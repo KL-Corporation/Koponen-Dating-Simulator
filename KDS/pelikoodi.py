@@ -781,7 +781,7 @@ def koponen_talk():
                     button_color = (90,90,90)
             else:
                 button_color = (100,100,100)
-
+            #Testi kommentti GitHub perseilyä varten 
             if y == 0:
                 text_offset = 60
             else:
