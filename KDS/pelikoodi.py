@@ -41,7 +41,7 @@ alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
 
-deltatime = 0
+deltatimeScaled = 0
 getTicksLastFrame = 0
 
 pygame.display.set_caption("Koponen Dating Simulator")
@@ -1105,9 +1105,12 @@ print(item_ids)
 
 while main_running:
 
-    t = pygame.time.get_ticks()
-    deltatime = (t - getTicksLastFrame) / 1000
-    getTicksLastFrame = t;
+    ticksFromStart = pygame.time.get_ticks()
+    #deltatime in milliseconds
+    deltatimeScaled = (t - getTicksLastFrame)
+    #deltatime in seconds
+    deltatime = deltatimeScaled / 1000
+    getTicksLastFrame = ticksFromStart
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -1292,9 +1295,9 @@ while main_running:
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
 
     if k_collisions["left"]:
-        koponen_movingx = koponen_movingx*-1
+        koponen_movingx = -koponen_movingx
     elif k_collisions["right"]:
-        koponen_movingx = koponen_movingx*-1
+        koponen_movingx = -koponen_movingx
 
 
     door_collision_test()
@@ -1325,16 +1328,16 @@ while main_running:
     if player_health > 0:
         if running:
             animation = run_animation.copy()
-            animation_duration = 700 * deltatime
+            animation_duration = 7 * deltatimeScaled
             if playerSprinting:
-                animation_duration = 300 * deltatime
+                animation_duration = 3 * deltatimeScaled
         else:
             animation = stand_animation.copy()
-            animation_duration = 1000 * deltatime
+            animation_duration = 10 * deltatimeScaled
     else:
         if player_death_event:
             animation = death_animation.copy()
-            animation_duration = 1000 * deltatime
+            animation_duration = 10 * deltatimeScaled
 
 
     if koponen_movement[0] != 0:
