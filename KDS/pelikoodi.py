@@ -124,6 +124,7 @@ ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
 main_running = True
 playerMovingRight = False
 playerMovingLeft = False
+playerSprinting = False
 gasburnerBurning = False
 knifeInUse = False
 currently_on_mission = False
@@ -145,7 +146,7 @@ koponen_animation_stats = [0,7,0]
 player_hand_item = "none"
 player_keys = {"red":False,"green":False,"blue":False}
 direction = True
-SpaceBar = False
+FunctionKey = False
 esc_menu = False
 
 go_to_main_menu = False
@@ -387,7 +388,7 @@ def door_collision_test():
                 if player_movement[0] > 0 and doors_open[x] == False:
                     player_rect.right = door.left+1
                 if not doors_open[x]:
-                    if SpaceBar:
+                    if FunctionKey:
                         if color_keys[x] != "none":
                             if color_keys[x] == "red":
                                 if player_keys["red"]:
@@ -1067,7 +1068,7 @@ agr(tcagr)
 if tcagr != "false":
     main_menu()
 
-koponen_talk_tip = tip_font.render("Puhu Koposelle [Space]", True, (255,255,255))
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
 print(item_ids)
 
 while main_running:
@@ -1076,21 +1077,24 @@ while main_running:
         if event.type == pygame.QUIT:
             main_running = False
 
+#<editor-fold desc="Input Detection">
         if event.type == KEYDOWN:
-            if event.key == K_RIGHT:
+            if event.key == K_d:
                 playerMovingRight = True
-            if event.key == K_LEFT:
+            if event.key == K_a:
                 playerMovingLeft = True
-            if event.key == K_UP:
+            if event.key == K_SPACE:
                 if air_timer < 6:
                     vertical_momentum = -10
+            if event.key == K_LSHIFT:
+                playerSprinting = True
             if event.key == K_p:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = True
                 if player_hand_item == "knife":
                     knifeInUse = True
-            if event.key == K_SPACE:
-                SpaceBar = True
+            if event.key == K_e:
+                FunctionKey = True
             if event.key == K_ESCAPE:
                 esc_menu = False if esc_menu else True
             if event.key == K_j:
@@ -1102,10 +1106,12 @@ while main_running:
             if event.key == K_F4:
                 player_health = 0
         if event.type == KEYUP:
-            if event.key == K_RIGHT:
+            if event.key == K_d:
                 playerMovingRight = False
-            if event.key == K_LEFT:
+            if event.key == K_a:
                 playerMovingLeft = False
+            if event.key == K_LSHIFT:
+                playerSprinting = False
             if event.key == K_p:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = False
@@ -1120,6 +1126,7 @@ while main_running:
                 inventory_slot += 1
             if event.button == 5:
                 inventory_slot -= 1
+#</editor-fold>
 
     if inventory_slot > len(inventory)-1:
         inventory_slot = 0
@@ -1218,8 +1225,13 @@ while main_running:
 
     if playerMovingRight == True:
         player_movement[0] += 4
+        if playerSprinting == True:
+            player_movement[0] += 4
+
     if playerMovingLeft == True:
         player_movement[0] -= 4
+        if playerSprinting ==  True:
+            player_movement[0] -= 4
 
     player_movement[1] += vertical_momentum
     vertical_momentum += 0.4
@@ -1362,7 +1374,7 @@ while main_running:
         koponen_movement[0] = 0
         if knifeInUse:
             koponen_alive = False
-        if SpaceBar:
+        if FunctionKey:
             koponen_talk()
     else:
         koponen_movement[0] = koponen_movingx
@@ -1425,7 +1437,7 @@ while main_running:
         gasburner_animation_stats[2] += 1
     elif player_hand_item == "knife":
         knife_animation_stats[2] += 1
-    SpaceBar = False
+    FunctionKey = False
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
     clock.tick(60)
