@@ -633,8 +633,11 @@ def agr(tcagr):
 
 def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items
+
     koponen_talk_running = True
+
     c = False
+
     exit_button = pygame.Rect(940,700,230, 80)
     mission_button = pygame.Rect(50,700,450,80)
     date_button = pygame.Rect(50, 610, 450,80)
@@ -653,6 +656,7 @@ def koponen_talk():
 
     def exit_function1():
         return False
+
     def mission_function():
         global currently_on_mission, current_mission
 
@@ -725,7 +729,7 @@ def koponen_talk():
             else:
                 conversations.append("Koponen: Sinä et ole suorittanut")
                 conversations.append("         haluamaani tehtävää")
-                conversations.append("Koponen: Tehtäväsi oli tuoda minulle {}".format(task))
+                conversations.append("Koponen: Tehtäväsi oli tuoda minulle {}".format(current_mission))
 
     c = False
     buttons = []
