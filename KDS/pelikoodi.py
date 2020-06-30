@@ -3,6 +3,8 @@ import os
 import random
 from pygame.locals import *
 
+#Testi kommentti 6969420
+
 pygame.init()
 
 display_size = (1200, 800)
