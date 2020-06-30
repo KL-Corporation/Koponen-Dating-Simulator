@@ -1108,7 +1108,7 @@ while main_running:
 
     ticksFromStart = pygame.time.get_ticks()
     #deltatime in milliseconds
-    deltatimeScaled = (t - getTicksLastFrame)
+    deltatimeScaled = (ticksFromStart - getTicksLastFrame)
     #deltatime in seconds
     deltatime = deltatimeScaled / 1000
     getTicksLastFrame = ticksFromStart
