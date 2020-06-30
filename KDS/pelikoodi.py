@@ -3,8 +3,6 @@ import os
 import random
 from pygame.locals import *
 
-#Testi kommentti 6969420
-
 pygame.init()
 
 display_size = (1200, 800)
@@ -44,7 +42,7 @@ alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
 
-pygame.display.set_caption("Koponen dating simulator")
+pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
 main_menu_background = pygame.image.load("resources/main_menu_bc.png")
 settings_background = pygame.image.load("resources/settings_bc.png")
@@ -727,6 +725,7 @@ def koponen_talk():
             else:
                 conversations.append("Koponen: Sinä et ole suorittanut")
                 conversations.append("         haluamaani tehtävää")
+                conversations.append("Koponen: Tehtäväsi oli tuoda minulle {}".format(task))
 
     c = False
     buttons = []
@@ -783,7 +782,7 @@ def koponen_talk():
                     button_color = (90,90,90)
             else:
                 button_color = (100,100,100)
-            #Testi kommentti GitHub perseilyä varten 
+                
             if y == 0:
                 text_offset = 60
             else:
