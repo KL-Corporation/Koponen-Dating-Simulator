@@ -31,7 +31,6 @@ class pygame_print_text:
 
     def skipRow(self):
         self.row += self.row_height
-        
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
@@ -41,6 +40,9 @@ esc_menu_surface = pygame.Surface((500, 400))
 alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
+
+deltatime = 0
+getTicksLastFrame = 0
 
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
@@ -635,7 +637,8 @@ def agr(tcagr):
 def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items
 
-    koponen_talk_running = True
+    koponenTalking = True
+    pygame.mouse.set_visible(True)
 
     c = False
 
@@ -754,15 +757,15 @@ def koponen_talk():
     conversations.append("Koponen: Hyvää päivää")
 
 
-    while koponen_talk_running:
+    while koponenTalking:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                koponen_talk_running = False
+                koponenTalking = False
                 main_running = False
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    koponen_talk_running = False
+                    koponenTalking = False
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -778,7 +781,7 @@ def koponen_talk():
             if button.collidepoint(pygame.mouse.get_pos()):
                 if c:
                     if not y:
-                        koponen_talk_running = functions[y]()
+                        koponenTalking = functions[y]()
                     else:
                         functions[y]()
                 button_color = (115,115,115)
@@ -802,8 +805,10 @@ def koponen_talk():
             printer.print_text(line)
         c = False
         pygame.display.update()
+    pygame.mouse.set_visible(False)
 
 def esc_menu_f():
+    pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
     c = False
     resume_button = pygame.Rect(150,170,200,30)
@@ -825,6 +830,7 @@ def esc_menu_f():
     def resume():
         global esc_menu
         esc_menu = False
+        pygame.mouse.set_visible(False)
         pygame.mixer.music.unpause()
 
     def settings():
@@ -994,6 +1000,7 @@ def main_menu():
     quit_text = button_font1.render("Quit", True, (255,255,255))
 
     def play_function():
+        pygame.mouse.set_visible(False)
         global main_menu_running
         main_menu_running = False
         load_music()
@@ -1076,6 +1083,10 @@ koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
 print(item_ids)
 
 while main_running:
+
+    t = pygame.time.get_ticks()
+    deltatime = (t - getTicksLastFrame) / 1000
+    getTicksLastFrame = t;
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -1281,9 +1292,9 @@ while main_running:
     if player_health > 0:
         if running:
             animation = run_animation.copy()
-            animation_duration = 7
-            
-
+            animation_duration = 700 * deltatime
+            if playerSprinting:
+                animation_duration = 300 * deltatime
         else:
             animation = stand_animation.copy()
             animation_duration = 10
@@ -1444,4 +1455,5 @@ while main_running:
     FunctionKey = False
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
+
     clock.tick(60)
