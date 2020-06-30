@@ -41,6 +41,7 @@ alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
 
+deltatime = 0
 deltatimeScaled = 0
 getTicksLastFrame = 0
 
