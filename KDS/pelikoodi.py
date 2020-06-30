@@ -149,6 +149,8 @@ player_hand_item = "none"
 player_keys = {"red":False,"green":False,"blue":False}
 direction = True
 FunctionKey = False
+AltPressed = False
+F4Pressed = False
 esc_menu = False
 
 go_to_main_menu = False
@@ -169,7 +171,6 @@ player_score = 0
 true_scroll = [0, 0]
 inventory_slot = 0
 
-
 test_rect = pygame.Rect(0, 0, 60, 40)
 player_rect = pygame.Rect(100, 100, 33, 65)
 koponen_rect = pygame.Rect(200,200,24,64)
@@ -177,6 +178,9 @@ koponen_recog_rec = pygame.Rect(0,0,72,64)
 koponen_movement = [0,6]
 koponen_movingx = 0
 koponen_happines = 40
+
+task = ""
+taskTaivutettu = ""
 
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
@@ -662,21 +666,25 @@ def koponen_talk():
         return False
 
     def mission_function():
-        global currently_on_mission, current_mission
+        global currently_on_mission, current_mission, taskTaivutettu, task
 
         conversations.append("{}: Saisinko tehtävän?".format(player_name))
         if currently_on_mission:
             conversations.append("Koponen: Olen pahoillani, sinulla on")
             conversations.append("         tehtävä kesken")
+            conversations.append("Koponen: Tehtäväsi oli tuoda minulle")
+            conversations.append("         {}.".format(task))
         elif task_items:
             currently_on_mission = True
             current_mission = task_items[0]
             task_items.remove(task_items[0])
-            if current_mission == "coffeemug":
-                task = "kahvikupin"
-            elif current_mission == "ss_bonuscard":
-                task = "SS-etukortin"
-            conversations.append("Koponen: Toisitko minulle {}".format(task))
+            conversations.append("Koponen: Toisitko minulle {}".format(taskTaivutettu))
+        if current_mission == "coffeemug":
+            task = "kahvikuppi"
+            taskTaivutettu = "kahvikupin"
+        elif current_mission == "ss_bonuscard":
+            task = "SS-etukortti"
+            taskTaivutettu = "SS-etukortin"
         else:
             conversations.append("Koponen: Olet suorittanut kaikki")
             conversations.append("         tehtävät")
@@ -718,6 +726,12 @@ def koponen_talk():
     def end_mission():
         global current_mission, currently_on_mission, player_score, koponen_happines
 
+        try:
+            taskTaivutettu
+        except NameError:
+            print("Task not defined. Defining task...")
+            taskTaivutettu = "";
+
         if not currently_on_mission:
             conversations.append("Koponen: Sinulla ei ole palautettavaa")
             conversations.append("         tehtävää")
@@ -731,9 +745,10 @@ def koponen_talk():
                 currently_on_mission = False
                 current_mission = "none"
             else:
-                conversations.append("Koponen: Sinä et ole suorittanut")
-                conversations.append("         haluamaani tehtävää")
-                conversations.append("Koponen: Tehtäväsi oli tuoda minulle {}".format(current_mission))
+                conversations.append("Koponen: Housuistasi ei löydy")
+                conversations.append("         pyytämääni esinettä.")
+                conversations.append("Koponen: Tehtäväsi oli tuoda minulle.")
+                conversations.append("         {}".format(task))
 
     c = False
     buttons = []
@@ -1119,7 +1134,15 @@ while main_running:
             if event.key == K_t:
                 console()
             if event.key == K_F4:
-                player_health = 0
+                F4Pressed = True
+                if AltPressed == True and F4Pressed ==  True:
+                    pygame.QUIT()
+                else:
+                    player_health = 0
+            if event.key == K_LALT or event.key == K_RALT:
+                AltPressed = True
+                if AltPressed == True and F4Pressed ==  True:
+                    pygame.QUIT()
         if event.type == KEYUP:
             if event.key == K_d:
                 playerMovingRight = False
@@ -1127,6 +1150,10 @@ while main_running:
                 playerMovingLeft = False
             if event.key == K_LSHIFT:
                 playerSprinting = False
+            if event.key == K_F4:
+                F4Pressed = False
+            if event.key == K_LALT or event.key == K_RALT:
+                AltPressed = False
             if event.key == K_p:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = False
@@ -1297,11 +1324,11 @@ while main_running:
                 animation_duration = 300 * deltatime
         else:
             animation = stand_animation.copy()
-            animation_duration = 10
+            animation_duration = 1000 * deltatime
     else:
         if player_death_event:
             animation = death_animation.copy()
-            animation_duration = 10
+            animation_duration = 1000 * deltatime
 
 
     if koponen_movement[0] != 0:
