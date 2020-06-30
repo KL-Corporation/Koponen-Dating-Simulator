@@ -675,10 +675,8 @@ def koponen_talk():
             conversations.append("Koponen: Tehtäväsi oli tuoda minulle")
             conversations.append("         {}.".format(task))
         elif task_items:
-            currently_on_mission = True
             current_mission = task_items[0]
             task_items.remove(task_items[0])
-            conversations.append("Koponen: Toisitko minulle {}".format(taskTaivutettu))
         if current_mission == "coffeemug":
             task = "kahvikuppi"
             taskTaivutettu = "kahvikupin"
@@ -686,9 +684,17 @@ def koponen_talk():
             task = "SS-etukortti"
             taskTaivutettu = "SS-etukortin"
         else:
+            task = "[FINISHED]"
+            taskTaivutettu = "[FINISHED]"
+
+        if task == "[FINISHED]" or taskTaivutettu == "[FINISHED]":
             conversations.append("Koponen: Olet suorittanut kaikki")
             conversations.append("         tehtävät")
-            
+        elif currently_on_mission == False:
+            conversations.append("Koponen: Toisitko minulle {}".format(taskTaivutettu))
+            currently_on_mission = True
+
+
     def date_function():
         global koponen_happines
 
