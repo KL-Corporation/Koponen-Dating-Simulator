@@ -1,6 +1,8 @@
 import pygame
 import os
 import random
+import logging
+from datetime import datetime
 from pygame.locals import *
 
 pygame.init()
@@ -32,6 +34,14 @@ class pygame_print_text:
     def skipRow(self):
         self.row += self.row_height
 
+logFiles = os.listdir("logs/")
+while len(logFiles) >= 5:
+    logFiles = os.listdir("logs/")
+    os.remove("logs/" + logFiles[0])
+
+now = datetime.now()
+logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S"))
+
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 printer = pygame_print_text((7,8,10),(50,50),680,main_display)
@@ -42,7 +52,6 @@ alpha.fill((0,0,0))
 alpha.set_alpha(170)
 
 deltatime = 0
-deltatimeScaled = 0
 getTicksLastFrame = 0
 
 pygame.display.set_caption("Koponen Dating Simulator")
@@ -139,7 +148,7 @@ with open("settings/volume.txt", 'r') as f:
 
 with open("settings/tc.agr", "r") as f:
     tcagr = f.read()
-    print(tcagr)
+    logging.info("Terms and Conditions Accepted: " + tcagr)
 
 volume = float(volume_data)/100
 gasburner_animation_stats = [0, 4, 0]
@@ -211,7 +220,9 @@ def load_music():
     music_files = os.listdir()
 
     random.shuffle(music_files)
-    print(music_files)
+    logging.debug("Music File Count: " + str(len(music_files)))
+    for track in music_files:
+        logging.debug("Music File: " + track)
 
     pygame.mixer.music.stop()
 
@@ -231,7 +242,9 @@ def load_ads():
     ad_files = os.listdir("resources/ads/")
 
     random.shuffle(ad_files)
-    print(ad_files)
+    logging.debug("Ad File Count: " + str(len(ad_files)))
+    for ad in ad_files:
+        logging.debug("Ad File: " + ad)
 
     ad_images = []
     
@@ -393,9 +406,9 @@ def door_collision_test():
         for door in hit_list:
             if recta == door:
                 if player_movement[0] > 0 and doors_open[x] == False:
-                    player_rect.right = door.left+1
+                    player_rect.right = door.left + 1
                 if not doors_open[x]:
-                    if FunctionKey:
+                    if FunctionKey == True:
                         if color_keys[x] != "none":
                             if color_keys[x] == "red":
                                 if player_keys["red"]:
@@ -414,7 +427,7 @@ def door_collision_test():
                             door_sound()
 
                 if player_movement[0] < 0 and doors_open[x] == False:
-                    player_rect.left = door.right-1
+                    player_rect.left = door.right - 1
 
         x += 1
 
@@ -426,49 +439,50 @@ def item_collision_test(rect, items):
     for item in items:
         if rect.colliderect(item):
             hit_list.append(item)
-            if item_ids[b] == "gasburner":
-                if "gasburner" not in inventory:
-                    pygame.mixer.Sound.play(gasburner_clip)
-                    player_score += 10
-                    inventory.append("gasburner")
+            if FunctionKey == True:
+                if item_ids[b] == "gasburner":
+                    if "gasburner" not in inventory:
+                        pygame.mixer.Sound.play(gasburner_clip)
+                        player_score += 10
+                        inventory.append("gasburner")
+                        item_rects.remove(item)
+                        del item_ids[b]
+                elif item_ids[b] == "knife":
+                    if "knife" not in inventory:
+                        player_score += 6
+                        item_rects.remove(item)
+                        pygame.mixer.Sound.play(knife_pickup)
+                        inventory.append("knife")
+                        del item_ids[b]
+                elif item_ids[b] == "coffeemug":
+                    if "coffeemug" not in inventory:
+                        player_score += 5
+                        item_rects.remove(item)
+                        inventory.append("coffeemug")
+                        pygame.mixer.Sound.play(coffeemug_sound)
+                        del item_ids[b]
+                elif item_ids[b] == "ss_bonuscard":
+                    if "ss_bonuscard" not in inventory:
+                        player_score += 5
+                        item_rects.remove(item)
+                        inventory.append("ss_bonuscard")
+                        pygame.mixer.Sound.play(ss_sound)
+                        del item_ids[b]
+                elif item_ids[b] == "red_key":
+                    player_keys["red"] = True
                     item_rects.remove(item)
+                    play_key_pickup()
                     del item_ids[b]
-            elif item_ids[b] == "knife":
-                if "knife" not in inventory:
-                    player_score += 6
+                elif item_ids[b] == "green_key":
+                    player_keys["green"] = True
                     item_rects.remove(item)
-                    pygame.mixer.Sound.play(knife_pickup)
-                    inventory.append("knife")
+                    play_key_pickup()
                     del item_ids[b]
-            elif item_ids[b] == "coffeemug":
-                if "coffeemug" not in inventory:
-                    player_score += 5
+                elif item_ids[b] == "blue_key":
+                    player_keys["blue"] = True
                     item_rects.remove(item)
-                    inventory.append("coffeemug")
-                    pygame.mixer.Sound.play(coffeemug_sound)
-                    del item_ids[b]
-            elif item_ids[b] == "ss_bonuscard":
-                if "ss_bonuscard" not in inventory:
-                    player_score += 5
-                    item_rects.remove(item)
-                    inventory.append("ss_bonuscard")
-                    pygame.mixer.Sound.play(ss_sound)
-                    del item_ids[b]
-            elif item_ids[b] == "red_key":
-                player_keys["red"] = True
-                item_rects.remove(item)
-                play_key_pickup()
-                del item_ids[b]
-            elif item_ids[b] == "green_key":
-                player_keys["green"] = True
-                item_rects.remove(item)
-                play_key_pickup()
-                del item_ids[b]
-            elif item_ids[b] == "blue_key":
-                player_keys["blue"] = True
-                item_rects.remove(item)
-                play_key_pickup()
-                del item_ids[b]            
+                    play_key_pickup()
+                    del item_ids[b]            
         b += 1
     return hit_list
 
@@ -553,20 +567,20 @@ def console():
         if command_list[1] != "key":
             try:
                 inventory.append(command_list[1])
-                print("Item was given")
+                logging.debug("Item was given")
             except Exception:
-                print("That item does not exist")
+                logging.exception("That item does not exist")
         elif command_list[1] == "key":
             try:
                 player_keys[command_list[2]] = True
-                print("Item was given")
+                logging.debug("Item was given")
             except Exception:
-                print("That item does not exist")
+                logging.exception("That item does not exist")
 
     elif command_list[0] == "playboy":
         koponen_happines = 1000
-        print("You are now a playboy")
-        print("Koponen happines: {}".format(koponen_happines))
+        logging.info("You are now a playboy")
+        logging.info("Koponen happines: {}".format(koponen_happines))
 
     elif command_list[0] == "kill":
         player_health = 0
@@ -576,9 +590,9 @@ def console():
                 with open("settings/tc.agr", "w") as f:
                     f.write(command_list[1])
             else:
-                print("Please provide a proper state for terms & conditions")
+                logging.info("Please provide a proper state for terms & conditions")
         except Exception:
-            print(Exception)
+            logging.exception(Exception)
 
 
 def agr(tcagr):
@@ -596,11 +610,12 @@ def agr(tcagr):
     functions = []
 
     def agree():
-        print("dick")
+        logging.info("Terms and Conditions have been accepted.")
+        logging.info("You said you will not get offended... Dick!")
         with open("settings/tc.agr", "w") as f:
             f.write("true")
         with open("settings/tc.agr", "r") as f:
-            print(f.read())
+            logging.debug("Terms Agreed. Updated Value: " + f.read())
 
         return False
 
@@ -652,7 +667,7 @@ def koponen_talk():
     date_button = pygame.Rect(50, 610, 450,80)
     return_mission_button = pygame.Rect(510, 700, 420,80)
 
-    koponen_talk_background = ad_images[int(random.uniform(0,len(ad_images)))].copy()
+    koponen_talk_foreground = ad_images[int(random.uniform(0,len(ad_images)))].copy()
 
     def renderText(text):
         text_object = button_font1.render(text, True, (255,255,255))
@@ -736,8 +751,9 @@ def koponen_talk():
         try:
             taskTaivutettu
         except NameError:
-            print("Task not defined. Defining task...")
-            taskTaivutettu = "";
+            logging.warning("Task not defined. Defining task...")
+            task = ""
+            taskTaivutettu = ""
 
         if not currently_on_mission:
             conversations.append("Koponen: Sinulla ei ole palautettavaa")
@@ -791,7 +807,7 @@ def koponen_talk():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-        main_display.blit(koponen_talk_background,(0,0))
+        main_display.blit(koponen_talk_foreground,(0,0))
         pygame.draw.rect(main_display,(230,230,230),(40,40, 700, 400))
         pygame.draw.rect(main_display,(30,30,30),(40,40, 700, 400), 3)
         printer.resetRow()
@@ -880,6 +896,7 @@ def esc_menu_f():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     esc_menu = False
+                    pygame.mouse.set_visible(False)
                     pygame.mixer.music.unpause()
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -914,7 +931,6 @@ def esc_menu_f():
         main_display.blit(esc_menu_surface,(display_size[0]/2-250,120))
         pygame.display.update()
         c = False
-        clock.tick(60)
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
 
@@ -1034,7 +1050,7 @@ def main_menu():
         player_rect.y = 100
         for key in player_keys:
             player_keys[key] = False
-        print("Press F4 to commit suicide")
+        logging.info("Press F4 to commit suicide")
     def settings_function():
         settings_menu()
 
@@ -1102,15 +1118,16 @@ if tcagr != "false":
     main_menu()
 
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
-print(item_ids)
+logging.debug("Item Count: " + str(len(item_ids))
+for id in item_ids:
+    logging.debug("Item ID: " + id)
 
 while main_running:
 
     ticksFromStart = pygame.time.get_ticks()
     #deltatime in milliseconds
-    deltatimeScaled = (ticksFromStart - getTicksLastFrame)
-    #deltatime in seconds
-    deltatime = deltatimeScaled / 1000
+    deltatime = clock.tick(60);
+    deltatime = 10
     getTicksLastFrame = ticksFromStart
 
     for event in pygame.event.get():
@@ -1128,11 +1145,6 @@ while main_running:
                     vertical_momentum = -10
             if event.key == K_LSHIFT:
                 playerSprinting = True
-            if event.key == K_p:
-                if player_hand_item == "gasburner":
-                    gasburnerBurning = True
-                if player_hand_item == "knife":
-                    knifeInUse = True
             if event.key == K_e:
                 FunctionKey = True
             if event.key == K_ESCAPE:
@@ -1153,6 +1165,12 @@ while main_running:
                 AltPressed = True
                 if AltPressed == True and F4Pressed ==  True:
                     pygame.QUIT()
+        if event.type == MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if player_hand_item == "gasburner":
+                    gasburnerBurning = True
+                if player_hand_item == "knife":
+                    knifeInUse = True
         if event.type == KEYUP:
             if event.key == K_d:
                 playerMovingRight = False
@@ -1174,6 +1192,11 @@ while main_running:
                 if inventory[inventory_slot] != "none":
                     inventory.remove(inventory[inventory_slot])
         if event.type == MOUSEBUTTONUP:
+            if event.button == 1:
+                if player_hand_item == "gasburner":
+                    gasburnerBurning = False
+                if player_hand_item == "knife":
+                    knifeInUse = False
             if event.button == 4:
                 inventory_slot += 1
             if event.button == 5:
@@ -1276,19 +1299,19 @@ while main_running:
     koponen_recog_rec.center = koponen_rect.center
 
     if playerMovingRight == True:
-        player_movement[0] += 4
+        player_movement[0] += 0.4 * deltatime
         if playerSprinting == True:
-            player_movement[0] += 4
+            player_movement[0] += 0.4 * deltatime
 
     if playerMovingLeft == True:
-        player_movement[0] -= 4
+        player_movement[0] -= 0.4 * deltatime
         if playerSprinting ==  True:
-            player_movement[0] -= 4
+            player_movement[0] -= 0.4 * deltatime
 
     player_movement[1] += vertical_momentum
-    vertical_momentum += 0.4
-    if vertical_momentum > 8:
-        vertical_momentum = 8
+    vertical_momentum += 0.04 * deltatime
+    if vertical_momentum > 0.8 * deltatime:
+        vertical_momentum = 0.8 * deltatime
 
     toilet_collisions(player_rect,gasburnerBurning)
     if player_health > 0:
@@ -1329,16 +1352,16 @@ while main_running:
     if player_health > 0:
         if running:
             animation = run_animation.copy()
-            animation_duration = 7 * deltatimeScaled
+            animation_duration = 70 * deltatime
             if playerSprinting:
-                animation_duration = 3 * deltatimeScaled
+                animation_duration = 30 * deltatime
         else:
             animation = stand_animation.copy()
-            animation_duration = 10 * deltatimeScaled
+            animation_duration = 100 * deltatime
     else:
         if player_death_event:
             animation = death_animation.copy()
-            animation_duration = 10 * deltatimeScaled
+            animation_duration = 100 * deltatime
 
 
     if koponen_movement[0] != 0:
