@@ -1298,16 +1298,14 @@ while main_running:
             screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
         b += 1
 
-    def Sprinting():
-        global playerStamina
-        if not playerSprinting and playerStamina < 100.0:
-            playerStamina += 0.25
-        elif playerSprinting and playerStamina > 0:
-            playerStamina -= 0.75
-        elif int(round(playerStamina)) < 0:
-            playerStamina = 0.0
-
-    Sprinting()
+    if playerSprinting == False and playerStamina < 100.0:
+        playerStamina += 0.25
+    elif playerSprinting and playerStamina > 0:
+        playerStamina -= 0.75
+    elif playerSprinting and playerStamina <= 0:
+        playerSprinting = False
+    elif int(round(playerStamina)) < 0:
+        playerStamina = 0.0
 
     player_movement = [0, 0]
 
