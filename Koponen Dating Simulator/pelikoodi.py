@@ -2,6 +2,7 @@ import pygame
 import os
 import random
 import logging
+import threading
 from datetime import datetime
 from pygame.locals import *
 
@@ -54,7 +55,9 @@ alpha.set_alpha(170)
 
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
-main_menu_background = pygame.image.load("resources/main_menu_bc.png")
+main_menu_background = pygame.image.load("resources/main_menu/main_menu_bc.png")
+main_menu_gasburner1 = pygame.image.load("resources/main_menu/main_menu_bc_gasburner1.png")
+main_menu_gasburner2 = pygame.image.load("resources/main_menu/main_menu_bc_gasburner2.png")
 settings_background = pygame.image.load("resources/settings_bc.png")
 agr_background = pygame.image.load("resources/tcagr.png")
 path = "resources/ads/koponen_talk_bc0.png"
@@ -99,8 +102,7 @@ green_door_closed.set_colorkey((255,255,255))
 blue_door_closed.set_colorkey((255,255,255))
 tree.set_colorkey((0,0,0))
 
-gasburner_off = pygame.image.load(
-    "resources/items/gasburner_off.png").convert()
+gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
 #gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
 knife = pygame.image.load("resources/items/knife.png").convert()
 knife_blood = pygame.image.load("resources/items/knife.png").convert()
@@ -135,6 +137,7 @@ main_running = True
 playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
+playerStamina = 100.0
 gasburnerBurning = False
 knifeInUse = False
 currently_on_mission = False
@@ -1292,18 +1295,29 @@ while main_running:
             screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
         b += 1
 
+    def Sprinting():
+        global playerStamina
+        if not playerSprinting and playerStamina < 100.0:
+            playerStamina += 0.25
+        elif playerSprinting and playerStamina > 0:
+            playerStamina -= 0.75
+        elif int(round(playerStamina)) < 0:
+            playerStamina = 0.0
+
+    Sprinting()
+
     player_movement = [0, 0]
 
     koponen_recog_rec.center = koponen_rect.center
 
     if playerMovingRight == True:
         player_movement[0] += 4
-        if playerSprinting == True:
+        if playerSprinting == True and playerStamina > 0:
             player_movement[0] += 4
 
     if playerMovingLeft == True:
         player_movement[0] -= 4
-        if playerSprinting ==  True:
+        if playerSprinting ==  True and playerStamina > 0:
             player_movement[0] -= 4
 
     player_movement[1] += vertical_momentum
@@ -1324,10 +1338,11 @@ while main_running:
 
     door_collision_test()
 
-    score = score_font.render(("Score: " + str(player_score)), True, (230, 240, 220))
+    score = score_font.render(("Score: " + str(player_score)), True, (255,255,255))
     if DebugMode:
         fps = score_font.render("Fps: " + str(int(clock.get_fps())), True, (255,255,255))
     health = score_font.render("Health: " + str(player_health), True, (255,255,255))
+    stamina = score_font.render("Stamina: " + str(round(int(playerStamina))), True, (255,255,255))
 
     if collisions['bottom'] == True:
         air_timer = 0
@@ -1495,7 +1510,8 @@ while main_running:
         pygame.draw.rect(screen,(70,70,70),((inventory_slot-1)*34+10,75, 34,34),4)
     else:
         pygame.draw.rect(screen,(70,70,70),((len(inventory)-1)*34+10,75, 34,34),4)
-    screen.blit(health,(10,120))
+    screen.blit(health, (10, 120))
+    screen.blit(stamina, (10, 130))
 
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
