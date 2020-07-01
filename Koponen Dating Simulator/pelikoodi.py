@@ -40,7 +40,8 @@ while len(logFiles) >= 5:
     os.remove("logs/" + logFiles[0])
 
 now = datetime.now()
-logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S"))
+logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log", level=logging.NOTSET)
+logging.info('Initialising Game...')
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
@@ -50,9 +51,6 @@ esc_menu_surface = pygame.Surface((500, 400))
 alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
-
-deltatime = 0
-getTicksLastFrame = 0
 
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
@@ -192,6 +190,8 @@ koponen_happines = 40
 task = ""
 taskTaivutettu = ""
 
+DebugMode = False
+
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 
@@ -220,9 +220,9 @@ def load_music():
     music_files = os.listdir()
 
     random.shuffle(music_files)
-    logging.debug("Music File Count: " + str(len(music_files)))
+    logging.debug("Music Files Initialised: " + str(len(music_files)))
     for track in music_files:
-        logging.debug("Music File: " + track)
+        logging.debug("Initialised Music File: " + track)
 
     pygame.mixer.music.stop()
 
@@ -242,9 +242,9 @@ def load_ads():
     ad_files = os.listdir("resources/ads/")
 
     random.shuffle(ad_files)
-    logging.debug("Ad File Count: " + str(len(ad_files)))
+    logging.debug("Ad Files Initialised: " + str(len(ad_files)))
     for ad in ad_files:
-        logging.debug("Ad File: " + ad)
+        logging.debug("Initialised Ad File: " + ad)
 
     ad_images = []
     
@@ -537,12 +537,12 @@ def move(rect, movement, tiles):
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
 gasburner_animation = load_animation("gasburner_on", 2)
-knife_animation = load_animation("knife",2)
-toilet_animation = load_animation("toilet_anim",3)
-trashcan_animation = load_animation("trashcan",3)
-koponen_stand = load_animation("koponen_standing",2)
-koponen_run = load_animation("koponen_running",2)
-death_animation = load_animation("death",5)
+knife_animation = load_animation("knife", 2)
+toilet_animation = load_animation("toilet_anim", 3)
+trashcan_animation = load_animation("trashcan", 3)
+koponen_stand = load_animation("koponen_standing", 2)
+koponen_run = load_animation("koponen_running", 2)
+death_animation = load_animation("death", 5)
 
 
 world_gen = load_map("resources/game_map")
@@ -1118,17 +1118,11 @@ if tcagr != "false":
     main_menu()
 
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
-logging.debug("Item Count: " + str(len(item_ids))
-for id in item_ids:
-    logging.debug("Item ID: " + id)
+logging.debug("Items Initialised: " + str(len(item_ids)))
+for i_id in item_ids:
+    logging.debug("Initialised Item: (ID)" + i_id)
 
 while main_running:
-
-    ticksFromStart = pygame.time.get_ticks()
-    #deltatime in milliseconds
-    deltatime = clock.tick(60);
-    deltatime = 10
-    getTicksLastFrame = ticksFromStart
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -1155,6 +1149,8 @@ while main_running:
                 inventory_slot += 1
             if event.key == K_t:
                 console()
+            if event.key == K_F3:
+                DebugMode = not DebugMode
             if event.key == K_F4:
                 F4Pressed = True
                 if AltPressed == True and F4Pressed ==  True:
@@ -1299,19 +1295,19 @@ while main_running:
     koponen_recog_rec.center = koponen_rect.center
 
     if playerMovingRight == True:
-        player_movement[0] += 0.4 * deltatime
+        player_movement[0] += 4
         if playerSprinting == True:
-            player_movement[0] += 0.4 * deltatime
+            player_movement[0] += 4
 
     if playerMovingLeft == True:
-        player_movement[0] -= 0.4 * deltatime
+        player_movement[0] -= 4
         if playerSprinting ==  True:
-            player_movement[0] -= 0.4 * deltatime
+            player_movement[0] -= 4
 
     player_movement[1] += vertical_momentum
-    vertical_momentum += 0.04 * deltatime
-    if vertical_momentum > 0.8 * deltatime:
-        vertical_momentum = 0.8 * deltatime
+    vertical_momentum += 0.4
+    if vertical_momentum > 8:
+        vertical_momentum = 8
 
     toilet_collisions(player_rect,gasburnerBurning)
     if player_health > 0:
@@ -1327,7 +1323,8 @@ while main_running:
     door_collision_test()
 
     score = score_font.render(("Score: " + str(player_score)), True, (230, 240, 220))
-    fps = score_font.render("Fps: " + str(int(clock.get_fps())), True, (255,255,255))
+    if DebugMode:
+        fps = score_font.render("Fps: " + str(int(clock.get_fps())), True, (255,255,255))
     health = score_font.render("Health: " + str(player_health), True, (255,255,255))
 
     if collisions['bottom'] == True:
@@ -1352,16 +1349,16 @@ while main_running:
     if player_health > 0:
         if running:
             animation = run_animation.copy()
-            animation_duration = 70 * deltatime
+            animation_duration = 7
             if playerSprinting:
-                animation_duration = 30 * deltatime
+                animation_duration = 3
         else:
             animation = stand_animation.copy()
-            animation_duration = 100 * deltatime
+            animation_duration = 10
     else:
         if player_death_event:
             animation = death_animation.copy()
-            animation_duration = 100 * deltatime
+            animation_duration = 10
 
 
     if koponen_movement[0] != 0:
@@ -1476,8 +1473,9 @@ while main_running:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
 
-    screen.blit(score, (10, 50))
-    screen.blit(fps, (10, 60))
+    screen.blit(score, (10, 55))
+    if DebugMode:
+        screen.blit(fps, (10, 10))
 
     y = 0
     for item in inventory:
@@ -1515,3 +1513,5 @@ while main_running:
     FunctionKey = False
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
+
+    clock.tick(60)
