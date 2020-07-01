@@ -439,6 +439,8 @@ def item_collision_test(rect, items):
     for item in items:
         if rect.colliderect(item):
             hit_list.append(item)
+            itemTip = tip_font.render("Nosta Esine Painamalla [E]", True, (255,255,255))
+            screen.blit(itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
             if FunctionKey == True:
                 if item_ids[b] == "gasburner":
                     if "gasburner" not in inventory:
