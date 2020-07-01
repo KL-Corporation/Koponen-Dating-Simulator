@@ -439,11 +439,14 @@ def item_collision_test(rect, items):
     hit_list = []
     b = 0
     global player_hand_item, player_score, inventory
+    itemTipVisible = False
     for item in items:
         if rect.colliderect(item):
             hit_list.append(item)
-            itemTip = tip_font.render("Nosta Esine Painamalla [E]", True, (255,255,255))
-            screen.blit(itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
+            if not itemTipVisible:
+                itemTip = tip_font.render("Nosta Esine Painamalla [E]", True, (255,255,255))
+                screen.blit(itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
+                itemTipVisible = True
             if FunctionKey == True:
                 if item_ids[b] == "gasburner":
                     if "gasburner" not in inventory:
