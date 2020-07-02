@@ -58,7 +58,7 @@ class Animation:
     def __init__(self, animation_name, number_of_images, duration):
         self.images = []
         self.duration = duration
-        self.ticks = number_of_images*duration
+        self.ticks = number_of_images*duration - 1
         self.tick = 0
 
         for x in range(number_of_images):
@@ -1168,7 +1168,7 @@ def main_menu():
                     c = True
 
         main_display.blit(main_menu_background, (0, 0))
-        screen.blit(pygame.transform.flip(menu_gasburner_animation.update(), direction, False), (100, 50))
+        main_display.blit(pygame.transform.flip(menu_gasburner_animation.update(), direction, False), (100, 50))
 
         y = 0
 
