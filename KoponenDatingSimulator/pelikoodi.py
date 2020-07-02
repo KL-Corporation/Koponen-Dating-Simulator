@@ -36,6 +36,51 @@ class pygame_print_text:
     def skipRow(self):
         self.row += self.row_height
 
+#Päätin, että on IQ 1000 luoda oma luokka animaatioita varten
+
+class Animation:
+
+    """
+    Ensimmäinen argumentti odottaa animaation nimeä esim. "gasburner"
+    Toinen argumentti odottaa kyseisen animaation kuvien määrää. Jos animaatiossa on 2 kuvaa, kannattaa toiseksi argumentiksi laittaa 2
+    Kolmas argumentti odottaa yhden kuvan kestoa tickeinä. 
+
+    Animaation kuvat tulee tallentaa animations-kansioon png-muodossa tähän malliin: 
+        gasburner_0, gasburner_1, gasburner_2, gasburner_3 ja niin edelleen
+
+    animation_name - string, number_of_images - int, duration - int
+
+    """
+
+    def __init__(self, animation_name, number_of_images, duration):
+        self.images = []
+        self.duration = duration
+        self.ticks = number_of_images*duration
+        self.tick = 0
+
+        for x in range(number_of_images):
+            path = "resources/animations/" + animation_name + "_" + str(x) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
+            image = pygame.image.load(path).convert()
+            image.set_colorkey((255,255,255)) #Kaikki osat kuvasata joiden väri on RGB 255,255,255 muutetaan läpinäkyviksi
+
+            for _ in range(duration):
+                self.images.append(image)
+
+        print(self.images)
+                
+    #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
+    #update-funktio palauttaa aina yhden pygame image-objektin
+
+    def update(self):
+        self.tick += 1
+        if self.tick > self.ticks:
+            self.tick = 0
+
+        return self.images[self.tick]
+
+#Seuraava instanen luominen on vain testi
+test_animation = Animation("an", 1, 8)
+
 logFiles = os.listdir("logs/")
 
 while len(logFiles) >= 5:
@@ -144,6 +189,7 @@ playerMovingLeft = False
 playerSprinting = False
 playerStamina = 100.0
 gasburnerBurning = False
+tick = 0
 knifeInUse = False
 currently_on_mission = False
 current_mission = "none"
@@ -405,7 +451,6 @@ def load_animation(name, number_of_images):
         img.set_colorkey((255, 255, 255))
         animation_list.append(img)
     return animation_list
-
 
 def collision_test(rect, tiles):
     hit_list = []
@@ -1562,4 +1607,7 @@ while main_running:
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
 
+    tick += 1
+    if tick > 60:
+        tick = 0
     clock.tick(60)
