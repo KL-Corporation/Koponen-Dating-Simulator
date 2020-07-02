@@ -114,7 +114,7 @@ alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
 
-
+#region Lataukset
 
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
@@ -194,6 +194,8 @@ coffeemug_sound = pygame.mixer.Sound("audio/misc/coffeemug.wav")
 knife_pickup = pygame.mixer.Sound("audio/misc/knife.wav")
 key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
+
+#endregion Lataukset
 
 main_running = True
 playerMovingRight = False
