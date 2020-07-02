@@ -3,6 +3,7 @@ import os
 import random
 import logging
 import threading
+import configparser
 from datetime import datetime
 from pygame.locals import *
 
@@ -144,12 +145,27 @@ currently_on_mission = False
 current_mission = "none"
 player_name = "Sinä"
 
-with open("settings/volume.txt", 'r') as f:
-    volume_data = f.read()
+configParser = configparser.RawConfigParser()
+configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
+configParser.read(configFilePath)
 
-with open("settings/tc.agr", "r") as f:
-    tcagr = f.read()
-    logging.info("Terms and Conditions Accepted: " + tcagr)
+try:
+    tcagr = bool(configParser.get("Data", "TermsAccepted"))
+except:
+    configParser.add_section("Data")
+    configParser.set("Data", "TermsAccepted", False)
+    tcagr = False
+    with open("settings.cfg", "w") as cfgFile:
+        configParser.write(cfgFile)
+try:
+    volume_data = configParser.get("Settings", "Volume")
+except:
+    configParser.add_section("Settings")
+    configParser.set("Settings", "Volume", 15)
+    volume_data = 15
+    with open("settings.cfg", "w") as cfgFile:
+        configParser.write(cfgFile)
+logging.debug("Settings Loaded:\nTerms Accepted: " + str(tcagr) + "\nVolume: " + str(configParser))
 
 volume = float(volume_data)/100
 gasburner_animation_stats = [0, 4, 0]
@@ -575,32 +591,40 @@ def console():
         if command_list[1] != "key":
             try:
                 inventory.append(command_list[1])
-                logging.debug("Item was given")
+                print("Item was given")
             except Exception:
-                logging.exception("That item does not exist")
+                print("That item does not exist")
         elif command_list[1] == "key":
             try:
                 player_keys[command_list[2]] = True
-                logging.debug("Item was given")
+                print("Item was given")
             except Exception:
-                logging.exception("That item does not exist")
+                print("That item does not exist")
 
     elif command_list[0] == "playboy":
         koponen_happines = 1000
-        logging.info("You are now a playboy")
-        logging.info("Koponen happines: {}".format(koponen_happines))
+        print("You are now a playboy")
+        print("Koponen happines: {}".format(koponen_happines))
 
     elif command_list[0] == "kill":
         player_health = 0
     elif command_list[0] == "dstrms":
+        setTerms = "";
         try:
-            if command_list[1] == "true" or "false":
-                with open("settings/tc.agr", "w") as f:
-                    f.write(command_list[1])
+            if command_list[1] == "true" or "True" or "T" or "t":
+                setTerms = True
+            elif command_list[1] == "false" or "False" or "F" or "f":
+                setTerms = False
             else:
-                logging.info("Please provide a proper state for terms & conditions")
+                setTerms = "[Error]"
+                print("Please provide a proper state for terms & conditions")
         except Exception:
-            logging.exception(Exception)
+            if(setTerms != "[Error]"):
+                configParser.set("Data", "TermsAccepted", command_list[1])
+                with open("settings.cfg", "w") as cfgFile:
+                    configParser.write(cfgFile)
+                print("Terms and Conditions set as: " + command_list[1])
+                print(Exception)
 
 
 def agr(tcagr):
@@ -620,10 +644,10 @@ def agr(tcagr):
     def agree():
         logging.info("Terms and Conditions have been accepted.")
         logging.info("You said you will not get offended... Dick!")
-        with open("settings/tc.agr", "w") as f:
-            f.write("true")
-        with open("settings/tc.agr", "r") as f:
-            logging.debug("Terms Agreed. Updated Value: " + f.read())
+        configParser.set("Data", "TermsAccepted", True)
+        with open("settings.cfg", "w") as cfgFile:
+            configParser.write(cfgFile)
+        logging.debug("Terms Agreed. Updated Value: " + configParser.get("Data", "TermsAccepted"))
 
         return False
 
@@ -997,8 +1021,9 @@ def settings_menu():
                     position = 900
                 position -= 560
                 position = int(position/3.4)
-                with open("settings/volume.txt", 'w') as f:
-                    f.write(str(position))
+                configParser.set("Settings", "Volume", position)
+                with open("settings.cfg", "w") as cfgFile:
+                    configParser.write(cfgFile)
                 volume = position/100
                 pygame.mixer.music.set_volume(volume)
         else:
