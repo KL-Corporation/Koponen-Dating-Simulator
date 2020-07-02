@@ -36,8 +36,7 @@ class pygame_print_text:
     def skipRow(self):
         self.row += self.row_height
 
-print(os.getcwd)
-logFiles = os.listdir( "logs/" )
+logFiles = os.listdir("logs/")
 
 while len(logFiles) >= 5:
     logFiles = os.listdir("logs/")
