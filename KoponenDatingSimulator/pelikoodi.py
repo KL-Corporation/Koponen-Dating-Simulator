@@ -11,7 +11,10 @@ pygame.init()
 
 display_size = (1200, 800)
 screen_size = (600, 400)
-        
+
+main_display = pygame.display.set_mode(display_size)
+screen = pygame.Surface(screen_size)
+
 class pygame_print_text:
 
     def __init__(self, color, topleft, width, display):
@@ -91,8 +94,6 @@ now = datetime.now()
 logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log", level=logging.NOTSET)
 logging.info('Initialising Game...')
 
-main_display = pygame.display.set_mode(display_size)
-screen = pygame.Surface(screen_size)
 printer = pygame_print_text((7,8,10),(50,50),680,main_display)
 
 esc_menu_surface = pygame.Surface((500, 400))
