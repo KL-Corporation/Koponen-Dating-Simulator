@@ -69,7 +69,7 @@ class Animation:
             for _ in range(duration):
                 self.images.append(image)
 
-        print(self.images)
+        logging.debug(self.images)
                 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
@@ -106,8 +106,6 @@ alpha.set_alpha(170)
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
 main_menu_background = pygame.image.load("resources/main_menu/main_menu_bc.png")
-main_menu_gasburner1 = pygame.image.load("resources/main_menu/main_menu_bc_gasburner1.png")
-main_menu_gasburner2 = pygame.image.load("resources/main_menu/main_menu_bc_gasburner2.png")
 settings_background = pygame.image.load("resources/settings_bc.png")
 agr_background = pygame.image.load("resources/tcagr.png")
 path = "resources/ads/koponen_talk_bc0.png"
@@ -611,6 +609,7 @@ def move(rect, movement, tiles):
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
 gasburner_animation = load_animation("gasburner_on", 2)
+menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 2)
 knife_animation = load_animation("knife", 2)
 toilet_animation = load_animation("toilet_anim", 3)
 trashcan_animation = load_animation("trashcan", 3)
@@ -1168,7 +1167,8 @@ def main_menu():
                 if event.button == 1:
                     c = True
 
-        main_display.blit(main_menu_background,(0,0))
+        main_display.blit(main_menu_background, (0, 0))
+        screen.blit(pygame.transform.flip(menu_gasburner_animation.update(), direction, False), (100, 50))
 
         y = 0
 
