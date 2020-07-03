@@ -65,16 +65,17 @@ class Animation:
 
     """
 
-    def __init__(self, animation_name, number_of_images, duration):
+    def __init__(self, animation_name, number_of_images, duration, colorkey):
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
+        self.colorkey = colorkey
 
         for x in range(number_of_images):
             path = "resources/animations/" + animation_name + "_" + str(x) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
-            image.set_colorkey((255,255,255)) #Kaikki osat kuvasata joiden väri on RGB 255,255,255 muutetaan läpinäkyviksi
+            image.set_colorkey(self.colorkey) #Kaikki osat kuvasata joiden väri on RGB 255,255,255 muutetaan läpinäkyviksi
 
             for _ in range(duration):
                 self.images.append(image)
@@ -650,14 +651,14 @@ def move(rect, movement, tiles):
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
 gasburner_animation = load_animation("gasburner_on", 2)
-menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 2)
 knife_animation = load_animation("knife", 2)
 toilet_animation = load_animation("toilet_anim", 3)
 trashcan_animation = load_animation("trashcan", 3)
 koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
-
+menu_gasburner_animation = Animation("main_menu_bc_gasburner",2,2,(255,255,255))
+burning_tree = Animation("tree_burning", 4, 5,(0,0,0))
 #endregion
 
 #region Load Game
@@ -1226,7 +1227,6 @@ def main_menu():
 
         main_display.blit(main_menu_background, (0, 0))
         main_display.blit(pygame.transform.flip(menu_gasburner_animation.update(), direction, False), (100, 50))
-
         y = 0
 
         for button in buttons:
@@ -1407,7 +1407,7 @@ while main_running:
             if tile == 'o':
                 screen.blit(bricks, (x*34-scroll[0], y*34-scroll[1]))
             if tile =='A':
-                screen.blit(tree,(x*34-scroll[0],y*34-scroll[1]-50))
+                screen.blit(burning_tree.update(),(x*34-scroll[0],y*34-scroll[1]-50))
             if tile == 'p':
                 screen.blit(planks, (x*34-scroll[0], y*34-scroll[1]))
             x += 1
@@ -1427,7 +1427,7 @@ while main_running:
             else:
                 screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
         x += 1
-        
+
     item_collision_test(player_rect, item_rects)
 
     b = 0
