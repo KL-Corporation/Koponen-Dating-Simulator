@@ -51,8 +51,6 @@ class pygame_print_text:
 
 #region Animator
 
-#Päätin, että on IQ 1000 luoda oma luokka animaatioita varten
-
 class Animation:
 
     """
@@ -172,6 +170,7 @@ green_key = pygame.image.load("resources/items/green_key2.png").convert()
 blue_key = pygame.image.load("resources/items/blue_key.png").convert()
 coffeemug = pygame.image.load("resources/items/coffeemug.png").convert()
 ss_bonuscard = pygame.image.load("resources/items/ss_bonuscard.png").convert()
+lappi_sytytyspalat = pygame.image.load("resources/items/lappi_sytytyspalat.png").convert()
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
@@ -180,6 +179,7 @@ green_key.set_colorkey((255,255,255))
 blue_key.set_colorkey((255,255,255))
 coffeemug.set_colorkey((255,255,255))
 ss_bonuscard.set_colorkey((255,0,0))
+lappi_sytytyspalat.set_colorkey((255,255,255))
 
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
@@ -194,6 +194,7 @@ coffeemug_sound = pygame.mixer.Sound("audio/misc/coffeemug.wav")
 knife_pickup = pygame.mixer.Sound("audio/misc/knife.wav")
 key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
 
 #endregion Lataukset
 
@@ -422,6 +423,9 @@ def load_item_rects():
                 task_items.append("ss_bonuscard")
                 item_ids.append("ss_bonuscard")
                 append_rect()
+            if item == '7':
+                item_ids.append("lappi_sytytyspalat")
+                append_rect()
             x += 1
         y += 1
     return item_rects, item_ids, task_items
@@ -544,6 +548,7 @@ def item_collision_test(rect, items):
                         inventory.append("gasburner")
                         item_rects.remove(item)
                         del item_ids[b]
+
                 elif item_ids[b] == "knife":
                     if "knife" not in inventory:
                         player_score += 6
@@ -551,6 +556,7 @@ def item_collision_test(rect, items):
                         pygame.mixer.Sound.play(knife_pickup)
                         inventory.append("knife")
                         del item_ids[b]
+
                 elif item_ids[b] == "coffeemug":
                     if "coffeemug" not in inventory:
                         player_score += 5
@@ -558,13 +564,23 @@ def item_collision_test(rect, items):
                         inventory.append("coffeemug")
                         pygame.mixer.Sound.play(coffeemug_sound)
                         del item_ids[b]
+
                 elif item_ids[b] == "ss_bonuscard":
                     if "ss_bonuscard" not in inventory:
-                        player_score += 5
+                        player_score += 30
                         item_rects.remove(item)
                         inventory.append("ss_bonuscard")
                         pygame.mixer.Sound.play(ss_sound)
                         del item_ids[b]
+
+                elif item_ids[b] == "lappi_sytytyspalat":
+                    if "lappi_sytytyspalat" not in inventory:
+                        player_score += 40
+                        item_rects.remove(item)
+                        inventory.append("lappi_sytytyspalat")
+                        pygame.mixer.Sound.play(lappi_sytytyspalat_sound)
+                        del item_ids[b]
+
                 elif item_ids[b] == "red_key":
                     player_keys["red"] = True
                     item_rects.remove(item)
@@ -1366,8 +1382,6 @@ while main_running:
 #endregion
 
 #region More Collisions
-
-    item_collision_test(player_rect, item_rects)
     y = 0
     for layer in world_gen:
         x = 0
@@ -1413,7 +1427,8 @@ while main_running:
             else:
                 screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
         x += 1
-
+        
+    item_collision_test(player_rect, item_rects)
 
     b = 0
     for item in item_rects:
@@ -1431,6 +1446,8 @@ while main_running:
             screen.blit(coffeemug, (item.x-scroll[0], item.y-scroll[1]+14))
         if item_ids[b] == "ss_bonuscard":
             screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
+        if item_ids[b] == "lappi_sytytyspalat":
+            screen.blit(lappi_sytytyspalat, (item.x-scroll[0], item.y-scroll[1]+17))
         b += 1
 
 #endregion
@@ -1679,6 +1696,8 @@ while main_running:
                 screen.blit(coffeemug,(y*34+15,80))
             elif item == "ss_bonuscard":
                 screen.blit(ss_bonuscard,(y*34+15,80))
+            elif item == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,(y*34+15,80))
             y+=1
     if inventory_slot:
         pygame.draw.rect(screen,(70,70,70),((inventory_slot-1)*34+10,75, 34,34),4)

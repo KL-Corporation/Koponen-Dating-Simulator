@@ -30,3 +30,4 @@ items:
 4 = blue_key
 5 = coffeemug
 6 = ss_bonuscard
+7 = lappi_sytytyspalat
