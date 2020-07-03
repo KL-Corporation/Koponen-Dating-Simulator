@@ -8,7 +8,6 @@ import configparser
 from datetime import datetime
 from pygame.locals import *
 #endregion
-
 #region PyGame Initialisation
 
 pygame.init()
@@ -20,7 +19,6 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 
 #endregion
-
 #region Text Handling
 
 class pygame_print_text:
@@ -48,7 +46,6 @@ class pygame_print_text:
         self.row += self.row_height
 
 #endregion
-
 #region Animator
 
 class Animation:
@@ -93,7 +90,6 @@ class Animation:
         return self.images[self.tick]
 
 #endregion
-
 #region Initialisation
 
 logFiles = os.listdir("logs/")
@@ -278,12 +274,10 @@ taskTaivutettu = ""
 DebugMode = False
 
 #endregion
-
 #region Pickup Sound
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 #endregion
-
 #region Loading
 
 def load_map(path):
@@ -478,7 +472,6 @@ def load_animation(name, number_of_images):
     return animation_list
 
 #endregion
-
 #region Collisions
 
 def collision_test(rect, tiles):
@@ -621,8 +614,7 @@ def toilet_collisions(rect, burnstate):
                     burning_trashcans[o] = True
         o += 1
 
-#endregion
-        
+#endregion      
 #region Player
 def move(rect, movement, tiles):
     collision_types = {'top': False, 'bottom': False,
@@ -660,7 +652,6 @@ death_animation = load_animation("death", 5)
 menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255))
 burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0))
 #endregion
-
 #region Load Game
 
 world_gen = load_map("resources/game_map")
@@ -675,7 +666,6 @@ door_rects, doors_open, color_keys = load_doors()
 ad_images = load_ads()
 
 #endregion
-
 #region Console
 
 def console():
@@ -725,7 +715,6 @@ def console():
                 print(Exception)
 
 #endregion
-
 #region Terms and Conditions
 def agr(tcagr):
 
@@ -786,7 +775,6 @@ def agr(tcagr):
         c = False
 
 #endregion
-
 #region Koponen Talk
 
 def koponen_talk():
@@ -981,7 +969,6 @@ def koponen_talk():
     pygame.mouse.set_visible(False)
 
 #endregion
-
 #region Menus
 
 def esc_menu_f():
@@ -1253,18 +1240,15 @@ def main_menu():
         c = False
 
 #endregion
-
 #region Check Terms
 agr(tcagr)
 
 if tcagr != "false":
     main_menu()
 #endregion
-
 #region Koponen Talk Tip Text
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
 #endregion
-
 #region Item Initialisation
 
 logging.debug("Items Initialised: " + str(len(item_ids)))
@@ -1272,7 +1256,6 @@ for i_id in item_ids:
     logging.debug("Initialised Item: (ID)" + i_id)
 
 #endregion
-
 #region Events
 
 while main_running:
@@ -1350,7 +1333,6 @@ while main_running:
                 inventory_slot -= 1
 
 #endregion
-
 #region Inventory Code
 
     if inventory_slot > len(inventory)-1:
@@ -1371,7 +1353,6 @@ while main_running:
     mouse_pos = pygame.mouse.get_pos()
 
 #endregion
-
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
@@ -1380,7 +1361,6 @@ while main_running:
         player_death_sound.set_volume(0.5)
         animation_has_played = True
 #endregion
-
 #region More Collisions
     y = 0
     for layer in world_gen:
@@ -1451,7 +1431,6 @@ while main_running:
         b += 1
 
 #endregion
-
 #region PlayerMovement
 
     if playerSprinting == False and playerStamina < 100.0:
@@ -1483,7 +1462,6 @@ while main_running:
         vertical_momentum = 8
 
 #endregion
-
 #region Even More Collisions
 
     toilet_collisions(player_rect,gasburnerBurning)
@@ -1500,7 +1478,6 @@ while main_running:
     door_collision_test()
 
     #endregion
-
 #region UI
 
     score = score_font.render(("Score: " + str(player_score)), True, (255,255,255))
@@ -1510,7 +1487,6 @@ while main_running:
     stamina = score_font.render("Stamina: " + str(round(int(playerStamina))), True, (255,255,255))
 
 #endregion
-
 #region Even Even More Collisions
 
     if collisions['bottom'] == True:
@@ -1522,7 +1498,6 @@ while main_running:
         vertical_momentum = 0
 
 #endregion
-
 #region Player Data
 
     if player_health:
@@ -1550,14 +1525,12 @@ while main_running:
             animation = death_animation.copy()
             animation_duration = 10
 #endregion
-
 #region Koponen Movement
     if koponen_movement[0] != 0:
         koponen_animation = koponen_run.copy()
     else:
         koponen_animation = koponen_stand.copy()
 #endregion
-
 #region Items
     if animation_counter > animation_duration:
         animation_counter = 0
@@ -1634,7 +1607,6 @@ while main_running:
         screen.blit(blue_key, (38, 20))
 
 #endregion
-
 #region Koponen Tip
 
     if player_rect.colliderect(koponen_recog_rec):
@@ -1649,7 +1621,6 @@ while main_running:
     h = 0
 
 #endregion
-
 #region Interactable Objects
 
     for toilet in toilets:
@@ -1674,7 +1645,6 @@ while main_running:
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
 
 #endregion
-
 #region Debug Mode
 
     screen.blit(score, (10, 55))
@@ -1682,7 +1652,6 @@ while main_running:
         screen.blit(fps, (10, 10))
 
 #endregion
-
 #region Inventory Rendering
 
     y = 0
@@ -1707,12 +1676,10 @@ while main_running:
     screen.blit(stamina, (10, 130))
 
 #endregion
-
 #region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 #endregion
-
 #region Conditional Events
 
     if esc_menu:
@@ -1733,7 +1700,6 @@ while main_running:
     koponen_animation_stats[2] += 1
 
 #endregion
-
 #region Ticks
     tick += 1
     if tick > 60:
