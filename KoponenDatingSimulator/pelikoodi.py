@@ -657,8 +657,8 @@ trashcan_animation = load_animation("trashcan", 3)
 koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
-menu_gasburner_animation = Animation("main_menu_bc_gasburner",2,2,(255,255,255))
-burning_tree = Animation("tree_burning", 4, 5,(0,0,0))
+menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255))
+burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0))
 #endregion
 
 #region Load Game
@@ -1226,7 +1226,7 @@ def main_menu():
                     c = True
 
         main_display.blit(main_menu_background, (0, 0))
-        main_display.blit(pygame.transform.flip(menu_gasburner_animation.update(), direction, False), (100, 50))
+        main_display.blit(pygame.transform.flip(menu_gasburner_animation.update(), False, False), (625, 450))
         y = 0
 
         for button in buttons:
