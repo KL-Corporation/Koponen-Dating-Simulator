@@ -241,6 +241,7 @@ FunctionKey = False
 AltPressed = False
 F4Pressed = False
 esc_menu = False
+mouseLeftPressed = False
 
 go_to_main_menu = False
 
@@ -697,7 +698,7 @@ def console():
     elif command_list[0] == "kill":
         player_health = 0
     elif command_list[0] == "dstrms":
-        setTerms = "";
+        setTerms = ""
         try:
             if command_list[1] == "true" or "True" or "T" or "t":
                 setTerms = True
@@ -718,7 +719,7 @@ def console():
 #region Terms and Conditions
 def agr(tcagr):
 
-    if tcagr == "false":
+    if tcagr == False:
         tcagr_running = True
     else:
         tcagr_running = False
@@ -1104,22 +1105,28 @@ def settings_menu():
 
         music_slider.x = int(560 + (volume*100)*3.4-15)
 
+        dragSlider = True
+        if pygame.mouse.get_pressed()[0] == False:
+            dragSlider = False
+            
         if music_slider.collidepoint(pygame.mouse.get_pos()):
             slider_color = (115,115,115)
             if pygame.mouse.get_pressed()[0]:
-                slider_color = (90,90,90)
-                position = int(pygame.mouse.get_pos()[0])
-                if position < 560:
-                    position = 560
-                if position > 1000:
-                    position = 900
-                position -= 560
-                position = int(position/3.4)
-                configParser.set("Settings", "Volume", position)
-                with open("settings.cfg", "w") as cfgFile:
-                    configParser.write(cfgFile)
-                volume = position/100
-                pygame.mixer.music.set_volume(volume)
+                dragSlider = True
+        if dragSlider:
+            slider_color = (90,90,90)
+            position = int(pygame.mouse.get_pos()[0])
+            if position < 560:
+                position = 560
+            if position > 900:
+                position = 900
+            position -= 560
+            position = int(position/3.4)
+            configParser.set("Settings", "Volume", position)
+            with open("settings.cfg", "w") as cfgFile:
+                configParser.write(cfgFile)
+            volume = position/100
+            pygame.mixer.music.set_volume(volume)
         else:
             slider_color = (100,100,100)
 
@@ -1221,7 +1228,7 @@ def main_menu():
                 if c:
                     functions[y]()
                 button_color = (115,115,115)
-                if pygame.mouse.get_pressed()[0]:
+                if mouseLeftPressed:
                     button_color = (90,90,90)
             else:
                 button_color = (100,100,100)
@@ -1297,6 +1304,7 @@ while main_running:
                     pygame.QUIT()
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
+                mouseLeftPressed = True
                 if player_hand_item == "gasburner":
                     gasburnerBurning = True
                 if player_hand_item == "knife":
@@ -1323,6 +1331,7 @@ while main_running:
                     inventory.remove(inventory[inventory_slot])
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
+                mouseLeftPressed = False
                 if player_hand_item == "gasburner":
                     gasburnerBurning = False
                 if player_hand_item == "knife":
