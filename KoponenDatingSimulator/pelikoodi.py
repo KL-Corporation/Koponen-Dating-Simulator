@@ -32,8 +32,8 @@ class pygame_print_text:
 
         self.row = 0
         self.row_height = 30
-        
-    
+
+
     def print_text(self, text):
         self.screen_text = self.text_font.render(text, True, self.color)
         self.display_to_blit.blit(self.screen_text, (self.topleft[0], self.topleft[1]+self.row))
@@ -128,7 +128,7 @@ button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
 
 player_img = pygame.image.load("resources/player/stand0.png").convert()
 player_corpse = pygame.image.load("resources/player/corpse.png").convert()
-player_corpse.set_colorkey((255,255,255))
+player_corpse.set_colorkey((255, 255, 255))
 player_img.set_colorkey((255, 255, 255))
 
 floor1 = pygame.image.load("resources/build/floor0v2.png")
@@ -155,8 +155,8 @@ trashcan.set_colorkey((255,255,255))
 door_closed.set_colorkey((255,255,255))
 red_door_closed.set_colorkey((255,255,255))
 green_door_closed.set_colorkey((255,255,255))
-blue_door_closed.set_colorkey((255,255,255))
-tree.set_colorkey((0,0,0))
+blue_door_closed.set_colorkey((255, 255, 255))
+tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
 #gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
@@ -171,16 +171,16 @@ lappi_sytytyspalat = pygame.image.load("resources/items/lappi_sytytyspalat.png")
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
-red_key.set_colorkey((255,255,255))
-green_key.set_colorkey((255,255,255))
-blue_key.set_colorkey((255,255,255))
-coffeemug.set_colorkey((255,255,255))
-ss_bonuscard.set_colorkey((255,0,0))
-lappi_sytytyspalat.set_colorkey((255,255,255))
+red_key.set_colorkey((255, 255, 255))
+green_key.set_colorkey((255, 255, 255))
+blue_key.set_colorkey((255, 255, 255))
+coffeemug.set_colorkey((255, 255, 255))
+ss_bonuscard.set_colorkey((255, 0, 0))
+lappi_sytytyspalat.set_colorkey((255, 255, 255))
 
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
-text_icon.set_colorkey((255,255,255))
+text_icon.set_colorkey((255, 255, 255))
 
 gasburner_clip = pygame.mixer.Sound("audio/misc/gasburner_clip.wav")
 gasburner_fire = pygame.mixer.Sound("audio/misc/gasburner_fire.wav")
@@ -227,7 +227,7 @@ except:
     volume_data = 15
     with open("settings.cfg", "w") as cfgFile:
         configParser.write(cfgFile)
-logging.debug("Settings Loaded:\nTerms Accepted: " + str(tcagr) + "\nVolume: " + str(configParser))
+logging.debug("Settings Loaded:\n- Terms Accepted: " + str(bool(tcagr)) + "\n- Volume: " + str(configParser))
 
 volume = float(volume_data)/100
 gasburner_animation_stats = [0, 4, 0]
@@ -697,8 +697,8 @@ def console():
 
     elif command_list[0] == "kill":
         player_health = 0
-    elif command_list[0] == "dstrms":
-        setTerms = ""
+    elif command_list[0] == "terms":
+        setTerms = False
         try:
             if command_list[1] == "true" or "True" or "T" or "t":
                 setTerms = True
@@ -706,14 +706,15 @@ def console():
                 setTerms = False
             else:
                 setTerms = "[Error]"
-                print("Please provide a proper state for terms & conditions")
         except Exception:
-            if(setTerms != "[Error]"):
-                configParser.set("Data", "TermsAccepted", command_list[1])
-                with open("settings.cfg", "w") as cfgFile:
-                    configParser.write(cfgFile)
-                print("Terms and Conditions set as: " + command_list[1])
-                print(Exception)
+                print("Encountered an error while processing your command.\nError:" + Exception)
+        if setTerms != "[Error]":
+            configParser.set("Data", "TermsAccepted", setTerms)
+            with open("settings.cfg", "w") as cfgFile:
+                configParser.write(cfgFile)
+            print("Terms and Conditions set as: " + str(setTerms))
+        else:
+            print("Please provide a proper state for terms & conditions")
 
 #endregion
 #region Terms and Conditions
@@ -1255,7 +1256,7 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 
-if tcagr != "false":
+if tcagr != False:
     main_menu()
 #endregion
 #region Koponen Talk Tip Text
