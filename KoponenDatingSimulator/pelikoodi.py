@@ -62,12 +62,16 @@ class Animation:
 
     """
 
-    def __init__(self, animation_name, number_of_images, duration, colorkey):
+    def __init__(self, animation_name, number_of_images, duration, colorkey, loops): #loops = -1, if infinite loops
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
         self.colorkey = colorkey
+        self.loops = loops
+        if loops != -1:
+            self.loops_count = 0
+            self.done = False
 
         for x in range(number_of_images):
             path = "resources/animations/" + animation_name + "_" + str(x) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
@@ -86,8 +90,15 @@ class Animation:
         self.tick += 1
         if self.tick > self.ticks:
             self.tick = 0
+            if self.loops != -1:
+                self.loops_count += 1
+                if self.loops_count == self.loops:
+                    self.done = True
 
-        return self.images[self.tick]
+        if self.loops == -1:
+            return self.images[self.tick]
+        else:
+            return self.images[self.tick], self.done
 
 #endregion
 #region Initialisation
@@ -149,6 +160,7 @@ bricks = pygame.image.load("resources/build/bricks.png")
 tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
 jokebox_texture = pygame.image.load("resources/build/jokebox.png")
+landmine_texture = pygame.image.load("resources/build/landmine.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -158,6 +170,7 @@ red_door_closed.set_colorkey((255,255,255))
 green_door_closed.set_colorkey((255,255,255))
 blue_door_closed.set_colorkey((255,255,255))
 jokebox_texture.set_colorkey((255,255,255))
+landmine_texture.set_colorkey((255,255,255))
 tree.set_colorkey((0,0,0))
 
 gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
@@ -194,6 +207,7 @@ knife_pickup = pygame.mixer.Sound("audio/misc/knife.wav")
 key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
 lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
+landmine_explosion = pygame.mixer.Sound("audio/misc/landmine.wav")
 
 
 #endregion Lataukset
@@ -238,6 +252,7 @@ gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
 toilet_animation_stats = [0,5,0]
 koponen_animation_stats = [0,7,0]
+explosion_positions = []
 player_hand_item = "none"
 player_keys = {"red":False,"green":False,"blue":False}
 jokebox_tip = tip_font.render("Use jokebox [E]", True, (255,255,255))
@@ -367,6 +382,7 @@ def load_rects():
     burning_toilets = []
     burning_trashcans = []
     jokeboxes = []
+    landmines = []
     w = [0,0]
     y = 0
     for layer in world_gen:
@@ -397,12 +413,14 @@ def load_rects():
                     pass
                 elif tile == 'B':
                     jokeboxes.append(pygame.Rect(x*34,y*34-26,42,60))
+                elif tile == 'C':
+                    landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines
 
 
 def load_item_rects():
@@ -669,15 +687,16 @@ trashcan_animation = load_animation("trashcan", 3)
 koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
-menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255))
-burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0))
+menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255),-1)
+burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0),-1)
+explosion_animation = Animation("explosion", 7,5,(255,255,255),1)
 #endregion
 #region Load Game
 
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines = load_rects()
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -1457,7 +1476,22 @@ while main_running:
                 jokebox_music[x].stop()
 
             pygame.mixer.music.unpause()
+    for landmine in landmines:
+        screen.blit(landmine_texture,(landmine.x-scroll[0],landmine.y-scroll[1]))
+        if player_rect.colliderect(landmine):
+            landmines.remove(landmine)
+            landmine_explosion.play()
+            player_health -= 60
+            if player_health < 0:
+                player_health = 0
+            explosion_positions.append((landmine.x-40,landmine.y-58))
 
+    for explosion in explosion_positions:
+        explosion_image, done_state = explosion_animation.update()
+        if not done_state:
+            screen.blit(explosion_image,(explosion[0]-scroll[0],explosion[1]-scroll[1]))
+        else:
+            explosion_positions.remove(explosion)
 
     item_collision_test(player_rect, item_rects)
 
@@ -1725,7 +1759,6 @@ while main_running:
         pygame.draw.rect(screen,(70,70,70),((len(inventory)-1)*34+10,75, 34,34),4)
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
-
 #endregion
 #region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
