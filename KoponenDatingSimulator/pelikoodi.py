@@ -779,10 +779,14 @@ def agr(tcagr):
 #region Koponen Talk
 
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items
+    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting
 
     koponenTalking = True
     pygame.mouse.set_visible(True)
+
+    playerMovingLeft = False
+    playerMovingRight = False
+    playerSprinting = False
 
     c = False
 
