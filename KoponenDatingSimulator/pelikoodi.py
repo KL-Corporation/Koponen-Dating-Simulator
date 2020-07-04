@@ -1083,6 +1083,8 @@ def settings_menu():
     texts.append(return_text)
     functions.append(return_def)
 
+    dragSlider = False
+
     while settings_running:
 
         volume_text = button_font1.render("Music Volume", True, (255,255,255))
@@ -1105,7 +1107,6 @@ def settings_menu():
 
         music_slider.x = int(560 + (volume*100)*3.4-15)
 
-        dragSlider = True
         if pygame.mouse.get_pressed()[0] == False:
             dragSlider = False
             
