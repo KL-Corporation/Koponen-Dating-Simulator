@@ -195,12 +195,16 @@ key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
 lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
 
+jokebox_music = pygame.mixer.Sound("audio/jokebox_music/jokebox_music_0.wav")
+jokebox_music.set_volume(0.3)
+
 #endregion Lataukset
 
 main_running = True
 playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
+jokeboxMusicPlaying = False
 playerStamina = 100.0
 gasburnerBurning = False
 tick = 0
@@ -1433,7 +1437,14 @@ while main_running:
         if player_rect.colliderect(jokebox):
             screen.blit(jokebox_tip,(jokebox.x-scroll[0]-20, jokebox.y-scroll[1]-30))
             if FunctionKey:
-                print("Let's play some music!")
+                pygame.mixer.music.pause()
+                jokebox_music.stop()
+                jokebox_music.play()
+        else:
+            jokebox_music.stop()
+
+            pygame.mixer.music.unpause()
+
 
     item_collision_test(player_rect, item_rects)
 
