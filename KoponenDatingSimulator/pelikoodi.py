@@ -148,6 +148,7 @@ door_open = pygame.image.load("resources/build/door_open2.png")
 bricks = pygame.image.load("resources/build/bricks.png")
 tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
+jokebox_texture = pygame.image.load("resources/build/jokebox.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -156,6 +157,7 @@ door_closed.set_colorkey((255,255,255))
 red_door_closed.set_colorkey((255,255,255))
 green_door_closed.set_colorkey((255,255,255))
 blue_door_closed.set_colorkey((255,255,255))
+jokebox_texture.set_colorkey((255,255,255))
 tree.set_colorkey((0,0,0))
 
 gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
@@ -236,6 +238,7 @@ toilet_animation_stats = [0,5,0]
 koponen_animation_stats = [0,7,0]
 player_hand_item = "none"
 player_keys = {"red":False,"green":False,"blue":False}
+jokebox_tip = tip_font.render("Use jokebox [E]", True, (255,255,255))
 direction = True
 FunctionKey = False
 AltPressed = False
@@ -350,6 +353,7 @@ def load_rects():
     trashcans = []
     burning_toilets = []
     burning_trashcans = []
+    jokeboxes = []
     w = [0,0]
     y = 0
     for layer in world_gen:
@@ -378,12 +382,14 @@ def load_rects():
                     pass
                 elif tile == 'A':
                     pass
+                elif tile == 'B':
+                    jokeboxes.append(pygame.Rect(x*34,y*34-26,42,60))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes
 
 
 def load_item_rects():
@@ -658,7 +664,7 @@ burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0))
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes = load_rects()
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -1421,6 +1427,13 @@ while main_running:
             else:
                 screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
         x += 1
+
+    for jokebox in jokeboxes:
+        screen.blit(jokebox_texture,(jokebox.x-scroll[0],jokebox.y-scroll[1]))
+        if player_rect.colliderect(jokebox):
+            screen.blit(jokebox_tip,(jokebox.x-scroll[0]-20, jokebox.y-scroll[1]-30))
+            if FunctionKey:
+                print("Let's play some music!")
 
     item_collision_test(player_rect, item_rects)
 
