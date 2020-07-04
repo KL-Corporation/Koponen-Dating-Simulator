@@ -195,8 +195,6 @@ key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
 lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
 
-jokebox_music = pygame.mixer.Sound("audio/jokebox_music/jokebox_music_0.wav")
-jokebox_music.set_volume(0.3)
 
 #endregion Lataukset
 
@@ -204,7 +202,7 @@ main_running = True
 playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
-jokeboxMusicPlaying = False
+jokeboxMusicPlaying = 0
 playerStamina = 100.0
 gasburnerBurning = False
 tick = 0
@@ -306,6 +304,17 @@ def load_items(path):
     for row in data:
         item_map.append(list(row))
     return item_map
+
+def load_jokebox_music():
+    musikerna = os.listdir("audio/jokebox_music/")
+    musics = []
+
+    for musiken in musikerna:
+        musics.append(pygame.mixer.Sound("audio/jokebox_music/" + musiken))
+
+    random.shuffle(musics)
+
+    return musics
 
 def load_music():
     original_path = os.getcwd()
@@ -1265,6 +1274,8 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 
+jokebox_music = load_jokebox_music()
+
 if tcagr != "false":
     main_menu()
 #endregion
@@ -1438,10 +1449,12 @@ while main_running:
             screen.blit(jokebox_tip,(jokebox.x-scroll[0]-20, jokebox.y-scroll[1]-30))
             if FunctionKey:
                 pygame.mixer.music.pause()
-                jokebox_music.stop()
-                jokebox_music.play()
+                jokebox_music[jokeboxMusicPlaying].stop()
+                jokeboxMusicPlaying = int(random.uniform(0, len(jokebox_music)))
+                jokebox_music[jokeboxMusicPlaying].play()
         else:
-            jokebox_music.stop()
+            for x in range(len(jokebox_music)):
+                jokebox_music[x].stop()
 
             pygame.mixer.music.unpause()
 
