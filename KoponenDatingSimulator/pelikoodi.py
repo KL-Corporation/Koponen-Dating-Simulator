@@ -150,7 +150,7 @@ alpha = pygame.Surface(screen_size)
 alpha.fill((0,0,0))
 alpha.set_alpha(170)
 
-#region Lataukset
+#region Downloads
 
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
@@ -194,14 +194,14 @@ landmine_texture = pygame.image.load("resources/build/landmine.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
-trashcan.set_colorkey((255,255,255))
-door_closed.set_colorkey((255,255,255))
-red_door_closed.set_colorkey((255,255,255))
-green_door_closed.set_colorkey((255,255,255))
-blue_door_closed.set_colorkey((255,255,255))
-jokebox_texture.set_colorkey((255,255,255))
-landmine_texture.set_colorkey((255,255,255))
-tree.set_colorkey((0,0,0))
+trashcan.set_colorkey((255, 255, 255))
+door_closed.set_colorkey((255, 255, 255))
+red_door_closed.set_colorkey((255, 255, 255))
+green_door_closed.set_colorkey((255, 255, 255))
+blue_door_closed.set_colorkey((255, 255, 255))
+jokebox_texture.set_colorkey((255, 255, 255))
+landmine_texture.set_colorkey((255, 255, 255))
+tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
 #gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
@@ -1459,8 +1459,8 @@ while main_running:
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
 
-    true_scroll[0] += (player_rect.x-true_scroll[0]-285)/12
-    true_scroll[1] += (player_rect.y-true_scroll[1]-220)/12
+    true_scroll[0] += (player_rect.x - true_scroll[0] - 285) / 12
+    true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
@@ -1853,25 +1853,39 @@ while main_running:
 
 #endregion
 #region Inventory Rendering
-
+    doubleWidth = []
     y = 0
     for item in inventory:
         if item != "none":
             if item == "gasburner":
-                screen.blit(gasburner_off,(y*34+15,80))
+                screen.blit(gasburner_off,(y * 34 + 15, 80))
+                doubleWidth.append(False)
             elif item == "knife":
-                screen.blit(knife,(y*34+15,80))
+                screen.blit(knife,(y * 34 + 15, 80))
+                doubleWidth.append(False)
             elif item == "coffeemug":
-                screen.blit(coffeemug,(y*34+15,80))
+                screen.blit(coffeemug,(y * 34 + 15, 80))
+                doubleWidth.append(False)
             elif item == "ss_bonuscard":
-                screen.blit(ss_bonuscard,(y*34+15,80))
+                screen.blit(ss_bonuscard,(y * 34 + 15, 80))
+                doubleWidth.append(False)
             elif item == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,(y*34+15,80))
-            y+=1
+                screen.blit(lappi_sytytyspalat,(y * 34 + 15, 80))
+                doubleWidth.append(False)
+            elif item == "plasmarifle":
+                screen.blit(plasmarifle, (y * 34 + 15, 80))
+                doubleWidth.append(True)
+                y += 1
+            y += 1
+    doubleWidthAdd = 0;
+    for double in doubleWidth:
+        if double:
+            doubleWidthAdd += 1
+
     if inventory_slot:
-        pygame.draw.rect(screen,(70,70,70),((inventory_slot-1)*34+10,75, 34,34),4)
+        pygame.draw.rect(screen,(70, 70, 70),((inventory_slot - 1) * 34 + 10, 75, 34, 34), 4)
     else:
-        pygame.draw.rect(screen,(70,70,70),((len(inventory)-1)*34+10,75, 34,34),4)
+        pygame.draw.rect(screen,(70, 70, 70),((len(inventory) - 1 + doubleWidthAdd) * 34 + 10, 75, 34, 34), 4)
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
 #endregion
