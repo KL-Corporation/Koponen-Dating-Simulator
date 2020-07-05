@@ -32,3 +32,4 @@ items:
 5 = coffeemug
 6 = ss_bonuscard
 7 = lappi_sytytyspalat
+8 = plasmarifle
