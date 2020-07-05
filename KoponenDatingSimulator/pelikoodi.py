@@ -218,14 +218,6 @@ plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
-<<<<<<< HEAD
-red_key.set_colorkey((255, 255, 255))
-green_key.set_colorkey((255, 255, 255))
-blue_key.set_colorkey((255, 255, 255))
-coffeemug.set_colorkey((255, 255, 255))
-ss_bonuscard.set_colorkey((255, 0, 0))
-lappi_sytytyspalat.set_colorkey((255, 255, 255))
-=======
 red_key.set_colorkey((255,255,255))
 green_key.set_colorkey((255,255,255))
 blue_key.set_colorkey((255,255,255))
@@ -234,7 +226,6 @@ ss_bonuscard.set_colorkey((255,0,0))
 lappi_sytytyspalat.set_colorkey((255,255,255))
 plasmarifle.set_colorkey((255,255,255))
 plasma_ammo.set_colorkey((255,255,255))
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
@@ -435,11 +426,8 @@ def load_rects():
     trashcans = []
     burning_toilets = []
     burning_trashcans = []
-<<<<<<< HEAD
-=======
     jokeboxes = []
     landmines = []
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
     w = [0,0]
     y = 0
     for layer in world_gen:
@@ -468,23 +456,16 @@ def load_rects():
                     pass
                 elif tile == 'A':
                     pass
-<<<<<<< HEAD
-=======
                 elif tile == 'B':
                     jokeboxes.append(pygame.Rect(x*34,y*34-26,42,60))
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
             x += 1
         y += 1
-<<<<<<< HEAD
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
-=======
     return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 
 
 def load_item_rects():
@@ -771,11 +752,7 @@ plasmarifle_animation = Animation("plasmarifle_firing",2,3,(255,255,255),-1)
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
-<<<<<<< HEAD
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
-=======
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines = load_rects()
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -1373,13 +1350,9 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 
-<<<<<<< HEAD
-if tcagr != False:
-=======
 jokebox_music = load_jokebox_music()
 
 if tcagr != "false":
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
     main_menu()
 #endregion
 #region Koponen Talk Tip Text
@@ -1550,8 +1523,6 @@ while main_running:
                 screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
         x += 1
 
-<<<<<<< HEAD
-=======
     for jokebox in jokeboxes:
         screen.blit(jokebox_texture,(jokebox.x-scroll[0],jokebox.y-scroll[1]))
         if player_rect.colliderect(jokebox):
@@ -1608,7 +1579,6 @@ while main_running:
             explosion_positions.remove(explosion)
             explosion_animation.reset()
 
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
     item_collision_test(player_rect, item_rects)
 
     b = 0
