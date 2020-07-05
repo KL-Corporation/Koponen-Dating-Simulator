@@ -1,3 +1,5 @@
+#Use Ctrl + K + 0 to fold all regions and Ctrl + K + J to unfold all regions
+
 #region Importing
 import pygame
 import os
@@ -14,6 +16,8 @@ pygame.init()
 
 display_size = (1200, 800)
 screen_size = (600, 400)
+
+pygame.mouse.set_cursor(*pygame.cursors.tri_left)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
@@ -143,11 +147,11 @@ now = datetime.now()
 logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log", level=logging.NOTSET)
 logging.info('Initialising Game...')
 
-printer = pygame_print_text((7,8,10),(50,50),680,main_display)
+printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
 
 esc_menu_surface = pygame.Surface((500, 400))
 alpha = pygame.Surface(screen_size)
-alpha.fill((0,0,0))
+alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
 
 #region Downloads
@@ -325,6 +329,7 @@ global player_score
 player_score = 0
 true_scroll = [0, 0]
 inventory_slot = 0
+doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
 player_rect = pygame.Rect(100, 100, 33, 65)
@@ -1368,7 +1373,6 @@ for i_id in item_ids:
 #region Events
 
 while main_running:
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             main_running = False
@@ -1443,18 +1447,17 @@ while main_running:
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = False
             if event.button == 4:
-                inventory_slot += 1
-            if event.button == 5:
                 inventory_slot -= 1
+            if event.button == 5:
+                inventory_slot += 1
 
 #endregion
 #region Inventory Code
-
-    if inventory_slot > len(inventory)-1:
+    if inventory_slot > len(inventory) - 1:
         inventory_slot = 0
 
     if inventory_slot < 0:
-        inventory_slot = len(inventory)-1
+        inventory_slot = len(inventory) - 1
 
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
@@ -1854,38 +1857,46 @@ while main_running:
 #endregion
 #region Inventory Rendering
     doubleWidth = []
-    y = 0
+    y = 1
     for item in inventory:
         if item != "none":
             if item == "gasburner":
-                screen.blit(gasburner_off,(y * 34 + 15, 80))
+                screen.blit(gasburner_off,((y * 34) + 10 + (gasburner_off.get_width() / 4), 80))
                 doubleWidth.append(False)
             elif item == "knife":
-                screen.blit(knife,(y * 34 + 15, 80))
+                screen.blit(knife,((y * 34) + 10 + (knife.get_width() / 4), 80))
                 doubleWidth.append(False)
             elif item == "coffeemug":
-                screen.blit(coffeemug,(y * 34 + 15, 80))
+                screen.blit(coffeemug,((y * 34) + 10 + (coffeemug.get_width() / 4), 80))
                 doubleWidth.append(False)
             elif item == "ss_bonuscard":
-                screen.blit(ss_bonuscard,(y * 34 + 15, 80))
+                screen.blit(ss_bonuscard,((y * 34) + 10 + (ss_bonuscard.get_width() / 4), 80))
                 doubleWidth.append(False)
             elif item == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,(y * 34 + 15, 80))
+                screen.blit(lappi_sytytyspalat,((y * 34) + 10 + (lappi_sytytyspalat.get_width() / 4), 80))
                 doubleWidth.append(False)
             elif item == "plasmarifle":
-                screen.blit(plasmarifle, (y * 34 + 15, 80))
+                screen.blit(plasmarifle, ((y * 34) + 10 + (plasmarifle.get_width() / 4), 80))
                 doubleWidth.append(True)
                 y += 1
             y += 1
-    doubleWidthAdd = 0;
+
     for double in doubleWidth:
         if double:
             doubleWidthAdd += 1
 
     if inventory_slot:
-        pygame.draw.rect(screen,(70, 70, 70),((inventory_slot - 1) * 34 + 10, 75, 34, 34), 4)
+        if doubleWidth[inventory_slot - 1] == True:
+            scaledSlotWidth = 34 * 2
+        else:
+            scaledSlotWidth = 34
+        doubleOffset = 0
+        for i in range(0, inventory_slot - 1):
+            if doubleWidth[i] == True:
+                doubleOffset += 1
+        pygame.draw.rect(screen, (70, 70, 70), (((inventory_slot + doubleOffset) * 34) + 10, 75, scaledSlotWidth, 34), 3)
     else:
-        pygame.draw.rect(screen,(70, 70, 70),((len(inventory) - 1 + doubleWidthAdd) * 34 + 10, 75, 34, 34), 4)
+        pygame.draw.rect(screen, (70, 70, 70), (10, 75, 34, 34), 3)
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
 #endregion
