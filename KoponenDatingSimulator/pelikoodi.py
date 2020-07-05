@@ -62,12 +62,16 @@ class Animation:
 
     """
 
-    def __init__(self, animation_name, number_of_images, duration, colorkey):
+    def __init__(self, animation_name, number_of_images, duration, colorkey, loops): #loops = -1, if infinite loops
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
         self.colorkey = colorkey
+        self.loops = loops
+        if loops != -1:
+            self.loops_count = 0
+            self.done = False
 
         for x in range(number_of_images):
             path = "resources/animations/" + animation_name + "_" + str(x) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
@@ -86,8 +90,45 @@ class Animation:
         self.tick += 1
         if self.tick > self.ticks:
             self.tick = 0
+            if self.loops != -1:
+                self.loops_count += 1
+                if self.loops_count == self.loops:
+                    self.done = True
 
-        return self.images[self.tick]
+        if self.loops == -1:
+            return self.images[self.tick]
+        else:
+            return self.images[self.tick], self.done
+
+    def reset(self):
+        self.tick = 0
+        self.loops_count = 0
+        self.done = False
+
+class plasma_bullet:
+
+    def __init__(self, starting_position, direction, display_to_blit):
+        self.done = False
+        self.direction = direction
+        self.display = display_to_blit
+        self.rect = pygame.Rect(starting_position[0],starting_position[1], 2,2)
+
+    def update(self, tile_rects):
+        if self.direction:
+            self.rect.centerx += 14
+        else:
+            self.rect.centerx -= 14
+
+        for tile in tile_rects:
+            if self.rect.colliderect(tile):
+                self.done = True
+                
+        self.display.blit(plasma_ammo, (self.rect.x-scroll[0],self.rect.y-scroll[1]))
+
+        return self.done
+        
+
+        
 
 #endregion
 #region Initialisation
@@ -148,6 +189,11 @@ door_open = pygame.image.load("resources/build/door_open2.png")
 bricks = pygame.image.load("resources/build/bricks.png")
 tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
+<<<<<<< HEAD
+=======
+jokebox_texture = pygame.image.load("resources/build/jokebox.png")
+landmine_texture = pygame.image.load("resources/build/landmine.png")
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -155,8 +201,15 @@ trashcan.set_colorkey((255,255,255))
 door_closed.set_colorkey((255,255,255))
 red_door_closed.set_colorkey((255,255,255))
 green_door_closed.set_colorkey((255,255,255))
+<<<<<<< HEAD
 blue_door_closed.set_colorkey((255, 255, 255))
 tree.set_colorkey((0, 0, 0))
+=======
+blue_door_closed.set_colorkey((255,255,255))
+jokebox_texture.set_colorkey((255,255,255))
+landmine_texture.set_colorkey((255,255,255))
+tree.set_colorkey((0,0,0))
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 
 gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
 #gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
@@ -168,15 +221,28 @@ blue_key = pygame.image.load("resources/items/blue_key.png").convert()
 coffeemug = pygame.image.load("resources/items/coffeemug.png").convert()
 ss_bonuscard = pygame.image.load("resources/items/ss_bonuscard.png").convert()
 lappi_sytytyspalat = pygame.image.load("resources/items/lappi_sytytyspalat.png").convert()
+plasmarifle = pygame.image.load("resources/items/plasmarifle.png").convert()
+plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
+<<<<<<< HEAD
 red_key.set_colorkey((255, 255, 255))
 green_key.set_colorkey((255, 255, 255))
 blue_key.set_colorkey((255, 255, 255))
 coffeemug.set_colorkey((255, 255, 255))
 ss_bonuscard.set_colorkey((255, 0, 0))
 lappi_sytytyspalat.set_colorkey((255, 255, 255))
+=======
+red_key.set_colorkey((255,255,255))
+green_key.set_colorkey((255,255,255))
+blue_key.set_colorkey((255,255,255))
+coffeemug.set_colorkey((255,255,255))
+ss_bonuscard.set_colorkey((255,0,0))
+lappi_sytytyspalat.set_colorkey((255,255,255))
+plasmarifle.set_colorkey((255,255,255))
+plasma_ammo.set_colorkey((255,255,255))
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
@@ -192,6 +258,16 @@ knife_pickup = pygame.mixer.Sound("audio/misc/knife.wav")
 key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
 lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
+landmine_explosion = pygame.mixer.Sound("audio/misc/landmine.wav")
+hurt_sound = pygame.mixer.Sound("audio/misc/dsplpain.wav")
+plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
+weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
+
+plasmarifle_f_sound.set_volume(0.3)
+
+
+hurt_sound.set_volume(0.6)
+
 
 #endregion Lataukset
 
@@ -199,8 +275,11 @@ main_running = True
 playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
+plasmarifle_fire = False
+jokeboxMusicPlaying = 0
 playerStamina = 100.0
 gasburnerBurning = False
+plasmabullets = []
 tick = 0
 knifeInUse = False
 currently_on_mission = False
@@ -234,6 +313,8 @@ gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
 toilet_animation_stats = [0,5,0]
 koponen_animation_stats = [0,7,0]
+explosion_positions = []
+plasmarifle_cooldown = 0
 player_hand_item = "none"
 player_keys = {"red":False,"green":False,"blue":False}
 direction = True
@@ -253,6 +334,7 @@ animation_duration = 0
 animation_image = 0
 air_timer = 0
 player_health = 100
+last_player_health = 100
 player_death_event = False
 animation_has_played = False
 inventory = ["none"]
@@ -299,6 +381,17 @@ def load_items(path):
     for row in data:
         item_map.append(list(row))
     return item_map
+
+def load_jokebox_music():
+    musikerna = os.listdir("audio/jokebox_music/")
+    musics = []
+
+    for musiken in musikerna:
+        musics.append(pygame.mixer.Sound("audio/jokebox_music/" + musiken))
+
+    random.shuffle(musics)
+
+    return musics
 
 def load_music():
     original_path = os.getcwd()
@@ -350,6 +443,11 @@ def load_rects():
     trashcans = []
     burning_toilets = []
     burning_trashcans = []
+<<<<<<< HEAD
+=======
+    jokeboxes = []
+    landmines = []
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
     w = [0,0]
     y = 0
     for layer in world_gen:
@@ -378,12 +476,23 @@ def load_rects():
                     pass
                 elif tile == 'A':
                     pass
+<<<<<<< HEAD
+=======
+                elif tile == 'B':
+                    jokeboxes.append(pygame.Rect(x*34,y*34-26,42,60))
+                elif tile == 'C':
+                    landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
             x += 1
         y += 1
+<<<<<<< HEAD
     return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
+=======
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 
 
 def load_item_rects():
@@ -421,6 +530,9 @@ def load_item_rects():
                 append_rect()
             if item == '7':
                 item_ids.append("lappi_sytytyspalat")
+                append_rect()
+            if item == '8':
+                item_ids.append("plasmarifle")
                 append_rect()
             x += 1
         y += 1
@@ -575,6 +687,13 @@ def item_collision_test(rect, items):
                         inventory.append("lappi_sytytyspalat")
                         pygame.mixer.Sound.play(lappi_sytytyspalat_sound)
                         del item_ids[b]
+                elif item_ids[b] == "plasmarifle":
+                    if "plasmarifle" not in inventory:
+                        player_score += 20
+                        item_rects.remove(item)
+                        inventory.append("plasmarifle")
+                        pygame.mixer.Sound.play(weapon_pickup)
+                        del item_ids[b]
 
                 elif item_ids[b] == "red_key":
                     player_keys["red"] = True
@@ -650,15 +769,21 @@ trashcan_animation = load_animation("trashcan", 3)
 koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
-menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255))
-burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0))
+menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255),-1)
+burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0),-1)
+explosion_animation = Animation("explosion", 7,5,(255,255,255),1)
+plasmarifle_animation = Animation("plasmarifle_firing",2,3,(255,255,255),-1)
 #endregion
 #region Load Game
 
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
+<<<<<<< HEAD
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
+=======
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines = load_rects()
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -1256,7 +1381,13 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 
+<<<<<<< HEAD
 if tcagr != False:
+=======
+jokebox_music = load_jokebox_music()
+
+if tcagr != "false":
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
     main_menu()
 #endregion
 #region Koponen Talk Tip Text
@@ -1315,6 +1446,8 @@ while main_running:
                     gasburnerBurning = True
                 if player_hand_item == "knife":
                     knifeInUse = True
+                if player_hand_item == "plasmarifle":
+                    plasmarifle_fire = True
         if event.type == KEYUP:
             if event.key == K_d:
                 playerMovingRight = False
@@ -1342,6 +1475,8 @@ while main_running:
                     gasburnerBurning = False
                 if player_hand_item == "knife":
                     knifeInUse = False
+                if player_hand_item == "plasmarifle":
+                    plasmarifle_fire = False
             if event.button == 4:
                 inventory_slot += 1
             if event.button == 5:
@@ -1402,7 +1537,7 @@ while main_running:
             if tile == 'o':
                 screen.blit(bricks, (x*34-scroll[0], y*34-scroll[1]))
             if tile =='A':
-                screen.blit(burning_tree.update(),(x*34-scroll[0],y*34-scroll[1]-50))
+                screen.blit(tree,(x*34-scroll[0],y*34-scroll[1]-50))
             if tile == 'p':
                 screen.blit(planks, (x*34-scroll[0], y*34-scroll[1]))
             x += 1
@@ -1423,6 +1558,65 @@ while main_running:
                 screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
         x += 1
 
+<<<<<<< HEAD
+=======
+    for jokebox in jokeboxes:
+        screen.blit(jokebox_texture,(jokebox.x-scroll[0],jokebox.y-scroll[1]))
+        if player_rect.colliderect(jokebox):
+            screen.blit(jokebox_tip,(jokebox.x-scroll[0]-20, jokebox.y-scroll[1]-30))
+            if FunctionKey:
+                pygame.mixer.music.pause()
+                jokebox_music[jokeboxMusicPlaying].stop()
+                jokeboxMusicPlaying = int(random.uniform(0, len(jokebox_music)))
+                jokebox_music[jokeboxMusicPlaying].play()
+        else:
+            for x in range(len(jokebox_music)):
+                jokebox_music[x].stop()
+
+            pygame.mixer.music.unpause()
+
+    for landmine in landmines:
+        screen.blit(landmine_texture,(landmine.x-scroll[0],landmine.y-scroll[1]))
+        if player_rect.colliderect(landmine):
+            landmines.remove(landmine)
+            landmine_explosion.play()
+            player_health -= 60
+            if player_health < 0:
+                player_health = 0
+            explosion_positions.append((landmine.x-40,landmine.y-58))
+
+    if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
+        if plasmarifle_cooldown > 4:
+            plasmarifle_cooldown = 0
+
+            if direction:
+                j_direction = False
+            else:
+                j_direction = True
+            if j_direction:
+                plasmabullets.append(plasma_bullet((player_rect.x+50,player_rect.y+17),j_direction,screen))
+            else:
+                plasmabullets.append(plasma_bullet((player_rect.x-50,player_rect.y+17),j_direction,screen))
+
+            plasmarifle_f_sound.play()
+
+    for bullet in plasmabullets:
+        state = bullet.update(tile_rects)
+        if state:
+            plasmabullets.remove(bullet)
+
+    if len(plasmabullets) > 50:
+        plasmabullets.remove(plasmabullets[0])
+
+    for explosion in explosion_positions:
+        explosion_image, done_state = explosion_animation.update()
+        if not done_state:
+            screen.blit(explosion_image,(explosion[0]-scroll[0],explosion[1]-scroll[1]))
+        else:
+            explosion_positions.remove(explosion)
+            explosion_animation.reset()
+
+>>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
     item_collision_test(player_rect, item_rects)
 
     b = 0
@@ -1443,6 +1637,8 @@ while main_running:
             screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
         if item_ids[b] == "lappi_sytytyspalat":
             screen.blit(lappi_sytytyspalat, (item.x-scroll[0], item.y-scroll[1]+17))
+        if item_ids[b] == "plasmarifle":
+            screen.blit(plasmarifle, (item.x-scroll[0], item.y-scroll[1]+17))
         b += 1
 
 #endregion
@@ -1500,6 +1696,21 @@ while main_running:
         fps = score_font.render("Fps: " + str(int(clock.get_fps())), True, (255,255,255))
     health = score_font.render("Health: " + str(player_health), True, (255,255,255))
     stamina = score_font.render("Stamina: " + str(round(int(playerStamina))), True, (255,255,255))
+
+    """ Pelaajan elämätilanteen käsittely """
+    
+    if player_health < 0:
+        player_health = 0
+
+    if player_health < last_player_health and player_health != 0 :
+        hurted = True
+    else:
+        hurted = False
+    
+    last_player_health = player_health
+
+    if hurted:
+        hurt_sound.play()
 
 #endregion
 #region Even Even More Collisions
@@ -1588,9 +1799,12 @@ while main_running:
             if direction:
                 offset = 49
                 offset_k = 75
+                offset_p = 75
             else:
                 offset = 7
                 offset_k = 10
+                offset_p = 14
+                
             if player_hand_item == "gasburner":
                 if gasburnerBurning:
                     if gasburner_animation_stats[0]:
@@ -1613,6 +1827,15 @@ while main_running:
             if player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
                     player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+
+            if player_hand_item == "plasmarifle":
+                if plasmarifle_fire:
+                    screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
+                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+                    
+                else:
+                    screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
+                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
 
     if player_keys["red"] == True:
         screen.blit(red_key, (10, 20))
@@ -1689,7 +1912,6 @@ while main_running:
         pygame.draw.rect(screen,(70,70,70),((len(inventory)-1)*34+10,75, 34,34),4)
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
-
 #endregion
 #region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
@@ -1713,6 +1935,7 @@ while main_running:
     FunctionKey = False
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
+    plasmarifle_cooldown += 1
 
 #endregion
 #region Ticks
