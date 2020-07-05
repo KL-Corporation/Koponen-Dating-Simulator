@@ -189,11 +189,8 @@ door_open = pygame.image.load("resources/build/door_open2.png")
 bricks = pygame.image.load("resources/build/bricks.png")
 tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
-<<<<<<< HEAD
-=======
 jokebox_texture = pygame.image.load("resources/build/jokebox.png")
 landmine_texture = pygame.image.load("resources/build/landmine.png")
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -201,15 +198,10 @@ trashcan.set_colorkey((255,255,255))
 door_closed.set_colorkey((255,255,255))
 red_door_closed.set_colorkey((255,255,255))
 green_door_closed.set_colorkey((255,255,255))
-<<<<<<< HEAD
-blue_door_closed.set_colorkey((255, 255, 255))
-tree.set_colorkey((0, 0, 0))
-=======
 blue_door_closed.set_colorkey((255,255,255))
 jokebox_texture.set_colorkey((255,255,255))
 landmine_texture.set_colorkey((255,255,255))
 tree.set_colorkey((0,0,0))
->>>>>>> 3b02285ada63f54fb423bef6481af010e593c50c
 
 gasburner_off = pygame.image.load("resources/items/gasburner_off.png").convert()
 #gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
