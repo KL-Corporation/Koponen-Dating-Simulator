@@ -324,7 +324,13 @@ player_health = 100
 last_player_health = 100
 player_death_event = False
 animation_has_played = False
-inventory = ["none"]
+
+inventory = ["none", "none", "none", "none", "none"]
+inventoryDoubles = []
+inventoryDoubleOffset = 0
+for none in inventory:
+    inventoryDoubles.append(False)
+
 global player_score
 player_score = 0
 true_scroll = [0, 0]
@@ -333,9 +339,9 @@ doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
 player_rect = pygame.Rect(100, 100, 33, 65)
-koponen_rect = pygame.Rect(200,200,24,64)
-koponen_recog_rec = pygame.Rect(0,0,72,64)
-koponen_movement = [0,6]
+koponen_rect = pygame.Rect(200, 200, 24, 64)
+koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
+koponen_movement = [0, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
@@ -579,7 +585,7 @@ def door_collision_test():
         pygame.mixer.Sound.play(door_opening)
 
     global door_rects, doors_open, color_keys, player_movement
-    hit_list = collision_test(player_rect,door_rects)
+    hit_list = collision_test(player_rect, door_rects)
     if player_rect.colliderect(door_rects[0]):
         pass
     
@@ -622,58 +628,50 @@ def item_collision_test(rect, items):
         if rect.colliderect(item):
             hit_list.append(item)
             if not itemTipVisible:
-                itemTip = tip_font.render("Nosta Esine Painamalla [E]", True, (255,255,255))
+                itemTip = tip_font.render("Nosta Esine Painamalla [E]", True, (255, 255, 255))
                 screen.blit(itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
                 itemTipVisible = True
             if FunctionKey == True:
-                if item_ids[b] == "gasburner":
-                    if "gasburner" not in inventory:
+                if inventory[inventory_slot] == "none":
+                    if item_ids[b] == "gasburner":
                         pygame.mixer.Sound.play(gasburner_clip)
                         player_score += 10
-                        inventory.append("gasburner")
+                        inventory[inventory_slot] = "gasburner"
                         item_rects.remove(item)
                         del item_ids[b]
-
-                elif item_ids[b] == "knife":
-                    if "knife" not in inventory:
+                    elif item_ids[b] == "knife":
                         player_score += 6
                         item_rects.remove(item)
                         pygame.mixer.Sound.play(knife_pickup)
-                        inventory.append("knife")
+                        inventory[inventory_slot] = "knife"
                         del item_ids[b]
-
-                elif item_ids[b] == "coffeemug":
-                    if "coffeemug" not in inventory:
+                    elif item_ids[b] == "coffeemug":
                         player_score += 5
                         item_rects.remove(item)
-                        inventory.append("coffeemug")
+                        inventory[inventory_slot] = "coffeemug"
                         pygame.mixer.Sound.play(coffeemug_sound)
                         del item_ids[b]
-
-                elif item_ids[b] == "ss_bonuscard":
-                    if "ss_bonuscard" not in inventory:
+                    elif item_ids[b] == "ss_bonuscard":
                         player_score += 30
                         item_rects.remove(item)
-                        inventory.append("ss_bonuscard")
+                        inventory[inventory_slot] = "ss_bonuscard"
                         pygame.mixer.Sound.play(ss_sound)
                         del item_ids[b]
-
-                elif item_ids[b] == "lappi_sytytyspalat":
-                    if "lappi_sytytyspalat" not in inventory:
+                    elif item_ids[b] == "lappi_sytytyspalat":
                         player_score += 40
                         item_rects.remove(item)
-                        inventory.append("lappi_sytytyspalat")
+                        inventory[inventory_slot] = "lappi_sytytyspalat"
                         pygame.mixer.Sound.play(lappi_sytytyspalat_sound)
                         del item_ids[b]
-                elif item_ids[b] == "plasmarifle":
-                    if "plasmarifle" not in inventory:
-                        player_score += 20
-                        item_rects.remove(item)
-                        inventory.append("plasmarifle")
-                        pygame.mixer.Sound.play(weapon_pickup)
-                        del item_ids[b]
-
-                elif item_ids[b] == "red_key":
+                    elif item_ids[b] == "plasmarifle":
+                        if inventory_slot != len(inventory) - 1: #If statement vaaditaan kahden slotin itemeissä, jotta ne eivät mene yli inventoryn
+                            player_score += 20
+                            item_rects.remove(item)
+                            inventory[inventory_slot] = "plasmarifle"
+                            inventory[inventory_slot + 1] = "double"
+                            pygame.mixer.Sound.play(weapon_pickup)
+                            del item_ids[b]
+                if item_ids[b] == "red_key":
                     player_keys["red"] = True
                     item_rects.remove(item)
                     play_key_pickup()
@@ -778,7 +776,7 @@ def console():
     if command_list[0] == "give":
         if command_list[1] != "key":
             try:
-                inventory.append(command_list[1])
+                inventory[inventory_slot] = command_list[1]
                 print("Item was given")
             except Exception:
                 print("That item does not exist")
@@ -806,7 +804,7 @@ def console():
             else:
                 setTerms = "[Error]"
         except Exception:
-                print("Encountered an error while processing your command.\nError:" + Exception)
+            print("Encountered an error while processing your command.\nError:" + Exception)
         if setTerms != "[Error]":
             configParser.set("Data", "TermsAccepted", setTerms)
             with open("settings.cfg", "w") as cfgFile:
@@ -988,11 +986,17 @@ def koponen_talk():
             conversations.append("         tehtävää")
         else:
             if current_mission in inventory:
+                missionRemoveRange = range(len(inventory))
+                itemFound = False
+                for i in missionRemoveRange:
+                    if itemFound == False:
+                        if inventory[i] == current_mission:
+                            inventory[i] = "none"
+                            itemFound = True
                 conversations.append("Koponen: Loistavaa työtä")
                 conversations.append("Game: Player score +60")
                 player_score += 60
                 koponen_happines += 10
-                inventory.remove(current_mission)
                 currently_on_mission = False
                 current_mission = "none"
             else:
@@ -1396,6 +1400,10 @@ while main_running:
                 inventory_slot += 1
             if event.key == K_t:
                 console()
+            if event.key == K_q:
+                if inventoryDoubles[inventory_slot] == True:
+                    inventory[inventory_slot + 1] = "none"
+                inventory[inventory_slot] = "none"
             if event.key == K_F3:
                 DebugMode = not DebugMode
             if event.key == K_F4:
@@ -1434,9 +1442,6 @@ while main_running:
                     gasburner_fire.stop()
                 if player_hand_item == "knife":
                     knifeInUse = False
-            if event.key == K_q:
-                if inventory[inventory_slot] != "none":
-                    inventory.remove(inventory[inventory_slot])
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 mouseLeftPressed = False
@@ -1453,11 +1458,16 @@ while main_running:
 
 #endregion
 #region Inventory Code
-    if inventory_slot > len(inventory) - 1:
+    def inventoryDoubleOffsetCounter():
+        inventoryDoubleOffset = 0
+        for i in range(0, inventory_slot - 1):
+            if inventoryDoubles[i] == True:
+                inventoryDoubleOffset += 1
+    inventoryDoubleOffsetCounter()
+    if inventory_slot >= len(inventory) - inventoryDoubleOffset:
         inventory_slot = 0
-
     if inventory_slot < 0:
-        inventory_slot = len(inventory) - 1
+        inventory_slot = len(inventory) - 1 - inventoryDoubleOffset
 
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
@@ -1856,45 +1866,40 @@ while main_running:
 
 #endregion
 #region Inventory Rendering
-    doubleWidth = []
-    y = 1
-    for item in inventory:
-        if item != "none":
-            if item == "gasburner":
-                screen.blit(gasburner_off,((y * 34) + 10 + (gasburner_off.get_width() / 4), 80))
-                doubleWidth.append(False)
-            elif item == "knife":
-                screen.blit(knife,((y * 34) + 10 + (knife.get_width() / 4), 80))
-                doubleWidth.append(False)
-            elif item == "coffeemug":
-                screen.blit(coffeemug,((y * 34) + 10 + (coffeemug.get_width() / 4), 80))
-                doubleWidth.append(False)
-            elif item == "ss_bonuscard":
-                screen.blit(ss_bonuscard,((y * 34) + 10 + (ss_bonuscard.get_width() / 4), 80))
-                doubleWidth.append(False)
-            elif item == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,((y * 34) + 10 + (lappi_sytytyspalat.get_width() / 4), 80))
-                doubleWidth.append(False)
-            elif item == "plasmarifle":
-                screen.blit(plasmarifle, ((y * 34) + 10 + (plasmarifle.get_width() / 4), 80))
-                doubleWidth.append(True)
-                y += 1
-            y += 1
+    for i in range(len(inventory) - 1):
+        if inventory[i] != "none":
+            if inventory[i] == "gasburner":
+                screen.blit(gasburner_off,((i * 34) + 10 + (34 / gasburner_off.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "knife":
+                screen.blit(knife,((i * 34) + 10 + (34 / knife.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "coffeemug":
+                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "ss_bonuscard":
+                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "plasmarifle":
+                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                inventoryDoubles[i] = True #True, koska vie kaksi slottia
 
-    for double in doubleWidth:
+    for double in inventoryDoubles:
         if double:
             doubleWidthAdd += 1
 
+    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
+
     if inventory_slot:
-        if doubleWidth[inventory_slot - 1] == True:
+        if inventoryDoubles[inventory_slot] == True:
             scaledSlotWidth = 34 * 2
         else:
             scaledSlotWidth = 34
-        doubleOffset = 0
-        for i in range(0, inventory_slot - 1):
-            if doubleWidth[i] == True:
-                doubleOffset += 1
-        pygame.draw.rect(screen, (70, 70, 70), (((inventory_slot + doubleOffset) * 34) + 10, 75, scaledSlotWidth, 34), 3)
+        inventoryDoubleOffsetCounter()
+        pygame.draw.rect(screen, (70, 70, 70), (((inventory_slot + inventoryDoubleOffset) * 34) + 10, 75, scaledSlotWidth, 34), 3)
     else:
         pygame.draw.rect(screen, (70, 70, 70), (10, 75, 34, 34), 3)
     screen.blit(health, (10, 120))
