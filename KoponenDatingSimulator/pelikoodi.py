@@ -273,7 +273,7 @@ hurt_sound = pygame.mixer.Sound("audio/misc/dsplpain.wav")
 plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
 weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
 
-plasmarifle_f_sound.set_volume(0.3)
+plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
