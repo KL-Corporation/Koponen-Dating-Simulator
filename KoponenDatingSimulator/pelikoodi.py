@@ -326,6 +326,8 @@ last_player_health = 100
 player_death_event = False
 animation_has_played = False
 
+ammunition_plasma = 60
+
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
@@ -1574,7 +1576,9 @@ while main_running:
             explosion_positions.append((landmine.x-40,landmine.y-58))
 
     if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
-        if plasmarifle_cooldown > 4:
+
+
+        if plasmarifle_cooldown > 4 and ammunition_plasma > 0:
             plasmarifle_cooldown = 0
 
             if direction:
@@ -1587,6 +1591,12 @@ while main_running:
                 plasmabullets.append(plasma_bullet((player_rect.x-50,player_rect.y+17),j_direction,screen))
 
             plasmarifle_f_sound.play()
+            ammunition_plasma -= 1
+
+    if player_hand_item == "plasmarifle":
+
+        ammo_count = score_font.render("Ammo: " + str(ammunition_plasma), True, (255,255,255))
+        screen.blit(ammo_count,(10,360))
 
     for bullet in plasmabullets:
         state = bullet.update(tile_rects)
@@ -1816,7 +1826,7 @@ while main_running:
                     player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
 
             if player_hand_item == "plasmarifle":
-                if plasmarifle_fire:
+                if plasmarifle_fire and ammunition_plasma > 0:
                     screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
                     
