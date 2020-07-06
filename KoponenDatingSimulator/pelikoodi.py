@@ -533,7 +533,7 @@ def load_rects():
 
 def load_item_rects():
     def append_rect():
-        item_rects.append(pygame.Rect(x*34, y*34, 34, 34))
+        item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
     item_rects = []
     item_ids = []
     task_items = []
@@ -672,6 +672,7 @@ def door_collision_test():
 
 
 def item_collision_test(rect, items):
+    global logging
     hit_list = []
     b = 0
     global player_hand_item, player_score, inventory
@@ -689,43 +690,64 @@ def item_collision_test(rect, items):
                         pygame.mixer.Sound.play(gasburner_clip)
                         player_score += 10
                         inventory[inventory_slot] = "gasburner"
-                        item_rects.remove(item)
+                        try:
+                            item_rects.remove(item)
+                        except:
+                            logging.error("Item not in item rects.")
                         del item_ids[b]
                     elif item_ids[b] == "knife":
                         player_score += 6
-                        item_rects.remove(item)
+                        try:
+                            item_rects.remove(item)
+                        except:
+                            logging.error("Item not in item rects.")
                         pygame.mixer.Sound.play(knife_pickup)
                         inventory[inventory_slot] = "knife"
                         del item_ids[b]
                     elif item_ids[b] == "coffeemug":
                         player_score += 5
-                        item_rects.remove(item)
+                        try:
+                            item_rects.remove(item)
+                        except:
+                            logging.error("Item not in item rects.")
                         inventory[inventory_slot] = "coffeemug"
                         pygame.mixer.Sound.play(coffeemug_sound)
                         del item_ids[b]
                     elif item_ids[b] == "ss_bonuscard":
                         player_score += 30
-                        item_rects.remove(item)
+                        try:
+                            item_rects.remove(item)
+                        except:
+                            logging.error("Item not in item rects.")
                         inventory[inventory_slot] = "ss_bonuscard"
                         pygame.mixer.Sound.play(ss_sound)
                         del item_ids[b]
                     elif item_ids[b] == "lappi_sytytyspalat":
                         player_score += 40
-                        item_rects.remove(item)
+                        try:
+                            item_rects.remove(item)
+                        except:
+                            logging.error("Item not in item rects.")
                         inventory[inventory_slot] = "lappi_sytytyspalat"
                         pygame.mixer.Sound.play(lappi_sytytyspalat_sound)
                         del item_ids[b]
                     elif item_ids[b] == "plasmarifle":
                         if inventory_slot != len(inventory) - 1: #If statement vaaditaan kahden slotin itemeissä, jotta ne eivät mene yli inventoryn
                             player_score += 20
+                        try:
                             item_rects.remove(item)
+                        except:
+                            logging.error("Item not in item rects.")
                             inventory[inventory_slot] = "plasmarifle"
                             inventory[inventory_slot + 1] = "double"
                             pygame.mixer.Sound.play(weapon_pickup)
                             del item_ids[b]
                 if item_ids[b] == "red_key":
                     player_keys["red"] = True
-                    item_rects.remove(item)
+                    try:
+                        item_rects.remove(item)
+                    except:
+                        logging.error("Item not in item rects.")
                     play_key_pickup()
                     del item_ids[b]
                 elif item_ids[b] == "green_key":
@@ -914,7 +936,6 @@ def agr(tcagr):
                     tcagr_running = functions[y]()
                 if pygame.mouse.get_pressed()[0]:
                     button_color = (90, 90, 90)
-                    agree()
                 else:
                     button_color = (115, 115, 115)
             else:
@@ -1265,13 +1286,13 @@ def settings_menu():
                 if event.key == K_F11:
                     setFullscreen(False)
         
-        main_display.blit(settings_background,(0,0))
+        main_display.blit(settings_background, (0, 0))
 
-        main_display.blit(volume_text,(190,130))
-        pygame.draw.rect(main_display,(120,120,120),(560,145,340,20))
+        main_display.blit(volume_text,(190, 130))
+        pygame.draw.rect(main_display,(120, 120, 120), (560, 145, 340, 20))
         
 
-        music_slider.x = int(560 + (volume*100)*3.4-15)
+        music_slider.x = int(560 + (volume * 100) * 3.4 - 15)
 
         if pygame.mouse.get_pressed()[0] == False:
             dragSlider = False
@@ -2080,7 +2101,7 @@ while main_running:
 
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
-#endregion
+#endregion 
 #region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
