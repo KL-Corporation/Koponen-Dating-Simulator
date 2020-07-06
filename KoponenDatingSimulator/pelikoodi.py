@@ -281,6 +281,7 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 #endregion Lataukset
 
 main_running = True
+main_start = False
 playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
@@ -345,6 +346,8 @@ except:
 setFullscreen(True)
 logging.debug("Settings Loaded:\n- Terms Accepted: " + str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
 
+selectedSave = 0
+
 volume = float(volume_data)/100
 gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
@@ -402,6 +405,41 @@ taskTaivutettu = ""
 
 DebugMode = False
 
+#endregion
+#region Save System
+Saving = configparser.RawConfigParser()
+
+def LoadSave():
+    global Saving, player_rect, selectedSave
+    saveFilePath = os.path.join(os.path.dirname(__file__), 'saves/save_' + str(selectedSave) + ".kds")
+    Saving.read(saveFilePath)
+
+    try:
+        player_rect.x = int(Saving.get("PlayerPosition", "X"))
+    except:
+        print("CHECK THIS OUT: " + Exception)
+        Saving.add_section("PlayerPosition")
+        Saving.set("PlayerPosition", "X", str(100))
+        player_rect.x = 100
+        with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
+            Saving.write(savFile)
+
+def SaveData():
+    global Saving, player_rect, selectedSave
+    Saving.set("PlayerPosition", "X", str(player_rect.x))
+    with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
+        Saving.write(savFile)
+
+#endregion
+#region Quit Handling
+    def quit_function():
+        global main_running, main_menu_running
+        main_menu_running = False
+        main_running = False
+        tcagr_running = False
+        koponenTalking = False
+        esc_menu = False
+        settings_running = False
 #endregion
 #region Pickup Sound
 def play_key_pickup():
@@ -910,8 +948,7 @@ def agr(tcagr):
     while tcagr_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                tcagr_running = False
-                main_running = False
+                quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
@@ -954,12 +991,12 @@ def koponen_talk():
 
     c = False
 
-    exit_button = pygame.Rect(940,700,230, 80)
-    mission_button = pygame.Rect(50,700,450,80)
-    date_button = pygame.Rect(50, 610, 450,80)
-    return_mission_button = pygame.Rect(510, 700, 420,80)
+    exit_button = pygame.Rect(940, 700, 230, 80)
+    mission_button = pygame.Rect(50, 700, 450, 80)
+    date_button = pygame.Rect(50, 610, 450, 80)
+    return_mission_button = pygame.Rect(510, 700, 420, 80)
 
-    koponen_talk_foreground = ad_images[int(random.uniform(0,len(ad_images)))].copy()
+    koponen_talk_foreground = ad_images[int(random.uniform(0, len(ad_images)))].copy()
 
     def renderText(text):
         text_object = button_font1.render(text, True, (255,255,255))
@@ -1097,8 +1134,7 @@ def koponen_talk():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                koponenTalking = False
-                main_running = False
+                quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     koponenTalking = False
@@ -1150,19 +1186,22 @@ def esc_menu_f():
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
     c = False
-    resume_button = pygame.Rect(150,170,200,30)
-    settings_button = pygame.Rect(150,210,200,30)
-    main_menu_button = pygame.Rect(150,250,200,30)
+    resume_button = pygame.Rect(150, 170, 200, 30)
+    save_button = pygame.Rect(150, 210, 200, 30)
+    settings_button = pygame.Rect(150, 250, 200, 30)
+    main_menu_button = pygame.Rect(150, 290, 200, 30)
 
-    resume_text = button_font.render("Resume", True, (255,255,255))
-    settings_text = button_font.render("Settings", True, (255,255,255))
-    main_menu_text = button_font.render("Main menu", True, (255,255,255))
+    resume_text = button_font.render("Resume", True, (255, 255, 255))
+    save_text = button_font.render("Save", True, (255, 255, 255))
+    settings_text = button_font.render("Settings", True, (255, 255, 255))
+    main_menu_text = button_font.render("Main menu", True, (255, 255, 255))
 
     buttons = []
     functions = []
     texts = []
 
     texts.append(resume_text)
+    texts.append(save_text)
     texts.append(settings_text)
     texts.append(main_menu_text)
 
@@ -1171,7 +1210,8 @@ def esc_menu_f():
         esc_menu = False
         pygame.mouse.set_visible(False)
         pygame.mixer.music.unpause()
-
+    def save():
+        SaveData()
     def settings():
         settings_menu()
     def goto_main_menu():
@@ -1181,19 +1221,19 @@ def esc_menu_f():
         
 
     functions.append(resume)
+    functions.append(save)
     functions.append(settings)
     functions.append(goto_main_menu)
 
     buttons.append(resume_button)
+    buttons.append(save_button)
     buttons.append(settings_button)
     buttons.append(main_menu_button)
 
     while esc_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                global main_running
-                main_running = False
-                esc_menu = False
+                quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     esc_menu = False
@@ -1265,10 +1305,7 @@ def settings_menu():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                main_menu_running = False
-                esc_menu = False
-                main_running = False
-                settings_running = False
+                quit_function()
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -1397,8 +1434,7 @@ def main_menu():
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                main_menu_running = False
-                main_running = False
+                quit_function()
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -1470,12 +1506,19 @@ for i_id in item_ids:
         else:
             inventory_slot += 1
 #endregion
-#region Events
-
+#region Game Start
+def GameStart():
+    LoadSave()
+#endregion
+#region Main Running
 while main_running:
+    if main_start == False:
+#region Events
+        main_start = True
+        GameStart()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            main_running = False
+            quit_function()
         if event.type == KEYDOWN:
             if event.key == K_d:
                 playerMovingRight = True
@@ -1523,9 +1566,6 @@ while main_running:
                     player_health = 0
             if event.key == K_LALT or event.key == K_RALT:
                 AltPressed = True
-                if AltPressed == True and F4Pressed ==  True:
-                    pygame.QUIT()
-
             if event.key == K_F11:
                 setFullscreen(False)
 
@@ -1568,7 +1608,6 @@ while main_running:
                 inventoryLeft()
             if event.button == 5:
                 inventoryRight()
-
 #endregion
 #region Inventory Code
     def inventoryDoubleOffsetCounter():
@@ -2123,3 +2162,5 @@ while main_running:
         tick = 0
     clock.tick(60)
 #endregion
+#endregion
+main_start = False
