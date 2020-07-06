@@ -433,7 +433,7 @@ def SaveData():
 #endregion
 #region Quit Handling
     def quit_function():
-        global main_running, main_menu_running
+        global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running
         main_menu_running = False
         main_running = False
         tcagr_running = False
