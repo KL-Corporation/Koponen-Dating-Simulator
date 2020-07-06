@@ -131,13 +131,25 @@ class plasma_bullet:
 
         return self.done
         
+class Zombie:
 
+    def __init__(self, position, health, speed):
+        self.position = position
+        self.health = health
+        self.speed = speed
+        self.rect = pygame.Rect(position[0], position[1], 32, 64)
+        self.walking = True
         
+    def search(self):
+        pass
+
+    def _attack(self):
+        pass
 
 #endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
-    global fullscreen_var
+    global fullscreen_var, main_display
     if reverseFullscreen:
         fullscreen_var = not fullscreen_var
     if fullscreen_var:
@@ -542,6 +554,7 @@ def load_rects():
     burning_trashcans = []
     jukeboxes = []
     landmines = []
+    zombies = []
     w = [0,0]
     y = 0
     for layer in world_gen:
@@ -574,12 +587,14 @@ def load_rects():
                     jukeboxes.append(pygame.Rect(x * 34, y * 34 - 26, 42, 60))
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
+                elif tile == 'Z':
+                    zombies.append(Zombie((x*34,y*34-34),100,2))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies
 
 
 def load_item_rects():
@@ -872,13 +887,16 @@ menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 2
 burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0),-1)
 explosion_animation = Animation("explosion", 7,5,(255,255,255),1)
 plasmarifle_animation = Animation("plasmarifle_firing",2,3,(255,255,255),-1)
+zombie_death_animation = Animation("z_death",5,6,(255,255,255),-1)
+zombie_walk_animation = Animation("z_walk",3,10,(255,255,255),-1)
+zombie_attack_animation = Animation("z_attack",4,10,(255,255,255),-1)
 #endregion
 #region Load Game
 
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies = load_rects()
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -1766,7 +1784,6 @@ while main_running:
             explosion_animation.reset()
 
     item_collision_test(player_rect, item_rects)
-
     b = 0
     for item in item_rects:
         if item_ids[b] == 'gasburner':

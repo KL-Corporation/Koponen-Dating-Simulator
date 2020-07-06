@@ -23,6 +23,8 @@ u
 decoration:
 A = tree
 B = jokebox
+enemies and other shit:
+Z = zombie
 items:
 0 = gasburner
 1 = knife
