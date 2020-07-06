@@ -152,7 +152,14 @@ def setFullscreen(reverseFullscreen):
 #endregion
 #region Initialisation
 
-logFiles = os.listdir("logs/")
+try:
+    logFiles = os.listdir("logs/")
+except:
+    os.mkdir("logs")
+    f = open("logs/initLog.log", "w+")
+    f.write("*THIS LOG INITIALISES THE LOGGING SYSTEM*\n\n\nDO NOT DELETE THIS LOG FILE!")
+    f.close()
+    logFiles = os.listdir("logs/")
 
 while len(logFiles) >= 5:
     os.remove("logs/" + logFiles[0])
@@ -1434,6 +1441,24 @@ for i_id in item_ids:
     logging.debug("Initialised Item: (ID)" + i_id)
 
 #endregion
+#region Inventory Slot Switching
+    def inventoryLeft():
+        global inventory_slot, inventoryDoubles, inventory
+        checkSlot = inventory_slot - 2
+        if checkSlot < 0:
+            checkSlot = len(inventory) - 3
+        if(inventoryDoubles[checkSlot] == True):
+            inventory_slot -= 2
+        else:
+            inventory_slot -= 1
+
+    def inventoryRight():
+        global inventory_slot, inventoryDoubles
+        if(inventoryDoubles[inventory_slot] == True):
+            inventory_slot += 2
+        else:
+            inventory_slot += 1
+#endregion
 #region Events
 
 while main_running:
@@ -1455,9 +1480,9 @@ while main_running:
             if event.key == K_ESCAPE:
                 esc_menu = False if esc_menu else True
             if event.key == K_j:
-                inventory_slot -= 1
+                inventoryLeft()
             if event.key == K_k:
-                inventory_slot += 1
+                inventoryRight()
             if event.key == K_t:
                 console()
             if event.key == K_q:
@@ -1516,9 +1541,9 @@ while main_running:
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = False
             if event.button == 4:
-                inventory_slot -= 1
+                inventoryLeft()
             if event.button == 5:
-                inventory_slot += 1
+                inventoryRight()
 
 #endregion
 #region Inventory Code
@@ -1969,13 +1994,77 @@ while main_running:
 
     if inventory_slot:
         if inventoryDoubles[inventory_slot] == True:
-            scaledSlotWidth = 34 * 2
-        else:
-            scaledSlotWidth = 34
-        inventoryDoubleOffsetCounter()
-        pygame.draw.rect(screen, (70, 70, 70), (((inventory_slot + inventoryDoubleOffset) * 34) + 10, 75, scaledSlotWidth, 34), 3)
+            scaledSlotWidth = 68
+            if inventory[i] == "coffeemug":
+                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "ss_bonuscard":
+                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "plasmarifle":
+                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                inventoryDoubles[i] = True #True, koska vie kaksi slottia
+
+    for double in inventoryDoubles:
+        if double:
+            doubleWidthAdd += 1
+
+    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
+
+    if inventory_slot:
+        if inventoryDoubles[inventory_slot] == True:
+            scaledSlotWidth = 68
+            if inventory[i] == "coffeemug":
+                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "ss_bonuscard":
+                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "plasmarifle":
+                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                inventoryDoubles[i] = True #True, koska vie kaksi slottia
+
+    for double in inventoryDoubles:
+        if double:
+            doubleWidthAdd += 1
+
+    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
+
+    if inventory_slot:
+        if inventoryDoubles[inventory_slot] == True:
+            scaledSlotWidth = 68
+            if inventory[i] == "coffeemug":
+                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "ss_bonuscard":
+                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "plasmarifle":
+                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                inventoryDoubles[i] = True #True, koska vie kaksi slottia
+
+    for double in inventoryDoubles:
+        if double:
+            doubleWidthAdd += 1
+
+    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
+
+    if inventoryDoubles[inventory_slot] == True:
+        scaledSlotWidth = 68
     else:
-        pygame.draw.rect(screen, (70, 70, 70), (10, 75, 34, 34), 3)
+        scaledSlotWidth = 34
+    inventoryDoubleOffsetCounter()
+    pygame.draw.rect(screen, (70, 70, 70), (((inventory_slot + inventoryDoubleOffset) * 34) + 10, 75, scaledSlotWidth, 34), 3)
+
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
 #endregion
