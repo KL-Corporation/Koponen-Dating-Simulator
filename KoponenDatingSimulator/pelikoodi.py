@@ -272,6 +272,8 @@ currently_on_mission = False
 current_mission = "none"
 player_name = "Sinä"
 
+fullscreen_var = False
+
 configParser = configparser.RawConfigParser()
 configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
 configParser.read(configFilePath)
@@ -1415,6 +1417,17 @@ while main_running:
                 AltPressed = True
                 if AltPressed == True and F4Pressed ==  True:
                     pygame.QUIT()
+
+            if event.key == K_F11:
+                pygame.display.quit()
+                pygame.display.init()
+                if fullscreen_var:
+                    main_display = pygame.display.set_mode(display_size)
+                    fullscreen_var = False
+                else:
+                    main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
+                    fullscreen_var = True
+
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True
