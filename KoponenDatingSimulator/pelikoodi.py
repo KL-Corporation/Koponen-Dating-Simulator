@@ -674,8 +674,15 @@ def door_collision_test():
 def item_collision_test(rect, items):
     global logging
     hit_list = []
-    b = 0
-    global player_hand_item, player_score, inventory
+    x = 0
+    global player_hand_item, player_score, inventory,inventory_slot, item_ids, player_keys, item_rects
+
+    def s(score):
+        global player_score
+
+        player_score += score
+
+
     itemTipVisible = False
     for item in items:
         if rect.colliderect(item):
@@ -685,82 +692,65 @@ def item_collision_test(rect, items):
                 screen.blit(itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
                 itemTipVisible = True
             if FunctionKey == True:
+                i = item_ids[x]
+
                 if inventory[inventory_slot] == "none":
-                    if item_ids[b] == "gasburner":
-                        pygame.mixer.Sound.play(gasburner_clip)
-                        player_score += 10
+                    if i == "gasburner":
                         inventory[inventory_slot] = "gasburner"
-                        try:
-                            item_rects.remove(item)
-                        except:
-                            logging.error("Item not in item rects.")
-                        del item_ids[b]
-                    elif item_ids[b] == "knife":
-                        player_score += 6
-                        try:
-                            item_rects.remove(item)
-                        except:
-                            logging.error("Item not in item rects.")
-                        pygame.mixer.Sound.play(knife_pickup)
-                        inventory[inventory_slot] = "knife"
-                        del item_ids[b]
-                    elif item_ids[b] == "coffeemug":
-                        player_score += 5
-                        try:
-                            item_rects.remove(item)
-                        except:
-                            logging.error("Item not in item rects.")
-                        inventory[inventory_slot] = "coffeemug"
-                        pygame.mixer.Sound.play(coffeemug_sound)
-                        del item_ids[b]
-                    elif item_ids[b] == "ss_bonuscard":
-                        player_score += 30
-                        try:
-                            item_rects.remove(item)
-                        except:
-                            logging.error("Item not in item rects.")
-                        inventory[inventory_slot] = "ss_bonuscard"
-                        pygame.mixer.Sound.play(ss_sound)
-                        del item_ids[b]
-                    elif item_ids[b] == "lappi_sytytyspalat":
-                        player_score += 40
-                        try:
-                            item_rects.remove(item)
-                        except:
-                            logging.error("Item not in item rects.")
-                        inventory[inventory_slot] = "lappi_sytytyspalat"
-                        pygame.mixer.Sound.play(lappi_sytytyspalat_sound)
-                        del item_ids[b]
-                    elif item_ids[b] == "plasmarifle":
-                        if inventory_slot != len(inventory) - 1: #If statement vaaditaan kahden slotin itemeissä, jotta ne eivät mene yli inventoryn
-                            player_score += 20
-                        try:
-                            item_rects.remove(item)
-                        except:
-                            logging.error("Item not in item rects.")
-                            inventory[inventory_slot] = "plasmarifle"
-                            inventory[inventory_slot + 1] = "double"
-                            pygame.mixer.Sound.play(weapon_pickup)
-                            del item_ids[b]
-                if item_ids[b] == "red_key":
-                    player_keys["red"] = True
-                    try:
+                        gasburner_clip.play()
                         item_rects.remove(item)
-                    except:
-                        logging.error("Item not in item rects.")
-                    play_key_pickup()
-                    del item_ids[b]
-                elif item_ids[b] == "green_key":
+                        del item_ids[x]
+
+                        s(5)
+                    elif i == "knife":
+                        inventory[inventory_slot] = "knife"
+                        knife_pickup.play()
+                        item_rects.remove(item)
+                        del item_ids[x]
+                        s(5)
+                    elif i == "plasmarifle":
+                        if inventory_slot != len(inventory) - 1:
+                            inventory[inventory_slot] = "plasmarifle"
+                            weapon_pickup.play()
+                            item_rects.remove(item)
+                            del item_ids[x]
+                            s(20)
+                    elif i == "ss_bonuscard":
+                        inventory[inventory_slot] = "ss_bonuscard"
+                        ss_sound.play()
+                        item_rects.remove(item)
+                        del item_ids[x]
+                        s(20)
+                    elif i == "coffeemug":
+                        inventory[inventory_slot] = "coffeemug"
+                        coffeemug_sound.play()
+                        item_rects.remove(item)
+                        del item_ids[x]
+                        s(3)
+                    elif i == "lappi_sytytyspalat":
+                        inventory[inventory_slot] = "lappi_sytytyspalat"
+                        lappi_sytytyspalat_sound.play()
+                        item_rects.remove(item)
+                        del item_ids[x]
+                        s(20)
+
+                if i == "red_key":
+                    player_keys["red"] = True
+                    key_pickup.play()
+                    item_rects.remove(item)
+                    del item_ids[x]
+                elif i == "green_key":
                     player_keys["green"] = True
+                    key_pickup.play()
                     item_rects.remove(item)
-                    play_key_pickup()
-                    del item_ids[b]
-                elif item_ids[b] == "blue_key":
+                    del item_ids[x]
+                elif i == "blue_key":
                     player_keys["blue"] = True
+                    key_pickup.play()
                     item_rects.remove(item)
-                    play_key_pickup()
-                    del item_ids[b]            
-        b += 1
+                    del item_ids[x]
+
+        x += 1
     return hit_list
 
 def toilet_collisions(rect, burnstate):
