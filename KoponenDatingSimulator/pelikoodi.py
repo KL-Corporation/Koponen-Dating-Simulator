@@ -251,10 +251,9 @@ plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
 weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
 
 plasmarifle_f_sound.set_volume(0.3)
-
-
 hurt_sound.set_volume(0.6)
 
+jokebox_tip = tip_font.render("Use jokebox [E]", True, (255, 255, 255))
 
 #endregion Lataukset
 
