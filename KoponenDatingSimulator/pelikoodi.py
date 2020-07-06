@@ -1553,9 +1553,22 @@ while main_running:
             if event.key == K_t:
                 console()
             if event.key == K_q:
+
+                if inventory[inventory_slot] != "none":
+                    item_rects.append(pygame.Rect(player_rect.x, player_rect.y, 34, 34))
+                    item_ids.append(inventory[inventory_slot])
+                    u = True
+                    while u:
+                        item_rects[-1].y += 30
+                        for tile in tile_rects:
+                            if item_rects[-1].colliderect(tile):
+                                item_rects[-1].bottom = tile.top
+                                u = False
+
                 if inventoryDoubles[inventory_slot] == True:
                     inventory[inventory_slot + 1] = "none"
                 inventory[inventory_slot] = "none"
+
             if event.key == K_F3:
                 DebugMode = not DebugMode
             if event.key == K_F4:
