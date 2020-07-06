@@ -57,9 +57,9 @@ class Animation:
     """
     Ensimmäinen argumentti odottaa animaation nimeä esim. "gasburner"
     Toinen argumentti odottaa kyseisen animaation kuvien määrää. Jos animaatiossa on 2 kuvaa, kannattaa toiseksi argumentiksi laittaa 2
-    Kolmas argumentti odottaa yhden kuvan kestoa tickeinä. 
+    Kolmas argumentti odottaa yhden kuvan kestoa tickeinä.
 
-    Animaation kuvat tulee tallentaa animations-kansioon png-muodossa tähän malliin: 
+    Animaation kuvat tulee tallentaa animations-kansioon png-muodossa tähän malliin:
         gasburner_0, gasburner_1, gasburner_2, gasburner_3 ja niin edelleen
 
     animation_name - string, number_of_images - int, duration - int
@@ -135,16 +135,32 @@ class plasma_bullet:
         
 
 #endregion
+#region Fullscreen
+def setFullscreen(reverseFullscreen):
+    global fullscreen_var
+    if reverseFullscreen:
+        fullscreen_var = not fullscreen_var
+    if fullscreen_var:
+        main_display = pygame.display.set_mode(display_size)
+        fullscreen_var = False
+    else:
+        main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
+        fullscreen_var = True
+    configParser.set("Settings", "Fullscreen", str(fullscreen_var))
+    with open("settings.cfg", "w") as cfgFile:
+        configParser.write(cfgFile)
+#endregion
 #region Initialisation
 
 logFiles = os.listdir("logs/")
 
 while len(logFiles) >= 5:
-    logFiles = os.listdir("logs/")
     os.remove("logs/" + logFiles[0])
+    logFiles = os.listdir("logs/")
 
 now = datetime.now()
 logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log", level=logging.NOTSET)
+logging.debug("Created log file: log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log")
 logging.info('Initialising Game...')
 
 printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
@@ -193,7 +209,7 @@ door_open = pygame.image.load("resources/build/door_open2.png")
 bricks = pygame.image.load("resources/build/bricks.png")
 tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
-jokebox_texture = pygame.image.load("resources/build/jokebox.png")
+jukebox_texture = pygame.image.load("resources/build/jokebox.png")
 landmine_texture = pygame.image.load("resources/build/landmine.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
@@ -203,7 +219,7 @@ door_closed.set_colorkey((255, 255, 255))
 red_door_closed.set_colorkey((255, 255, 255))
 green_door_closed.set_colorkey((255, 255, 255))
 blue_door_closed.set_colorkey((255, 255, 255))
-jokebox_texture.set_colorkey((255, 255, 255))
+jukebox_texture.set_colorkey((255, 255, 255))
 landmine_texture.set_colorkey((255, 255, 255))
 tree.set_colorkey((0, 0, 0))
 
@@ -222,14 +238,14 @@ plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
-red_key.set_colorkey((255,255,255))
-green_key.set_colorkey((255,255,255))
-blue_key.set_colorkey((255,255,255))
-coffeemug.set_colorkey((255,255,255))
-ss_bonuscard.set_colorkey((255,0,0))
-lappi_sytytyspalat.set_colorkey((255,255,255))
-plasmarifle.set_colorkey((255,255,255))
-plasma_ammo.set_colorkey((255,255,255))
+red_key.set_colorkey((255, 255, 255))
+green_key.set_colorkey((255, 255, 255))
+blue_key.set_colorkey((255, 255, 255))
+coffeemug.set_colorkey((255, 255, 255))
+ss_bonuscard.set_colorkey((255, 0, 0))
+lappi_sytytyspalat.set_colorkey((255, 255, 255))
+plasmarifle.set_colorkey((255, 255, 255))
+plasma_ammo.set_colorkey((255, 255, 255))
 
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
@@ -253,7 +269,7 @@ weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 
-jokebox_tip = tip_font.render("Use jokebox [E]", True, (255, 255, 255))
+jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 
 #endregion Lataukset
 
@@ -262,7 +278,8 @@ playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
 plasmarifle_fire = False
-jokeboxMusicPlaying = 0
+jukeboxMusicPlaying = 0
+lastJukeboxSong = 0
 playerStamina = 100.0
 gasburnerBurning = False
 plasmabullets = []
@@ -279,10 +296,15 @@ configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
 configParser.read(configFilePath)
 
 try:
-    tcagr = bool(configParser.get("Data", "TermsAccepted"))
+    if configParser.get("Data", "TermsAccepted") == "True":
+        tcagr = True
+    elif configParser.get("Data", "TermsAccepted") == "False":
+        tcagr = False
+    else:
+        logging.error("Error parcing terms and conditions bool.")
 except:
     configParser.add_section("Data")
-    configParser.set("Data", "TermsAccepted", False)
+    configParser.set("Data", "TermsAccepted", str(False))
     tcagr = False
     with open("settings.cfg", "w") as cfgFile:
         configParser.write(cfgFile)
@@ -294,17 +316,37 @@ except:
     volume_data = 15
     with open("settings.cfg", "w") as cfgFile:
         configParser.write(cfgFile)
-logging.debug("Settings Loaded:\n- Terms Accepted: " + str(bool(tcagr)) + "\n- Volume: " + str(configParser))
+try:
+    if configParser.get("Settings", "Fullscreen") == "True":
+        fullscreen_var = True
+    elif configParser.get("Settings", "Fullscreen") == "False":
+        fullscreen_var = False
+    else:
+        logging.error("Error parcing fullscreen bool.")
+except:
+    try:
+        configParser.set("Settings", "Fullscreen", str(False))
+        fullscreen_var = False
+        with open("settings.cfg", "w") as cfgFile:
+            configParser.write(cfgFile)
+    except:
+        configParser.add_section("Settings")
+        configParser.set("Settings", "Fullscreen", str(False))
+        fullscreen_var = False
+        with open("settings.cfg", "w") as cfgFile:
+            configParser.write(cfgFile)
+setFullscreen(True)
+logging.debug("Settings Loaded:\n- Terms Accepted: " + str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
 
 volume = float(volume_data)/100
 gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
-toilet_animation_stats = [0,5,0]
-koponen_animation_stats = [0,7,0]
+toilet_animation_stats = [0, 5, 0]
+koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
 plasmarifle_cooldown = 0
 player_hand_item = "none"
-player_keys = {"red":False,"green":False,"blue":False}
+player_keys = {"red": False,"green": False,"blue": False}
 direction = True
 FunctionKey = False
 AltPressed = False
@@ -379,7 +421,7 @@ def load_items(path):
         item_map.append(list(row))
     return item_map
 
-def load_jokebox_music():
+def load_jukebox_music():
     musikerna = os.listdir("audio/jokebox_music/")
     musics = []
 
@@ -440,7 +482,7 @@ def load_rects():
     trashcans = []
     burning_toilets = []
     burning_trashcans = []
-    jokeboxes = []
+    jukeboxes = []
     landmines = []
     w = [0,0]
     y = 0
@@ -471,7 +513,7 @@ def load_rects():
                 elif tile == 'A':
                     pass
                 elif tile == 'B':
-                    jokeboxes.append(pygame.Rect(x*34,y*34-26,42,60))
+                    jukeboxes.append(pygame.Rect(x * 34, y * 34 - 26, 42, 60))
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
                 else:
@@ -479,7 +521,7 @@ def load_rects():
                 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines
 
 
 def load_item_rects():
@@ -758,7 +800,7 @@ plasmarifle_animation = Animation("plasmarifle_firing",2,3,(255,255,255),-1)
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jokeboxes, landmines = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines = load_rects()
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -809,7 +851,7 @@ def console():
         except Exception:
             print("Encountered an error while processing your command.\nError:" + Exception)
         if setTerms != "[Error]":
-            configParser.set("Data", "TermsAccepted", setTerms)
+            configParser.set("Data", "TermsAccepted", str(setTerms))
             with open("settings.cfg", "w") as cfgFile:
                 configParser.write(cfgFile)
             print("Terms and Conditions set as: " + str(setTerms))
@@ -835,15 +877,15 @@ def agr(tcagr):
     def agree():
         logging.info("Terms and Conditions have been accepted.")
         logging.info("You said you will not get offended... Dick!")
-        configParser.set("Data", "TermsAccepted", True)
+        configParser.set("Data", "TermsAccepted", "True")
         with open("settings.cfg", "w") as cfgFile:
             configParser.write(cfgFile)
         logging.debug("Terms Agreed. Updated Value: " + configParser.get("Data", "TermsAccepted"))
-
+        tcagr_running = False
         return False
 
-    buttons.append(pygame.Rect(249,353, 200, 160))
-    texts.append(button_font1.render("I Agree", True, (255,255,255)))
+    buttons.append(pygame.Rect(249, 353, 200, 160))
+    texts.append(button_font1.render("I Agree", True, (255, 255, 255)))
     functions.append(agree)
 
     while tcagr_running:
@@ -851,10 +893,12 @@ def agr(tcagr):
             if event.type == pygame.QUIT:
                 tcagr_running = False
                 main_running = False
-            if event.type == MOUSEBUTTONUP:
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    setFullscreen(False)
                 if event.button == 1:
                     c = True
-        main_display.blit(agr_background, (0,0))
+        main_display.blit(agr_background, (0, 0))
 
         y = 0
         for button in buttons:
@@ -862,13 +906,14 @@ def agr(tcagr):
                 if c:
                     tcagr_running = functions[y]()
                 if pygame.mouse.get_pressed()[0]:
-                    button_color = (90,90,90)
+                    button_color = (90, 90, 90)
+                    agree()
                 else:
-                    button_color = (115,115,115)
+                    button_color = (115, 115, 115)
             else:
-                button_color = (100,100,100)
+                button_color = (100, 100, 100)
 
-            pygame.draw.rect(main_display,button_color,button)
+            pygame.draw.rect(main_display, button_color, button)
 
             main_display.blit(texts[y],(button.x+10,button.y+5))
             y += 1
@@ -1209,6 +1254,9 @@ def settings_menu():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    setFullscreen(False)
         
         main_display.blit(settings_background,(0,0))
 
@@ -1266,6 +1314,12 @@ def settings_menu():
         pygame.display.update()
 
 def main_menu():
+    try:
+        jukebox_music[jukeboxMusicPlaying].stop()
+    except:
+        logging.warning("Jukebox music has not been defined yet.")
+    pygame.mixer.music.unpause()
+
     global main_menu_running, main_running, go_to_main_menu
     go_to_main_menu = False
     main_menu_running = True
@@ -1275,8 +1329,8 @@ def main_menu():
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(volume)
 
-    play_button = pygame.Rect(450,180,300, 60)
-    settings_button = pygame.Rect(450,250,300,60)
+    play_button = pygame.Rect(450, 180, 300, 60)
+    settings_button = pygame.Rect(450, 250, 300, 60)
     quit_button = pygame.Rect(450, 320, 300, 60)
 
     play_text = button_font1.render("Play", True, (255,255,255))
@@ -1330,6 +1384,9 @@ def main_menu():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    setFullscreen(False)
 
         main_display.blit(main_menu_background, (0, 0))
         main_display.blit(pygame.transform.flip(menu_gasburner_animation.update(), False, False), (625, 450))
@@ -1362,7 +1419,7 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 
-jokebox_music = load_jokebox_music()
+jukebox_music = load_jukebox_music()
 
 if tcagr != "false":
     main_menu()
@@ -1421,14 +1478,7 @@ while main_running:
                     pygame.QUIT()
 
             if event.key == K_F11:
-                pygame.display.quit()
-                pygame.display.init()
-                if fullscreen_var:
-                    main_display = pygame.display.set_mode(display_size)
-                    fullscreen_var = False
-                else:
-                    main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
-                    fullscreen_var = True
+                setFullscreen(False)
 
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
@@ -1550,18 +1600,20 @@ while main_running:
                 screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
         x += 1
 
-    for jokebox in jokeboxes:
-        screen.blit(jokebox_texture,(jokebox.x-scroll[0],jokebox.y-scroll[1]))
-        if player_rect.colliderect(jokebox):
-            screen.blit(jokebox_tip,(jokebox.x-scroll[0]-20, jokebox.y-scroll[1]-30))
+    for jukebox in jukeboxes:
+        screen.blit(jukebox_texture,(jukebox.x-scroll[0],jukebox.y-scroll[1]))
+        if player_rect.colliderect(jukebox):
+            screen.blit(jukebox_tip,(jukebox.x-scroll[0]-20, jukebox.y-scroll[1]-30))
             if FunctionKey:
                 pygame.mixer.music.pause()
-                jokebox_music[jokeboxMusicPlaying].stop()
-                jokeboxMusicPlaying = int(random.uniform(0, len(jokebox_music)))
-                jokebox_music[jokeboxMusicPlaying].play()
+                jukebox_music[jukeboxMusicPlaying].stop()
+                while jukeboxMusicPlaying == lastJukeboxSong:
+                    jukeboxMusicPlaying = int(random.uniform(0, len(jukebox_music)))
+                lastJukeboxSong = jukeboxMusicPlaying
+                jukebox_music[jukeboxMusicPlaying].play()
         else:
-            for x in range(len(jokebox_music)):
-                jokebox_music[x].stop()
+            for x in range(len(jukebox_music)):
+                jukebox_music[x].stop()
 
             pygame.mixer.music.unpause()
 
