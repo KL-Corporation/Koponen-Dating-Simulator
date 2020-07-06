@@ -932,6 +932,7 @@ def agr(tcagr):
     functions = []
 
     def agree():
+        global tcagr_running
         logging.info("Terms and Conditions have been accepted.")
         logging.info("You said you will not get offended... Dick!")
         configParser.set("Data", "TermsAccepted", "True")
