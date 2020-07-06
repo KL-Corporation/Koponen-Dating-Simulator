@@ -216,7 +216,7 @@ door_open = pygame.image.load("resources/build/door_open2.png")
 bricks = pygame.image.load("resources/build/bricks.png")
 tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
-jukebox_texture = pygame.image.load("resources/build/jokebox.png")
+jukebox_texture = pygame.image.load("resources/build/jukebox.png")
 landmine_texture = pygame.image.load("resources/build/landmine.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
@@ -288,7 +288,7 @@ playerMovingLeft = False
 playerSprinting = False
 plasmarifle_fire = False
 jukeboxMusicPlaying = 0
-lastJukeboxSong = 0
+lastJukeboxSong = [0, 0, 0, 0, 0]
 playerStamina = 100.0
 gasburnerBurning = False
 plasmabullets = []
@@ -480,11 +480,11 @@ def load_items(path):
     return item_map
 
 def load_jukebox_music():
-    musikerna = os.listdir("audio/jokebox_music/")
+    musikerna = os.listdir("audio/jukebox_music/")
     musics = []
 
     for musiken in musikerna:
-        musics.append(pygame.mixer.Sound("audio/jokebox_music/" + musiken))
+        musics.append(pygame.mixer.Sound("audio/jukebox_music/" + musiken))
 
     random.shuffle(musics)
 
@@ -1701,9 +1701,14 @@ while main_running:
             if FunctionKey:
                 pygame.mixer.music.pause()
                 jukebox_music[jukeboxMusicPlaying].stop()
-                while jukeboxMusicPlaying == lastJukeboxSong:
+                while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
                     jukeboxMusicPlaying = int(random.uniform(0, len(jukebox_music)))
-                lastJukeboxSong = jukeboxMusicPlaying
+                
+                lastJukeboxSong[4] = lastJukeboxSong[3]
+                lastJukeboxSong[3] = lastJukeboxSong[2]
+                lastJukeboxSong[2] = lastJukeboxSong[1]
+                lastJukeboxSong[1] = lastJukeboxSong[0]
+                lastJukeboxSong[0] = jukeboxMusicPlaying
                 jukebox_music[jukeboxMusicPlaying].play()
         else:
             for x in range(len(jukebox_music)):
