@@ -1634,7 +1634,6 @@ while main_running:
         inventory_slot = len(inventory) - inventory_slot
     if inventory_slot < 0:
         inventory_slot = len(inventory) + inventory_slot
-    print(inventory_slot)
 
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
