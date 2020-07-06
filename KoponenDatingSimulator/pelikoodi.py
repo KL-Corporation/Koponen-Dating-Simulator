@@ -242,6 +242,7 @@ ss_bonuscard = pygame.image.load("resources/items/ss_bonuscard.png").convert()
 lappi_sytytyspalat = pygame.image.load("resources/items/lappi_sytytyspalat.png").convert()
 plasmarifle = pygame.image.load("resources/items/plasmarifle.png").convert()
 plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
+cell = pygame.image.load("resources/items/cell.png")
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
@@ -253,7 +254,7 @@ ss_bonuscard.set_colorkey((255, 0, 0))
 lappi_sytytyspalat.set_colorkey((255, 255, 255))
 plasmarifle.set_colorkey((255, 255, 255))
 plasma_ammo.set_colorkey((255, 255, 255))
-
+cell.set_colorkey((255, 255, 255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -272,6 +273,7 @@ landmine_explosion = pygame.mixer.Sound("audio/misc/landmine.wav")
 hurt_sound = pygame.mixer.Sound("audio/misc/dsplpain.wav")
 plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
 weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
+item_pickup = pygame.mixer.Sound("audio/misc/dsitemup.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -444,14 +446,14 @@ def SaveData():
 
 #endregion
 #region Quit Handling
-    def quit_function():
-        global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running
-        main_menu_running = False
-        main_running = False
-        tcagr_running = False
-        koponenTalking = False
-        esc_menu = False
-        settings_running = False
+def quit_function():
+    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running
+    main_menu_running = False
+    main_running = False
+    tcagr_running = False
+    koponenTalking = False
+    esc_menu = False
+    settings_running = False
 #endregion
 #region Pickup Sound
 def play_key_pickup():
@@ -620,6 +622,9 @@ def load_item_rects():
             if item == '8':
                 item_ids.append("plasmarifle")
                 append_rect()
+            if item == '9':
+                item_ids.append("cell")
+                append_rect()
             x += 1
         y += 1
     return item_rects, item_ids, task_items
@@ -725,7 +730,7 @@ def item_collision_test(rect, items):
     global logging
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory,inventory_slot, item_ids, player_keys, item_rects
+    global player_hand_item, player_score, inventory,inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma
 
     def s(score):
         global player_score
@@ -798,6 +803,11 @@ def item_collision_test(rect, items):
                     player_keys["blue"] = True
                     key_pickup.play()
                     item_rects.remove(item)
+                    del item_ids[x]
+                elif i == "cell":
+                    ammunition_plasma += 30
+                    item_rects.remove(item)
+                    item_pickup.play()
                     del item_ids[x]
 
         x += 1
@@ -944,6 +954,7 @@ def agr(tcagr):
     functions = []
 
     def agree():
+        global tcagr_running
         logging.info("Terms and Conditions have been accepted.")
         logging.info("You said you will not get offended... Dick!")
         configParser.set("Data", "TermsAccepted", "True")
@@ -1228,7 +1239,6 @@ def esc_menu_f():
     def goto_main_menu():
         global esc_menu, go_to_main_menu
         esc_menu = False
-        main_running = False
         go_to_main_menu = True
         
 
@@ -1781,6 +1791,8 @@ while main_running:
             screen.blit(lappi_sytytyspalat, (item.x-scroll[0], item.y-scroll[1]+17))
         if item_ids[b] == "plasmarifle":
             screen.blit(plasmarifle, (item.x-scroll[0], item.y-scroll[1]+17))
+        if item_ids[b] == "cell":
+            screen.blit(cell, (item.x-scroll[0], item.y-scroll[1]+17))
         b += 1
 
 #endregion

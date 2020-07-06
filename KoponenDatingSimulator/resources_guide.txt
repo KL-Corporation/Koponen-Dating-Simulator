@@ -33,3 +33,4 @@ items:
 6 = ss_bonuscard
 7 = lappi_sytytyspalat
 8 = plasmarifle
+9 = cell
