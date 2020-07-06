@@ -146,7 +146,7 @@ def setFullscreen(reverseFullscreen):
     else:
         main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
         fullscreen_var = True
-    configParser.set("Settings", "Fullscreen", fullscreen_var)
+    configParser.set("Settings", "Fullscreen", str(fullscreen_var))
     with open("settings.cfg", "w") as cfgFile:
         configParser.write(cfgFile)
 #endregion
@@ -154,7 +154,7 @@ def setFullscreen(reverseFullscreen):
 
 logFiles = os.listdir("logs/")
 
-while len(logFiles) > 5:
+while len(logFiles) >= 5:
     os.remove("logs/" + logFiles[0])
     logFiles = os.listdir("logs/")
 
@@ -296,10 +296,15 @@ configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
 configParser.read(configFilePath)
 
 try:
-    tcagr = bool(configParser.get("Data", "TermsAccepted"))
+    if configParser.get("Data", "TermsAccepted") == "True":
+        tcagr = True
+    elif configParser.get("Data", "TermsAccepted") == "False":
+        tcagr = False
+    else:
+        logging.error("Error parcing terms and conditions bool.")
 except:
     configParser.add_section("Data")
-    configParser.set("Data", "TermsAccepted", False)
+    configParser.set("Data", "TermsAccepted", str(False))
     tcagr = False
     with open("settings.cfg", "w") as cfgFile:
         configParser.write(cfgFile)
@@ -312,22 +317,26 @@ except:
     with open("settings.cfg", "w") as cfgFile:
         configParser.write(cfgFile)
 try:
-    fullscreen_var = bool(configParser.get("Settings", "Fullscreen"))
+    if configParser.get("Settings", "Fullscreen") == "True":
+        fullscreen_var = True
+    elif configParser.get("Settings", "Fullscreen") == "False":
+        fullscreen_var = False
+    else:
+        logging.error("Error parcing fullscreen bool.")
 except:
     try:
-        configParser.set("Settings", "Fullscreen", False)
+        configParser.set("Settings", "Fullscreen", str(False))
         fullscreen_var = False
         with open("settings.cfg", "w") as cfgFile:
             configParser.write(cfgFile)
     except:
         configParser.add_section("Settings")
-        configParser.set("Settings", "Fullscreen", False)
+        configParser.set("Settings", "Fullscreen", str(False))
         fullscreen_var = False
         with open("settings.cfg", "w") as cfgFile:
             configParser.write(cfgFile)
 setFullscreen(True)
-
-logging.debug("Settings Loaded:\n- Terms Accepted: " + str(bool(tcagr)) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
+logging.debug("Settings Loaded:\n- Terms Accepted: " + str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
 
 volume = float(volume_data)/100
 gasburner_animation_stats = [0, 4, 0]
@@ -840,7 +849,7 @@ def console():
         except Exception:
             print("Encountered an error while processing your command.\nError:" + Exception)
         if setTerms != "[Error]":
-            configParser.set("Data", "TermsAccepted", setTerms)
+            configParser.set("Data", "TermsAccepted", str(setTerms))
             with open("settings.cfg", "w") as cfgFile:
                 configParser.write(cfgFile)
             print("Terms and Conditions set as: " + str(setTerms))
@@ -866,15 +875,15 @@ def agr(tcagr):
     def agree():
         logging.info("Terms and Conditions have been accepted.")
         logging.info("You said you will not get offended... Dick!")
-        configParser.set("Data", "TermsAccepted", True)
+        configParser.set("Data", "TermsAccepted", "True")
         with open("settings.cfg", "w") as cfgFile:
             configParser.write(cfgFile)
         logging.debug("Terms Agreed. Updated Value: " + configParser.get("Data", "TermsAccepted"))
-
+        tcagr_running = False
         return False
 
-    buttons.append(pygame.Rect(249,353, 200, 160))
-    texts.append(button_font1.render("I Agree", True, (255,255,255)))
+    buttons.append(pygame.Rect(249, 353, 200, 160))
+    texts.append(button_font1.render("I Agree", True, (255, 255, 255)))
     functions.append(agree)
 
     while tcagr_running:
@@ -887,7 +896,7 @@ def agr(tcagr):
                     setFullscreen(False)
                 if event.button == 1:
                     c = True
-        main_display.blit(agr_background, (0,0))
+        main_display.blit(agr_background, (0, 0))
 
         y = 0
         for button in buttons:
@@ -895,13 +904,14 @@ def agr(tcagr):
                 if c:
                     tcagr_running = functions[y]()
                 if pygame.mouse.get_pressed()[0]:
-                    button_color = (90,90,90)
+                    button_color = (90, 90, 90)
+                    agree()
                 else:
-                    button_color = (115,115,115)
+                    button_color = (115, 115, 115)
             else:
-                button_color = (100,100,100)
+                button_color = (100, 100, 100)
 
-            pygame.draw.rect(main_display,button_color,button)
+            pygame.draw.rect(main_display, button_color, button)
 
             main_display.blit(texts[y],(button.x+10,button.y+5))
             y += 1
@@ -1302,7 +1312,10 @@ def settings_menu():
         pygame.display.update()
 
 def main_menu():
-    jukebox_music[jukeboxMusicPlaying].stop()
+    try:
+        jukebox_music[jukeboxMusicPlaying].stop()
+    except:
+        logging.warning("Jukebox music has not been defined yet.")
     pygame.mixer.music.unpause()
 
     global main_menu_running, main_running, go_to_main_menu
