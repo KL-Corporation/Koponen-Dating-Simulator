@@ -295,7 +295,6 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 #endregion Lataukset
 
 main_running = True
-main_start = False
 playerMovingRight = False
 playerMovingLeft = False
 playerSprinting = False
@@ -407,7 +406,7 @@ inventory_slot = 0
 doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
-player_rect = pygame.Rect(100, 100, 33, 65)
+player_rect = pygame.Rect(100, 100, 30, 65)
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
 koponen_movement = [0, 6]
@@ -1258,7 +1257,6 @@ def esc_menu_f():
         global esc_menu, go_to_main_menu
         esc_menu = False
         go_to_main_menu = True
-        
 
     functions.append(resume)
     functions.append(save)
@@ -1282,10 +1280,10 @@ def esc_menu_f():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-        esc_menu_surface.fill((123,134,111))
-        esc_menu_surface.blit(pygame.transform.scale(text_icon, (250,139)),(125,10))
+        esc_menu_surface.fill((123, 134, 111))
+        esc_menu_surface.blit(pygame.transform.scale(text_icon, (250, 139)),(125, 10))
         point = list(pygame.mouse.get_pos())
-        point[0] -= display_size[0]/2-250
+        point[0] -= display_size[0] / 2 - 250
         point[1] -= 120
         y = 0
         for button in buttons:
@@ -1309,7 +1307,7 @@ def esc_menu_f():
             esc_menu_surface.blit(texts[y],(button.x+x,button.y+3))
             y += 1
 
-        main_display.blit(esc_menu_surface,(display_size[0]/2-250,120))
+        main_display.blit(esc_menu_surface,(display_size[0] / 2 - 250, 120))
         pygame.display.update()
         c = False
 
@@ -1426,9 +1424,9 @@ def main_menu():
     settings_button = pygame.Rect(450, 250, 300, 60)
     quit_button = pygame.Rect(450, 320, 300, 60)
 
-    play_text = button_font1.render("Play", True, (255,255,255))
-    settings_text = button_font1.render("Settings", True, (255,255,255))
-    quit_text = button_font1.render("Quit", True, (255,255,255))
+    play_text = button_font1.render("Play", True, (255, 255, 255))
+    settings_text = button_font1.render("Settings", True, (255, 255, 255))
+    quit_text = button_font1.render("Quit", True, (255, 255, 255))
 
     def play_function():
         pygame.mouse.set_visible(False)
@@ -1444,6 +1442,7 @@ def main_menu():
         for key in player_keys:
             player_keys[key] = False
         logging.info("Press F4 to commit suicide")
+        LoadSave()
     def settings_function():
         settings_menu()
 
@@ -1538,15 +1537,8 @@ for i_id in item_ids:
         else:
             inventory_slot += 1
 #endregion
-#region Game Start
-def GameStart():
-    LoadSave()
-#endregion
 #region Main Running
 while main_running:
-    if main_start == False:
-        main_start = True
-        GameStart()
 #region Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -2195,6 +2187,4 @@ while main_running:
         tick = 0
     clock.tick(60)
 #endregion
-else:
-    main_start = False
 #endregion
