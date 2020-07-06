@@ -1193,7 +1193,6 @@ def koponen_talk():
 
 #endregion
 #region Menus
-
 def esc_menu_f():
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
@@ -1287,7 +1286,6 @@ def esc_menu_f():
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
-
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, volume
     c = False
@@ -1380,7 +1378,6 @@ def settings_menu():
 
         c = False
         pygame.display.update()
-
 def main_menu():
     try:
         jukebox_music[jukeboxMusicPlaying].stop()
@@ -1481,13 +1478,10 @@ def main_menu():
 
         pygame.display.update()
         c = False
-
 #endregion
 #region Check Terms
 agr(tcagr)
-
 jukebox_music = load_jukebox_music()
-
 if tcagr != "false":
     main_menu()
 #endregion
@@ -1495,23 +1489,20 @@ if tcagr != "false":
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
 #endregion
 #region Item Initialisation
-
 logging.debug("Items Initialised: " + str(len(item_ids)))
 for i_id in item_ids:
     logging.debug("Initialised Item: (ID)" + i_id)
-
 #endregion
 #region Inventory Slot Switching
     def inventoryLeft():
         global inventory_slot, inventoryDoubles, inventory
         checkSlot = inventory_slot - 2
         if checkSlot < 0:
-            checkSlot = len(inventory) - 3
+            checkSlot = len(inventory) + checkSlot
         if(inventoryDoubles[checkSlot] == True):
             inventory_slot -= 2
         else:
             inventory_slot -= 1
-
     def inventoryRight():
         global inventory_slot, inventoryDoubles
         if(inventoryDoubles[inventory_slot] == True):
@@ -1565,7 +1556,7 @@ while main_running:
                                 item_rects[-1].bottom = tile.top
                                 u = False
 
-                if inventoryDoubles[inventory_slot] == True:
+                if inventoryDoubles[inventory_slot] == False:
                     inventory[inventory_slot + 1] = "none"
                 inventory[inventory_slot] = "none"
 
@@ -1629,10 +1620,11 @@ while main_running:
             if inventoryDoubles[i] == True:
                 inventoryDoubleOffset += 1
     inventoryDoubleOffsetCounter()
-    if inventory_slot >= len(inventory) - inventoryDoubleOffset:
-        inventory_slot = 0
+    if inventory_slot >= len(inventory):
+        inventory_slot = len(inventory) - inventory_slot
     if inventory_slot < 0:
-        inventory_slot = len(inventory) - 1 - inventoryDoubleOffset
+        inventory_slot = len(inventory) + inventory_slot
+    print(inventory_slot)
 
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
