@@ -417,16 +417,28 @@ def LoadSave():
     try:
         player_rect.x = int(Saving.get("PlayerPosition", "X"))
     except:
-        print("CHECK THIS OUT: " + Exception)
         Saving.add_section("PlayerPosition")
-        Saving.set("PlayerPosition", "X", str(100))
-        player_rect.x = 100
+        Saving.set("PlayerPosition", "X", str(player_rect.x))
         with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
             Saving.write(savFile)
+    try:
+        player_rect.y = int(Saving.get("PlayerPosition", "Y"))
+    except:
+        try:
+            Saving.set("PlayerPosition", "Y", str(player_rect.y))
+            with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
+                Saving.write(savFile)
+        except:
+            Saving.add_section("PlayerPosition")
+            Saving.set("PlayerPosition", "Y", str(player_rect.y))
+            with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
+                Saving.write(savFile)
 
 def SaveData():
     global Saving, player_rect, selectedSave
     Saving.set("PlayerPosition", "X", str(player_rect.x))
+    Saving.set("PlayerPosition", "Y", str(player_rect.y))
+
     with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
         Saving.write(savFile)
 
@@ -1218,6 +1230,7 @@ def esc_menu_f():
     def goto_main_menu():
         global esc_menu, go_to_main_menu
         esc_menu = False
+        main_running = False
         go_to_main_menu = True
         
 
@@ -1514,9 +1527,9 @@ def GameStart():
 #region Main Running
 while main_running:
     if main_start == False:
-#region Events
         main_start = True
         GameStart()
+#region Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_function()
@@ -2163,5 +2176,6 @@ while main_running:
         tick = 0
     clock.tick(60)
 #endregion
+else:
+    main_start = False
 #endregion
-main_start = False
