@@ -1,5 +1,3 @@
-#Use Ctrl + K + 0 to fold all regions and Ctrl + K + J to unfold all regions
-
 #region Importing
 import pygame
 import os
@@ -17,7 +15,7 @@ pygame.init()
 display_size = (1200, 800)
 screen_size = (600, 400)
 
-pygame.mouse.set_cursor(*pygame.cursors.tri_left)
+pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
@@ -198,7 +196,6 @@ alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
 
 #region Downloads
-
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
 main_menu_background = pygame.image.load("resources/main_menu/main_menu_bc.png")
@@ -301,7 +298,6 @@ plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
-
 #endregion Lataukset
 
 main_running = True
@@ -470,7 +466,7 @@ def SaveData():
     global Saving, player_rect, selectedSave
     Saving.set("PlayerPosition", "X", str(player_rect.x))
     Saving.set("PlayerPosition", "Y", str(player_rect.y))
-    Saving.Set("PlayerData", "Name", str(player_name))
+    Saving.set("PlayerData", "Name", str(player_name))
 
     with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
         Saving.write(savFile)
