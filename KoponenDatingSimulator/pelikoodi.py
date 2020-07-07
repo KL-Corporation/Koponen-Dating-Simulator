@@ -139,6 +139,11 @@ class Zombie:
         self.speed = speed
         self.rect = pygame.Rect(position[0], position[1], 32, 64)
         self.walking = True
+        self.direction = False
+        self.movement = [speed,8]
+        self.hits = {}
+        self.playDeathAnimation = True
+        self.dead = False
         
     def search(self):
         pass
@@ -255,6 +260,7 @@ lappi_sytytyspalat = pygame.image.load("resources/items/lappi_sytytyspalat.png")
 plasmarifle = pygame.image.load("resources/items/plasmarifle.png").convert()
 plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
 cell = pygame.image.load("resources/items/cell.png")
+zombie_corpse = pygame.image.load("resources/animations/z_death_4.png").convert()
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
@@ -267,6 +273,7 @@ lappi_sytytyspalat.set_colorkey((255, 255, 255))
 plasmarifle.set_colorkey((255, 255, 255))
 plasma_ammo.set_colorkey((255, 255, 255))
 cell.set_colorkey((255, 255, 255))
+zombie_corpse.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -588,7 +595,7 @@ def load_rects():
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
                 elif tile == 'Z':
-                    zombies.append(Zombie((x*34,y*34-34),100,2))
+                    zombies.append(Zombie((300,100),100,1))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
@@ -887,7 +894,7 @@ menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 2
 burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0),-1)
 explosion_animation = Animation("explosion", 7,5,(255,255,255),1)
 plasmarifle_animation = Animation("plasmarifle_firing",2,3,(255,255,255),-1)
-zombie_death_animation = Animation("z_death",5,6,(255,255,255),-1)
+zombie_death_animation = Animation("z_death",5,6,(255,255,255),1)
 zombie_walk_animation = Animation("z_walk",3,10,(255,255,255),-1)
 zombie_attack_animation = Animation("z_attack",4,10,(255,255,255),-1)
 #endregion
@@ -897,6 +904,7 @@ world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies = load_rects()
+print(zombies)
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -1743,6 +1751,14 @@ while main_running:
             if player_health < 0:
                 player_health = 0
             explosion_positions.append((landmine.x-40,landmine.y-58))
+        for zombie1 in zombies:
+            if zombie1.rect.colliderect(landmine):
+                landmines.remove(landmine)
+                landmine_explosion.play()
+                zombie1.health -= 140
+                if zombie1.health < 0:
+                    zombie1.health = 0
+                explosion_positions.append((landmine.x-40,landmine.y-58))
 
     if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
 
@@ -1846,6 +1862,32 @@ while main_running:
     if player_health > 0:
         player_rect, collisions = move(player_rect, player_movement, tile_rects)
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
+
+    for zombie1 in zombies:
+
+        if zombie1.health > 0:
+            zombie1.rect, zombie1.hits = move(zombie1.rect, zombie1.movement, tile_rects)
+
+            if zombie1.movement[0] != 0:
+                zombie1.walking = True
+                if zombie1.movement[0] > 0:
+                    zombie1.direction = False
+                else:
+                    zombie1.direction = True 
+            else:
+                zombie1.walking = False
+            
+            screen.blit(pygame.transform.flip(zombie_walk_animation.update(), zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
+
+            if zombie1.hits["left"] or zombie1.hits["right"]:
+                zombie1.movement[0] = -zombie1.movement[0]
+        elif zombie1.playDeathAnimation:
+            d, s = zombie_death_animation.update()
+            screen.blit(pygame.transform.flip(d, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
+            if s:
+                zombie1.playDeathAnimation = False
+        else:
+            screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]+14))
 
     if k_collisions["left"]:
         koponen_movingx = -koponen_movingx
