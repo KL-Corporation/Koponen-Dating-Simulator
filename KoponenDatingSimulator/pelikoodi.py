@@ -433,7 +433,7 @@ DebugMode = False
 Saving = configparser.RawConfigParser()
 
 def LoadSave():
-    global Saving, player_rect, selectedSave
+    global Saving, player_rect, selectedSave, player_name
     saveFilePath = os.path.join(os.path.dirname(__file__), 'saves/save_' + str(selectedSave) + ".kds")
     Saving.read(saveFilePath)
 
@@ -456,11 +456,21 @@ def LoadSave():
             Saving.set("PlayerPosition", "Y", str(player_rect.y))
             with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
                 Saving.write(savFile)
+    try:
+        player_name = str(Saving.get("PlayerData", "Name"))
+        if len(player_name) < 1:
+            player_name = "Sinä"
+    except:
+        Saving.add_section("PlayerData")
+        Saving.set("PlayerData", "Name", str(player_name))
+        with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
+            Saving.write(savFile)
 
 def SaveData():
     global Saving, player_rect, selectedSave
     Saving.set("PlayerPosition", "X", str(player_rect.x))
     Saving.set("PlayerPosition", "Y", str(player_rect.y))
+    Saving.Set("PlayerData", "Name", str(player_name))
 
     with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
         Saving.write(savFile)
