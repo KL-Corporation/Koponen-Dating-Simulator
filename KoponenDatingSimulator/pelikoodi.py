@@ -9,7 +9,6 @@ import threading
 import configparser
 from datetime import datetime
 from pygame.locals import *
-from moviepy.editor import *
 #endregion
 #region PyGame Initialisation
 
