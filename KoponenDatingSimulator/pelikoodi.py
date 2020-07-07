@@ -1,5 +1,3 @@
-#Use Ctrl + K + 0 to fold all regions and Ctrl + K + J to unfold all regions
-
 #region Importing
 import pygame
 import os
@@ -17,7 +15,7 @@ pygame.init()
 display_size = (1200, 800)
 screen_size = (600, 400)
 
-pygame.mouse.set_cursor(*pygame.cursors.tri_left)
+pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
@@ -241,7 +239,6 @@ alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
 
 #region Downloads
-
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
 main_menu_background = pygame.image.load("resources/main_menu/main_menu_bc.png")
@@ -351,7 +348,6 @@ hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
-
 #endregion Lataukset
 
 main_running = True
@@ -429,7 +425,7 @@ koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
 plasmarifle_cooldown = 0
 player_hand_item = "none"
-player_keys = {"red": False,"green": False,"blue": False}
+player_keys = {"red": False, "green": False, "blue": False}
 direction = True
 FunctionKey = False
 AltPressed = False
@@ -484,7 +480,7 @@ DebugMode = False
 Saving = configparser.RawConfigParser()
 
 def LoadSave():
-    global Saving, player_rect, selectedSave
+    global Saving, player_rect, selectedSave, player_name
     saveFilePath = os.path.join(os.path.dirname(__file__), 'saves/save_' + str(selectedSave) + ".kds")
     Saving.read(saveFilePath)
 
@@ -507,11 +503,21 @@ def LoadSave():
             Saving.set("PlayerPosition", "Y", str(player_rect.y))
             with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
                 Saving.write(savFile)
+    try:
+        player_name = str(Saving.get("PlayerData", "Name"))
+        if len(player_name) < 1:
+            player_name = "Sinä"
+    except:
+        Saving.add_section("PlayerData")
+        Saving.set("PlayerData", "Name", str(player_name))
+        with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
+            Saving.write(savFile)
 
 def SaveData():
     global Saving, player_rect, selectedSave
     Saving.set("PlayerPosition", "X", str(player_rect.x))
     Saving.set("PlayerPosition", "Y", str(player_rect.y))
+    Saving.set("PlayerData", "Name", str(player_name))
 
     with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
         Saving.write(savFile)
@@ -808,7 +814,7 @@ def item_collision_test(rect, items):
     global logging
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory,inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma
+    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma
 
     def s(score):
         global player_score
@@ -1647,7 +1653,7 @@ while main_running:
                                 item_rects[-1].bottom = tile.top
                                 u = False
 
-                if inventoryDoubles[inventory_slot] == False:
+                if inventoryDoubles[inventory_slot] == True:
                     inventory[inventory_slot + 1] = "none"
                 inventory[inventory_slot] = "none"
 
@@ -2200,7 +2206,7 @@ while main_running:
 
 #endregion
 #region Inventory Rendering
-    for i in range(len(inventory) - 1):
+    for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
                 screen.blit(gasburner_off,((i * 34) + 10 + (34 / gasburner_off.get_width() * 2), 80))
@@ -2231,19 +2237,19 @@ while main_running:
     pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
 
     if inventory_slot:
-        if inventoryDoubles[inventory_slot] == True:
+        if inventoryDoubles[inventory_slot] == False:
             scaledSlotWidth = 68
             if inventory[i] == "coffeemug":
-                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
+                screen.blit(coffeemug,((i * 34) + 10 + ((34 - coffeemug.get_width()) / 2), 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "ss_bonuscard":
-                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
+                screen.blit(ss_bonuscard,((i * 34) + 10 + ((34 - ss_bonuscard.get_width()) / 2), 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + ((34 - lappi_sytytyspalat.get_width()) / 2), 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
-                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                screen.blit(plasmarifle, ((i * 34) + 10 + ((68 - plasmarifle.get_width()) / 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
                 inventoryDoubles[i] = True #True, koska vie kaksi slottia
 
     for double in inventoryDoubles:
