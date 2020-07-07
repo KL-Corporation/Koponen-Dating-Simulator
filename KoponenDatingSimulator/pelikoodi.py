@@ -126,15 +126,56 @@ class plasma_bullet:
         for tile in tile_rects:
             if self.rect.colliderect(tile):
                 self.done = True
+                plasma_hitting.play()
         for zombie1 in zombies:
             if self.rect.colliderect(zombie1) == True and zombie1.playDeathAnimation == True:
                 self.done = True
                 zombie1.health -= 10
+                plasma_hitting.play()
                 
         self.display.blit(plasma_ammo, (self.rect.x-scroll[0],self.rect.y-scroll[1]))
 
         return self.done
-        
+class Bullet:
+
+    def __init__(self, _position, _direction):
+        self.position = _position
+        self.direction = not _direction
+        self.move = 0
+
+
+    def shoot(self, _tile_rects):
+
+        global zombies, screen
+
+        if self.direction:
+            self.move = 28
+        else:
+            self.move = -28
+        q = True
+        counter = 0
+        while q:
+
+            self.position[0] += self.move
+
+            for tile in _tile_rects:
+                if tile.collidepoint(self.position):
+                    q = False
+                    return "wall"
+
+            for zombie1 in zombies:
+                if zombie1.rect.collidepoint(tuple(self.position)):
+                    zombie1.health -= 50
+                    q = False
+                    return "enemy"
+            
+
+            counter += 1
+            if counter > 300:
+                q = False
+        return "null"
+
+
 class Zombie:
 
     def __init__(self, position, health, speed):
@@ -147,12 +188,14 @@ class Zombie:
         self.movement = [speed,8]
         self.hits = {}
         self.playDeathAnimation = True
+        self.attacking = False
+        self.true_movement = self.movement.copy()
         
-    def search(self):
-        pass
+    def search(self, search_object):
 
-    def _attack(self):
-        pass
+        if self.rect.colliderect(search_object):
+            self.attacking = True
+            return self.attacking
 
 #endregion
 #region Fullscreen
@@ -264,6 +307,8 @@ plasmarifle = pygame.image.load("resources/items/plasmarifle.png").convert()
 plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
 cell = pygame.image.load("resources/items/cell.png")
 zombie_corpse = pygame.image.load("resources/animations/z_death_4.png").convert()
+pistol_texture = pygame.image.load("resources/items/pistol.png").convert()
+pistol_f_texture = pygame.image.load("resources/items/pistol_firing.png").convert()
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
@@ -277,6 +322,8 @@ plasmarifle.set_colorkey((255, 255, 255))
 plasma_ammo.set_colorkey((255, 255, 255))
 cell.set_colorkey((255, 255, 255))
 zombie_corpse.set_colorkey((255,255,255))
+pistol_texture.set_colorkey((255,255,255))
+pistol_f_texture.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -296,9 +343,12 @@ hurt_sound = pygame.mixer.Sound("audio/misc/dsplpain.wav")
 plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
 weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
 item_pickup = pygame.mixer.Sound("audio/misc/dsitemup.wav")
+plasma_hitting = pygame.mixer.Sound("audio/misc/dsfirxpl.wav")
+pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
+plasma_hitting.set_volume(0.03)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 
@@ -319,7 +369,7 @@ knifeInUse = False
 currently_on_mission = False
 current_mission = "none"
 player_name = "Sinä"
-
+pistolFire = False
 fullscreen_var = False
 
 configParser = configparser.RawConfigParser()
@@ -400,6 +450,7 @@ player_health = 100
 last_player_health = 100
 player_death_event = False
 animation_has_played = False
+attack_counter = 0
 
 ammunition_plasma = 60
 
@@ -598,7 +649,7 @@ def load_rects():
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
                 elif tile == 'Z':
-                    zombies.append(Zombie((300,100),100,1))
+                    zombies.append(Zombie((x*34,y*34-34),100,1))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
@@ -648,6 +699,9 @@ def load_item_rects():
                 append_rect()
             if item == '9':
                 item_ids.append("cell")
+                append_rect()
+            if item == '!':
+                item_ids.append("pistol")
                 append_rect()
             x += 1
         y += 1
@@ -809,6 +863,12 @@ def item_collision_test(rect, items):
                     elif i == "lappi_sytytyspalat":
                         inventory[inventory_slot] = "lappi_sytytyspalat"
                         lappi_sytytyspalat_sound.play()
+                        item_rects.remove(item)
+                        del item_ids[x]
+                        s(20)
+                    elif i == "pistol":
+                        inventory[inventory_slot] = "pistol"
+                        weapon_pickup.play()
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
@@ -1607,6 +1667,7 @@ while main_running:
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True
+                pistolFire = True
                 if player_hand_item == "gasburner":
                     gasburnerBurning = True
                 if player_hand_item == "knife":
@@ -1825,6 +1886,8 @@ while main_running:
             screen.blit(plasmarifle, (item.x-scroll[0], item.y-scroll[1]+17))
         if item_ids[b] == "cell":
             screen.blit(cell, (item.x-scroll[0], item.y-scroll[1]+17))
+        if item_ids[b] == "pistol":
+            screen.blit(pistol_texture, (item.x-scroll[0]-23, item.y-scroll[1]+18))
         b += 1
 
 #endregion
@@ -1866,32 +1929,50 @@ while main_running:
         player_rect, collisions = move(player_rect, player_movement, tile_rects)
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
 
+    wa = zombie_walk_animation.update()
     for zombie1 in zombies:
 
         if zombie1.health > 0:
-            zombie1.rect, zombie1.hits = move(zombie1.rect, zombie1.movement, tile_rects)
+            search = zombie1.search(player_rect)
+            if not search:
+                zombie1.rect, zombie1.hits = move(zombie1.rect, zombie1.movement, tile_rects)
+                if zombie1.movement[0] != 0:
+                    zombie1.walking = True
+                    if zombie1.movement[0] > 0:
+                        zombie1.direction = False
+                    else:
+                        zombie1.direction = True 
+                else:
+                    zombie1.walking = False
+                
+                screen.blit(pygame.transform.flip(wa, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
 
-            if zombie1.movement[0] != 0:
-                zombie1.walking = True
-                if zombie1.movement[0] > 0:
+                if zombie1.hits["left"]:
+                    zombie1.movement[0] = -zombie1.movement[0]
+                elif zombie1.hits["right"]:
+                    zombie1.movement[0] = -zombie1.movement[0]
+            else:
+                attack_counter += 1
+                if attack_counter > 40:
+                    attack_counter = 0
+                    player_health -= int(random.uniform(1,11))
+                if player_rect.centerx > zombie1.rect.centerx:
                     zombie1.direction = False
                 else:
-                    zombie1.direction = True 
-            else:
-                zombie1.walking = False
-            
-            screen.blit(pygame.transform.flip(zombie_walk_animation.update(), zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
+                    zombie1.direction = True
+                screen.blit(pygame.transform.flip(zombie_attack_animation.update(), zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
 
-            if zombie1.hits["left"] or zombie1.hits["right"]:
-                zombie1.movement[0] = -zombie1.movement[0]
         elif zombie1.playDeathAnimation:
             d, s = zombie_death_animation.update()
             if not s:
                 screen.blit(pygame.transform.flip(d, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
             if s:
                 zombie1.playDeathAnimation = False
+                zombie_death_animation.reset()
         else:
             screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]+14))
+
+    #Zombien käsittely loppuu tähän
 
     if k_collisions["left"]:
         koponen_movingx = -koponen_movingx
@@ -2013,10 +2094,12 @@ while main_running:
                 offset = 49
                 offset_k = 75
                 offset_p = 75
+                offset_pi = 80
             else:
                 offset = 7
                 offset_k = 10
                 offset_p = 14
+                offset_pi = 2
                 
             if player_hand_item == "gasburner":
                 if gasburnerBurning:
@@ -2049,6 +2132,19 @@ while main_running:
                 else:
                     screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+
+            if player_hand_item == "pistol":
+                if pistolFire:
+                    screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
+                        player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
+                    bullet = Bullet([player_rect.x, player_rect.y+20], direction)
+                    hit = bullet.shoot(tile_rects)
+                    print(hit)
+                    del hit, bullet
+                    pistol_shot.play()
+                else:
+                    screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
+                        player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
 
     if player_keys["red"] == True:
         screen.blit(red_key, (10, 20))
@@ -2120,6 +2216,9 @@ while main_running:
                 inventoryDoubles[i] = False
             elif inventory[i] == "lappi_sytytyspalat":
                 screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                inventoryDoubles[i] = False
+            elif inventory[i] == "pistol":
+                screen.blit(pistol_texture,((i * 34) + 10 + (34 / pistol_texture.get_width() * 2) - 30, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
                 screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
@@ -2227,6 +2326,7 @@ while main_running:
     elif player_hand_item == "knife":
         knife_animation_stats[2] += 1
     FunctionKey = False
+    pistolFire = False
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
