@@ -126,6 +126,10 @@ class plasma_bullet:
         for tile in tile_rects:
             if self.rect.colliderect(tile):
                 self.done = True
+        for zombie1 in zombies:
+            if self.rect.colliderect(zombie1) == True and zombie1.playDeathAnimation == True:
+                self.done = True
+                zombie1.health -= 10
                 
         self.display.blit(plasma_ammo, (self.rect.x-scroll[0],self.rect.y-scroll[1]))
 
@@ -143,7 +147,6 @@ class Zombie:
         self.movement = [speed,8]
         self.hits = {}
         self.playDeathAnimation = True
-        self.dead = False
         
     def search(self):
         pass
@@ -1883,7 +1886,8 @@ while main_running:
                 zombie1.movement[0] = -zombie1.movement[0]
         elif zombie1.playDeathAnimation:
             d, s = zombie_death_animation.update()
-            screen.blit(pygame.transform.flip(d, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
+            if not s:
+                screen.blit(pygame.transform.flip(d, zombie1.direction, False),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1]))
             if s:
                 zombie1.playDeathAnimation = False
         else:
