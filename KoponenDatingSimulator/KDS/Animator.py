@@ -1,3 +1,4 @@
+import KDS.Logging
 import pygame
 
 class Animation:
@@ -31,6 +32,9 @@ class Animation:
                 self.images.append(image)
 
         print(self.images)
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Images Initialised: " + str(len(self.images)))
+        for image in self.images:
+            KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: " + str(image))
                 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin

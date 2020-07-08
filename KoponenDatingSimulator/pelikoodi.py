@@ -1,10 +1,10 @@
 #region Importing
 import KDS.ConfigManager
 import KDS.Animator
+import KDS.Logging
 import pygame
 import os
 import random
-import logging
 import threading
 from datetime import datetime
 from pygame.locals import *
@@ -20,6 +20,8 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
+
+KDS.Logging.init()
 
 #endregion
 #region Text Handling
@@ -49,27 +51,7 @@ class pygame_print_text:
         self.row += self.row_height
 
 #endregion
-#region Animator
-
-    def update(self):
-        self.tick += 1
-        if self.tick > self.ticks:
-            self.tick = 0
-            if self.loops != -1:
-                self.loops_count += 1
-                if self.loops_count == self.loops:
-                    self.done = True
-
-        if self.loops == -1:
-            return self.images[self.tick]
-        else:
-            return self.images[self.tick], self.done
-
-    def reset(self):
-        self.tick = 0
-        self.loops_count = 0
-        self.done = False
-
+#region Animations
 class plasma_bullet:
 
     def __init__(self, starting_position, direction, display_to_blit):
@@ -136,7 +118,6 @@ class Bullet:
                 q = False
         return "null"
 
-
 class Zombie:
 
     def __init__(self, position, health, speed):
@@ -173,25 +154,6 @@ def setFullscreen(reverseFullscreen):
     KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
 #endregion
 #region Initialisation
-
-try:
-    logFiles = os.listdir("logs/")
-except:
-    os.mkdir("logs")
-    f = open("logs/initLog.log", "w+")
-    f.write("*THIS LOG INITIALISES THE LOGGING SYSTEM*\n\n\nDO NOT DELETE THIS LOG FILE!")
-    f.close()
-    logFiles = os.listdir("logs/")
-
-while len(logFiles) >= 5:
-    os.remove("logs/" + logFiles[0])
-    logFiles = os.listdir("logs/")
-
-now = datetime.now()
-logging.basicConfig(filename="logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log", level=logging.NOTSET)
-logging.debug("Created log file: log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log")
-logging.info('Initialising Game...')
-
 printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
 
 esc_menu_surface = pygame.Surface((500, 400))
@@ -334,16 +296,16 @@ if KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "True":
 elif KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "False":
     tcagr = False
 else:
-    logging.error("Error parcing terms and conditions bool.")
+    KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing terms and conditions bool.")
 volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
 if KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "True":
     fullscreen_var = True
 elif KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "False":
     fullscreen_var = False
 else:
-    logging.error("Error parcing fullscreen bool.")
+    KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing fullscreen bool.")
 setFullscreen(True)
-logging.debug("Settings Loaded:\n- Terms Accepted: " + str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " + str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
 
 selectedSave = 0
 
@@ -475,9 +437,9 @@ def load_music():
     music_files = os.listdir()
 
     random.shuffle(music_files)
-    logging.debug("Music Files Initialised: " + str(len(music_files)))
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Music Files Initialised: " + str(len(music_files)))
     for track in music_files:
-        logging.debug("Initialised Music File: " + track)
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Music File: " + track)
 
     pygame.mixer.music.stop()
 
@@ -497,9 +459,9 @@ def load_ads():
     ad_files = os.listdir("resources/ads/")
 
     random.shuffle(ad_files)
-    logging.debug("Ad Files Initialised: " + str(len(ad_files)))
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Ad Files Initialised: " + str(len(ad_files)))
     for ad in ad_files:
-        logging.debug("Initialised Ad File: " + ad)
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Ad File: " + ad)
 
     ad_images = []
     
@@ -711,7 +673,6 @@ def door_collision_test():
 
 
 def item_collision_test(rect, items):
-    global logging
     hit_list = []
     x = 0
     global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma
@@ -873,7 +834,9 @@ world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies = load_rects()
-print(zombies)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Zombies Initialised: " + str(len(zombies)))
+for zombie in zombies:
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Zombie: " + str(zombie))
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
@@ -946,10 +909,10 @@ def agr(tcagr):
 
     def agree():
         global tcagr_running
-        logging.info("Terms and Conditions have been accepted.")
-        logging.info("You said you will not get offended... Dick!")
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and Conditions have been accepted.")
+        KDS.Logging.Log(KDS.Logging.LogType.info, "You said you will not get offended... Dick!")
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
-        logging.debug("Terms Agreed. Updated Value: " + KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"))
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " + KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"))
         tcagr_running = False
         return False
 
@@ -1092,7 +1055,7 @@ def koponen_talk():
         try:
             taskTaivutettu
         except NameError:
-            logging.warning("Task not defined. Defining task...")
+            KDS.Logging.Log(KDS.Logging.LogType.warning, "Task not defined. Defining task...")
             task = ""
             taskTaivutettu = ""
 
@@ -1378,7 +1341,7 @@ def main_menu():
     try:
         jukebox_music[jukeboxMusicPlaying].stop()
     except:
-        logging.warning("Jukebox music has not been defined yet.")
+        KDS.Logging.Log(KDS.Logging.LogType.warning, "Jukebox music has not been defined yet.")
     pygame.mixer.music.unpause()
 
     global main_menu_running, main_running, go_to_main_menu
@@ -1411,7 +1374,7 @@ def main_menu():
         player_rect.y = 100
         for key in player_keys:
             player_keys[key] = False
-        logging.info("Press F4 to commit suicide")
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Press F4 to commit suicide")
         LoadSave()
     def settings_function():
         settings_menu()
@@ -1486,9 +1449,9 @@ if tcagr != "false":
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
 #endregion
 #region Item Initialisation
-logging.debug("Items Initialised: " + str(len(item_ids)))
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Items Initialised: " + str(len(item_ids)))
 for i_id in item_ids:
-    logging.debug("Initialised Item: (ID)" + i_id)
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Item: (ID)" + i_id)
 #endregion
 #region Inventory Slot Switching
     def inventoryLeft():
@@ -2038,7 +2001,7 @@ while main_running:
                         player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
                     bullet = Bullet([player_rect.x, player_rect.y+20], direction)
                     hit = bullet.shoot(tile_rects)
-                    print(hit)
+                    KDS.Logging.Log(KDS.Logging.LogType.debug, str(hit))
                     del hit, bullet
                     pistol_shot.play()
                 else:
