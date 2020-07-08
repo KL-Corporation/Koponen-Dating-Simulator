@@ -355,7 +355,7 @@ inventory_slot = 0
 doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
-player_rect = pygame.Rect(100, 100, 30, 65)
+player_rect = pygame.Rect(100, 100, 28, 65)
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
 koponen_movement = [0, 6]
