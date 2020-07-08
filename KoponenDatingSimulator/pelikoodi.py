@@ -90,7 +90,7 @@ class Bullet:
 
     def shoot(self, _tile_rects):
 
-        global zombies, screen
+        global zombies, screen, sergeants
 
         if self.direction:
             self.move = 28
@@ -111,6 +111,13 @@ class Bullet:
                 if zombie1.health > 0:
                     if zombie1.rect.collidepoint(tuple(self.position)):
                         zombie1.health -= self.damage
+                        q = False
+                        return "enemy"
+
+            for sergeant in sergeants:
+                if sergeant.health > 0:
+                    if sergeant.rect.collidepoint(tuple(self.position)):
+                        sergeant.health -= self.damage
                         q = False
                         return "enemy"
             
@@ -140,6 +147,34 @@ class Zombie:
         if self.rect.colliderect(search_object):
             self.attacking = True
             return self.attacking
+
+class SergeantZombie:
+
+    def __init__(self, position, health, speed):
+        self.position = position
+        self.health = health 
+        self.rect = pygame.Rect(position[0],position[1], 34, 64)
+        self.direction = True
+        self.playDeathAnimation = True
+        self.movement = [speed, 8]
+        self.shooting = False
+        self.hits = {}
+
+    def hit_scan(self, _rect):
+        if self.rect.topleft[1] < _rect.centery < self.rect.bottomleft[1]:
+            print("On same level")
+            if self.direction:
+                if self.rect.x < _rect.x:
+                    if _rect.x - self.rect.x < 1800:
+                        return True
+            else:
+                if self.rect.x > _rect.x:
+                    if self.rect.x - _rect.x < 1800:
+                        return True
+
+        return False
+
+            
 
 #endregion
 #region Fullscreen
@@ -235,6 +270,7 @@ pistol_mag = pygame.image.load("resources/items/pistol_mag.png").convert()
 rk62_texture = pygame.image.load("resources/items/rk62.png").convert()
 rk62_f_texture = pygame.image.load("resources/items/rk62_firing.png").convert()
 rk62_mag = pygame.image.load("resources/items/rk_mag.png").convert()
+sergeant_corpse = pygame.image.load("resources/animations/seargeant_dying_4.png").convert()
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -255,6 +291,7 @@ pistol_mag.set_colorkey((255,255,255))
 rk62_texture.set_colorkey((255,255,255))
 rk62_f_texture.set_colorkey((255,255,255))
 rk62_mag.set_colorkey((255,255,255))
+sergeant_corpse.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -389,6 +426,7 @@ DebugMode = False
 
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
+
     player_rect.x = int(KDS.ConfigManager.LoadSave(selectedSave, "PlayerPosition", "X", str(player_rect.x)))
     player_rect.y = int(KDS.ConfigManager.LoadSave(selectedSave, "PlayerPosition", "Y", str(player_rect.y)))
     player_health = int(KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Health", str(player_health)))
@@ -396,11 +434,13 @@ def LoadSave():
     player_name = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Name", player_name)
 
 def SaveData():
+
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
     KDS.ConfigManager.SetSave(selectedSave, "PlayerPosition", "X", str(player_rect.x))
     KDS.ConfigManager.SetSave(selectedSave, "PlayerPosition", "Y", str(player_rect.y))
     KDS.ConfigManager.SetSave(selectedSave, "PlayerData", "Health", str(player_health))
     KDS.ConfigManager.SetSave(selectedSave, "PlayerData", "Name", str(player_name))
+
 #endregion
 #region Quit Handling
 def quit_function():
@@ -501,6 +541,7 @@ def load_rects():
     jukeboxes = []
     landmines = []
     zombies = []
+    sergeants = []
     w = [0,0]
     y = 0
     for layer in world_gen:
@@ -535,12 +576,14 @@ def load_rects():
                     landmines.append(pygame.Rect(x*34+6,y*34+23,22,11))
                 elif tile == 'Z':
                     zombies.append(Zombie((x*34,y*34-34),100,1))
+                elif tile == 'S':
+                    sergeants.append(SergeantZombie((x*34,y*34-34),220,1))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
                 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants
 
 
 def load_item_rects():
@@ -870,13 +913,17 @@ plasmarifle_animation = KDS.Animator.Animation("plasmarifle_firing", 2, 3, (255,
 zombie_death_animation = KDS.Animator.Animation("z_death",5, 6, (255, 255, 255), 1)
 zombie_walk_animation = KDS.Animator.Animation("z_walk", 3, 10, (255, 255, 255), -1)
 zombie_attack_animation = KDS.Animator.Animation("z_attack", 4, 10, (255, 255, 255), -1)
+sergeant_walk_animation = KDS.Animator.Animation("seargeant_walking",4,8,(255,255,255), -1)
+sergeant_shoot_animation = KDS.Animator.Animation("seargeant_shooting",2,6,(255,255,255),1)
+sergeant_death_animation = KDS.Animator.Animation("seargeant_dying", 5, 20, (255,255,255), 1)
 #endregion
 #region Load Game
 
 world_gen = load_map("resources/game_map")
 item_gen = load_items("resources/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants = load_rects()
+print(sergeants)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Zombies Initialised: " + str(len(zombies)))
 for zombie in zombies:
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Zombie: " + str(zombie))
@@ -1852,6 +1899,39 @@ while main_running:
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
 
     wa = zombie_walk_animation.update()
+    sa = sergeant_walk_animation.update()
+
+    for sergeant in sergeants:
+        if sergeant.health > 0:
+            hitscan = sergeant.hit_scan(player_rect)
+            if not hitscan:
+                sergeant.rect, sergeant.hits = move(sergeant.rect, sergeant.movement, tile_rects) 
+
+                if sergeant.movement[0] > 0:
+                    sergeant.direction = True
+                elif sergeant.movement[0] < 0:
+                    sergeant.direction = False
+
+                screen.blit(pygame.transform.flip(sa, sergeant.direction, False),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1]))
+
+                if sergeant.hits["right"] or sergeant.hits["left"]:
+                    sergeant.movement[0] = -sergeant.movement[0]
+
+            else:
+                u, i = sergeant_shoot_animation.update()
+                screen.blit(pygame.transform.flip(u, sergeant.direction, False),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1]))
+
+        elif sergeant.playDeathAnimation:
+            d, s = sergeant_death_animation.update()
+            if not s:
+                screen.blit(pygame.transform.flip(d, sergeant.direction, False),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1]))
+            if s:
+                sergeant.playDeathAnimation = False
+                sergeant_death_animation.reset()
+        else:
+            screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction, False),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1]+4))
+            
+    wa = zombie_walk_animation.update()
     for zombie1 in zombies:
 
         if zombie1.health > 0:
@@ -2080,7 +2160,7 @@ while main_running:
                         player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
                     bullet = Bullet([player_rect.x, player_rect.y+20], direction, 25)
                     hit = bullet.shoot(tile_rects)
-                    KDS.Logging.Log(KDS.Logging.LogType.debug, str(hit))
+                    KDS.Logging.Log(KDS.Logging.LogType.debug, ("rk62 hit an object: " + str(hit)))
                     del hit, bullet
                     rk62_sound_cooldown += 1
                     if rk62_sound_cooldown > 10:
@@ -2123,7 +2203,6 @@ while main_running:
             screen.blit(toilet_animation[toilet_animation_stats[0]], (toilet.x-scroll[0]+2, toilet.y-scroll[1]+1))
         h += 1
     h = 0
-
     for trashcan2 in trashcans:
         if burning_trashcans[h] == True:
             screen.blit(trashcan_animation[toilet_animation_stats[0]], (trashcan2.x-scroll[0]+3, trashcan2.y-scroll[1]+6))
