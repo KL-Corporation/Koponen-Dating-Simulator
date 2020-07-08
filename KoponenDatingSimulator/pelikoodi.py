@@ -1758,6 +1758,11 @@ while main_running:
         ammo_count = score_font.render("Ammo: " + str(pistol_bullets), True, (255,255,255))
         screen.blit(ammo_count,(10,360))
 
+    elif player_hand_item == "rk62":
+
+        ammo_count = score_font.render("Ammo: " + str(rk_62_ammo), True, (255,255,255))
+        screen.blit(ammo_count,(10,360))
+
     for bullet in plasmabullets:
         state = bullet.update(tile_rects)
         if state:
@@ -2069,11 +2074,13 @@ while main_running:
 
             if player_hand_item == "rk62":
                 if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
+                    rk_62_ammo -= 1
                     rk62_cooldown = 0
                     screen.blit(pygame.transform.flip(rk62_f_texture, direction, False), (
                         player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
                     bullet = Bullet([player_rect.x, player_rect.y+20], direction, 25)
                     hit = bullet.shoot(tile_rects)
+                    KDS.Logging.Log(KDS.Logging.LogType.debug, str(hit))
                     del hit, bullet
                     rk62_sound_cooldown += 1
                     if rk62_sound_cooldown > 10:
