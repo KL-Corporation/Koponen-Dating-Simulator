@@ -1,10 +1,11 @@
 #region Importing
+import KDS.ConfigManager
+import KDS.Animator
 import pygame
 import os
 import random
 import logging
 import threading
-import configparser
 from datetime import datetime
 from pygame.locals import *
 #endregion
@@ -49,44 +50,6 @@ class pygame_print_text:
 
 #endregion
 #region Animator
-
-class Animation:
-
-    """
-    Ensimmäinen argumentti odottaa animaation nimeä esim. "gasburner"
-    Toinen argumentti odottaa kyseisen animaation kuvien määrää. Jos animaatiossa on 2 kuvaa, kannattaa toiseksi argumentiksi laittaa 2
-    Kolmas argumentti odottaa yhden kuvan kestoa tickeinä.
-
-    Animaation kuvat tulee tallentaa animations-kansioon png-muodossa tähän malliin:
-        gasburner_0, gasburner_1, gasburner_2, gasburner_3 ja niin edelleen
-
-    animation_name - string, number_of_images - int, duration - int
-
-    """
-
-    def __init__(self, animation_name, number_of_images, duration, colorkey, loops): #loops = -1, if infinite loops
-        self.images = []
-        self.duration = duration
-        self.ticks = number_of_images * duration - 1
-        self.tick = 0
-        self.colorkey = colorkey
-        self.loops = loops
-        if loops != -1:
-            self.loops_count = 0
-            self.done = False
-
-        for x in range(number_of_images):
-            path = "resources/animations/" + animation_name + "_" + str(x) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
-            image = pygame.image.load(path).convert()
-            image.set_colorkey(self.colorkey) #Kaikki osat kuvasata joiden väri on RGB 255,255,255 muutetaan läpinäkyviksi
-
-            for _ in range(duration):
-                self.images.append(image)
-
-        logging.debug(self.images)
-                
-    #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
-    #update-funktio palauttaa aina yhden pygame image-objektin
 
     def update(self):
         self.tick += 1
@@ -164,9 +127,7 @@ def setFullscreen(reverseFullscreen):
     else:
         main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
         fullscreen_var = True
-    configParser.set("Settings", "Fullscreen", str(fullscreen_var))
-    with open("settings.cfg", "w") as cfgFile:
-        configParser.write(cfgFile)
+    KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
 #endregion
 #region Initialisation
 
@@ -318,50 +279,19 @@ player_name = "Sinä"
 
 fullscreen_var = False
 
-configParser = configparser.RawConfigParser()
-configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
-configParser.read(configFilePath)
-
-try:
-    if configParser.get("Data", "TermsAccepted") == "True":
-        tcagr = True
-    elif configParser.get("Data", "TermsAccepted") == "False":
-        tcagr = False
-    else:
-        logging.error("Error parcing terms and conditions bool.")
-except:
-    configParser.add_section("Data")
-    configParser.set("Data", "TermsAccepted", str(False))
+if KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "True":
+    tcagr = True
+elif KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "False":
     tcagr = False
-    with open("settings.cfg", "w") as cfgFile:
-        configParser.write(cfgFile)
-try:
-    volume_data = configParser.get("Settings", "Volume")
-except:
-    configParser.add_section("Settings")
-    configParser.set("Settings", "Volume", 15)
-    volume_data = 15
-    with open("settings.cfg", "w") as cfgFile:
-        configParser.write(cfgFile)
-try:
-    if configParser.get("Settings", "Fullscreen") == "True":
-        fullscreen_var = True
-    elif configParser.get("Settings", "Fullscreen") == "False":
-        fullscreen_var = False
-    else:
-        logging.error("Error parcing fullscreen bool.")
-except:
-    try:
-        configParser.set("Settings", "Fullscreen", str(False))
-        fullscreen_var = False
-        with open("settings.cfg", "w") as cfgFile:
-            configParser.write(cfgFile)
-    except:
-        configParser.add_section("Settings")
-        configParser.set("Settings", "Fullscreen", str(False))
-        fullscreen_var = False
-        with open("settings.cfg", "w") as cfgFile:
-            configParser.write(cfgFile)
+else:
+    logging.error("Error parcing terms and conditions bool.")
+volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
+if KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "True":
+    fullscreen_var = True
+elif KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "False":
+    fullscreen_var = False
+else:
+    logging.error("Error parcing fullscreen bool.")
 setFullscreen(True)
 logging.debug("Settings Loaded:\n- Terms Accepted: " + str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
 
@@ -426,51 +356,21 @@ DebugMode = False
 
 #endregion
 #region Save System
-Saving = configparser.RawConfigParser()
 
 def LoadSave():
-    global Saving, player_rect, selectedSave, player_name
-    saveFilePath = os.path.join(os.path.dirname(__file__), 'saves/save_' + str(selectedSave) + ".kds")
-    Saving.read(saveFilePath)
-
-    try:
-        player_rect.x = int(Saving.get("PlayerPosition", "X"))
-    except:
-        Saving.add_section("PlayerPosition")
-        Saving.set("PlayerPosition", "X", str(player_rect.x))
-        with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
-            Saving.write(savFile)
-    try:
-        player_rect.y = int(Saving.get("PlayerPosition", "Y"))
-    except:
-        try:
-            Saving.set("PlayerPosition", "Y", str(player_rect.y))
-            with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
-                Saving.write(savFile)
-        except:
-            Saving.add_section("PlayerPosition")
-            Saving.set("PlayerPosition", "Y", str(player_rect.y))
-            with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
-                Saving.write(savFile)
-    try:
-        player_name = str(Saving.get("PlayerData", "Name"))
-        if len(player_name) < 1:
-            player_name = "Sinä"
-    except:
-        Saving.add_section("PlayerData")
-        Saving.set("PlayerData", "Name", str(player_name))
-        with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
-            Saving.write(savFile)
+    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
+    player_rect.x = int(KDS.ConfigManager.LoadSave(selectedSave, "PlayerPosition", "X", str(player_rect.x)))
+    player_rect.y = int(KDS.ConfigManager.LoadSave(selectedSave, "PlayerPosition", "Y", str(player_rect.y)))
+    player_health = int(KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Health", str(player_health)))
+    last_player_health = player_health
+    player_name = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Name", player_name)
 
 def SaveData():
-    global Saving, player_rect, selectedSave
-    Saving.set("PlayerPosition", "X", str(player_rect.x))
-    Saving.set("PlayerPosition", "Y", str(player_rect.y))
-    Saving.set("PlayerData", "Name", str(player_name))
-
-    with open("saves/save_" + str(selectedSave) + ".kds", "w") as savFile:
-        Saving.write(savFile)
-
+    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
+    KDS.ConfigManager.SetSave(selectedSave, "PlayerPosition", "X", str(player_rect.x))
+    KDS.ConfigManager.SetSave(selectedSave, "PlayerPosition", "Y", str(player_rect.y))
+    KDS.ConfigManager.SetSave(selectedSave, "PlayerData", "Health", str(player_health))
+    KDS.ConfigManager.SetSave(selectedSave, "PlayerData", "Name", str(player_name))
 #endregion
 #region Quit Handling
 def quit_function():
@@ -899,13 +799,13 @@ trashcan_animation = load_animation("trashcan", 3)
 koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
-menu_gasburner_animation = Animation("main_menu_bc_gasburner", 2, 8,(255, 255, 255),-1)
-burning_tree = Animation("tree_burning", 4, 5,(0, 0, 0),-1)
-explosion_animation = Animation("explosion", 7,5,(255,255,255),1)
-plasmarifle_animation = Animation("plasmarifle_firing",2,3,(255,255,255),-1)
-zombie_death_animation = Animation("z_death",5,6,(255,255,255),1)
-zombie_walk_animation = Animation("z_walk",3,10,(255,255,255),-1)
-zombie_attack_animation = Animation("z_attack",4,10,(255,255,255),-1)
+menu_gasburner_animation = KDS.Animator.Animation("main_menu_bc_gasburner", 2, 8, (255, 255, 255), -1)
+burning_tree = KDS.Animator.Animation("tree_burning", 4, 5,(0, 0, 0), -1)
+explosion_animation = KDS.Animator.Animation("explosion", 7, 5, (255, 255, 255), 1)
+plasmarifle_animation = KDS.Animator.Animation("plasmarifle_firing", 2, 3, (255, 255, 255), -1)
+zombie_death_animation = KDS.Animator.Animation("z_death",5, 6, (255, 255, 255), 1)
+zombie_walk_animation = KDS.Animator.Animation("z_walk", 3, 10, (255, 255, 255), -1)
+zombie_attack_animation = KDS.Animator.Animation("z_attack", 4, 10, (255, 255, 255), -1)
 #endregion
 #region Load Game
 
@@ -964,10 +864,7 @@ def console():
         except Exception:
             print("Encountered an error while processing your command.\nError:" + Exception)
         if setTerms != "[Error]":
-            configParser.set("Data", "TermsAccepted", str(setTerms))
-            with open("settings.cfg", "w") as cfgFile:
-                configParser.write(cfgFile)
-            print("Terms and Conditions set as: " + str(setTerms))
+            KDS.ConfigManager.SetSetting("Data", "TermsAccepted", str(setTerms))
         else:
             print("Please provide a proper state for terms & conditions")
 
@@ -991,10 +888,8 @@ def agr(tcagr):
         global tcagr_running
         logging.info("Terms and Conditions have been accepted.")
         logging.info("You said you will not get offended... Dick!")
-        configParser.set("Data", "TermsAccepted", "True")
-        with open("settings.cfg", "w") as cfgFile:
-            configParser.write(cfgFile)
-        logging.debug("Terms Agreed. Updated Value: " + configParser.get("Data", "TermsAccepted"))
+        KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
+        logging.debug("Terms Agreed. Updated Value: " + KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"))
         tcagr_running = False
         return False
 
@@ -1391,9 +1286,7 @@ def settings_menu():
                 position = 900
             position -= 560
             position = int(position/3.4)
-            configParser.set("Settings", "Volume", position)
-            with open("settings.cfg", "w") as cfgFile:
-                configParser.write(cfgFile)
+            KDS.ConfigManager.SetSetting("Settings", "Volume", str(position))
             volume = position/100
             pygame.mixer.music.set_volume(volume)
         else:
@@ -2113,22 +2006,22 @@ while main_running:
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
-                screen.blit(gasburner_off,((i * 34) + 10 + (34 / gasburner_off.get_width() * 2), 80))
+                screen.blit(gasburner_off,((i * 34) + 17, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "knife":
-                screen.blit(knife,((i * 34) + 10 + (34 / knife.get_width() * 2), 80))
+                screen.blit(knife,((i * 34) + 15, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "coffeemug":
-                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
+                screen.blit(coffeemug,((i * 34) + 17, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "ss_bonuscard":
-                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
+                screen.blit(ss_bonuscard,((i * 34) + 12, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
+                screen.blit(lappi_sytytyspalat,((i * 34) + 15, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
-                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                screen.blit(plasmarifle, ((i * 34) + 15, 80))
                 inventoryDoubles[i] = True #True, koska vie kaksi slottia
 
     for double in inventoryDoubles:

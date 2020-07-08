@@ -22,7 +22,7 @@ t
 u
 decoration:
 A = tree
-B = jokebox
+B = jukebox
 enemies and other shit:
 Z = zombie
 items:
