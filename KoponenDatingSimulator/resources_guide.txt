@@ -37,3 +37,6 @@ items:
 8 = plasmarifle
 9 = cell
 ! = pistol
+# = pistol_mag
+% = rk62
+& = rk62_mag

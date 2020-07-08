@@ -136,10 +136,11 @@ class plasma_bullet:
         return self.done
 class Bullet:
 
-    def __init__(self, _position, _direction):
+    def __init__(self, _position, _direction, damage):
         self.position = _position
         self.direction = not _direction
         self.move = 0
+        self.damage = damage
 
 
     def shoot(self, _tile_rects):
@@ -162,10 +163,11 @@ class Bullet:
                     return "wall"
 
             for zombie1 in zombies:
-                if zombie1.rect.collidepoint(tuple(self.position)):
-                    zombie1.health -= 50
-                    q = False
-                    return "enemy"
+                if zombie1.health > 0:
+                    if zombie1.rect.collidepoint(tuple(self.position)):
+                        zombie1.health -= self.damage
+                        q = False
+                        return "enemy"
             
 
             counter += 1
@@ -306,6 +308,11 @@ cell = pygame.image.load("resources/items/cell.png")
 zombie_corpse = pygame.image.load("resources/animations/z_death_4.png").convert()
 pistol_texture = pygame.image.load("resources/items/pistol.png").convert()
 pistol_f_texture = pygame.image.load("resources/items/pistol_firing.png").convert()
+pistol_mag = pygame.image.load("resources/items/pistol_mag.png").convert()
+rk62_texture = pygame.image.load("resources/items/rk62.png").convert()
+rk62_f_texture = pygame.image.load("resources/items/rk62_firing.png").convert()
+rk62_mag = pygame.image.load("resources/items/rk_mag.png").convert()
+
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
 knife_blood.set_colorkey((255, 255, 255))
@@ -321,6 +328,10 @@ cell.set_colorkey((255, 255, 255))
 zombie_corpse.set_colorkey((255,255,255))
 pistol_texture.set_colorkey((255,255,255))
 pistol_f_texture.set_colorkey((255,255,255))
+pistol_mag.set_colorkey((255,255,255))
+rk62_texture.set_colorkey((255,255,255))
+rk62_f_texture.set_colorkey((255,255,255))
+rk62_mag.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -342,10 +353,12 @@ weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
 item_pickup = pygame.mixer.Sound("audio/misc/dsitemup.wav")
 plasma_hitting = pygame.mixer.Sound("audio/misc/dsfirxpl.wav")
 pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
+rk62_shot = pygame.mixer.Sound("audio/misc/rk62_shot.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
+rk62_shot.set_volume(0.6)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 #endregion Lataukset
@@ -424,6 +437,8 @@ toilet_animation_stats = [0, 5, 0]
 koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
 plasmarifle_cooldown = 0
+rk62_cooldown = 0
+rk62_sound_cooldown = 0
 player_hand_item = "none"
 player_keys = {"red": False, "green": False, "blue": False}
 direction = True
@@ -448,7 +463,9 @@ player_death_event = False
 animation_has_played = False
 attack_counter = 0
 
-ammunition_plasma = 60
+ammunition_plasma = 50
+pistol_bullets = 8
+rk_62_ammo = 30
 
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
@@ -709,6 +726,15 @@ def load_item_rects():
             if item == '!':
                 item_ids.append("pistol")
                 append_rect()
+            if item == '#':
+                item_ids.append("pistol_mag")
+                append_rect()
+            if item == '%':
+                item_ids.append("rk62")
+                append_rect()
+            if item == '&':
+                item_ids.append("rk62_mag")
+                append_rect()
             x += 1
         y += 1
     return item_rects, item_ids, task_items
@@ -814,7 +840,7 @@ def item_collision_test(rect, items):
     global logging
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma
+    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo
 
     def s(score):
         global player_score
@@ -878,6 +904,13 @@ def item_collision_test(rect, items):
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
+                    elif i == "rk62":
+                        if inventory_slot != len(inventory) - 1:
+                            inventory[inventory_slot] = "rk62"
+                            weapon_pickup.play()
+                            item_rects.remove(item)
+                            del item_ids[x]
+                            s(20)
 
                 if i == "red_key":
                     player_keys["red"] = True
@@ -896,6 +929,16 @@ def item_collision_test(rect, items):
                     del item_ids[x]
                 elif i == "cell":
                     ammunition_plasma += 30
+                    item_rects.remove(item)
+                    item_pickup.play()
+                    del item_ids[x]
+                elif i == "pistol_mag":
+                    pistol_bullets += 8
+                    item_rects.remove(item)
+                    item_pickup.play()
+                    del item_ids[x]
+                elif i == "rk62_mag":
+                    rk_62_ammo += 30
                     item_rects.remove(item)
                     item_pickup.play()
                     del item_ids[x]
@@ -1673,6 +1716,7 @@ while main_running:
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True
+                rk62_sound_cooldown = 11
                 pistolFire = True
                 if player_hand_item == "gasburner":
                     gasburnerBurning = True
@@ -1833,7 +1877,7 @@ while main_running:
     if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
 
 
-        if plasmarifle_cooldown > 4 and ammunition_plasma > 0:
+        if plasmarifle_cooldown > 3 and ammunition_plasma > 0:
             plasmarifle_cooldown = 0
 
             if direction:
@@ -1851,6 +1895,11 @@ while main_running:
     if player_hand_item == "plasmarifle":
 
         ammo_count = score_font.render("Ammo: " + str(ammunition_plasma), True, (255,255,255))
+        screen.blit(ammo_count,(10,360))
+
+    elif player_hand_item == "pistol":
+
+        ammo_count = score_font.render("Ammo: " + str(pistol_bullets), True, (255,255,255))
         screen.blit(ammo_count,(10,360))
 
     for bullet in plasmabullets:
@@ -1894,6 +1943,12 @@ while main_running:
             screen.blit(cell, (item.x-scroll[0], item.y-scroll[1]+17))
         if item_ids[b] == "pistol":
             screen.blit(pistol_texture, (item.x-scroll[0]-23, item.y-scroll[1]+18))
+        if item_ids[b] == "pistol_mag":
+            screen.blit(pistol_mag, (item.x-scroll[0], item.y-scroll[1]+19))
+        if item_ids[b] == "rk62":
+            screen.blit(rk62_texture, (item.x-scroll[0], item.y-scroll[1]+17))
+        if item_ids[b] == "rk62_mag":
+            screen.blit(rk62_mag, (item.x-scroll[0], item.y-scroll[1]+14))
         b += 1
 
 #endregion
@@ -2101,11 +2156,13 @@ while main_running:
                 offset_k = 75
                 offset_p = 75
                 offset_pi = 80
+                offset_rk = 80
             else:
                 offset = 7
                 offset_k = 10
                 offset_p = 14
                 offset_pi = 2
+                offset_rk = 14
                 
             if player_hand_item == "gasburner":
                 if gasburnerBurning:
@@ -2141,16 +2198,38 @@ while main_running:
 
             if player_hand_item == "pistol":
                 if pistolFire:
-                    screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
-                        player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
-                    bullet = Bullet([player_rect.x, player_rect.y+20], direction)
-                    hit = bullet.shoot(tile_rects)
-                    print(hit)
-                    del hit, bullet
-                    pistol_shot.play()
+                    if pistol_bullets > 0:
+                        pistol_bullets -= 1
+                        screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
+                            player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
+                        bullet = Bullet([player_rect.x, player_rect.y+20], direction,50)
+                        hit = bullet.shoot(tile_rects)
+                        print(hit)
+                        del hit, bullet
+                        pistol_shot.play()
                 else:
                     screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
                         player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
+
+            if player_hand_item == "rk62":
+                if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
+                    rk62_cooldown = 0
+                    screen.blit(pygame.transform.flip(rk62_f_texture, direction, False), (
+                        player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
+                    bullet = Bullet([player_rect.x, player_rect.y+20], direction, 25)
+                    hit = bullet.shoot(tile_rects)
+                    del hit, bullet
+                    rk62_sound_cooldown += 1
+                    if rk62_sound_cooldown > 10:
+                        rk62_sound_cooldown
+                        rk62_shot.stop()
+                        rk62_shot.play()
+                    
+                else:
+                    if not mouseLeftPressed:
+                        rk62_shot.stop()
+                    screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
+                        player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
 
     if player_keys["red"] == True:
         screen.blit(red_key, (10, 20))
@@ -2229,71 +2308,8 @@ while main_running:
             elif inventory[i] == "plasmarifle":
                 screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
                 inventoryDoubles[i] = True #True, koska vie kaksi slottia
-
-    for double in inventoryDoubles:
-        if double:
-            doubleWidthAdd += 1
-
-    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
-
-    if inventory_slot:
-        if inventoryDoubles[inventory_slot] == False:
-            scaledSlotWidth = 68
-            if inventory[i] == "coffeemug":
-                screen.blit(coffeemug,((i * 34) + 10 + ((34 - coffeemug.get_width()) / 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "ss_bonuscard":
-                screen.blit(ss_bonuscard,((i * 34) + 10 + ((34 - ss_bonuscard.get_width()) / 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + ((34 - lappi_sytytyspalat.get_width()) / 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "plasmarifle":
-                screen.blit(plasmarifle, ((i * 34) + 10 + ((68 - plasmarifle.get_width()) / 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
-                inventoryDoubles[i] = True #True, koska vie kaksi slottia
-
-    for double in inventoryDoubles:
-        if double:
-            doubleWidthAdd += 1
-
-    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
-
-    if inventory_slot:
-        if inventoryDoubles[inventory_slot] == True:
-            scaledSlotWidth = 68
-            if inventory[i] == "coffeemug":
-                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "ss_bonuscard":
-                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "plasmarifle":
-                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
-                inventoryDoubles[i] = True #True, koska vie kaksi slottia
-
-    for double in inventoryDoubles:
-        if double:
-            doubleWidthAdd += 1
-
-    pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
-
-    if inventory_slot:
-        if inventoryDoubles[inventory_slot] == True:
-            scaledSlotWidth = 68
-            if inventory[i] == "coffeemug":
-                screen.blit(coffeemug,((i * 34) + 10 + (34 / coffeemug.get_width() * 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "ss_bonuscard":
-                screen.blit(ss_bonuscard,((i * 34) + 10 + (34 / ss_bonuscard.get_width() * 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,((i * 34) + 10 + (34 / lappi_sytytyspalat.get_width() * 2), 80))
-                inventoryDoubles[i] = False
-            elif inventory[i] == "plasmarifle":
-                screen.blit(plasmarifle, ((i * 34) + 10 + (68 / plasmarifle.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+            elif inventory[i] == "rk62":
+                screen.blit(rk62_texture, ((i * 34) + 20 + (68 / rk62_texture.get_width() * 2), 80)) #Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
                 inventoryDoubles[i] = True #True, koska vie kaksi slottia
 
     for double in inventoryDoubles:
@@ -2336,7 +2352,7 @@ while main_running:
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
-
+    rk62_cooldown += 1
 #endregion
 #region Ticks
     tick += 1
