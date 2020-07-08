@@ -161,15 +161,18 @@ class SergeantZombie:
         self.hits = {}
 
     def hit_scan(self, _rect):
+        global player_health 
         if self.rect.topleft[1] < _rect.centery < self.rect.bottomleft[1]:
             print("On same level")
             if self.direction:
                 if self.rect.x < _rect.x:
                     if _rect.x - self.rect.x < 1800:
+                        
                         return True
             else:
                 if self.rect.x > _rect.x:
                     if self.rect.x - _rect.x < 1800:
+                        
                         return True
 
         return False
@@ -314,11 +317,13 @@ item_pickup = pygame.mixer.Sound("audio/misc/dsitemup.wav")
 plasma_hitting = pygame.mixer.Sound("audio/misc/dsfirxpl.wav")
 pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
 rk62_shot = pygame.mixer.Sound("audio/misc/rk62_shot.wav")
+shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.6)
+shotgun_shot.set_volume(0.9)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 #endregion Lataukset
@@ -340,6 +345,7 @@ current_mission = "none"
 player_name = "Sinä"
 pistolFire = False
 fullscreen_var = False
+shoot = False
 
 if KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "True":
     tcagr = True
@@ -368,6 +374,7 @@ explosion_positions = []
 plasmarifle_cooldown = 0
 rk62_cooldown = 0
 rk62_sound_cooldown = 0
+hitscanner_cooldown = 0
 player_hand_item = "none"
 player_keys = {"red": False, "green": False, "blue": False}
 direction = True
@@ -915,7 +922,7 @@ zombie_walk_animation = KDS.Animator.Animation("z_walk", 3, 10, (255, 255, 255),
 zombie_attack_animation = KDS.Animator.Animation("z_attack", 4, 10, (255, 255, 255), -1)
 sergeant_walk_animation = KDS.Animator.Animation("seargeant_walking",4,8,(255,255,255), -1)
 sergeant_shoot_animation = KDS.Animator.Animation("seargeant_shooting",2,6,(255,255,255),1)
-sergeant_death_animation = KDS.Animator.Animation("seargeant_dying", 5, 20, (255,255,255), 1)
+sergeant_death_animation = KDS.Animator.Animation("seargeant_dying", 5, 8, (255,255,255), 1)
 #endregion
 #region Load Game
 
@@ -1903,8 +1910,17 @@ while main_running:
 
     for sergeant in sergeants:
         if sergeant.health > 0:
-            hitscan = sergeant.hit_scan(player_rect)
-            if not hitscan:
+            if hitscanner_cooldown > 100:
+                hitscan = sergeant.hit_scan(player_rect)
+                hitscanner_cooldown = 0
+                if hitscan:
+                    shotgun_shot.play()
+                    shoot = True
+                    player_health -= int(random.uniform(20,50))
+                
+            else:
+                hitscan = False
+            if not shoot:
                 sergeant.rect, sergeant.hits = move(sergeant.rect, sergeant.movement, tile_rects) 
 
                 if sergeant.movement[0] > 0:
@@ -1919,7 +1935,11 @@ while main_running:
 
             else:
                 u, i = sergeant_shoot_animation.update()
+                
                 screen.blit(pygame.transform.flip(u, sergeant.direction, False),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1]))
+                if i:
+                    sergeant_shoot_animation.reset()
+                    shoot = False
 
         elif sergeant.playDeathAnimation:
             d, s = sergeant_death_animation.update()
@@ -2295,6 +2315,7 @@ while main_running:
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
     rk62_cooldown += 1
+    hitscanner_cooldown += 1
 #endregion
 #region Ticks
     tick += 1
