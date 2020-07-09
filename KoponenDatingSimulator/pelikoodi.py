@@ -75,6 +75,12 @@ class plasma_bullet:
                 self.done = True
                 zombie1.health -= 10
                 plasma_hitting.play()
+
+        for sergeant in sergeants:
+            if self.rect.colliderect(sergeant) and sergeant.playDeathAnimation:
+                self.done = True
+                sergeant.health -= 12
+                plasma_hitting.play()
                 
         self.display.blit(plasma_ammo, (self.rect.x-scroll[0],self.rect.y-scroll[1]))
 
@@ -159,6 +165,9 @@ class SergeantZombie:
         self.movement = [speed, 8]
         self.shooting = False
         self.hits = {}
+        self.xvar = False
+        self.hitscanner_cooldown = 0
+        self.shoot = False
 
     def hit_scan(self, _rect):
         global player_health 
@@ -274,6 +283,8 @@ rk62_texture = pygame.image.load("resources/items/rk62.png").convert()
 rk62_f_texture = pygame.image.load("resources/items/rk62_firing.png").convert()
 rk62_mag = pygame.image.load("resources/items/rk_mag.png").convert()
 sergeant_corpse = pygame.image.load("resources/animations/seargeant_dying_4.png").convert()
+sergeant_aiming = pygame.image.load("resources/animations/seargeant_shooting_0.png").convert()
+sergeant_firing = pygame.image.load("resources/animations/seargeant_shooting_1.png").convert()
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -295,6 +306,8 @@ rk62_texture.set_colorkey((255,255,255))
 rk62_f_texture.set_colorkey((255,255,255))
 rk62_mag.set_colorkey((255,255,255))
 sergeant_corpse.set_colorkey((255,255,255))
+sergeant_aiming.set_colorkey((255,255,255))
+sergeant_firing.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -374,7 +387,6 @@ explosion_positions = []
 plasmarifle_cooldown = 0
 rk62_cooldown = 0
 rk62_sound_cooldown = 0
-hitscanner_cooldown = 0
 player_hand_item = "none"
 player_keys = {"red": False, "green": False, "blue": False}
 direction = True
@@ -398,6 +410,8 @@ last_player_health = 100
 player_death_event = False
 animation_has_played = False
 attack_counter = 0
+
+current_map = "02"
 
 ammunition_plasma = 50
 pistol_bullets = 8
@@ -518,6 +532,10 @@ def load_music():
     os.chdir(original_path)
     del original_path
     del pos
+
+def load_music_for_map(_current_map):
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load("MAPS/map" + _current_map + "/music.mid")
 
 def load_ads():
     ad_files = os.listdir("resources/ads/")
@@ -706,6 +724,13 @@ def collision_test(rect, tiles):
         if rect.colliderect(tile):
             hit_list.append(tile)
     return hit_list
+
+def damage(health, min_damage: float, max_damage: float):
+    health -= int(random.uniform(min_damage, max_damage))
+    if health < 0:
+        health = 0
+    
+    return health
 
 def door_collision_test():
     x = 0
@@ -922,23 +947,24 @@ zombie_walk_animation = KDS.Animator.Animation("z_walk", 3, 10, (255, 255, 255),
 zombie_attack_animation = KDS.Animator.Animation("z_attack", 4, 10, (255, 255, 255), -1)
 sergeant_walk_animation = KDS.Animator.Animation("seargeant_walking",4,8,(255,255,255), -1)
 sergeant_shoot_animation = KDS.Animator.Animation("seargeant_shooting",2,6,(255,255,255),1)
+#region Sergeant fixing
+sergeant_shoot_animation.images = []
+for _ in range(5):
+    for _ in range(6):
+        sergeant_shoot_animation.images.append(sergeant_aiming)
+for _ in range(2):
+    sergeant_shoot_animation.images.append(sergeant_firing)
+for _ in range(2):
+    for _ in range(6):
+        sergeant_shoot_animation.images.append(sergeant_aiming)
+print(len(sergeant_shoot_animation.images))
+sergeant_shoot_animation.ticks = 43
+#endregion
+
+
 sergeant_death_animation = KDS.Animator.Animation("seargeant_dying", 5, 8, (255,255,255), 1)
 #endregion
 #region Load Game
-
-world_gen = load_map("resources/game_map")
-item_gen = load_items("resources/item_map")
-
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants = load_rects()
-print(sergeants)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Zombies Initialised: " + str(len(zombies)))
-for zombie in zombies:
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Zombie: " + str(zombie))
-item_rects, item_ids, task_items = load_item_rects()
-random.shuffle(task_items)
-
-door_rects, doors_open, color_keys = load_doors()
-
 ad_images = load_ads()
 
 #endregion
@@ -1460,13 +1486,15 @@ def main_menu():
 
     def play_function():
         pygame.mouse.set_visible(False)
-        global main_menu_running
+        global main_menu_running, current_map
         main_menu_running = False
-        load_music()
-        pygame.mixer.music.play(1)
+        #load_music()
+        load_music_for_map(current_map)
+        pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(volume)
         global player_keys, player_hand_item
         player_hand_item = "none"
+
         player_rect.x = 100
         player_rect.y = 100
         for key in player_keys:
@@ -1546,28 +1574,41 @@ if tcagr != "false":
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255,255,255))
 #endregion
 #region Item Initialisation
+#endregion
+#region Inventory Slot Switching
+def inventoryLeft():
+    global inventory_slot, inventoryDoubles, inventory
+    checkSlot = inventory_slot - 2
+    if checkSlot < 0:
+        checkSlot = len(inventory) + checkSlot
+    if(inventoryDoubles[checkSlot] == True):
+        inventory_slot -= 2
+    else:
+        inventory_slot -= 1
+def inventoryRight():
+    global inventory_slot, inventoryDoubles
+    if(inventoryDoubles[inventory_slot] == True):
+        inventory_slot += 2
+    else:
+        inventory_slot += 1
+#endregion
+#region Main Running
+world_gen = load_map("MAPS/map" + current_map + "/game_map")
+item_gen = load_items("MAPS/map" + current_map + "/item_map")
+
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants = load_rects()
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Zombies Initialised: " + str(len(zombies)))
+for zombie in zombies:
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Zombie: " + str(zombie))
+
+item_rects, item_ids, task_items = load_item_rects()
+random.shuffle(task_items)
+
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Items Initialised: " + str(len(item_ids)))
 for i_id in item_ids:
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Item: (ID)" + i_id)
-#endregion
-#region Inventory Slot Switching
-    def inventoryLeft():
-        global inventory_slot, inventoryDoubles, inventory
-        checkSlot = inventory_slot - 2
-        if checkSlot < 0:
-            checkSlot = len(inventory) + checkSlot
-        if(inventoryDoubles[checkSlot] == True):
-            inventory_slot -= 2
-        else:
-            inventory_slot -= 1
-    def inventoryRight():
-        global inventory_slot, inventoryDoubles
-        if(inventoryDoubles[inventory_slot] == True):
-            inventory_slot += 2
-        else:
-            inventory_slot += 1
-#endregion
-#region Main Running
+door_rects, doors_open, color_keys = load_doors()
+
 while main_running:
 #region Events
     for event in pygame.event.get():
@@ -1910,17 +1951,15 @@ while main_running:
 
     for sergeant in sergeants:
         if sergeant.health > 0:
-            if hitscanner_cooldown > 100:
+            if sergeant.hitscanner_cooldown > 100:
                 hitscan = sergeant.hit_scan(player_rect)
-                hitscanner_cooldown = 0
+                sergeant.hitscanner_cooldown = 0
                 if hitscan:
-                    shotgun_shot.play()
-                    shoot = True
-                    player_health -= int(random.uniform(20,50))
+                    sergeant.shoot = True
                 
             else:
                 hitscan = False
-            if not shoot:
+            if not sergeant.shoot:
                 sergeant.rect, sergeant.hits = move(sergeant.rect, sergeant.movement, tile_rects) 
 
                 if sergeant.movement[0] > 0:
@@ -1937,9 +1976,16 @@ while main_running:
                 u, i = sergeant_shoot_animation.update()
                 
                 screen.blit(pygame.transform.flip(u, sergeant.direction, False),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1]))
+
+                if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
+                    sergeant.xvar = True
+                    shotgun_shot.play()
+                    if sergeant.hit_scan(player_rect):
+                        player_health = damage(player_health, 20, 50)
                 if i:
                     sergeant_shoot_animation.reset()
-                    shoot = False
+                    sergeant.shoot = False
+                    sergeant.xvar = False
 
         elif sergeant.playDeathAnimation:
             d, s = sergeant_death_animation.update()
@@ -2315,7 +2361,8 @@ while main_running:
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
     rk62_cooldown += 1
-    hitscanner_cooldown += 1
+    for sergeant in sergeants:
+        sergeant.hitscanner_cooldown += 1
 #endregion
 #region Ticks
     tick += 1
