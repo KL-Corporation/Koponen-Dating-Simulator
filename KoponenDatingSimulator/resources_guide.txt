@@ -42,3 +42,5 @@ items:
 % = rk62
 & = rk62_mag
 ( = medkit
+) = shotgun
+= = shotgun_shells

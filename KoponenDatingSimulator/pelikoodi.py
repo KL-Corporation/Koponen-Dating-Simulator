@@ -335,6 +335,9 @@ sergeant_aiming = pygame.image.load(
 sergeant_firing = pygame.image.load(
     "resources/animations/seargeant_shooting_1.png").convert()
 medkit = pygame.image.load("resources/items/medkit.png").convert()
+shotgun = pygame.image.load("resources/items/shotgun.png").convert()
+shotgun_f = pygame.image.load("resources/items/shotgun_firing.png").convert()
+shotgun_shells_t = pygame.image.load("resources/items/shotgun_shells.png").convert()
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -359,6 +362,9 @@ sergeant_corpse.set_colorkey((255, 255, 255))
 sergeant_aiming.set_colorkey((255, 255, 255))
 sergeant_firing.set_colorkey((255, 255, 255))
 medkit.set_colorkey((255, 255, 255))
+shotgun.set_colorkey((255,255,255))
+shotgun_f.set_colorkey((255,255,255))
+shotgun_shells_t.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -382,12 +388,14 @@ plasma_hitting = pygame.mixer.Sound("audio/misc/dsfirxpl.wav")
 pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
 rk62_shot = pygame.mixer.Sound("audio/misc/rk62_shot.wav")
 shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
+player_shotgun_shot = pygame.mixer.Sound("audio/misc/player_shotgun.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.6)
 shotgun_shot.set_volume(0.9)
+player_shotgun_shot.set_volume(0.8)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
@@ -449,6 +457,8 @@ AltPressed = False
 F4Pressed = False
 esc_menu = False
 mouseLeftPressed = False
+shotgun_loaded = True
+shotgun_cooldown = 0
 
 go_to_main_menu = False
 
@@ -470,6 +480,7 @@ current_map = "02"
 ammunition_plasma = 50
 pistol_bullets = 8
 rk_62_ammo = 30
+shotgun_shells = 8
 
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
@@ -745,6 +756,12 @@ def load_item_rects():
             if item == '(':
                 item_ids.append("medkit")
                 append_rect()
+            if item == ')':
+                item_ids.append("shotgun")
+                append_rect()
+            if item == '=':
+                item_ids.append("shotgun_shells")
+                append_rect()
             x += 1
         y += 1
     return item_rects, item_ids, task_items
@@ -803,6 +820,53 @@ def load_animation(name, number_of_images):
 
 # endregion
 # region Collisions
+
+
+def shotgun_shots():
+    shots = []
+    global direction
+    shots_direction = not direction
+    for _ in range(7):
+        shots.append([player_rect.centerx, player_rect.centery-20])
+
+    q = True
+    counter = 0
+    dir_counter = 0
+    while q:
+
+        for tile in tile_rects:
+            for shot in shots:
+                if tile.collidepoint(shot):
+                    shots.remove(shot)
+
+        for zombie1 in zombies:
+            for shot in shots:
+                if zombie1.rect.collidepoint(shot):
+                    shots.remove(shot)
+                    zombie1.health -= 35
+
+        for sergeant in sergeants:
+            for shot in shots:
+                if sergeant.rect.collidepoint(shot):
+                    shots.remove(shot)
+                    sergeant.health -= 35
+
+        for x in range(len(shots)):
+            if shots_direction:
+                shots[x][0] += 26
+                if dir_counter > 4:
+                    shots[x][1] += int((x - 2)*3)
+            else:
+                shots[x][0] -= 26
+                shots[x][1] += int((x - 2)*3)
+
+
+        counter += 1
+        dir_counter += 1
+        if dir_counter > 5:
+            dir_counter = 0
+        if counter > 80:
+            q = False
 
 
 def collision_test(rect, tiles):
@@ -865,7 +929,7 @@ def door_collision_test():
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health
+    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells
 
     def s(score):
         global player_score
@@ -937,6 +1001,13 @@ def item_collision_test(rect, items):
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
+                    elif i == "shotgun":
+                        if inventory_slot != len(inventory) - 1:
+                            inventory[inventory_slot] = "shotgun"
+                            weapon_pickup.play()
+                            item_rects.remove(item)
+                            del item_ids[x]
+                            s(20)
 
                 if i == "red_key":
                     player_keys["red"] = True
@@ -965,6 +1036,11 @@ def item_collision_test(rect, items):
                     del item_ids[x]
                 elif i == "rk62_mag":
                     rk_62_ammo += 30
+                    item_rects.remove(item)
+                    item_pickup.play()
+                    del item_ids[x]
+                elif i == "shotgun_shells":
+                    shotgun_shells += 4
                     item_rects.remove(item)
                     item_pickup.play()
                     del item_ids[x]
@@ -2023,6 +2099,12 @@ while main_running:
             "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
         screen.blit(ammo_count, (10, 360))
 
+    elif player_hand_item == "shotgun":
+
+        ammo_count = score_font.render(
+            "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
+        screen.blit(ammo_count, (10, 360))
+
     for bullet in plasmabullets:
         state = bullet.update(tile_rects)
         if state:
@@ -2075,6 +2157,10 @@ while main_running:
             screen.blit(rk62_mag, (item.x-scroll[0], item.y-scroll[1]+14))
         if item_ids[b] == "medkit":
             screen.blit(medkit, (item.x-scroll[0], item.y-scroll[1]+15))
+        if item_ids[b] == "shotgun":
+            screen.blit(shotgun, (item.x-scroll[0], item.y-scroll[1]+22))
+        if item_ids[b] == "shotgun_shells":
+            screen.blit(shotgun_shells_t, (item.x-scroll[0], item.y-scroll[1]+25))
         b += 1
 
 # endregion
@@ -2429,6 +2515,26 @@ while main_running:
                     screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
                         player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
 
+            if player_hand_item == "shotgun":
+                if not shotgun_loaded:
+                    shotgun_cooldown += 1
+                    if shotgun_cooldown > 60:
+                        shotgun_loaded = True
+                else:
+                    shotgun_cooldown = 0
+                if pistolFire and shotgun_shells > 0 and shotgun_loaded:
+                    shotgun_shells -= 1
+                    shotgun_loaded = False
+                    shotgun_thread = threading.Thread(target=shotgun_shots)
+                    shotgun_thread.start()
+                    player_shotgun_shot.play()
+                    screen.blit(pygame.transform.flip(shotgun_f, direction, False), (
+                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+
+                else:
+                    screen.blit(pygame.transform.flip(shotgun, direction, False), (
+                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+
     if player_keys["red"] == True:
         screen.blit(red_key, (10, 20))
     if player_keys["green"] == True:
@@ -2513,6 +2619,11 @@ while main_running:
                 # Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
                 screen.blit(rk62_texture, ((i * 34) + 20 +
                                            (68 / rk62_texture.get_width() * 2), 80))
+                inventoryDoubles[i] = True  # True, koska vie kaksi slottia
+            elif inventory[i] == "shotgun":
+                # Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
+                screen.blit(shotgun, ((i * 34) + 20 +
+                                           (68 / shotgun.get_width() * 2), 80))
                 inventoryDoubles[i] = True  # True, koska vie kaksi slottia
 
     for double in inventoryDoubles:
