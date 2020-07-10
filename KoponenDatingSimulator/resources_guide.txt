@@ -41,3 +41,4 @@ items:
 # = pistol_mag
 % = rk62
 & = rk62_mag
+( = medkit
