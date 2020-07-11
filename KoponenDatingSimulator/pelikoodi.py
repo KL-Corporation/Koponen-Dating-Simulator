@@ -186,7 +186,7 @@ class Archvile:
         def hit_scan(self):
             q = True
             counter = 0
-            scan_position = [self.rect.centerx,self.rect.centery]
+            scan_position = [self.rect.centerx, self.rect.centery]
             while q:
                 if self.direction:
                     scan_position[0] += 27
@@ -236,7 +236,7 @@ class Archvile:
                     f = hit_scan(self)
 
                     if f != "wall" and player_rect.y-40 < archvile.rect.y :
-                        player_health -= int(random.uniform(30,80))
+                        player_health -= int(random.uniform(30, 80))
                         landmine_explosion.play()
 
                     del f
@@ -2381,16 +2381,17 @@ while main_running:
     if DebugMode:
         fps = score_font.render(
             "Fps: " + str(int(clock.get_fps())), True, (255, 255, 255))
+    
+    if player_health < 0:
+        player_health = 0
+
     health = score_font.render(
         "Health: " + str(player_health), True, (255, 255, 255))
     stamina = score_font.render(
         "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
 
     """ Pelaajan elämätilanteen käsittely """
-
-    if player_health < 0:
-        player_health = 0
-
+    
     if player_health < last_player_health and player_health != 0:
         hurted = True
     else:
