@@ -25,6 +25,7 @@ A = tree
 B = jukebox
 enemies and other shit:
 Z = zombie
+S = sergeant
 items:
 0 = gasburner
 1 = knife
@@ -37,3 +38,9 @@ items:
 8 = plasmarifle
 9 = cell
 ! = pistol
+# = pistol_mag
+% = rk62
+& = rk62_mag
+( = medkit
+) = shotgun
+= = shotgun_shells
