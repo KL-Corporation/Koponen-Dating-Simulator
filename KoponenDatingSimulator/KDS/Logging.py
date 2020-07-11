@@ -32,7 +32,7 @@ class LogType():
     debug = 10
     notset = 0
 
-def Log(logType: LogType, message: str):
+def Log(logType: LogType, message: str, consoleVisible: bool):
     if logType == LogType.execption:
         logging.exception(message)
     elif logType == LogType.log:
@@ -49,3 +49,5 @@ def Log(logType: LogType, message: str):
         logging.debug(message)
     elif logType == LogType.notset:
         logging.NOTSET(message)
+    if consoleVisible:
+        print(message)

@@ -62,10 +62,10 @@ def SetMission_Progress(identifier, progress: float):
                         Mission_Finished[i] = True
         else:
             frameinfo = getframeinfo(currentframe())
-            KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ") Identifier could not be processed.")
+            KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ") Identifier could not be processed.", False)
     else:
         frameinfo = getframeinfo(currentframe())
-        KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ") Identifier could not be processed.")
+        KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ") Identifier could not be processed.", False)
 
 def Update_Missions():
     print("TEMP")
