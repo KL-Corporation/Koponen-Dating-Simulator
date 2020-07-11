@@ -1,20 +1,26 @@
-# region Importing
+#region Importing
 import KDS.ConfigManager
 import KDS.Animator
 import KDS.Logging
+import KDS.Missions
 import pygame
 import os
 import random
 import threading
 from datetime import datetime
 from pygame.locals import *
-# endregion
-# region PyGame Initialisation
+#endregion
+#region PyGame Initialisation
 
 pygame.init()
 
-display_size = (1200, 800)
-screen_size = (600, 400)
+KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
+KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(800))
+KDS.ConfigManager.SetSetting("Settings", "ScreenSizeX", str(600))
+KDS.ConfigManager.SetSetting("Settings", "ScreenSizeY", str(400))
+
+display_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", str(1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
+screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
@@ -22,9 +28,10 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 
 KDS.Logging.init()
+KDS.Missions.init(screen)
 
-# endregion
-# region Text Handling
+#endregion
+#region Text Handling
 
 
 class pygame_print_text:
@@ -52,7 +59,7 @@ class pygame_print_text:
         self.row += self.row_height
 
 # endregion
-# region Animations
+#region Animations
 
 
 class plasma_bullet:
@@ -287,7 +294,6 @@ class SergeantZombie:
     def hit_scan(self, _rect):
         global player_health, tile_rects
         if self.rect.topleft[1] < _rect.centery < self.rect.bottomleft[1]:
-            print("On same level")
             if self.direction:
                 if self.rect.x < _rect.x:
                     self.bullet_pos = [self.rect.centerx,self.rect.centery-20]
@@ -332,7 +338,7 @@ class SergeantZombie:
 
 
 # endregion
-# region Fullscreen
+#region Fullscreen
 def setFullscreen(reverseFullscreen):
     global fullscreen_var, main_display
     if reverseFullscreen:
@@ -347,7 +353,7 @@ def setFullscreen(reverseFullscreen):
 
 
 # endregion
-# region Initialisation
+#region Initialisation
 printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
 
 esc_menu_surface = pygame.Surface((500, 400))
@@ -511,6 +517,9 @@ player_shotgun_shot.set_volume(0.8)
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
+KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", "", "", False)
+KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", "", "", False)
+
 main_running = True
 playerMovingRight = False
 playerMovingLeft = False
@@ -535,19 +544,17 @@ if KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "True":
 elif KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "False":
     tcagr = False
 else:
-    KDS.Logging.Log(KDS.Logging.LogType.error,
-                    "Error parcing terms and conditions bool.")
+    KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing terms and conditions bool.", False)
 volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
 if KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "True":
     fullscreen_var = True
 elif KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "False":
     fullscreen_var = False
 else:
-    KDS.Logging.Log(KDS.Logging.LogType.error,
-                    "Error parcing fullscreen bool.")
+    KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing fullscreen bool.", False)
 setFullscreen(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
-                str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var))
+                str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var), False)
 
 selectedSave = 0
 
@@ -619,7 +626,7 @@ taskTaivutettu = ""
 DebugMode = False
 
 # endregion
-# region Save System
+#region Save System
 
 
 def LoadSave():
@@ -649,7 +656,7 @@ def SaveData():
         selectedSave, "PlayerData", "Name", str(player_name))
 
 # endregion
-# region Quit Handling
+#region Quit Handling
 
 
 def quit_function():
@@ -661,13 +668,13 @@ def quit_function():
     esc_menu = False
     settings_running = False
 # endregion
-# region Pickup Sound
+#region Pickup Sound
 
 
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 # endregion
-# region Loading
+#region Loading
 
 
 def load_map(path):
@@ -709,10 +716,10 @@ def load_music():
 
     random.shuffle(music_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Music Files Initialised: " + str(len(music_files)))
+                    "Music Files Initialised: " + str(len(music_files)), False)
     for track in music_files:
         KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Music File: " + track)
+                        "Initialised Music File: " + track, False)
 
     pygame.mixer.music.stop()
 
@@ -739,10 +746,10 @@ def load_ads():
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Ad Files Initialised: " + str(len(ad_files)))
+                    "Ad Files Initialised: " + str(len(ad_files)), False)
     for ad in ad_files:
         KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Ad File: " + ad)
+                        "Initialised Ad File: " + ad, False)
 
     ad_images = []
 
@@ -933,7 +940,7 @@ def load_animation(name, number_of_images):
     return animation_list
 
 # endregion
-# region Collisions
+#region Collisions
 
 
 def shotgun_shots():
@@ -1199,7 +1206,7 @@ def toilet_collisions(rect, burnstate):
         o += 1
 
 # endregion
-# region Player
+#region Player
 
 
 def move(rect, movement, tiles):
@@ -1268,7 +1275,11 @@ for _ in range(2):
 for _ in range(2):
     for _ in range(6):
         sergeant_shoot_animation.images.append(sergeant_aiming)
-print(len(sergeant_shoot_animation.images))
+KDS.Logging.Log(KDS.Logging.LogType.debug,
+                "Sergeant Shoot Animation Images Initialised: " + str(len(sergeant_shoot_animation.images)), False)
+for animation in sergeant_shoot_animation.images:
+    KDS.Logging.Log(KDS.Logging.LogType.debug,
+                    "Initialised Sergeant Shoot Animation Image: " + str(animation), False)
 sergeant_shoot_animation.ticks = 43
 # endregion
 
@@ -1276,11 +1287,11 @@ sergeant_shoot_animation.ticks = 43
 sergeant_death_animation = KDS.Animator.Animation(
     "seargeant_dying", 5, 8, (255, 255, 255), 1)
 # endregion
-# region Load Game
+#region Load Game
 ad_images = load_ads()
 
 # endregion
-# region Console
+#region Console
 
 
 def console():
@@ -1294,43 +1305,49 @@ def console():
         if command_list[1] != "key":
             try:
                 inventory[inventory_slot] = command_list[1]
-                print("Item was given")
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Item was given: " + str(command_list[1]), True)
             except Exception:
-                print("That item does not exist")
+                KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " + str(command_list[1]), True)
         elif command_list[1] == "key":
             try:
                 player_keys[command_list[2]] = True
-                print("Item was given")
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Item was given: " + str(command_list[1]) + " " + str(command_list[2]), True)
             except Exception:
-                print("That item does not exist")
+                KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " + str(command_list[1]) + " " + str(command_list[2]), True)
 
     elif command_list[0] == "playboy":
         koponen_happines = 1000
-        print("You are now a playboy")
-        print("Koponen happines: {}".format(koponen_happines))
+        KDS.Logging.Log(KDS.Logging.LogType.info, "You are now a playboy", True)
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Koponen happines: {}".format(koponen_happines), True)
 
-    elif command_list[0] == "kill":
+    elif command_list[0] == "kill" or command_list[0] == "stop":
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Stop command issued through console.", True)
+        pygame.QUIT()
+    elif command_list[0] == "killme":
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Player kill command issued through console.", True)
         player_health = 0
     elif command_list[0] == "terms":
         setTerms = False
         try:
             if command_list[1] == "true" or "True" or "T" or "t":
                 setTerms = True
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as true from console.", True)
             elif command_list[1] == "false" or "False" or "F" or "f":
                 setTerms = False
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as false from console.", True)
             else:
                 setTerms = "[Error]"
         except Exception:
-            print(
-                "Encountered an error while processing your command.\nError:" + Exception)
+            KDS.Logging.Log(KDS.Logging.LogType.info,
+                "Encountered an error while processing your command.\nError:" + Exception, True)
         if setTerms != "[Error]":
             KDS.ConfigManager.SetSetting(
                 "Data", "TermsAccepted", str(setTerms))
         else:
-            print("Please provide a proper state for terms & conditions")
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Please provide a proper state for terms & conditions", True)
 
 # endregion
-# region Terms and Conditions
+#region Terms and Conditions
 
 
 def agr(tcagr):
@@ -1350,12 +1367,12 @@ def agr(tcagr):
     def agree():
         global tcagr_running
         KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Terms and Conditions have been accepted.")
+                        "Terms and Conditions have been accepted.", False)
         KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "You said you will not get offended... Dick!")
+                        "You said you will not get offended... Dick!", False)
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " +
-                        KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"))
+                        KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"), False)
         tcagr_running = False
         return False
 
@@ -1395,7 +1412,7 @@ def agr(tcagr):
         c = False
 
 # endregion
-# region Koponen Talk
+#region Koponen Talk
 
 
 def koponen_talk():
@@ -1502,7 +1519,7 @@ def koponen_talk():
             taskTaivutettu
         except NameError:
             KDS.Logging.Log(KDS.Logging.LogType.warning,
-                            "Task not defined. Defining task...")
+                            "Task not defined. Defining task...", False)
             task = ""
             taskTaivutettu = ""
 
@@ -1600,7 +1617,7 @@ def koponen_talk():
     pygame.mouse.set_visible(False)
 
 # endregion
-# region Menus
+#region Menus
 
 
 def esc_menu_f():
@@ -1797,7 +1814,7 @@ def main_menu():
         jukebox_music[jukeboxMusicPlaying].stop()
     except:
         KDS.Logging.Log(KDS.Logging.LogType.warning,
-                        "Jukebox music has not been defined yet.")
+                        "Jukebox music has not been defined yet.", False)
     pygame.mixer.music.unpause()
 
     global main_menu_running, main_running, go_to_main_menu
@@ -1832,7 +1849,7 @@ def main_menu():
         player_rect.y = 100
         for key in player_keys:
             player_keys[key] = False
-        KDS.Logging.Log(KDS.Logging.LogType.info, "Press F4 to commit suicide")
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Press F4 to commit suicide", False)
         LoadSave()
 
     def settings_function():
@@ -1901,18 +1918,18 @@ def main_menu():
 
 
 # endregion
-# region Check Terms
+#region Check Terms
 agr(tcagr)
 jukebox_music = load_jukebox_music()
 if tcagr != "false":
     main_menu()
 # endregion
-# region Koponen Talk Tip Text
+#region Koponen Talk Tip Text
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
 # endregion
-# region Item Initialisation
+#region Item Initialisation
 # endregion
-# region Inventory Slot Switching
+#region Inventory Slot Switching
 
 
 def inventoryLeft():
@@ -1935,24 +1952,24 @@ def inventoryRight():
 
 
 # endregion
-# region Main Running
+#region Main Running
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Zombies Initialised: " + str(len(zombies)))
+                "Zombies Initialised: " + str(len(zombies)), False)
 for zombie in zombies:
     KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialised Zombie: " + str(zombie))
+                    "Initialised Zombie: " + str(zombie), False)
 
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Items Initialised: " + str(len(item_ids)))
+                "Items Initialised: " + str(len(item_ids)), False)
 for i_id in item_ids:
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Item: (ID)" + i_id)
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Item: (ID)" + i_id, False)
 door_rects, doors_open, color_keys = load_doors()
 
 while main_running:
@@ -2615,7 +2632,6 @@ while main_running:
                         bullet = Bullet(
                             [player_rect.x, player_rect.y+20], direction, 50)
                         hit = bullet.shoot(tile_rects)
-                        print(hit)
                         del hit, bullet
                         pistol_shot.play()
                 else:
@@ -2632,7 +2648,7 @@ while main_running:
                         [player_rect.x, player_rect.y+20], direction, 25)
                     hit = bullet.shoot(tile_rects)
                     KDS.Logging.Log(KDS.Logging.LogType.debug,
-                                    ("rk62 hit an object: " + str(hit)))
+                                    ("rk62 hit an object: " + str(hit)), False)
                     del hit, bullet
                     rk62_sound_cooldown += 1
                     if rk62_sound_cooldown > 10:
@@ -2812,5 +2828,11 @@ while main_running:
     if tick > 60:
         tick = 0
     clock.tick(60)
-# endregion
-# endregion
+#endregion
+#endregion
+#region Get Data
+def Get_Display_Size():
+    return display_size
+def Get_Screen_Size():
+    return screen_size
+#endregion
