@@ -1287,7 +1287,6 @@ sergeant_death_animation = KDS.Animator.Animation(
 # endregion
 #region Load Game
 ad_images = load_ads()
-
 # endregion
 #region Console
 
@@ -1346,8 +1345,6 @@ def console():
 
 # endregion
 #region Terms and Conditions
-
-
 def agr(tcagr):
 
     if tcagr == False:
@@ -1408,7 +1405,6 @@ def agr(tcagr):
 
         pygame.display.update()
         c = False
-
 # endregion
 #region Koponen Talk
 
