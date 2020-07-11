@@ -2,6 +2,7 @@
 import KDS.ConfigManager
 import KDS.Animator
 import KDS.Logging
+import KDS.Missions
 import pygame
 import os
 import random
@@ -13,8 +14,13 @@ from pygame.locals import *
 
 pygame.init()
 
-display_size = (1200, 800)
-screen_size = (600, 400)
+KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
+KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(800))
+KDS.ConfigManager.SetSetting("Settings", "ScreenSizeX", str(600))
+KDS.ConfigManager.SetSetting("Settings", "ScreenSizeY", str(400))
+
+display_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", str(1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
+screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
@@ -22,6 +28,7 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 
 KDS.Logging.init()
+KDS.Missions.init(screen)
 
 #endregion
 #region Text Handling
@@ -272,6 +279,9 @@ plasma_hitting.set_volume(0.03)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 #endregion Lataukset
+
+KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", "", "", False)
+KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", "", "", False)
 
 main_running = True
 playerMovingRight = False
@@ -2200,4 +2210,10 @@ while main_running:
         tick = 0
     clock.tick(60)
 #endregion
+#endregion
+#region Get Data
+def Get_Display_Size():
+    return display_size
+def Get_Screen_Size():
+    return screen_size
 #endregion
