@@ -601,8 +601,6 @@ koponen_movement = [0, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
-ad_images = load_ads()
-
 task = ""
 taskTaivutettu = ""
 
@@ -720,6 +718,7 @@ def load_ads():
         ad_images.append(pygame.image.load(path))
 
     return ad_images
+ad_images = load_ads()
 #world_gen = load_map("resources/game_map")
 #item_gen = load_items("resources/item_map")
 def load_rects():
