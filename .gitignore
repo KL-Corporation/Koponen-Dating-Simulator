@@ -1,3 +1,4 @@
 KoponenDatingSimulator/logs/*.log
 KoponenDatingSimulator/settings.cfg
 KoponenDatingSimulator/saves/*.kds
+*.pyc
