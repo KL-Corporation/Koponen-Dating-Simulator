@@ -26,6 +26,7 @@ B = jukebox
 enemies and other shit:
 Z = zombie
 S = sergeant
+V = archvile
 items:
 0 = gasburner
 1 = knife

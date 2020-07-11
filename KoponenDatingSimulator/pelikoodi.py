@@ -130,6 +130,12 @@ class Bullet:
                         sergeant.health -= self.damage
                         q = False
                         return "enemy"
+            for archvile in archviles:
+                if archvile.health > 0:
+                    if archvile.rect.collidepoint(tuple(self.position)):
+                        archvile.health -= self.damage
+                        q = False
+                        return "enemy"
 
             counter += 1
             if counter > 300:
@@ -155,6 +161,105 @@ class Zombie:
         if self.rect.colliderect(search_object):
             self.attacking = True
             return self.attacking
+class Archvile:
+
+    def __init__(self, position, health, speed):
+        self.position = position
+        self.health = health
+        self.speed = speed
+        self.rect = pygame.Rect(position[0], position[1], 65, 85)
+
+        self.direction = True
+        self.movement = [speed, 8]
+        self.hits = {}
+        self.playDeathAnimation = True
+        self.attacking = "null"
+        self.counter = 0
+        self.attack_anim = False
+        self.playDeathSound = True
+
+    def update(self, a_run):
+        global player_health
+        if not self.attack_anim:
+            self.counter += 1
+
+        def hit_scan(self):
+            q = True
+            counter = 0
+            scan_position = [self.rect.centerx,self.rect.centery]
+            while q:
+                if self.direction:
+                    scan_position[0] += 27
+                else:
+                    scan_position[0] -= 27
+
+                for tile in tile_rects:
+                    if tile.collidepoint(scan_position):
+                        return "wall"
+
+                if player_rect.collidepoint(scan_position):
+                    return "player"
+
+                counter += 1
+                if counter > 40:
+                    q = False
+
+            return "null"
+
+        if self.health > 0:
+            if self.counter > 100:
+                self.attacking = hit_scan(self)
+                if self.attacking == "player":
+                    if not self.attack_anim:
+                        archvile_attack.play()
+                    self.attack_anim = True
+                self.counter = 0
+            else:
+                self.attacking = "null"
+
+
+            if not self.attack_anim:
+                self.rect, self.hits = move(self.rect, self.movement, tile_rects)
+                if self.hits["right"] or self.hits["left"]:
+                    self.movement[0] = -self.movement[0]
+
+                if self.movement[0] > 0:
+                    self.direction = True
+                elif self.movement[0] < 0:
+                    self.direction = False
+
+                screen.blit(pygame.transform.flip(a_run, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+
+            else:
+                i, u = arhcvile_attack_animation.update()
+                if u:
+                    f = hit_scan(self)
+
+                    if f != "wall" and player_rect.y-40 < archvile.rect.y :
+                        player_health -= int(random.uniform(30,80))
+                        landmine_explosion.play()
+
+                    del f
+
+                    arhcvile_attack_animation.reset()
+                    self.attack_anim = False
+                screen.blit(pygame.transform.flip(i, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+
+        elif self.playDeathAnimation:
+            self.attacking = "null"
+            self.attack_anim = False
+            if self.playDeathSound:
+                self.playDeathSound = False
+                archvile_death.play()
+            l, p = archvile_death_animation.update()
+            if not p:
+                screen.blit(pygame.transform.flip(l, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+15))
+
+            if p:
+                self.playDeathAnimation = False
+
+        else:
+            screen.blit(pygame.transform.flip(archvile_corpse, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
 class SergeantZombie:
 
     def __init__(self, position, health, speed):
@@ -327,6 +432,7 @@ medkit = pygame.image.load("resources/items/medkit.png").convert()
 shotgun = pygame.image.load("resources/items/shotgun.png").convert()
 shotgun_f = pygame.image.load("resources/items/shotgun_firing.png").convert()
 shotgun_shells_t = pygame.image.load("resources/items/shotgun_shells.png").convert()
+archvile_corpse = pygame.image.load("resources/animations/archvile_death_6.png").convert()
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -354,6 +460,7 @@ medkit.set_colorkey((255, 255, 255))
 shotgun.set_colorkey((255,255,255))
 shotgun_f.set_colorkey((255,255,255))
 shotgun_shells_t.set_colorkey((255,255,255))
+archvile_corpse.set_colorkey((255,255,255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -378,11 +485,13 @@ pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
 rk62_shot = pygame.mixer.Sound("audio/misc/rk62_shot.wav")
 shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
 player_shotgun_shot = pygame.mixer.Sound("audio/misc/player_shotgun.wav")
+archvile_attack = pygame.mixer.Sound("audio/misc/dsflame.wav")
+archvile_death = pygame.mixer.Sound("audio/misc/dsvildth.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
-rk62_shot.set_volume(0.6)
+rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
@@ -620,6 +729,7 @@ def load_rects():
     landmines = []
     zombies = []
     sergeants = []
+    archviles = []
     w = [0, 0]
     y = 0
     for layer in world_gen:
@@ -656,12 +766,14 @@ def load_rects():
                     zombies.append(Zombie((x*34, y*34-34), 100, 1))
                 elif tile == 'S':
                     sergeants.append(SergeantZombie((x*34, y*34-34), 220, 1))
+                elif tile == 'V':
+                    archviles.append(Archvile((x*34, y*34-51), 750, 2))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -804,6 +916,12 @@ def shotgun_shots():
                 if sergeant.rect.collidepoint(shot):
                     shots.remove(shot)
                     sergeant.health -= 35
+
+        for archvile in archviles:
+            for shot in shots:
+                if archvile.rect.collidepoint(shot):
+                    shots.remove(shot)
+                    archvile.health -= 35
 
         for x in range(len(shots)):
             if shots_direction:
@@ -1071,6 +1189,12 @@ sergeant_walk_animation = KDS.Animator.Animation(
     "seargeant_walking", 4, 8, (255, 255, 255), -1)
 sergeant_shoot_animation = KDS.Animator.Animation(
     "seargeant_shooting", 2, 6, (255, 255, 255), 1)
+
+archvile_run_animation = KDS.Animator.Animation("archvile_run", 3, 9, (255,255,255), -1)
+arhcvile_attack_animation = KDS.Animator.Animation("archvile_attack", 6, 16, (255,255,255), 1)
+archvile_death_animation =KDS.Animator.Animation("archvile_death", 7, 12, (255,255,255), 1)
+flames_animation = KDS.Animator.Animation("flames", 5,3,(255,255,255),-1)
+
 # region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
@@ -1737,7 +1861,7 @@ def inventoryRight():
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Zombies Initialised: " + str(len(zombies)), False)
 for zombie in zombies:
@@ -2236,6 +2360,11 @@ while main_running:
 
     # Zombien käsittely loppuu tähän
 
+    arch_run = archvile_run_animation.update()
+    for archvile in archviles:
+        archvile.update(arch_run)
+
+
     if k_collisions["left"]:
         koponen_movingx = -koponen_movingx
     elif k_collisions["right"]:
@@ -2458,11 +2587,11 @@ while main_running:
                     screen.blit(pygame.transform.flip(shotgun, direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
 
-    if player_keys["red"] == True:
+    if player_keys["red"]:
         screen.blit(red_key, (10, 20))
-    if player_keys["green"] == True:
+    if player_keys["green"]:
         screen.blit(green_key, (24, 20))
-    if player_keys["blue"] == True:
+    if player_keys["blue"]:
         screen.blit(blue_key, (38, 20))
 
 # endregion
@@ -2504,6 +2633,10 @@ while main_running:
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
+
+    for archvile in archviles:
+        if archvile.attack_anim:
+            screen.blit(flames_animation.update(),(player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
 
 # endregion
 # region Debug Mode
@@ -2593,6 +2726,7 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
+    print(clock.get_fps())
 # endregion
 # region Ticks
     tick += 1
