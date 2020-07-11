@@ -21,7 +21,7 @@ screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(
 screen = pygame.Surface(screen_size)
 mission_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
 
-def InitialiseMission(Safe_Name: str, Name: str, Message: str, Koponen_Say: str, Koponen_Repeat: str, Koponen_Interactable: bool):
+def InitialiseMission(Safe_Name: str, Name: str, Message: str, Koponen_Interactable: bool, Koponen_Say: str = "", Koponen_Repeat: str = ""):
     """
     1. Safe Name (string): A name that does not conflict with any other mission name.
     2. Name (string): Public name of the mission.
@@ -36,9 +36,9 @@ def InitialiseMission(Safe_Name: str, Name: str, Message: str, Koponen_Say: str,
     Safe_Names.append(Safe_Name)
     Names.append(Name)
     Messages.append(Message)
-    Koponen_Says.append(Koponen_Say)
-    Koponen_Repeats.append(Koponen_Repeats)
     Koponen_Interactables.append(Koponen_Interactable)
+    Koponen_Says.append(Koponen_Say)
+    Koponen_Repeats.append(Koponen_Repeat)
     Mission_Progress.append(0.0)
     Mission_Finished.append(False)
 

@@ -498,8 +498,8 @@ player_shotgun_shot.set_volume(0.8)
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
-KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", "", "", False)
-KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", "", "", False)
+KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", False)
+KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", False)
 
 main_running = True
 playerMovingRight = False
@@ -2391,7 +2391,7 @@ while main_running:
         "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
 
     """ Pelaajan elämätilanteen käsittely """
-    
+
     if player_health < last_player_health and player_health != 0:
         hurted = True
     else:
