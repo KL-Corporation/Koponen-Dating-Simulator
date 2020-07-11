@@ -187,7 +187,6 @@ class SergeantZombie:
     def hit_scan(self, _rect):
         global player_health, tile_rects
         if self.rect.topleft[1] < _rect.centery < self.rect.bottomleft[1]:
-            print("On same level")
             if self.direction:
                 if self.rect.x < _rect.x:
                     self.bullet_pos = [self.rect.centerx,self.rect.centery-20]
@@ -1152,7 +1151,11 @@ for _ in range(2):
 for _ in range(2):
     for _ in range(6):
         sergeant_shoot_animation.images.append(sergeant_aiming)
-print(len(sergeant_shoot_animation.images))
+KDS.Logging.Log(KDS.Logging.LogType.debug,
+                "Sergeant Shoot Animation Images Initialised: " + str(len(sergeant_shoot_animation.images)))
+for animation in sergeant_shoot_animation.images:
+    KDS.Logging.Log(KDS.Logging.LogType.debug,
+                    "Initialised Sergeant Shoot Animation Image: " + str(animation))
 sergeant_shoot_animation.ticks = 43
 # endregion
 
@@ -2494,7 +2497,6 @@ while main_running:
                         bullet = Bullet(
                             [player_rect.x, player_rect.y+20], direction, 50)
                         hit = bullet.shoot(tile_rects)
-                        print(hit)
                         del hit, bullet
                         pistol_shot.play()
                 else:
