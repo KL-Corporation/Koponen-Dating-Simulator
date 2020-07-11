@@ -11,7 +11,6 @@ from datetime import datetime
 from pygame.locals import *
 #endregion
 #region PyGame Initialisation
-
 pygame.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
@@ -29,11 +28,8 @@ screen = pygame.Surface(screen_size)
 
 KDS.Logging.init()
 KDS.Missions.init(screen)
-
 #endregion
 #region Text Handling
-
-
 class pygame_print_text:
 
     def __init__(self, color, topleft, width, display):
@@ -57,11 +53,8 @@ class pygame_print_text:
 
     def skipRow(self):
         self.row += self.row_height
-
 # endregion
 #region Animations
-
-
 class plasma_bullet:
 
     def __init__(self, starting_position, direction, display_to_blit):
@@ -97,8 +90,6 @@ class plasma_bullet:
             plasma_ammo, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
 
         return self.done
-
-
 class Bullet:
 
     def __init__(self, _position, _direction, damage):
@@ -144,8 +135,6 @@ class Bullet:
             if counter > 300:
                 q = False
         return "null"
-
-
 class Zombie:
 
     def __init__(self, position, health, speed):
@@ -166,8 +155,6 @@ class Zombie:
         if self.rect.colliderect(search_object):
             self.attacking = True
             return self.attacking
-
-
 class SergeantZombie:
 
     def __init__(self, position, health, speed):
@@ -228,8 +215,6 @@ class SergeantZombie:
                             q = False 
 
         return False
-
-
 # endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
@@ -243,8 +228,6 @@ def setFullscreen(reverseFullscreen):
         main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
         fullscreen_var = True
     KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
-
-
 # endregion
 #region Initialisation
 printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
@@ -513,11 +496,8 @@ task = ""
 taskTaivutettu = ""
 
 DebugMode = False
-
 # endregion
 #region Save System
-
-
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
 
@@ -530,8 +510,6 @@ def LoadSave():
     last_player_health = player_health
     player_name = KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerData", "Name", player_name)
-
-
 def SaveData():
 
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
@@ -543,11 +521,8 @@ def SaveData():
         selectedSave, "PlayerData", "Health", str(player_health))
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Name", str(player_name))
-
 # endregion
 #region Quit Handling
-
-
 def quit_function():
     global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running
     main_menu_running = False
@@ -558,14 +533,10 @@ def quit_function():
     settings_running = False
 # endregion
 #region Pickup Sound
-
-
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 # endregion
 #region Loading
-
-
 def load_map(path):
     with open(path + '.kds', 'r') as f:
         data = f.read()
@@ -574,8 +545,6 @@ def load_map(path):
     for row in data:
         game_map.append(list(row))
     return game_map
-
-
 def load_items(path):
     with open(path + '.kds', 'r') as f:
         data = f.read()
@@ -584,8 +553,6 @@ def load_items(path):
     for row in data:
         item_map.append(list(row))
     return item_map
-
-
 def load_jukebox_music():
     musikerna = os.listdir("audio/jukebox_music/")
     musics = []
@@ -596,8 +563,6 @@ def load_jukebox_music():
     random.shuffle(musics)
 
     return musics
-
-
 def load_music():
     original_path = os.getcwd()
     os.chdir("audio/music/")
@@ -623,13 +588,9 @@ def load_music():
     os.chdir(original_path)
     del original_path
     del pos
-
-
 def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
     pygame.mixer.music.load("MAPS/map" + _current_map + "/music.mid")
-
-
 def load_ads():
     ad_files = os.listdir("resources/ads/")
 
@@ -647,11 +608,8 @@ def load_ads():
         ad_images.append(pygame.image.load(path))
 
     return ad_images
-
 #world_gen = load_map("resources/game_map")
 #item_gen = load_items("resources/item_map")
-
-
 def load_rects():
     tile_rects = []
     toilets = []
@@ -704,8 +662,6 @@ def load_rects():
             x += 1
         y += 1
     return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants
-
-
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -772,8 +728,6 @@ def load_item_rects():
             x += 1
         y += 1
     return item_rects, item_ids, task_items
-
-
 def load_doors():
     y = 0
     door_rects = []
@@ -809,13 +763,9 @@ def load_doors():
             x += 1
         y += 1
     return door_rects, doors_open, color_keys
-
 #tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
 #item_rects, item_ids = load_item_rects()
-
 #door_rects, doors_open, color_keys = load_doors()
-
-
 def load_animation(name, number_of_images):
     animation_list = []
     for i in range(number_of_images):
@@ -824,11 +774,8 @@ def load_animation(name, number_of_images):
         img.set_colorkey((255, 255, 255))
         animation_list.append(img)
     return animation_list
-
 # endregion
 #region Collisions
-
-
 def shotgun_shots():
     shots = []
     global direction
@@ -874,24 +821,18 @@ def shotgun_shots():
             dir_counter = 0
         if counter > 80:
             q = False
-
-
 def collision_test(rect, tiles):
     hit_list = []
     for tile in tiles:
         if rect.colliderect(tile):
             hit_list.append(tile)
     return hit_list
-
-
 def damage(health, min_damage: float, max_damage: float):
     health -= int(random.uniform(min_damage, max_damage))
     if health < 0:
         health = 0
 
     return health
-
-
 def door_collision_test():
     x = 0
 
@@ -931,8 +872,6 @@ def door_collision_test():
                     player_rect.left = door.right - 1
 
         x += 1
-
-
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
@@ -1062,8 +1001,6 @@ def item_collision_test(rect, items):
 
         x += 1
     return hit_list
-
-
 def toilet_collisions(rect, burnstate):
     global burning_toilets, player_score, burning_trashcans
     o = 0
@@ -1084,11 +1021,8 @@ def toilet_collisions(rect, burnstate):
                         player_score += 15
                     burning_trashcans[o] = True
         o += 1
-
 # endregion
 #region Player
-
-
 def move(rect, movement, tiles):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
@@ -1111,8 +1045,6 @@ def move(rect, movement, tiles):
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
-
-
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
 gasburner_animation = load_animation("gasburner_on", 2)
@@ -1156,18 +1088,13 @@ for animation in sergeant_shoot_animation.images:
                     "Initialised Sergeant Shoot Animation Image: " + str(animation), False)
 sergeant_shoot_animation.ticks = 43
 # endregion
-
-
 sergeant_death_animation = KDS.Animator.Animation(
     "seargeant_dying", 5, 8, (255, 255, 255), 1)
 # endregion
 #region Load Game
 ad_images = load_ads()
-
 # endregion
 #region Console
-
-
 def console():
     global inventory, player_keys, player_health, koponen_happines
 
@@ -1203,10 +1130,10 @@ def console():
     elif command_list[0] == "terms":
         setTerms = False
         try:
-            if command_list[1] == "true" or "True" or "T" or "t":
+            if command_list[1] == "true" or command_list[1] == "True" or command_list[1] == "T" or command_list[1] == "t":
                 setTerms = True
                 KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as true from console.", True)
-            elif command_list[1] == "false" or "False" or "F" or "f":
+            elif command_list[1] == "false" or command_list[1] == "False" or command_list[1] == "F" or command_list[1] == "f":
                 setTerms = False
                 KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as false from console.", True)
             else:
@@ -1219,11 +1146,11 @@ def console():
                 "Data", "TermsAccepted", str(setTerms))
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info, "Please provide a proper state for terms & conditions", True)
-
+    
+    else:
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Not a valid command", True)
 # endregion
 #region Terms and Conditions
-
-
 def agr(tcagr):
 
     if tcagr == False:
@@ -1284,11 +1211,8 @@ def agr(tcagr):
 
         pygame.display.update()
         c = False
-
 # endregion
 #region Koponen Talk
-
-
 def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting
 
@@ -1489,11 +1413,8 @@ def koponen_talk():
         c = False
         pygame.display.update()
     pygame.mouse.set_visible(False)
-
 # endregion
 #region Menus
-
-
 def esc_menu_f():
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
@@ -1589,8 +1510,6 @@ def esc_menu_f():
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
-
-
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, volume
     c = False
@@ -1681,8 +1600,6 @@ def settings_menu():
 
         c = False
         pygame.display.update()
-
-
 def main_menu():
     try:
         jukebox_music[jukeboxMusicPlaying].stop()
@@ -1789,8 +1706,6 @@ def main_menu():
 
         pygame.display.update()
         c = False
-
-
 # endregion
 #region Check Terms
 agr(tcagr)
@@ -1801,11 +1716,7 @@ if tcagr != "false":
 #region Koponen Talk Tip Text
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
 # endregion
-#region Item Initialisation
-# endregion
 #region Inventory Slot Switching
-
-
 def inventoryLeft():
     global inventory_slot, inventoryDoubles, inventory
     checkSlot = inventory_slot - 2
@@ -1815,16 +1726,12 @@ def inventoryLeft():
         inventory_slot -= 2
     else:
         inventory_slot -= 1
-
-
 def inventoryRight():
     global inventory_slot, inventoryDoubles
     if(inventoryDoubles[inventory_slot] == True):
         inventory_slot += 2
     else:
         inventory_slot += 1
-
-
 # endregion
 #region Main Running
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
@@ -2693,10 +2600,4 @@ while main_running:
         tick = 0
     clock.tick(60)
 #endregion
-#endregion
-#region Get Data
-def Get_Display_Size():
-    return display_size
-def Get_Screen_Size():
-    return screen_size
 #endregion
