@@ -28,8 +28,6 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 
 KDS.Logging.init()
-KDS.Missions.init(screen)
-
 #endregion
 #region Text Handling
 
@@ -1221,7 +1219,7 @@ def move(rect, movement, tiles):
         elif movement[0] < 0:
             rect.left = tile.right
             collision_types['left'] = True
-    rect.y += movement[1]
+    rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
@@ -1690,7 +1688,7 @@ def esc_menu_f():
         point[1] -= 120
         y = 0
         for button in buttons:
-            if button.collidepoint(point[0], point[1]):
+            if button.collidepoint(int(point[0]), int(point[1])):
                 if c:
                     functions[y]()
                 if pygame.mouse.get_pressed()[0]:
@@ -1710,7 +1708,7 @@ def esc_menu_f():
             esc_menu_surface.blit(texts[y], (button.x+x, button.y+3))
             y += 1
 
-        main_display.blit(esc_menu_surface, (display_size[0] / 2 - 250, 120))
+        main_display.blit(esc_menu_surface, (int(display_size[0]) / 2 - 250, 120))
         pygame.display.update()
         c = False
 
@@ -1850,6 +1848,7 @@ def main_menu():
         for key in player_keys:
             player_keys[key] = False
         KDS.Logging.Log(KDS.Logging.LogType.info, "Press F4 to commit suicide", False)
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Press Alt + F4 to get depression", False)
         LoadSave()
 
     def settings_function():
@@ -1952,7 +1951,7 @@ def inventoryRight():
 
 
 # endregion
-#region Main Running
+#region World Generation
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
@@ -1971,7 +1970,8 @@ KDS.Logging.Log(KDS.Logging.LogType.debug,
 for i_id in item_ids:
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Item: (ID)" + i_id, False)
 door_rects, doors_open, color_keys = load_doors()
-
+#endregion
+#region Main Running
 while main_running:
     # region Events
     for event in pygame.event.get():
@@ -2070,7 +2070,7 @@ while main_running:
             if event.button == 5:
                 inventoryRight()
 # endregion
-# region Inventory Code
+#region Inventory Code
 
     def inventoryDoubleOffsetCounter():
         inventoryDoubleOffset = 0
@@ -2095,7 +2095,7 @@ while main_running:
     mouse_pos = pygame.mouse.get_pos()
 
 # endregion
-# region Player Death
+#region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
         pygame.mixer.music.stop()
@@ -2103,7 +2103,7 @@ while main_running:
         player_death_sound.set_volume(0.5)
         animation_has_played = True
 # endregion
-# region More Collisions
+#region More Collisions
     y = 0
     for layer in world_gen:
         x = 0
@@ -2307,7 +2307,7 @@ while main_running:
         b += 1
 
 # endregion
-# region PlayerMovement
+#region PlayerMovement
 
     if playerSprinting == False and playerStamina < 100.0:
         playerStamina += 0.25
@@ -2338,7 +2338,7 @@ while main_running:
         vertical_momentum = 8
 
 # endregion
-# region Even More Collisions
+#region Even More Collisions
 
     toilet_collisions(player_rect, gasburnerBurning)
     if player_health > 0:
@@ -2468,7 +2468,7 @@ while main_running:
     door_collision_test()
 
     # endregion
-# region UI
+#region UI
 
     score = score_font.render(
         ("Score: " + str(player_score)), True, (255, 255, 255))
@@ -2496,7 +2496,7 @@ while main_running:
         hurt_sound.play()
 
 # endregion
-# region Even Even More Collisions
+#region Even Even More Collisions
 
     if collisions['bottom'] == True:
         air_timer = 0
@@ -2507,7 +2507,7 @@ while main_running:
         vertical_momentum = 0
 
 # endregion
-# region Player Data
+#region Player Data
 
     if player_health:
         if player_movement[0] > 0:
@@ -2534,13 +2534,13 @@ while main_running:
             animation = death_animation.copy()
             animation_duration = 10
 # endregion
-# region Koponen Movement
+#region Koponen Movement
     if koponen_movement[0] != 0:
         koponen_animation = koponen_run.copy()
     else:
         koponen_animation = koponen_stand.copy()
 # endregion
-# region Items
+#region Items
     if animation_counter > animation_duration:
         animation_counter = 0
         animation_image += 1
@@ -2690,7 +2690,7 @@ while main_running:
         screen.blit(blue_key, (38, 20))
 
 # endregion
-# region Koponen Tip
+#region Koponen Tip
 
     if player_rect.colliderect(koponen_recog_rec):
         screen.blit(
@@ -2705,7 +2705,7 @@ while main_running:
     h = 0
 
 # endregion
-# region Interactable Objects
+#region Interactable Objects
 
     for toilet in toilets:
         if burning_toilets[h] == True:
@@ -2734,14 +2734,14 @@ while main_running:
             screen.blit(flames_animation.update(),(player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
 
 # endregion
-# region Debug Mode
+#region Debug Mode
 
     screen.blit(score, (10, 55))
     if DebugMode:
         screen.blit(fps, (10, 10))
 
 # endregion
-# region Inventory Rendering
+#region Inventory Rendering
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
@@ -2794,11 +2794,11 @@ while main_running:
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
 # endregion
-# region Rendering
+#region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 # endregion
-# region Conditional Events
+#region Conditional Events
 
     if esc_menu:
         pygame.mixer.music.pause()
@@ -2821,9 +2821,11 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
-    print(clock.get_fps())
 # endregion
-# region Ticks
+#region Mission Updating
+    KDS.Missions.Update_Missions()
+#endregion
+#region Ticks
     tick += 1
     if tick > 60:
         tick = 0

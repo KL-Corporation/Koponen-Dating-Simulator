@@ -15,12 +15,11 @@ Koponen_Interactables = []
 Mission_Progress = []
 Mission_Finished = []
 
+pygame.init()
+
 screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
 screen = pygame.Surface(screen_size)
-
-def init(Screen):
-    global screen
-    screen = Screen
+mission_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
 
 def InitialiseMission(Safe_Name: str, Name: str, Message: str, Koponen_Say: str, Koponen_Repeat: str, Koponen_Interactable: bool):
     """
@@ -68,4 +67,6 @@ def SetMission_Progress(identifier, progress: float):
         KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ") Identifier could not be processed.", False)
 
 def Update_Missions():
-    print("TEMP")
+    for i in range(len(Safe_Names)):
+        itemTip = mission_font.render("Koponen on raiskannut kymmenen ihmistä", True, (255, 255, 255))
+        screen.blit(itemTip, (50, 50))
