@@ -3,6 +3,7 @@ import KDS.ConfigManager
 import KDS.Animator
 import KDS.Logging
 import KDS.Missions
+import KDS.AI
 import pygame
 import os
 import random
@@ -27,7 +28,6 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 
 KDS.Logging.init()
-KDS.Missions.init(screen)
 #endregion
 #region Text Handling
 class pygame_print_text:
@@ -186,7 +186,7 @@ class Archvile:
         def hit_scan(self):
             q = True
             counter = 0
-            scan_position = [self.rect.centerx,self.rect.centery]
+            scan_position = [self.rect.centerx, self.rect.centery]
             while q:
                 if self.direction:
                     scan_position[0] += 27
@@ -236,7 +236,7 @@ class Archvile:
                     f = hit_scan(self)
 
                     if f != "wall" and player_rect.y-40 < archvile.rect.y :
-                        player_health -= int(random.uniform(30,80))
+                        player_health -= int(random.uniform(30, 80))
                         landmine_explosion.play()
 
                     del f
@@ -260,66 +260,6 @@ class Archvile:
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
-class SergeantZombie:
-
-    def __init__(self, position, health, speed):
-        self.position = position
-        self.health = health
-        self.rect = pygame.Rect(position[0], position[1], 34, 64)
-        self.direction = True
-        self.playDeathAnimation = True
-        self.movement = [speed, 8]
-        self.shooting = False
-        self.hits = {}
-        self.xvar = False
-        self.hitscanner_cooldown = 0
-        self.shoot = False
-        self.bullet_pos =  [0,0]
-
-    def hit_scan(self, _rect):
-        global player_health, tile_rects
-        if self.rect.topleft[1] < _rect.centery < self.rect.bottomleft[1]:
-            if self.direction:
-                if self.rect.x < _rect.x:
-                    self.bullet_pos = [self.rect.centerx,self.rect.centery-20]
-
-                    q = True
-                    counter = 0
-                    while q:
-                        for tile in tile_rects:
-                            if tile.collidepoint(self.bullet_pos):
-                                return False
-
-                        if _rect.collidepoint(self.bullet_pos):
-                            return True
-
-                        self.bullet_pos[0] += 27
-
-                        counter += 1
-
-                        if counter > 40:
-                            q = False
-                    
-            else:
-                if self.rect.x > _rect.x:
-                    self.bullet_pos = [self.rect.centerx,self.rect.centery-20]
-
-                    q = True
-                    counter = 0
-                    while q:
-                        for tile in tile_rects:
-                            if tile.collidepoint(self.bullet_pos):
-                                return False
-                        if _rect.collidepoint(self.bullet_pos):
-                            return True
-                        self.bullet_pos[0] -= 27
-
-                        counter += 1
-
-                        if counter > 40:
-                            q = False 
-
-        return False
 # endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
@@ -487,6 +427,7 @@ shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
 player_shotgun_shot = pygame.mixer.Sound("audio/misc/player_shotgun.wav")
 archvile_attack = pygame.mixer.Sound("audio/misc/dsflame.wav")
 archvile_death = pygame.mixer.Sound("audio/misc/dsvildth.wav")
+fart = pygame.mixer.Sound("audio/misc/fart_attack.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -498,8 +439,8 @@ player_shotgun_shot.set_volume(0.8)
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
-KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", "", "", False)
-KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", "", "", False)
+KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", False)
+KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", False)
 
 main_running = True
 playerMovingRight = False
@@ -573,6 +514,8 @@ last_player_health = 100
 player_death_event = False
 animation_has_played = False
 attack_counter = 0
+fart_counter = 0
+farting = False
 
 current_map = "02"
 
@@ -605,6 +548,7 @@ task = ""
 taskTaivutettu = ""
 
 DebugMode = False
+
 # endregion
 #region Save System
 def LoadSave():
@@ -672,6 +616,10 @@ def load_jukebox_music():
     random.shuffle(musics)
 
     return musics
+def shakeScreen():
+    scroll[0] += random.randint(-10, 10)
+    scroll[1] += random.randint(-10, 10)
+
 def load_music():
     original_path = os.getcwd()
     os.chdir("audio/music/")
@@ -717,6 +665,7 @@ def load_ads():
         ad_images.append(pygame.image.load(path))
 
     return ad_images
+ad_images = load_ads()
 #world_gen = load_map("resources/game_map")
 #item_gen = load_items("resources/item_map")
 def load_rects():
@@ -765,7 +714,7 @@ def load_rects():
                 elif tile == 'Z':
                     zombies.append(Zombie((x*34, y*34-34), 100, 1))
                 elif tile == 'S':
-                    sergeants.append(SergeantZombie((x*34, y*34-34), 220, 1))
+                    sergeants.append(KDS.AI.SergeantZombie((x*34, y*34-34), 220, 1))
                 elif tile == 'V':
                     archviles.append(Archvile((x*34, y*34-51), 750, 2))
                 else:
@@ -1153,7 +1102,7 @@ def move(rect, movement, tiles):
         elif movement[0] < 0:
             rect.left = tile.right
             collision_types['left'] = True
-    rect.y += movement[1]
+    rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
@@ -1163,6 +1112,7 @@ def move(rect, movement, tiles):
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
+
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
 gasburner_animation = load_animation("gasburner_on", 2)
@@ -1212,11 +1162,10 @@ for animation in sergeant_shoot_animation.images:
                     "Initialised Sergeant Shoot Animation Image: " + str(animation), False)
 sergeant_shoot_animation.ticks = 43
 # endregion
+
+
 sergeant_death_animation = KDS.Animator.Animation(
     "seargeant_dying", 5, 8, (255, 255, 255), 1)
-# endregion
-#region Load Game
-ad_images = load_ads()
 # endregion
 #region Console
 def console():
@@ -1254,10 +1203,10 @@ def console():
     elif command_list[0] == "terms":
         setTerms = False
         try:
-            if command_list[1] == "true" or command_list[1] == "True" or command_list[1] == "T" or command_list[1] == "t":
+            if command_list[1] == "true" or "True" or "T" or "t":
                 setTerms = True
                 KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as true from console.", True)
-            elif command_list[1] == "false" or command_list[1] == "False" or command_list[1] == "F" or command_list[1] == "f":
+            elif command_list[1] == "false" or "False" or "F" or "f":
                 setTerms = False
                 KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as false from console.", True)
             else:
@@ -1270,9 +1219,6 @@ def console():
                 "Data", "TermsAccepted", str(setTerms))
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info, "Please provide a proper state for terms & conditions", True)
-    
-    else:
-        KDS.Logging.Log(KDS.Logging.LogType.info, "Not a valid command", True)
 # endregion
 #region Terms and Conditions
 def agr(tcagr):
@@ -1609,7 +1555,7 @@ def esc_menu_f():
         point[1] -= 120
         y = 0
         for button in buttons:
-            if button.collidepoint(point[0], point[1]):
+            if button.collidepoint(int(point[0]), int(point[1])):
                 if c:
                     functions[y]()
                 if pygame.mouse.get_pressed()[0]:
@@ -1629,7 +1575,7 @@ def esc_menu_f():
             esc_menu_surface.blit(texts[y], (button.x+x, button.y+3))
             y += 1
 
-        main_display.blit(esc_menu_surface, (display_size[0] / 2 - 250, 120))
+        main_display.blit(esc_menu_surface, (int(display_size[0]) / 2 - 250, 120))
         pygame.display.update()
         c = False
 
@@ -1765,6 +1711,7 @@ def main_menu():
         for key in player_keys:
             player_keys[key] = False
         KDS.Logging.Log(KDS.Logging.LogType.info, "Press F4 to commit suicide", False)
+        KDS.Logging.Log(KDS.Logging.LogType.info, "Press Alt + F4 to get depression", False)
         LoadSave()
 
     def settings_function():
@@ -1857,7 +1804,7 @@ def inventoryRight():
     else:
         inventory_slot += 1
 # endregion
-#region Main Running
+#region World Generation
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
@@ -1876,7 +1823,8 @@ KDS.Logging.Log(KDS.Logging.LogType.debug,
 for i_id in item_ids:
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Item: (ID)" + i_id, False)
 door_rects, doors_open, color_keys = load_doors()
-
+#endregion
+#region Main Running
 while main_running:
     # region Events
     for event in pygame.event.get():
@@ -1902,6 +1850,11 @@ while main_running:
                 inventoryRight()
             if event.key == K_t:
                 console()
+            if event.key == K_f:
+                if playerStamina == 100:
+                    playerStamina = -1000
+                    farting = True
+                    fart.play()
             if event.key == K_q:
 
                 if inventory[inventory_slot] != "none":
@@ -1975,7 +1928,7 @@ while main_running:
             if event.button == 5:
                 inventoryRight()
 # endregion
-# region Inventory Code
+#region Inventory Code
 
     def inventoryDoubleOffsetCounter():
         inventoryDoubleOffset = 0
@@ -1996,11 +1949,12 @@ while main_running:
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
+    if farting:
+        shakeScreen()
     player_hand_item = inventory[inventory_slot]
     mouse_pos = pygame.mouse.get_pos()
-
 # endregion
-# region Player Death
+#region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
         pygame.mixer.music.stop()
@@ -2008,7 +1962,7 @@ while main_running:
         player_death_sound.set_volume(0.5)
         animation_has_played = True
 # endregion
-# region More Collisions
+#region More Collisions
     y = 0
     for layer in world_gen:
         x = 0
@@ -2128,30 +2082,31 @@ while main_running:
 
             plasmarifle_f_sound.play()
             ammunition_plasma -= 1
+            
+    if player_hand_item != "none":
+        if player_hand_item == "plasmarifle":
 
-    if player_hand_item == "plasmarifle":
+            ammo_count = score_font.render(
+                "Ammo: " + str(ammunition_plasma), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
-        ammo_count = score_font.render(
-            "Ammo: " + str(ammunition_plasma), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+        elif player_hand_item == "pistol":
 
-    elif player_hand_item == "pistol":
+            ammo_count = score_font.render(
+                "Ammo: " + str(pistol_bullets), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
-        ammo_count = score_font.render(
-            "Ammo: " + str(pistol_bullets), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+        elif player_hand_item == "rk62":
 
-    elif player_hand_item == "rk62":
+            ammo_count = score_font.render(
+                "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
-        ammo_count = score_font.render(
-            "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+        elif player_hand_item == "shotgun":
 
-    elif player_hand_item == "shotgun":
-
-        ammo_count = score_font.render(
-            "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+            ammo_count = score_font.render(
+                "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
     for bullet in plasmabullets:
         state = bullet.update(tile_rects)
@@ -2212,7 +2167,7 @@ while main_running:
         b += 1
 
 # endregion
-# region PlayerMovement
+#region PlayerMovement
 
     if playerSprinting == False and playerStamina < 100.0:
         playerStamina += 0.25
@@ -2243,7 +2198,7 @@ while main_running:
         vertical_momentum = 8
 
 # endregion
-# region Even More Collisions
+#region Even More Collisions
 
     toilet_collisions(player_rect, gasburnerBurning)
     if player_health > 0:
@@ -2260,7 +2215,7 @@ while main_running:
     for sergeant in sergeants:
         if sergeant.health > 0:
             if sergeant.hitscanner_cooldown > 100:
-                hitscan = sergeant.hit_scan(player_rect)
+                hitscan = sergeant.hit_scan(player_rect, player_health, tile_rects)
                 sergeant.hitscanner_cooldown = 0
                 if hitscan:
                     sergeant.shoot = True
@@ -2291,7 +2246,7 @@ while main_running:
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
                     shotgun_shot.play()
-                    if sergeant.hit_scan(player_rect):
+                    if sergeant.hit_scan(player_rect, player_health, tile_rects):
                         player_health = damage(player_health, 20, 50)
                 if i:
                     sergeant_shoot_animation.reset()
@@ -2310,7 +2265,6 @@ while main_running:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
                                               False), (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]+10))
 
-    wa = zombie_walk_animation.update()
     for zombie1 in zombies:
 
         if zombie1.health > 0:
@@ -2373,22 +2327,23 @@ while main_running:
     door_collision_test()
 
     # endregion
-# region UI
+#region UI
 
     score = score_font.render(
         ("Score: " + str(player_score)), True, (255, 255, 255))
     if DebugMode:
         fps = score_font.render(
             "Fps: " + str(int(clock.get_fps())), True, (255, 255, 255))
+    
+    if player_health < 0:
+        player_health = 0
+
     health = score_font.render(
         "Health: " + str(player_health), True, (255, 255, 255))
     stamina = score_font.render(
         "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
 
     """ Pelaajan elämätilanteen käsittely """
-
-    if player_health < 0:
-        player_health = 0
 
     if player_health < last_player_health and player_health != 0:
         hurted = True
@@ -2401,7 +2356,7 @@ while main_running:
         hurt_sound.play()
 
 # endregion
-# region Even Even More Collisions
+#region Even Even More Collisions
 
     if collisions['bottom'] == True:
         air_timer = 0
@@ -2412,7 +2367,7 @@ while main_running:
         vertical_momentum = 0
 
 # endregion
-# region Player Data
+#region Player Data
 
     if player_health:
         if player_movement[0] > 0:
@@ -2439,13 +2394,13 @@ while main_running:
             animation = death_animation.copy()
             animation_duration = 10
 # endregion
-# region Koponen Movement
+#region Koponen Movement
     if koponen_movement[0] != 0:
         koponen_animation = koponen_run.copy()
     else:
         koponen_animation = koponen_stand.copy()
 # endregion
-# region Items
+#region Items
     if animation_counter > animation_duration:
         animation_counter = 0
         animation_image += 1
@@ -2587,6 +2542,31 @@ while main_running:
                     screen.blit(pygame.transform.flip(shotgun, direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
 
+    if farting:
+        fart_counter += 1
+        if fart_counter > 250:
+            farting = False
+            fart_counter = 0
+
+            damage_rect = pygame.Rect(0,0,800,600)
+
+            damage_rect.centerx = player_rect.centerx
+            damage_rect.centery = player_rect.centery
+
+            for archvile in archviles:
+                if damage_rect.colliderect(archvile.rect):
+                    archvile.health -= 600
+            for zombie1 in zombies:
+                if damage_rect.colliderect(zombie1.rect):
+                    zombie1.health -= 600
+            for sergeant in sergeants:
+                if damage_rect.colliderect(sergeant.rect):
+                    sergeant.health -= 600
+
+            del damage_rect
+
+
+
     if player_keys["red"]:
         screen.blit(red_key, (10, 20))
     if player_keys["green"]:
@@ -2595,7 +2575,7 @@ while main_running:
         screen.blit(blue_key, (38, 20))
 
 # endregion
-# region Koponen Tip
+#region Koponen Tip
 
     if player_rect.colliderect(koponen_recog_rec):
         screen.blit(
@@ -2610,7 +2590,7 @@ while main_running:
     h = 0
 
 # endregion
-# region Interactable Objects
+#region Interactable Objects
 
     for toilet in toilets:
         if burning_toilets[h] == True:
@@ -2639,14 +2619,14 @@ while main_running:
             screen.blit(flames_animation.update(),(player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
 
 # endregion
-# region Debug Mode
+#region Debug Mode
 
     screen.blit(score, (10, 55))
     if DebugMode:
         screen.blit(fps, (10, 10))
 
 # endregion
-# region Inventory Rendering
+#region Inventory Rendering
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
@@ -2699,11 +2679,11 @@ while main_running:
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
 # endregion
-# region Rendering
+#region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 # endregion
-# region Conditional Events
+#region Conditional Events
 
     if esc_menu:
         pygame.mixer.music.pause()
@@ -2726,12 +2706,20 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
-    print(clock.get_fps())
 # endregion
-# region Ticks
+#region Mission Updating
+    KDS.Missions.Update_Missions()
+#endregion
+#region Ticks
     tick += 1
     if tick > 60:
         tick = 0
     clock.tick(60)
 #endregion
+#endregion
+#region Get Data
+def Get_Display_Size():
+    return display_size
+def Get_Screen_Size():
+    return screen_size
 #endregion
