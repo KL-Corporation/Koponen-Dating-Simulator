@@ -260,66 +260,6 @@ class Archvile:
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
-class SergeantZombie:
-
-    def __init__(self, position, health, speed):
-        self.position = position
-        self.health = health
-        self.rect = pygame.Rect(position[0], position[1], 34, 64)
-        self.direction = True
-        self.playDeathAnimation = True
-        self.movement = [speed, 8]
-        self.shooting = False
-        self.hits = {}
-        self.xvar = False
-        self.hitscanner_cooldown = 0
-        self.shoot = False
-        self.bullet_pos =  [0,0]
-
-    def hit_scan(self, _rect):
-        global player_health, tile_rects
-        if self.rect.topleft[1] < _rect.centery < self.rect.bottomleft[1]:
-            if self.direction:
-                if self.rect.x < _rect.x:
-                    self.bullet_pos = [self.rect.centerx,self.rect.centery-20]
-
-                    q = True
-                    counter = 0
-                    while q:
-                        for tile in tile_rects:
-                            if tile.collidepoint(self.bullet_pos):
-                                return False
-
-                        if _rect.collidepoint(self.bullet_pos):
-                            return True
-
-                        self.bullet_pos[0] += 27
-
-                        counter += 1
-
-                        if counter > 40:
-                            q = False
-                    
-            else:
-                if self.rect.x > _rect.x:
-                    self.bullet_pos = [self.rect.centerx,self.rect.centery-20]
-
-                    q = True
-                    counter = 0
-                    while q:
-                        for tile in tile_rects:
-                            if tile.collidepoint(self.bullet_pos):
-                                return False
-                        if _rect.collidepoint(self.bullet_pos):
-                            return True
-                        self.bullet_pos[0] -= 27
-
-                        counter += 1
-
-                        if counter > 40:
-                            q = False 
-
-        return False
 # endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
@@ -487,6 +427,7 @@ shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
 player_shotgun_shot = pygame.mixer.Sound("audio/misc/player_shotgun.wav")
 archvile_attack = pygame.mixer.Sound("audio/misc/dsflame.wav")
 archvile_death = pygame.mixer.Sound("audio/misc/dsvildth.wav")
+fart = pygame.mixer.Sound("audio/misc/fart_attack.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -573,6 +514,8 @@ last_player_health = 100
 player_death_event = False
 animation_has_played = False
 attack_counter = 0
+fart_counter = 0
+farting = False
 
 current_map = "02"
 
@@ -673,6 +616,10 @@ def load_jukebox_music():
     random.shuffle(musics)
 
     return musics
+def shakeScreen():
+    scroll[0] += random.randint(-10, 10)
+    scroll[1] += random.randint(-10, 10)
+
 def load_music():
     original_path = os.getcwd()
     os.chdir("audio/music/")
@@ -767,7 +714,7 @@ def load_rects():
                 elif tile == 'Z':
                     zombies.append(Zombie((x*34, y*34-34), 100, 1))
                 elif tile == 'S':
-                    sergeants.append(SergeantZombie((x*34, y*34-34), 220, 1))
+                    sergeants.append(KDS.AI.SergeantZombie((x*34, y*34-34), 220, 1))
                 elif tile == 'V':
                     archviles.append(Archvile((x*34, y*34-51), 750, 2))
                 else:
@@ -1903,6 +1850,11 @@ while main_running:
                 inventoryRight()
             if event.key == K_t:
                 console()
+            if event.key == K_f:
+                if playerStamina == 100:
+                    playerStamina = -1000
+                    farting = True
+                    fart.play()
             if event.key == K_q:
 
                 if inventory[inventory_slot] != "none":
@@ -1997,9 +1949,10 @@ while main_running:
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
+    if farting:
+        shakeScreen()
     player_hand_item = inventory[inventory_slot]
     mouse_pos = pygame.mouse.get_pos()
-
 # endregion
 #region Player Death
     if player_health < 1 and not animation_has_played:
@@ -2129,30 +2082,31 @@ while main_running:
 
             plasmarifle_f_sound.play()
             ammunition_plasma -= 1
+            
+    if player_hand_item != "none":
+        if player_hand_item == "plasmarifle":
 
-    if player_hand_item == "plasmarifle":
+            ammo_count = score_font.render(
+                "Ammo: " + str(ammunition_plasma), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
-        ammo_count = score_font.render(
-            "Ammo: " + str(ammunition_plasma), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+        elif player_hand_item == "pistol":
 
-    elif player_hand_item == "pistol":
+            ammo_count = score_font.render(
+                "Ammo: " + str(pistol_bullets), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
-        ammo_count = score_font.render(
-            "Ammo: " + str(pistol_bullets), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+        elif player_hand_item == "rk62":
 
-    elif player_hand_item == "rk62":
+            ammo_count = score_font.render(
+                "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
-        ammo_count = score_font.render(
-            "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+        elif player_hand_item == "shotgun":
 
-    elif player_hand_item == "shotgun":
-
-        ammo_count = score_font.render(
-            "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
-        screen.blit(ammo_count, (10, 360))
+            ammo_count = score_font.render(
+                "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
+            screen.blit(ammo_count, (10, 360))
 
     for bullet in plasmabullets:
         state = bullet.update(tile_rects)
@@ -2261,7 +2215,7 @@ while main_running:
     for sergeant in sergeants:
         if sergeant.health > 0:
             if sergeant.hitscanner_cooldown > 100:
-                hitscan = sergeant.hit_scan(player_rect)
+                hitscan = sergeant.hit_scan(player_rect, player_health, tile_rects)
                 sergeant.hitscanner_cooldown = 0
                 if hitscan:
                     sergeant.shoot = True
@@ -2292,7 +2246,7 @@ while main_running:
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
                     shotgun_shot.play()
-                    if sergeant.hit_scan(player_rect):
+                    if sergeant.hit_scan(player_rect, player_health, tile_rects):
                         player_health = damage(player_health, 20, 50)
                 if i:
                     sergeant_shoot_animation.reset()
@@ -2311,7 +2265,6 @@ while main_running:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
                                               False), (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]+10))
 
-    wa = zombie_walk_animation.update()
     for zombie1 in zombies:
 
         if zombie1.health > 0:
@@ -2588,6 +2541,31 @@ while main_running:
                 else:
                     screen.blit(pygame.transform.flip(shotgun, direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+
+    if farting:
+        fart_counter += 1
+        if fart_counter > 250:
+            farting = False
+            fart_counter = 0
+
+            damage_rect = pygame.Rect(0,0,800,600)
+
+            damage_rect.centerx = player_rect.centerx
+            damage_rect.centery = player_rect.centery
+
+            for archvile in archviles:
+                if damage_rect.colliderect(archvile.rect):
+                    archvile.health -= 600
+            for zombie1 in zombies:
+                if damage_rect.colliderect(zombie1.rect):
+                    zombie1.health -= 600
+            for sergeant in sergeants:
+                if damage_rect.colliderect(sergeant.rect):
+                    sergeant.health -= 600
+
+            del damage_rect
+
+
 
     if player_keys["red"]:
         screen.blit(red_key, (10, 20))
