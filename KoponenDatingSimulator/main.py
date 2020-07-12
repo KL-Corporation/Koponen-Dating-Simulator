@@ -289,7 +289,7 @@ main_menu_background = pygame.image.load(
     "resources/main_menu/main_menu_bc.png")
 settings_background = pygame.image.load("resources/settings_bc.png")
 agr_background = pygame.image.load("resources/tcagr.png")
-path = "resources/ads/koponen_talk_bc0.png"
+path = "resources/koponen_background/ads/koponen_talk_bc0.png"
 bc = pygame.image.load(path)
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
@@ -439,8 +439,10 @@ player_shotgun_shot.set_volume(0.8)
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
-KDS.Missions.InitialiseMission("tutorialWalk", "Kävely Tutoriaali", "Kävele käyttäen näppäimiä: A, D ja Välilyönti", False)
-KDS.Missions.InitialiseMission("tutorialKoponen", "Koponen Tutoriaali", "Puhu koposelle", False)
+KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
+KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: A, D ja Välilyönti")
+KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
+KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F")
 
 main_running = True
 playerMovingRight = False
@@ -552,7 +554,7 @@ DebugMode = False
 # endregion
 #region Save System
 def LoadSave():
-    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
+    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
 
     player_rect.x = int(KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x)))
@@ -653,7 +655,7 @@ def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
     pygame.mixer.music.load("MAPS/map" + _current_map + "/music.mid")
 def load_ads():
-    ad_files = os.listdir("resources/ads/")
+    ad_files = os.listdir("resources/koponen_background/ads")
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
@@ -665,7 +667,7 @@ def load_ads():
     ad_images = []
 
     for ad in ad_files:
-        path = str("resources/ads/" + ad)
+        path = str("resources/koponen_background/ads/" + ad)
         ad_images.append(pygame.image.load(path))
 
     return ad_images
@@ -1933,7 +1935,6 @@ while main_running:
                 inventoryRight()
 # endregion
 #region Inventory Code
-
     def inventoryDoubleOffsetCounter():
         inventoryDoubleOffset = 0
         for i in range(0, inventory_slot - 1):
@@ -2143,7 +2144,7 @@ while main_running:
         if item_ids[b] == "blue_key":
             screen.blit(blue_key, (item.x-scroll[0], item.y-scroll[1]+16))
         if item_ids[b] == "coffeemug":
-            screen.blit(coffeemug, (item.x-scroll[0], item.y-scroll[1]+14))
+            screen.blit(coffeemug, (item.x - scroll[0], item.y - scroll[1] + 14))
         if item_ids[b] == "ss_bonuscard":
             screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
         if item_ids[b] == "lappi_sytytyspalat":
@@ -2331,7 +2332,6 @@ while main_running:
 
     # endregion
 #region UI
-
     score = score_font.render(
         ("Score: " + str(player_score)), True, (255, 255, 255))
     if DebugMode:
@@ -2345,8 +2345,8 @@ while main_running:
         "Health: " + str(player_health), True, (255, 255, 255))
     stamina = score_font.render(
         "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
-
-    """ Pelaajan elämätilanteen käsittely """
+#endregion
+#region Pelaajan elämätilanteen käsittely
 
     if player_health < last_player_health and player_health != 0:
         hurted = True
@@ -2357,7 +2357,6 @@ while main_running:
 
     if hurted:
         hurt_sound.play()
-
 # endregion
 #region Even Even More Collisions
 
@@ -2623,13 +2622,11 @@ while main_running:
 
 # endregion
 #region Debug Mode
-
     screen.blit(score, (10, 55))
     if DebugMode:
         screen.blit(fps, (10, 10))
-
 # endregion
-#region Inventory Rendering
+#region UI Rendering
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
@@ -2681,13 +2678,13 @@ while main_running:
 
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
+
 # endregion
 #region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 # endregion
 #region Conditional Events
-
     if esc_menu:
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
@@ -2710,9 +2707,6 @@ while main_running:
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
 # endregion
-#region Mission Updating
-    KDS.Missions.Update_Missions()
-#endregion
 #region Ticks
     tick += 1
     if tick > 60:
