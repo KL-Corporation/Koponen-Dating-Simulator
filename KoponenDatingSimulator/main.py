@@ -563,6 +563,8 @@ def LoadSave():
     last_player_health = player_health
     player_name = KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerData", "Name", player_name)
+    playerStamina = float(KDS.ConfigManager.LoadSave(
+        selectedSave, "PlayerData", "Stamina", str(playerStamina)))
 def SaveData():
 
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
@@ -574,6 +576,8 @@ def SaveData():
         selectedSave, "PlayerData", "Health", str(player_health))
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Name", str(player_name))
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Stamina", str(playerStamina))
 # endregion
 #region Quit Handling
 def quit_function():
@@ -2169,14 +2173,13 @@ while main_running:
 # endregion
 #region PlayerMovement
 
-    if playerSprinting == False and playerStamina < 100.0:
-        playerStamina += 0.25
-    elif playerSprinting and playerStamina > 0:
-        playerStamina -= 0.75
-    elif playerSprinting and playerStamina <= 0:
-        playerSprinting = False
-    elif int(round(playerStamina)) < 0:
-        playerStamina = 0.0
+    if player_health > 0:
+        if playerSprinting == False and playerStamina < 100.0:
+            playerStamina += 0.25
+        elif playerSprinting and playerStamina > 0:
+            playerStamina -= 0.75
+        elif playerSprinting and playerStamina <= 0:
+            playerSprinting = False
 
     player_movement = [0, 0]
 
