@@ -2714,9 +2714,3 @@ while main_running:
     clock.tick(60)
 #endregion
 #endregion
-#region Get Data
-def Get_Display_Size():
-    return display_size
-def Get_Screen_Size():
-    return screen_size
-#endregion
