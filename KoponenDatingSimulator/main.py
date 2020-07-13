@@ -357,6 +357,7 @@ shotgun = pygame.image.load("resources/items/shotgun.png").convert()
 shotgun_f = pygame.image.load("resources/items/shotgun_firing.png").convert()
 shotgun_shells_t = pygame.image.load("resources/items/shotgun_shells.png").convert()
 archvile_corpse = pygame.image.load("resources/animations/archvile_death_6.png").convert()
+iphone_texture = pygame.image.load("resources/items/iphone.png")
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -385,6 +386,7 @@ shotgun.set_colorkey((255,255,255))
 shotgun_f.set_colorkey((255,255,255))
 shotgun_shells_t.set_colorkey((255,255,255))
 archvile_corpse.set_colorkey((255,255,255))
+iphone_texture.set_colorkey((255, 255, 255))
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -1015,6 +1017,10 @@ def item_collision_test(rect, items):
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
+                    elif i == "iPuhelin":
+                        inventory[inventory_slot] = "iPuhelin"
+                        item_rects.remove(item)
+                        del item_ids[x]
 
                 if i == "red_key":
                     player_keys["red"] = True
@@ -1060,8 +1066,10 @@ def item_collision_test(rect, items):
                     item_pickup.play()
                     del item_ids[x]
 
+
         x += 1
     return hit_list
+
 def toilet_collisions(rect, burnstate):
     global burning_toilets, player_score, burning_trashcans
     o = 0
@@ -2160,6 +2168,8 @@ while main_running:
             screen.blit(shotgun, (item.x-scroll[0], item.y-scroll[1]+22))
         if item_ids[b] == "shotgun_shells":
             screen.blit(shotgun_shells_t, (item.x-scroll[0], item.y-scroll[1]+25))
+        if item_ids[b] == "iPuhelin":
+            screen.blit(iphone_texture, (item.x-scroll[0], item.y-scroll[1]+10))
         b += 1
 
 # endregion
@@ -2483,6 +2493,10 @@ while main_running:
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
                     player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
 
+            if player_hand_item == "iPuhelin":
+                screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
+                    player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+
             if player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
                     screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
@@ -2654,6 +2668,9 @@ while main_running:
             elif inventory[i] == "pistol":
                 screen.blit(pistol_texture, ((i * 34) + 10 +
                                              (34 / pistol_texture.get_width() * 2) - 30, 80))
+            elif inventory[i] == "iPuhelin":
+                screen.blit(iphone_texture, ((i * 34) + 10 +
+                                             (34 / iphone_texture.get_width() * 2) , 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
                 screen.blit(plasmarifle, ((i * 34) + 15, 80))
