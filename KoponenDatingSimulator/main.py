@@ -1,9 +1,10 @@
 #region Importing
-import KDS.ConfigManager
+import KDS.AI
 import KDS.Animator
+import KDS.ConfigManager
+import KDS.Convert
 import KDS.Logging
 import KDS.Missions
-import KDS.AI
 import pygame
 import os
 import random
@@ -463,18 +464,13 @@ pistolFire = False
 fullscreen_var = False
 shoot = False
 
-if KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "True":
-    tcagr = True
-elif KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)) == "False":
-    tcagr = False
-else:
+tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)))
+if tcagr == None:
     KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing terms and conditions bool.", False)
+    tcagr = False
 volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
-if KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "True":
-    fullscreen_var = True
-elif KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)) == "False":
-    fullscreen_var = False
-else:
+fullscreen_var = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
+if fullscreen_var == None:
     KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing fullscreen bool.", False)
 setFullscreen(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
@@ -1208,19 +1204,8 @@ def console():
         player_health = 0
     elif command_list[0] == "terms":
         setTerms = False
-        try:
-            if command_list[1] == "true" or "True" or "T" or "t":
-                setTerms = True
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as true from console.", True)
-            elif command_list[1] == "false" or "False" or "F" or "f":
-                setTerms = False
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Terms and conditions has been manually set as false from console.", True)
-            else:
-                setTerms = "[Error]"
-        except Exception:
-            KDS.Logging.Log(KDS.Logging.LogType.info,
-                "Encountered an error while processing your command.\nError:" + Exception, True)
-        if setTerms != "[Error]":
+        setTerms = KDS.Convert.ToBool(command_list[1])
+        if setTerms != None:
             KDS.ConfigManager.SetSetting(
                 "Data", "TermsAccepted", str(setTerms))
         else:
@@ -1787,7 +1772,7 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 jukebox_music = load_jukebox_music()
-if tcagr != "false":
+if tcagr != False:
     main_menu()
 # endregion
 #region Koponen Talk Tip Text
@@ -2188,13 +2173,17 @@ while main_running:
 
     if playerMovingRight == True:
         player_movement[0] += 4
+        KDS.Missions.SetProgress("tutorial", "walk", 0.005)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] += 4
+            KDS.Missions.SetProgress("tutorial", "walk", 0.005)
 
     if playerMovingLeft == True:
         player_movement[0] -= 4
+        KDS.Missions.SetProgress("tutorial", "walk", 0.005)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] -= 4
+            KDS.Missions.SetProgress("tutorial", "walk", 0.005)
 
     player_movement[1] += vertical_momentum
     vertical_momentum += 0.4
@@ -2203,7 +2192,6 @@ while main_running:
 
 # endregion
 #region Even More Collisions
-
     toilet_collisions(player_rect, gasburnerBurning)
     if player_health > 0:
         player_rect, collisions = move(
@@ -2679,6 +2667,10 @@ while main_running:
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
 
+    for i in range(KDS.Missions.GetRenderCount()):
+        Render_Data = KDS.Missions.RenderTask(i)
+        pygame.draw.rect(screen, Render_Data[3], (screen_size[0] - Render_Data[5], Render_Data[4], Render_Data[5], Render_Data[6]))
+        screen.blit(Render_Data[0], (Render_Data[1], Render_Data[2]))
 # endregion
 #region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
