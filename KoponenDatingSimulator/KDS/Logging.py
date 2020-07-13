@@ -32,22 +32,22 @@ class LogType():
     debug = 10
     notset = 0
 
-def Log(logType: LogType, message: str, consoleVisible: bool):
-    if logType == LogType.execption:
-        logging.exception(message)
-    elif logType == LogType.log:
-        logging.log(message)
-    elif logType == LogType.critical:
-        logging.critical(message)
-    elif logType == LogType.error:
-        logging.error(message)
-    elif logType == LogType.warning:
-        logging.warning(message)
-    elif logType == LogType.info:
-        logging.info(message)
-    elif logType == LogType.debug:
-        logging.debug(message)
-    elif logType == LogType.notset:
-        logging.NOTSET(message)
-    if consoleVisible:
-        print(message)
+def Log(Log_Type: LogType, Message: str, Console_Visible: bool):
+    if Log_Type == LogType.execption:
+        logging.exception(Message)
+    elif Log_Type == LogType.log:
+        logging.log(Message)
+    elif Log_Type == LogType.critical:
+        logging.critical(Message)
+    elif Log_Type == LogType.error:
+        logging.error(Message)
+    elif Log_Type == LogType.warning:
+        logging.warning(Message)
+    elif Log_Type == LogType.info:
+        logging.info(Message)
+    elif Log_Type == LogType.debug:
+        logging.debug(Message)
+    elif Log_Type == LogType.notset:
+        logging.NOTSET(Message)
+    if Console_Visible:
+        print(Message)
