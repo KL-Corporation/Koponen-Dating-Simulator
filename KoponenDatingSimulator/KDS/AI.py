@@ -62,3 +62,24 @@ class SergeantZombie:
                             q = False 
 
         return False
+
+class Zombie:
+
+    def __init__(self, position, health, speed):
+        self.position = position
+        self.health = health
+        self.speed = speed
+        self.rect = pygame.Rect(position[0], position[1], 32, 64)
+        self.walking = True
+        self.direction = False
+        self.movement = [speed, 8]
+        self.hits = {}
+        self.playDeathAnimation = True
+        self.attacking = False
+        self.true_movement = self.movement.copy()
+
+    def search(self, search_object):
+
+        if self.rect.colliderect(search_object):
+            self.attacking = True
+            return self.attacking
