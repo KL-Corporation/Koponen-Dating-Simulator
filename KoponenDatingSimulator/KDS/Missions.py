@@ -75,7 +75,6 @@ def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
                 Active_Mission += 1
             else:
                 KDS.Logging.Log(KDS.Logging.LogType.error, "No ending for tasks done yet...", True)
-                pygame.quit()
 #endregion
 #region Render
 def GetRenderCount():
