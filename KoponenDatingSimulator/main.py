@@ -142,26 +142,7 @@ class Bullet:
             if counter > 300:
                 q = False
         return "null"
-class Zombie:
 
-    def __init__(self, position, health, speed):
-        self.position = position
-        self.health = health
-        self.speed = speed
-        self.rect = pygame.Rect(position[0], position[1], 32, 64)
-        self.walking = True
-        self.direction = False
-        self.movement = [speed, 8]
-        self.hits = {}
-        self.playDeathAnimation = True
-        self.attacking = False
-        self.true_movement = self.movement.copy()
-
-    def search(self, search_object):
-
-        if self.rect.colliderect(search_object):
-            self.attacking = True
-            return self.attacking
 class Archvile:
 
     def __init__(self, position, health, speed):
@@ -327,6 +308,7 @@ tree = pygame.image.load("resources/build/tree.png")
 planks = pygame.image.load("resources/build/planks.png")
 jukebox_texture = pygame.image.load("resources/build/jukebox.png")
 landmine_texture = pygame.image.load("resources/build/landmine.png")
+ladder_texture = pygame.image.load("resources/build/ladder.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -337,6 +319,7 @@ green_door_closed.set_colorkey((255, 255, 255))
 blue_door_closed.set_colorkey((255, 255, 255))
 jukebox_texture.set_colorkey((255, 255, 255))
 landmine_texture.set_colorkey((255, 255, 255))
+ladder_texture.set_colorkey((255,255,255))
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
@@ -494,6 +477,8 @@ FunctionKey = False
 AltPressed = False
 F4Pressed = False
 esc_menu = False
+KeyW = False
+KeyS = False
 mouseLeftPressed = False
 shotgun_loaded = True
 shotgun_cooldown = 0
@@ -681,6 +666,7 @@ def load_rects():
     zombies = []
     sergeants = []
     archviles = []
+    ladders = []
     w = [0, 0]
     y = 0
     for layer in world_gen:
@@ -699,6 +685,8 @@ def load_rects():
                     trashcans.append(pygame.Rect(x*34-1, y*34, w[0]+2, w[1]))
                     burning_trashcans.append(False)
                     tile_rects.append(pygame.Rect(x*34, y*34+8, w[0], w[1]))
+                elif tile == 'q':
+                    ladders.append(pygame.Rect(x*34,y*34, 34, 34))
                 elif tile == 'k':
                     pass
                 elif tile == 'l':
@@ -714,7 +702,7 @@ def load_rects():
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6, y*34+23, 22, 11))
                 elif tile == 'Z':
-                    zombies.append(Zombie((x*34, y*34-34), 100, 1))
+                    zombies.append(KDS.AI.Zombie((x*34, y*34-34), 100, 1))
                 elif tile == 'S':
                     sergeants.append(KDS.AI.SergeantZombie((x*34, y*34-34), 220, 1))
                 elif tile == 'V':
@@ -724,7 +712,7 @@ def load_rects():
 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -1799,7 +1787,7 @@ def inventoryRight():
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Zombies Initialised: " + str(len(zombies)), False)
 for zombie in zombies:
@@ -1841,6 +1829,10 @@ while main_running:
                 inventoryRight()
             if event.key == K_t:
                 console()
+            if event.key == K_w:
+                KeyW = True
+            if event.key == K_s:
+                KeyS = True
             if event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -1899,6 +1891,10 @@ while main_running:
                 F4Pressed = False
             if event.key == K_LALT or event.key == K_RALT:
                 AltPressed = False
+            if event.key == K_w:
+                KeyW = False
+            if event.key == K_s:
+                KeyS = False
             if event.key == K_p:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = False
@@ -1981,6 +1977,8 @@ while main_running:
                 screen.blit(tree, (x*34-scroll[0], y*34-scroll[1]-50))
             if tile == 'p':
                 screen.blit(planks, (x*34-scroll[0], y*34-scroll[1]))
+            if tile == 'q':
+                screen.blit(ladder_texture, (x*34-scroll[0], y*34-scroll[1]))
             x += 1
         y += 1
 
@@ -2190,14 +2188,27 @@ while main_running:
     if vertical_momentum > 8:
         vertical_momentum = 8
 
+    for ladder in ladders:
+        if player_rect.colliderect(ladder):
+            vertical_momentum = 0
+            if KeyW:
+                player_movement[1] = -1
+            elif KeyS:
+                player_movement[1] = 1
+            else:
+                player_movement[1] = 0
+
 # endregion
 #region Even More Collisions
     toilet_collisions(player_rect, gasburnerBurning)
+
     if player_health > 0:
         player_rect, collisions = move(
             player_rect, player_movement, tile_rects)
+
     else:
         player_rect, collisions = move(player_rect, [0, 8], tile_rects)
+
     koponen_rect, k_collisions = move(
         koponen_rect, koponen_movement, tile_rects)
 
