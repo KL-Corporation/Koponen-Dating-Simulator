@@ -9,7 +9,7 @@ from inspect import currentframe, getframeinfo
 HeaderColor = (128, 128, 128)
 BackgroundColor = (70, 70, 70)
 BackgroundFinishedColor = (0, 70, 0)
-textOffset = 1
+textOffset = 2
 #endregion
 #region init
 pygame.init()
