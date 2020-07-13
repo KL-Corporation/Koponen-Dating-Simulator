@@ -424,9 +424,13 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
 KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: A, D ja Välilyönti")
+KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: A, D, Vaihto ja Välilyönti")
 KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
-KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F")
+KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
+KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
+
+KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
+KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
 
 main_running = True
 playerMovingRight = False
@@ -461,7 +465,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: 
 
 selectedSave = 0
 
-volume = float(volume_data)/100
+volume = float(volume_data) / 100
 gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
 toilet_animation_stats = [0, 5, 0]
@@ -507,7 +511,7 @@ pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
 
-inventory = ["none", "none", "none", "none", "none"]
+inventory = ["iPuhelin", "none", "none", "none", "none"]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -1265,6 +1269,8 @@ def agr(tcagr):
 def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting
 
+    KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
+
     koponenTalking = True
     pygame.mouse.set_visible(True)
 
@@ -1840,9 +1846,11 @@ while main_running:
                     playerStamina = -1000
                     farting = True
                     fart.play()
+                    KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             if event.key == K_q:
-
                 if inventory[inventory_slot] != "none":
+                    if inventory[inventory_slot] == "iPuhelin":
+                        KDS.Missions.SetProgress("tutorial", "trash", 1.0)
                     item_rects.append(pygame.Rect(
                         player_rect.x, player_rect.y, 34, 34))
                     item_ids.append(inventory[inventory_slot])
@@ -1853,11 +1861,9 @@ while main_running:
                             if item_rects[-1].colliderect(tile):
                                 item_rects[-1].bottom = tile.top
                                 u = False
-
                 if inventoryDoubles[inventory_slot] == True:
                     inventory[inventory_slot + 1] = "none"
                 inventory[inventory_slot] = "none"
-
             if event.key == K_F3:
                 DebugMode = not DebugMode
             if event.key == K_F4:

@@ -16,6 +16,9 @@ Active_Mission = 0
 Last_Active_Mission = 0
 Max_Text_Width = 0
 text_height = 0
+BackgroundColor = (70, 70, 70)
+BackgroundFinishedColor = (0, 70, 0)
+
 #endregion
 #region Initialise
 def InitialiseMission(Safe_Name: str, Visible_Name: str):
@@ -38,7 +41,8 @@ def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str):
     for i in range(len(Missions)):
         if Missions[i][0] == Mission_Name:
             Missions[i].append(New_Task)
-
+#endregion
+#region Set
 def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
     """
     1. Mission_Name, The Safe_Name of the mission your task is under.
@@ -57,17 +61,22 @@ def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
                         #Play audio?
     All_Tasks_Done = True
     while All_Tasks_Done == True:
-        for i in range(len(Missions[Active_Mission])):
-            All_Tasks_Done = KDS.Convert.ToBool(Missions[Active_Mission][i][3])
+        for i in range(len(Missions[Active_Mission]) - 2):
+            if All_Tasks_Done == True:
+                All_Tasks_Done = KDS.Convert.ToBool(Missions[Active_Mission][i + 2][3])
         if All_Tasks_Done:
-            Active_Mission += 1
-
+            if Active_Mission + 1 < len(Missions[Active_Mission]) - 2:
+                Active_Mission += 1
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.error, "No ending for tasks done yet...", True)
+#endregion
+#region Render
 def GetRenderCount():
     global Missions, Active_Mission
     return len(Missions[Active_Mission]) - 2
 
 def RenderTask(index):
-    global mission_font, Missions, Max_Text_Width, text_height
+    global mission_font, Missions, Max_Text_Width, text_height, BackgroundColor, BackgroundFinishedColor
     index_var = index + 2
     Mission_Progress = Missions[Active_Mission][index_var][2]
     if Mission_Progress > 1.0:
@@ -78,13 +87,14 @@ def RenderTask(index):
         if i == 0:
             Max_Text_Width = 0
         tempVar = i + 2
-        temp_width = mission_font.size(Missions[Active_Mission][tempVar][1] + "   " + Mission_Progress)[0]
+        temp_width, temp_height = mission_font.size(Missions[Active_Mission][tempVar][1] + "   " + Mission_Progress)
         if Max_Text_Width < temp_width:
             Max_Text_Width = temp_width
     rendered = mission_font.render(Missions[Active_Mission][index_var][1] + "   " + Mission_Progress, True, (255, 255, 255))
     text_width, text_height = mission_font.size(Missions[Active_Mission][index_var][1] + "   " + Mission_Progress)
-    Color = (70, 70, 70)
     if Missions[Active_Mission][index_var][2] >= 1.0:
-        Color = (0, 70, 0)
+        Color = BackgroundFinishedColor
+    else:
+        Color = BackgroundColor
     return rendered, screen_size[0] - text_width, 5 + ((text_height + 5) * index), Color, ((text_height + 5) * index), Max_Text_Width, text_height + 5
 #endregion
