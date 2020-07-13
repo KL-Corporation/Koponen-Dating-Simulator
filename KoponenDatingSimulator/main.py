@@ -242,6 +242,7 @@ class Archvile:
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
+            
 # endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
@@ -387,6 +388,9 @@ shotgun_f.set_colorkey((255,255,255))
 shotgun_shells_t.set_colorkey((255,255,255))
 archvile_corpse.set_colorkey((255,255,255))
 iphone_texture.set_colorkey((255, 255, 255))
+
+Items_list = ["iPuhelin", "coffeemug"]
+Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 
 text_icon = pygame.image.load("resources/text_icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
@@ -1019,7 +1023,7 @@ def item_collision_test(rect, items):
                             s(20)
                     elif i == "iPuhelin":
                         inventory[inventory_slot] = "iPuhelin"
-                        item_rects.remove(item)
+                        item_rects.remove(item) 
                         del item_ids[x]
 
                 if i == "red_key":
@@ -2458,17 +2462,24 @@ while main_running:
     if player_hand_item != "none":
         if player_health:
             if direction:
-                offset = 49
+                offset_c = 49
                 offset_k = 75
                 offset_p = 75
                 offset_pi = 80
                 offset_rk = 80
             else:
-                offset = 7
+                offset_c = 7
                 offset_k = 10
                 offset_p = 14
                 offset_pi = 2
                 offset_rk = 14
+            if player_hand_item in Items_list:
+                o = Items[player_hand_item]
+                if not direction:
+                    offset = 0
+                else:
+                    offset = o.get_width() + 28
+
 
             if player_hand_item == "gasburner":
                 if gasburnerBurning:
@@ -2476,10 +2487,10 @@ while main_running:
                         gasburner_fire.stop()
                         pygame.mixer.Sound.play(gasburner_fire)
                     screen.blit(pygame.transform.flip(gasburner_animation[gasburner_animation_stats[0]], direction, False), (
-                        player_rect.right-offset-scroll[0], player_rect.y-scroll[1]))
+                        player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
                 else:
                     screen.blit(pygame.transform.flip(gasburner_off, direction, False),
-                                (player_rect.right-offset-scroll[0], player_rect.y-scroll[1]))
+                                (player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
 
             if player_hand_item == "knife":
                 if knifeInUse:
@@ -2487,7 +2498,7 @@ while main_running:
                         player_rect.right-offset_k-scroll[0], player_rect.y-scroll[1]+14))
                 else:
                     screen.blit(pygame.transform.flip(knife, direction, False), (
-                        player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]+14))
 
             if player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
