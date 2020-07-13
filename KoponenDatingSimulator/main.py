@@ -1769,6 +1769,7 @@ koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
 #region Inventory Slot Switching
 def inventoryLeft():
     global inventory_slot, inventoryDoubles, inventory
+    KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
     checkSlot = inventory_slot - 2
     if checkSlot < 0:
         checkSlot = len(inventory) + checkSlot
@@ -1778,6 +1779,7 @@ def inventoryLeft():
         inventory_slot -= 1
 def inventoryRight():
     global inventory_slot, inventoryDoubles
+    KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
     if(inventoryDoubles[inventory_slot] == True):
         inventory_slot += 2
     else:
@@ -1805,7 +1807,7 @@ door_rects, doors_open, color_keys = load_doors()
 #endregion
 #region Main Running
 while main_running:
-    # region Events
+#region Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_function()
