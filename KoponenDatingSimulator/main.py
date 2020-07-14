@@ -457,11 +457,15 @@ fullscreen_var = False
 shoot = False
 
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)))
+
 if tcagr == None:
     KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing terms and conditions bool.", False)
     tcagr = False
+
 volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
+
 fullscreen_var = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
+
 if fullscreen_var == None:
     KDS.Logging.Log(KDS.Logging.LogType.error, "Error parcing fullscreen bool.", False)
 setFullscreen(True)
@@ -1238,7 +1242,6 @@ def agr(tcagr):
     functions = []
 
     def agree():
-        global tcagr_running
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Terms and Conditions have been accepted.", False)
         KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -1246,7 +1249,6 @@ def agr(tcagr):
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " +
                         KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"), False)
-        tcagr_running = False
         return False
 
     buttons.append(pygame.Rect(249, 353, 200, 160))
@@ -1256,10 +1258,12 @@ def agr(tcagr):
     while tcagr_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                tcagr_running = False
                 quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
+            if event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     c = True
         main_display.blit(agr_background, (0, 0))
@@ -1283,6 +1287,7 @@ def agr(tcagr):
 
         pygame.display.update()
         c = False
+
 # endregion
 #region Koponen Talk
 def koponen_talk():
@@ -1788,6 +1793,7 @@ def main_menu():
 #region Check Terms
 agr(tcagr)
 jukebox_music = load_jukebox_music()
+tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)))
 if tcagr != False:
     main_menu()
 # endregion
