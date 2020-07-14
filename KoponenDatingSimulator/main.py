@@ -495,6 +495,7 @@ KeyS = False
 mouseLeftPressed = False
 shotgun_loaded = True
 shotgun_cooldown = 0
+pistol_cooldown = 0
 
 go_to_main_menu = False
 
@@ -2537,7 +2538,9 @@ while main_running:
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
 
             if player_hand_item == "pistol":
-                if pistolFire:
+                pistol_cooldown += 1
+                if pistolFire and pistol_cooldown > 25:
+                    pistol_cooldown = 0
                     if pistol_bullets > 0:
                         pistol_bullets -= 1
                         screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
