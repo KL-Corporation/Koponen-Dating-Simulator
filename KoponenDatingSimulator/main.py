@@ -273,7 +273,7 @@ main_menu_background = pygame.image.load(
     "resources/main_menu/main_menu_bc.png")
 settings_background = pygame.image.load("resources/settings_bc.png")
 agr_background = pygame.image.load("resources/tcagr.png")
-path = "resources/koponen_background/ads/koponen_talk_bc0.png"
+path = "resources/koponen_background/ads/koponen_talk_bc_0.png"
 bc = pygame.image.load(path)
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
@@ -384,10 +384,10 @@ sergeant_corpse.set_colorkey((255, 255, 255))
 sergeant_aiming.set_colorkey((255, 255, 255))
 sergeant_firing.set_colorkey((255, 255, 255))
 medkit.set_colorkey((255, 255, 255))
-shotgun.set_colorkey((255,255,255))
-shotgun_f.set_colorkey((255,255,255))
-shotgun_shells_t.set_colorkey((255,255,255))
-archvile_corpse.set_colorkey((255,255,255))
+shotgun.set_colorkey((255, 255, 255))
+shotgun_f.set_colorkey((255, 255, 255))
+shotgun_shells_t.set_colorkey((255, 255, 255))
+archvile_corpse.set_colorkey((255, 255, 255))
 iphone_texture.set_colorkey((255, 255, 255))
 
 Items_list = ["iPuhelin", "coffeemug"]
@@ -431,7 +431,7 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
 KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: A, D, Vaihto ja Välilyönti")
+KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
 KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
 KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
 KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
@@ -664,6 +664,8 @@ def load_ads():
 
     return ad_images
 ad_images = load_ads()
+koponen_talking_background = pygame.image.load("resources/koponen_background/background.png")
+koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 #world_gen = load_map("resources/game_map")
 #item_gen = load_items("resources/item_map")
 def load_rects():
@@ -1280,7 +1282,7 @@ def agr(tcagr):
 # endregion
 #region Koponen Talk
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting
+    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes
 
     KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
 
@@ -1298,8 +1300,13 @@ def koponen_talk():
     date_button = pygame.Rect(50, 610, 450, 80)
     return_mission_button = pygame.Rect(510, 700, 420, 80)
 
-    koponen_talk_foreground = ad_images[int(
-        random.uniform(0, len(ad_images)))].copy()
+    for i in range(len(koponen_talking_foreground_indexes), 0):
+        koponen_talking_foreground_indexes[i] = koponen_talking_foreground_indexes[i - 1]
+    random_foreground = int(random.uniform(0, len(ad_images)))
+    while random_foreground == koponen_talking_foreground_indexes[0] or random_foreground == koponen_talking_foreground_indexes[1] or random_foreground == koponen_talking_foreground_indexes[2] or random_foreground == koponen_talking_foreground_indexes[3] or random_foreground == koponen_talking_foreground_indexes[4]:
+        random_foreground = int(random.uniform(0, len(ad_images)))
+    koponen_talking_foreground_indexes[4] = random_foreground
+    koponen_talk_foreground = ad_images[random_foreground].copy()
 
     def renderText(text):
         text_object = button_font1.render(text, True, (255, 255, 255))
@@ -1445,7 +1452,8 @@ def koponen_talk():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-        main_display.blit(koponen_talk_foreground, (0, 0))
+        main_display.blit(koponen_talking_background, (0, 0))
+        main_display.blit(koponen_talk_foreground, (40, 474))
         pygame.draw.rect(main_display, (230, 230, 230), (40, 40, 700, 400))
         pygame.draw.rect(main_display, (30, 30, 30), (40, 40, 700, 400), 3)
         printer.resetRow()
