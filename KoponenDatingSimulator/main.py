@@ -5,6 +5,7 @@ import KDS.ConfigManager
 import KDS.Convert
 import KDS.Logging
 import KDS.Missions
+import KDS.KDSMath
 import pygame
 import os
 import random
@@ -358,7 +359,7 @@ shotgun = pygame.image.load("resources/items/shotgun.png").convert()
 shotgun_f = pygame.image.load("resources/items/shotgun_firing.png").convert()
 shotgun_shells_t = pygame.image.load("resources/items/shotgun_shells.png").convert()
 archvile_corpse = pygame.image.load("resources/animations/archvile_death_6.png").convert()
-iphone_texture = pygame.image.load("resources/items/iphone.png")
+iphone_texture = pygame.image.load("resources/items/iphone.png").convert()
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -894,7 +895,7 @@ def collision_test(rect, tiles):
         if rect.colliderect(tile):
             hit_list.append(tile)
     return hit_list
-def damage(health, min_damage: float, max_damage: float):
+def damage(health, min_damage: int, max_damage: int):
     health -= int(random.uniform(min_damage, max_damage))
     if health < 0:
         health = 0
@@ -2752,6 +2753,7 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
+    print(KDS.KDSMath.getDistance(player_rect.topleft,zombies[0].rect.topleft))
 # endregion
 #region Ticks
     tick += 1
