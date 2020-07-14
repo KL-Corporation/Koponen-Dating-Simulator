@@ -273,8 +273,6 @@ main_menu_background = pygame.image.load(
     "resources/main_menu/main_menu_bc.png")
 settings_background = pygame.image.load("resources/settings_bc.png")
 agr_background = pygame.image.load("resources/tcagr.png")
-path = "resources/koponen_background/ads/koponen_talk_bc_0.png"
-bc = pygame.image.load(path)
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
@@ -384,10 +382,10 @@ sergeant_corpse.set_colorkey((255, 255, 255))
 sergeant_aiming.set_colorkey((255, 255, 255))
 sergeant_firing.set_colorkey((255, 255, 255))
 medkit.set_colorkey((255, 255, 255))
-shotgun.set_colorkey((255, 255, 255))
-shotgun_f.set_colorkey((255, 255, 255))
-shotgun_shells_t.set_colorkey((255, 255, 255))
-archvile_corpse.set_colorkey((255, 255, 255))
+shotgun.set_colorkey((255,255,255))
+shotgun_f.set_colorkey((255,255,255))
+shotgun_shells_t.set_colorkey((255,255,255))
+archvile_corpse.set_colorkey((255,255,255))
 iphone_texture.set_colorkey((255, 255, 255))
 
 Items_list = ["iPuhelin", "coffeemug"]
@@ -431,7 +429,7 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
 KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: A, D, Vaihto ja Välilyönti")
 KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
 KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
 KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
@@ -518,7 +516,7 @@ pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
 
-inventory = ["iPuhelin", "none", "none", "none", "none"]
+inventory = ["none","none","none","none","none"]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -545,6 +543,12 @@ DebugMode = False
 
 # endregion
 #region Save System
+def loadInventory(_current_map):
+    with open("MAPS/map" + _current_map + "/inventory.penis", "r") as file:
+        contents = file.read()
+    contents = contents.split("\n")
+    return contents
+
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
 
@@ -588,6 +592,7 @@ def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 # endregion
 #region Loading
+
 def load_map(path):
     with open(path + '.kds', 'r') as f:
         data = f.read()
@@ -604,6 +609,7 @@ def load_items(path):
     for row in data:
         item_map.append(list(row))
     return item_map
+
 def load_jukebox_music():
     musikerna = os.listdir("audio/jukebox_music/")
     musics = []
@@ -664,8 +670,6 @@ def load_ads():
 
     return ad_images
 ad_images = load_ads()
-koponen_talking_background = pygame.image.load("resources/koponen_background/background.png")
-koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 #world_gen = load_map("resources/game_map")
 #item_gen = load_items("resources/item_map")
 def load_rects():
@@ -1282,7 +1286,7 @@ def agr(tcagr):
 # endregion
 #region Koponen Talk
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes
+    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting
 
     KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
 
@@ -1300,13 +1304,8 @@ def koponen_talk():
     date_button = pygame.Rect(50, 610, 450, 80)
     return_mission_button = pygame.Rect(510, 700, 420, 80)
 
-    for i in range(len(koponen_talking_foreground_indexes), 0):
-        koponen_talking_foreground_indexes[i] = koponen_talking_foreground_indexes[i - 1]
-    random_foreground = int(random.uniform(0, len(ad_images)))
-    while random_foreground == koponen_talking_foreground_indexes[0] or random_foreground == koponen_talking_foreground_indexes[1] or random_foreground == koponen_talking_foreground_indexes[2] or random_foreground == koponen_talking_foreground_indexes[3] or random_foreground == koponen_talking_foreground_indexes[4]:
-        random_foreground = int(random.uniform(0, len(ad_images)))
-    koponen_talking_foreground_indexes[4] = random_foreground
-    koponen_talk_foreground = ad_images[random_foreground].copy()
+    koponen_talk_foreground = ad_images[int(
+        random.uniform(0, len(ad_images)))].copy()
 
     def renderText(text):
         text_object = button_font1.render(text, True, (255, 255, 255))
@@ -1452,8 +1451,7 @@ def koponen_talk():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-        main_display.blit(koponen_talking_background, (0, 0))
-        main_display.blit(koponen_talk_foreground, (40, 474))
+        main_display.blit(koponen_talk_foreground, (0, 0))
         pygame.draw.rect(main_display, (230, 230, 230), (40, 40, 700, 400))
         pygame.draw.rect(main_display, (30, 30, 30), (40, 40, 700, 400), 3)
         printer.resetRow()
@@ -1494,6 +1492,7 @@ def koponen_talk():
 def esc_menu_f():
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
+    file = pygame.image.load("im314.png")
     c = False
     resume_button = pygame.Rect(150, 170, 200, 30)
     save_button = pygame.Rect(150, 210, 200, 30)
@@ -1554,6 +1553,7 @@ def esc_menu_f():
                 if event.button == 1:
                     c = True
         esc_menu_surface.fill((123, 134, 111))
+        main_display.blit(file,(0,0))
         esc_menu_surface.blit(pygame.transform.scale(
             text_icon, (250, 139)), (125, 10))
         point = list(pygame.mouse.get_pos())
@@ -1586,6 +1586,7 @@ def esc_menu_f():
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
+
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, volume
     c = False
@@ -1816,6 +1817,7 @@ def inventoryRight():
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
+
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Zombies Initialised: " + str(len(zombies)), False)
@@ -1825,6 +1827,8 @@ for zombie in zombies:
 
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
+
+inventory = loadInventory(current_map)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Items Initialised: " + str(len(item_ids)), False)
@@ -2744,6 +2748,7 @@ while main_running:
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
         main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+        pygame.image.save(main_display, "im314.png")
         esc_menu_f()
     if go_to_main_menu:
         pygame.mixer.music.stop()
@@ -2761,7 +2766,6 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
-    print(KDS.KDSMath.getDistance(player_rect.topleft,zombies[0].rect.topleft))
 # endregion
 #region Ticks
     tick += 1
