@@ -1,6 +1,7 @@
 #region Importing
 import KDS.Logging
 import configparser
+import os
 from inspect import currentframe, getframeinfo
 #endregion
 
@@ -58,9 +59,9 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     with open("settings.cfg", "w") as cfg_file:
         config.write(cfg_file)
 def SetSave(SaveIndex: int, SaveDirectory: str, SaveName: str, SaveValue: str):
-    SaveValue = SaveValue.re
     config = configparser.ConfigParser()
-    config.read("saves/save_" + str(SaveIndex) + ".kds")
+    saveFilePath = "saves/save_" + str(SaveIndex) + ".kds"
+    config.read(saveFilePath)
     try:
         config.set(SaveDirectory, SaveName, SaveValue)
     except:
@@ -70,5 +71,5 @@ def SetSave(SaveIndex: int, SaveDirectory: str, SaveName: str, SaveValue: str):
         except:
                 frameinfo = getframeinfo(currentframe())
                 KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + str(Exception))
-    with open("saves/save_" + str(SaveIndex) + ".kds", "w") as sav_file:
+    with open(saveFilePath, "w") as sav_file:
         config.write(sav_file)
