@@ -1845,8 +1845,6 @@ for zombie in zombies:
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
 
-inventory = loadInventory(current_map)
-
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Items Initialised: " + str(len(item_ids)), False)
 for i_id in item_ids:

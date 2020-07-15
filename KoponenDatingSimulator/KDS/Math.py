@@ -10,6 +10,5 @@ def getDistance(point1: tuple, point2: tuple): #Calculate distance between two p
             r = -r
 
         return sqrt(r)
-
     except Exception:
         return (0, 0)
