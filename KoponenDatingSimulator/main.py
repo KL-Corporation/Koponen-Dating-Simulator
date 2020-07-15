@@ -1825,10 +1825,11 @@ def inventoryLeft():
 def inventoryRight():
     global inventory_slot, inventoryDoubles
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
-    if(inventoryDoubles[inventory_slot] == True):
-        inventory_slot += 2
-    else:
-        inventory_slot += 1
+    if inventory_slot < len(inventoryDoubles):
+        if inventoryDoubles[inventory_slot] == True:
+            inventory_slot += 2
+        else:
+            inventory_slot += 1
 # endregion
 #region World Generation
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
