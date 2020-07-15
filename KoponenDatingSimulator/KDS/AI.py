@@ -109,6 +109,7 @@ class Zombie:
             return self.attacking
 
 class Bulldog:
+    a = False
 
     def __init__(self, position: tuple, health: int, speed: int, animation):
         self.position = position
@@ -194,5 +195,9 @@ class Bulldog:
             elif self.movement[0] > 0:
                 self.direction = False
         return self.rect, self.animation.get_frame(), self.direction, self.damage
+
+    @classmethod
+    def setClassAngry(cls, state):
+        cls.a = state
 
     
