@@ -429,7 +429,7 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
 KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: A, D, Vaihto ja Välilyönti")
+KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
 KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
 KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
 KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
