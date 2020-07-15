@@ -551,6 +551,8 @@ koponen_movement = [0, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
+
 task = ""
 taskTaivutettu = ""
 
@@ -1858,9 +1860,6 @@ tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
     "Data", "TermsAccepted", str(False)))
 if tcagr != False:
     main_menu()
-#endregion
-#region Koponen Talk Tip Text
-koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
 #endregion
 #region Inventory Slot Switching
 def inventoryLeft():
