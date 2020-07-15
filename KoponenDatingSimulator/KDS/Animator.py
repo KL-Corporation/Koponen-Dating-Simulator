@@ -53,6 +53,9 @@ class Animation:
         else:
             return self.images[self.tick], self.done
 
+    def get_frame(self):
+        return self.images[self.tick]
+
     def reset(self):
         self.tick = 0
         self.loops_count = 0

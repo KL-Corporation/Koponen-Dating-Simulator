@@ -739,6 +739,7 @@ def load_rects():
     sergeants = []
     archviles = []
     ladders = []
+    bulldogs = []
     w = [0, 0]
     y = 0
     for layer in world_gen:
@@ -780,12 +781,14 @@ def load_rects():
                         (x*34, y*34-34), 220, 1))
                 elif tile == 'V':
                     archviles.append(Archvile((x*34, y*34-51), 750, 2))
+                elif tile == 'K':
+                    bulldogs.append(KDS.AI.Bulldog((x*34, y*34),80,3,bulldog_run_animation))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
 
             x += 1
         y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs
 
 
 def load_item_rects():
@@ -1964,7 +1967,7 @@ world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
 
 
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders = load_rects()
+tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Zombies Initialised: " + str(len(zombies)), False)
 for zombie in zombies:
@@ -1980,6 +1983,7 @@ for i_id in item_ids:
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Initialised Item: (ID)" + i_id, False)
 door_rects, doors_open, color_keys = load_doors()
+
 # endregion
 # region Main Running
 while main_running:
@@ -2506,6 +2510,14 @@ while main_running:
     arch_run = archvile_run_animation.update()
     for archvile in archviles:
         archvile.update(arch_run)
+
+    for bulldog in bulldogs:
+        bulldog.startUpdateThread(player_rect, tile_rects)
+    
+    for bulldog in bulldogs:
+        bd_attr = bulldog.getAttributes()
+        screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x-scroll[0],bd_attr[0].y-scroll[1]))
+        player_health -= bd_attr[3]
 
     if k_collisions["left"]:
         koponen_movingx = -koponen_movingx
