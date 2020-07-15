@@ -4,8 +4,8 @@ import KDS.Animator
 import KDS.ConfigManager
 import KDS.Convert
 import KDS.Logging
-import KDS.Missions
 import KDS.Math
+import KDS.Missions
 import pygame
 import os
 import random
