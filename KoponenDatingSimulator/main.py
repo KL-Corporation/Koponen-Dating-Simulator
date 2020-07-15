@@ -5,7 +5,7 @@ import KDS.ConfigManager
 import KDS.Convert
 import KDS.Logging
 import KDS.Missions
-import KDS.KDSMath
+import KDS.Math
 import pygame
 import os
 import random
@@ -448,14 +448,10 @@ jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 # endregion Lataukset
 
 KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-KDS.Missions.InitialiseTask(
-    "tutorial", "walk", "Liiku käyttämällä: A, D, Vaihto ja Välilyönti")
-KDS.Missions.InitialiseTask("tutorial", "inventory",
-                            "Käytä tavaraluetteloa rullaamalla hiirtä")
-KDS.Missions.InitialiseTask(
-    "tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-KDS.Missions.InitialiseTask(
-    "tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
+KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
+KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
+KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
 
 KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
 KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
@@ -548,7 +544,7 @@ pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
 
-inventory = ["none", "none", "none", "none", "none"]
+inventory = ["iPuhelin", "none", "none", "none", "none"]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -574,19 +570,9 @@ taskTaivutettu = ""
 DebugMode = False
 
 # endregion
-# region Save System
-
-
-def loadInventory(_current_map):
-    with open("MAPS/map" + _current_map + "/inventory.penis", "r") as file:
-        contents = file.read()
-    contents = contents.split("\n")
-    return contents
-
-
+#region Save System
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
-
     player_rect.x = int(KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x)))
     player_rect.y = int(KDS.ConfigManager.LoadSave(
@@ -598,8 +584,11 @@ def LoadSave():
         selectedSave, "PlayerData", "Name", player_name)
     playerStamina = float(KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerData", "Stamina", str(playerStamina)))
-
-
+    inventory[0] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory0", inventory[0])
+    inventory[1] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory1", inventory[1])
+    inventory[2] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory2", inventory[2])
+    inventory[3] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory3", inventory[3])
+    inventory[4] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", inventory[4])
 def SaveData():
 
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
@@ -613,12 +602,22 @@ def SaveData():
         selectedSave, "PlayerData", "Name", str(player_name))
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Stamina", str(playerStamina))
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory0", inventory[0])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory1", inventory[1])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory2", inventory[2])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory3", inventory[3])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory4", inventory[4])
 # endregion
 # region Quit Handling
 
 
 def quit_function():
-    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running
+    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave
     main_menu_running = False
     main_running = False
     tcagr_running = False
@@ -1954,12 +1953,11 @@ def inventoryLeft():
 def inventoryRight():
     global inventory_slot, inventoryDoubles
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
-    if(inventoryDoubles[inventory_slot] == True):
-        inventory_slot += 2
-    else:
-        inventory_slot += 1
-
-
+    if inventory_slot < len(inventoryDoubles):
+        if inventoryDoubles[inventory_slot] == True:
+            inventory_slot += 2
+        else:
+            inventory_slot += 1
 # endregion
 # region World Generation
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
@@ -1975,8 +1973,6 @@ for zombie in zombies:
 
 item_rects, item_ids, task_items = load_item_rects()
 random.shuffle(task_items)
-
-inventory = loadInventory(current_map)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Items Initialised: " + str(len(item_ids)), False)
@@ -2037,6 +2033,7 @@ while main_running:
                                 u = False
                 if inventoryDoubles[inventory_slot] == True:
                     inventory[inventory_slot + 1] = "none"
+                    inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
             if event.key == K_F3:
                 DebugMode = not DebugMode
