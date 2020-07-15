@@ -1902,6 +1902,7 @@ while main_running:
                                 u = False
                 if inventoryDoubles[inventory_slot] == True:
                     inventory[inventory_slot + 1] = "none"
+                    inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
             if event.key == K_F3:
                 DebugMode = not DebugMode
