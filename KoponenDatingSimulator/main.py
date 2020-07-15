@@ -550,7 +550,6 @@ DebugMode = False
 #region Save System
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
-
     player_rect.x = int(KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x)))
     player_rect.y = int(KDS.ConfigManager.LoadSave(
@@ -562,12 +561,11 @@ def LoadSave():
         selectedSave, "PlayerData", "Name", player_name)
     playerStamina = float(KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerData", "Stamina", str(playerStamina)))
-    inventory = [
-        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory0", "none"),
-        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory1", "none"),
-        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory2", "none"),
-        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory3", "none"),
-        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", "none")]
+    inventory[0] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory0", inventory[0])
+    inventory[1] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory1", inventory[1])
+    inventory[2] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory2", inventory[2])
+    inventory[3] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory3", inventory[3])
+    inventory[4] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", inventory[4])
 def SaveData():
 
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
