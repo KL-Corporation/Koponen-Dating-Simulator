@@ -15,6 +15,7 @@ from pygame.locals import *
 #endregion
 #region PyGame Initialisation
 pygame.init()
+KDS.Logging.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(800))
@@ -30,8 +31,6 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
-
-KDS.Logging.init()
 #endregion
 #region Text Handling
 class pygame_print_text:
