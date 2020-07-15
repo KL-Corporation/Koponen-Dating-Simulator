@@ -743,14 +743,14 @@ def load_rects():
                 elif tile == 'C':
                     landmines.append(pygame.Rect(x*34+6, y*34+23, 22, 11))
                 elif tile == 'Z':
-                    zombies.append(KDS.AI.Zombie((x*34, y*34-34), 100, 1))
+                    zombies.append(KDS.AI.Zombie((x * 34, y * 34 - 34), 100, 1))
                 elif tile == 'S':
                     sergeants.append(KDS.AI.SergeantZombie(
-                        (x*34, y*34-34), 220, 1))
+                        (x * 34, y * 34 - 34), 220, 1))
                 elif tile == 'V':
                     archviles.append(Archvile((x*34, y*34-51), 750, 2))
                 elif tile == 'K':
-                    bulldogs.append(KDS.AI.Bulldog((x*34, y*34),80,3,bulldog_run_animation))
+                    bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                 else:
                     tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
 
@@ -1209,7 +1209,7 @@ sergeant_death_animation = KDS.Animator.Animation(
 #endregion
 #region Console
 def console():
-    global inventory, player_keys, player_health, koponen_happines
+    global inventory, player_keys, player_health, koponen_happines, bulldogs
 
     command_input = input("command: ")
     command_input = command_input.lower()
@@ -1232,14 +1232,12 @@ def console():
             except Exception:
                 KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " +
                                 str(command_list[1]) + " " + str(command_list[2]), True)
-
     elif command_list[0] == "playboy":
         koponen_happines = 1000
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You are now a playboy", True)
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Koponen happines: {}".format(koponen_happines), True)
-
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
@@ -1250,13 +1248,32 @@ def console():
         player_health = 0
     elif command_list[0] == "terms":
         setTerms = False
-        setTerms = KDS.Convert.ToBool(command_list[1])
-        if setTerms != None:
-            KDS.ConfigManager.SetSetting(
-                "Data", "TermsAccepted", str(setTerms))
+        if len(command_list) > 1:
+            setTerms = KDS.Convert.ToBool(command_list[1])
+            if setTerms != None:
+                KDS.ConfigManager.SetSetting(
+                    "Data", "TermsAccepted", str(setTerms))
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Terms status set to: " + str(setTerms), True)
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Please provide a proper state for terms & conditions", True)
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for terms & conditions", True)
+    elif command_list[0] == "woof":
+        if len(command_list) > 1:
+            woofState = KDS.Convert.ToBool(command_list[1])
+            if woofState != None:
+                KDS.Logging.Log(KDS.Logging.LogType.info, "woof status of all dogs has been set to: " + str(woofState), True)
+                KDS.AI.Bulldog.SetAngryAll(woofState)
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Please provide a proper state for woof", True)
+        else:
+            KDS.Logging.Log(KDS.Logging.LogType.info,
+                            "Please provide a proper state for woof", True)
+    else:
+        KDS.Logging.Log(KDS.Logging.LogType.info, "This command does not exist")
 #endregion
 #region Terms and Conditions
 def agr(tcagr):

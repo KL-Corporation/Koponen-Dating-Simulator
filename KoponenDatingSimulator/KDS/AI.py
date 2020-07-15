@@ -125,9 +125,6 @@ class Bulldog:
         self.animation = animation
         self.damage = 0
 
-
-
-
     def startUpdateThread(self, _rect, tile_rects):
 
         def _update(self, __rect, tile_rects):
@@ -185,8 +182,12 @@ class Bulldog:
         bdThread = threading.Thread(target=_update,args=[self, _rect, tile_rects])
         bdThread.start()
 
-    def setAngry(self, state: bool):
+    def SetAngry(self, state: bool):
         self.a = state
+
+    @classmethod
+    def SetAngryAll(cls, state):
+        cls.a = state
 
     def getAttributes(self):
         if not self.a:
@@ -195,9 +196,3 @@ class Bulldog:
             elif self.movement[0] > 0:
                 self.direction = False
         return self.rect, self.animation.get_frame(), self.direction, self.damage
-
-    @classmethod
-    def setClassAngry(cls, state):
-        cls.a = state
-
-    
