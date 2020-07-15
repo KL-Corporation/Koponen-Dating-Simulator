@@ -12,4 +12,4 @@ def getDistance(point1: tuple, point2: tuple): #Calculate distance between two p
         return sqrt(r)
 
     except Exception:
-        return (0,0)
+        return (0, 0)

@@ -5,7 +5,7 @@ import KDS.ConfigManager
 import KDS.Convert
 import KDS.Logging
 import KDS.Missions
-import KDS.KDSMath
+import KDS.Math
 import pygame
 import os
 import random
@@ -382,10 +382,10 @@ sergeant_corpse.set_colorkey((255, 255, 255))
 sergeant_aiming.set_colorkey((255, 255, 255))
 sergeant_firing.set_colorkey((255, 255, 255))
 medkit.set_colorkey((255, 255, 255))
-shotgun.set_colorkey((255,255,255))
-shotgun_f.set_colorkey((255,255,255))
-shotgun_shells_t.set_colorkey((255,255,255))
-archvile_corpse.set_colorkey((255,255,255))
+shotgun.set_colorkey((255, 255, 255))
+shotgun_f.set_colorkey((255, 255, 255))
+shotgun_shells_t.set_colorkey((255, 255, 255))
+archvile_corpse.set_colorkey((255, 255, 255))
 iphone_texture.set_colorkey((255, 255, 255))
 
 Items_list = ["iPuhelin", "coffeemug"]
@@ -521,7 +521,7 @@ pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
 
-inventory = ["none","none","none","none","none"]
+inventory = ["iPuhelin", "none", "none", "none", "none"]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -548,12 +548,6 @@ DebugMode = False
 
 # endregion
 #region Save System
-def loadInventory(_current_map):
-    with open("MAPS/map" + _current_map + "/inventory.penis", "r") as file:
-        contents = file.read()
-    contents = contents.split("\n")
-    return contents
-
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
 
@@ -568,6 +562,12 @@ def LoadSave():
         selectedSave, "PlayerData", "Name", player_name)
     playerStamina = float(KDS.ConfigManager.LoadSave(
         selectedSave, "PlayerData", "Stamina", str(playerStamina)))
+    inventory = [
+        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory0", "none"),
+        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory1", "none"),
+        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory2", "none"),
+        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory3", "none"),
+        KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", "none")]
 def SaveData():
 
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
@@ -581,10 +581,20 @@ def SaveData():
         selectedSave, "PlayerData", "Name", str(player_name))
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Stamina", str(playerStamina))
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory0", inventory[0])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory1", inventory[1])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory2", inventory[2])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory3", inventory[3])
+    KDS.ConfigManager.SetSave(
+        selectedSave, "PlayerData", "Inventory4", inventory[4])
 # endregion
 #region Quit Handling
 def quit_function():
-    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running
+    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave
     main_menu_running = False
     main_running = False
     tcagr_running = False
