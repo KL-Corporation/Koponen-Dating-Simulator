@@ -12,7 +12,6 @@ import random
 import threading
 from datetime import datetime
 from pygame.locals import *
-from psd_tools import PSDImage
 #endregion
 #region PyGame Initialisation
 pygame.init()
@@ -694,8 +693,6 @@ def load_ads():
 
     return ad_images
 ad_images = load_ads()
-#world_gen = load_map("resources/game_map")
-#item_gen = load_items("resources/item_map")
 def load_rects():
     tile_rects = []
     toilets = []
@@ -758,8 +755,6 @@ def load_rects():
             x += 1
         y += 1
     return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs
-
-
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -1905,13 +1900,8 @@ def inventoryRight():
             inventory_slot += 1
 #endregion
 #region World Generation
-world = PSDImage.open(os.path.join("MAPS", "map" + current_map, "game_map.psd"))
-worldLayers = []
-for layer in world:
-    worldLayers.append(layer)
-    test = layer.composite()
-    test.save('%s.png' % layer.name)
 
+#Stuff
 
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
