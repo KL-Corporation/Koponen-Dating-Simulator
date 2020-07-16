@@ -1,3 +1,4 @@
+Text:
 building:
 a = air
 b = floor0
@@ -27,6 +28,55 @@ enemies and other shit:
 Z = zombie
 S = sergeant
 V = archvile
+items:
+0 = gasburner
+1 = knife
+2 = red_key
+3 = green_key
+4 = blue_key
+5 = coffeemug
+6 = ss_bonuscard
+7 = lappi_sytytyspalat
+8 = plasmarifle
+9 = cell
+! = pistol
+# = pistol_mag
+% = rk62
+& = rk62_mag
+( = medkit
+) = shotgun
+= = shotgun_shells
+
+Image:
+building Layer:
+(0, 255, 255) = air
+(0, 255, 0) = floor0
+(255, 0, 0) = wall0
+(128, 0, 0) = table0
+(245, 245, 245) = toilet0
+(255, 255, 0) = lamp0
+(64, 64, 64) = trashcan
+(150, 75, 0) = ground1
+(0, 128, 0) = grass
+(192, 192, 192) = concrete
+(128, 128, 128) = door
+(255, 128, 128) = red_door
+(128, 255, 128) = green_door
+(128, 128, 255) = blue_door
+(255, 128, 0) = bricks
+(255, 64, 0) = planks
+(255, 192, 0) = ladder
+-
+-
+-
+-
+Decoration Layer:
+(0, 255, 0) = tree
+(255, 0, 0) = jukebox
+Enemies Layer:
+(0, 255, 0) = zombie
+(255, 0, 0) = sergeant
+(0, 0, 255) = archvile
 items:
 0 = gasburner
 1 = knife

@@ -12,6 +12,7 @@ import random
 import threading
 from datetime import datetime
 from pygame.locals import *
+from psd_tools import PSDImage
 #endregion
 #region PyGame Initialisation
 pygame.init()
@@ -1264,8 +1265,9 @@ def console():
         if len(command_list) > 1:
             woofState = KDS.Convert.ToBool(command_list[1])
             if woofState != None:
-                KDS.Logging.Log(KDS.Logging.LogType.info, "woof status of all dogs has been set to: " + str(woofState), True)
-                KDS.AI.Bulldog.SetAngryAll(woofState)
+                for dog in bulldogs:
+                    KDS.Logging.Log(KDS.Logging.LogType.info, str(dog) + " woof status has been set to: " + str(woofState), True)
+                    KDS.AI.Bulldog.SetAngry(dog, woofState)
             else:
                 KDS.Logging.Log(KDS.Logging.LogType.info,
                                 "Please provide a proper state for woof", True)
@@ -1903,9 +1905,16 @@ def inventoryRight():
             inventory_slot += 1
 #endregion
 #region World Generation
+world = PSDImage.open(os.path.join("MAPS", "map" + current_map, "game_map.psd"))
+worldLayers = []
+for layer in world:
+    worldLayers.append(layer)
+    test = layer.composite()
+    test.save('%s.png' % layer.name)
+
+
 world_gen = load_map("MAPS/map" + current_map + "/game_map")
 item_gen = load_items("MAPS/map" + current_map + "/item_map")
-
 
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
