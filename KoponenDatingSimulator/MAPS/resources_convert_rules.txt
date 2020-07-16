@@ -1,4 +1,4 @@
-air,a,0,0,0,0,WillBeTransparent
+air,a,0,0,0,0,Air will be transparent, but do not use this value.
 floor0,b,0,255,0,0
 wall0,c,255,0,0,0
 table0,d,128,0,0,0

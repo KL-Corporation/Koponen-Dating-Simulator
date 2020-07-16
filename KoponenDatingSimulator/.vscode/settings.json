@@ -4,6 +4,5 @@
     "python.linting.enabled": true,
     "python.linting.pylintArgs": [
         "--extension-pkg-whitelist=pygame",
-        "--extension-pkg-whitelist=psd-tools"
     ]
 }

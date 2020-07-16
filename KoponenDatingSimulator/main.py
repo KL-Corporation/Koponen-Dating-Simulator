@@ -12,6 +12,7 @@ import random
 import threading
 from datetime import datetime
 from pygame.locals import *
+from PIL import Image
 #endregion
 #region PyGame Initialisation
 pygame.init()
@@ -619,7 +620,7 @@ def play_key_pickup():
 #endregion
 #region Loading
 def load_map(path):
-    with open(path + '.kds', 'r') as f:
+    with open(path, 'r') as f:
         data = f.read()
     data = data.split('\n')
     game_map = []
@@ -627,7 +628,7 @@ def load_map(path):
         game_map.append(list(row))
     return game_map
 def load_items(path):
-    with open(path + '.kds', 'r') as f:
+    with open(path, 'r') as f:
         data = f.read()
     data = data.split('\n')
     item_map = []
@@ -674,7 +675,7 @@ def load_music():
     del pos
 def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
-    pygame.mixer.music.load("MAPS/map" + _current_map + "/music.mid")
+    pygame.mixer.music.load("maps/map" + _current_map + "/music.mid")
 def load_ads():
     ad_files = os.listdir("resources/koponen_background/ads")
 
@@ -1900,11 +1901,33 @@ def inventoryRight():
             inventory_slot += 1
 #endregion
 #region World Generation
+buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "Map_Buildings.png"))
+decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "Map_Decorations.png"))
+enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "Map_Enemies.png"))
+itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "Map_Items.png"))
 
-#Stuff
+convertRules = list()
+convertColors = list()
+with open(os.path.join("maps", "resources_convert_rules.txt"), 'r') as f:
+    raw = f.read()
+    rowSplit = raw.split('\n')
+    for row in rowSplit:
+        array = row.split(',')
+        convertRules.append(array[1])
+        convertColors.append((array[2], array[3], array[4]))
 
-world_gen = load_map("MAPS/map" + current_map + "/game_map")
-item_gen = load_items("MAPS/map" + current_map + "/item_map")
+
+BitmapSize = buildingBitmap.size
+progress = 1
+progressMax = BitmapSize[0] * BitmapSize[1]
+for i in range(BitmapSize[1]):
+    for j in range(BitmapSize[0]):
+        list.index(buildingBitmap.getpixel((j, i)))
+
+#Use the index to get the letter and make the file using the letters
+
+world_gen = load_map(os.path.join("maps", "map" + current_map, "game_map.map"))
+item_gen = load_items(os.path.join("maps", "map" + current_map, "item_map.map"))
 
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
