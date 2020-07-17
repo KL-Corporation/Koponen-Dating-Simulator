@@ -1926,8 +1926,8 @@ for i in range(BitmapSize[1]):
 
 #Use the index to get the letter and make the file using the letters
 
-world_gen = load_map(os.path.join("maps", "map" + current_map, "game_map.map"))
-item_gen = load_items(os.path.join("maps", "map" + current_map, "item_map.map"))
+world_gen = load_map(os.path.join("maps", "game_map.map"))
+item_gen = load_items(os.path.join("maps", "item_map.map"))
 
 tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
 KDS.Logging.Log(KDS.Logging.LogType.debug,
