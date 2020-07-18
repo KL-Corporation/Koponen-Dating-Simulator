@@ -613,9 +613,134 @@ def quit_function():
     esc_menu = False
     settings_running = False
 #endregion
+#region World Generation
+world_gen = ()
+item_gen = ()
+tile_rects = ()
+toilets = ()
+burning_toilets = ()
+trashcans = ()
+burning_trashcans = ()
+jukeboxes = ()
+landmines = ()
+zombies = ()
+sergeants = ()
+archviles = ()
+ladders = ()
+bulldogs = ()
+item_rects = ()
+item_ids = ()
+task_items = ()
+door_rects = ()
+doors_open = ()
+color_keys = ()
+def WorldGeneration():
+    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
+    buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.map"))
+    decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.map"))
+    enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.map"))
+    itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.map"))
+
+    convertBuildingRules = list()
+    convertBuildingColors = list()
+    convertDecorationRules = list()
+    convertDecorationColors = list()
+    convertEnemyRules = list()
+    convertEnemyColors = list()
+    convertItemRules = list()
+    convertItemColors = list()
+    with open(os.path.join("maps", "resources_convert_rules.txt"), 'r') as f:
+        raw = f.read()
+        rowSplit = raw.split('\n')
+
+        array = rowSplit[0].split(',')
+        convertBuildingRules.append(array[1])
+        convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+        convertDecorationRules.append(array[1])
+        convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
+        convertEnemyRules.append(array[1])
+        convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
+        convertItemRules.append(array[1])
+        convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+
+        Type = -1
+        for row in rowSplit:
+            array = row.split(',')
+            skip = True
+
+            if array[0] == "building:":
+                Type = 0
+            elif array[0] == "decoration:":
+                Type = 1
+            elif array[0] == "enemies:":
+                Type = 2
+            elif array[0] == "items:":
+                Type = 3
+            else:
+                if len(array[0]) > 0 and rowSplit.index(row) != 0:
+                    skip = False
+
+            if skip == False and Type != -1:
+                if Type == 0:
+                    convertBuildingRules.append(array[1])
+                    convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+                elif Type == 1:
+                    convertDecorationRules.append(array[1])
+                    convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
+                elif Type == 2:
+                    convertEnemyRules.append(array[1])
+                    convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
+                elif Type == 3:
+                    convertItemRules.append(array[1])
+                    convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+
+    building_gen = list()
+    decoration_gen = list()
+    enemy_gen = list()
+    item_gen = list()
+
+    BitmapSize = buildingBitmap.size
+    progress = 1
+    progressMax = BitmapSize[0] * BitmapSize[1]
+    for i in range(BitmapSize[1]):
+        building_layer = list()
+        decoration_layer = list()
+        enemy_layer = list()
+        item_layer = list()
+        for j in range(BitmapSize[0]):
+            building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.getpixel((j, i))[:3])])
+            decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.getpixel((j, i))[:3])])
+            enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.getpixel((j, i))[:3])])
+            item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.getpixel((j, i))[:3])])
+        
+        building_gen.append(building_layer)
+        decoration_gen.append(decoration_layer)
+        enemy_gen.append(enemy_layer)
+        item_gen.append(item_layer)
+
+
+    world_gen = (building_gen, decoration_gen, enemy_gen, item_gen)
+
+    #Use the index to get the letter and make the file using the letters
+
+    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
+    KDS.Logging.Log(KDS.Logging.LogType.debug,
+                    "Zombies Initialised: " + str(len(zombies)), False)
+    for zombie in zombies:
+        KDS.Logging.Log(KDS.Logging.LogType.debug,
+                        "Initialised Zombie: " + str(zombie), False)
+
+    item_rects, item_ids, task_items = load_item_rects()
+    random.shuffle(task_items)
+
+    KDS.Logging.Log(KDS.Logging.LogType.debug,
+                    "Items Initialised: " + str(len(item_ids)), False)
+    for i_id in item_ids:
+        KDS.Logging.Log(KDS.Logging.LogType.debug,
+                        "Initialised Item: (ID)" + i_id, False)
+    door_rects, doors_open, color_keys = load_doors()
+#endregion
 #region Pickup Sound
-
-
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 #endregion
@@ -1567,6 +1692,8 @@ def esc_menu_f():
     settings_text = button_font.render("Settings", True, (255, 255, 255))
     main_menu_text = button_font.render("Main menu", True, (255, 255, 255))
 
+    jukebox_music[jukeboxMusicPlaying].stop()
+    
     buttons = []
     functions = []
     texts = []
@@ -1581,6 +1708,7 @@ def esc_menu_f():
         esc_menu = False
         pygame.mouse.set_visible(False)
         pygame.mixer.music.unpause()
+        jukebox_music[jukeboxMusicPlaying].play()
 
     def save():
         SaveData()
@@ -1774,10 +1902,11 @@ def main_menu():
     left_text = button_font1.render("<", True, (255, 255, 255))
 
     def play_function():
+        WorldGeneration()
         pygame.mouse.set_visible(False)
         global main_menu_running, current_map
         main_menu_running = False
-        # load_music()
+        #load_music()
         load_music_for_map(current_map)
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(volume)
@@ -1912,115 +2041,9 @@ def inventoryRight():
         else:
             inventory_slot += 1
 #endregion
-#region World Generation
-buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.map"))
-decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.map"))
-enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.map"))
-itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.map"))
-
-convertBuildingRules = list()
-convertBuildingColors = list()
-convertDecorationRules = list()
-convertDecorationColors = list()
-convertEnemyRules = list()
-convertEnemyColors = list()
-convertItemRules = list()
-convertItemColors = list()
-with open(os.path.join("maps", "resources_convert_rules.txt"), 'r') as f:
-    raw = f.read()
-    rowSplit = raw.split('\n')
-
-    array = rowSplit[0].split(',')
-    convertBuildingRules.append(array[1])
-    convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
-    convertDecorationRules.append(array[1])
-    convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
-    convertEnemyRules.append(array[1])
-    convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
-    convertItemRules.append(array[1])
-    convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
-
-    Type = -1
-    for row in rowSplit:
-        array = row.split(',')
-        skip = True
-
-        if array[0] == "building:":
-            Type = 0
-        elif array[0] == "decoration:":
-            Type = 1
-        elif array[0] == "enemies:":
-            Type = 2
-        elif array[0] == "items:":
-            Type = 3
-        else:
-            if len(array[0]) > 0 and rowSplit.index(row) != 0:
-                skip = False
-
-        if skip == False and Type != -1:
-            if Type == 0:
-                convertBuildingRules.append(array[1])
-                convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
-            elif Type == 1:
-                convertDecorationRules.append(array[1])
-                convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
-            elif Type == 2:
-                convertEnemyRules.append(array[1])
-                convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
-            elif Type == 3:
-                convertItemRules.append(array[1])
-                convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
-
-building_gen = list()
-decoration_gen = list()
-enemy_gen = list()
-item_gen = list()
-
-BitmapSize = buildingBitmap.size
-progress = 1
-progressMax = BitmapSize[0] * BitmapSize[1]
-for i in range(BitmapSize[1]):
-    building_layer = list()
-    decoration_layer = list()
-    enemy_layer = list()
-    item_layer = list()
-    for j in range(BitmapSize[0]):
-        building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.getpixel((j, i))[:3])])
-        decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.getpixel((j, i))[:3])])
-        enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.getpixel((j, i))[:3])])
-        item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.getpixel((j, i))[:3])])
-    
-    building_gen.append(building_layer)
-    decoration_gen.append(decoration_layer)
-    enemy_gen.append(enemy_layer)
-    item_gen.append(item_layer)
-
-
-world_gen = (building_gen, decoration_gen, enemy_gen, item_gen)
-
-#Use the index to get the letter and make the file using the letters
-
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
-KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Zombies Initialised: " + str(len(zombies)), False)
-for zombie in zombies:
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialised Zombie: " + str(zombie), False)
-
-item_rects, item_ids, task_items = load_item_rects()
-random.shuffle(task_items)
-
-KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Items Initialised: " + str(len(item_ids)), False)
-for i_id in item_ids:
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialised Item: (ID)" + i_id, False)
-door_rects, doors_open, color_keys = load_doors()
-
-#endregion
 #region Main Running
 while main_running:
-    #region Events
+#region Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_function()
@@ -2555,7 +2578,6 @@ while main_running:
         koponen_movingx = -koponen_movingx
 
     door_collision_test()
-
 #endregion
 #region UI
     score = score_font.render(
@@ -2583,8 +2605,7 @@ while main_running:
     if hurted:
         hurt_sound.play()
 #endregion
-#region Even More Collisions
-
+#region More Collisions
     if collisions['bottom'] == True:
         air_timer = 0
         vertical_momentum = 0
@@ -2592,7 +2613,6 @@ while main_running:
         air_timer += 1
     if collisions['top'] == True:
         vertical_momentum = 0
-
 #endregion
 #region Player Data
     if player_health:
@@ -2809,7 +2829,6 @@ while main_running:
         screen.blit(green_key, (24, 20))
     if player_keys["blue"]:
         screen.blit(blue_key, (38, 20))
-
 #endregion
 #region Koponen Tip
     if player_rect.colliderect(koponen_recog_rec):
