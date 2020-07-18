@@ -1905,10 +1905,10 @@ def inventoryRight():
             inventory_slot += 1
 #endregion
 #region World Generation
-buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.png"))
-decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.png"))
-enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.png"))
-itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.png"))
+buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.map"))
+decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.map"))
+enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.map"))
+itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.map"))
 
 convertBuildingRules = list()
 convertBuildingColors = list()
