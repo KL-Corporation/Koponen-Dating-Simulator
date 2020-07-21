@@ -1,4 +1,6 @@
+import KDS.Logging
 from math import sqrt
+from inspect import currentframe, getframeinfo
 
 def getDistance(point1: tuple, point2: tuple): #Calculate distance between two points.
     try:
@@ -11,4 +13,6 @@ def getDistance(point1: tuple, point2: tuple): #Calculate distance between two p
 
         return sqrt(r)
     except Exception:
+        frameinfo = getframeinfo(currentframe())
+        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + Exception, True)
         return (0, 0)
