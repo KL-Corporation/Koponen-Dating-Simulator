@@ -2,6 +2,7 @@
 import pygame
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Gamemode
 import KDS.Logging
 from inspect import currentframe, getframeinfo
 #endregion
@@ -18,7 +19,7 @@ screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(
 mission_font = pygame.font.Font("COURIER.ttf", 15, bold=1, italic=0)
 task_font = pygame.font.Font("COURIER.ttf", 10, bold=0, italic=0)
 
-Missions = []
+Missions = list()
 Active_Mission = 0
 Last_Active_Mission = 0
 text_height = 0
@@ -44,9 +45,13 @@ def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str):
     """
     global Missions
     New_Task = [Safe_Name, Visible_Name, 0.0, False]
-    for i in range(len(Missions)):
-        if Missions[i][0] == Mission_Name:
-            Missions[i].append(New_Task)
+    for j in range(len(Missions)):
+        if Missions[j][0] == Mission_Name:
+            Missions[j].append(New_Task)
+
+def DeleteAll():
+    global Missions
+    Missions = list()
 #endregion
 #region Set
 def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
@@ -135,4 +140,30 @@ def TaskTextValues(index):
     return RenderTask(index, ValueType.Text)
 def TaskProgressValues(index):
     return RenderTask(index, ValueType.Progress)
+#endregion
+#region Missions
+def InitialiseMissions(LevelIndex):
+    DeleteAll()
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+        KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
+        KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+        KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
+        KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
+        KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
+
+        KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
+        KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
+    elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+        if LevelIndex < 2:
+            KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
+            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+            KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
+            KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
+            KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
+
+            KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
+            KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
+        elif LevelIndex == 2:
+            KDS.Missions.InitialiseMission("koponen_talk", "Puhu Koposelle")
+            KDS.Missions.InitialiseTask("koponen_talk", "talk", "Puhu Koposelle")
 #endregion

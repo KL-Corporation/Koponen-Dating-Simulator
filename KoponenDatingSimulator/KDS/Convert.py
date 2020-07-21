@@ -1,3 +1,6 @@
+import KDS.Logging
+from inspect import currentframe, getframeinfo
+
 def ToBool(value):
     """
     Converts a value to bool with these rules:
@@ -31,3 +34,5 @@ def ToBool(value):
         return value
     else:
         return None
+        frameinfo = getframeinfo(currentframe())
+        KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nValue is not a valid type.", True)
