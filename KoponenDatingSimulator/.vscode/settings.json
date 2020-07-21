@@ -1,9 +1,0 @@
-{
-    "python.linting.banditEnabled": false,
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.linting.pylintArgs": [
-        "--extension-pkg-whitelist=pygame",
-    ],
-    "python.pythonPath": "C:\\Users\\Jarno\\AppData\\Local\\Programs\\Python\\Python38\\python.exe"
-}
