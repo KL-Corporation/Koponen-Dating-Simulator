@@ -274,11 +274,11 @@ alpha.set_alpha(170)
 
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
-game_icon = pygame.image.load("resources/game_icon.png")
+game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
-    "resources/main_menu/main_menu_bc.png")
-settings_background = pygame.image.load("resources/settings_bc.png")
-agr_background = pygame.image.load("resources/tcagr.png")
+    "Assets/Textures/Menus/main_menu_bc.png")
+settings_background = pygame.image.load("Assets/Textures/Menus/settings_bc.png")
+agr_background = pygame.image.load("Assets/Textures/Menus/tcagr_bc.png")
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
@@ -287,34 +287,34 @@ tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
 
-player_img = pygame.image.load("resources/player/stand0.png").convert()
-player_corpse = pygame.image.load("resources/player/corpse.png").convert()
+player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
+player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
 player_corpse.set_colorkey((255, 255, 255))
 player_img.set_colorkey((255, 255, 255))
 
-floor1 = pygame.image.load("resources/build/floor0v2.png")
-concrete1 = pygame.image.load("resources/build/concrete0.png")
-wall1 = pygame.image.load("resources/build/wall0.png")
-table1 = pygame.image.load("resources/build/table0.png").convert()
-toilet1 = pygame.image.load("resources/build/toilet0.png").convert()
-lamp1 = pygame.image.load("resources/build/lamp0.png").convert()
-trashcan = pygame.image.load("resources/build/trashcan.png").convert()
-ground1 = pygame.image.load("resources/build/ground0.png")
-grass = pygame.image.load("resources/build/grass0.png")
-door_closed = pygame.image.load("resources/build/door_closed.png").convert()
+floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
+concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
+wall1 = pygame.image.load("Assets/Textures/Building/wall0.png")
+table1 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
+toilet1 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
+lamp1 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
+trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
+ground1 = pygame.image.load("Assets/Textures/Building/ground0.png")
+grass = pygame.image.load("Assets/Textures/Building/grass0.png")
+door_closed = pygame.image.load("Assets/Textures/Building/door_closed.png").convert()
 red_door_closed = pygame.image.load(
-    "resources/build/red_door_closed.png").convert()
+    "Assets/Textures/Building/red_door_closed.png").convert()
 green_door_closed = pygame.image.load(
-    "resources/build/green_door_closed.png").convert()
+    "Assets/Textures/Building/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
-    "resources/build/blue_door_closed.png").convert()
-door_open = pygame.image.load("resources/build/door_open2.png")
-bricks = pygame.image.load("resources/build/bricks.png")
-tree = pygame.image.load("resources/build/tree.png")
-planks = pygame.image.load("resources/build/planks.png")
-jukebox_texture = pygame.image.load("resources/build/jukebox.png")
-landmine_texture = pygame.image.load("resources/build/landmine.png")
-ladder_texture = pygame.image.load("resources/build/ladder.png")
+    "Assets/Textures/Building/blue_door_closed.png").convert()
+door_open = pygame.image.load("Assets/Textures/Building/door_open2.png")
+bricks = pygame.image.load("Assets/Textures/Building/bricks.png")
+tree = pygame.image.load("Assets/Textures/Building/tree.png")
+planks = pygame.image.load("Assets/Textures/Building/planks.png")
+jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png")
+landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png")
+ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -329,43 +329,43 @@ ladder_texture.set_colorkey((255, 255, 255))
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
-    "resources/items/gasburner_off.png").convert()
-#gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
-knife = pygame.image.load("resources/items/knife.png").convert()
-knife_blood = pygame.image.load("resources/items/knife.png").convert()
-red_key = pygame.image.load("resources/items/red_key.png").convert()
-green_key = pygame.image.load("resources/items/green_key2.png").convert()
-blue_key = pygame.image.load("resources/items/blue_key.png").convert()
-coffeemug = pygame.image.load("resources/items/coffeemug.png").convert()
-ss_bonuscard = pygame.image.load("resources/items/ss_bonuscard.png").convert()
+    "Assets/Textures/Items/gasburner_off.png").convert()
+#gasburner_on = pygame.image.load("Assets/Textures/Items/gasburner_on.png").convert()
+knife = pygame.image.load("Assets/Textures/Items/knife.png").convert()
+knife_blood = pygame.image.load("Assets/Textures/Items/knife.png").convert()
+red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
+green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
+blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
+coffeemug = pygame.image.load("Assets/Textures/Items/coffeemug.png").convert()
+ss_bonuscard = pygame.image.load("Assets/Textures/Items/ss_bonuscard.png").convert()
 lappi_sytytyspalat = pygame.image.load(
-    "resources/items/lappi_sytytyspalat.png").convert()
-plasmarifle = pygame.image.load("resources/items/plasmarifle.png").convert()
-plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
-cell = pygame.image.load("resources/items/cell.png")
+    "Assets/Textures/Items/lappi_sytytyspalat.png").convert()
+plasmarifle = pygame.image.load("Assets/Textures/Items/plasmarifle.png").convert()
+plasma_ammo = pygame.image.load("Assets/Textures/Items/plasma_ammo.png").convert()
+cell = pygame.image.load("Assets/Textures/Items/cell.png")
 zombie_corpse = pygame.image.load(
-    "resources/animations/z_death_4.png").convert()
-pistol_texture = pygame.image.load("resources/items/pistol.png").convert()
+    "Assets/Textures/Animations/z_death_4.png").convert()
+pistol_texture = pygame.image.load("Assets/Textures/Items/pistol.png").convert()
 pistol_f_texture = pygame.image.load(
-    "resources/items/pistol_firing.png").convert()
-pistol_mag = pygame.image.load("resources/items/pistol_mag.png").convert()
-rk62_texture = pygame.image.load("resources/items/rk62.png").convert()
-rk62_f_texture = pygame.image.load("resources/items/rk62_firing.png").convert()
-rk62_mag = pygame.image.load("resources/items/rk_mag.png").convert()
+    "Assets/Textures/Items/pistol_firing.png").convert()
+pistol_mag = pygame.image.load("Assets/Textures/Items/pistol_mag.png").convert()
+rk62_texture = pygame.image.load("Assets/Textures/Items/rk62.png").convert()
+rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
+rk62_mag = pygame.image.load("Assets/Textures/Items/rk_mag.png").convert()
 sergeant_corpse = pygame.image.load(
-    "resources/animations/seargeant_dying_4.png").convert()
+    "Assets/Textures/Animations/seargeant_dying_4.png").convert()
 sergeant_aiming = pygame.image.load(
-    "resources/animations/seargeant_shooting_0.png").convert()
+    "Assets/Textures/Animations/seargeant_shooting_0.png").convert()
 sergeant_firing = pygame.image.load(
-    "resources/animations/seargeant_shooting_1.png").convert()
-medkit = pygame.image.load("resources/items/medkit.png").convert()
-shotgun = pygame.image.load("resources/items/shotgun.png").convert()
-shotgun_f = pygame.image.load("resources/items/shotgun_firing.png").convert()
+    "Assets/Textures/Animations/seargeant_shooting_1.png").convert()
+medkit = pygame.image.load("Assets/Textures/Items/medkit.png").convert()
+shotgun = pygame.image.load("Assets/Textures/Items/shotgun.png").convert()
+shotgun_f = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
 shotgun_shells_t = pygame.image.load(
-    "resources/items/shotgun_shells.png").convert()
+    "Assets/Textures/Items/shotgun_shells.png").convert()
 archvile_corpse = pygame.image.load(
-    "resources/animations/archvile_death_6.png").convert()
-iphone_texture = pygame.image.load("resources/items/iphone.png").convert()
+    "Assets/Textures/Animations/archvile_death_6.png").convert()
+iphone_texture = pygame.image.load("Assets/Textures/Items/iphone.png").convert()
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -399,32 +399,32 @@ iphone_texture.set_colorkey((255, 255, 255))
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 
-text_icon = pygame.image.load("resources/text_icon.png").convert()
+text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
 
-gasburner_clip = pygame.mixer.Sound("audio/misc/gasburner_clip.wav")
-gasburner_fire = pygame.mixer.Sound("audio/misc/gasburner_fire.wav")
-door_opening = pygame.mixer.Sound("audio/misc/door.wav")
-player_death_sound = pygame.mixer.Sound("audio/misc/dspldeth.wav")
-player_walking = pygame.mixer.Sound("audio/misc/walking.wav")
-coffeemug_sound = pygame.mixer.Sound("audio/misc/coffeemug.wav")
-knife_pickup = pygame.mixer.Sound("audio/misc/knife.wav")
-key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
-ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
-lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
-landmine_explosion = pygame.mixer.Sound("audio/misc/landmine.wav")
-hurt_sound = pygame.mixer.Sound("audio/misc/dsplpain.wav")
-plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
-weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
-item_pickup = pygame.mixer.Sound("audio/misc/dsitemup.wav")
-plasma_hitting = pygame.mixer.Sound("audio/misc/dsfirxpl.wav")
-pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
-rk62_shot = pygame.mixer.Sound("audio/misc/rk62_shot.wav")
-shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
-player_shotgun_shot = pygame.mixer.Sound("audio/misc/player_shotgun.wav")
-archvile_attack = pygame.mixer.Sound("audio/misc/dsflame.wav")
-archvile_death = pygame.mixer.Sound("audio/misc/dsvildth.wav")
-fart = pygame.mixer.Sound("audio/misc/fart_attack.wav")
+gasburner_clip = pygame.mixer.Sound("Assets/Audio/misc/gasburner_clip.wav")
+gasburner_fire = pygame.mixer.Sound("Assets/Audio/misc/gasburner_fire.wav")
+door_opening = pygame.mixer.Sound("Assets/Audio/misc/door.wav")
+player_death_sound = pygame.mixer.Sound("Assets/Audio/misc/dspldeth.wav")
+player_walking = pygame.mixer.Sound("Assets/Audio/misc/walking.wav")
+coffeemug_sound = pygame.mixer.Sound("Assets/Audio/misc/coffeemug.wav")
+knife_pickup = pygame.mixer.Sound("Assets/Audio/misc/knife.wav")
+key_pickup = pygame.mixer.Sound("Assets/Audio/misc/pickup_key.wav")
+ss_sound = pygame.mixer.Sound("Assets/Audio/misc/ss.wav")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/misc/sytytyspalat.wav")
+landmine_explosion = pygame.mixer.Sound("Assets/Audio/misc/landmine.wav")
+hurt_sound = pygame.mixer.Sound("Assets/Audio/misc/dsplpain.wav")
+plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/misc/dsplasma.wav")
+weapon_pickup = pygame.mixer.Sound("Assets/Audio/misc/weapon_pickup.wav")
+item_pickup = pygame.mixer.Sound("Assets/Audio/misc/dsitemup.wav")
+plasma_hitting = pygame.mixer.Sound("Assets/Audio/misc/dsfirxpl.wav")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/misc/pistolshot.wav")
+rk62_shot = pygame.mixer.Sound("Assets/Audio/misc/rk62_shot.wav")
+shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/shotgun.wav")
+player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/player_shotgun.wav")
+archvile_attack = pygame.mixer.Sound("Assets/Audio/misc/dsflame.wav")
+archvile_death = pygame.mixer.Sound("Assets/Audio/misc/dsvildth.wav")
+fart = pygame.mixer.Sound("Assets/Audio/misc/fart_attack.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -631,10 +631,10 @@ doors_open = ()
 color_keys = ()
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
-    buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.map"))
-    decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.map"))
-    enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.map"))
-    itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.map"))
+    buildingBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map"))
+    decorationBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map"))
+    enemyBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map"))
+    itemBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map"))
 
     convertBuildingRules = list()
     convertBuildingColors = list()
@@ -644,7 +644,7 @@ def WorldGeneration():
     convertEnemyColors = list()
     convertItemRules = list()
     convertItemColors = list()
-    with open(os.path.join("maps", "resources_convert_rules.txt"), 'r') as f:
+    with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
         raw = f.read()
         rowSplit = raw.split('\n')
 
@@ -757,11 +757,11 @@ def load_items(path):
         item_map.append(list(row))
     return item_map
 def load_jukebox_music():
-    musikerna = os.listdir("audio/jukebox_music/")
+    musikerna = os.listdir("Assets/Audio/jukebox_music/")
     musics = []
 
     for musiken in musikerna:
-        musics.append(pygame.mixer.Sound("audio/jukebox_music/" + musiken))
+        musics.append(pygame.mixer.Sound("Assets/Audio/jukebox_music/" + musiken))
 
     random.shuffle(musics)
 
@@ -771,7 +771,7 @@ def shakeScreen():
     scroll[1] += random.randint(-10, 10)
 def load_music():
     original_path = os.getcwd()
-    os.chdir("audio/music/")
+    os.chdir("Assets/Audio/music/")
     music_files = os.listdir()
 
     random.shuffle(music_files)
@@ -796,9 +796,9 @@ def load_music():
     del pos
 def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
-    pygame.mixer.music.load(os.path.join("maps", "map" + _current_map, "music.mid"))
+    pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
 def load_ads():
-    ad_files = os.listdir("resources/koponen_background/ads")
+    ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
@@ -810,12 +810,12 @@ def load_ads():
     ad_images = []
 
     for ad in ad_files:
-        path = str("resources/koponen_background/ads/" + ad)
+        path = str("Assets/Textures/KoponenTalk/ads/" + ad)
         ad_images.append(pygame.image.load(path))
 
     return ad_images
 ad_images = load_ads()
-koponen_talking_background = pygame.image.load("resources/koponen_background/background.png")
+koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png")
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 def load_rects():
     tile_rects = []
@@ -989,7 +989,7 @@ def load_doors():
 def load_animation(name, number_of_images):
     animation_list = []
     for i in range(number_of_images):
-        path = "resources/player/" + name + str(i) + ".png"
+        path = "Assets/Textures/Player/" + name + str(i) + ".png"
         img = pygame.image.load(path).convert()
         img.set_colorkey((255, 255, 255))
         animation_list.append(img)
@@ -1879,7 +1879,7 @@ def main_menu():
     try:
         jukebox_music[jukeboxMusicPlaying].stop()
     except:
-        KDS.Logging.Log(KDS.Logging.LogType.warning,
+        KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Jukebox music has not been defined yet.", False)
     pygame.mixer.music.unpause()
 
@@ -1888,7 +1888,7 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    pygame.mixer.music.load("audio/lobbymusic.wav")
+    pygame.mixer.music.load("Assets/Audio/lobbymusic.wav")
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(volume)
 
