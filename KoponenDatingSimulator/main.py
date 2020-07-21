@@ -1,20 +1,23 @@
-# region Importing
+#region Importing
 import KDS.AI
 import KDS.Animator
+import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
 import KDS.Logging
-import KDS.Missions
 import KDS.Math
+import KDS.Missions
 import pygame
 import os
 import random
 import threading
 from datetime import datetime
 from pygame.locals import *
-# endregion
-# region PyGame Initialisation
+from PIL import Image
+#endregion
+#region PyGame Initialisation
 pygame.init()
+KDS.Logging.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(800))
@@ -30,12 +33,8 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
-
-KDS.Logging.init()
-# endregion
-# region Text Handling
-
-
+#endregion
+#region Text Handling
 class pygame_print_text:
 
     def __init__(self, color, topleft, width, display):
@@ -59,10 +58,8 @@ class pygame_print_text:
 
     def skipRow(self):
         self.row += self.row_height
-# endregion
-# region Animations
-
-
+#endregion
+#region Animations
 class plasma_bullet:
 
     def __init__(self, starting_position, direction, display_to_blit):
@@ -98,8 +95,6 @@ class plasma_bullet:
             plasma_ammo, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
 
         return self.done
-
-
 class Bullet:
 
     def __init__(self, _position, _direction, damage):
@@ -151,8 +146,6 @@ class Bullet:
             if counter > 300:
                 q = False
         return "null"
-
-
 class Archvile:
 
     def __init__(self, position, health, speed):
@@ -256,11 +249,8 @@ class Archvile:
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction,
                                               False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
-
-# endregion
-# region Fullscreen
-
-
+#endregion
+#region Fullscreen
 def setFullscreen(reverseFullscreen):
     global fullscreen_var, main_display
     if reverseFullscreen:
@@ -272,10 +262,8 @@ def setFullscreen(reverseFullscreen):
         main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
         fullscreen_var = True
     KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
-
-
-# endregion
-# region Initialisation
+#endregion
+#region Initialisation
 printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
 
 esc_menu_surface = pygame.Surface((500, 400))
@@ -283,7 +271,7 @@ alpha = pygame.Surface(screen_size)
 alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
 
-# region Downloads
+#region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("resources/game_icon.png")
 main_menu_background = pygame.image.load(
@@ -445,7 +433,7 @@ shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
-# endregion Lataukset
+#endregion Lataukset
 
 KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
 KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
@@ -564,12 +552,14 @@ koponen_movement = [0, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
+
 task = ""
 taskTaivutettu = ""
 
 DebugMode = False
 
-# endregion
+#endregion
 #region Save System
 def LoadSave():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
@@ -612,10 +602,8 @@ def SaveData():
         selectedSave, "PlayerData", "Inventory3", inventory[3])
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Inventory4", inventory[4])
-# endregion
-# region Quit Handling
-
-
+#endregion
+#region Quit Handling
 def quit_function():
     global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave
     main_menu_running = False
@@ -624,36 +612,155 @@ def quit_function():
     koponenTalking = False
     esc_menu = False
     settings_running = False
-# endregion
-# region Pickup Sound
+#endregion
+#region World Generation
+world_gen = ()
+item_gen = ()
+tile_rects = ()
+toilets = ()
+burning_toilets = ()
+trashcans = ()
+burning_trashcans = ()
+jukeboxes = ()
+landmines = ()
+zombies = ()
+sergeants = ()
+archviles = ()
+ladders = ()
+bulldogs = ()
+item_rects = ()
+item_ids = ()
+task_items = ()
+door_rects = ()
+doors_open = ()
+color_keys = ()
+def WorldGeneration():
+    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
+    buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.map"))
+    decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.map"))
+    enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.map"))
+    itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.map"))
+
+    convertBuildingRules = list()
+    convertBuildingColors = list()
+    convertDecorationRules = list()
+    convertDecorationColors = list()
+    convertEnemyRules = list()
+    convertEnemyColors = list()
+    convertItemRules = list()
+    convertItemColors = list()
+    with open(os.path.join("maps", "resources_convert_rules.txt"), 'r') as f:
+        raw = f.read()
+        rowSplit = raw.split('\n')
+
+        array = rowSplit[0].split(',')
+        convertBuildingRules.append(array[1])
+        convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+        convertDecorationRules.append(array[1])
+        convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
+        convertEnemyRules.append(array[1])
+        convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
+        convertItemRules.append(array[1])
+        convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+
+        Type = -1
+        for row in rowSplit:
+            array = row.split(',')
+            skip = True
+
+            if array[0] == "building:":
+                Type = 0
+            elif array[0] == "decoration:":
+                Type = 1
+            elif array[0] == "enemies:":
+                Type = 2
+            elif array[0] == "items:":
+                Type = 3
+            else:
+                if len(array[0]) > 0 and rowSplit.index(row) != 0:
+                    skip = False
+
+            if skip == False and Type != -1:
+                if Type == 0:
+                    convertBuildingRules.append(array[1])
+                    convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+                elif Type == 1:
+                    convertDecorationRules.append(array[1])
+                    convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
+                elif Type == 2:
+                    convertEnemyRules.append(array[1])
+                    convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
+                elif Type == 3:
+                    convertItemRules.append(array[1])
+                    convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+
+    building_gen = list()
+    decoration_gen = list()
+    enemy_gen = list()
+    item_gen = list()
+
+    BitmapSize = buildingBitmap.size
+    progress = 1
+    progressMax = BitmapSize[0] * BitmapSize[1]
+    for i in range(BitmapSize[1]):
+        building_layer = list()
+        decoration_layer = list()
+        enemy_layer = list()
+        item_layer = list()
+        for j in range(BitmapSize[0]):
+            building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.getpixel((j, i))[:3])])
+            decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.getpixel((j, i))[:3])])
+            enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.getpixel((j, i))[:3])])
+            item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.getpixel((j, i))[:3])])
+        
+        building_gen.append(building_layer)
+        decoration_gen.append(decoration_layer)
+        enemy_gen.append(enemy_layer)
+        item_gen.append(item_layer)
 
 
+    world_gen = (building_gen, decoration_gen, enemy_gen, item_gen)
+
+    #Use the index to get the letter and make the file using the letters
+
+    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
+    KDS.Logging.Log(KDS.Logging.LogType.debug,
+                    "Zombies Initialised: " + str(len(zombies)), False)
+    for zombie in zombies:
+        KDS.Logging.Log(KDS.Logging.LogType.debug,
+                        "Initialised Zombie: " + str(zombie), False)
+
+    item_rects, item_ids, task_items = load_item_rects()
+    random.shuffle(task_items)
+
+    KDS.Logging.Log(KDS.Logging.LogType.debug,
+                    "Items Initialised: " + str(len(item_ids)), False)
+    for i_id in item_ids:
+        KDS.Logging.Log(KDS.Logging.LogType.debug,
+                        "Initialised Item: (ID)" + i_id, False)
+    door_rects, doors_open, color_keys = load_doors()
+#endregion
+#region Pickup Sound
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
-# endregion
-# region Loading
-
-
+#endregion
+#region Loading
 def load_map(path):
-    with open(path + '.kds', 'r') as f:
+    with open(path, 'r') as f:
         data = f.read()
     data = data.split('\n')
     game_map = []
     for row in data:
         game_map.append(list(row))
     return game_map
-
-
 def load_items(path):
-    with open(path + '.kds', 'r') as f:
+    with open(path, 'r') as f:
         data = f.read()
     data = data.split('\n')
     item_map = []
     for row in data:
         item_map.append(list(row))
     return item_map
-
-
 def load_jukebox_music():
     musikerna = os.listdir("audio/jukebox_music/")
     musics = []
@@ -664,13 +771,9 @@ def load_jukebox_music():
     random.shuffle(musics)
 
     return musics
-
-
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
-
-
 def load_music():
     original_path = os.getcwd()
     os.chdir("audio/music/")
@@ -696,13 +799,9 @@ def load_music():
     os.chdir(original_path)
     del original_path
     del pos
-
-
 def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
-    pygame.mixer.music.load("MAPS/map" + _current_map + "/music.mid")
-
-
+    pygame.mixer.music.load("maps/map" + _current_map + "/music.mid")
 def load_ads():
     ad_files = os.listdir("resources/koponen_background/ads")
 
@@ -720,13 +819,9 @@ def load_ads():
         ad_images.append(pygame.image.load(path))
 
     return ad_images
-
-
 ad_images = load_ads()
-#world_gen = load_map("resources/game_map")
-#item_gen = load_items("resources/item_map")
-
-
+koponen_talking_background = pygame.image.load("resources/koponen_background/background.png")
+koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 def load_rects():
     tile_rects = []
     toilets = []
@@ -739,55 +834,57 @@ def load_rects():
     sergeants = []
     archviles = []
     ladders = []
+    bulldogs = []
     w = [0, 0]
-    y = 0
-    for layer in world_gen:
-        x = 0
-        for tile in layer:
-            if tile != 'a':
-                if tile == 'f':
-                    tile_rects.append(pygame.Rect(x*34, y*34, 14, 21))
-                elif tile == 'e':
-                    w = list(toilet1.get_size())
-                    toilets.append(pygame.Rect(x*34-2, y*34, 34, 34))
-                    burning_toilets.append(False)
-                    tile_rects.append(pygame.Rect(x*34, y*34, w[0], w[1]))
-                elif tile == 'g':
-                    w = list(trashcan.get_size())
-                    trashcans.append(pygame.Rect(x*34-1, y*34, w[0]+2, w[1]))
-                    burning_trashcans.append(False)
-                    tile_rects.append(pygame.Rect(x*34, y*34+8, w[0], w[1]))
-                elif tile == 'q':
-                    ladders.append(pygame.Rect(x*34, y*34, 34, 34))
-                elif tile == 'k':
-                    pass
-                elif tile == 'l':
-                    pass
-                elif tile == 'm':
-                    pass
-                elif tile == 'n':
-                    pass
-                elif tile == 'A':
-                    pass
-                elif tile == 'B':
-                    jukeboxes.append(pygame.Rect(x * 34, y * 34 - 26, 42, 60))
-                elif tile == 'C':
-                    landmines.append(pygame.Rect(x*34+6, y*34+23, 22, 11))
-                elif tile == 'Z':
-                    zombies.append(KDS.AI.Zombie((x*34, y*34-34), 100, 1))
-                elif tile == 'S':
-                    sergeants.append(KDS.AI.SergeantZombie(
-                        (x*34, y*34-34), 220, 1))
-                elif tile == 'V':
-                    archviles.append(Archvile((x*34, y*34-51), 750, 2))
-                else:
-                    tile_rects.append(pygame.Rect(x*34, y*34, 34, 34))
+    for i in range(len(world_gen) - 1):
+        y = 0
+        for layer in world_gen[i]:
+            x = 0
+            for tile in layer:
+                if tile != 'a':
+                    if tile == 'f':
+                        tile_rects.append(pygame.Rect(x * 34, y * 34, 14, 21))
+                    elif tile == 'e':
+                        w = list(toilet1.get_size())
+                        toilets.append(pygame.Rect(x * 34-2, y * 34, 34, 34))
+                        burning_toilets.append(False)
+                        tile_rects.append(pygame.Rect(x * 34, y * 34, w[0], w[1]))
+                    elif tile == 'g':
+                        w = list(trashcan.get_size())
+                        trashcans.append(pygame.Rect(x * 34-1, y * 34, w[0]+2, w[1]))
+                        burning_trashcans.append(False)
+                        tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
+                    elif tile == 'q':
+                        ladders.append(pygame.Rect(x * 34, y * 34, 34, 34))
+                    elif tile == 'k':
+                        pass
+                    elif tile == 'l':
+                        pass
+                    elif tile == 'm':
+                        pass
+                    elif tile == 'n':
+                        pass
+                    elif tile == 'A':
+                        pass
+                    elif tile == 'B':
+                        jukeboxes.append(pygame.Rect(x * 34, y * 34 - 26, 42, 60))
+                    elif tile == 'C':
+                        landmines.append(pygame.Rect(x * 34+6, y * 34+23, 22, 11))
+                    elif tile == 'Z':
+                        zombies.append(KDS.AI.Zombie((x * 34, y * 34 - 34), 100, 1))
+                    elif tile == 'S':
+                        sergeants.append(KDS.AI.SergeantZombie(
+                            (x * 34, y * 34 - 34), 220, 1))
+                    elif tile == 'V':
+                        archviles.append(Archvile((x * 34, y * 34-51), 750, 2))
+                    elif tile == 'K':
+                        bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
+                    else:
+                        tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
-            x += 1
-        y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders
-
-
+                x += 1
+            y += 1
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -854,48 +951,46 @@ def load_item_rects():
             x += 1
         y += 1
     return item_rects, item_ids, task_items
-
-
 def load_doors():
     y = 0
-    door_rects = []
-    doors_open = []
-    color_keys = []
-    for layer in world_gen:
-        x = 0
-        for door in layer:
-            if door == 'k':
-                size = list(door_closed.get_size())
-                door_rects.append(pygame.Rect(
-                    x*34-1, y*34, size[0]+1, size[1]))
-                doors_open.append(False)
-                color_keys.append("none")
-            if door == 'l':
-                size = list(red_door_closed.get_size())
-                door_rects.append(pygame.Rect(
-                    x*34-1, y*34, size[0]+1, size[1]))
-                doors_open.append(False)
-                color_keys.append("red")
-            if door == 'm':
-                size = list(green_door_closed.get_size())
-                door_rects.append(pygame.Rect(
-                    x*34-1, y*34, size[0]+1, size[1]))
-                doors_open.append(False)
-                color_keys.append("green")
-            if door == 'n':
-                size = list(blue_door_closed.get_size())
-                door_rects.append(pygame.Rect(
-                    x*34-1, y*34, size[0]+1, size[1]))
-                doors_open.append(False)
-                color_keys.append("blue")
-            x += 1
-        y += 1
+    door_rects = list()
+    doors_open = list()
+    color_keys = list()
+    for i in range(len(world_gen)):
+        for layer in world_gen[i]:
+            x = 0
+            for door in layer:
+                if door == 'k':
+                    size = list(door_closed.get_size())
+                    door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0]+1, size[1]))
+                    doors_open.append(False)
+                    color_keys.append("none")
+                elif door == 'l':
+                    size = list(red_door_closed.get_size())
+                    door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0]+1, size[1]))
+                    doors_open.append(False)
+                    color_keys.append("red")
+                elif door == 'm':
+                    size = list(green_door_closed.get_size())
+                    door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0]+1, size[1]))
+                    doors_open.append(False)
+                    color_keys.append("green")
+                elif door == 'n':
+                    size = list(blue_door_closed.get_size())
+                    door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0]+1, size[1]))
+                    doors_open.append(False)
+                    color_keys.append("blue")
+                x += 1
+            y += 1
+
     return door_rects, doors_open, color_keys
 #tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
 #item_rects, item_ids = load_item_rects()
 #door_rects, doors_open, color_keys = load_doors()
-
-
 def load_animation(name, number_of_images):
     animation_list = []
     for i in range(number_of_images):
@@ -904,10 +999,8 @@ def load_animation(name, number_of_images):
         img.set_colorkey((255, 255, 255))
         animation_list.append(img)
     return animation_list
-# endregion
-# region Collisions
-
-
+#endregion
+#region Collisions
 def shotgun_shots():
     shots = []
     global direction
@@ -958,24 +1051,18 @@ def shotgun_shots():
             dir_counter = 0
         if counter > 80:
             q = False
-
-
 def collision_test(rect, tiles):
     hit_list = []
     for tile in tiles:
         if rect.colliderect(tile):
             hit_list.append(tile)
     return hit_list
-
-
 def damage(health, min_damage: int, max_damage: int):
     health -= int(random.uniform(min_damage, max_damage))
     if health < 0:
         health = 0
 
     return health
-
-
 def door_collision_test():
     x = 0
 
@@ -984,7 +1071,7 @@ def door_collision_test():
 
     global door_rects, doors_open, color_keys, player_movement
     hit_list = collision_test(player_rect, door_rects)
-    if player_rect.colliderect(door_rects[0]):
+    if len(door_rects) > 0 and player_rect.colliderect(door_rects[0]):
         pass
 
     for recta in door_rects:
@@ -1015,8 +1102,6 @@ def door_collision_test():
                     player_rect.left = door.right - 1
 
         x += 1
-
-
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
@@ -1150,8 +1235,6 @@ def item_collision_test(rect, items):
 
         x += 1
     return hit_list
-
-
 def toilet_collisions(rect, burnstate):
     global burning_toilets, player_score, burning_trashcans
     o = 0
@@ -1172,10 +1255,8 @@ def toilet_collisions(rect, burnstate):
                         player_score += 15
                     burning_trashcans[o] = True
         o += 1
-# endregion
-# region Player
-
-
+#endregion
+#region Player
 def move(rect, movement, tiles):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
@@ -1198,7 +1279,6 @@ def move(rect, movement, tiles):
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
-
 
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
@@ -1234,10 +1314,8 @@ arhcvile_attack_animation = KDS.Animator.Animation(
 archvile_death_animation = KDS.Animator.Animation(
     "archvile_death", 7, 12, (255, 255, 255), 1)
 flames_animation = KDS.Animator.Animation("flames", 5, 3, (255, 255, 255), -1)
-
 bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6,(255,255,255),-1)
-
-# region Sergeant fixing
+#region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
     for _ in range(6):
@@ -1253,17 +1331,13 @@ for animation in sergeant_shoot_animation.images:
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Initialised Sergeant Shoot Animation Image: " + str(animation), False)
 sergeant_shoot_animation.ticks = 43
-# endregion
-
-
+#endregion
 sergeant_death_animation = KDS.Animator.Animation(
     "seargeant_dying", 5, 8, (255, 255, 255), 1)
-# endregion
-# region Console
-
-
+#endregion
+#region Console
 def console():
-    global inventory, player_keys, player_health, koponen_happines
+    global inventory, player_keys, player_health, koponen_happines, bulldogs
 
     command_input = input("command: ")
     command_input = command_input.lower()
@@ -1286,14 +1360,12 @@ def console():
             except Exception:
                 KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " +
                                 str(command_list[1]) + " " + str(command_list[2]), True)
-
     elif command_list[0] == "playboy":
         koponen_happines = 1000
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You are now a playboy", True)
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Koponen happines: {}".format(koponen_happines), True)
-
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
@@ -1304,17 +1376,35 @@ def console():
         player_health = 0
     elif command_list[0] == "terms":
         setTerms = False
-        setTerms = KDS.Convert.ToBool(command_list[1])
-        if setTerms != None:
-            KDS.ConfigManager.SetSetting(
-                "Data", "TermsAccepted", str(setTerms))
+        if len(command_list) > 1:
+            setTerms = KDS.Convert.ToBool(command_list[1])
+            if setTerms != None:
+                KDS.ConfigManager.SetSetting(
+                    "Data", "TermsAccepted", str(setTerms))
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Terms status set to: " + str(setTerms), True)
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Please provide a proper state for terms & conditions", True)
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for terms & conditions", True)
-# endregion
-# region Terms and Conditions
-
-
+    elif command_list[0] == "woof":
+        if len(command_list) > 1:
+            woofState = KDS.Convert.ToBool(command_list[1])
+            if woofState != None:
+                for dog in bulldogs:
+                    KDS.Logging.Log(KDS.Logging.LogType.info, str(dog) + " woof status has been set to: " + str(woofState), True)
+                    KDS.AI.Bulldog.SetAngry(dog, woofState)
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Please provide a proper state for woof", True)
+        else:
+            KDS.Logging.Log(KDS.Logging.LogType.info,
+                            "Please provide a proper state for woof", True)
+    else:
+        KDS.Logging.Log(KDS.Logging.LogType.info, "This command does not exist")
+#endregion
+#region Terms and Conditions
 def agr(tcagr):
 
     if tcagr == False:
@@ -1375,13 +1465,10 @@ def agr(tcagr):
 
         pygame.display.update()
         c = False
-
-# endregion
-# region Koponen Talk
-
-
+#endregion
+#region Koponen Talk
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting
+    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes
 
     KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
 
@@ -1399,8 +1486,13 @@ def koponen_talk():
     date_button = pygame.Rect(50, 610, 450, 80)
     return_mission_button = pygame.Rect(510, 700, 420, 80)
 
-    koponen_talk_foreground = ad_images[int(
-        random.uniform(0, len(ad_images)))].copy()
+    for i in range(len(koponen_talking_foreground_indexes), 0):
+        koponen_talking_foreground_indexes[i] = koponen_talking_foreground_indexes[i - 1]
+    random_foreground = int(random.uniform(0, len(ad_images)))
+    while random_foreground == koponen_talking_foreground_indexes[0] or random_foreground == koponen_talking_foreground_indexes[1] or random_foreground == koponen_talking_foreground_indexes[2] or random_foreground == koponen_talking_foreground_indexes[3] or random_foreground == koponen_talking_foreground_indexes[4]:
+        random_foreground = int(random.uniform(0, len(ad_images)))
+    koponen_talking_foreground_indexes[4] = random_foreground
+    koponen_talk_foreground = ad_images[random_foreground].copy()
 
     def renderText(text):
         text_object = button_font1.render(text, True, (255, 255, 255))
@@ -1546,7 +1638,8 @@ def koponen_talk():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-        main_display.blit(koponen_talk_foreground, (0, 0))
+        main_display.blit(koponen_talking_background, (0, 0))
+        main_display.blit(koponen_talk_foreground, (40, 474))
         pygame.draw.rect(main_display, (230, 230, 230), (40, 40, 700, 400))
         pygame.draw.rect(main_display, (30, 30, 30), (40, 40, 700, 400), 3)
         printer.resetRow()
@@ -1582,10 +1675,8 @@ def koponen_talk():
         c = False
         pygame.display.update()
     pygame.mouse.set_visible(False)
-# endregion
-# region Menus
-
-
+#endregion
+#region Menus
 def esc_menu_f():
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
@@ -1601,6 +1692,8 @@ def esc_menu_f():
     settings_text = button_font.render("Settings", True, (255, 255, 255))
     main_menu_text = button_font.render("Main menu", True, (255, 255, 255))
 
+    jukebox_music[jukeboxMusicPlaying].stop()
+    
     buttons = []
     functions = []
     texts = []
@@ -1615,6 +1708,7 @@ def esc_menu_f():
         esc_menu = False
         pygame.mouse.set_visible(False)
         pygame.mixer.music.unpause()
+        jukebox_music[jukeboxMusicPlaying].play()
 
     def save():
         SaveData()
@@ -1684,8 +1778,6 @@ def esc_menu_f():
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
-
-
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, volume
     c = False
@@ -1776,8 +1868,6 @@ def settings_menu():
 
         c = False
         pygame.display.update()
-
-
 def main_menu():
     global current_map
     current_map_int = 0
@@ -1812,10 +1902,11 @@ def main_menu():
     left_text = button_font1.render("<", True, (255, 255, 255))
 
     def play_function():
+        WorldGeneration()
         pygame.mouse.set_visible(False)
         global main_menu_running, current_map
         main_menu_running = False
-        # load_music()
+        #load_music()
         load_music_for_map(current_map)
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(volume)
@@ -1921,23 +2012,16 @@ def main_menu():
 
         pygame.display.update()
         c = False
-
-
-# endregion
-# region Check Terms
+#endregion
+#region Check Terms
 agr(tcagr)
 jukebox_music = load_jukebox_music()
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
     "Data", "TermsAccepted", str(False)))
 if tcagr != False:
     main_menu()
-# endregion
-# region Koponen Talk Tip Text
-koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
-# endregion
-# region Inventory Slot Switching
-
-
+#endregion
+#region Inventory Slot Switching
 def inventoryLeft():
     global inventory_slot, inventoryDoubles, inventory
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
@@ -1948,8 +2032,6 @@ def inventoryLeft():
         inventory_slot -= 2
     else:
         inventory_slot -= 1
-
-
 def inventoryRight():
     global inventory_slot, inventoryDoubles
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
@@ -1958,32 +2040,10 @@ def inventoryRight():
             inventory_slot += 2
         else:
             inventory_slot += 1
-# endregion
-# region World Generation
-world_gen = load_map("MAPS/map" + current_map + "/game_map")
-item_gen = load_items("MAPS/map" + current_map + "/item_map")
-
-
-tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders = load_rects()
-KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Zombies Initialised: " + str(len(zombies)), False)
-for zombie in zombies:
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialised Zombie: " + str(zombie), False)
-
-item_rects, item_ids, task_items = load_item_rects()
-random.shuffle(task_items)
-
-KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Items Initialised: " + str(len(item_ids)), False)
-for i_id in item_ids:
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialised Item: (ID)" + i_id, False)
-door_rects, doors_open, color_keys = load_doors()
-# endregion
-# region Main Running
+#endregion
+#region Main Running
 while main_running:
-    # region Events
+#region Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_function()
@@ -2093,9 +2153,8 @@ while main_running:
                 inventoryLeft()
             if event.button == 5:
                 inventoryRight()
-# endregion
-# region Inventory Code
-
+#endregion
+#region Inventory Code
     def inventoryDoubleOffsetCounter():
         inventoryDoubleOffset = 0
         for i in range(0, inventory_slot - 1):
@@ -2119,48 +2178,49 @@ while main_running:
         shakeScreen()
     player_hand_item = inventory[inventory_slot]
     mouse_pos = pygame.mouse.get_pos()
-# endregion
-# region Player Death
+#endregion
+#region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
         animation_has_played = True
-# endregion
-# region More Collisions
-    y = 0
-    for layer in world_gen:
-        x = 0
-        for tile in layer:
-            if tile == 'b':
-                screen.blit(floor1, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'c':
-                screen.blit(wall1, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'd':
-                screen.blit(table1, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'e':
-                screen.blit(toilet1, (x*34-scroll[0], y*34-scroll[1]+1))
-            if tile == 'f':
-                screen.blit(lamp1, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'g':
-                screen.blit(trashcan, (x*34-scroll[0]+2, y*34-scroll[1]+7))
-            if tile == 'h':
-                screen.blit(ground1, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'i':
-                screen.blit(grass, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'j':
-                screen.blit(concrete1, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'o':
-                screen.blit(bricks, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'A':
-                screen.blit(tree, (x*34-scroll[0], y*34-scroll[1]-50))
-            if tile == 'p':
-                screen.blit(planks, (x*34-scroll[0], y*34-scroll[1]))
-            if tile == 'q':
-                screen.blit(ladder_texture, (x*34-scroll[0], y*34-scroll[1]))
-            x += 1
-        y += 1
+#endregion
+#region Rendering
+    for i in range(len(world_gen)):
+        y = 0
+        for layer in world_gen[i]:
+            x = 0
+            for tile in layer:
+                if tile == 'b':
+                    screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'c':
+                    screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'd':
+                    screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'e':
+                    screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
+                if tile == 'f':
+                    screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'g':
+                    screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
+                if tile == 'h':
+                    screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'i':
+                    screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'j':
+                    screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'o':
+                    screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'A':
+                    screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
+                if tile == 'p':
+                    screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
+                if tile == 'q':
+                    screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
+                x += 1
+            y += 1
 
     x = 0
     for door in door_rects:
@@ -2339,9 +2399,8 @@ while main_running:
                         (item.x-scroll[0], item.y-scroll[1]+10))
         b += 1
 
-# endregion
-# region PlayerMovement
-
+#endregion
+#region PlayerMovement
     if player_health > 0:
         if playerSprinting == False and playerStamina < 100.0:
             playerStamina += 0.25
@@ -2383,14 +2442,13 @@ while main_running:
             else:
                 player_movement[1] = 0
 
-# endregion
-# region Even More Collisions
+#endregion
+#region AI
     toilet_collisions(player_rect, gasburnerBurning)
 
     if player_health > 0:
         player_rect, collisions = move(
             player_rect, player_movement, tile_rects)
-
     else:
         player_rect, collisions = move(player_rect, [0, 8], tile_rects)
 
@@ -2455,7 +2513,6 @@ while main_running:
                                               False), (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]+10))
 
     for zombie1 in zombies:
-
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
             if not search:
@@ -2471,7 +2528,7 @@ while main_running:
                     zombie1.walking = False
 
                 screen.blit(pygame.transform.flip(wa, zombie1.direction, False),
-                            (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]))
+                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
 
                 if zombie1.hits["left"]:
                     zombie1.movement[0] = -zombie1.movement[0]
@@ -2507,15 +2564,22 @@ while main_running:
     for archvile in archviles:
         archvile.update(arch_run)
 
+    for bulldog in bulldogs:
+        bulldog.startUpdateThread(player_rect, tile_rects)
+    
+    for bulldog in bulldogs:
+        bd_attr = bulldog.getAttributes()
+        screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x-scroll[0],bd_attr[0].y-scroll[1]))
+        player_health -= bd_attr[3]
+
     if k_collisions["left"]:
         koponen_movingx = -koponen_movingx
     elif k_collisions["right"]:
         koponen_movingx = -koponen_movingx
 
     door_collision_test()
-
-    # endregion
-# region UI
+#endregion
+#region UI
     score = score_font.render(
         ("Score: " + str(player_score)), True, (255, 255, 255))
     if DebugMode:
@@ -2529,9 +2593,8 @@ while main_running:
         "Health: " + str(player_health), True, (255, 255, 255))
     stamina = score_font.render(
         "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
-# endregion
-# region Pelaajan elämätilanteen käsittely
-
+#endregion
+#region Pelaajan elämätilanteen käsittely
     if player_health < last_player_health and player_health != 0:
         hurted = True
     else:
@@ -2541,9 +2604,8 @@ while main_running:
 
     if hurted:
         hurt_sound.play()
-# endregion
-# region Even Even More Collisions
-
+#endregion
+#region More Collisions
     if collisions['bottom'] == True:
         air_timer = 0
         vertical_momentum = 0
@@ -2551,10 +2613,8 @@ while main_running:
         air_timer += 1
     if collisions['top'] == True:
         vertical_momentum = 0
-
-# endregion
-# region Player Data
-
+#endregion
+#region Player Data
     if player_health:
         if player_movement[0] > 0:
             direction = False
@@ -2579,14 +2639,14 @@ while main_running:
         if player_death_event:
             animation = death_animation.copy()
             animation_duration = 10
-# endregion
-# region Koponen Movement
+#endregion
+#region Koponen Movement
     if koponen_movement[0] != 0:
         koponen_animation = koponen_run.copy()
     else:
         koponen_animation = koponen_stand.copy()
-# endregion
-# region Items
+#endregion
+#region Items
     if animation_counter > animation_duration:
         animation_counter = 0
         animation_image += 1
@@ -2769,10 +2829,8 @@ while main_running:
         screen.blit(green_key, (24, 20))
     if player_keys["blue"]:
         screen.blit(blue_key, (38, 20))
-
-# endregion
-# region Koponen Tip
-
+#endregion
+#region Koponen Tip
     if player_rect.colliderect(koponen_recog_rec):
         screen.blit(
             koponen_talk_tip, (koponen_recog_rec.topleft[0]-scroll[0], koponen_recog_rec.topleft[1]-scroll[1]-10))
@@ -2784,10 +2842,8 @@ while main_running:
     else:
         koponen_movement[0] = koponen_movingx
     h = 0
-
-# endregion
-# region Interactable Objects
-
+#endregion
+#region Interactable Objects
     for toilet in toilets:
         if burning_toilets[h] == True:
             screen.blit(toilet_animation[toilet_animation_stats[0]],
@@ -2815,13 +2871,13 @@ while main_running:
             screen.blit(flames_animation.update(),
                         (player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
 
-# endregion
-# region Debug Mode
+#endregion
+#region Debug Mode
     screen.blit(score, (10, 55))
     if DebugMode:
         screen.blit(fps, (10, 10))
-# endregion
-# region UI Rendering
+#endregion
+#region UI Rendering
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
@@ -2892,12 +2948,12 @@ while main_running:
         task_progress_values = KDS.Missions.TaskProgressValues(i)
         screen.blit(task_progress_values[0], task_progress_values[1])
     
-# endregion
-# region Rendering
+#endregion
+#region Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
-# endregion
-# region Conditional Events
+#endregion
+#region Conditional Events
     if esc_menu:
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
@@ -2920,11 +2976,11 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
-# endregion
-# region Ticks
+#endregion
+#region Ticks
     tick += 1
     if tick > 60:
         tick = 0
     clock.tick(60)
-# endregion
-# endregion
+#endregion
+#endregion
