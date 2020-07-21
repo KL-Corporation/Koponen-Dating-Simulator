@@ -4,6 +4,7 @@ import KDS.Animator
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
@@ -435,15 +436,6 @@ player_shotgun_shot.set_volume(0.8)
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
 #endregion Lataukset
 
-KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
-KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
-KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
-
-KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
-
 main_running = True
 playerMovingRight = False
 playerMovingLeft = False
@@ -525,14 +517,15 @@ attack_counter = 0
 fart_counter = 0
 farting = False
 
-current_map = "02"
+current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "02")
+max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "02"))
 
 ammunition_plasma = 50
 pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
 
-inventory = ["iPuhelin", "none", "none", "none", "none"]
+inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -558,7 +551,6 @@ task = ""
 taskTaivutettu = ""
 
 DebugMode = False
-
 #endregion
 #region Save System
 def LoadSave():
@@ -604,14 +596,17 @@ def SaveData():
         selectedSave, "PlayerData", "Inventory4", inventory[4])
 #endregion
 #region Quit Handling
-def quit_function():
-    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave
+def KDS_Quit():
+    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave, tick
     main_menu_running = False
     main_running = False
     tcagr_running = False
     koponenTalking = False
     esc_menu = False
     settings_running = False
+    pygame.display.quit()
+    pygame.quit()
+    exit()
 #endregion
 #region World Generation
 world_gen = ()
@@ -801,7 +796,7 @@ def load_music():
     del pos
 def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
-    pygame.mixer.music.load("maps/map" + _current_map + "/music.mid")
+    pygame.mixer.music.load(os.path.join("maps", "map" + _current_map, "music.mid"))
 def load_ads():
     ad_files = os.listdir("resources/koponen_background/ads")
 
@@ -1369,7 +1364,7 @@ def console():
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
-        pygame.QUIT()
+        KDS_Quit()
     elif command_list[0] == "killme":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Player kill command issued through console.", True)
@@ -1435,12 +1430,15 @@ def agr(tcagr):
 
     while tcagr_running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                tcagr_running = False
-                quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
+                if event.key == K_F4:
+                    F4Pressed = True
+                    if AltPressed == True and F4Pressed == True:
+                        KDS_Quit()
+                if event.key == K_LALT or event.key == K_RALT:
+                    AltPressed = True
             if event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     c = True
@@ -1470,7 +1468,13 @@ def agr(tcagr):
 def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes
 
-    KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+        KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
+    elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+        if int(current_map) < 2:
+            KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
+        elif int(current_map) == 2:
+            KDS.Missions.SetProgress("koponen_talk", "talk", 1.0)
 
     koponenTalking = True
     pygame.mouse.set_visible(True)
@@ -1630,8 +1634,6 @@ def koponen_talk():
     while koponenTalking:
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     koponenTalking = False
@@ -1691,8 +1693,6 @@ def esc_menu_f():
     save_text = button_font.render("Save", True, (255, 255, 255))
     settings_text = button_font.render("Settings", True, (255, 255, 255))
     main_menu_text = button_font.render("Main menu", True, (255, 255, 255))
-
-    jukebox_music[jukeboxMusicPlaying].stop()
     
     buttons = []
     functions = []
@@ -1707,8 +1707,8 @@ def esc_menu_f():
         global esc_menu
         esc_menu = False
         pygame.mouse.set_visible(False)
+        pygame.mixer.unpause()
         pygame.mixer.music.unpause()
-        jukebox_music[jukeboxMusicPlaying].play()
 
     def save():
         SaveData()
@@ -1718,6 +1718,8 @@ def esc_menu_f():
 
     def goto_main_menu():
         global esc_menu, go_to_main_menu
+        pygame.mixer.unpause()
+        pygame.mixer.music.unpause()
         esc_menu = False
         go_to_main_menu = True
 
@@ -1733,8 +1735,6 @@ def esc_menu_f():
 
     while esc_menu:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                quit_function()
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     esc_menu = False
@@ -1808,14 +1808,18 @@ def settings_menu():
             "Music Volume", True, (255, 255, 255))
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                quit_function()
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
+                if event.key == K_F4:
+                    F4Pressed = True
+                    if AltPressed == True and F4Pressed == True:
+                        KDS_Quit()
+                if event.key == K_LALT or event.key == K_RALT:
+                    AltPressed = True
 
         main_display.blit(settings_background, (0, 0))
 
@@ -1902,9 +1906,12 @@ def main_menu():
     left_text = button_font1.render("<", True, (255, 255, 255))
 
     def play_function():
+        global main_menu_running, current_map
+        KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
+            inventory[0] = "iPuhelin"
         WorldGeneration()
         pygame.mouse.set_visible(False)
-        global main_menu_running, current_map
         main_menu_running = False
         #load_music()
         load_music_for_map(current_map)
@@ -1926,30 +1933,33 @@ def main_menu():
     def settings_function():
         settings_menu()
 
-    def quit_function():
-        global main_running, main_menu_running
-        main_menu_running = False
-        main_running = False
+    class level_pick():
+        class direction():
+            left = 0
+            right = 1
 
-    def level_right():
-        global current_map
-        current_map_int = int(current_map)
-        current_map_int += 1
-        if current_map_int < 10:
-            current_map = "0" + str(current_map_int)
-        else:
-            current_map = str(current_map_int)
+        def right():
+            level_pick.pick(level_pick.direction.right)
 
-    def level_left():
-        global current_map
-        current_map_int = int(current_map)
-        current_map_int -= 1
-        if current_map_int < 1:
-            current_map_int = 1
-        if current_map_int < 10:
-            current_map = "0" + str(current_map_int)
-        else:
-            current_map = str(current_map_int)
+        def left():
+            level_pick.pick(level_pick.direction.left)
+
+        def pick(direction: direction):
+            global current_map, max_map
+            current_map_int = int(current_map)
+            if direction == level_pick.direction.left:
+                current_map_int -= 1
+            else:
+                current_map_int += 1
+            if current_map_int < 1:
+                current_map_int = 1
+            if current_map_int > max_map:
+                current_map_int = max_map
+            if current_map_int < 10:
+                current_map = "0" + str(current_map_int)
+            else:
+                current_map = str(current_map_int)
+            KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
 
     buttons = []
     functions = []
@@ -1963,9 +1973,9 @@ def main_menu():
 
     functions.append(play_function)
     functions.append(settings_function)
-    functions.append(quit_function)
-    functions.append(level_left)
-    functions.append(level_right)
+    functions.append(KDS_Quit)
+    functions.append(level_pick.left)
+    functions.append(level_pick.right)
 
     texts.append(play_text)
     texts.append(settings_text)
@@ -1976,20 +1986,24 @@ def main_menu():
     while main_menu_running:
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                quit_function()
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
+                if event.key == K_F4:
+                    F4Pressed = True
+                    if AltPressed == True and F4Pressed == True:
+                        KDS_Quit()
+                if event.key == K_LALT or event.key == K_RALT:
+                    AltPressed = True
 
         main_display.blit(main_menu_background, (0, 0))
         main_display.blit(pygame.transform.flip(
             menu_gasburner_animation.update(), False, False), (625, 450))
-        pygame.draw.rect(main_display, (255,255,255), (35, 200, 275, 50))
-        hg = button_font1.render("map" + current_map, True, (0,0,0))
+        pygame.draw.rect(main_display, (255, 255, 255), (35, 200, 275, 50))
+        hg = button_font1.render("map" + current_map, True, (0, 0, 0))
         main_display.blit(hg, (100, 202))
         y = 0
 
@@ -2005,15 +2019,14 @@ def main_menu():
 
             pygame.draw.rect(main_display, button_color, button)
 
-            main_display.blit(texts[y],     (button.x + ((button.width-texts[y].get_width(
-            ))/2),       button.y + ((button.height-texts[y].get_height())/2)))
+            main_display.blit(texts[y], (button.x + ((button.width-texts[y].get_width()) / 2), button.y + ((button.height-texts[y].get_height()) / 2)))
 
             y += 1
 
         pygame.display.update()
         c = False
 #endregion
-#region Check Terms
+#region Check Termsiut
 agr(tcagr)
 jukebox_music = load_jukebox_music()
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
@@ -2045,8 +2058,6 @@ def inventoryRight():
 while main_running:
 #region Events
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            quit_function()
         if event.type == KEYDOWN:
             if event.key == K_d:
                 playerMovingRight = True
@@ -2100,7 +2111,7 @@ while main_running:
             if event.key == K_F4:
                 F4Pressed = True
                 if AltPressed == True and F4Pressed == True:
-                    pygame.QUIT()
+                    KDS_Quit()
                 else:
                     player_health = 0
             if event.key == K_LALT or event.key == K_RALT:
@@ -2260,10 +2271,9 @@ while main_running:
                 lastJukeboxSong[0] = jukeboxMusicPlaying
                 jukebox_music[jukeboxMusicPlaying].play()
         else:
+            pygame.mixer.music.unpause()
             for x in range(len(jukebox_music)):
                 jukebox_music[x].stop()
-
-            pygame.mixer.music.unpause()
 
     for landmine in landmines:
         screen.blit(landmine_texture, (landmine.x -
@@ -2955,6 +2965,7 @@ while main_running:
 #endregion
 #region Conditional Events
     if esc_menu:
+        pygame.mixer.pause()
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
         main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))

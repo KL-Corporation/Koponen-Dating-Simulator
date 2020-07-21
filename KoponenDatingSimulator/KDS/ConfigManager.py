@@ -6,6 +6,12 @@ from inspect import currentframe, getframeinfo
 #endregion
 
 def LoadSave(SaveIndex: int, SaveDirectory: str, SaveName: str, DefaultValue: str):
+    """
+    1. SaveIndex, The index of the currently played save.
+    2. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
+    3. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
+    4. DefaultValue, The value that is going to be loaded if no value was found.
+    """
     config = configparser.ConfigParser()
     config.read("saves/save_" + str(SaveIndex) + ".kds")
     try:
@@ -25,6 +31,11 @@ def LoadSave(SaveIndex: int, SaveDirectory: str, SaveName: str, DefaultValue: st
     with open("saves/save_" + str(SaveIndex) + ".kds", "w") as savFile:
         config.write(savFile)
 def LoadSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
+    """
+    1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
+    2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
+    3. DefaultValue, The value that is going to be loaded if no value was found.
+    """
     config = configparser.ConfigParser()
     config.read("settings.cfg")
     try:
@@ -45,6 +56,11 @@ def LoadSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
         config.write(savFile)
 
 def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
+    """
+    2. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
+    3. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
+    4. SaveValue, The value that is going to be saved.
+    """
     config = configparser.ConfigParser()
     config.read("settings.cfg")
     try:
@@ -59,6 +75,12 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     with open("settings.cfg", "w") as cfg_file:
         config.write(cfg_file)
 def SetSave(SaveIndex: int, SaveDirectory: str, SaveName: str, SaveValue: str):
+    """
+    1. SaveIndex, The index of the currently played save.
+    2. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
+    3. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
+    4. SaveValue, The value that is going to be saved.
+    """
     config = configparser.ConfigParser()
     saveFilePath = "saves/save_" + str(SaveIndex) + ".kds"
     config.read(saveFilePath)
