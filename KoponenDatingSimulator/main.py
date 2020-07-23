@@ -366,6 +366,7 @@ shotgun_shells_t = pygame.image.load(
 archvile_corpse = pygame.image.load(
     "Assets/Textures/Animations/archvile_death_6.png").convert()
 iphone_texture = pygame.image.load("Assets/Textures/Items/iphone.png").convert()
+
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_1_1.png"))
 gamemode_bc_2_1 = pygame.image.load(
@@ -508,8 +509,8 @@ shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
 
-gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 60)
-gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 60)
+gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
+gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
 
 go_to_main_menu = False
 
@@ -1456,6 +1457,8 @@ def agr(tcagr):
             if event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     c = True
+            if event.type == pygame.QUIT:
+                KDS_Quit()
         main_display.blit(agr_background, (0, 0))
 
         y = 0
@@ -1654,6 +1657,8 @@ def koponen_talk():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
+            if event.type == pygame.QUIT:
+                KDS_Quit()
         main_display.blit(koponen_talking_background, (0, 0))
         main_display.blit(koponen_talk_foreground, (40, 474))
         pygame.draw.rect(main_display, (230, 230, 230), (40, 40, 700, 400))
@@ -1757,6 +1762,8 @@ def esc_menu_f():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
+            if event.type == pygame.QUIT:
+                KDS_Quit()
         esc_menu_surface.fill((123, 134, 111))
         main_display.blit(file, (0, 0))
         esc_menu_surface.blit(pygame.transform.scale(
@@ -1837,6 +1844,8 @@ def settings_menu():
                     AltPressed = True
                 if event.key == K_ESCAPE:
                     settings_running = False
+            if event.type == pygame.QUIT:
+                KDS_Quit()
 
         main_display.blit(settings_background, (0, 0))
 
@@ -1932,7 +1941,7 @@ def main_menu():
     right_text = button_font1.render(">", True, (255, 255, 255))
     left_text = button_font1.render("<", True, (255, 255, 255))
 
-    def play_function():
+    def play_function(gamemode: KDS.Gamemode.Modes):
         global main_menu_running, current_map
         KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
@@ -1992,28 +2001,38 @@ def main_menu():
         global MenuMode
         MenuMode = Mode.ModeSelectionMenu
 
-    buttons = list()
-    functions = list()
-    texts = list()
+    main_menu_buttons = list()
+    main_menu_functions = list()
+    main_menu_texts = list()
 
-    buttons.append(play_button)
-    buttons.append(settings_button)
-    buttons.append(quit_button)
-    buttons.append(level_left_button)
-    buttons.append(level_right_button)
+    main_menu_buttons.append(play_button)
+    main_menu_buttons.append(settings_button)
+    main_menu_buttons.append(quit_button)
+    main_menu_buttons.append(level_left_button)
+    main_menu_buttons.append(level_right_button)
 
-    functions.append(mode_selection_function)
-    functions.append(settings_function)
-    functions.append(KDS_Quit)
-    functions.append(level_pick.left)
-    functions.append(level_pick.right)
+    main_menu_functions.append(mode_selection_function)
+    main_menu_functions.append(settings_function)
+    main_menu_functions.append(KDS_Quit)
+    main_menu_functions.append(level_pick.left)
+    main_menu_functions.append(level_pick.right)
 
-    texts.append(play_text)
-    texts.append(settings_text)
-    texts.append(quit_text)
-    texts.append(left_text)
-    texts.append(right_text)
+    main_menu_texts.append(play_text)
+    main_menu_texts.append(settings_text)
+    main_menu_texts.append(quit_text)
+    main_menu_texts.append(left_text)
+    main_menu_texts.append(right_text)
 
+    mode_selection_buttons = list()
+    mode_selection_modes = list()
+
+    story_mode_button = pygame.Rect(0, 0, int(display_size[0]), int(display_size[1] / 2))
+    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), int(display_size[0]), int(display_size[1] / 2))
+
+    mode_selection_buttons.append(story_mode_button)
+    mode_selection_buttons.append(campaign_mode_button)
+    mode_selection_modes.append(KDS.Gamemode.Modes.Story)
+    mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
 
     while main_menu_running:
 
@@ -2033,6 +2052,8 @@ def main_menu():
                 if event.key == K_ESCAPE:
                     if MenuMode == Mode.ModeSelectionMenu:
                         MenuMode = Mode.MainMenu
+            if event.type == pygame.QUIT:
+                KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
             main_display.blit(main_menu_background, (0, 0))
@@ -2041,26 +2062,45 @@ def main_menu():
             pygame.draw.rect(main_display, (255, 255, 255), (35, 200, 275, 50))
             hg = button_font1.render("map" + current_map, True, (0, 0, 0))
             main_display.blit(hg, (100, 202))
-            y = 0
 
-            for button in buttons:
-                if button.collidepoint(pygame.mouse.get_pos()):
+            for y in range(len(main_menu_buttons)):
+                if main_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
                     if c:
-                        functions[y]()
+                        main_menu_functions[y]()
+                        c = False
                     button_color = (115, 115, 115)
                     if pygame.mouse.get_pressed()[0]:
                         button_color = (90, 90, 90)
                 else:
                     button_color = (100, 100, 100)
 
-                pygame.draw.rect(main_display, button_color, button)
+                pygame.draw.rect(main_display, button_color, main_menu_buttons[y])
 
-                main_display.blit(texts[y], (int(button.x + ((button.width-texts[y].get_width()) / 2)), int(button.y + ((button.height-texts[y].get_height()) / 2))))
-
-                y += 1
+                main_display.blit(main_menu_texts[y], (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - main_menu_texts[y].get_width()) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - main_menu_texts[y].get_height()) / 2))))
 
         if MenuMode == Mode.ModeSelectionMenu:
-            main_display.blit(KDS.Convert.ToColor(gamemode_bc_1_1, 128), (0, 0))
+            main_display.blit(gamemode_bc_1_1, (0, 0))
+            main_display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
+            for y in range(len(mode_selection_buttons)):
+                if mode_selection_buttons[y].collidepoint(pygame.mouse.get_pos()):
+                    if y == 0:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(False) * 255.0))), (0, 0))
+                    elif y == 1:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(False) * 255.0))), (0, int(display_size[1] / 2)))
+                    if c:
+                        if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
+                            MenuMode = Mode.StoryMenu
+                        elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
+                            MenuMode = Mode.CampaignMenu
+                        else:
+                            frameinfo = getframeinfo(currentframe())
+                            KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nInvalid mode_selection_mode! Value: " + mode_selection_modes[y])
+                else:
+                    if y == 0:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(True) * 255.0))), (0, 0))
+                    elif y == 1:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
+
             clock.tick(60)
 
         pygame.display.update()
@@ -2204,6 +2244,8 @@ while main_running:
                 inventoryLeft()
             if event.button == 5:
                 inventoryRight()
+        if event.type == pygame.QUIT:
+            KDS_Quit()
 #endregion
 #region Inventory Code
     def inventoryDoubleOffsetCounter():
