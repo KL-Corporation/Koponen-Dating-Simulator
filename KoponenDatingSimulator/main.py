@@ -375,6 +375,8 @@ gamemode_bc_2_2 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png"))
 gamemode_bc_1_2 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png"))
+arrow_button = pygame.image.load(
+    os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -532,6 +534,11 @@ farting = False
 
 current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "02")
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "02"))
+map_names = (
+    "Placeholder",
+    "Beginnings...",
+    "More Monsters"
+)
 
 ammunition_plasma = 50
 pistol_bullets = 8
@@ -1932,18 +1939,13 @@ def main_menu():
     settings_button = pygame.Rect(450, 250, 300, 60)
     quit_button = pygame.Rect(450, 320, 300, 60)
 
-    level_right_button = pygame.Rect(300, 200, 50, 50)
-    level_left_button = pygame.Rect(30, 200, 50, 50)
-
-    play_text = button_font1.render("Play", True, (255, 255, 255))
-    settings_text = button_font1.render("Settings", True, (255, 255, 255))
-    quit_text = button_font1.render("Quit", True, (255, 255, 255))
-    right_text = button_font1.render(">", True, (255, 255, 255))
-    left_text = button_font1.render("<", True, (255, 255, 255))
+    play_text = button_font1.render("PLAY", True, (255, 255, 255))
+    settings_text = button_font1.render("SETTINGS", True, (255, 255, 255))
+    quit_text = button_font1.render("QUIT", True, (255, 255, 255))
 
     def play_function(gamemode: KDS.Gamemode.Modes):
         global main_menu_running, current_map
-        KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
+        KDS.Gamemode.SetGamemode(gamemode, int(current_map))
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
             inventory[0] = "iPuhelin"
         WorldGeneration()
@@ -2004,35 +2006,41 @@ def main_menu():
     main_menu_buttons = list()
     main_menu_functions = list()
     main_menu_texts = list()
-
     main_menu_buttons.append(play_button)
     main_menu_buttons.append(settings_button)
     main_menu_buttons.append(quit_button)
-    main_menu_buttons.append(level_left_button)
-    main_menu_buttons.append(level_right_button)
-
     main_menu_functions.append(mode_selection_function)
     main_menu_functions.append(settings_function)
     main_menu_functions.append(KDS_Quit)
-    main_menu_functions.append(level_pick.left)
-    main_menu_functions.append(level_pick.right)
-
     main_menu_texts.append(play_text)
     main_menu_texts.append(settings_text)
     main_menu_texts.append(quit_text)
-    main_menu_texts.append(left_text)
-    main_menu_texts.append(right_text)
 
     mode_selection_buttons = list()
     mode_selection_modes = list()
-
     story_mode_button = pygame.Rect(0, 0, int(display_size[0]), int(display_size[1] / 2))
     campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), int(display_size[0]), int(display_size[1] / 2))
-
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
     mode_selection_modes.append(KDS.Gamemode.Modes.Story)
     mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
+
+    campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
+    campaign_left_button = pygame.Rect(50, 200, 66, 66)
+    campaign_play_button = pygame.Rect(display_size[0] / 2 - 150, display_size[1] - 300, 300, 100)
+    campaign_return_button = pygame.Rect(display_size[0] / 2 - 150, display_size[1] - 150, 300, 100)
+    campaign_menu_buttons = list()
+    campaign_menu_functions = list()
+    campaign_menu_buttons.append(campaign_left_button)
+    campaign_menu_buttons.append(campaign_right_button)
+    campaign_menu_buttons.append(campaign_play_button)
+    campaign_menu_buttons.append(campaign_return_button)
+    campaign_menu_functions.append(level_pick.left)
+    campaign_menu_functions.append(level_pick.right)
+    campaign_menu_functions.append(play_function)
+    campaign_menu_functions.append("useless, just like me.")
+    campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
+    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
 
     while main_menu_running:
 
@@ -2059,9 +2067,6 @@ def main_menu():
             main_display.blit(main_menu_background, (0, 0))
             main_display.blit(pygame.transform.flip(
                 menu_gasburner_animation.update(), False, False), (625, 450))
-            pygame.draw.rect(main_display, (255, 255, 255), (35, 200, 275, 50))
-            hg = button_font1.render("map" + current_map, True, (0, 0, 0))
-            main_display.blit(hg, (100, 202))
 
             for y in range(len(main_menu_buttons)):
                 if main_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
@@ -2092,6 +2097,7 @@ def main_menu():
                             MenuMode = Mode.StoryMenu
                         elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
                             MenuMode = Mode.CampaignMenu
+                            c = False
                         else:
                             frameinfo = getframeinfo(currentframe())
                             KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nInvalid mode_selection_mode! Value: " + mode_selection_modes[y])
@@ -2101,17 +2107,51 @@ def main_menu():
                     elif y == 1:
                         main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
 
-            clock.tick(60)
-
         if MenuMode == Mode.StoryMenu:
             print("Wow... So empty.")
 
         if MenuMode == Mode.CampaignMenu:
-            print("Wow... So empty.")
+            pygame.draw.rect(main_display, (192, 192, 192), (50, 200, display_size[0] - 100, 66))
+            for y in range(len(campaign_menu_buttons)):
+                if campaign_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
+                    if c:
+                        if y < 2:
+                            campaign_menu_functions[y]()
+                        elif y == 2:
+                            campaign_menu_functions[y](KDS.Gamemode.Modes.Campaign)
+                        else:
+                            MenuMode = Mode.MainMenu
+                        c = False
+                    button_color = (115, 115, 115)
+                    if pygame.mouse.get_pressed()[0]:
+                        button_color = (90, 90, 90)
+                else:
+                    button_color = (100, 100, 100)
+                
+                pygame.draw.rect(main_display, button_color, campaign_menu_buttons[y])
+
+                if y == 0:
+                    main_display.blit(pygame.transform.flip(arrow_button, True, False), (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
+                elif y == 1:
+                    main_display.blit(arrow_button, (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
+                elif y == 2:
+                    main_display.blit(campaign_play_text, (campaign_play_button.x + (campaign_play_button.width / 4), campaign_play_button.y + (campaign_play_button.height / 4)))
+                elif y == 3:
+                    main_display.blit(campaign_return_text, (campaign_return_button.x + (campaign_return_button.width / 5), campaign_return_button.y + (campaign_return_button.height / 4)))
+
+                current_map_int = int(current_map)
+
+                if current_map_int < len(map_names):
+                    map_name = map_names[current_map_int]
+                else:
+                    map_name = map_names[0]
+                level_text = button_font1.render(current_map + " - " + map_name, True, (0, 0, 0))
+                main_display.blit(level_text, (125, 209))
 
         pygame.display.update()
         main_display.fill((0, 0, 0))
         c = False
+        clock.tick(60)
 #endregion
 #region Check Terms
 agr(tcagr)
