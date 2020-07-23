@@ -366,6 +366,14 @@ shotgun_shells_t = pygame.image.load(
 archvile_corpse = pygame.image.load(
     "Assets/Textures/Animations/archvile_death_6.png").convert()
 iphone_texture = pygame.image.load("Assets/Textures/Items/iphone.png").convert()
+gamemode_bc_1_1 = pygame.image.load(
+    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_1_1.png"))
+gamemode_bc_2_1 = pygame.image.load(
+    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_2_1.png"))
+gamemode_bc_2_2 = pygame.image.load(
+    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_2_2.png"))
+gamemode_bc_1_2 = pygame.image.load(
+    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_1_2.png"))
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -500,9 +508,13 @@ shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
 
+gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 60)
+gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 60)
+
 go_to_main_menu = False
 
 main_menu_running = False
+mode_selection_running = False
 settings_running = False
 vertical_momentum = 0
 animation_counter = 0
@@ -551,6 +563,8 @@ task = ""
 taskTaivutettu = ""
 
 DebugMode = False
+
+MenuMode = 0
 #endregion
 #region Save System
 def LoadSave():
@@ -1778,6 +1792,7 @@ def esc_menu_f():
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
+
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, volume
     c = False
@@ -1820,6 +1835,8 @@ def settings_menu():
                         KDS_Quit()
                 if event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
+                if event.key == K_ESCAPE:
+                    settings_running = False
 
         main_display.blit(settings_background, (0, 0))
 
@@ -1872,8 +1889,17 @@ def settings_menu():
 
         c = False
         pygame.display.update()
+
 def main_menu():
-    global current_map
+    global current_map, MenuMode
+
+    class Mode():
+        MainMenu = 0
+        ModeSelectionMenu = 1
+        StoryMenu = 2
+        CampaignMenu = 3
+    MenuMode = Mode.MainMenu
+
     current_map_int = 0
     current_map_int = int(current_map)
     try:
@@ -1885,6 +1911,7 @@ def main_menu():
 
     global main_menu_running, main_running, go_to_main_menu
     go_to_main_menu = False
+
     main_menu_running = True
     c = False
 
@@ -1961,9 +1988,13 @@ def main_menu():
                 current_map = str(current_map_int)
             KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
 
-    buttons = []
-    functions = []
-    texts = []
+    def mode_selection_function():
+        global MenuMode
+        MenuMode = Mode.ModeSelectionMenu
+
+    buttons = list()
+    functions = list()
+    texts = list()
 
     buttons.append(play_button)
     buttons.append(settings_button)
@@ -1971,7 +2002,7 @@ def main_menu():
     buttons.append(level_left_button)
     buttons.append(level_right_button)
 
-    functions.append(play_function)
+    functions.append(mode_selection_function)
     functions.append(settings_function)
     functions.append(KDS_Quit)
     functions.append(level_pick.left)
@@ -1982,6 +2013,7 @@ def main_menu():
     texts.append(quit_text)
     texts.append(left_text)
     texts.append(right_text)
+
 
     while main_menu_running:
 
@@ -1998,35 +2030,44 @@ def main_menu():
                         KDS_Quit()
                 if event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
+                if event.key == K_ESCAPE:
+                    if MenuMode == Mode.ModeSelectionMenu:
+                        MenuMode = Mode.MainMenu
 
-        main_display.blit(main_menu_background, (0, 0))
-        main_display.blit(pygame.transform.flip(
-            menu_gasburner_animation.update(), False, False), (625, 450))
-        pygame.draw.rect(main_display, (255, 255, 255), (35, 200, 275, 50))
-        hg = button_font1.render("map" + current_map, True, (0, 0, 0))
-        main_display.blit(hg, (100, 202))
-        y = 0
+        if MenuMode == Mode.MainMenu:
+            main_display.blit(main_menu_background, (0, 0))
+            main_display.blit(pygame.transform.flip(
+                menu_gasburner_animation.update(), False, False), (625, 450))
+            pygame.draw.rect(main_display, (255, 255, 255), (35, 200, 275, 50))
+            hg = button_font1.render("map" + current_map, True, (0, 0, 0))
+            main_display.blit(hg, (100, 202))
+            y = 0
 
-        for button in buttons:
-            if button.collidepoint(pygame.mouse.get_pos()):
-                if c:
-                    functions[y]()
-                button_color = (115, 115, 115)
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-            else:
-                button_color = (100, 100, 100)
+            for button in buttons:
+                if button.collidepoint(pygame.mouse.get_pos()):
+                    if c:
+                        functions[y]()
+                    button_color = (115, 115, 115)
+                    if pygame.mouse.get_pressed()[0]:
+                        button_color = (90, 90, 90)
+                else:
+                    button_color = (100, 100, 100)
 
-            pygame.draw.rect(main_display, button_color, button)
+                pygame.draw.rect(main_display, button_color, button)
 
-            main_display.blit(texts[y], (button.x + ((button.width-texts[y].get_width()) / 2), button.y + ((button.height-texts[y].get_height()) / 2)))
+                main_display.blit(texts[y], (int(button.x + ((button.width-texts[y].get_width()) / 2)), int(button.y + ((button.height-texts[y].get_height()) / 2))))
 
-            y += 1
+                y += 1
+
+        if MenuMode == Mode.ModeSelectionMenu:
+            main_display.blit(KDS.Convert.ToColor(gamemode_bc_1_1, 128), (0, 0))
+            clock.tick(60)
 
         pygame.display.update()
+        main_display.fill((0, 0, 0))
         c = False
 #endregion
-#region Check Termsiut
+#region Check Terms
 agr(tcagr)
 jukebox_music = load_jukebox_music()
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
@@ -2118,7 +2159,6 @@ while main_running:
                 AltPressed = True
             if event.key == K_F11:
                 setFullscreen(False)
-
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True

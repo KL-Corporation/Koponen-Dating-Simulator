@@ -1,16 +1,8 @@
 #The official unofficial color palette that this game is not built around
 
-def Cloud_White():
-    return (236, 240, 241)
-
-def Midnight_Blue():
-    return (44, 62, 80)
-
-def Aviator_Red():
-    return (240, 71, 71)
-
-def Emerald_Green():
-    return (46, 204, 113)
-
-def River_Blue():
-    return (52, 152, 219)
+class Get():
+    CloudWhite = (236, 240, 241)
+    MidnightBlue = (44, 62, 80)
+    AviatorRed = (240, 71, 71)
+    EmeraldGreen = (46, 204, 113)
+    RiverBlue = (52, 152, 219)

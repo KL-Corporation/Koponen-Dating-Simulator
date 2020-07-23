@@ -1,4 +1,5 @@
 import KDS.Logging
+import KDS.Math
 import pygame
 
 class Animation:
@@ -13,14 +14,6 @@ class Animation:
     """
 
     def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey, loops): #loops = -1, if infinite loops
-        """
-        Ensimmäinen argumentti odottaa animaation nimeä esim. "gasburner"
-        Toinen argumentti odottaa kyseisen animaation kuvien määrää. Jos animaatiossa on 2 kuvaa, kannattaa toiseksi argumentiksi laittaa 2
-        Kolmas argumentti odottaa yhden kuvan kestoa tickeinä.
-        Animaation kuvat tulee tallentaa animations-kansioon png-muodossa tähän malliin:
-            gasburner_0, gasburner_1, gasburner_2, gasburner_3 ja niin edelleen
-        animation_name - string, number_of_images - int, duration - int
-        """
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
@@ -68,3 +61,26 @@ class Animation:
         self.tick = 0
         self.loops_count = 0
         self.done = False
+
+class Lerp():
+    """
+    Ensimmäinen argumentti odottaa lerpin lähtöarvoa
+    Toinen argumentti odottaa lerpin päättymisarvoa
+    Kolmas argumentti odottaa kyseisen animaation kestoa. Jos animaation pitäisi kestää 2 tickiä, kannattaa kolmanneksi argumentiksi laittaa 2
+    """
+    def __init__(self, From: float, To: float, duration: int):
+        self.From = From
+        self.To = To
+        self.ticks = duration
+        self.tick = 0
+
+    def update(self, reverse=False):
+        if not reverse:
+            self.tick += 1
+            if self.tick > self.ticks:
+                self.tick = self.ticks
+        else:
+            self.tick -= 1
+            if self.tick < 0:
+                self.tick = 0
+        return KDS.Math.Lerp(self.From, self.To, self.tick / self.ticks)
