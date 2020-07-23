@@ -276,9 +276,9 @@ alpha.set_alpha(170)
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
-    "Assets/Textures/Menus/main_menu_bc.png")
-settings_background = pygame.image.load("Assets/Textures/Menus/settings_bc.png")
-agr_background = pygame.image.load("Assets/Textures/Menus/tcagr_bc.png")
+    "Assets/Textures/UI/Menus/main_menu_bc.png")
+settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png")
+agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png")
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
@@ -368,13 +368,13 @@ archvile_corpse = pygame.image.load(
 iphone_texture = pygame.image.load("Assets/Textures/Items/iphone.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_1_1.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png"))
 gamemode_bc_2_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_2_1.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png"))
 gamemode_bc_2_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_2_2.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png"))
 gamemode_bc_1_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "Menus", "Gamemode_bc_1_2.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png"))
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -2050,7 +2050,7 @@ def main_menu():
                 if event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
                 if event.key == K_ESCAPE:
-                    if MenuMode == Mode.ModeSelectionMenu:
+                    if MenuMode != Mode.MainMenu:
                         MenuMode = Mode.MainMenu
             if event.type == pygame.QUIT:
                 KDS_Quit()
@@ -2102,6 +2102,12 @@ def main_menu():
                         main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
 
             clock.tick(60)
+
+        if MenuMode == Mode.StoryMenu:
+            print("Wow... So empty.")
+
+        if MenuMode == Mode.CampaignMenu:
+            print("Wow... So empty.")
 
         pygame.display.update()
         main_display.fill((0, 0, 0))
