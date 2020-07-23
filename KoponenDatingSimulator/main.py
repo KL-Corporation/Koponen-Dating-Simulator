@@ -365,7 +365,7 @@ shotgun_shells_t = pygame.image.load(
     "Assets/Textures/Items/shotgun_shells.png").convert()
 archvile_corpse = pygame.image.load(
     "Assets/Textures/Animations/archvile_death_6.png").convert()
-iphone_texture = pygame.image.load("Assets/Textures/Items/iphone.png").convert()
+iphone_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png"))
@@ -445,7 +445,7 @@ shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
-#endregion Lataukset
+#endregion
 
 main_running = True
 playerMovingRight = False
@@ -594,7 +594,6 @@ def LoadSave():
     inventory[3] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory3", inventory[3])
     inventory[4] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", inventory[4])
 def SaveData():
-
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x))
@@ -1307,7 +1306,7 @@ koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 8, (255, 255, 255), -1)
+    "main_menu_bc_gasburner", 2, 5, (255, 255, 255), -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
     "explosion", 7, 5, (255, 255, 255), 1)
@@ -1944,8 +1943,9 @@ def main_menu():
     quit_text = button_font1.render("QUIT", True, (255, 255, 255))
 
     def play_function(gamemode: KDS.Gamemode.Modes):
-        global main_menu_running, current_map
+        global main_menu_running, current_map, inventory
         KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+        inventory = ["none", "none", "none", "none", "none"]
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
             inventory[0] = "iPuhelin"
         WorldGeneration()
@@ -2271,12 +2271,10 @@ while main_running:
                 KeyW = False
             if event.key == K_s:
                 KeyS = False
-            if event.key == K_p:
+            if event.key == K_c:
                 if player_hand_item == "gasburner":
-                    gasburnerBurning = False
+                    gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
-                if player_hand_item == "knife":
-                    knifeInUse = False
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 mouseLeftPressed = False
@@ -2829,17 +2827,17 @@ while main_running:
                 offset_pi = 80
                 offset_rk = 80
             else:
-                offset_c = 7
+                offset_c = 8
                 offset_k = 10
                 offset_p = 14
                 offset_pi = 2
                 offset_rk = 14
             if player_hand_item in Items_list:
                 o = Items[player_hand_item]
-                if not direction:
-                    offset = 0
+                if direction:
+                    offset = player_rect.width - o.get_width() / 2
                 else:
-                    offset = o.get_width() + 28
+                    offset = -player_rect.width - -(o.get_width() / 2)
 
             if player_hand_item == "gasburner":
                 if gasburnerBurning:
@@ -2862,11 +2860,11 @@ while main_running:
 
             if player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
-                    player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+                    player_rect.center[0] - offset - scroll[0], player_rect.y - scroll[1] + 14))
 
             if player_hand_item == "iPuhelin":
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
-                    player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+                    player_rect.center[0] - offset - scroll[0], player_rect.y - scroll[1] + 14))
 
             if player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
@@ -3087,7 +3085,7 @@ while main_running:
         screen.blit(task_progress_values[0], task_progress_values[1])
     
 #endregion
-#region Rendering
+#region Screen Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 #endregion
