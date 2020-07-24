@@ -1,4 +1,4 @@
-#region
+#region Importing
 import pygame
 import KDS.ConfigManager
 import KDS.Convert
@@ -26,6 +26,7 @@ text_height = 0
 textOffsetString = ""
 for i in range(textOffset):
     textOffsetString += " "
+Missions_Finished = False
 #endregion
 #region Initialise
 def InitialiseMission(Safe_Name: str, Visible_Name: str):
@@ -60,7 +61,7 @@ def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
     2. Task_Name, The Safe_Name of the task.
     3. Add_Value, The value that will be added to your task.
     """
-    global Active_Mission
+    global Active_Mission, Missions_Finished
     for i in range(len(Missions)):
         if Missions[i][0] == Mission_Name:
             for j in range(len(Missions[i]) - 2):
@@ -71,7 +72,7 @@ def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
                         Missions[i][j_var][3] = True
                         #Play audio?
     All_Tasks_Done = True
-    while All_Tasks_Done == True:
+    while All_Tasks_Done and not Missions_Finished:
         for i in range(len(Missions[Active_Mission]) - 2):
             if All_Tasks_Done == True:
                 All_Tasks_Done = KDS.Convert.ToBool(Missions[Active_Mission][i + 2][3])
@@ -79,7 +80,7 @@ def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
             if Active_Mission + 1 < len(Missions[Active_Mission]) - 2:
                 Active_Mission += 1
             else:
-                KDS.Logging.Log(KDS.Logging.LogType.error, "No ending for tasks done yet...", True)
+                Missions_Finished = True
 #endregion
 #region Render
 def GetRenderCount():
@@ -156,4 +157,8 @@ def InitialiseMissions(LevelIndex):
         elif LevelIndex == 2:
             KDS.Missions.InitialiseMission("koponen_talk", "Puhu Koposelle")
             KDS.Missions.InitialiseTask("koponen_talk", "talk", "Puhu Koposelle")
+#endregion
+#region Data
+def GetFinished():
+    return Missions_Finished
 #endregion

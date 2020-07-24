@@ -1800,7 +1800,7 @@ def esc_menu_f():
             y += 1
 
         main_display.blit(esc_menu_surface,
-                          (int(display_size[0]) / 2 - 250, 120))
+                          (int(display_size[0] / 2 - 250), 120))
         pygame.display.update()
         c = False
 
@@ -2027,8 +2027,8 @@ def main_menu():
 
     campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
     campaign_left_button = pygame.Rect(50, 200, 66, 66)
-    campaign_play_button = pygame.Rect(display_size[0] / 2 - 150, display_size[1] - 300, 300, 100)
-    campaign_return_button = pygame.Rect(display_size[0] / 2 - 150, display_size[1] - 150, 300, 100)
+    campaign_play_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 300), 300, 100)
+    campaign_return_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 150), 300, 100)
     campaign_menu_buttons = list()
     campaign_menu_functions = list()
     campaign_menu_buttons.append(campaign_left_button)
@@ -2135,9 +2135,9 @@ def main_menu():
                 elif y == 1:
                     main_display.blit(arrow_button, (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
                 elif y == 2:
-                    main_display.blit(campaign_play_text, (campaign_play_button.x + (campaign_play_button.width / 4), campaign_play_button.y + (campaign_play_button.height / 4)))
+                    main_display.blit(campaign_play_text, (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
                 elif y == 3:
-                    main_display.blit(campaign_return_text, (campaign_return_button.x + (campaign_return_button.width / 5), campaign_return_button.y + (campaign_return_button.height / 4)))
+                    main_display.blit(campaign_return_text, (int(campaign_return_button.x + (campaign_return_button.width / 5)), int(campaign_return_button.y + (campaign_return_button.height / 4))))
 
                 current_map_int = int(current_map)
 
@@ -2864,7 +2864,7 @@ while main_running:
 
             if player_hand_item == "iPuhelin":
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
-                    player_rect.center[0] - offset - scroll[0], player_rect.y - scroll[1] + 14))
+                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
 
             if player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
@@ -3035,8 +3035,8 @@ while main_running:
                 screen.blit(pistol_texture, ((i * 34) + 10 +
                                              (34 / pistol_texture.get_width() * 2) - 30, 80))
             elif inventory[i] == "iPuhelin":
-                screen.blit(iphone_texture, ((i * 34) + 10 +
-                                             (34 / iphone_texture.get_width() * 2), 80))
+                screen.blit(iphone_texture, (int((i * 34) + 10 +
+                                             (34 / iphone_texture.get_width() * 2)), 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
                 screen.blit(plasmarifle, ((i * 34) + 15, 80))
