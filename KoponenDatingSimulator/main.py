@@ -2850,7 +2850,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(gasburner_off, direction, False),
                                 (player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
 
-            if player_hand_item == "knife":
+            elif player_hand_item == "knife":
                 if knifeInUse:
                     screen.blit(pygame.transform.flip(knife_animation[knife_animation_stats[0]], direction, False), (
                         player_rect.right-offset_k-scroll[0], player_rect.y-scroll[1]+14))
@@ -2858,15 +2858,16 @@ while main_running:
                     screen.blit(pygame.transform.flip(knife, direction, False), (
                         player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "coffeemug":
+            elif player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
-                    player_rect.center[0] - offset - scroll[0], player_rect.y - scroll[1] + 14))
+                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
+                print(scroll[0])
 
-            if player_hand_item == "iPuhelin":
+            elif player_hand_item == "iPuhelin":
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
                     int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
 
-            if player_hand_item == "plasmarifle":
+            elif player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
                     screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
@@ -2875,7 +2876,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "pistol":
+            elif player_hand_item == "pistol":
                 pistol_cooldown += 1
                 if pistolFire and pistol_cooldown > 25:
                     pistol_cooldown = 0
@@ -2892,7 +2893,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
                         player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "rk62":
+            elif player_hand_item == "rk62":
                 if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
                     rk_62_ammo -= 1
                     rk62_cooldown = 0
@@ -2916,7 +2917,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
                         player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "shotgun":
+            elif player_hand_item == "shotgun":
                 if not shotgun_loaded:
                     shotgun_cooldown += 1
                     if shotgun_cooldown > 60:
