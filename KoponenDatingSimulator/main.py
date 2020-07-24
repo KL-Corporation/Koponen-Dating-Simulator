@@ -3070,20 +3070,9 @@ while main_running:
     screen.blit(stamina, (10, 130))
 
     missions_background_width = KDS.Missions.GetMaxWidth()
-    Mission_Render_Data = KDS.Missions.RenderMission()
-    pygame.draw.rect(screen, Mission_Render_Data[3], (
-        Mission_Render_Data[4], 0, Mission_Render_Data[5], Mission_Render_Data[6]))
-    screen.blit(
-        Mission_Render_Data[0], (Mission_Render_Data[1], Mission_Render_Data[2]))
+    Mission_Render_Data = KDS.Missions.RenderMission(screen)
     for i in range(KDS.Missions.GetRenderCount()):
-        task_background_values = KDS.Missions.TaskBackgroundValues(i)
-        pygame.draw.rect(
-            screen, task_background_values[0], task_background_values[1])
-        task_text_values = KDS.Missions.TaskTextValues(i)
-        screen.blit(task_text_values[0], task_text_values[1])
-        task_progress_values = KDS.Missions.TaskProgressValues(i)
-        screen.blit(task_progress_values[0], task_progress_values[1])
-    
+        KDS.Missions.RenderTask(screen, i)
 #endregion
 #region Screen Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))

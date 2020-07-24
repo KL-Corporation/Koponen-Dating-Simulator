@@ -94,17 +94,19 @@ def GetMaxWidth():
         if Max_Text_Width < temp_width:
             Max_Text_Width = temp_width
     return Max_Text_Width
-def RenderMission():
+def RenderMission(surface: pygame.Surface):
     global Missions, mission_font, BackgroundColor, Active_Mission, HeaderColor
     rendered = mission_font.render(Missions[Active_Mission][1], True, (255, 255, 255))
-    text_width, text_height = mission_font.size(Missions[Active_Mission][1])
+    text_width = mission_font.size(Missions[Active_Mission][1])[0]
     MaxWidth = GetMaxWidth()
-    return rendered, screen_size[0] - MaxWidth + ((MaxWidth / 2) - (text_width / 2)), 3.75, HeaderColor, screen_size[0] - MaxWidth, MaxWidth, 20
+    screen_width = surface.get_width()
+    pygame.draw.rect(surface, HeaderColor, (screen_width - MaxWidth, 0, MaxWidth, 20))
+    surface.blit(rendered, (screen_width - MaxWidth + ((MaxWidth / 2) - (text_width / 2)), 3.75))
 class ValueType():
     Background = 0
     Text = 1
     Progress = 2
-def RenderTask(index: int, Value_Type: ValueType):
+def RenderTask(surface: pygame.Surface, index: int):
     global task_font, Missions, text_height, BackgroundColor, BackgroundFinishedColor
     index_var = index + 2
     Mission_Progress = Missions[Active_Mission][index_var][2]
@@ -114,8 +116,8 @@ def RenderTask(index: int, Value_Type: ValueType):
     Mission_Progress = str(int(round(Mission_Progress)))
     task_rendered = task_font.render(Missions[Active_Mission][index_var][1], True, (255, 255, 255))
     progress_rendered = task_font.render(Mission_Progress, True, (255, 255, 255))
-    text_width, text_height = task_font.size(Missions[Active_Mission][index_var][1])
-    progress_width, progress_height = task_font.size(Mission_Progress)
+    text_height = task_font.size(Missions[Active_Mission][index_var][1])[1]
+    progress_width = task_font.size(Mission_Progress)[0]
     if Missions[Active_Mission][index_var][2] >= 1.0:
         Color = BackgroundFinishedColor
     else:
@@ -125,21 +127,9 @@ def RenderTask(index: int, Value_Type: ValueType):
     taskpos = (screen_size[0] - Max_Text_Width, 22.5 + ((text_height + 5) * index))
     progresspos = (screen_size[0] - progress_width, 22.5 + ((text_height + 5) * index))
 
-    if Value_Type == ValueType.Background:
-        return Color, backgroundRect
-    elif Value_Type == ValueType.Text:
-        return task_rendered, taskpos
-    elif Value_Type == ValueType.Progress:
-        return progress_rendered, progresspos
-    else:
-        frameinfo = getframeinfo(currentframe())
-        KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ") Not a valid Value_Type")
-def TaskBackgroundValues(index):
-    return RenderTask(index, ValueType.Background)
-def TaskTextValues(index):
-    return RenderTask(index, ValueType.Text)
-def TaskProgressValues(index):
-    return RenderTask(index, ValueType.Progress)
+    pygame.draw.rect(surface, Color, backgroundRect)
+    surface.blit(task_rendered, taskpos)
+    surface.blit(progress_rendered, progresspos)
 #endregion
 #region Missions
 def InitialiseMissions(LevelIndex):
