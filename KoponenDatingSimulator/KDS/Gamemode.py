@@ -1,6 +1,6 @@
 import KDS.Missions
 
-class Modes():
+class Modes:
     Story = 0
     Campaign = 1
 

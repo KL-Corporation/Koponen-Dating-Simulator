@@ -8,6 +8,7 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
+import KDS.LevelLoader
 import pygame
 import os
 import random
@@ -650,6 +651,7 @@ task_items = list()
 color_keys = list()
 door_rects = list()
 doors_open = list()
+
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
     buildingBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map"))
@@ -787,9 +789,11 @@ def load_jukebox_music():
     random.shuffle(musics)
 
     return musics
+
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
+
 def load_music():
     original_path = os.getcwd()
     os.chdir("Assets/Audio/music/")
@@ -1908,7 +1912,7 @@ def settings_menu():
 def main_menu():
     global current_map, MenuMode
 
-    class Mode():
+    class Mode:
         MainMenu = 0
         ModeSelectionMenu = 1
         StoryMenu = 2
@@ -1971,8 +1975,8 @@ def main_menu():
     def settings_function():
         settings_menu()
 
-    class level_pick():
-        class direction():
+    class level_pick:
+        class direction:
             left = 0
             right = 1
 
@@ -2325,39 +2329,38 @@ while main_running:
         animation_has_played = True
 #endregion
 #region Rendering
-    for i in range(len(world_gen)):
-        y = 0
-        for layer in world_gen[i]:
-            x = 0
-            for tile in layer:
-                if tile == 'b':
-                    screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'c':
-                    screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'd':
-                    screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'e':
-                    screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
-                if tile == 'f':
-                    screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'g':
-                    screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
-                if tile == 'h':
-                    screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'i':
-                    screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'j':
-                    screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'o':
-                    screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'A':
-                    screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
-                if tile == 'p':
-                    screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'q':
-                    screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
-                x += 1
-            y += 1
+    y = 0
+    for layer in world_gen[0]:
+        x = 0
+        for tile in layer:
+            if tile == 'b':
+                screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'c':
+                screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'd':
+                screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'e':
+                screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
+            if tile == 'f':
+                screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'g':
+                screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
+            if tile == 'h':
+                screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'i':
+                screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'j':
+                screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'o':
+                screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'A':
+                screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
+            if tile == 'p':
+                screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'q':
+                screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
+            x += 1
+        y += 1
 
     x = 0
     for door in door_rects:
@@ -3072,8 +3075,10 @@ while main_running:
 
     missions_background_width = KDS.Missions.GetMaxWidth()
     Mission_Render_Data = KDS.Missions.RenderMission(screen)
+
     for i in range(KDS.Missions.GetRenderCount()):
         KDS.Missions.RenderTask(screen, i)
+       
 #endregion
 #region Screen Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
