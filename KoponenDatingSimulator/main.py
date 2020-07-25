@@ -8,6 +8,7 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
+import KDS.LevelLoader
 import pygame
 import os
 import random
@@ -274,11 +275,11 @@ alpha.set_alpha(170)
 
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
-game_icon = pygame.image.load("resources/game_icon.png")
+game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
-    "resources/main_menu/main_menu_bc.png")
-settings_background = pygame.image.load("resources/settings_bc.png")
-agr_background = pygame.image.load("resources/tcagr.png")
+    "Assets/Textures/UI/Menus/main_menu_bc.png")
+settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png")
+agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png")
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
@@ -287,34 +288,34 @@ tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
 
-player_img = pygame.image.load("resources/player/stand0.png").convert()
-player_corpse = pygame.image.load("resources/player/corpse.png").convert()
+player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
+player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
 player_corpse.set_colorkey((255, 255, 255))
 player_img.set_colorkey((255, 255, 255))
 
-floor1 = pygame.image.load("resources/build/floor0v2.png")
-concrete1 = pygame.image.load("resources/build/concrete0.png")
-wall1 = pygame.image.load("resources/build/wall0.png")
-table1 = pygame.image.load("resources/build/table0.png").convert()
-toilet1 = pygame.image.load("resources/build/toilet0.png").convert()
-lamp1 = pygame.image.load("resources/build/lamp0.png").convert()
-trashcan = pygame.image.load("resources/build/trashcan.png").convert()
-ground1 = pygame.image.load("resources/build/ground0.png")
-grass = pygame.image.load("resources/build/grass0.png")
-door_closed = pygame.image.load("resources/build/door_closed.png").convert()
+floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
+concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
+wall1 = pygame.image.load("Assets/Textures/Building/wall0.png")
+table1 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
+toilet1 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
+lamp1 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
+trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
+ground1 = pygame.image.load("Assets/Textures/Building/ground0.png")
+grass = pygame.image.load("Assets/Textures/Building/grass0.png")
+door_closed = pygame.image.load("Assets/Textures/Building/door_closed.png").convert()
 red_door_closed = pygame.image.load(
-    "resources/build/red_door_closed.png").convert()
+    "Assets/Textures/Building/red_door_closed.png").convert()
 green_door_closed = pygame.image.load(
-    "resources/build/green_door_closed.png").convert()
+    "Assets/Textures/Building/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
-    "resources/build/blue_door_closed.png").convert()
-door_open = pygame.image.load("resources/build/door_open2.png")
-bricks = pygame.image.load("resources/build/bricks.png")
-tree = pygame.image.load("resources/build/tree.png")
-planks = pygame.image.load("resources/build/planks.png")
-jukebox_texture = pygame.image.load("resources/build/jukebox.png")
-landmine_texture = pygame.image.load("resources/build/landmine.png")
-ladder_texture = pygame.image.load("resources/build/ladder.png")
+    "Assets/Textures/Building/blue_door_closed.png").convert()
+door_open = pygame.image.load("Assets/Textures/Building/door_open2.png")
+bricks = pygame.image.load("Assets/Textures/Building/bricks.png")
+tree = pygame.image.load("Assets/Textures/Building/tree.png")
+planks = pygame.image.load("Assets/Textures/Building/planks.png")
+jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png")
+landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png")
+ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
 table1.set_colorkey((255, 255, 255))
 toilet1.set_colorkey((255, 255, 255))
 lamp1.set_colorkey((255, 255, 255))
@@ -329,43 +330,54 @@ ladder_texture.set_colorkey((255, 255, 255))
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
-    "resources/items/gasburner_off.png").convert()
-#gasburner_on = pygame.image.load("resources/items/gasburner_on.png").convert()
-knife = pygame.image.load("resources/items/knife.png").convert()
-knife_blood = pygame.image.load("resources/items/knife.png").convert()
-red_key = pygame.image.load("resources/items/red_key.png").convert()
-green_key = pygame.image.load("resources/items/green_key2.png").convert()
-blue_key = pygame.image.load("resources/items/blue_key.png").convert()
-coffeemug = pygame.image.load("resources/items/coffeemug.png").convert()
-ss_bonuscard = pygame.image.load("resources/items/ss_bonuscard.png").convert()
+    "Assets/Textures/Items/gasburner_off.png").convert()
+#gasburner_on = pygame.image.load("Assets/Textures/Items/gasburner_on.png").convert()
+knife = pygame.image.load("Assets/Textures/Items/knife.png").convert()
+knife_blood = pygame.image.load("Assets/Textures/Items/knife.png").convert()
+red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
+green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
+blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
+coffeemug = pygame.image.load("Assets/Textures/Items/coffeemug.png").convert()
+ss_bonuscard = pygame.image.load("Assets/Textures/Items/ss_bonuscard.png").convert()
 lappi_sytytyspalat = pygame.image.load(
-    "resources/items/lappi_sytytyspalat.png").convert()
-plasmarifle = pygame.image.load("resources/items/plasmarifle.png").convert()
-plasma_ammo = pygame.image.load("resources/items/plasma_ammo.png").convert()
-cell = pygame.image.load("resources/items/cell.png")
+    "Assets/Textures/Items/lappi_sytytyspalat.png").convert()
+plasmarifle = pygame.image.load("Assets/Textures/Items/plasmarifle.png").convert()
+plasma_ammo = pygame.image.load("Assets/Textures/Items/plasma_ammo.png").convert()
+cell = pygame.image.load("Assets/Textures/Items/cell.png")
 zombie_corpse = pygame.image.load(
-    "resources/animations/z_death_4.png").convert()
-pistol_texture = pygame.image.load("resources/items/pistol.png").convert()
+    "Assets/Textures/Animations/z_death_4.png").convert()
+pistol_texture = pygame.image.load("Assets/Textures/Items/pistol.png").convert()
 pistol_f_texture = pygame.image.load(
-    "resources/items/pistol_firing.png").convert()
-pistol_mag = pygame.image.load("resources/items/pistol_mag.png").convert()
-rk62_texture = pygame.image.load("resources/items/rk62.png").convert()
-rk62_f_texture = pygame.image.load("resources/items/rk62_firing.png").convert()
-rk62_mag = pygame.image.load("resources/items/rk_mag.png").convert()
+    "Assets/Textures/Items/pistol_firing.png").convert()
+pistol_mag = pygame.image.load("Assets/Textures/Items/pistol_mag.png").convert()
+rk62_texture = pygame.image.load("Assets/Textures/Items/rk62.png").convert()
+rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
+rk62_mag = pygame.image.load("Assets/Textures/Items/rk_mag.png").convert()
 sergeant_corpse = pygame.image.load(
-    "resources/animations/seargeant_dying_4.png").convert()
+    "Assets/Textures/Animations/seargeant_dying_4.png").convert()
 sergeant_aiming = pygame.image.load(
-    "resources/animations/seargeant_shooting_0.png").convert()
+    "Assets/Textures/Animations/seargeant_shooting_0.png").convert()
 sergeant_firing = pygame.image.load(
-    "resources/animations/seargeant_shooting_1.png").convert()
-medkit = pygame.image.load("resources/items/medkit.png").convert()
-shotgun = pygame.image.load("resources/items/shotgun.png").convert()
-shotgun_f = pygame.image.load("resources/items/shotgun_firing.png").convert()
+    "Assets/Textures/Animations/seargeant_shooting_1.png").convert()
+medkit = pygame.image.load("Assets/Textures/Items/medkit.png").convert()
+shotgun = pygame.image.load("Assets/Textures/Items/shotgun.png").convert()
+shotgun_f = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
 shotgun_shells_t = pygame.image.load(
-    "resources/items/shotgun_shells.png").convert()
+    "Assets/Textures/Items/shotgun_shells.png").convert()
 archvile_corpse = pygame.image.load(
-    "resources/animations/archvile_death_6.png").convert()
-iphone_texture = pygame.image.load("resources/items/iphone.png").convert()
+    "Assets/Textures/Animations/archvile_death_6.png").convert()
+iphone_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
+
+gamemode_bc_1_1 = pygame.image.load(
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png"))
+gamemode_bc_2_1 = pygame.image.load(
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png"))
+gamemode_bc_2_2 = pygame.image.load(
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png"))
+gamemode_bc_1_2 = pygame.image.load(
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png"))
+arrow_button = pygame.image.load(
+    os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 
 gasburner_off.set_colorkey((255, 255, 255))
 knife.set_colorkey((255, 255, 255))
@@ -399,32 +411,32 @@ iphone_texture.set_colorkey((255, 255, 255))
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 
-text_icon = pygame.image.load("resources/text_icon.png").convert()
+text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
 text_icon.set_colorkey((255, 255, 255))
 
-gasburner_clip = pygame.mixer.Sound("audio/misc/gasburner_clip.wav")
-gasburner_fire = pygame.mixer.Sound("audio/misc/gasburner_fire.wav")
-door_opening = pygame.mixer.Sound("audio/misc/door.wav")
-player_death_sound = pygame.mixer.Sound("audio/misc/dspldeth.wav")
-player_walking = pygame.mixer.Sound("audio/misc/walking.wav")
-coffeemug_sound = pygame.mixer.Sound("audio/misc/coffeemug.wav")
-knife_pickup = pygame.mixer.Sound("audio/misc/knife.wav")
-key_pickup = pygame.mixer.Sound("audio/misc/pickup_key.wav")
-ss_sound = pygame.mixer.Sound("audio/misc/ss.wav")
-lappi_sytytyspalat_sound = pygame.mixer.Sound("audio/misc/sytytyspalat.wav")
-landmine_explosion = pygame.mixer.Sound("audio/misc/landmine.wav")
-hurt_sound = pygame.mixer.Sound("audio/misc/dsplpain.wav")
-plasmarifle_f_sound = pygame.mixer.Sound("audio/misc/dsplasma.wav")
-weapon_pickup = pygame.mixer.Sound("audio/misc/weapon_pickup.wav")
-item_pickup = pygame.mixer.Sound("audio/misc/dsitemup.wav")
-plasma_hitting = pygame.mixer.Sound("audio/misc/dsfirxpl.wav")
-pistol_shot = pygame.mixer.Sound("audio/misc/pistolshot.wav")
-rk62_shot = pygame.mixer.Sound("audio/misc/rk62_shot.wav")
-shotgun_shot = pygame.mixer.Sound("audio/misc/shotgun.wav")
-player_shotgun_shot = pygame.mixer.Sound("audio/misc/player_shotgun.wav")
-archvile_attack = pygame.mixer.Sound("audio/misc/dsflame.wav")
-archvile_death = pygame.mixer.Sound("audio/misc/dsvildth.wav")
-fart = pygame.mixer.Sound("audio/misc/fart_attack.wav")
+gasburner_clip = pygame.mixer.Sound("Assets/Audio/misc/gasburner_clip.wav")
+gasburner_fire = pygame.mixer.Sound("Assets/Audio/misc/gasburner_fire.wav")
+door_opening = pygame.mixer.Sound("Assets/Audio/misc/door.wav")
+player_death_sound = pygame.mixer.Sound("Assets/Audio/misc/dspldeth.wav")
+player_walking = pygame.mixer.Sound("Assets/Audio/misc/walking.wav")
+coffeemug_sound = pygame.mixer.Sound("Assets/Audio/misc/coffeemug.wav")
+knife_pickup = pygame.mixer.Sound("Assets/Audio/misc/knife.wav")
+key_pickup = pygame.mixer.Sound("Assets/Audio/misc/pickup_key.wav")
+ss_sound = pygame.mixer.Sound("Assets/Audio/misc/ss.wav")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/misc/sytytyspalat.wav")
+landmine_explosion = pygame.mixer.Sound("Assets/Audio/misc/landmine.wav")
+hurt_sound = pygame.mixer.Sound("Assets/Audio/misc/dsplpain.wav")
+plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/misc/dsplasma.wav")
+weapon_pickup = pygame.mixer.Sound("Assets/Audio/misc/weapon_pickup.wav")
+item_pickup = pygame.mixer.Sound("Assets/Audio/misc/dsitemup.wav")
+plasma_hitting = pygame.mixer.Sound("Assets/Audio/misc/dsfirxpl.wav")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/misc/pistolshot.wav")
+rk62_shot = pygame.mixer.Sound("Assets/Audio/misc/rk62_shot.wav")
+shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/shotgun.wav")
+player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/player_shotgun.wav")
+archvile_attack = pygame.mixer.Sound("Assets/Audio/misc/dsflame.wav")
+archvile_death = pygame.mixer.Sound("Assets/Audio/misc/dsvildth.wav")
+fart = pygame.mixer.Sound("Assets/Audio/misc/fart_attack.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -434,7 +446,7 @@ shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
 jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
-#endregion Lataukset
+#endregion
 
 main_running = True
 playerMovingRight = False
@@ -500,9 +512,13 @@ shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
 
+gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
+gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
+
 go_to_main_menu = False
 
 main_menu_running = False
+mode_selection_running = False
 settings_running = False
 vertical_momentum = 0
 animation_counter = 0
@@ -519,6 +535,11 @@ farting = False
 
 current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "02")
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "02"))
+map_names = (
+    "Placeholder",
+    "Beginnings...",
+    "More Monsters"
+)
 
 ammunition_plasma = 50
 pistol_bullets = 8
@@ -551,6 +572,8 @@ task = ""
 taskTaivutettu = ""
 
 DebugMode = False
+
+MenuMode = 0
 #endregion
 #region Save System
 def LoadSave():
@@ -572,7 +595,6 @@ def LoadSave():
     inventory[3] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory3", inventory[3])
     inventory[4] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", inventory[4])
 def SaveData():
-
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x))
@@ -609,32 +631,33 @@ def KDS_Quit():
     exit()
 #endregion
 #region World Generation
-world_gen = ()
-item_gen = ()
-tile_rects = ()
-toilets = ()
-burning_toilets = ()
-trashcans = ()
-burning_trashcans = ()
-jukeboxes = ()
-landmines = ()
-zombies = ()
-sergeants = ()
-archviles = ()
-ladders = ()
-bulldogs = ()
-item_rects = ()
-item_ids = ()
-task_items = ()
-door_rects = ()
-doors_open = ()
-color_keys = ()
+world_gen = list()
+item_gen = list()
+tile_rects = list()
+toilets = list()
+burning_toilets = list()
+trashcans = list()
+burning_trashcans = list()
+jukeboxes = list()
+landmines = list()
+zombies = list()
+sergeants = list()
+archviles = list()
+ladders = list()
+bulldogs = list()
+item_rects = list()
+item_ids = list()
+task_items = list()
+color_keys = list()
+door_rects = list()
+doors_open = list()
+
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
-    buildingBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_buildings.map"))
-    decorationBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_decorations.map"))
-    enemyBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_enemies.map"))
-    itemBitmap = Image.open(os.path.join("maps", "map" + current_map, "map_items.map"))
+    buildingBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map"))
+    decorationBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map"))
+    enemyBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map"))
+    itemBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map"))
 
     convertBuildingRules = list()
     convertBuildingColors = list()
@@ -644,7 +667,7 @@ def WorldGeneration():
     convertEnemyColors = list()
     convertItemRules = list()
     convertItemColors = list()
-    with open(os.path.join("maps", "resources_convert_rules.txt"), 'r') as f:
+    with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
         raw = f.read()
         rowSplit = raw.split('\n')
 
@@ -757,21 +780,23 @@ def load_items(path):
         item_map.append(list(row))
     return item_map
 def load_jukebox_music():
-    musikerna = os.listdir("audio/jukebox_music/")
+    musikerna = os.listdir("Assets/Audio/jukebox_music/")
     musics = []
 
     for musiken in musikerna:
-        musics.append(pygame.mixer.Sound("audio/jukebox_music/" + musiken))
+        musics.append(pygame.mixer.Sound("Assets/Audio/jukebox_music/" + musiken))
 
     random.shuffle(musics)
 
     return musics
+
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
+
 def load_music():
     original_path = os.getcwd()
-    os.chdir("audio/music/")
+    os.chdir("Assets/Audio/music/")
     music_files = os.listdir()
 
     random.shuffle(music_files)
@@ -796,9 +821,9 @@ def load_music():
     del pos
 def load_music_for_map(_current_map):
     pygame.mixer.music.stop()
-    pygame.mixer.music.load(os.path.join("maps", "map" + _current_map, "music.mid"))
+    pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
 def load_ads():
-    ad_files = os.listdir("resources/koponen_background/ads")
+    ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
@@ -810,12 +835,12 @@ def load_ads():
     ad_images = []
 
     for ad in ad_files:
-        path = str("resources/koponen_background/ads/" + ad)
+        path = str("Assets/Textures/KoponenTalk/ads/" + ad)
         ad_images.append(pygame.image.load(path))
 
     return ad_images
 ad_images = load_ads()
-koponen_talking_background = pygame.image.load("resources/koponen_background/background.png")
+koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png")
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 def load_rects():
     tile_rects = []
@@ -989,7 +1014,7 @@ def load_doors():
 def load_animation(name, number_of_images):
     animation_list = []
     for i in range(number_of_images):
-        path = "resources/player/" + name + str(i) + ".png"
+        path = "Assets/Textures/Player/" + name + str(i) + ".png"
         img = pygame.image.load(path).convert()
         img.set_colorkey((255, 255, 255))
         animation_list.append(img)
@@ -1285,7 +1310,7 @@ koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 8, (255, 255, 255), -1)
+    "main_menu_bc_gasburner", 2, 5, (255, 255, 255), -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
     "explosion", 7, 5, (255, 255, 255), 1)
@@ -1442,6 +1467,8 @@ def agr(tcagr):
             if event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     c = True
+            if event.type == pygame.QUIT:
+                KDS_Quit()
         main_display.blit(agr_background, (0, 0))
 
         y = 0
@@ -1640,6 +1667,8 @@ def koponen_talk():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
+            if event.type == pygame.QUIT:
+                KDS_Quit()
         main_display.blit(koponen_talking_background, (0, 0))
         main_display.blit(koponen_talk_foreground, (40, 474))
         pygame.draw.rect(main_display, (230, 230, 230), (40, 40, 700, 400))
@@ -1743,6 +1772,8 @@ def esc_menu_f():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
+            if event.type == pygame.QUIT:
+                KDS_Quit()
         esc_menu_surface.fill((123, 134, 111))
         main_display.blit(file, (0, 0))
         esc_menu_surface.blit(pygame.transform.scale(
@@ -1773,11 +1804,12 @@ def esc_menu_f():
             y += 1
 
         main_display.blit(esc_menu_surface,
-                          (int(display_size[0]) / 2 - 250, 120))
+                          (int(display_size[0] / 2 - 250), 120))
         pygame.display.update()
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
+
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, volume
     c = False
@@ -1820,6 +1852,10 @@ def settings_menu():
                         KDS_Quit()
                 if event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
+                if event.key == K_ESCAPE:
+                    settings_running = False
+            if event.type == pygame.QUIT:
+                KDS_Quit()
 
         main_display.blit(settings_background, (0, 0))
 
@@ -1872,23 +1908,33 @@ def settings_menu():
 
         c = False
         pygame.display.update()
+
 def main_menu():
-    global current_map
+    global current_map, MenuMode
+
+    class Mode:
+        MainMenu = 0
+        ModeSelectionMenu = 1
+        StoryMenu = 2
+        CampaignMenu = 3
+    MenuMode = Mode.MainMenu
+
     current_map_int = 0
     current_map_int = int(current_map)
     try:
         jukebox_music[jukeboxMusicPlaying].stop()
     except:
-        KDS.Logging.Log(KDS.Logging.LogType.warning,
+        KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Jukebox music has not been defined yet.", False)
     pygame.mixer.music.unpause()
 
     global main_menu_running, main_running, go_to_main_menu
     go_to_main_menu = False
+
     main_menu_running = True
     c = False
 
-    pygame.mixer.music.load("audio/lobbymusic.wav")
+    pygame.mixer.music.load("Assets/Audio/lobbymusic.wav")
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(volume)
 
@@ -1896,18 +1942,14 @@ def main_menu():
     settings_button = pygame.Rect(450, 250, 300, 60)
     quit_button = pygame.Rect(450, 320, 300, 60)
 
-    level_right_button = pygame.Rect(300, 200, 50, 50)
-    level_left_button = pygame.Rect(30, 200, 50, 50)
+    play_text = button_font1.render("PLAY", True, (255, 255, 255))
+    settings_text = button_font1.render("SETTINGS", True, (255, 255, 255))
+    quit_text = button_font1.render("QUIT", True, (255, 255, 255))
 
-    play_text = button_font1.render("Play", True, (255, 255, 255))
-    settings_text = button_font1.render("Settings", True, (255, 255, 255))
-    quit_text = button_font1.render("Quit", True, (255, 255, 255))
-    right_text = button_font1.render(">", True, (255, 255, 255))
-    left_text = button_font1.render("<", True, (255, 255, 255))
-
-    def play_function():
-        global main_menu_running, current_map
-        KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
+    def play_function(gamemode: KDS.Gamemode.Modes):
+        global main_menu_running, current_map, inventory
+        KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+        inventory = ["none", "none", "none", "none", "none"]
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
             inventory[0] = "iPuhelin"
         WorldGeneration()
@@ -1933,8 +1975,8 @@ def main_menu():
     def settings_function():
         settings_menu()
 
-    class level_pick():
-        class direction():
+    class level_pick:
+        class direction:
             left = 0
             right = 1
 
@@ -1961,27 +2003,48 @@ def main_menu():
                 current_map = str(current_map_int)
             KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
 
-    buttons = []
-    functions = []
-    texts = []
+    def mode_selection_function():
+        global MenuMode
+        MenuMode = Mode.ModeSelectionMenu
 
-    buttons.append(play_button)
-    buttons.append(settings_button)
-    buttons.append(quit_button)
-    buttons.append(level_left_button)
-    buttons.append(level_right_button)
+    main_menu_buttons = list()
+    main_menu_functions = list()
+    main_menu_texts = list()
+    main_menu_buttons.append(play_button)
+    main_menu_buttons.append(settings_button)
+    main_menu_buttons.append(quit_button)
+    main_menu_functions.append(mode_selection_function)
+    main_menu_functions.append(settings_function)
+    main_menu_functions.append(KDS_Quit)
+    main_menu_texts.append(play_text)
+    main_menu_texts.append(settings_text)
+    main_menu_texts.append(quit_text)
 
-    functions.append(play_function)
-    functions.append(settings_function)
-    functions.append(KDS_Quit)
-    functions.append(level_pick.left)
-    functions.append(level_pick.right)
+    mode_selection_buttons = list()
+    mode_selection_modes = list()
+    story_mode_button = pygame.Rect(0, 0, int(display_size[0]), int(display_size[1] / 2))
+    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), int(display_size[0]), int(display_size[1] / 2))
+    mode_selection_buttons.append(story_mode_button)
+    mode_selection_buttons.append(campaign_mode_button)
+    mode_selection_modes.append(KDS.Gamemode.Modes.Story)
+    mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
 
-    texts.append(play_text)
-    texts.append(settings_text)
-    texts.append(quit_text)
-    texts.append(left_text)
-    texts.append(right_text)
+    campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
+    campaign_left_button = pygame.Rect(50, 200, 66, 66)
+    campaign_play_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 300), 300, 100)
+    campaign_return_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 150), 300, 100)
+    campaign_menu_buttons = list()
+    campaign_menu_functions = list()
+    campaign_menu_buttons.append(campaign_left_button)
+    campaign_menu_buttons.append(campaign_right_button)
+    campaign_menu_buttons.append(campaign_play_button)
+    campaign_menu_buttons.append(campaign_return_button)
+    campaign_menu_functions.append(level_pick.left)
+    campaign_menu_functions.append(level_pick.right)
+    campaign_menu_functions.append(play_function)
+    campaign_menu_functions.append("useless, just like me.")
+    campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
+    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
 
     while main_menu_running:
 
@@ -1998,35 +2061,103 @@ def main_menu():
                         KDS_Quit()
                 if event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
+                if event.key == K_ESCAPE:
+                    if MenuMode != Mode.MainMenu:
+                        MenuMode = Mode.MainMenu
+            if event.type == pygame.QUIT:
+                KDS_Quit()
 
-        main_display.blit(main_menu_background, (0, 0))
-        main_display.blit(pygame.transform.flip(
-            menu_gasburner_animation.update(), False, False), (625, 450))
-        pygame.draw.rect(main_display, (255, 255, 255), (35, 200, 275, 50))
-        hg = button_font1.render("map" + current_map, True, (0, 0, 0))
-        main_display.blit(hg, (100, 202))
-        y = 0
+        if MenuMode == Mode.MainMenu:
+            main_display.blit(main_menu_background, (0, 0))
+            main_display.blit(pygame.transform.flip(
+                menu_gasburner_animation.update(), False, False), (625, 450))
 
-        for button in buttons:
-            if button.collidepoint(pygame.mouse.get_pos()):
-                if c:
-                    functions[y]()
-                button_color = (115, 115, 115)
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-            else:
-                button_color = (100, 100, 100)
+            for y in range(len(main_menu_buttons)):
+                if main_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
+                    if c:
+                        main_menu_functions[y]()
+                        c = False
+                    button_color = (115, 115, 115)
+                    if pygame.mouse.get_pressed()[0]:
+                        button_color = (90, 90, 90)
+                else:
+                    button_color = (100, 100, 100)
 
-            pygame.draw.rect(main_display, button_color, button)
+                pygame.draw.rect(main_display, button_color, main_menu_buttons[y])
 
-            main_display.blit(texts[y], (button.x + ((button.width-texts[y].get_width()) / 2), button.y + ((button.height-texts[y].get_height()) / 2)))
+                main_display.blit(main_menu_texts[y], (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - main_menu_texts[y].get_width()) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - main_menu_texts[y].get_height()) / 2))))
 
-            y += 1
+        if MenuMode == Mode.ModeSelectionMenu:
+            main_display.blit(gamemode_bc_1_1, (0, 0))
+            main_display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
+            for y in range(len(mode_selection_buttons)):
+                if mode_selection_buttons[y].collidepoint(pygame.mouse.get_pos()):
+                    if y == 0:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(False) * 255.0))), (0, 0))
+                    elif y == 1:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(False) * 255.0))), (0, int(display_size[1] / 2)))
+                    if c:
+                        if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
+                            MenuMode = Mode.StoryMenu
+                        elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
+                            MenuMode = Mode.CampaignMenu
+                            c = False
+                        else:
+                            frameinfo = getframeinfo(currentframe())
+                            KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nInvalid mode_selection_mode! Value: " + mode_selection_modes[y])
+                else:
+                    if y == 0:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(True) * 255.0))), (0, 0))
+                    elif y == 1:
+                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
+
+        if MenuMode == Mode.StoryMenu:
+            print("Wow... So empty.")
+
+        if MenuMode == Mode.CampaignMenu:
+            pygame.draw.rect(main_display, (192, 192, 192), (50, 200, display_size[0] - 100, 66))
+            for y in range(len(campaign_menu_buttons)):
+                if campaign_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
+                    if c:
+                        if y < 2:
+                            campaign_menu_functions[y]()
+                        elif y == 2:
+                            campaign_menu_functions[y](KDS.Gamemode.Modes.Campaign)
+                        else:
+                            MenuMode = Mode.MainMenu
+                        c = False
+                    button_color = (115, 115, 115)
+                    if pygame.mouse.get_pressed()[0]:
+                        button_color = (90, 90, 90)
+                else:
+                    button_color = (100, 100, 100)
+                
+                pygame.draw.rect(main_display, button_color, campaign_menu_buttons[y])
+
+                if y == 0:
+                    main_display.blit(pygame.transform.flip(arrow_button, True, False), (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
+                elif y == 1:
+                    main_display.blit(arrow_button, (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
+                elif y == 2:
+                    main_display.blit(campaign_play_text, (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
+                elif y == 3:
+                    main_display.blit(campaign_return_text, (int(campaign_return_button.x + (campaign_return_button.width / 5)), int(campaign_return_button.y + (campaign_return_button.height / 4))))
+
+                current_map_int = int(current_map)
+
+                if current_map_int < len(map_names):
+                    map_name = map_names[current_map_int]
+                else:
+                    map_name = map_names[0]
+                level_text = button_font1.render(current_map + " - " + map_name, True, (0, 0, 0))
+                main_display.blit(level_text, (125, 209))
 
         pygame.display.update()
+        main_display.fill((0, 0, 0))
         c = False
+        clock.tick(60)
 #endregion
-#region Check Termsiut
+#region Check Terms
 agr(tcagr)
 jukebox_music = load_jukebox_music()
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
@@ -2118,7 +2249,6 @@ while main_running:
                 AltPressed = True
             if event.key == K_F11:
                 setFullscreen(False)
-
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True
@@ -2145,12 +2275,10 @@ while main_running:
                 KeyW = False
             if event.key == K_s:
                 KeyS = False
-            if event.key == K_p:
+            if event.key == K_c:
                 if player_hand_item == "gasburner":
-                    gasburnerBurning = False
+                    gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
-                if player_hand_item == "knife":
-                    knifeInUse = False
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 mouseLeftPressed = False
@@ -2164,6 +2292,8 @@ while main_running:
                 inventoryLeft()
             if event.button == 5:
                 inventoryRight()
+        if event.type == pygame.QUIT:
+            KDS_Quit()
 #endregion
 #region Inventory Code
     def inventoryDoubleOffsetCounter():
@@ -2199,39 +2329,38 @@ while main_running:
         animation_has_played = True
 #endregion
 #region Rendering
-    for i in range(len(world_gen)):
-        y = 0
-        for layer in world_gen[i]:
-            x = 0
-            for tile in layer:
-                if tile == 'b':
-                    screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'c':
-                    screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'd':
-                    screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'e':
-                    screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
-                if tile == 'f':
-                    screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'g':
-                    screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
-                if tile == 'h':
-                    screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'i':
-                    screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'j':
-                    screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'o':
-                    screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'A':
-                    screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
-                if tile == 'p':
-                    screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
-                if tile == 'q':
-                    screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
-                x += 1
-            y += 1
+    y = 0
+    for layer in world_gen[0]:
+        x = 0
+        for tile in layer:
+            if tile == 'b':
+                screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'c':
+                screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'd':
+                screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'e':
+                screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
+            if tile == 'f':
+                screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'g':
+                screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
+            if tile == 'h':
+                screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'i':
+                screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'j':
+                screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'o':
+                screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'A':
+                screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
+            if tile == 'p':
+                screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile == 'q':
+                screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
+            x += 1
+        y += 1
 
     x = 0
     for door in door_rects:
@@ -2701,17 +2830,17 @@ while main_running:
                 offset_pi = 80
                 offset_rk = 80
             else:
-                offset_c = 7
+                offset_c = 8
                 offset_k = 10
                 offset_p = 14
                 offset_pi = 2
                 offset_rk = 14
             if player_hand_item in Items_list:
                 o = Items[player_hand_item]
-                if not direction:
-                    offset = 0
+                if direction:
+                    offset = player_rect.width - o.get_width() / 2
                 else:
-                    offset = o.get_width() + 28
+                    offset = -player_rect.width - -(o.get_width() / 2)
 
             if player_hand_item == "gasburner":
                 if gasburnerBurning:
@@ -2724,7 +2853,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(gasburner_off, direction, False),
                                 (player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
 
-            if player_hand_item == "knife":
+            elif player_hand_item == "knife":
                 if knifeInUse:
                     screen.blit(pygame.transform.flip(knife_animation[knife_animation_stats[0]], direction, False), (
                         player_rect.right-offset_k-scroll[0], player_rect.y-scroll[1]+14))
@@ -2732,15 +2861,16 @@ while main_running:
                     screen.blit(pygame.transform.flip(knife, direction, False), (
                         player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "coffeemug":
+            elif player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
-                    player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
+                print(scroll[0])
 
-            if player_hand_item == "iPuhelin":
+            elif player_hand_item == "iPuhelin":
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
-                    player_rect.right-offset-scroll[0], player_rect.y-scroll[1]+14))
+                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
 
-            if player_hand_item == "plasmarifle":
+            elif player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
                     screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
@@ -2749,7 +2879,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
                         player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "pistol":
+            elif player_hand_item == "pistol":
                 pistol_cooldown += 1
                 if pistolFire and pistol_cooldown > 25:
                     pistol_cooldown = 0
@@ -2766,7 +2896,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
                         player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "rk62":
+            elif player_hand_item == "rk62":
                 if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
                     rk_62_ammo -= 1
                     rk62_cooldown = 0
@@ -2790,7 +2920,7 @@ while main_running:
                     screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
                         player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
 
-            if player_hand_item == "shotgun":
+            elif player_hand_item == "shotgun":
                 if not shotgun_loaded:
                     shotgun_cooldown += 1
                     if shotgun_cooldown > 60:
@@ -2909,8 +3039,8 @@ while main_running:
                 screen.blit(pistol_texture, ((i * 34) + 10 +
                                              (34 / pistol_texture.get_width() * 2) - 30, 80))
             elif inventory[i] == "iPuhelin":
-                screen.blit(iphone_texture, ((i * 34) + 10 +
-                                             (34 / iphone_texture.get_width() * 2), 80))
+                screen.blit(iphone_texture, (int((i * 34) + 10 +
+                                             (34 / iphone_texture.get_width() * 2)), 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
                 screen.blit(plasmarifle, ((i * 34) + 15, 80))
@@ -2944,22 +3074,13 @@ while main_running:
     screen.blit(stamina, (10, 130))
 
     missions_background_width = KDS.Missions.GetMaxWidth()
-    Mission_Render_Data = KDS.Missions.RenderMission()
-    pygame.draw.rect(screen, Mission_Render_Data[3], (
-        Mission_Render_Data[4], 0, Mission_Render_Data[5], Mission_Render_Data[6]))
-    screen.blit(
-        Mission_Render_Data[0], (Mission_Render_Data[1], Mission_Render_Data[2]))
+    Mission_Render_Data = KDS.Missions.RenderMission(screen)
+
     for i in range(KDS.Missions.GetRenderCount()):
-        task_background_values = KDS.Missions.TaskBackgroundValues(i)
-        pygame.draw.rect(
-            screen, task_background_values[0], task_background_values[1])
-        task_text_values = KDS.Missions.TaskTextValues(i)
-        screen.blit(task_text_values[0], task_text_values[1])
-        task_progress_values = KDS.Missions.TaskProgressValues(i)
-        screen.blit(task_progress_values[0], task_progress_values[1])
-    
+        KDS.Missions.RenderTask(screen, i)
+       
 #endregion
-#region Rendering
+#region Screen Rendering
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 #endregion

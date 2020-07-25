@@ -1,3 +1,4 @@
+import pygame
 import KDS.Logging
 from inspect import currentframe, getframeinfo
 
@@ -36,3 +37,13 @@ def ToBool(value):
         return None
         frameinfo = getframeinfo(currentframe())
         KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nValue is not a valid type.", True)
+
+def ToAlpha(image, alpha: int):
+    """
+    1. image: The image you want to convert.
+    2. alpha: The alpha (0 - 255) you want the image to be.
+    """
+    temp = pygame.Surface((image.get_width(), image.get_height())).convert()
+    temp.blit(image, (0, 0))
+    temp.set_alpha(alpha)
+    return temp

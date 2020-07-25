@@ -16,3 +16,7 @@ def getDistance(point1: tuple, point2: tuple): #Calculate distance between two p
         frameinfo = getframeinfo(currentframe())
         KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + Exception, True)
         return (0, 0)
+
+def Lerp(a: float, b: float, t: float):
+    value = (t * a) + ((1 - t) * b)
+    return value

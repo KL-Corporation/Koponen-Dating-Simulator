@@ -1,4 +1,5 @@
 import KDS.Logging
+import KDS.Math
 import pygame
 
 class Animation:
@@ -24,7 +25,7 @@ class Animation:
             self.done = False
 
         for i in range(number_of_images):
-            path = "resources/animations/" + animation_name + "_" + str(i) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
+            path = "Assets/Textures/Animations/" + animation_name + "_" + str(i) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasata joiden väri on RGB 255,255,255 muutetaan läpinäkyviksi
 
@@ -60,3 +61,26 @@ class Animation:
         self.tick = 0
         self.loops_count = 0
         self.done = False
+
+class Lerp():
+    """
+    Ensimmäinen argumentti odottaa lerpin lähtöarvoa
+    Toinen argumentti odottaa lerpin päättymisarvoa
+    Kolmas argumentti odottaa kyseisen animaation kestoa. Jos animaation pitäisi kestää 2 tickiä, kannattaa kolmanneksi argumentiksi laittaa 2
+    """
+    def __init__(self, From: float, To: float, duration: int):
+        self.From = From
+        self.To = To
+        self.ticks = duration
+        self.tick = 0
+
+    def update(self, reverse=False):
+        if not reverse:
+            self.tick += 1
+            if self.tick > self.ticks:
+                self.tick = self.ticks
+        else:
+            self.tick -= 1
+            if self.tick < 0:
+                self.tick = 0
+        return KDS.Math.Lerp(self.From, self.To, self.tick / self.ticks)
