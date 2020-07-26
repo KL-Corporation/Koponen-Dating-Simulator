@@ -2540,7 +2540,6 @@ while main_running:
             screen.blit(iphone_texture,
                         (item.x-scroll[0], item.y-scroll[1]+10))
         b += 1
-
 #endregion
 #region PlayerMovement
     if player_health > 0:
@@ -2583,7 +2582,6 @@ while main_running:
                 player_movement[1] = 1
             else:
                 player_movement[1] = 0
-
 #endregion
 #region AI
     toilet_collisions(player_rect, gasburnerBurning)
@@ -3004,7 +3002,7 @@ while main_running:
 
     if player_health or player_death_event:
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            player_rect.x-scroll[0], player_rect.y-scroll[1]))
+            player_rect.x - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.y - scroll[1] + ((player_rect.height - animation[animation_image].get_height()) / 2)))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
