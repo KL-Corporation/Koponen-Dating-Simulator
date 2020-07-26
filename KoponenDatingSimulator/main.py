@@ -512,8 +512,8 @@ shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
 
-gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
-gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
+gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
@@ -2865,7 +2865,6 @@ while main_running:
             elif player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
                     int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
-                print(scroll[0])
 
             elif player_hand_item == "iPuhelin":
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (

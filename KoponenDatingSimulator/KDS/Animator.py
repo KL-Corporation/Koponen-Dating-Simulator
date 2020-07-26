@@ -2,6 +2,11 @@ import KDS.Logging
 import KDS.Math
 import pygame
 
+class OnAnimationEnd:
+    Stop = 0
+    Loop = 1
+    PingPong = 2
+
 class Animation:
 
     """
@@ -68,19 +73,35 @@ class Lerp():
     Toinen argumentti odottaa lerpin päättymisarvoa
     Kolmas argumentti odottaa kyseisen animaation kestoa. Jos animaation pitäisi kestää 2 tickiä, kannattaa kolmanneksi argumentiksi laittaa 2
     """
-    def __init__(self, From: float, To: float, duration: int):
+    def __init__(self, From: float, To: float, duration: int, On_Animation_End: OnAnimationEnd):
         self.From = From
         self.To = To
         self.ticks = duration
         self.tick = 0
+        self.onAnimationEnd = On_Animation_End
+        self.PingPong = False
 
     def update(self, reverse=False):
-        if not reverse:
+        """
+        Ensimmäinen argumentti määrittää kumpaan suuntaan lerp kulkee
+        Toinen argumentti määrittää mitä lerp tekee, kun se pääsee loppuun.
+        """
+        if not reverse and not self.PingPong:
             self.tick += 1
             if self.tick > self.ticks:
-                self.tick = self.ticks
+                if self.onAnimationEnd == OnAnimationEnd.Stop:
+                    self.tick = self.ticks
+                elif self.onAnimationEnd == OnAnimationEnd.Loop:
+                    self.tick = 0
+                elif self.onAnimationEnd == OnAnimationEnd.PingPong:
+                    self.PingPong = True
         else:
             self.tick -= 1
             if self.tick < 0:
-                self.tick = 0
+                if self.onAnimationEnd == OnAnimationEnd.Stop:
+                    self.tick = 0
+                elif self.onAnimationEnd == OnAnimationEnd.Loop:
+                    self.tick = self.ticks
+                elif self.onAnimationEnd == OnAnimationEnd.PingPong:
+                    self.PingPong = False
         return KDS.Math.Lerp(self.From, self.To, self.tick / self.ticks)
