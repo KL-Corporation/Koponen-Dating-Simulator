@@ -71,7 +71,8 @@ class Lerp():
     """
     Ensimmäinen argumentti odottaa lerpin lähtöarvoa
     Toinen argumentti odottaa lerpin päättymisarvoa
-    Kolmas argumentti odottaa kyseisen animaation kestoa. Jos animaation pitäisi kestää 2 tickiä, kannattaa kolmanneksi argumentiksi laittaa 2
+    Kolmas argumentti odottaa kyseisen lerpin kestoa. Jos lerpin pitäisi kestää 2 tickiä, kannattaa kolmanneksi argumentiksi laittaa 2
+    Neljäs argumentti määrittää mitä lerp lerp tekee päättyessään. Näiden toiminnan voit jo varmaan arvata nimestäkin.
     """
     def __init__(self, From: float, To: float, duration: int, On_Animation_End: OnAnimationEnd):
         self.From = From
