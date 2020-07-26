@@ -103,7 +103,7 @@ def RenderMission(surface: pygame.Surface):
     screen_width = surface.get_width()
     pygame.draw.rect(surface, HeaderColor, (screen_width - MaxWidth, 0, MaxWidth, 20))
     surface.blit(rendered, (screen_width - MaxWidth + ((MaxWidth / 2) - (text_width / 2)), 3.75))
-class ValueType():
+class ValueType:
     Background = 0
     Text = 1
     Progress = 2

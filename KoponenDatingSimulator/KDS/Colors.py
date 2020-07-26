@@ -1,6 +1,6 @@
 #The official unofficial color palette that this game is not built around
 
-class Get():
+class Get:
     CloudWhite = (236, 240, 241)
     MidnightBlue = (44, 62, 80)
     AviatorRed = (240, 71, 71)
