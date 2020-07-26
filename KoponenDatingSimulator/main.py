@@ -51,7 +51,7 @@ class pygame_print_text:
     def print_text(self, text):
         self.screen_text = self.text_font.render(text, True, self.color)
         self.display_to_blit.blit(
-            self.screen_text, (self.topleft[0], self.topleft[1]+self.row))
+            self.screen_text, (self.topleft[0], self.topleft[1] + self.row))
         self.row += self.row_height
 
     def resetRow(self):
@@ -2152,6 +2152,9 @@ def main_menu():
         main_display.fill((0, 0, 0))
         c = False
         clock.tick(60)
+
+def level_finished_menu():
+    print("nothing")
 #endregion
 #region Check Terms
 agr(tcagr)
@@ -3103,6 +3106,9 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
+    if KDS.Missions.GetFinished() == True:
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+            level_finished_menu()
 #endregion
 #region Ticks
     tick += 1
