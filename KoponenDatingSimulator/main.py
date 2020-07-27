@@ -512,8 +512,8 @@ FunctionKey = False
 AltPressed = False
 F4Pressed = False
 esc_menu = False
-KeyW = False
-KeyS = False
+moveUp = False
+moveDown = False
 mouseLeftPressed = False
 shotgun_loaded = True
 shotgun_cooldown = 0
@@ -887,7 +887,7 @@ def load_rects():
                         burning_trashcans.append(False)
                         tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
                     elif tile == 'q':
-                        ladders.append(pygame.Rect((x * 34) + 15, y * 34, 4, 34))
+                        ladders.append(pygame.Rect((x * 34) + 15, (y * 34) - 2, 4, 38))
                     elif tile == 'k':
                         pass
                     elif tile == 'l':
@@ -2228,8 +2228,11 @@ while main_running:
             if event.key == K_a:
                 playerMovingLeft = True
             if event.key == K_SPACE:
+                moveUp = True
                 if air_timer < 6:
                     vertical_momentum = -10
+            if event.key == K_LCTRL:
+                moveDown = True
             if event.key == K_LSHIFT:
                 playerSprinting = True
             if event.key == K_e:
@@ -2243,9 +2246,11 @@ while main_running:
             if event.key == K_t:
                 console()
             if event.key == K_w:
-                KeyW = True
+                moveUp = True
+                if air_timer < 6:
+                    vertical_momentum = -10
             if event.key == K_s:
-                KeyS = True
+                moveDown = True
             if event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -2298,6 +2303,10 @@ while main_running:
                 playerMovingRight = False
             if event.key == K_a:
                 playerMovingLeft = False
+            if event.key == K_SPACE:
+                moveUp = False
+            if event.key == K_LCTRL:
+                moveDown = False
             if event.key == K_LSHIFT:
                 playerSprinting = False
             if event.key == K_F4:
@@ -2305,9 +2314,9 @@ while main_running:
             if event.key == K_LALT or event.key == K_RALT:
                 AltPressed = False
             if event.key == K_w:
-                KeyW = False
+                moveUp = False
             if event.key == K_s:
-                KeyS = False
+                moveDown = False
             if event.key == K_c:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
@@ -2605,15 +2614,23 @@ while main_running:
     if vertical_momentum > 8:
         vertical_momentum = 8
 
+    ladderJump = True
     for ladder in ladders:
         if player_rect.colliderect(ladder):
+            ladderJump = False
             vertical_momentum = 0
-            if KeyW:
+            air_timer = 0
+            if moveUp:
                 player_movement[1] = -1
-            elif KeyS:
+            elif moveDown:
                 player_movement[1] = 1
             else:
                 player_movement[1] = 0
+
+    if ladderJump and moveUp:
+        moveUp = False
+        if air_timer < 6:
+            vertical_momentum = -10
 #endregion
 #region AI
     toilet_collisions(player_rect, gasburnerBurning)
