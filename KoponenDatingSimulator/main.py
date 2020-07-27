@@ -887,7 +887,7 @@ def load_rects():
                         burning_trashcans.append(False)
                         tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
                     elif tile == 'q':
-                        ladders.append(pygame.Rect(x * 34, y * 34, 34, 34))
+                        ladders.append(pygame.Rect((x * 34) + 15, y * 34, 4, 34))
                     elif tile == 'k':
                         pass
                     elif tile == 'l':
@@ -3033,7 +3033,7 @@ while main_running:
 
     if player_health or player_death_event:
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            player_rect.x - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.y - scroll[1] + ((player_rect.height - animation[animation_image].get_height()) / 2)))
+            player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.topleft[1] - scroll[1] + ((player_rect.height - animation[animation_image].get_height()) / 2)))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
