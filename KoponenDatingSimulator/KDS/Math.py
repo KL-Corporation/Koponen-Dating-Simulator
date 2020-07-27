@@ -2,7 +2,10 @@ import KDS.Logging
 from math import sqrt
 from inspect import currentframe, getframeinfo
 
-def getDistance(point1: tuple, point2: tuple): #Calculate distance between two points.
+def getDistance(point1: tuple, point2: tuple): 
+    """
+    Calculates the distance between two points.
+    """
     try:
         q = point1[0] - point2[0]
         w = point1[1] - point1[-1]
@@ -18,5 +21,8 @@ def getDistance(point1: tuple, point2: tuple): #Calculate distance between two p
         return (0, 0)
 
 def Lerp(a: float, b: float, t: float):
+    """
+    Linearly interpolates between a and b by t.
+    """
     value = (t * a) + ((1 - t) * b)
     return value

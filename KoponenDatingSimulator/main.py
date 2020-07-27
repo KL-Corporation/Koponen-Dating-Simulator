@@ -52,7 +52,7 @@ class pygame_print_text:
     def print_text(self, text):
         self.screen_text = self.text_font.render(text, True, self.color)
         self.display_to_blit.blit(
-            self.screen_text, (self.topleft[0], self.topleft[1]+self.row))
+            self.screen_text, (self.topleft[0], self.topleft[1] + self.row))
         self.row += self.row_height
 
     def resetRow(self):
@@ -520,8 +520,8 @@ shotgun_cooldown = 0
 pistol_cooldown = 0
 dark = False
 
-gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
-gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
+gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
@@ -2170,6 +2170,9 @@ def main_menu():
         main_display.fill((0, 0, 0))
         c = False
         clock.tick(60)
+
+def level_finished_menu():
+    print("nothing")
 #endregion
 #region Check Terms
 agr(tcagr)
@@ -2569,7 +2572,6 @@ while main_running:
             screen.blit(iphone_texture,
                         (item.x-scroll[0], item.y-scroll[1]+10))
         b += 1
-
 #endregion
 #region PlayerMovement
     if player_health > 0:
@@ -2612,7 +2614,6 @@ while main_running:
                 player_movement[1] = 1
             else:
                 player_movement[1] = 0
-
 #endregion
 #region AI
     toilet_collisions(player_rect, gasburnerBurning)
@@ -2896,7 +2897,6 @@ while main_running:
             elif player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
                     int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
-                print(scroll[0])
 
             elif player_hand_item == "iPuhelin":
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
@@ -3033,7 +3033,7 @@ while main_running:
 
     if player_health or player_death_event:
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            player_rect.x-scroll[0], player_rect.y-scroll[1]))
+            player_rect.x - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.y - scroll[1] + ((player_rect.height - animation[animation_image].get_height()) / 2)))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
@@ -3148,6 +3148,9 @@ while main_running:
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
+    if KDS.Missions.GetFinished() == True:
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+            level_finished_menu()
 #endregion
 #region Ticks
     tick += 1
