@@ -157,6 +157,9 @@ def InitialiseMissions(LevelIndex):
         elif LevelIndex == 2:
             KDS.Missions.InitialiseMission("koponen_talk", "Puhu Koposelle")
             KDS.Missions.InitialiseTask("koponen_talk", "talk", "Puhu Koposelle")
+        else:
+            KDS.Missions.InitialiseMission("null_mission", "null mission")
+            KDS.Missions.InitialiseTask("null_mission", "null", "null_mission")
 #endregion
 #region Data
 def GetFinished():

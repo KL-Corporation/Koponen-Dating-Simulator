@@ -274,6 +274,7 @@ alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
 
 #region Downloads
+WHITE = (255,255,255)
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
@@ -290,8 +291,8 @@ button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
-player_corpse.set_colorkey((255, 255, 255))
-player_img.set_colorkey((255, 255, 255))
+player_corpse.set_colorkey(WHITE)
+player_img.set_colorkey(WHITE)
 
 floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
 concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
@@ -316,17 +317,21 @@ planks = pygame.image.load("Assets/Textures/Building/planks.png")
 jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png")
 landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png")
 ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
-table1.set_colorkey((255, 255, 255))
-toilet1.set_colorkey((255, 255, 255))
-lamp1.set_colorkey((255, 255, 255))
-trashcan.set_colorkey((255, 255, 255))
-door_closed.set_colorkey((255, 255, 255))
-red_door_closed.set_colorkey((255, 255, 255))
-green_door_closed.set_colorkey((255, 255, 255))
-blue_door_closed.set_colorkey((255, 255, 255))
-jukebox_texture.set_colorkey((255, 255, 255))
-landmine_texture.set_colorkey((255, 255, 255))
-ladder_texture.set_colorkey((255, 255, 255))
+background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png")
+light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png")
+iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
+table1.set_colorkey(WHITE)
+toilet1.set_colorkey(WHITE)
+lamp1.set_colorkey(WHITE)
+trashcan.set_colorkey(WHITE)
+door_closed.set_colorkey(WHITE)
+red_door_closed.set_colorkey(WHITE)
+green_door_closed.set_colorkey(WHITE)
+blue_door_closed.set_colorkey(WHITE)
+jukebox_texture.set_colorkey(WHITE)
+landmine_texture.set_colorkey(WHITE)
+ladder_texture.set_colorkey(WHITE)
+iron_bars.set_colorkey(WHITE)
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
@@ -379,40 +384,40 @@ gamemode_bc_1_2 = pygame.image.load(
 arrow_button = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 
-gasburner_off.set_colorkey((255, 255, 255))
-knife.set_colorkey((255, 255, 255))
-knife_blood.set_colorkey((255, 255, 255))
-red_key.set_colorkey((255, 255, 255))
-green_key.set_colorkey((255, 255, 255))
-blue_key.set_colorkey((255, 255, 255))
-coffeemug.set_colorkey((255, 255, 255))
+gasburner_off.set_colorkey(WHITE)
+knife.set_colorkey(WHITE)
+knife_blood.set_colorkey(WHITE)
+red_key.set_colorkey(WHITE)
+green_key.set_colorkey(WHITE)
+blue_key.set_colorkey(WHITE)
+coffeemug.set_colorkey(WHITE)
 ss_bonuscard.set_colorkey((255, 0, 0))
-lappi_sytytyspalat.set_colorkey((255, 255, 255))
-plasmarifle.set_colorkey((255, 255, 255))
-plasma_ammo.set_colorkey((255, 255, 255))
-cell.set_colorkey((255, 255, 255))
-zombie_corpse.set_colorkey((255, 255, 255))
-pistol_texture.set_colorkey((255, 255, 255))
-pistol_f_texture.set_colorkey((255, 255, 255))
-pistol_mag.set_colorkey((255, 255, 255))
-rk62_texture.set_colorkey((255, 255, 255))
-rk62_f_texture.set_colorkey((255, 255, 255))
-rk62_mag.set_colorkey((255, 255, 255))
-sergeant_corpse.set_colorkey((255, 255, 255))
-sergeant_aiming.set_colorkey((255, 255, 255))
-sergeant_firing.set_colorkey((255, 255, 255))
-medkit.set_colorkey((255, 255, 255))
-shotgun.set_colorkey((255, 255, 255))
-shotgun_f.set_colorkey((255, 255, 255))
-shotgun_shells_t.set_colorkey((255, 255, 255))
-archvile_corpse.set_colorkey((255, 255, 255))
-iphone_texture.set_colorkey((255, 255, 255))
+lappi_sytytyspalat.set_colorkey(WHITE)
+plasmarifle.set_colorkey(WHITE)
+plasma_ammo.set_colorkey(WHITE)
+cell.set_colorkey(WHITE)
+zombie_corpse.set_colorkey(WHITE)
+pistol_texture.set_colorkey(WHITE)
+pistol_f_texture.set_colorkey(WHITE)
+pistol_mag.set_colorkey(WHITE)
+rk62_texture.set_colorkey(WHITE)
+rk62_f_texture.set_colorkey(WHITE)
+rk62_mag.set_colorkey(WHITE)
+sergeant_corpse.set_colorkey(WHITE)
+sergeant_aiming.set_colorkey(WHITE)
+sergeant_firing.set_colorkey(WHITE)
+medkit.set_colorkey(WHITE)
+shotgun.set_colorkey(WHITE)
+shotgun_f.set_colorkey(WHITE)
+shotgun_shells_t.set_colorkey(WHITE)
+archvile_corpse.set_colorkey(WHITE)
+iphone_texture.set_colorkey(WHITE)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 
 text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
-text_icon.set_colorkey((255, 255, 255))
+text_icon.set_colorkey(WHITE)
 
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/misc/gasburner_clip.wav")
 gasburner_fire = pygame.mixer.Sound("Assets/Audio/misc/gasburner_fire.wav")
@@ -445,7 +450,9 @@ rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
-jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
+gradient_sphere = pygame.image.load("Assets/gradient_sphere.png").convert_alpha()
+
+jukebox_tip = tip_font.render("Use jukebox [E]", True, WHITE)
 #endregion
 
 main_running = True
@@ -511,6 +518,7 @@ mouseLeftPressed = False
 shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
+dark = False
 
 gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
 gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
@@ -534,12 +542,15 @@ fart_counter = 0
 farting = False
 
 current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "02")
-max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "02"))
-map_names = (
-    "Placeholder",
-    "Beginnings...",
-    "More Monsters"
-)
+
+with open("Assets/Maps/map_names.txt", "r") as file:
+    cntnts = file.read()
+    cntnts = cntnts.split('\n')
+
+
+max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
+
+map_names = tuple(cntnts)
 
 ammunition_plasma = 50
 pistol_bullets = 8
@@ -562,11 +573,11 @@ test_rect = pygame.Rect(0, 0, 60, 40)
 player_rect = pygame.Rect(100, 100, 28, 65)
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
-koponen_movement = [0, 6]
+koponen_movement = [1, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
-koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, WHITE)
 
 task = ""
 taskTaivutettu = ""
@@ -653,7 +664,7 @@ door_rects = list()
 doors_open = list()
 
 def WorldGeneration():
-    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
+    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys, iron_barss
     buildingBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map"))
     decorationBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map"))
     enemyBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map"))
@@ -741,7 +752,7 @@ def WorldGeneration():
 
     #Use the index to get the letter and make the file using the letters
 
-    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
+    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_barss = load_rects()
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Zombies Initialised: " + str(len(zombies)), False)
     for zombie in zombies:
@@ -855,6 +866,7 @@ def load_rects():
     archviles = []
     ladders = []
     bulldogs = []
+    iron_barss = []
     w = [0, 0]
     for i in range(len(world_gen) - 1):
         y = 0
@@ -884,6 +896,8 @@ def load_rects():
                         pass
                     elif tile == 'n':
                         pass
+                    elif tile == 's':
+                        iron_barss.append(pygame.Rect(x*34, y*34, 1, 1))
                     elif tile == 'A':
                         pass
                     elif tile == 'B':
@@ -904,7 +918,7 @@ def load_rects():
 
                 x += 1
             y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_barss
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -1016,7 +1030,7 @@ def load_animation(name, number_of_images):
     for i in range(number_of_images):
         path = "Assets/Textures/Player/" + name + str(i) + ".png"
         img = pygame.image.load(path).convert()
-        img.set_colorkey((255, 255, 255))
+        img.set_colorkey(WHITE)
         animation_list.append(img)
     return animation_list
 #endregion
@@ -1138,7 +1152,7 @@ def item_collision_test(rect, items):
             hit_list.append(item)
             if not itemTipVisible:
                 itemTip = tip_font.render(
-                    "Nosta Esine Painamalla [E]", True, (255, 255, 255))
+                    "Nosta Esine Painamalla [E]", True, WHITE)
                 screen.blit(
                     itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
                 itemTipVisible = True
@@ -1310,30 +1324,30 @@ koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 5, (255, 255, 255), -1)
+    "main_menu_bc_gasburner", 2, 5, WHITE, -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, (255, 255, 255), 1)
+    "explosion", 7, 5, WHITE, 1)
 plasmarifle_animation = KDS.Animator.Animation(
-    "plasmarifle_firing", 2, 3, (255, 255, 255), -1)
+    "plasmarifle_firing", 2, 3, WHITE, -1)
 zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, (255, 255, 255), 1)
+    "z_death", 5, 6, WHITE, 1)
 zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, (255, 255, 255), -1)
+    "z_walk", 3, 10, WHITE, -1)
 zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, (255, 255, 255), -1)
+    "z_attack", 4, 10, WHITE, -1)
 sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, (255, 255, 255), -1)
+    "seargeant_walking", 4, 8, WHITE, -1)
 sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, (255, 255, 255), 1)
+    "seargeant_shooting", 2, 6, WHITE, 1)
 
 archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, (255, 255, 255), -1)
+    "archvile_run", 3, 9, WHITE, -1)
 arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, (255, 255, 255), 1)
+    "archvile_attack", 6, 16, WHITE, 1)
 archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, (255, 255, 255), 1)
-flames_animation = KDS.Animator.Animation("flames", 5, 3, (255, 255, 255), -1)
+    "archvile_death", 7, 12, WHITE, 1)
+flames_animation = KDS.Animator.Animation("flames", 5, 3, WHITE, -1)
 bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6,(255,255,255),-1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
@@ -1353,7 +1367,7 @@ for animation in sergeant_shoot_animation.images:
 sergeant_shoot_animation.ticks = 43
 #endregion
 sergeant_death_animation = KDS.Animator.Animation(
-    "seargeant_dying", 5, 8, (255, 255, 255), 1)
+    "seargeant_dying", 5, 8, WHITE, 1)
 #endregion
 #region Console
 def console():
@@ -1450,7 +1464,7 @@ def agr(tcagr):
         return False
 
     buttons.append(pygame.Rect(249, 353, 200, 160))
-    texts.append(button_font1.render("I Agree", True, (255, 255, 255)))
+    texts.append(button_font1.render("I Agree", True, WHITE))
     functions.append(agree)
 
     while tcagr_running:
@@ -1526,7 +1540,7 @@ def koponen_talk():
     koponen_talk_foreground = ad_images[random_foreground].copy()
 
     def renderText(text):
-        text_object = button_font1.render(text, True, (255, 255, 255))
+        text_object = button_font1.render(text, True, WHITE)
         return text_object
 
     exit_text = renderText("Exit")
@@ -1718,10 +1732,10 @@ def esc_menu_f():
     settings_button = pygame.Rect(150, 250, 200, 30)
     main_menu_button = pygame.Rect(150, 290, 200, 30)
 
-    resume_text = button_font.render("Resume", True, (255, 255, 255))
-    save_text = button_font.render("Save", True, (255, 255, 255))
-    settings_text = button_font.render("Settings", True, (255, 255, 255))
-    main_menu_text = button_font.render("Main menu", True, (255, 255, 255))
+    resume_text = button_font.render("Resume", True, WHITE)
+    save_text = button_font.render("Save", True, WHITE)
+    settings_text = button_font.render("Settings", True, WHITE)
+    main_menu_text = button_font.render("Main menu", True, WHITE)
     
     buttons = []
     functions = []
@@ -1818,7 +1832,7 @@ def settings_menu():
     return_button = pygame.Rect(465, 700, 270, 60)
     music_slider = pygame.Rect(560, 141, 30, 28)
 
-    return_text = button_font1.render("Return", True, (255, 255, 255))
+    return_text = button_font1.render("Return", True, WHITE)
 
     def return_def():
         global settings_running
@@ -1837,7 +1851,7 @@ def settings_menu():
     while settings_running:
 
         volume_text = button_font1.render(
-            "Music Volume", True, (255, 255, 255))
+            "Music Volume", True, WHITE)
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -1942,9 +1956,9 @@ def main_menu():
     settings_button = pygame.Rect(450, 250, 300, 60)
     quit_button = pygame.Rect(450, 320, 300, 60)
 
-    play_text = button_font1.render("PLAY", True, (255, 255, 255))
-    settings_text = button_font1.render("SETTINGS", True, (255, 255, 255))
-    quit_text = button_font1.render("QUIT", True, (255, 255, 255))
+    play_text = button_font1.render("PLAY", True, WHITE)
+    settings_text = button_font1.render("SETTINGS", True, WHITE)
+    quit_text = button_font1.render("QUIT", True, WHITE)
 
     def play_function(gamemode: KDS.Gamemode.Modes):
         global main_menu_running, current_map, inventory
@@ -2087,7 +2101,7 @@ def main_menu():
 
                 main_display.blit(main_menu_texts[y], (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - main_menu_texts[y].get_width()) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - main_menu_texts[y].get_height()) / 2))))
 
-        if MenuMode == Mode.ModeSelectionMenu:
+        elif MenuMode == Mode.ModeSelectionMenu:
             main_display.blit(gamemode_bc_1_1, (0, 0))
             main_display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
             for y in range(len(mode_selection_buttons)):
@@ -2111,10 +2125,10 @@ def main_menu():
                     elif y == 1:
                         main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
 
-        if MenuMode == Mode.StoryMenu:
+        elif MenuMode == Mode.StoryMenu:
             print("Wow... So empty.")
 
-        if MenuMode == Mode.CampaignMenu:
+        elif MenuMode == Mode.CampaignMenu:
             pygame.draw.rect(main_display, (192, 192, 192), (50, 200, display_size[0] - 100, 66))
             for y in range(len(campaign_menu_buttons)):
                 if campaign_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
@@ -2184,6 +2198,22 @@ def inventoryRight():
             inventory_slot += 2
         else:
             inventory_slot += 1
+#endregion
+#region Useless shit
+"""
+wd = len(world_gen[0][0])*68
+hg = len(world_gen[0])*68
+background_surface = pygame.Surface((wd,hg))
+
+for y in range(len(world_gen[0])):
+    for x in range(len(world_gen[0][0])):
+        background_surface.blit(background_wall,(x*68,y*68))
+
+pygame.image.save(background_surface, "level_background.png")
+del background_surface
+
+game_background = pygame.image.load("level_background.png")
+"""
 #endregion
 #region Main Running
 while main_running:
@@ -2335,30 +2365,32 @@ while main_running:
         for tile in layer:
             if tile == 'b':
                 screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'c':
+            elif tile == 'c':
                 screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'd':
+            elif tile == 'd':
                 screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'e':
+            elif tile == 'e':
                 screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
-            if tile == 'f':
+            elif tile == 'f':
                 screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'g':
+            elif tile == 'g':
                 screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
-            if tile == 'h':
+            elif tile == 'h':
                 screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'i':
+            elif tile == 'i':
                 screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'j':
+            elif tile == 'j':
                 screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'o':
+            elif tile == 'o':
                 screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'A':
+            elif tile == 'A':
                 screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
-            if tile == 'p':
+            elif tile == 'p':
                 screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'q':
+            elif tile == 'q':
                 screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
+            elif tile == 'r':
+                screen.blit(light_bricks, (x * 34-scroll[0], y * 34-scroll[1]))
             x += 1
         y += 1
 
@@ -2454,25 +2486,25 @@ while main_running:
         if player_hand_item == "plasmarifle":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(ammunition_plasma), True, (255, 255, 255))
+                "Ammo: " + str(ammunition_plasma), True, WHITE)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "pistol":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(pistol_bullets), True, (255, 255, 255))
+                "Ammo: " + str(pistol_bullets), True, WHITE)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "rk62":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
+                "Ammo: " + str(rk_62_ammo), True, WHITE)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "shotgun":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
+                "Ammo: " + str(shotgun_shells), True, WHITE)
             screen.blit(ammo_count, (10, 360))
 
     for bullet in plasmabullets:
@@ -2591,8 +2623,8 @@ while main_running:
     else:
         player_rect, collisions = move(player_rect, [0, 8], tile_rects)
 
-    koponen_rect, k_collisions = move(
-        koponen_rect, koponen_movement, tile_rects)
+    koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
+
 
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
@@ -2720,18 +2752,18 @@ while main_running:
 #endregion
 #region UI
     score = score_font.render(
-        ("Score: " + str(player_score)), True, (255, 255, 255))
+        ("Score: " + str(player_score)), True, WHITE)
     if DebugMode:
         fps = score_font.render(
-            "Fps: " + str(int(clock.get_fps())), True, (255, 255, 255))
+            "Fps: " + str(int(clock.get_fps())), True, WHITE)
 
     if player_health < 0:
         player_health = 0
 
     health = score_font.render(
-        "Health: " + str(player_health), True, (255, 255, 255))
+        "Health: " + str(player_health), True, WHITE)
     stamina = score_font.render(
-        "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
+        "Stamina: " + str(round(int(playerStamina))), True, WHITE)
 #endregion
 #region Pelaajan elämätilanteen käsittely
     if player_health < last_player_health and player_health != 0:
@@ -3011,6 +3043,9 @@ while main_running:
             screen.blit(flames_animation.update(),
                         (player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
 
+    for iron_bar in iron_barss:
+        screen.blit(iron_bars,(iron_bar.x-scroll[0],iron_bar.y-scroll[1]))
+
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3081,10 +3116,15 @@ while main_running:
        
 #endregion
 #region Screen Rendering
+    if dark:
+        screen.blit(alpha,(0,0))
+        
+
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 #endregion
 #region Conditional Events
+
     if esc_menu:
         pygame.mixer.pause()
         pygame.mixer.music.pause()

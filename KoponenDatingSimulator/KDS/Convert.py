@@ -47,3 +47,4 @@ def ToAlpha(image, alpha: int):
     temp.blit(image, (0, 0))
     temp.set_alpha(alpha)
     return temp
+

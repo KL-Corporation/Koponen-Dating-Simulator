@@ -17,8 +17,8 @@ n = blue_door
 o = bricks
 p = planks
 q = ladder
-r
-s
+r = light_bricks
+s = iron_bars
 t
 u
 decoration:

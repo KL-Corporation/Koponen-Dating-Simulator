@@ -17,6 +17,8 @@ blue_door,n,128,128,255
 bricks,o,255,128,0
 planks,p,255,64,0
 ladder,q,255,192,0
+light_bricks,r,213,0,231
+iron_bars,s,23,41,22
 
 decoration:
 tree,A,0,255,0
