@@ -1472,16 +1472,16 @@ def agr(tcagr):
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
-                if event.key == K_F4:
+                elif event.key == K_F4:
                     F4Pressed = True
                     if AltPressed == True and F4Pressed == True:
                         KDS_Quit()
-                if event.key == K_LALT or event.key == K_RALT:
+                elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-            if event.type == MOUSEBUTTONDOWN:
+            elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     c = True
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
         main_display.blit(agr_background, (0, 0))
 
@@ -1678,10 +1678,10 @@ def koponen_talk():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     koponenTalking = False
-            if event.type == MOUSEBUTTONUP:
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
         main_display.blit(koponen_talking_background, (0, 0))
         main_display.blit(koponen_talk_foreground, (40, 474))
@@ -1783,10 +1783,10 @@ def esc_menu_f():
                     esc_menu = False
                     pygame.mouse.set_visible(False)
                     pygame.mixer.music.unpause()
-            if event.type == MOUSEBUTTONUP:
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
         esc_menu_surface.fill((123, 134, 111))
         main_display.blit(file, (0, 0))
@@ -1857,18 +1857,18 @@ def settings_menu():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
-                if event.key == K_F4:
+                elif event.key == K_F4:
                     F4Pressed = True
                     if AltPressed == True and F4Pressed == True:
                         KDS_Quit()
-                if event.key == K_LALT or event.key == K_RALT:
+                elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-                if event.key == K_ESCAPE:
+                elif event.key == K_ESCAPE:
                     settings_running = False
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
 
         main_display.blit(settings_background, (0, 0))
@@ -2066,19 +2066,19 @@ def main_menu():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     setFullscreen(False)
-                if event.key == K_F4:
+                elif event.key == K_F4:
                     F4Pressed = True
                     if AltPressed == True and F4Pressed == True:
                         KDS_Quit()
-                if event.key == K_LALT or event.key == K_RALT:
+                elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-                if event.key == K_ESCAPE:
+                elif event.key == K_ESCAPE:
                     if MenuMode != Mode.MainMenu:
                         MenuMode = Mode.MainMenu
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
@@ -2225,39 +2225,39 @@ while main_running:
         if event.type == KEYDOWN:
             if event.key == K_d:
                 playerMovingRight = True
-            if event.key == K_a:
+            elif event.key == K_a:
                 playerMovingLeft = True
-            if event.key == K_SPACE:
+            elif event.key == K_SPACE:
                 moveUp = True
                 if air_timer < 6:
                     vertical_momentum = -10
-            if event.key == K_LCTRL:
+            elif event.key == K_LCTRL:
                 moveDown = True
-            if event.key == K_LSHIFT:
+            elif event.key == K_LSHIFT:
                 playerSprinting = True
-            if event.key == K_e:
+            elif event.key == K_e:
                 FunctionKey = True
-            if event.key == K_ESCAPE:
+            elif event.key == K_ESCAPE:
                 esc_menu = False if esc_menu else True
-            if event.key == K_j:
+            elif event.key == K_j:
                 inventoryLeft()
-            if event.key == K_k:
+            elif event.key == K_k:
                 inventoryRight()
-            if event.key == K_t:
+            elif event.key == K_t:
                 console()
-            if event.key == K_w:
+            elif event.key == K_w:
                 moveUp = True
                 if air_timer < 6:
                     vertical_momentum = -10
-            if event.key == K_s:
+            elif event.key == K_s:
                 moveDown = True
-            if event.key == K_f:
+            elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
                     farting = True
                     fart.play()
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
-            if event.key == K_q:
+            elif event.key == K_q:
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
@@ -2275,19 +2275,19 @@ while main_running:
                     inventory[inventory_slot + 1] = "none"
                     inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
-            if event.key == K_F3:
+            elif event.key == K_F3:
                 DebugMode = not DebugMode
-            if event.key == K_F4:
+            elif event.key == K_F4:
                 F4Pressed = True
                 if AltPressed == True and F4Pressed == True:
                     KDS_Quit()
                 else:
                     player_health = 0
-            if event.key == K_LALT or event.key == K_RALT:
+            elif event.key == K_LALT or event.key == K_RALT:
                 AltPressed = True
-            if event.key == K_F11:
+            elif event.key == K_F11:
                 setFullscreen(False)
-        if event.type == MOUSEBUTTONDOWN:
+        elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True
                 rk62_sound_cooldown = 11
@@ -2298,30 +2298,30 @@ while main_running:
                     knifeInUse = True
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = True
-        if event.type == KEYUP:
+        elif event.type == KEYUP:
             if event.key == K_d:
                 playerMovingRight = False
-            if event.key == K_a:
+            elif event.key == K_a:
                 playerMovingLeft = False
-            if event.key == K_SPACE:
+            elif event.key == K_SPACE:
                 moveUp = False
-            if event.key == K_LCTRL:
+            elif event.key == K_LCTRL:
                 moveDown = False
-            if event.key == K_LSHIFT:
+            elif event.key == K_LSHIFT:
                 playerSprinting = False
-            if event.key == K_F4:
+            elif event.key == K_F4:
                 F4Pressed = False
-            if event.key == K_LALT or event.key == K_RALT:
+            elif event.key == K_LALT or event.key == K_RALT:
                 AltPressed = False
-            if event.key == K_w:
+            elif event.key == K_w:
                 moveUp = False
-            if event.key == K_s:
+            elif event.key == K_s:
                 moveDown = False
-            if event.key == K_c:
+            elif event.key == K_c:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
-        if event.type == MOUSEBUTTONUP:
+        elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 mouseLeftPressed = False
                 if player_hand_item == "gasburner":
@@ -2330,11 +2330,11 @@ while main_running:
                     knifeInUse = False
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = False
-            if event.button == 4:
+            elif event.button == 4:
                 inventoryLeft()
-            if event.button == 5:
+            elif event.button == 5:
                 inventoryRight()
-        if event.type == pygame.QUIT:
+        elif event.type == pygame.QUIT:
             KDS_Quit()
 #endregion
 #region Inventory Code
