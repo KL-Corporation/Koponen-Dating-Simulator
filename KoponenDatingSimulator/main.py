@@ -320,6 +320,8 @@ ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
 background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png")
 light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png")
 iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
+soil = pygame.image.load("Assets/Textures/Building/soil.png")
+mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png")
 table1.set_colorkey(WHITE)
 toilet1.set_colorkey(WHITE)
 lamp1.set_colorkey(WHITE)
@@ -354,6 +356,8 @@ zombie_corpse = pygame.image.load(
 pistol_texture = pygame.image.load("Assets/Textures/Items/pistol.png").convert()
 pistol_f_texture = pygame.image.load(
     "Assets/Textures/Items/pistol_firing.png").convert()
+soulsphere = pygame.image.load("Assets/Textures/Items/soulsphere.png").convert()
+turboneedle = pygame.image.load("Assets/Textures/Items/turboneedle.png").convert()
 pistol_mag = pygame.image.load("Assets/Textures/Items/pistol_mag.png").convert()
 rk62_texture = pygame.image.load("Assets/Textures/Items/rk62.png").convert()
 rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
@@ -412,6 +416,8 @@ shotgun_f.set_colorkey(WHITE)
 shotgun_shells_t.set_colorkey(WHITE)
 archvile_corpse.set_colorkey(WHITE)
 iphone_texture.set_colorkey(WHITE)
+soulsphere.set_colorkey(WHITE)
+turboneedle.set_colorkey(WHITE)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
@@ -442,6 +448,7 @@ player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/player_shotgun.wav")
 archvile_attack = pygame.mixer.Sound("Assets/Audio/misc/dsflame.wav")
 archvile_death = pygame.mixer.Sound("Assets/Audio/misc/dsvildth.wav")
 fart = pygame.mixer.Sound("Assets/Audio/misc/fart_attack.wav")
+soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/misc/dsgetpow.wav")
 
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -984,6 +991,12 @@ def load_item_rects():
             if item == '=':
                 item_ids.append("shotgun_shells")
                 append_rect()
+            if item == '+':
+                item_ids.append("soulsphere")
+                append_rect()
+            if item == "'":
+                item_ids.append("turboneedle")
+                append_rect()
             x += 1
         y += 1
     return item_rects, item_ids, task_items
@@ -1267,6 +1280,18 @@ def item_collision_test(rect, items):
                             player_health = 100
                     item_rects.remove(item)
                     item_pickup.play()
+                    del item_ids[x]
+                elif i == "soulsphere":
+                    player_health += 100
+                    if player_health > 300:
+                        player_health = 300
+                    item_rects.remove(item)
+                    soulsphere_pickup.play()
+                    del item_ids[x]
+                elif i == "turboneedle":
+                    playerStamina = 250
+                    item_rects.remove(item)
+                    soulsphere_pickup.play()
                     del item_ids[x]
 
         x += 1
@@ -2219,6 +2244,24 @@ del background_surface
 
 game_background = pygame.image.load("level_background.png")
 """
+tile_textures = {'b': floor1,
+                    'c': wall1,
+                    'd': table1,
+                    'e': toilet1,
+                    'f': lamp1,
+                    'g': trashcan,
+                    'h': ground1,
+                    'i': grass,
+                    'j': concrete1,
+                    'o': bricks,
+                    'A': tree,
+                    'p': planks,
+                    'q': ladder_texture,
+                    'r': light_bricks,
+                    's': iron_bars,
+                    't': soil,
+                    'u': mossy_bricks}
+
 #endregion
 #region Main Running
 while main_running:
@@ -2377,34 +2420,8 @@ while main_running:
     for layer in world_gen[0]:
         x = 0
         for tile in layer:
-            if tile == 'b':
-                screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'c':
-                screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'd':
-                screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'e':
-                screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
-            elif tile == 'f':
-                screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'g':
-                screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
-            elif tile == 'h':
-                screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'i':
-                screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'j':
-                screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'o':
-                screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'A':
-                screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
-            elif tile == 'p':
-                screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'q':
-                screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
-            elif tile == 'r':
-                screen.blit(light_bricks, (x * 34-scroll[0], y * 34-scroll[1]))
+            if tile in tile_textures:
+                screen.blit(tile_textures[tile], (x * 34-scroll[0], y * 34-scroll[1]))
             x += 1
         y += 1
 
@@ -2582,6 +2599,10 @@ while main_running:
         if item_ids[b] == "iPuhelin":
             screen.blit(iphone_texture,
                         (item.x-scroll[0], item.y-scroll[1]+10))
+        if item_ids[b] == 'soulsphere':
+            screen.blit(soulsphere, (item.x-scroll[0], item.y-scroll[1]))
+        if item_ids[b] == 'turboneedle':
+            screen.blit(turboneedle, (item.x-scroll[0], item.y-scroll[1]))
         b += 1
 #endregion
 #region PlayerMovement
@@ -3145,7 +3166,6 @@ while main_running:
 #region Conditional Events
 
     if esc_menu:
-        pygame.mixer.pause()
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
         main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
