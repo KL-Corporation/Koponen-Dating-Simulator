@@ -19,8 +19,8 @@ p = planks
 q = ladder
 r = light_bricks
 s = iron_bars
-t
-u
+t = soil
+u = mossy_bricks
 decoration:
 A = tree
 B = jukebox
@@ -48,6 +48,8 @@ items:
 ( = medkit
 ) = shotgun
 = = shotgun_shells
++ = soulsphere
+' = turboneedle
 
 (Resources Convert Rules are in the format of [name],[rule],[ColorR],[ColorG],[ColorB],[Category: 0 = Building, 1 = Decoration, 2 = Enemy, 3 = Item])
 Image:
