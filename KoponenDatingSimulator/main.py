@@ -849,15 +849,17 @@ def load_ads():
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Ad Files Initialised: " + str(len(ad_files)), False)
-    for ad in ad_files:
-        KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Ad File: " + ad, False)
 
     ad_images = []
 
     for ad in ad_files:
         path = str("Assets/Textures/KoponenTalk/ads/" + ad)
-        ad_images.append(pygame.image.load(path))
+        image = pygame.image.load(path)
+        if path.find("7"):
+            image.set_colorkey((255, 0, 0))
+        ad_images.append(image)
+        KDS.Logging.Log(KDS.Logging.LogType.debug,
+                "Initialised Ad File: " + ad, False)
 
     return ad_images
 ad_images = load_ads()
