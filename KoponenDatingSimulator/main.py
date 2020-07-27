@@ -2283,8 +2283,6 @@ while main_running:
                 if not moveDown and air_timer < 6:
                     vertical_momentum = -10
             elif event.key == K_LCTRL:
-                if not moveDown and not onLadder:
-                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                 moveDown = True
             elif event.key == K_LSHIFT:
                 if not moveDown:
@@ -2304,8 +2302,6 @@ while main_running:
                 if not moveDown and air_timer < 6:
                     vertical_momentum = -10
             elif event.key == K_s:
-                if not moveDown and not onLadder:
-                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                 moveDown = True
             elif event.key == K_f:
                 if playerStamina == 100:
@@ -2362,8 +2358,6 @@ while main_running:
             elif event.key == K_SPACE:
                 moveUp = False
             elif event.key == K_LCTRL:
-                if moveDown or onLadder:
-                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 moveDown = False
             elif event.key == K_LSHIFT:
                 playerSprinting = False
@@ -2374,8 +2368,6 @@ while main_running:
             elif event.key == K_w:
                 moveUp = False
             elif event.key == K_s:
-                if moveDown or onLadder:
-                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 moveDown = False
             elif event.key == K_c:
                 if player_hand_item == "gasburner":
@@ -2671,10 +2663,16 @@ while main_running:
             else:
                 player_movement[1] = 0
 
-    if not onLadder and moveUp:
+    if moveDown and not onLadder and player_rect.height != crouch_size[1]:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+    elif player_rect.height != stand_size[1]:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+
+    if not onLadder and not moveDown and moveUp:
         moveUp = False
         if air_timer < 6:
             vertical_momentum = -10
+
 #endregion
 #region AI
     toilet_collisions(player_rect, gasburnerBurning)
