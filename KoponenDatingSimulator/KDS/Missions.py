@@ -137,7 +137,7 @@ def InitialiseMissions(LevelIndex):
     DeleteAll()
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-        KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+        KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti")
         KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
         KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
         KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
@@ -147,7 +147,7 @@ def InitialiseMissions(LevelIndex):
     elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         if LevelIndex < 2:
             KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti")
             KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
             KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
             KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")

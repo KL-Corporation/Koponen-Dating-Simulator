@@ -521,6 +521,7 @@ F4Pressed = False
 esc_menu = False
 moveUp = False
 moveDown = False
+onLadder = False
 mouseLeftPressed = False
 shotgun_loaded = True
 shotgun_cooldown = 0
@@ -579,7 +580,7 @@ doubleWidthAdd = 0
 test_rect = pygame.Rect(0, 0, 60, 40)
 stand_size = (28, 65)
 crouch_size = (28, 33)
-player_rect = pygame.Rect(100, 100, stand_size)
+player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
 koponen_movement = [1, 6]
@@ -1343,6 +1344,9 @@ def move(rect, movement, tiles):
 
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
+short_stand_animation = load_animation("shortplayer_stand", 2)
+short_run_animation = load_animation("shortplayer_run", 2)
+
 gasburner_animation = load_animation("gasburner_on", 2)
 knife_animation = load_animation("knife", 2)
 toilet_animation = load_animation("toilet_anim", 3)
@@ -2274,12 +2278,15 @@ while main_running:
                 playerMovingLeft = True
             elif event.key == K_SPACE:
                 moveUp = True
-                if air_timer < 6:
+                if not moveDown and air_timer < 6:
                     vertical_momentum = -10
             elif event.key == K_LCTRL:
+                if not moveDown and not onLadder:
+                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                 moveDown = True
             elif event.key == K_LSHIFT:
-                playerSprinting = True
+                if not moveDown:
+                    playerSprinting = True
             elif event.key == K_e:
                 FunctionKey = True
             elif event.key == K_ESCAPE:
@@ -2292,9 +2299,11 @@ while main_running:
                 console()
             elif event.key == K_w:
                 moveUp = True
-                if air_timer < 6:
+                if not moveDown and air_timer < 6:
                     vertical_momentum = -10
             elif event.key == K_s:
+                if not moveDown and not onLadder:
+                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                 moveDown = True
             elif event.key == K_f:
                 if playerStamina == 100:
@@ -2351,6 +2360,8 @@ while main_running:
             elif event.key == K_SPACE:
                 moveUp = False
             elif event.key == K_LCTRL:
+                if moveDown or onLadder:
+                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 moveDown = False
             elif event.key == K_LSHIFT:
                 playerSprinting = False
@@ -2361,6 +2372,8 @@ while main_running:
             elif event.key == K_w:
                 moveUp = False
             elif event.key == K_s:
+                if moveDown or onLadder:
+                    player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 moveDown = False
             elif event.key == K_c:
                 if player_hand_item == "gasburner":
@@ -2619,14 +2632,20 @@ while main_running:
     koponen_recog_rec.center = koponen_rect.center
 
     if playerMovingRight == True:
-        player_movement[0] += 4
+        if not moveDown:
+            player_movement[0] += 4
+        else:
+            player_movement[0] += 2
         KDS.Missions.SetProgress("tutorial", "walk", 0.005)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] += 4
             KDS.Missions.SetProgress("tutorial", "walk", 0.005)
 
     if playerMovingLeft == True:
-        player_movement[0] -= 4
+        if not moveDown:
+            player_movement[0] -= 4
+        else:
+            player_movement[0] -= 2
         KDS.Missions.SetProgress("tutorial", "walk", 0.005)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] -= 4
@@ -2637,10 +2656,10 @@ while main_running:
     if vertical_momentum > 8:
         vertical_momentum = 8
 
-    ladderJump = True
+    onLadder = False
     for ladder in ladders:
         if player_rect.colliderect(ladder):
-            ladderJump = False
+            onLadder = True
             vertical_momentum = 0
             air_timer = 0
             if moveUp:
@@ -2650,7 +2669,7 @@ while main_running:
             else:
                 player_movement[1] = 0
 
-    if ladderJump and moveUp:
+    if not onLadder and moveUp:
         moveUp = False
         if air_timer < 6:
             vertical_momentum = -10
@@ -2840,12 +2859,18 @@ while main_running:
     animation = []
     if player_health > 0:
         if running:
-            animation = run_animation.copy()
+            if not moveDown:
+                animation = run_animation.copy()
+            else:
+                animation = short_run_animation.copy()
             animation_duration = 7
             if playerSprinting:
                 animation_duration = 3
         else:
-            animation = stand_animation.copy()
+            if not moveDown:
+                animation = stand_animation.copy()
+            else:
+                animation = short_stand_animation.copy()
             animation_duration = 10
     else:
         if player_death_event:
@@ -3072,8 +3097,10 @@ while main_running:
         koponen_rect.x-scroll[0], koponen_rect.y-scroll[1]))
 
     if player_health or player_death_event:
+        if DebugMode:
+            pygame.draw.rect(screen, (0, 255, 0), (player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.topleft[1] - scroll[1] + ((player_rect.height - animation[animation_image].get_height()) / 2)))
+            player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height()))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x-scroll[0], player_rect.y-scroll[1]))
