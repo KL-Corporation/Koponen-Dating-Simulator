@@ -2664,9 +2664,7 @@ while main_running:
 
     if moveDown and not onLadder and player_rect.height != crouch_size[1]:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-    elif not moveDown and player_rect.height != stand_size[1]:
-        player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
-    elif onLadder and player_rect.height != stand_size[1]:
+    elif (not moveDown or onLadder) and player_rect.height != stand_size[1]:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
 
     if not onLadder and not moveDown and moveUp:
