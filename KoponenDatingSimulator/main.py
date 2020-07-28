@@ -2423,8 +2423,8 @@ while main_running:
 #endregion
 #region Rendering
     vertical_render_position = [int(max(0, (scroll[1] / 34) - 1)), int(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 1))]
+    horisontal_render_position = [int(max(0, (scroll[0] / 34) - 1)), int(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 1))]
     for y in range(vertical_render_position[0], vertical_render_position[1]):
-        horisontal_render_position = [int(max(0, (scroll[0] / 34) - 1)), int(min(len(world_gen[0]), ((scroll[0] + screen_size[0]) / 34) + 1))]
         for x in range(horisontal_render_position[0], horisontal_render_position[1]):
             if world_gen[0][y][x] in tile_textures:
                 screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
