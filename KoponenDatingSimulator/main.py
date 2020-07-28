@@ -94,7 +94,7 @@ class plasma_bullet:
                 plasma_hitting.play()
 
         self.display.blit(
-            plasma_ammo, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+            plasma_ammo, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
         return self.done
 class Bullet:
@@ -216,7 +216,7 @@ class Archvile:
                     self.direction = False
 
                 screen.blit(pygame.transform.flip(a_run, not self.direction,
-                                                  False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                                                  False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
             else:
                 i, u = arhcvile_attack_animation.update()
@@ -232,7 +232,7 @@ class Archvile:
                     arhcvile_attack_animation.reset()
                     self.attack_anim = False
                 screen.blit(pygame.transform.flip(
-                    i, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                    i, not self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
         elif self.playDeathAnimation:
             self.attacking = "null"
@@ -243,14 +243,14 @@ class Archvile:
             l, p = archvile_death_animation.update()
             if not p:
                 screen.blit(pygame.transform.flip(l, not self.direction, False),
-                            (self.rect.x-scroll[0], self.rect.y-scroll[1]+15))
+                            (self.rect.x - scroll[0], self.rect.y - scroll[1]+15))
 
             if p:
                 self.playDeathAnimation = False
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction,
-                                              False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
+                                              False), (self.rect.x - scroll[0], self.rect.y - scroll[1]+25))
 #endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
@@ -899,7 +899,7 @@ def load_rects():
                         burning_trashcans.append(False)
                         tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
                     elif tile == 'q':
-                        ladders.append(pygame.Rect((x * 34) + 15, (y * 34) - 2, 4, 38))
+                        ladders.append(pygame.Rect((x * 34) + 16, (y * 34) - 2, 2, 38))
                     elif tile == 'k':
                         pass
                     elif tile == 'l':
@@ -2423,39 +2423,38 @@ while main_running:
         animation_has_played = True
 #endregion
 #region Rendering
-    y = 0
-    for layer in world_gen[0]:
+    for y in range(len(world_gen[0])):
+        horisontalRange = [max(0, scroll[0] - (screen_size[0] / 2) - 1), min(len(world_gen[0][1]), scroll[0] + (screen_size[0] / 2) + 1)]
         x = 0
-        for tile in layer:
-            if tile in tile_textures:
-                screen.blit(tile_textures[tile], (x * 34-scroll[0], y * 34-scroll[1]))
+        for x in range(len(world_gen[0][y])):
+            if world_gen[0][y][x] in tile_textures:
+                screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
             x += 1
-        y += 1
 
     x = 0
     for door in door_rects:
         if doors_open[x]:
-            screen.blit(door_open, (door.x-scroll[0]+2, door.y-scroll[1]))
+            screen.blit(door_open, (door.x - scroll[0]+2, door.y - scroll[1]))
         else:
             if color_keys[x] == "red":
                 screen.blit(red_door_closed,
-                            (door.x-scroll[0], door.y-scroll[1]))
+                            (door.x - scroll[0], door.y - scroll[1]))
             elif color_keys[x] == "green":
                 screen.blit(green_door_closed,
-                            (door.x-scroll[0], door.y-scroll[1]))
+                            (door.x - scroll[0], door.y - scroll[1]))
             elif color_keys[x] == "blue":
                 screen.blit(blue_door_closed,
-                            (door.x-scroll[0], door.y-scroll[1]))
+                            (door.x - scroll[0], door.y - scroll[1]))
             else:
-                screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
+                screen.blit(door_closed, (door.x - scroll[0], door.y - scroll[1]))
         x += 1
 
     for jukebox in jukeboxes:
         screen.blit(jukebox_texture, (jukebox.x -
-                                      scroll[0], jukebox.y-scroll[1]))
+                                      scroll[0], jukebox.y - scroll[1]))
         if player_rect.colliderect(jukebox):
             screen.blit(jukebox_tip, (jukebox.x -
-                                      scroll[0]-20, jukebox.y-scroll[1]-30))
+                                      scroll[0]-20, jukebox.y - scroll[1]-30))
             if FunctionKey:
                 pygame.mixer.music.pause()
                 jukebox_music[jukeboxMusicPlaying].stop()
@@ -2476,7 +2475,7 @@ while main_running:
 
     for landmine in landmines:
         screen.blit(landmine_texture, (landmine.x -
-                                       scroll[0], landmine.y-scroll[1]))
+                                       scroll[0], landmine.y - scroll[1]))
         if player_rect.colliderect(landmine):
             landmines.remove(landmine)
             landmine_explosion.play()
@@ -2557,7 +2556,7 @@ while main_running:
         explosion_image, done_state = explosion_animation.update()
         if not done_state:
             screen.blit(explosion_image,
-                        (explosion[0]-scroll[0], explosion[1]-scroll[1]))
+                        (explosion[0] - scroll[0], explosion[1] - scroll[1]))
         else:
             explosion_positions.remove(explosion)
             explosion_animation.reset()
@@ -2566,50 +2565,50 @@ while main_running:
     b = 0
     for item in item_rects:
         if item_ids[b] == 'gasburner':
-            screen.blit(gasburner_off, (item.x-scroll[0], item.y-scroll[1]+10))
+            screen.blit(gasburner_off, (item.x - scroll[0], item.y - scroll[1]+10))
         if item_ids[b] == "knife":
-            screen.blit(knife, (item.x-scroll[0], item.y-scroll[1]+26))
+            screen.blit(knife, (item.x - scroll[0], item.y - scroll[1]+26))
         if item_ids[b] == "red_key":
-            screen.blit(red_key, (item.x-scroll[0], item.y-scroll[1]+16))
+            screen.blit(red_key, (item.x - scroll[0], item.y - scroll[1]+16))
         if item_ids[b] == "green_key":
-            screen.blit(green_key, (item.x-scroll[0], item.y-scroll[1]+16))
+            screen.blit(green_key, (item.x - scroll[0], item.y - scroll[1]+16))
         if item_ids[b] == "blue_key":
-            screen.blit(blue_key, (item.x-scroll[0], item.y-scroll[1]+16))
+            screen.blit(blue_key, (item.x - scroll[0], item.y - scroll[1]+16))
         if item_ids[b] == "coffeemug":
             screen.blit(
                 coffeemug, (item.x - scroll[0], item.y - scroll[1] + 14))
         if item_ids[b] == "ss_bonuscard":
-            screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
+            screen.blit(ss_bonuscard, (item.x - scroll[0], item.y - scroll[1]+14))
         if item_ids[b] == "lappi_sytytyspalat":
             screen.blit(lappi_sytytyspalat,
-                        (item.x-scroll[0], item.y-scroll[1]+17))
+                        (item.x - scroll[0], item.y - scroll[1]+17))
         if item_ids[b] == "plasmarifle":
-            screen.blit(plasmarifle, (item.x-scroll[0], item.y-scroll[1]+17))
+            screen.blit(plasmarifle, (item.x - scroll[0], item.y - scroll[1]+17))
         if item_ids[b] == "cell":
-            screen.blit(cell, (item.x-scroll[0], item.y-scroll[1]+17))
+            screen.blit(cell, (item.x - scroll[0], item.y - scroll[1]+17))
         if item_ids[b] == "pistol":
             screen.blit(pistol_texture,
-                        (item.x-scroll[0]-23, item.y-scroll[1]+18))
+                        (item.x - scroll[0]-23, item.y - scroll[1]+18))
         if item_ids[b] == "pistol_mag":
-            screen.blit(pistol_mag, (item.x-scroll[0], item.y-scroll[1]+19))
+            screen.blit(pistol_mag, (item.x - scroll[0], item.y - scroll[1]+19))
         if item_ids[b] == "rk62":
-            screen.blit(rk62_texture, (item.x-scroll[0], item.y-scroll[1]+17))
+            screen.blit(rk62_texture, (item.x - scroll[0], item.y - scroll[1]+17))
         if item_ids[b] == "rk62_mag":
-            screen.blit(rk62_mag, (item.x-scroll[0], item.y-scroll[1]+14))
+            screen.blit(rk62_mag, (item.x - scroll[0], item.y - scroll[1]+14))
         if item_ids[b] == "medkit":
-            screen.blit(medkit, (item.x-scroll[0], item.y-scroll[1]+15))
+            screen.blit(medkit, (item.x - scroll[0], item.y - scroll[1]+15))
         if item_ids[b] == "shotgun":
-            screen.blit(shotgun, (item.x-scroll[0], item.y-scroll[1]+22))
+            screen.blit(shotgun, (item.x - scroll[0], item.y - scroll[1]+22))
         if item_ids[b] == "shotgun_shells":
             screen.blit(shotgun_shells_t,
-                        (item.x-scroll[0], item.y-scroll[1]+25))
+                        (item.x - scroll[0], item.y - scroll[1]+25))
         if item_ids[b] == "iPuhelin":
             screen.blit(iphone_texture,
-                        (item.x-scroll[0], item.y-scroll[1]+10))
+                        (item.x - scroll[0], item.y - scroll[1]+10))
         if item_ids[b] == 'soulsphere':
-            screen.blit(soulsphere, (item.x-scroll[0], item.y-scroll[1]))
+            screen.blit(soulsphere, (item.x - scroll[0], item.y - scroll[1]))
         if item_ids[b] == 'turboneedle':
-            screen.blit(turboneedle, (item.x-scroll[0], item.y-scroll[1]))
+            screen.blit(turboneedle, (item.x - scroll[0], item.y - scroll[1]))
         b += 1
 #endregion
 #region PlayerMovement
@@ -2665,7 +2664,9 @@ while main_running:
 
     if moveDown and not onLadder and player_rect.height != crouch_size[1]:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-    elif player_rect.height != stand_size[1]:
+    elif not moveDown and player_rect.height != stand_size[1]:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+    elif onLadder and player_rect.height != stand_size[1]:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
 
     if not onLadder and not moveDown and moveUp:
@@ -2710,7 +2711,7 @@ while main_running:
                     sergeant.direction = False
 
                 screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
-                            (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]))
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant.hits["right"] or sergeant.hits["left"]:
                     sergeant.movement[0] = -sergeant.movement[0]
@@ -2719,7 +2720,7 @@ while main_running:
                 u, i = sergeant_shoot_animation.update()
 
                 screen.blit(pygame.transform.flip(u, sergeant.direction, False),
-                            (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]))
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
@@ -2735,13 +2736,13 @@ while main_running:
             d, s = sergeant_death_animation.update()
             if not s:
                 screen.blit(pygame.transform.flip(d, sergeant.direction, False),
-                            (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]))
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
             if s:
                 sergeant.playDeathAnimation = False
                 sergeant_death_animation.reset()
         else:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
-                                              False), (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]+10))
+                                              False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
 
     for zombie1 in zombies:
         if zombie1.health > 0:
@@ -2775,19 +2776,19 @@ while main_running:
                 else:
                     zombie1.direction = True
                 screen.blit(pygame.transform.flip(zombie_attack_animation.update(
-                ), zombie1.direction, False), (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]))
+                ), zombie1.direction, False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
 
         elif zombie1.playDeathAnimation:
             d, s = zombie_death_animation.update()
             if not s:
                 screen.blit(pygame.transform.flip(d, zombie1.direction, False),
-                            (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]))
+                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
             if s:
                 zombie1.playDeathAnimation = False
                 zombie_death_animation.reset()
         else:
             screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction,
-                                              False), (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]+14))
+                                              False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]+14))
 
     # Zombien käsittely loppuu tähän
 
@@ -2800,7 +2801,7 @@ while main_running:
     
     for bulldog in bulldogs:
         bd_attr = bulldog.getAttributes()
-        screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x-scroll[0],bd_attr[0].y-scroll[1]))
+        screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x - scroll[0],bd_attr[0].y - scroll[1]))
         player_health -= bd_attr[3]
 
     if k_collisions["left"]:
@@ -2859,7 +2860,7 @@ while main_running:
     animation = []
     if player_health > 0:
         if running:
-            if not moveDown:
+            if player_rect.height == stand_size[1]:
                 animation = run_animation.copy()
             else:
                 animation = short_run_animation.copy()
@@ -2867,7 +2868,7 @@ while main_running:
             if playerSprinting:
                 animation_duration = 3
         else:
-            if not moveDown:
+            if player_rect.height == stand_size[1]:
                 animation = stand_animation.copy()
             else:
                 animation = short_stand_animation.copy()
@@ -2946,18 +2947,18 @@ while main_running:
                         gasburner_fire.stop()
                         pygame.mixer.Sound.play(gasburner_fire)
                     screen.blit(pygame.transform.flip(gasburner_animation[gasburner_animation_stats[0]], direction, False), (
-                        player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
+                        player_rect.right-offset_c - scroll[0], player_rect.y - scroll[1]))
                 else:
                     screen.blit(pygame.transform.flip(gasburner_off, direction, False),
-                                (player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
+                                (player_rect.right-offset_c - scroll[0], player_rect.y - scroll[1]))
 
             elif player_hand_item == "knife":
                 if knifeInUse:
                     screen.blit(pygame.transform.flip(knife_animation[knife_animation_stats[0]], direction, False), (
-                        player_rect.right-offset_k-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_k - scroll[0], player_rect.y - scroll[1]+14))
                 else:
                     screen.blit(pygame.transform.flip(knife, direction, False), (
-                        player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_c - scroll[0], player_rect.y - scroll[1]+14))
 
             elif player_hand_item == "coffeemug":
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
@@ -2970,11 +2971,11 @@ while main_running:
             elif player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
                     screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
                 else:
                     screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
             elif player_hand_item == "pistol":
                 pistol_cooldown += 1
@@ -2983,7 +2984,7 @@ while main_running:
                     if pistol_bullets > 0:
                         pistol_bullets -= 1
                         screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
-                            player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
+                            player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
                         bullet = Bullet(
                             [player_rect.x, player_rect.y+20], direction, 50)
                         hit = bullet.shoot(tile_rects)
@@ -2991,14 +2992,14 @@ while main_running:
                         pistol_shot.play()
                 else:
                     screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
-                        player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
 
             elif player_hand_item == "rk62":
                 if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
                     rk_62_ammo -= 1
                     rk62_cooldown = 0
                     screen.blit(pygame.transform.flip(rk62_f_texture, direction, False), (
-                        player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
                     bullet = Bullet(
                         [player_rect.x, player_rect.y+20], direction, 25)
                     hit = bullet.shoot(tile_rects)
@@ -3015,7 +3016,7 @@ while main_running:
                     if not mouseLeftPressed:
                         rk62_shot.stop()
                     screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
-                        player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
 
             elif player_hand_item == "shotgun":
                 if not shotgun_loaded:
@@ -3031,11 +3032,11 @@ while main_running:
                     shotgun_thread.start()
                     player_shotgun_shot.play()
                     screen.blit(pygame.transform.flip(shotgun_f, direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
                 else:
                     screen.blit(pygame.transform.flip(shotgun, direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+                        player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
     if farting:
         fart_counter += 1
@@ -3070,7 +3071,7 @@ while main_running:
 #region Koponen Tip
     if player_rect.colliderect(koponen_recog_rec):
         screen.blit(
-            koponen_talk_tip, (koponen_recog_rec.topleft[0]-scroll[0], koponen_recog_rec.topleft[1]-scroll[1]-10))
+            koponen_talk_tip, (koponen_recog_rec.topleft[0] - scroll[0], koponen_recog_rec.topleft[1] - scroll[1]-10))
         koponen_movement[0] = 0
         if knifeInUse:
             koponen_alive = False
@@ -3084,17 +3085,17 @@ while main_running:
     for toilet in toilets:
         if burning_toilets[h] == True:
             screen.blit(toilet_animation[toilet_animation_stats[0]],
-                        (toilet.x-scroll[0]+2, toilet.y-scroll[1]+1))
+                        (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
         h += 1
     h = 0
     for trashcan2 in trashcans:
         if burning_trashcans[h] == True:
             screen.blit(trashcan_animation[toilet_animation_stats[0]],
-                        (trashcan2.x-scroll[0]+3, trashcan2.y-scroll[1]+6))
+                        (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
         h += 1
 
     screen.blit(koponen_animation[koponen_animation_stats[0]], (
-        koponen_rect.x-scroll[0], koponen_rect.y-scroll[1]))
+        koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if player_health or player_death_event:
         if DebugMode:
@@ -3103,15 +3104,15 @@ while main_running:
             player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height()))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
-            player_rect.x-scroll[0], player_rect.y-scroll[1]))
+            player_rect.x - scroll[0], player_rect.y - scroll[1]))
 
     for archvile in archviles:
         if archvile.attack_anim:
             screen.blit(flames_animation.update(),
-                        (player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
+                        (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
     for iron_bar in iron_barss:
-        screen.blit(iron_bars,(iron_bar.x-scroll[0],iron_bar.y-scroll[1]))
+        screen.blit(iron_bars,(iron_bar.x - scroll[0],iron_bar.y - scroll[1]))
 
 #endregion
 #region Debug Mode
@@ -3184,14 +3185,12 @@ while main_running:
 #endregion
 #region Screen Rendering
     if dark:
-        screen.blit(alpha,(0,0))
+        screen.blit(alpha, (0, 0))
         
-
     main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     pygame.display.update()
 #endregion
 #region Conditional Events
-
     if esc_menu:
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
