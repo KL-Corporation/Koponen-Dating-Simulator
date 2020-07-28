@@ -274,7 +274,6 @@ alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
 
 #region Downloads
-WHITE = (255,255,255)
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
@@ -291,8 +290,8 @@ button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
-player_corpse.set_colorkey(WHITE)
-player_img.set_colorkey(WHITE)
+player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
 floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
 concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
@@ -322,18 +321,18 @@ light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png")
 iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
 soil = pygame.image.load("Assets/Textures/Building/soil.png")
 mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png")
-table1.set_colorkey(WHITE)
-toilet1.set_colorkey(WHITE)
-lamp1.set_colorkey(WHITE)
-trashcan.set_colorkey(WHITE)
-door_closed.set_colorkey(WHITE)
-red_door_closed.set_colorkey(WHITE)
-green_door_closed.set_colorkey(WHITE)
-blue_door_closed.set_colorkey(WHITE)
-jukebox_texture.set_colorkey(WHITE)
-landmine_texture.set_colorkey(WHITE)
-ladder_texture.set_colorkey(WHITE)
-iron_bars.set_colorkey(WHITE)
+table1.set_colorkey(KDS.Colors.GetPrimary.White)
+toilet1.set_colorkey(KDS.Colors.GetPrimary.White)
+lamp1.set_colorkey(KDS.Colors.GetPrimary.White)
+trashcan.set_colorkey(KDS.Colors.GetPrimary.White)
+door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+red_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+green_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+blue_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+jukebox_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+landmine_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+ladder_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+iron_bars.set_colorkey(KDS.Colors.GetPrimary.White)
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
@@ -388,42 +387,42 @@ gamemode_bc_1_2 = pygame.image.load(
 arrow_button = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 
-gasburner_off.set_colorkey(WHITE)
-knife.set_colorkey(WHITE)
-knife_blood.set_colorkey(WHITE)
-red_key.set_colorkey(WHITE)
-green_key.set_colorkey(WHITE)
-blue_key.set_colorkey(WHITE)
-coffeemug.set_colorkey(WHITE)
+gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
+knife.set_colorkey(KDS.Colors.GetPrimary.White)
+knife_blood.set_colorkey(KDS.Colors.GetPrimary.White)
+red_key.set_colorkey(KDS.Colors.GetPrimary.White)
+green_key.set_colorkey(KDS.Colors.GetPrimary.White)
+blue_key.set_colorkey(KDS.Colors.GetPrimary.White)
+coffeemug.set_colorkey(KDS.Colors.GetPrimary.White)
 ss_bonuscard.set_colorkey((255, 0, 0))
-lappi_sytytyspalat.set_colorkey(WHITE)
-plasmarifle.set_colorkey(WHITE)
-plasma_ammo.set_colorkey(WHITE)
-cell.set_colorkey(WHITE)
-zombie_corpse.set_colorkey(WHITE)
-pistol_texture.set_colorkey(WHITE)
-pistol_f_texture.set_colorkey(WHITE)
-pistol_mag.set_colorkey(WHITE)
-rk62_texture.set_colorkey(WHITE)
-rk62_f_texture.set_colorkey(WHITE)
-rk62_mag.set_colorkey(WHITE)
-sergeant_corpse.set_colorkey(WHITE)
-sergeant_aiming.set_colorkey(WHITE)
-sergeant_firing.set_colorkey(WHITE)
-medkit.set_colorkey(WHITE)
-shotgun.set_colorkey(WHITE)
-shotgun_f.set_colorkey(WHITE)
-shotgun_shells_t.set_colorkey(WHITE)
-archvile_corpse.set_colorkey(WHITE)
-iphone_texture.set_colorkey(WHITE)
-soulsphere.set_colorkey(WHITE)
-turboneedle.set_colorkey(WHITE)
+lappi_sytytyspalat.set_colorkey(KDS.Colors.GetPrimary.White)
+plasmarifle.set_colorkey(KDS.Colors.GetPrimary.White)
+plasma_ammo.set_colorkey(KDS.Colors.GetPrimary.White)
+cell.set_colorkey(KDS.Colors.GetPrimary.White)
+zombie_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+pistol_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+pistol_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+pistol_mag.set_colorkey(KDS.Colors.GetPrimary.White)
+rk62_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+rk62_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+rk62_mag.set_colorkey(KDS.Colors.GetPrimary.White)
+sergeant_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+sergeant_aiming.set_colorkey(KDS.Colors.GetPrimary.White)
+sergeant_firing.set_colorkey(KDS.Colors.GetPrimary.White)
+medkit.set_colorkey(KDS.Colors.GetPrimary.White)
+shotgun.set_colorkey(KDS.Colors.GetPrimary.White)
+shotgun_f.set_colorkey(KDS.Colors.GetPrimary.White)
+shotgun_shells_t.set_colorkey(KDS.Colors.GetPrimary.White)
+archvile_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+iphone_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
+turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 
 text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
-text_icon.set_colorkey(WHITE)
+text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/misc/gasburner_clip.wav")
 gasburner_fire = pygame.mixer.Sound("Assets/Audio/misc/gasburner_fire.wav")
@@ -459,7 +458,7 @@ player_shotgun_shot.set_volume(0.8)
 
 gradient_sphere = pygame.image.load("Assets/gradient_sphere.png").convert_alpha()
 
-jukebox_tip = tip_font.render("Use jukebox [E]", True, WHITE)
+jukebox_tip = tip_font.render("Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
 #endregion
 
 main_running = True
@@ -587,7 +586,7 @@ koponen_movement = [1, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
-koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, WHITE)
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, KDS.Colors.GetPrimary.White)
 
 task = ""
 taskTaivutettu = ""
@@ -1048,7 +1047,7 @@ def load_animation(name, number_of_images):
     for i in range(number_of_images):
         path = "Assets/Textures/Player/" + name + str(i) + ".png"
         img = pygame.image.load(path).convert()
-        img.set_colorkey(WHITE)
+        img.set_colorkey(KDS.Colors.GetPrimary.White)
         animation_list.append(img)
     return animation_list
 #endregion
@@ -1170,7 +1169,7 @@ def item_collision_test(rect, items):
             hit_list.append(item)
             if not itemTipVisible:
                 itemTip = tip_font.render(
-                    "Nosta Esine Painamalla [E]", True, WHITE)
+                    "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
                 screen.blit(
                     itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
                 itemTipVisible = True
@@ -1357,30 +1356,30 @@ koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 5, WHITE, -1)
+    "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, WHITE, 1)
+    "explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)
 plasmarifle_animation = KDS.Animator.Animation(
-    "plasmarifle_firing", 2, 3, WHITE, -1)
+    "plasmarifle_firing", 2, 3, KDS.Colors.GetPrimary.White, -1)
 zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, WHITE, 1)
+    "z_death", 5, 6, KDS.Colors.GetPrimary.White, 1)
 zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, WHITE, -1)
+    "z_walk", 3, 10, KDS.Colors.GetPrimary.White, -1)
 zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, WHITE, -1)
+    "z_attack", 4, 10, KDS.Colors.GetPrimary.White, -1)
 sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, WHITE, -1)
+    "seargeant_walking", 4, 8, KDS.Colors.GetPrimary.White, -1)
 sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, WHITE, 1)
+    "seargeant_shooting", 2, 6, KDS.Colors.GetPrimary.White, 1)
 
 archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, WHITE, -1)
+    "archvile_run", 3, 9, KDS.Colors.GetPrimary.White, -1)
 arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, WHITE, 1)
+    "archvile_attack", 6, 16, KDS.Colors.GetPrimary.White, 1)
 archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, WHITE, 1)
-flames_animation = KDS.Animator.Animation("flames", 5, 3, WHITE, -1)
+    "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, 1)
+flames_animation = KDS.Animator.Animation("flames", 5, 3, KDS.Colors.GetPrimary.White, -1)
 bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6,(255,255,255),-1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
@@ -1400,7 +1399,7 @@ for animation in sergeant_shoot_animation.images:
 sergeant_shoot_animation.ticks = 43
 #endregion
 sergeant_death_animation = KDS.Animator.Animation(
-    "seargeant_dying", 5, 8, WHITE, 1)
+    "seargeant_dying", 5, 8, KDS.Colors.GetPrimary.White, 1)
 #endregion
 #region Console
 def console():
@@ -1497,7 +1496,7 @@ def agr(tcagr):
         return False
 
     buttons.append(pygame.Rect(249, 353, 200, 160))
-    texts.append(button_font1.render("I Agree", True, WHITE))
+    texts.append(button_font1.render("I Agree", True, KDS.Colors.GetPrimary.White))
     functions.append(agree)
 
     while tcagr_running:
@@ -1573,7 +1572,7 @@ def koponen_talk():
     koponen_talk_foreground = ad_images[random_foreground].copy()
 
     def renderText(text):
-        text_object = button_font1.render(text, True, WHITE)
+        text_object = button_font1.render(text, True, KDS.Colors.GetPrimary.White)
         return text_object
 
     exit_text = renderText("Exit")
@@ -1765,10 +1764,10 @@ def esc_menu_f():
     settings_button = pygame.Rect(150, 250, 200, 30)
     main_menu_button = pygame.Rect(150, 290, 200, 30)
 
-    resume_text = button_font.render("Resume", True, WHITE)
-    save_text = button_font.render("Save", True, WHITE)
-    settings_text = button_font.render("Settings", True, WHITE)
-    main_menu_text = button_font.render("Main menu", True, WHITE)
+    resume_text = button_font.render("Resume", True, KDS.Colors.GetPrimary.White)
+    save_text = button_font.render("Save", True, KDS.Colors.GetPrimary.White)
+    settings_text = button_font.render("Settings", True, KDS.Colors.GetPrimary.White)
+    main_menu_text = button_font.render("Main menu", True, KDS.Colors.GetPrimary.White)
     
     buttons = []
     functions = []
@@ -1865,7 +1864,7 @@ def settings_menu():
     return_button = pygame.Rect(465, 700, 270, 60)
     music_slider = pygame.Rect(560, 141, 30, 28)
 
-    return_text = button_font1.render("Return", True, WHITE)
+    return_text = button_font1.render("Return", True, KDS.Colors.GetPrimary.White)
 
     def return_def():
         global settings_running
@@ -1884,7 +1883,7 @@ def settings_menu():
     while settings_running:
 
         volume_text = button_font1.render(
-            "Music Volume", True, WHITE)
+            "Music Volume", True, KDS.Colors.GetPrimary.White)
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -1989,9 +1988,9 @@ def main_menu():
     settings_button = pygame.Rect(450, 250, 300, 60)
     quit_button = pygame.Rect(450, 320, 300, 60)
 
-    play_text = button_font1.render("PLAY", True, WHITE)
-    settings_text = button_font1.render("SETTINGS", True, WHITE)
-    quit_text = button_font1.render("QUIT", True, WHITE)
+    play_text = button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White)
+    settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
+    quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
 
     def play_function(gamemode: KDS.Gamemode.Modes):
         global main_menu_running, current_map, inventory
@@ -2423,13 +2422,12 @@ while main_running:
         animation_has_played = True
 #endregion
 #region Rendering
-    for y in range(len(world_gen[0])):
-        horisontalRange = [max(0, scroll[0] - (screen_size[0] / 2) - 1), min(len(world_gen[0][1]), scroll[0] + (screen_size[0] / 2) + 1)]
-        x = 0
-        for x in range(len(world_gen[0][y])):
+    vertical_render_position = [int(max(0, (scroll[1] / 34) - 1)), int(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 1))]
+    for y in range(vertical_render_position[0], vertical_render_position[1]):
+        horisontal_render_position = [int(max(0, (scroll[0] / 34) - 1)), int(min(len(world_gen[0]), ((scroll[0] + screen_size[0]) / 34) + 1))]
+        for x in range(horisontal_render_position[0], horisontal_render_position[1]):
             if world_gen[0][y][x] in tile_textures:
                 screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
-            x += 1
 
     x = 0
     for door in door_rects:
@@ -2523,25 +2521,25 @@ while main_running:
         if player_hand_item == "plasmarifle":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(ammunition_plasma), True, WHITE)
+                "Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "pistol":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(pistol_bullets), True, WHITE)
+                "Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "rk62":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(rk_62_ammo), True, WHITE)
+                "Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "shotgun":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(shotgun_shells), True, WHITE)
+                "Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
     for bullet in plasmabullets:
@@ -2811,18 +2809,18 @@ while main_running:
 #endregion
 #region UI
     score = score_font.render(
-        ("Score: " + str(player_score)), True, WHITE)
+        ("Score: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
     if DebugMode:
         fps = score_font.render(
-            "Fps: " + str(int(clock.get_fps())), True, WHITE)
+            "Fps: " + str(int(clock.get_fps())), True, KDS.Colors.GetPrimary.White)
 
     if player_health < 0:
         player_health = 0
 
     health = score_font.render(
-        "Health: " + str(player_health), True, WHITE)
+        "Health: " + str(player_health), True, KDS.Colors.GetPrimary.White)
     stamina = score_font.render(
-        "Stamina: " + str(round(int(playerStamina))), True, WHITE)
+        "Stamina: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
 #endregion
 #region Pelaajan elämätilanteen käsittely
     if player_health < last_player_health and player_health != 0:
