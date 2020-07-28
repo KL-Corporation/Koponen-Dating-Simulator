@@ -1380,7 +1380,7 @@ arhcvile_attack_animation = KDS.Animator.Animation(
 archvile_death_animation = KDS.Animator.Animation(
     "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, 1)
 flames_animation = KDS.Animator.Animation("flames", 5, 3, KDS.Colors.GetPrimary.White, -1)
-bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6,(255,255,255),-1)
+bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6, KDS.Colors.GetPrimary.White, - 1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
