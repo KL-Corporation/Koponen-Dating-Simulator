@@ -3201,8 +3201,8 @@ while main_running:
         blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
     else:
         blit_size = display_size
-    
-    main_display.blit(pygame.transform.scale(screen, blit_size), ((blit_size[0] - screen_size[0]) / 2, 0))
+    main_display.fill(KDS.Colors.GetPrimary.Black)
+    main_display.blit(pygame.transform.scale(screen, blit_size), ((monitor_size[0] / 2) - (blit_size[0] / 2), 0))
     pygame.display.update()
 #endregion
 #region Conditional Events
@@ -3213,8 +3213,8 @@ while main_running:
             blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
         else:
             blit_size = display_size
-        
-        main_display.blit(pygame.transform.scale(screen, blit_size), ((blit_size[0] - screen_size[0]) / 2, 0))
+        main_display.fill(KDS.Colors.GetPrimary.Black)
+        main_display.blit(pygame.transform.scale(screen, blit_size), ((monitor_size[0] / 2) - (blit_size[0] / 2), 0))
         pygame.image.save(main_display, "im314.png")
         esc_menu_f()
     if go_to_main_menu:
