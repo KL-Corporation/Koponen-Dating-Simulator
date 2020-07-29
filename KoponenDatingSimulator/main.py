@@ -30,6 +30,8 @@ display_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", st
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
 screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(
     600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
+monitor_info = pygame.display.Info()
+monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
@@ -261,7 +263,7 @@ def setFullscreen(reverseFullscreen):
         main_display = pygame.display.set_mode(display_size)
         fullscreen_var = False
     else:
-        main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
+        main_display = pygame.display.set_mode(monitor_size, pygame.FULLSCREEN)
         fullscreen_var = True
     KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
 #endregion
@@ -1955,6 +1957,37 @@ def settings_menu():
         c = False
         pygame.display.update()
 
+def play_function(gamemode: KDS.Gamemode.Modes):
+    global main_menu_running, current_map, inventory
+    KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+    inventory = ["none", "none", "none", "none", "none"]
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
+        inventory[0] = "iPuhelin"
+    WorldGeneration()
+    pygame.mouse.set_visible(False)
+    main_menu_running = False
+    #load_music()
+    load_music_for_map(current_map)
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(volume)
+    global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
+    player_hand_item = "none"
+
+    player_death_event = False
+    animation_has_played = False
+
+    player_rect.x = 100
+    player_rect.y = 100
+    player_health = 100
+    
+    for key in player_keys:
+        player_keys[key] = False
+    KDS.Logging.Log(KDS.Logging.LogType.info,
+                    "Press F4 to commit suicide", False)
+    KDS.Logging.Log(KDS.Logging.LogType.info,
+                    "Press Alt + F4 to get depression", False)
+    LoadSave()
+
 def main_menu():
     global current_map, MenuMode
 
@@ -1991,32 +2024,6 @@ def main_menu():
     play_text = button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White)
     settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
     quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
-
-    def play_function(gamemode: KDS.Gamemode.Modes):
-        global main_menu_running, current_map, inventory
-        KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-        inventory = ["none", "none", "none", "none", "none"]
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
-            inventory[0] = "iPuhelin"
-        WorldGeneration()
-        pygame.mouse.set_visible(False)
-        main_menu_running = False
-        #load_music()
-        load_music_for_map(current_map)
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(volume)
-        global player_keys, player_hand_item
-        player_hand_item = "none"
-
-        player_rect.x = 100
-        player_rect.y = 100
-        for key in player_keys:
-            player_keys[key] = False
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Press F4 to commit suicide", False)
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Press Alt + F4 to get depression", False)
-        LoadSave()
 
     def settings_function():
         settings_menu()
@@ -2420,6 +2427,13 @@ while main_running:
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
         animation_has_played = True
+    elif player_health < 1:
+        try:
+            deathWait += 1
+        except Exception:
+            deathWait = 0
+        if deathWait == 240:
+            play_function(KDS.Gamemode.gamemode)
 #endregion
 #region Rendering
     vertical_render_position = [int(max(0, (scroll[1] / 34) - 1)), int(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 1))]
@@ -3097,7 +3111,7 @@ while main_running:
         if DebugMode:
             pygame.draw.rect(screen, (0, 255, 0), (player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2), player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height()))
+            int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2)), int(player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height())))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x - scroll[0], player_rect.y - scroll[1]))
@@ -3183,14 +3197,24 @@ while main_running:
     if dark:
         screen.blit(alpha, (0, 0))
         
-    main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+    if fullscreen_var == True:
+        blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
+    else:
+        blit_size = display_size
+    
+    main_display.blit(pygame.transform.scale(screen, blit_size), ((blit_size[0] - screen_size[0]) / 2, 0))
     pygame.display.update()
 #endregion
 #region Conditional Events
     if esc_menu:
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
-        main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+        if fullscreen_var == True:
+            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
+        else:
+            blit_size = display_size
+        
+        main_display.blit(pygame.transform.scale(screen, blit_size), ((blit_size[0] - screen_size[0]) / 2, 0))
         pygame.image.save(main_display, "im314.png")
         esc_menu_f()
     if go_to_main_menu:
