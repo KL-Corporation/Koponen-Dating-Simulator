@@ -1757,23 +1757,20 @@ def koponen_talk():
 #endregion
 #region Menus
 def esc_menu_f():
+
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
-    file = pygame.image.load("im314.png")
+    game_background = pygame.image.load("im314.png")
     c = False
-    resume_button = pygame.Rect(150, 170, 200, 30)
-    save_button = pygame.Rect(150, 210, 200, 30)
-    settings_button = pygame.Rect(150, 250, 200, 30)
-    main_menu_button = pygame.Rect(150, 290, 200, 30)
 
     resume_text = button_font.render("Resume", True, KDS.Colors.GetPrimary.White)
     save_text = button_font.render("Save", True, KDS.Colors.GetPrimary.White)
     settings_text = button_font.render("Settings", True, KDS.Colors.GetPrimary.White)
     main_menu_text = button_font.render("Main menu", True, KDS.Colors.GetPrimary.White)
     
-    buttons = []
-    functions = []
-    texts = []
+    buttons = list()
+    functions = list()
+    texts = list()
 
     texts.append(resume_text)
     texts.append(save_text)
@@ -1800,19 +1797,43 @@ def esc_menu_f():
         esc_menu = False
         go_to_main_menu = True
 
-    functions.append(resume)
-    functions.append(save)
-    functions.append(settings)
-    functions.append(goto_main_menu)
-
-    buttons.append(resume_button)
-    buttons.append(save_button)
-    buttons.append(settings_button)
-    buttons.append(main_menu_button)
-
     while esc_menu:
+
+        fullscreen_offset = (0, 0)
+        fullscreen_scaling = 1
+        blit_size = display_size
+
+        if fullscreen_var:
+            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
+            fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
+            fullscreen_scaling = blit_size[1] / display_size[1]
+
+        buttons = list()
+        functions = list()
+        texts = list()
+
+        resume_button = pygame.Rect(150, 170, 200, 30)
+        save_button = pygame.Rect(150, 210, 200, 30)
+        settings_button = pygame.Rect(150, 250, 200, 30)
+        main_menu_button = pygame.Rect(150, 290, 200, 30)
+
+        buttons.append(resume_button)
+        buttons.append(save_button)
+        buttons.append(settings_button)
+        buttons.append(main_menu_button)
+        functions.append(resume)
+        functions.append(save)
+        functions.append(settings)
+        functions.append(goto_main_menu)
+        texts.append(resume_text)
+        texts.append(save_text)
+        texts.append(settings_text)
+        texts.append(main_menu_text)
+
         for event in pygame.event.get():
             if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    setFullscreen(False)
                 if event.key == K_ESCAPE:
                     esc_menu = False
                     pygame.mouse.set_visible(False)
@@ -1823,11 +1844,13 @@ def esc_menu_f():
             elif event.type == pygame.QUIT:
                 KDS_Quit()
         esc_menu_surface.fill((123, 134, 111))
-        main_display.blit(file, (0, 0))
+        game_background_scaling = blit_size[1] / game_background.get_height()
+        main_display.blit(pygame.transform.scale(game_background, (int(game_background.get_width() * game_background_scaling), int(game_background.get_height() * game_background_scaling))
+        ), (0, 0))
         esc_menu_surface.blit(pygame.transform.scale(
             text_icon, (250, 139)), (125, 10))
         point = list(pygame.mouse.get_pos())
-        point[0] -= display_size[0] / 2 - 250
+        point[0] -= blit_size[0] / 2 - 250
         point[1] -= 120
         y = 0
         for button in buttons:
@@ -1848,12 +1871,13 @@ def esc_menu_f():
             else:
                 x = 30
 
-            esc_menu_surface.blit(texts[y], (button.x+x, button.y+3))
+            esc_menu_surface.blit(texts[y], (button.x + x, button.y + 3))
             y += 1
 
-        main_display.blit(esc_menu_surface,
-                          (int(display_size[0] / 2 - 250), 120))
+        main_display.blit(pygame.transform.scale(esc_menu_surface, (int(esc_menu_surface.get_width() * fullscreen_scaling), int(esc_menu_surface.get_height() * fullscreen_scaling))),
+                          (int(blit_size[0] / 2 - (250 * fullscreen_scaling) + fullscreen_offset[0]), int(120 * fullscreen_scaling + fullscreen_offset[1])))
         pygame.display.update()
+        main_display.fill((0, 0, 0))
         c = False
 
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
@@ -2052,6 +2076,10 @@ def main_menu():
         global MenuMode
         MenuMode = Mode.ModeSelectionMenu
 
+    play_text = button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White)
+    settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
+    quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
+
     while main_menu_running:
 
         fullscreen_offset = (0, 0)
@@ -2062,53 +2090,6 @@ def main_menu():
             blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
             fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
             fullscreen_scaling = blit_size[1] / display_size[1]
-
-        play_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (180 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
-        settings_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (250 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
-        quit_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (320 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
-
-        play_text = button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White)
-        settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
-        quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
-
-        main_menu_buttons = list()
-        main_menu_functions = list()
-        main_menu_texts = list()
-        main_menu_buttons.append(play_button)
-        main_menu_buttons.append(settings_button)
-        main_menu_buttons.append(quit_button)
-        main_menu_functions.append(mode_selection_function)
-        main_menu_functions.append(settings_function)
-        main_menu_functions.append(KDS_Quit)
-        main_menu_texts.append(play_text)
-        main_menu_texts.append(settings_text)
-        main_menu_texts.append(quit_text)
-
-        mode_selection_buttons = list()
-        mode_selection_modes = list()
-        story_mode_button = pygame.Rect(0 + fullscreen_offset[0], 0 + fullscreen_offset[1], int(blit_size[0]), int(blit_size[1] / 2))
-        campaign_mode_button = pygame.Rect(0 + fullscreen_offset[0], int(blit_size[1] / 2), int(blit_size[0]), int(blit_size[1] / 2))
-        mode_selection_buttons.append(story_mode_button)
-        mode_selection_buttons.append(campaign_mode_button)
-        mode_selection_modes.append(KDS.Gamemode.Modes.Story)
-        mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
-
-        campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
-        campaign_left_button = pygame.Rect(50, 200, 66, 66)
-        campaign_play_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 300), 300, 100)
-        campaign_return_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 150), 300, 100)
-        campaign_menu_buttons = list()
-        campaign_menu_functions = list()
-        campaign_menu_buttons.append(campaign_left_button)
-        campaign_menu_buttons.append(campaign_right_button)
-        campaign_menu_buttons.append(campaign_play_button)
-        campaign_menu_buttons.append(campaign_return_button)
-        campaign_menu_functions.append(level_pick.left)
-        campaign_menu_functions.append(level_pick.right)
-        campaign_menu_functions.append(play_function)
-        campaign_menu_functions.append("useless, just like me.")
-        campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
-        campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2130,6 +2111,22 @@ def main_menu():
                 KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
+            play_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (180 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
+            settings_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (250 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
+            quit_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (320 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
+            main_menu_buttons = list()
+            main_menu_functions = list()
+            main_menu_texts = list()
+            main_menu_buttons.append(play_button)
+            main_menu_buttons.append(settings_button)
+            main_menu_buttons.append(quit_button)
+            main_menu_functions.append(mode_selection_function)
+            main_menu_functions.append(settings_function)
+            main_menu_functions.append(KDS_Quit)
+            main_menu_texts.append(play_text)
+            main_menu_texts.append(settings_text)
+            main_menu_texts.append(quit_text)
+
             main_display.blit(pygame.transform.scale(main_menu_background, blit_size), (0 + fullscreen_offset[0], 0 + fullscreen_offset[1]))
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
                 menu_gasburner_animation.update(), (int(menu_gasburner_animation.get_frame().get_width() * fullscreen_scaling),
@@ -2152,6 +2149,15 @@ def main_menu():
                 main_display.blit(pygame.transform.scale(main_menu_texts[y], (int(main_menu_texts[y].get_width() * fullscreen_scaling), int(main_menu_texts[y].get_height() * fullscreen_scaling))), (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - (main_menu_texts[y].get_width()) * fullscreen_scaling) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - (main_menu_texts[y].get_height()) * fullscreen_scaling) / 2))))
 
         elif MenuMode == Mode.ModeSelectionMenu:
+            mode_selection_buttons = list()
+            mode_selection_modes = list()
+            story_mode_button = pygame.Rect(0 + fullscreen_offset[0], 0 + fullscreen_offset[1], int(blit_size[0]), int(blit_size[1] / 2))
+            campaign_mode_button = pygame.Rect(0 + fullscreen_offset[0], int(blit_size[1] / 2), int(blit_size[0]), int(blit_size[1] / 2))
+            mode_selection_buttons.append(story_mode_button)
+            mode_selection_buttons.append(campaign_mode_button)
+            mode_selection_modes.append(KDS.Gamemode.Modes.Story)
+            mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
+
             main_display.blit(pygame.transform.scale(gamemode_bc_1_1, (int(gamemode_bc_1_1.get_width() * fullscreen_scaling), int(gamemode_bc_1_1.get_height() * fullscreen_scaling))), (0 + fullscreen_offset[0], 0 + fullscreen_offset[1]))
             main_display.blit(pygame.transform.scale(gamemode_bc_2_1, (int(gamemode_bc_2_1.get_width() * fullscreen_scaling), int(gamemode_bc_2_1.get_height() * fullscreen_scaling))), (0 + fullscreen_offset[0], int((display_size[1] * fullscreen_scaling) / 2 + fullscreen_offset[1])))
             for y in range(len(mode_selection_buttons)):
@@ -2179,7 +2185,26 @@ def main_menu():
             print("Wow... So empty.")
 
         elif MenuMode == Mode.CampaignMenu:
-            pygame.draw.rect(main_display, (192, 192, 192), (50 * fullscreen_scaling + fullscreen_offset[0], 200 + fullscreen_offset[1], blit_size[0] - (100 * fullscreen_scaling), 66 * fullscreen_scaling))
+            campaign_right_button = pygame.Rect(blit_size[0] - (50 * fullscreen_scaling) - (66 * fullscreen_scaling) + fullscreen_offset[0], 200 * fullscreen_scaling + fullscreen_offset[1], 66 * fullscreen_scaling, 66 * fullscreen_scaling)
+            campaign_left_button = pygame.Rect(int(50 * fullscreen_scaling + fullscreen_offset[0]), int(200 * fullscreen_scaling + fullscreen_offset[1]), 66 * fullscreen_scaling, 66 * fullscreen_scaling)
+            campaign_play_button = pygame.Rect(int(blit_size[0] / 2 - (150 * fullscreen_scaling) + fullscreen_offset[0]), int(blit_size[1] - (300 * fullscreen_scaling) + fullscreen_offset[1]), 300 * fullscreen_scaling, 100 * fullscreen_scaling)
+            campaign_return_button = pygame.Rect(int(blit_size[0] / 2 - (150 * fullscreen_scaling) + fullscreen_offset[0]), int(blit_size[1] - (150 * fullscreen_scaling) + fullscreen_offset[1]), 300 * fullscreen_scaling, 100 * fullscreen_scaling)
+            campaign_menu_buttons = list()
+            campaign_menu_functions = list()
+            campaign_menu_buttons.append(campaign_left_button)
+            campaign_menu_buttons.append(campaign_right_button)
+            campaign_menu_buttons.append(campaign_play_button)
+            campaign_menu_buttons.append(campaign_return_button)
+            campaign_menu_functions.append(level_pick.left)
+            campaign_menu_functions.append(level_pick.right)
+            campaign_menu_functions.append(play_function)
+            campaign_menu_functions.append("useless, just like me.")
+            campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
+            campaign_play_text_size = button_font1.size("START")
+            campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
+            campaign_return_text_size = button_font1.size("RETURN")
+
+            pygame.draw.rect(main_display, (192, 192, 192), (50 * fullscreen_scaling + fullscreen_offset[0], 200 * fullscreen_scaling + fullscreen_offset[1], blit_size[0] - (100 * fullscreen_scaling), 66 * fullscreen_scaling))
             for y in range(len(campaign_menu_buttons)):
                 if campaign_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
                     if c:
@@ -2203,9 +2228,9 @@ def main_menu():
                 elif y == 1:
                     main_display.blit(pygame.transform.scale(arrow_button, (int(arrow_button.get_width() * fullscreen_scaling), int(arrow_button.get_height() * fullscreen_scaling))), (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
                 elif y == 2:
-                    main_display.blit(campaign_play_text, (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
+                    main_display.blit(pygame.transform.scale(campaign_play_text, (int(campaign_play_text_size[0] * fullscreen_scaling), int(campaign_play_text_size[1] * fullscreen_scaling))), (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
                 elif y == 3:
-                    main_display.blit(campaign_return_text, (int(campaign_return_button.x + (campaign_return_button.width / 5)), int(campaign_return_button.y + (campaign_return_button.height / 4))))
+                    main_display.blit(pygame.transform.scale(campaign_return_text, (int(campaign_return_text_size[0] * fullscreen_scaling), int(campaign_return_text_size[1] * fullscreen_scaling))), (int(campaign_return_button.x + (campaign_return_button.width / 5)), int(campaign_return_button.y + (campaign_return_button.height / 4))))
 
                 current_map_int = int(current_map)
 
@@ -2214,7 +2239,8 @@ def main_menu():
                 else:
                     map_name = map_names[0]
                 level_text = button_font1.render(current_map + " - " + map_name, True, (0, 0, 0))
-                main_display.blit(level_text, (125, 209))
+                level_text_size = button_font1.size(current_map + " - " + map_name)
+                main_display.blit(pygame.transform.scale(level_text, (int(level_text_size[0] * fullscreen_scaling), int(level_text_size[1] * fullscreen_scaling))), (int(125 * fullscreen_scaling + fullscreen_offset[0]), int(209 * fullscreen_scaling + fullscreen_offset[1])))
 
         pygame.display.update()
         main_display.fill((0, 0, 0))
@@ -3243,7 +3269,7 @@ while main_running:
         else:
             blit_size = display_size
         main_display.fill(KDS.Colors.GetPrimary.Black)
-        main_display.blit(pygame.transform.scale(screen, blit_size), ((monitor_size[0] / 2) - (blit_size[0] / 2), 0))
+        main_display.blit(pygame.transform.scale(screen, blit_size), (int(fullscreen_offset[0]), int(fullscreen_offset[1])))
         pygame.image.save(main_display, "im314.png")
         esc_menu_f()
     if go_to_main_menu:
