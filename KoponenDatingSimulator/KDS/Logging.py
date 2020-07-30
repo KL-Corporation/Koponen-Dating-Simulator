@@ -32,7 +32,7 @@ class LogType():
     debug = 10
     notset = 0
 
-def Log(Log_Type: LogType, Message: str, Console_Visible: bool):
+def Log(Log_Type: LogType, Message: str, Console_Visible=False):
     if Log_Type == LogType.execption:
         logging.exception(Message)
     elif Log_Type == LogType.log:

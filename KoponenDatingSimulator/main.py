@@ -579,8 +579,8 @@ inventory_slot = 0
 doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
-stand_size = (28, 65)
-crouch_size = (28, 33)
+stand_size = (28, 63)
+crouch_size = (28, 34)
 player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
@@ -1322,25 +1322,25 @@ def toilet_collisions(rect, burnstate):
         o += 1
 #endregion
 #region Player
-def move(rect, movement, tiles):
+def move(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
     rect.x += movement[0]
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
-        if movement[0] > 0:
+        if movement[0] > 0 or skip_horisontal_movement_check:
             rect.right = tile.left
             collision_types['right'] = True
-        elif movement[0] < 0:
+        elif movement[0] < 0 or skip_horisontal_movement_check:
             rect.left = tile.right
             collision_types['left'] = True
     rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
-        if movement[1] > 0:
+        if movement[1] > 0 or skip_vertical_movement_check:
             rect.bottom = tile.top
             collision_types['bottom'] = True
-        elif movement[1] < 0:
+        elif movement[1] < 0 or skip_vertical_movement_check:
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
@@ -2017,14 +2017,6 @@ def main_menu():
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(volume)
 
-    play_button = pygame.Rect(450, 180, 300, 60)
-    settings_button = pygame.Rect(450, 250, 300, 60)
-    quit_button = pygame.Rect(450, 320, 300, 60)
-
-    play_text = button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White)
-    settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
-    quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
-
     def settings_function():
         settings_menu()
 
@@ -2060,46 +2052,63 @@ def main_menu():
         global MenuMode
         MenuMode = Mode.ModeSelectionMenu
 
-    main_menu_buttons = list()
-    main_menu_functions = list()
-    main_menu_texts = list()
-    main_menu_buttons.append(play_button)
-    main_menu_buttons.append(settings_button)
-    main_menu_buttons.append(quit_button)
-    main_menu_functions.append(mode_selection_function)
-    main_menu_functions.append(settings_function)
-    main_menu_functions.append(KDS_Quit)
-    main_menu_texts.append(play_text)
-    main_menu_texts.append(settings_text)
-    main_menu_texts.append(quit_text)
-
-    mode_selection_buttons = list()
-    mode_selection_modes = list()
-    story_mode_button = pygame.Rect(0, 0, int(display_size[0]), int(display_size[1] / 2))
-    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), int(display_size[0]), int(display_size[1] / 2))
-    mode_selection_buttons.append(story_mode_button)
-    mode_selection_buttons.append(campaign_mode_button)
-    mode_selection_modes.append(KDS.Gamemode.Modes.Story)
-    mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
-
-    campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
-    campaign_left_button = pygame.Rect(50, 200, 66, 66)
-    campaign_play_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 300), 300, 100)
-    campaign_return_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 150), 300, 100)
-    campaign_menu_buttons = list()
-    campaign_menu_functions = list()
-    campaign_menu_buttons.append(campaign_left_button)
-    campaign_menu_buttons.append(campaign_right_button)
-    campaign_menu_buttons.append(campaign_play_button)
-    campaign_menu_buttons.append(campaign_return_button)
-    campaign_menu_functions.append(level_pick.left)
-    campaign_menu_functions.append(level_pick.right)
-    campaign_menu_functions.append(play_function)
-    campaign_menu_functions.append("useless, just like me.")
-    campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
-    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
-
     while main_menu_running:
+
+        fullscreen_offset = (0, 0)
+        fullscreen_scaling = 1
+        blit_size = display_size
+
+        if fullscreen_var:
+            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
+            fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
+            fullscreen_scaling = blit_size[1] / display_size[1]
+
+        play_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (180 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
+        settings_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (250 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
+        quit_button = pygame.Rect((450 * fullscreen_scaling) + fullscreen_offset[0], (320 + fullscreen_offset[1]) * fullscreen_scaling, 300 * fullscreen_scaling, 60 * fullscreen_scaling)
+
+        play_text = button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White)
+        settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
+        quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
+
+        main_menu_buttons = list()
+        main_menu_functions = list()
+        main_menu_texts = list()
+        main_menu_buttons.append(play_button)
+        main_menu_buttons.append(settings_button)
+        main_menu_buttons.append(quit_button)
+        main_menu_functions.append(mode_selection_function)
+        main_menu_functions.append(settings_function)
+        main_menu_functions.append(KDS_Quit)
+        main_menu_texts.append(play_text)
+        main_menu_texts.append(settings_text)
+        main_menu_texts.append(quit_text)
+
+        mode_selection_buttons = list()
+        mode_selection_modes = list()
+        story_mode_button = pygame.Rect(0 + fullscreen_offset[0], 0 + fullscreen_offset[1], int(blit_size[0]), int(blit_size[1] / 2))
+        campaign_mode_button = pygame.Rect(0 + fullscreen_offset[0], int(blit_size[1] / 2), int(blit_size[0]), int(blit_size[1] / 2))
+        mode_selection_buttons.append(story_mode_button)
+        mode_selection_buttons.append(campaign_mode_button)
+        mode_selection_modes.append(KDS.Gamemode.Modes.Story)
+        mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
+
+        campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
+        campaign_left_button = pygame.Rect(50, 200, 66, 66)
+        campaign_play_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 300), 300, 100)
+        campaign_return_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 150), 300, 100)
+        campaign_menu_buttons = list()
+        campaign_menu_functions = list()
+        campaign_menu_buttons.append(campaign_left_button)
+        campaign_menu_buttons.append(campaign_right_button)
+        campaign_menu_buttons.append(campaign_play_button)
+        campaign_menu_buttons.append(campaign_return_button)
+        campaign_menu_functions.append(level_pick.left)
+        campaign_menu_functions.append(level_pick.right)
+        campaign_menu_functions.append(play_function)
+        campaign_menu_functions.append("useless, just like me.")
+        campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
+        campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2121,9 +2130,11 @@ def main_menu():
                 KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
-            main_display.blit(main_menu_background, (0, 0))
-            main_display.blit(pygame.transform.flip(
-                menu_gasburner_animation.update(), False, False), (625, 450))
+            main_display.blit(pygame.transform.scale(main_menu_background, blit_size), (0 + fullscreen_offset[0], 0 + fullscreen_offset[1]))
+            main_display.blit(pygame.transform.flip(pygame.transform.scale(
+                menu_gasburner_animation.update(), (int(menu_gasburner_animation.get_frame().get_width() * fullscreen_scaling),
+                int(menu_gasburner_animation.get_frame().get_height() * fullscreen_scaling))),
+                False, False), ((625 * fullscreen_scaling) + fullscreen_offset[0], (450 * fullscreen_scaling) + fullscreen_offset[1]))
 
             for y in range(len(main_menu_buttons)):
                 if main_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
@@ -2138,17 +2149,17 @@ def main_menu():
 
                 pygame.draw.rect(main_display, button_color, main_menu_buttons[y])
 
-                main_display.blit(main_menu_texts[y], (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - main_menu_texts[y].get_width()) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - main_menu_texts[y].get_height()) / 2))))
+                main_display.blit(pygame.transform.scale(main_menu_texts[y], (int(main_menu_texts[y].get_width() * fullscreen_scaling), int(main_menu_texts[y].get_height() * fullscreen_scaling))), (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - (main_menu_texts[y].get_width()) * fullscreen_scaling) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - (main_menu_texts[y].get_height()) * fullscreen_scaling) / 2))))
 
         elif MenuMode == Mode.ModeSelectionMenu:
-            main_display.blit(gamemode_bc_1_1, (0, 0))
-            main_display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
+            main_display.blit(pygame.transform.scale(gamemode_bc_1_1, (int(gamemode_bc_1_1.get_width() * fullscreen_scaling), int(gamemode_bc_1_1.get_height() * fullscreen_scaling))), (0 + fullscreen_offset[0], 0 + fullscreen_offset[1]))
+            main_display.blit(pygame.transform.scale(gamemode_bc_2_1, (int(gamemode_bc_2_1.get_width() * fullscreen_scaling), int(gamemode_bc_2_1.get_height() * fullscreen_scaling))), (0 + fullscreen_offset[0], int((display_size[1] * fullscreen_scaling) / 2 + fullscreen_offset[1])))
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(pygame.mouse.get_pos()):
                     if y == 0:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(False) * 255.0))), (0, 0))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(False) * 255.0)), (int(gamemode_bc_1_2.get_width() * fullscreen_scaling), int(gamemode_bc_1_2.get_height() * fullscreen_scaling))), (int(0 + fullscreen_offset[0]), int(0 + fullscreen_offset[1])))
                     elif y == 1:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(False) * 255.0))), (0, int(display_size[1] / 2)))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(False) * 255.0)), (int(gamemode_bc_2_2.get_width() * fullscreen_scaling), int(gamemode_bc_2_2.get_height() * fullscreen_scaling))), (int(0 + fullscreen_offset[0]), int((display_size[1] * fullscreen_scaling) / 2 + fullscreen_offset[1])))
                     if c:
                         if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
                             MenuMode = Mode.StoryMenu
@@ -2160,15 +2171,15 @@ def main_menu():
                             KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nInvalid mode_selection_mode! Value: " + mode_selection_modes[y])
                 else:
                     if y == 0:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(True) * 255.0))), (0, 0))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(True) * 255.0)), (int(gamemode_bc_1_2.get_width() * fullscreen_scaling), int(gamemode_bc_1_2.get_height() * fullscreen_scaling))), (int(0 + fullscreen_offset[0]), int(0 + fullscreen_offset[1])))
                     elif y == 1:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(True) * 255.0)), (int(gamemode_bc_2_2.get_width() * fullscreen_scaling), int(gamemode_bc_2_2.get_height() * fullscreen_scaling))), (int(0 + fullscreen_offset[0]), int((display_size[1] * fullscreen_scaling) / 2 + fullscreen_offset[1])))
 
         elif MenuMode == Mode.StoryMenu:
             print("Wow... So empty.")
 
         elif MenuMode == Mode.CampaignMenu:
-            pygame.draw.rect(main_display, (192, 192, 192), (50, 200, display_size[0] - 100, 66))
+            pygame.draw.rect(main_display, (192, 192, 192), (50 * fullscreen_scaling + fullscreen_offset[0], 200 + fullscreen_offset[1], blit_size[0] - (100 * fullscreen_scaling), 66 * fullscreen_scaling))
             for y in range(len(campaign_menu_buttons)):
                 if campaign_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
                     if c:
@@ -2188,9 +2199,9 @@ def main_menu():
                 pygame.draw.rect(main_display, button_color, campaign_menu_buttons[y])
 
                 if y == 0:
-                    main_display.blit(pygame.transform.flip(arrow_button, True, False), (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
+                    main_display.blit(pygame.transform.scale(pygame.transform.flip(arrow_button, True, False), (int(arrow_button.get_width() * fullscreen_scaling), int(arrow_button.get_height() * fullscreen_scaling))), (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
                 elif y == 1:
-                    main_display.blit(arrow_button, (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
+                    main_display.blit(pygame.transform.scale(arrow_button, (int(arrow_button.get_width() * fullscreen_scaling), int(arrow_button.get_height() * fullscreen_scaling))), (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
                 elif y == 2:
                     main_display.blit(campaign_play_text, (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
                 elif y == 3:
@@ -2674,18 +2685,30 @@ while main_running:
             else:
                 player_movement[1] = 0
 
+    try:
+        if check_crouch == True:
+            crouch_collisions = move(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
+        else:
+            crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
+    except Exception:
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "check_crouch has not been assigned yet.", False)
+        crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
+
     if moveDown and not onLadder and player_rect.height != crouch_size[1]:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-    elif (not moveDown or onLadder) and player_rect.height != stand_size[1]:
+        check_crouch = True
+    elif (not moveDown or onLadder) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+        check_crouch = False
+    elif not moveDown and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1]:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+        check_crouch = True
 
     if not onLadder and not moveDown and moveUp:
         moveUp = False
         if air_timer < 6:
             vertical_momentum = -10
 
-#endregion
-#region AI
     toilet_collisions(player_rect, gasburnerBurning)
 
     if player_health > 0:
@@ -2693,6 +2716,8 @@ while main_running:
             player_rect, player_movement, tile_rects)
     else:
         player_rect, collisions = move(player_rect, [0, 8], tile_rects)
+#endregion
+#region AI
 
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
 
@@ -3197,12 +3222,16 @@ while main_running:
     if dark:
         screen.blit(alpha, (0, 0))
         
+    fullscreen_offset = (0, 0)
+    fullscreen_scaling = 1
+    blit_size = display_size
     if fullscreen_var == True:
-        blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
-    else:
-        blit_size = display_size
+            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
+            fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
+            fullscreen_scaling = blit_size[1] / display_size[1]
+
     main_display.fill(KDS.Colors.GetPrimary.Black)
-    main_display.blit(pygame.transform.scale(screen, blit_size), ((monitor_size[0] / 2) - (blit_size[0] / 2), 0))
+    main_display.blit(pygame.transform.scale(screen, blit_size), (fullscreen_offset[0], fullscreen_offset[1]))
     pygame.display.update()
 #endregion
 #region Conditional Events
