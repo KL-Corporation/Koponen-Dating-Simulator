@@ -128,6 +128,9 @@ rectMap = []
 tile_rects = []
 rectwidth = 0
 rectheight = 0
+scroll = 0
+scroll_y = 0
+shiftPressed = False
 
 current_block = "a"
 current_modifier = "none"
@@ -177,12 +180,31 @@ while main:
         if event.type == pygame.QUIT:
             main = False
             inputThread_running = True
+        if event.type == MOUSEBUTTONDOWN:
+            if event.button == 4:
+                if shiftPressed:
+                    scroll_y -= rectwidth
+                else:
+                    scroll -= rectwidth
+            elif event.button == 5:
+                if shiftPressed:
+                    scroll_y += rectwidth
+                else:
+                    scroll += rectwidth
+        if event.type == KEYDOWN:
+            if event.key == K_p:
+                print(scroll)
+            if event.key == K_LSHIFT:
+                shiftPressed = True
+        if event.type == KEYUP:
+            if event.key == K_LSHIFT:
+                shiftPressed = False
 
     if not inputThread_running and main == True:
         thread = threading.Thread(target=inputThread)
         thread.start()
 
-    main_display.fill((220,200,199))
+    main_display.fill((20,20,29))
     toplayer.fill((230,240,240))
 
     if input_data == "exit":
@@ -212,11 +234,8 @@ while main:
             item_map.append(row)
         input_data = ""
 
-        rectwidth = display_size[0]/len(row)
-        rectheight = display_size[1]/len(textmap)
-        rectwidth = rectheight
-
-        print(type(rectwidth))
+        rectwidth = 50
+        rectheight = 50
 
         y = 0
         u = 0
@@ -253,10 +272,14 @@ while main:
         y += 1
 
     y = 0
+    ps = pygame.mouse.get_pos()
+    ps = list(ps)
+    ps[0] += scroll
+    ps[1] += scroll_y
     for row in tile_rects:
         x = 0
         for tile in row:
-            if tile.collidepoint(pygame.mouse.get_pos()):
+            if tile.collidepoint(ps):
                 pygame.draw.rect(toplayer, (20,20,20), tile, 3)
                 if pygame.mouse.get_pressed()[0]:
                     if current_modifier == "tile":
@@ -266,6 +289,6 @@ while main:
             x += 1
         y += 1
 
-    main_display.blit(toplayer,(0,0))
+    main_display.blit(toplayer,(0-scroll,0-scroll_y))
 
     pygame.display.update()
