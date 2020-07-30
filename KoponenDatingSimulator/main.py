@@ -30,6 +30,7 @@ display_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", st
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
 screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(
     600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
+window_size = display_size
 monitor_info = pygame.display.Info()
 monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
@@ -256,15 +257,17 @@ class Archvile:
 #endregion
 #region Fullscreen
 def setFullscreen(reverseFullscreen):
-    global fullscreen_var, main_display
+    global fullscreen_var, main_display, window_size
     if reverseFullscreen:
         fullscreen_var = not fullscreen_var
     if fullscreen_var:
         main_display = pygame.display.set_mode(display_size)
         fullscreen_var = False
+        window_size = display_size
     else:
         main_display = pygame.display.set_mode(monitor_size, pygame.FULLSCREEN)
         fullscreen_var = True
+        window_size = monitor_size
     KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
 #endregion
 #region Initialisation
@@ -596,6 +599,7 @@ taskTaivutettu = ""
 DebugMode = False
 
 MenuMode = 0
+esc_menu_background = pygame.Surface(window_size)
 #endregion
 #region Save System
 def LoadSave():
@@ -1760,7 +1764,6 @@ def esc_menu_f():
 
     pygame.mouse.set_visible(True)
     global esc_menu, go_to_main_menu
-    game_background = pygame.image.load("im314.png")
     c = False
 
     resume_text = button_font.render("Resume", True, KDS.Colors.GetPrimary.White)
@@ -1804,8 +1807,8 @@ def esc_menu_f():
         blit_size = display_size
 
         if fullscreen_var:
-            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
-            fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
+            blit_size = (int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
+            fullscreen_offset = ((window_size[0] / 2) - (blit_size[0] / 2), (window_size[1] / 2) - (blit_size[1] / 2))
             fullscreen_scaling = blit_size[1] / display_size[1]
 
         buttons = list()
@@ -1844,8 +1847,8 @@ def esc_menu_f():
             elif event.type == pygame.QUIT:
                 KDS_Quit()
         esc_menu_surface.fill((123, 134, 111))
-        game_background_scaling = blit_size[1] / game_background.get_height()
-        main_display.blit(pygame.transform.scale(game_background, (int(game_background.get_width() * game_background_scaling), int(game_background.get_height() * game_background_scaling))
+        game_background_scaling = blit_size[1] / esc_menu_background.get_height()
+        main_display.blit(pygame.transform.scale(esc_menu_background, (int(esc_menu_background.get_width() * game_background_scaling), int(esc_menu_background.get_height() * game_background_scaling))
         ), (0, 0))
         esc_menu_surface.blit(pygame.transform.scale(
             text_icon, (250, 139)), (125, 10))
@@ -2087,8 +2090,8 @@ def main_menu():
         blit_size = display_size
 
         if fullscreen_var:
-            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
-            fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
+            blit_size = (int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
+            fullscreen_offset = ((window_size[0] / 2) - (blit_size[0] / 2), (window_size[1] / 2) - (blit_size[1] / 2))
             fullscreen_scaling = blit_size[1] / display_size[1]
 
         for event in pygame.event.get():
@@ -2291,7 +2294,7 @@ for y in range(len(world_gen[0])):
 pygame.image.save(background_surface, "level_background.png")
 del background_surface
 
-game_background = pygame.image.load("level_background.png")
+esc_menu_background = pygame.image.load("level_background.png")
 """
 tile_textures = {'b': floor1,
                     'c': wall1,
@@ -3248,13 +3251,9 @@ while main_running:
     if dark:
         screen.blit(alpha, (0, 0))
         
-    fullscreen_offset = (0, 0)
-    fullscreen_scaling = 1
-    blit_size = display_size
-    if fullscreen_var == True:
-            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
-            fullscreen_offset = ((monitor_size[0] / 2) - (blit_size[0] / 2), (monitor_size[1] / 2) - (blit_size[1] / 2))
-            fullscreen_scaling = blit_size[1] / display_size[1]
+    blit_size = (int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
+    fullscreen_offset = ((window_size[0] / 2) - (blit_size[0] / 2), (window_size[1] / 2) - (blit_size[1] / 2))
+    fullscreen_scaling = blit_size[1] / display_size[1]
 
     main_display.fill(KDS.Colors.GetPrimary.Black)
     main_display.blit(pygame.transform.scale(screen, blit_size), (fullscreen_offset[0], fullscreen_offset[1]))
@@ -3265,12 +3264,12 @@ while main_running:
         pygame.mixer.music.pause()
         screen.blit(alpha, (0, 0))
         if fullscreen_var == True:
-            blit_size = (int(monitor_size[1] * (display_size[0] / display_size[1])), int(monitor_size[1]))
+            blit_size = (int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
         else:
             blit_size = display_size
         main_display.fill(KDS.Colors.GetPrimary.Black)
         main_display.blit(pygame.transform.scale(screen, blit_size), (int(fullscreen_offset[0]), int(fullscreen_offset[1])))
-        pygame.image.save(main_display, "im314.png")
+        esc_menu_background = main_display.copy()
         esc_menu_f()
     if go_to_main_menu:
         pygame.mixer.music.stop()
