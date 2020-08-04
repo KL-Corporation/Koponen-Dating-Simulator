@@ -261,10 +261,9 @@ def FullscreenSet(reverseFullscreen=False):
     FullscreenGet.scaling = FullscreenGet.size[1] / display_size[1]
 #endregion
 #region Initialisation
-alpha = pygame.Surface(screen_size)
-alpha.fill((0, 0, 0))
-alpha.set_alpha(170)
-
+black_tint = pygame.Surface(screen_size)
+black_tint.fill((0, 0, 0))
+black_tint.set_alpha(170)
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
@@ -481,7 +480,7 @@ if tcagr == None:
                     "Error parcing terms and conditions bool.", False)
     tcagr = False
 
-volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
+music_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
 
 isFullscreen = KDS.Convert.ToBool(
     KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
@@ -491,11 +490,10 @@ if isFullscreen == None:
                     "Error parcing fullscreen bool.", False)
 FullscreenSet(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
-                str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(isFullscreen), False)
+                str(tcagr) + "\n- Volume: " + str(music_volume) + "\n- Fullscreen: " + str(isFullscreen), False)
 
 selectedSave = 0
 
-volume = float(volume_data) / 100
 gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
 toilet_animation_stats = [0, 5, 0]
@@ -791,13 +789,14 @@ def load_items(path):
 def load_jukebox_music():
     musikerna = os.listdir("Assets/Audio/jukebox_music/")
     musics = []
-
     for musiken in musikerna:
         musics.append(pygame.mixer.Sound("Assets/Audio/jukebox_music/" + musiken))
-
     random.shuffle(musics)
-
     return musics
+
+jukebox_music = load_jukebox_music()
+for i in range(len(jukebox_music)):
+    jukebox_music[i].set_volume(music_volume)
 
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
@@ -815,8 +814,6 @@ def load_music():
         KDS.Logging.Log(KDS.Logging.LogType.debug,
                         "Initialised Music File: " + track, False)
 
-    pygame.mixer.music.stop()
-
     pygame.mixer.music.load(music_files[0])
 
     pos = 0
@@ -829,7 +826,6 @@ def load_music():
     del original_path
     del pos
 def load_music_for_map(_current_map):
-    pygame.mixer.music.stop()
     pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
@@ -1345,7 +1341,7 @@ koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 3, KDS.Colors.GetPrimary.White, -1)
+    "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
     "explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)
@@ -1774,7 +1770,6 @@ def esc_menu_f():
         esc_menu = False
         pygame.mouse.set_visible(False)
         pygame.mixer.unpause()
-        pygame.mixer.music.unpause()
 
     def save():
         SaveData()
@@ -1785,7 +1780,6 @@ def esc_menu_f():
     def goto_main_menu():
         global esc_menu, go_to_main_menu
         pygame.mixer.unpause()
-        pygame.mixer.music.unpause()
         esc_menu = False
         go_to_main_menu = True
 
@@ -1819,7 +1813,6 @@ def esc_menu_f():
                 if event.key == K_ESCAPE:
                     esc_menu = False
                     pygame.mouse.set_visible(False)
-                    pygame.mixer.music.unpause()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -1862,7 +1855,7 @@ def esc_menu_f():
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, volume
+    global main_menu_running, esc_menu, main_running, settings_running, music_volume
     c = False
     settings_running = True
 
@@ -1883,7 +1876,7 @@ def settings_menu():
     texts.append(return_text)
     functions.append(return_def)
 
-    dragSlider = False
+    music_volume_slider = KDS.UI.New.Slider("Volume", pygame.Rect(560, 145, 340, 20), (20, 30))
 
     while settings_running:
 
@@ -1911,37 +1904,8 @@ def settings_menu():
         main_display.blit(settings_background, (0, 0))
 
         main_display.blit(volume_text, (190, 130))
-        pygame.draw.rect(main_display, (120, 120, 120), (560, 145, 340, 20))
-
-        music_slider.x = int(560 + (volume * 100) * 3.4 - 15)
-
-        if pygame.mouse.get_pressed()[0] == False:
-            dragSlider = False
-
-        if music_slider.collidepoint(pygame.mouse.get_pos()):
-            slider_color = (115, 115, 115)
-            if pygame.mouse.get_pressed()[0]:
-                dragSlider = True
-        if dragSlider:
-            slider_color = (90, 90, 90)
-            position = int(pygame.mouse.get_pos()[0])
-            if position < 560:
-                position = 560
-            if position > 900:
-                position = 900
-            position -= 560
-            position = int(position/3.4)
-            KDS.ConfigManager.SetSetting("Settings", "Volume", str(position))
-            volume = position/100
-            pygame.mixer.music.set_volume(volume)
-        else:
-            slider_color = (100, 100, 100)
-
-        pygame.draw.rect(main_display, (slider_color), music_slider)
-
-        music_slider = KDS.UI.New.Slider("Volume", pygame.Rect(560, 250, 340, 20), )
-
-        print()
+        music_volume = music_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
+        pygame.mixer.music.set_volume(music_volume)
 
         y = 0
         for button in buttons:
@@ -1976,7 +1940,7 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     #load_music()
     load_music_for_map(current_map)
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(volume)
+    pygame.mixer.music.set_volume(music_volume)
     global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
     player_hand_item = "none"
 
@@ -1996,7 +1960,7 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     LoadSave()
 
 def main_menu():
-    global current_map, MenuMode
+    global current_map, MenuMode, DebugMode
 
     class Mode:
         MainMenu = 0
@@ -2022,7 +1986,7 @@ def main_menu():
 
     pygame.mixer.music.load("Assets/Audio/lobbymusic.wav")
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(volume)
+    pygame.mixer.music.set_volume(music_volume)
 
     def settings_function():
         settings_menu()
@@ -2063,6 +2027,15 @@ def main_menu():
     settings_text = button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White)
     quit_text = button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White)
 
+    main_menu_functions = list()
+    main_menu_functions.append(mode_selection_function)
+    main_menu_functions.append(settings_function)
+    main_menu_functions.append(KDS_Quit)
+    main_menu_texts = list()
+    main_menu_texts.append(play_text)
+    main_menu_texts.append(settings_text)
+    main_menu_texts.append(quit_text)
+
     while main_menu_running:
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2077,6 +2050,8 @@ def main_menu():
                         KDS_Quit()
                 elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
+                elif event.key == K_F3:
+                    DebugMode = not DebugMode
                 elif event.key == K_ESCAPE:
                     if MenuMode != Mode.MainMenu:
                         MenuMode = Mode.MainMenu
@@ -2088,17 +2063,9 @@ def main_menu():
             settings_button = pygame.Rect(int((450 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((250 + FullscreenGet.offset[1]) * FullscreenGet.scaling), int(300 * FullscreenGet.scaling), int(60 * FullscreenGet.scaling))
             quit_button = pygame.Rect(int((450 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((320 + FullscreenGet.offset[1]) * FullscreenGet.scaling), int(300 * FullscreenGet.scaling), int(60 * FullscreenGet.scaling))
             main_menu_buttons = list()
-            main_menu_functions = list()
-            main_menu_texts = list()
             main_menu_buttons.append(play_button)
             main_menu_buttons.append(settings_button)
             main_menu_buttons.append(quit_button)
-            main_menu_functions.append(mode_selection_function)
-            main_menu_functions.append(settings_function)
-            main_menu_functions.append(KDS_Quit)
-            main_menu_texts.append(play_text)
-            main_menu_texts.append(settings_text)
-            main_menu_texts.append(quit_text)
 
             main_display.blit(pygame.transform.scale(main_menu_background, FullscreenGet.size), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
@@ -2215,6 +2182,10 @@ def main_menu():
                 level_text_size = button_font1.size(current_map + " - " + map_name)
                 main_display.blit(pygame.transform.scale(level_text, (int(level_text_size[0] * FullscreenGet.scaling), int(level_text_size[1] * FullscreenGet.scaling))), (int(125 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(209 * FullscreenGet.scaling + FullscreenGet.offset[1])))
 
+        if DebugMode:
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            main_display.blit(pygame.transform.scale(score_font.render(fps_text, True, KDS.Colors.GetPrimary.White), (int(score_font.size(fps_text)[0] * 2 * FullscreenGet.scaling), int(score_font.size(fps_text)[1] * 2 * FullscreenGet.scaling))), (int(10 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(10 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+
         pygame.display.update()
         main_display.fill((0, 0, 0))
         c = False
@@ -2225,7 +2196,6 @@ def level_finished_menu():
 #endregion
 #region Check Terms
 agr(tcagr)
-jukebox_music = load_jukebox_music()
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
     "Data", "TermsAccepted", str(False)))
 if tcagr != False:
@@ -2306,7 +2276,7 @@ while main_running:
             elif event.key == K_e:
                 FunctionKey = True
             elif event.key == K_ESCAPE:
-                esc_menu = False if esc_menu else True
+                esc_menu = True
             elif event.key == K_j:
                 inventoryLeft()
             elif event.key == K_k:
@@ -2474,26 +2444,6 @@ while main_running:
     for jukebox in jukeboxes:
         screen.blit(jukebox_texture, (jukebox.x -
                                       scroll[0], jukebox.y - scroll[1]))
-        if player_rect.colliderect(jukebox):
-            screen.blit(jukebox_tip, (jukebox.x -
-                                      scroll[0]-20, jukebox.y - scroll[1]-30))
-            if FunctionKey:
-                pygame.mixer.music.pause()
-                jukebox_music[jukeboxMusicPlaying].stop()
-                while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
-                    jukeboxMusicPlaying = int(
-                        random.uniform(0, len(jukebox_music)))
-
-                lastJukeboxSong[4] = lastJukeboxSong[3]
-                lastJukeboxSong[3] = lastJukeboxSong[2]
-                lastJukeboxSong[2] = lastJukeboxSong[1]
-                lastJukeboxSong[1] = lastJukeboxSong[0]
-                lastJukeboxSong[0] = jukeboxMusicPlaying
-                jukebox_music[jukeboxMusicPlaying].play()
-        else:
-            pygame.mixer.music.unpause()
-            for x in range(len(jukebox_music)):
-                jukebox_music[x].stop()
 
     for landmine in landmines:
         screen.blit(landmine_texture, (landmine.x -
@@ -2847,18 +2797,15 @@ while main_running:
 #endregion
 #region UI
     score = score_font.render(
-        ("Score: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
-    if DebugMode:
-        fps = score_font.render(
-            "Fps: " + str(int(clock.get_fps())), True, KDS.Colors.GetPrimary.White)
+        ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
 
     if player_health < 0:
         player_health = 0
 
     health = score_font.render(
-        "Health: " + str(player_health), True, KDS.Colors.GetPrimary.White)
+        "HEALTH: " + str(player_health), True, KDS.Colors.GetPrimary.White)
     stamina = score_font.render(
-        "Stamina: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
+        "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
 #endregion
 #region Pelaajan elämätilanteen käsittely
     if player_health < last_player_health and player_health != 0:
@@ -3148,11 +3095,37 @@ while main_running:
     for iron_bar in iron_barss:
         screen.blit(iron_bars,(iron_bar.x - scroll[0],iron_bar.y - scroll[1]))
 
+    jukebox_collision = False
+
+    for jukebox in jukeboxes:
+        if player_rect.colliderect(jukebox):
+            screen.blit(jukebox_tip, (jukebox.x - scroll[0]-20, jukebox.y - scroll[1]-30))
+            jukebox_collision = True
+
+    if jukebox_collision:
+        if FunctionKey:
+            pygame.mixer.music.stop()
+            for x in range(len(jukebox_music)):
+                jukebox_music[x].stop()
+            while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
+                jukeboxMusicPlaying = int(
+                    random.uniform(0, len(jukebox_music)))
+            for i in range(len(lastJukeboxSong) - 1):
+                lastJukeboxSong[i] = lastJukeboxSong[i + 1]
+            lastJukeboxSong[4] = jukeboxMusicPlaying
+            jukebox_music[jukeboxMusicPlaying].set_volume(music_volume)
+            jukebox_music[jukeboxMusicPlaying].play()
+    else:
+        if not pygame.mixer.music.get_busy:
+            pygame.mixer.music.set_volume(music_volume)
+            pygame.mixer.music.play()
+        for x in range(len(jukebox_music)):
+            jukebox_music[x].stop()
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
     if DebugMode:
-        screen.blit(fps, (10, 10))
+        screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (10, 10))
 #endregion
 #region UI Rendering
     for i in range(len(inventory)):
@@ -3219,19 +3192,23 @@ while main_running:
 #endregion
 #region Screen Rendering
     if dark:
-        screen.blit(alpha, (0, 0))
+        screen.blit(black_tint, (0, 0))
     main_display.fill(KDS.Colors.GetPrimary.Black)
     main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
     pygame.display.update()
 #endregion
 #region Conditional Events
     if esc_menu:
-        pygame.mixer.music.pause()
-        screen.blit(alpha, (0, 0))
+        for x in range(len(jukebox_music)):
+            jukebox_music[x].fadeout(500)
+        pygame.mixer.music.fadeout(500)
+        screen.blit(black_tint, (0, 0))
         main_display.fill(KDS.Colors.GetPrimary.Black)
         main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
         esc_menu_background = main_display.copy()
         esc_menu_f()
+        pygame.mixer.music.set_volume(music_volume)
+        pygame.mixer.music.play(-1)
     if go_to_main_menu:
         pygame.mixer.music.stop()
         main_menu()
