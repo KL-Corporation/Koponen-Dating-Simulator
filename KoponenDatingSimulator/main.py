@@ -38,6 +38,30 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 #endregion
+#region Audio
+class Audio:
+    MusicChannel = pygame.mixer.Channel(0)
+    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), pygame.mixer.Channel(4), pygame.mixer.Channel(5)]
+    def playSound(sound: pygame.mixer.Sound):
+        audio_assigned = False
+        i = 0
+        while not audio_assigned and i < len(Audio.EffectChannels) - 1:
+            if not Audio.EffectChannels[i].get_busy():
+                Audio.EffectChannels[i].play(sound)
+                Audio.EffectChannels[i].set_volume(effect_volume)
+                audio_assigned = True
+            i += 1
+        if not audio_assigned:
+            Audio.EffectChannels[len(Audio.EffectChannels - 1)].queue(sound)
+
+    def stopAllSounds():
+        for i in range(len(Audio.EffectChannels)):
+            Audio.EffectChannels[i].stop()
+
+    def setVolume(volume: float):
+        for i in range(len(Audio.EffectChannels)):
+            Audio.EffectChannels[i].set_volume(volume)
+#endregion
 #region Animations
 class plasma_bullet:
 
@@ -57,19 +81,18 @@ class plasma_bullet:
         for tile in tile_rects:
             if self.rect.colliderect(tile):
                 self.done = True
-                plasma_hitting.play()
+                Audio.playSound(plasma_hitting)
         for zombie1 in zombies:
             if self.rect.colliderect(zombie1) == True and zombie1.playDeathAnimation == True:
                 self.done = True
                 zombie1.health -= 10
-                plasma_hitting.play()
-
+                Audio.playSound(plasma_hitting)
         for sergeant in sergeants:
             if self.rect.colliderect(sergeant) and sergeant.playDeathAnimation:
                 self.done = True
                 sergeant.health -= 12
-                plasma_hitting.play()
-
+                Audio.playSound(plasma_hitting)
+                
         self.display.blit(
             plasma_ammo, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
@@ -175,7 +198,7 @@ class Archvile:
                 self.attacking = hit_scan(self)
                 if self.attacking == "player":
                     if not self.attack_anim:
-                        archvile_attack.play()
+                        Audio.playSound(archvile_attack)
                     self.attack_anim = True
                 self.counter = 0
             else:
@@ -202,8 +225,7 @@ class Archvile:
 
                     if f != "wall" and player_rect.y-40 < archvile.rect.y:
                         player_health -= int(random.uniform(30, 80))
-                        landmine_explosion.play()
-
+                        Audio.playSound(landmine_explosion)
                     del f
 
                     arhcvile_attack_animation.reset()
@@ -216,7 +238,7 @@ class Archvile:
             self.attack_anim = False
             if self.playDeathSound:
                 self.playDeathSound = False
-                archvile_death.play()
+                Audio.playSound(archvile_death)
             l, p = archvile_death_animation.update()
             if not p:
                 screen.blit(pygame.transform.flip(l, not self.direction, False),
@@ -264,9 +286,10 @@ def FullscreenSet(reverseFullscreen=False):
 black_tint = pygame.Surface(screen_size)
 black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
+
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
-game_icon = pygame.image.load("Assets/Textures/Game_Icon.png").convert()
+game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
     "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
 settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
@@ -440,7 +463,6 @@ archvile_attack = pygame.mixer.Sound("Assets/Audio/misc/dsflame.wav")
 archvile_death = pygame.mixer.Sound("Assets/Audio/misc/dsvildth.wav")
 fart = pygame.mixer.Sound("Assets/Audio/misc/fart_attack.wav")
 soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/misc/dsgetpow.wav")
-
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
@@ -480,7 +502,8 @@ if tcagr == None:
                     "Error parcing terms and conditions bool.", False)
     tcagr = False
 
-music_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
+music_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Music Volume", str(0.5)))
+effect_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Sound Effect Volume", str(0.5)))
 
 isFullscreen = KDS.Convert.ToBool(
     KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
@@ -490,7 +513,7 @@ if isFullscreen == None:
                     "Error parcing fullscreen bool.", False)
 FullscreenSet(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
-                str(tcagr) + "\n- Volume: " + str(music_volume) + "\n- Fullscreen: " + str(isFullscreen), False)
+                str(tcagr) + "\n- Music Volume: " + str(music_volume) + "\n- Sound Effect Volume: " + str(effect_volume) + "\n- Fullscreen: " + str(isFullscreen), False)
 
 selectedSave = 0
 
@@ -795,36 +818,34 @@ def load_jukebox_music():
     return musics
 
 jukebox_music = load_jukebox_music()
-for i in range(len(jukebox_music)):
-    jukebox_music[i].set_volume(music_volume)
 
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
 
-def load_music():
-    original_path = os.getcwd()
-    os.chdir("Assets/Audio/music/")
-    music_files = os.listdir()
-
-    random.shuffle(music_files)
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Music Files Initialised: " + str(len(music_files)), False)
-    for track in music_files:
-        KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Music File: " + track, False)
-
-    pygame.mixer.music.load(music_files[0])
-
-    pos = 0
-    for track in music_files:
-        if pos:
-            pygame.mixer.music.queue(track)
-        pos += 1
-
-    os.chdir(original_path)
-    del original_path
-    del pos
+#def load_music():
+#    original_path = os.getcwd()
+#    os.chdir("Assets/Audio/music/")
+#    music_files = os.listdir()
+#
+#    random.shuffle(music_files)
+#    KDS.Logging.Log(KDS.Logging.LogType.debug,
+#                    "Music Files Initialised: " + str(len(music_files)), False)
+#    for track in music_files:
+#        KDS.Logging.Log(KDS.Logging.LogType.debug,
+#                        "Initialised Music File: " + track, False)
+#
+#    pygame.mixer.music.load(music_files[0])
+#
+#    pos = 0
+#    for track in music_files:
+#        if pos:
+#            pygame.mixer.music.queue(track)
+#        pos += 1
+#
+#    os.chdir(original_path)
+#    del original_path
+#    del pos
 def load_music_for_map(_current_map):
     pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
 def load_ads():
@@ -1164,59 +1185,59 @@ def item_collision_test(rect, items):
                 if inventory[inventory_slot] == "none":
                     if i == "gasburner":
                         inventory[inventory_slot] = "gasburner"
-                        gasburner_clip.play()
+                        Audio.playSound(gasburner_clip)
                         item_rects.remove(item)
                         del item_ids[x]
 
                         s(5)
                     elif i == "knife":
                         inventory[inventory_slot] = "knife"
-                        knife_pickup.play()
+                        Audio.playSound(knife_pickup)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(5)
                     elif i == "plasmarifle":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "plasmarifle"
-                            weapon_pickup.play()
+                            Audio.playSound(weapon_pickup)
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
                     elif i == "ss_bonuscard":
                         inventory[inventory_slot] = "ss_bonuscard"
-                        ss_sound.play()
+                        Audio.playSound(ss_sound)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
                     elif i == "coffeemug":
                         inventory[inventory_slot] = "coffeemug"
-                        coffeemug_sound.play()
+                        Audio.playSound(coffeemug_sound)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(3)
                     elif i == "lappi_sytytyspalat":
                         inventory[inventory_slot] = "lappi_sytytyspalat"
-                        lappi_sytytyspalat_sound.play()
+                        Audio.playSound(lappi_sytytyspalat_sound)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
                     elif i == "pistol":
                         inventory[inventory_slot] = "pistol"
-                        weapon_pickup.play()
+                        Audio.playSound(weapon_pickup)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
                     elif i == "rk62":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "rk62"
-                            weapon_pickup.play()
+                            Audio.playSound(weapon_pickup)
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
                     elif i == "shotgun":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "shotgun"
-                            weapon_pickup.play()
+                            Audio.playSound(weapon_pickup)
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
@@ -1227,38 +1248,38 @@ def item_collision_test(rect, items):
 
                 if i == "red_key":
                     player_keys["red"] = True
-                    key_pickup.play()
+                    Audio.playSound(key_pickup)
                     item_rects.remove(item)
                     del item_ids[x]
                 elif i == "green_key":
                     player_keys["green"] = True
-                    key_pickup.play()
+                    Audio.playSound(key_pickup)
                     item_rects.remove(item)
                     del item_ids[x]
                 elif i == "blue_key":
                     player_keys["blue"] = True
-                    key_pickup.play()
+                    Audio.playSound(key_pickup)
                     item_rects.remove(item)
                     del item_ids[x]
                 elif i == "cell":
                     ammunition_plasma += 30
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "pistol_mag":
                     pistol_bullets += 8
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "rk62_mag":
                     rk_62_ammo += 30
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "shotgun_shells":
                     shotgun_shells += 4
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "medkit":
                     if player_health < 100:
@@ -1266,19 +1287,19 @@ def item_collision_test(rect, items):
                         if player_health > 100:
                             player_health = 100
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "soulsphere":
                     player_health += 100
                     if player_health > 300:
                         player_health = 300
                     item_rects.remove(item)
-                    soulsphere_pickup.play()
+                    Audio.playSound(soulsphere_pickup)
                     del item_ids[x]
                 elif i == "turboneedle":
                     playerStamina = 250
                     item_rects.remove(item)
-                    soulsphere_pickup.play()
+                    Audio.playSound(soulsphere_pickup)
                     del item_ids[x]
 
         x += 1
@@ -1855,12 +1876,11 @@ def esc_menu_f():
     del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, music_volume
+    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode
     c = False
     settings_running = True
 
-    return_button = pygame.Rect(465, 700, 270, 60)
-    music_slider = pygame.Rect(560, 141, 30, 28)
+    return_button = pygame.Rect(int(465 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(700 * FullscreenGet.scaling + FullscreenGet.offset[1]), int(270 * FullscreenGet.scaling), int(60 * FullscreenGet.scaling))
 
     return_text = button_font1.render("Return", True, KDS.Colors.GetPrimary.White)
 
@@ -1868,20 +1888,23 @@ def settings_menu():
         global settings_running
         settings_running = False
 
-    buttons = []
-    texts = []
-    functions = []
+    buttons = list()
+    texts = list()
+    functions = list()
 
     buttons.append(return_button)
     texts.append(return_text)
     functions.append(return_def)
 
-    music_volume_slider = KDS.UI.New.Slider("Volume", pygame.Rect(560, 145, 340, 20), (20, 30))
+    music_volume_slider = KDS.UI.New.Slider("Music Volume", pygame.Rect(450, 135, 340, 20), (20, 30))
+    effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30))
 
     while settings_running:
 
-        volume_text = button_font1.render(
-            "Music Volume", True, KDS.Colors.GetPrimary.White)
+        music_volume_text = button_font.render("Music Volume", True, KDS.Colors.GetPrimary.White)
+        effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
+        music_volume_text_size = button_font.size("Music Volume")
+        effect_volume_text_size = button_font.size("Sound Effect Volume")
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -1898,14 +1921,25 @@ def settings_menu():
                     AltPressed = True
                 elif event.key == K_ESCAPE:
                     settings_running = False
+                elif event.key == K_F3:
+                    DebugMode = not DebugMode
             elif event.type == pygame.QUIT:
                 KDS_Quit()
 
-        main_display.blit(settings_background, (0, 0))
+        main_display.blit(pygame.transform.scale(settings_background, (int(settings_background.get_width() * FullscreenGet.scaling), int(settings_background.get_height() * FullscreenGet.scaling))), (0, 0))
 
-        main_display.blit(volume_text, (190, 130))
-        music_volume = music_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
-        pygame.mixer.music.set_volume(music_volume)
+        main_display.blit(pygame.transform.scale(music_volume_text, (int(music_volume_text_size[0] * FullscreenGet.scaling), int(music_volume_text_size[1] * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling), int(135 * FullscreenGet.scaling)))
+        main_display.blit(pygame.transform.scale(effect_volume_text, (int(effect_volume_text_size[0] * FullscreenGet.scaling), int(effect_volume_text_size[1] * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling), int(185 * FullscreenGet.scaling)))
+        set_music_volume = music_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
+        set_effect_volume = effect_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
+
+        if set_music_volume != music_volume:
+            music_volume = set_music_volume
+            pygame.mixer.music.set_volume(music_volume)
+            Audio.MusicChannel.set_volume(music_volume)
+        elif set_effect_volume != effect_volume:
+            effect_volume = set_effect_volume
+            Audio.setVolume(effect_volume)
 
         y = 0
         for button in buttons:
@@ -1925,8 +1959,13 @@ def settings_menu():
             main_display.blit(texts[y], (button.x+50, button.y+6))
             y += 1
 
-        c = False
+        if DebugMode:
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            main_display.blit(pygame.transform.scale(score_font.render(fps_text, True, KDS.Colors.GetPrimary.White), (int(score_font.size(fps_text)[0] * 2 * FullscreenGet.scaling), int(score_font.size(fps_text)[1] * 2 * FullscreenGet.scaling))), (int(10 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(10 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+
         pygame.display.update()
+        main_display.fill((0, 0, 0))
+        c = False
 
 def play_function(gamemode: KDS.Gamemode.Modes):
     global main_menu_running, current_map, inventory
@@ -1941,6 +1980,7 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     load_music_for_map(current_map)
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(music_volume)
+    
     global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
     player_hand_item = "none"
 
@@ -1971,12 +2011,6 @@ def main_menu():
 
     current_map_int = 0
     current_map_int = int(current_map)
-    try:
-        jukebox_music[jukeboxMusicPlaying].stop()
-    except:
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Jukebox music has not been defined yet.", False)
-    pygame.mixer.music.unpause()
 
     global main_menu_running, main_running, go_to_main_menu
     go_to_main_menu = False
@@ -2293,7 +2327,7 @@ while main_running:
                 if playerStamina == 100:
                     playerStamina = -1000
                     farting = True
-                    fart.play()
+                    Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_q:
                 if inventory[inventory_slot] != "none":
@@ -2403,6 +2437,7 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
+        Audio.MusicChannel.stop()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
@@ -2450,7 +2485,7 @@ while main_running:
                                        scroll[0], landmine.y - scroll[1]))
         if player_rect.colliderect(landmine):
             landmines.remove(landmine)
-            landmine_explosion.play()
+            Audio.playSound(landmine_explosion)
             player_health -= 60
             if player_health < 0:
                 player_health = 0
@@ -2458,7 +2493,7 @@ while main_running:
         for zombie1 in zombies:
             if zombie1.rect.colliderect(landmine):
                 landmines.remove(landmine)
-                landmine_explosion.play()
+                Audio.playSound(landmine_explosion)
                 zombie1.health -= 140
                 if zombie1.health < 0:
                     zombie1.health = 0
@@ -2467,7 +2502,7 @@ while main_running:
         for sergeant in sergeants:
             if sergeant.rect.colliderect(landmine):
                 landmines.remove(landmine)
-                landmine_explosion.play()
+                Audio.playSound(landmine_explosion)
                 sergeant.health -= 220
 
                 explosion_positions.append((landmine.x-40, landmine.y-58))
@@ -2488,7 +2523,7 @@ while main_running:
                 plasmabullets.append(plasma_bullet(
                     (player_rect.x-50, player_rect.y+17), j_direction, screen))
 
-            plasmarifle_f_sound.play()
+            Audio.playSound(plasmarifle_f_sound)
             ammunition_plasma -= 1
 
     if player_hand_item != "none":
@@ -2708,7 +2743,7 @@ while main_running:
 
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
-                    shotgun_shot.play()
+                    Audio.playSound(shotgun_shot)
                     if sergeant.hit_scan(player_rect, player_health, tile_rects):
                         player_health = damage(player_health, 20, 50)
                 if i:
@@ -2816,7 +2851,7 @@ while main_running:
     last_player_health = player_health
 
     if hurted:
-        hurt_sound.play()
+        Audio.playSound(hurt_sound)
 #endregion
 #region More Collisions
     if collisions['bottom'] == True:
@@ -2970,7 +3005,7 @@ while main_running:
                             [player_rect.x, player_rect.y+20], direction, 50)
                         hit = bullet.shoot(tile_rects)
                         del hit, bullet
-                        pistol_shot.play()
+                        Audio.playSound(pistol_shot)
                 else:
                     screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
                         player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
@@ -2991,7 +3026,7 @@ while main_running:
                     if rk62_sound_cooldown > 10:
                         rk62_sound_cooldown
                         rk62_shot.stop()
-                        rk62_shot.play()
+                        Audio.playSound(rk62_shot)
 
                 else:
                     if not mouseLeftPressed:
@@ -3011,7 +3046,7 @@ while main_running:
                     shotgun_loaded = False
                     shotgun_thread = threading.Thread(target=shotgun_shots)
                     shotgun_thread.start()
-                    player_shotgun_shot.play()
+                    Audio.playSound(player_shotgun_shot)
                     screen.blit(pygame.transform.flip(shotgun_f, direction, False), (
                         player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
@@ -3113,14 +3148,12 @@ while main_running:
             for i in range(len(lastJukeboxSong) - 1):
                 lastJukeboxSong[i] = lastJukeboxSong[i + 1]
             lastJukeboxSong[4] = jukeboxMusicPlaying
-            jukebox_music[jukeboxMusicPlaying].set_volume(music_volume)
-            jukebox_music[jukeboxMusicPlaying].play()
+            Audio.MusicChannel.play(jukebox_music[jukeboxMusicPlaying])
+            Audio.MusicChannel.set_volume(music_volume)
     else:
-        if not pygame.mixer.music.get_busy:
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play(-1)
             pygame.mixer.music.set_volume(music_volume)
-            pygame.mixer.music.play()
-        for x in range(len(jukebox_music)):
-            jukebox_music[x].stop()
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3201,15 +3234,16 @@ while main_running:
     if esc_menu:
         for x in range(len(jukebox_music)):
             jukebox_music[x].fadeout(500)
-        pygame.mixer.music.fadeout(500)
+        Audio.MusicChannel.fadeout(500)
         screen.blit(black_tint, (0, 0))
         main_display.fill(KDS.Colors.GetPrimary.Black)
         main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
         esc_menu_background = main_display.copy()
         esc_menu_f()
-        pygame.mixer.music.set_volume(music_volume)
         pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(music_volume)
     if go_to_main_menu:
+        Audio.MusicChannel.stop()
         pygame.mixer.music.stop()
         main_menu()
     animation_counter += 1

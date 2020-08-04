@@ -9,7 +9,7 @@ class New:
     class Slider:
 
         """
-        1. safe_name: An identifier that does not conflict with ANY other safe_names.
+        1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
         2. slider_rect: The pygame.Rect of the slider.
         3. handle_size: Width and height of the handle.
         4. handle_move_area_padding (OPTIONAL): Reduce the left and right move area of the handle. [DEFAULT: (0, 0)]
@@ -29,7 +29,7 @@ class New:
             self.handle_highlighted_color = handle_highlighted_color
             self.handle_pressed_color = handle_pressed_color
 
-        def update(self, surface, fullscreen_scaling: int, fullscreen_offset: tuple):
+        def update(self, surface, fullscreen_scaling, fullscreen_offset):
             """
             1. surface: The surface this slider is going to be rendered.
             2. fullscreen_scaling: The fullscreen_scaling value the Fullscreen.Get.scaling command returns.
@@ -38,7 +38,7 @@ class New:
 
             global slider_dragged
             slider_rect = pygame.Rect(self.slider_rect.x * fullscreen_scaling + fullscreen_offset[0], self.slider_rect.y * fullscreen_scaling + fullscreen_offset[1], self.slider_rect.width * fullscreen_scaling, self.slider_rect.height * fullscreen_scaling)
-            handle_rect = pygame.Rect(self.handle_rect.x * fullscreen_scaling + fullscreen_offset[0], (slider_rect.center[1] - (self.handle_rect.height / 2)) * fullscreen_scaling + fullscreen_offset[1], self.handle_rect.width * fullscreen_scaling, self.handle_rect.height * fullscreen_scaling)
+            handle_rect = pygame.Rect(self.handle_rect.x * fullscreen_scaling + fullscreen_offset[0], slider_rect.center[1] - (self.handle_rect.height / 2 * fullscreen_scaling) + fullscreen_offset[1], self.handle_rect.width * fullscreen_scaling, self.handle_rect.height * fullscreen_scaling)
             handle_move_area_padding = (self.handle_move_area_padding[0] * fullscreen_scaling, self.handle_move_area_padding[1] * fullscreen_scaling)
 
             pointer = pygame.mouse.get_pos()
