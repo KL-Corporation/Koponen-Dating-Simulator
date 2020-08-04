@@ -266,11 +266,11 @@ black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
-game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
+game_icon = pygame.image.load("Assets/Textures/Game_Icon.png").convert()
 main_menu_background = pygame.image.load(
-    "Assets/Textures/UI/Menus/main_menu_bc.png")
-settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png")
-agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png")
+    "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
+settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
+agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
@@ -285,15 +285,15 @@ player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
 player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
-floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
-concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
-wall1 = pygame.image.load("Assets/Textures/Building/wall0.png")
+floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png").convert()
+concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png").convert()
+wall1 = pygame.image.load("Assets/Textures/Building/wall0.png").convert()
 table1 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
 toilet1 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
 lamp1 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
 trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Building/ground0.png")
-grass = pygame.image.load("Assets/Textures/Building/grass0.png")
+ground1 = pygame.image.load("Assets/Textures/Building/ground0.png").convert()
+grass = pygame.image.load("Assets/Textures/Building/grass0.png").convert()
 door_closed = pygame.image.load("Assets/Textures/Building/door_closed.png").convert()
 red_door_closed = pygame.image.load(
     "Assets/Textures/Building/red_door_closed.png").convert()
@@ -301,18 +301,18 @@ green_door_closed = pygame.image.load(
     "Assets/Textures/Building/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
     "Assets/Textures/Building/blue_door_closed.png").convert()
-door_open = pygame.image.load("Assets/Textures/Building/door_open2.png")
-bricks = pygame.image.load("Assets/Textures/Building/bricks.png")
-tree = pygame.image.load("Assets/Textures/Building/tree.png")
-planks = pygame.image.load("Assets/Textures/Building/planks.png")
-jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png")
-landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png")
-ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
-background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png")
-light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png")
+door_open = pygame.image.load("Assets/Textures/Building/door_open2.png").convert()
+bricks = pygame.image.load("Assets/Textures/Building/bricks.png").convert()
+tree = pygame.image.load("Assets/Textures/Building/tree.png").convert()
+planks = pygame.image.load("Assets/Textures/Building/planks.png").convert()
+jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png").convert()
+landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png").convert()
+ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png").convert()
+background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png").convert()
+light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").convert()
 iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
-soil = pygame.image.load("Assets/Textures/Building/soil.png")
-mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png")
+soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
+mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
 table1.set_colorkey(KDS.Colors.GetPrimary.White)
 toilet1.set_colorkey(KDS.Colors.GetPrimary.White)
 lamp1.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -369,13 +369,13 @@ archvile_corpse = pygame.image.load(
 iphone_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
 gamemode_bc_2_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png")).convert()
 gamemode_bc_2_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png")).convert()
 gamemode_bc_1_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png")).convert()
 arrow_button = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 
@@ -468,7 +468,7 @@ knifeInUse = False
 currently_on_mission = False
 current_mission = "none"
 player_name = "Sinä"
-pistolFire = False
+weapon_fire = False
 isFullscreen = False
 shoot = False
 
@@ -838,7 +838,7 @@ def load_ads():
 
     for ad in ad_files:
         path = str("Assets/Textures/KoponenTalk/ads/" + ad)
-        image = pygame.image.load(path)
+        image = pygame.image.load(path).convert()
         if path.find("7"):
             image.set_colorkey((255, 0, 0))
         ad_images.append(image)
@@ -847,7 +847,7 @@ def load_ads():
 
     return ad_images
 ad_images = load_ads()
-koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png")
+koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 def load_rects():
     tile_rects = []
@@ -2329,7 +2329,7 @@ while main_running:
             if event.button == 1:
                 mouseLeftPressed = True
                 rk62_sound_cooldown = 11
-                pistolFire = True
+                weapon_fire = True
                 if player_hand_item == "gasburner":
                     gasburnerBurning = True
                 if player_hand_item == "knife":
@@ -2960,7 +2960,7 @@ while main_running:
 
             elif player_hand_item == "pistol":
                 pistol_cooldown += 1
-                if pistolFire and pistol_cooldown > 25:
+                if weapon_fire and pistol_cooldown > 25:
                     pistol_cooldown = 0
                     if pistol_bullets > 0:
                         pistol_bullets -= 1
@@ -3006,7 +3006,7 @@ while main_running:
                         shotgun_loaded = True
                 else:
                     shotgun_cooldown = 0
-                if pistolFire and shotgun_shells > 0 and shotgun_loaded:
+                if weapon_fire and shotgun_shells > 0 and shotgun_loaded:
                     shotgun_shells -= 1
                     shotgun_loaded = False
                     shotgun_thread = threading.Thread(target=shotgun_shots)
@@ -3218,7 +3218,7 @@ while main_running:
     elif player_hand_item == "knife":
         knife_animation_stats[2] += 1
     FunctionKey = False
-    pistolFire = False
+    weapon_fire = False
     toilet_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
