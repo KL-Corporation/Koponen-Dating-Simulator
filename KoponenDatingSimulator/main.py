@@ -13,7 +13,6 @@ import pygame
 import os
 import random
 import threading
-from datetime import datetime
 from pygame.locals import *
 #endregion
 #region PyGame Initialisation
@@ -37,31 +36,6 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
-#endregion
-#region Text Handling
-class pygame_print_text:
-
-    def __init__(self, color, topleft, width, display):
-        self.text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
-        self.display_to_blit = display
-        self.color = tuple(color)
-        self.topleft = tuple(topleft)
-        self.width = width
-
-        self.row = 0
-        self.row_height = 30
-
-    def print_text(self, text):
-        self.screen_text = self.text_font.render(text, True, self.color)
-        self.display_to_blit.blit(
-            self.screen_text, (self.topleft[0], self.topleft[1] + self.row))
-        self.row += self.row_height
-
-    def resetRow(self):
-        self.row = 0
-
-    def skipRow(self):
-        self.row += self.row_height
 #endregion
 #region Animations
 class plasma_bullet:
@@ -270,8 +244,6 @@ def setFullscreen(reverseFullscreen):
     KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
 #endregion
 #region Initialisation
-printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
-
 alpha = pygame.Surface(screen_size)
 alpha.fill((0, 0, 0))
 alpha.set_alpha(170)
@@ -290,6 +262,7 @@ score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
+text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
@@ -650,9 +623,6 @@ def KDS_Quit():
     koponenTalking = False
     esc_menu = False
     settings_running = False
-    pygame.display.quit()
-    pygame.quit()
-    exit()
 #endregion
 #region World Generation
 world_gen = list()
@@ -1701,10 +1671,10 @@ def koponen_talk():
         fullscreen_offset = ((window_size[0] / 2) - (blit_size[0] / 2), (window_size[1] / 2) - (blit_size[1] / 2))
         fullscreen_scaling = blit_size[1] / display_size[1]
 
-        exit_button = pygame.Rect(940 * fullscreen_scaling + fullscreen_offset[0], 700 * fullscreen_scaling + fullscreen_offset[1], 230 * fullscreen_scaling, 80 * fullscreen_scaling)
-        mission_button = pygame.Rect(50 * fullscreen_scaling + fullscreen_offset[0], 700 * fullscreen_scaling + fullscreen_offset[1], 450 * fullscreen_scaling, 80 * fullscreen_scaling)
-        date_button = pygame.Rect(50 * fullscreen_scaling + fullscreen_offset[0], 610 * fullscreen_scaling + fullscreen_offset[1], 450 * fullscreen_scaling, 80 * fullscreen_scaling)
-        return_mission_button = pygame.Rect(510 * fullscreen_scaling + fullscreen_offset[0], 700 * fullscreen_scaling + fullscreen_offset[1], 420 * fullscreen_scaling, 80 * fullscreen_scaling)
+        exit_button = pygame.Rect(int(940 * fullscreen_scaling + fullscreen_offset[0]), int(700 * fullscreen_scaling + fullscreen_offset[1]), int(230 * fullscreen_scaling), int(80 * fullscreen_scaling))
+        mission_button = pygame.Rect(int(50 * fullscreen_scaling + fullscreen_offset[0]), int(700 * fullscreen_scaling + fullscreen_offset[1]), int(450 * fullscreen_scaling), int(80 * fullscreen_scaling))
+        date_button = pygame.Rect(int(50 * fullscreen_scaling + fullscreen_offset[0]), int(610 * fullscreen_scaling + fullscreen_offset[1]), int(450 * fullscreen_scaling), int(80 * fullscreen_scaling))
+        return_mission_button = pygame.Rect(int(510 * fullscreen_scaling + fullscreen_offset[0]), int(700 * fullscreen_scaling + fullscreen_offset[1]), int(420 * fullscreen_scaling), int(80 * fullscreen_scaling))
         buttons = list()
         functions = list()
 
@@ -1732,7 +1702,6 @@ def koponen_talk():
         main_display.blit(pygame.transform.scale(koponen_talk_foreground, (int(koponen_talk_foreground.get_width() * fullscreen_scaling), int(koponen_talk_foreground.get_height() * fullscreen_scaling))), (int(40 * fullscreen_scaling + fullscreen_offset[0]), int(474 * fullscreen_scaling + fullscreen_offset[1])))
         pygame.draw.rect(main_display, (230, 230, 230), (int(40 * fullscreen_scaling + fullscreen_offset[0]), int(40 * fullscreen_scaling + fullscreen_offset[1]), int(700 * fullscreen_scaling), int(400 * fullscreen_scaling)))
         pygame.draw.rect(main_display, (30, 30, 30), (int(40 * fullscreen_scaling + fullscreen_offset[0]), int(40 * fullscreen_scaling + fullscreen_offset[1]), int(700 * fullscreen_scaling), int(400 * fullscreen_scaling)), 3)
-        printer.resetRow()
 
         y = 0
 
@@ -1756,14 +1725,17 @@ def koponen_talk():
                 text_offset = 10 * fullscreen_scaling
 
             pygame.draw.rect(main_display, button_color, button)
-            main_display.blit(pygame.transform.scale(texts[y], (int(texts_size[y][0] * fullscreen_scaling), int(texts_size[1] * fullscreen_scaling))), (button.x + text_offset, button.y + (14 * fullscreen_scaling)))
+            main_display.blit(pygame.transform.scale(texts[y], (int(texts_size[y][0] * fullscreen_scaling), int(texts_size[y][1] * fullscreen_scaling))), (int(button.x + text_offset), int(button.y + (14 * fullscreen_scaling))))
             y += 1
-        if len(conversations) > 13:
-            conversations.remove(conversations[0])
-        for line in conversations:
-            printer.print_text(line)
+        while len(conversations) > 13:
+            del conversations[0]
+        for i in range(len(conversations)):
+            row_text = text_font.render(conversations[i], True, (7, 8, 10))
+            row_text_size = text_font.size(conversations[i])
+            main_display.blit(pygame.transform.scale(row_text, (int(row_text_size[0] * fullscreen_scaling), int(row_text_size[1] * fullscreen_scaling))), (int(50 * fullscreen_scaling + fullscreen_offset[0]), int((50 + (i * 30)) * fullscreen_scaling + fullscreen_offset[1])))
         c = False
         pygame.display.update()
+        main_display.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 #endregion
 #region Menus
@@ -3285,3 +3257,5 @@ while main_running:
     clock.tick(60)
 #endregion
 #endregion
+pygame.display.quit()
+pygame.quit()
