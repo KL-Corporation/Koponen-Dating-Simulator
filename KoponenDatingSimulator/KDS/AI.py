@@ -192,3 +192,13 @@ class Bulldog:
             elif self.movement[0] > 0:
                 self.direction = False
         return self.rect, self.animation.get_frame(), self.direction, self.damage
+
+    def AI_Update(self, surface: pygame.Surface, scroll: (int, int), render_rect: pygame.Rect):
+        if not self.a:
+            if self.movement[0] < 0:
+                self.direction = True
+            elif self.movement[0] > 0:
+                self.direction = False
+        if self.rect.colliderect(render_rect):
+            surface.blit(pygame.transform.flip(self.animation.get_frame(), self.direction, False),(self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        return self.damage

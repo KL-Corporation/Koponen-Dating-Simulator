@@ -1141,33 +1141,34 @@ def door_collision_test():
         pass
 
     for recta in door_rects:
-        for door in hit_list:
-            if recta == door:
-                if player_movement[0] > 0 and doors_open[x] == False:
-                    player_rect.right = door.left + 1
-                if not doors_open[x]:
-                    if FunctionKey == True:
-                        if color_keys[x] != "none":
-                            if color_keys[x] == "red":
-                                if player_keys["red"]:
-                                    doors_open[x] = True
-                                    door_sound()
-                            elif color_keys[x] == "green":
-                                if player_keys["green"]:
-                                    doors_open[x] = True
-                                    door_sound()
-                            elif color_keys[x] == "blue":
-                                if player_keys["blue"]:
-                                    doors_open[x] = True
-                                    door_sound()
-                        else:
-                            doors_open[x] = True
-                            door_sound()
+        if recta.colliderect(render_rect):
+            for door in hit_list:
+                if recta == door:
+                    if player_movement[0] > 0 and doors_open[x] == False:
+                        player_rect.right = door.left + 1
+                    if not doors_open[x]:
+                        if FunctionKey == True:
+                            if color_keys[x] != "none":
+                                if color_keys[x] == "red":
+                                    if player_keys["red"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                                elif color_keys[x] == "green":
+                                    if player_keys["green"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                                elif color_keys[x] == "blue":
+                                    if player_keys["blue"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                            else:
+                                doors_open[x] = True
+                                door_sound()
 
-                if player_movement[0] < 0 and doors_open[x] == False:
-                    player_rect.left = door.right - 1
+                    if player_movement[0] < 0 and doors_open[x] == False:
+                        player_rect.left = door.right - 1
 
-        x += 1
+            x += 1
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
@@ -2471,19 +2472,19 @@ while main_running:
     for i in range(len(door_rects)):
         if door_rects[i].colliderect(render_rect):
             if doors_open[i]:
-                screen.blit(door_open, (door.x - scroll[0]+2, door.y - scroll[1]))
+                screen.blit(door_open, (door_rects[i].x - scroll[0]+2, door_rects[i].y - scroll[1]))
             else:
                 if color_keys[i] == "red":
                     screen.blit(red_door_closed,
-                                (door.x - scroll[0], door.y - scroll[1]))
+                                (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
                 elif color_keys[i] == "green":
                     screen.blit(green_door_closed,
-                                (door.x - scroll[0], door.y - scroll[1]))
+                                (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
                 elif color_keys[i] == "blue":
                     screen.blit(blue_door_closed,
-                                (door.x - scroll[0], door.y - scroll[1]))
+                                (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
                 else:
-                    screen.blit(door_closed, (door.x - scroll[0], door.y - scroll[1]))
+                    screen.blit(door_closed, (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
 
     for jukebox in jukeboxes:
         if jukebox.colliderect(render_rect):
