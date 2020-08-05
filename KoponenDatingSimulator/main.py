@@ -46,7 +46,6 @@ screen = pygame.Surface(screen_size)
 pygame.mixer.set_reserved(0)
 pygame.mixer.set_reserved(11)
 class Audio:
-    MusicMixer = pygame.mixer.music
     MusicChannel1 = pygame.mixer.Channel(0)
     MusicChannel2 = pygame.mixer.Channel(11)
     EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
@@ -857,8 +856,13 @@ def shakeScreen():
 #    os.chdir(original_path)
 #    del original_path
 #    del pos
-def load_music_for_map(_current_map):
-    Audio.MusicMixer.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
+def play_map_music(_current_map):
+    try:
+        Audio.MusicChannel1.play(pygame.mixer.Sound(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid")), -1)
+    except Exception:
+        KDS.Logging.Log(KDS.Logging.LogType.warning, "No map music loaded. The audiofile is most likely still a .midi file.", True)
+        Audio.MusicChannel1.stop()
+    Audio.MusicChannel1.set_volume(music_volume)
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
@@ -1948,7 +1952,7 @@ def settings_menu():
 
         if set_music_volume != music_volume:
             music_volume = set_music_volume
-            pygame.mixer.music.set_volume(music_volume)
+            Audio.MusicChannel1.set_volume(music_volume)
             Audio.MusicChannel2.set_volume(music_volume)
         elif set_effect_volume != effect_volume:
             effect_volume = set_effect_volume
@@ -1989,9 +1993,7 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     pygame.mouse.set_visible(False)
     main_menu_running = False
     #load_music()
-    load_music_for_map(current_map)
-    Audio.MusicMixer.play(-1)
-    Audio.MusicMixer.set_volume(music_volume)
+    play_map_music(current_map)
     
     global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
     player_hand_item = "none"
@@ -2030,9 +2032,8 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    Audio.MusicMixer.load("Assets/Audio/lobbymusic.wav")
-    Audio.MusicMixer.set_volume(music_volume)
-    Audio.MusicMixer.play(-1)
+    Audio.MusicChannel1.play(pygame.mixer.Sound("Assets/Audio/lobbymusic.wav"), -1)
+    Audio.MusicChannel1.set_volume(music_volume)
 
     def settings_function():
         settings_menu()
@@ -2450,8 +2451,8 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
-        Audio.MusicChannel2.stop()
-        pygame.mixer.music.stop()
+        Audio.MusicChannel1.stop()
+        Audio.MusicChannel2.set_volume(music_volume / 2)
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
         animation_has_played = True
@@ -3151,7 +3152,7 @@ while main_running:
 
     if jukebox_collision:
         if FunctionKey:
-            pygame.mixer.music.stop()
+            Audio.MusicChannel1.pause()
             for x in range(len(jukebox_music)):
                 jukebox_music[x].stop()
             while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
@@ -3163,9 +3164,9 @@ while main_running:
             Audio.MusicChannel2.play(jukebox_music[jukeboxMusicPlaying])
             Audio.MusicChannel2.set_volume(music_volume)
     else:
-        if not pygame.mixer.music.get_busy():
-            Audio.MusicMixer.set_volume(music_volume)
-            Audio.MusicMixer.play(-1)
+        if not Audio.MusicChannel1.get_busy():
+            Audio.MusicChannel1.unpause()
+            Audio.MusicChannel1.set_volume(music_volume)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3243,19 +3244,18 @@ while main_running:
 #endregion
 #region Conditional Events
     if esc_menu:
-        for x in range(len(jukebox_music)):
-            jukebox_music[x].fadeout(500)
-        Audio.MusicChannel2.fadeout(500)
+        Audio.MusicChannel1.pause()
+        Audio.MusicChannel2.pause()
         screen.blit(black_tint, (0, 0))
         main_display.fill(KDS.Colors.GetPrimary.Black)
         main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
         esc_menu_background = main_display.copy()
         esc_menu_f()
-        Audio.MusicMixer.set_volume(music_volume)
-        Audio.MusicMixer.play(-1)
+        Audio.MusicChannel1.unpause()
+        Audio.MusicChannel2.unpause()
     if go_to_main_menu:
+        Audio.MusicChannel1.stop()
         Audio.MusicChannel2.stop()
-        pygame.mixer.music.stop()
         main_menu()
     animation_counter += 1
     if player_hand_item == "gasburner":
