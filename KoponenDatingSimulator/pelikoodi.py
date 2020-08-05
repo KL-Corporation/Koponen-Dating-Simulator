@@ -100,6 +100,11 @@ class Animation:
         else:
             return self.images[self.tick], self.done
 
+    def reset(self):
+        self.tick = 0
+        self.loops_count = 0
+        self.done = False
+
 #endregion
 #region Initialisation
 
@@ -1492,6 +1497,7 @@ while main_running:
             screen.blit(explosion_image,(explosion[0]-scroll[0],explosion[1]-scroll[1]))
         else:
             explosion_positions.remove(explosion)
+            explosion_animation.reset()
 
     item_collision_test(player_rect, item_rects)
 
