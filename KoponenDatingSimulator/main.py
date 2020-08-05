@@ -21,7 +21,6 @@ from pygame.locals import *
 pygame.mixer.pre_init()
 pygame.mixer.init()
 pygame.init()
-pygame.mixer.set_num_channels(11)
 KDS.Logging.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
@@ -43,10 +42,13 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 #endregion
 #region Audio
+pygame.mixer.set_num_channels(12)
 pygame.mixer.set_reserved(0)
+pygame.mixer.set_reserved(11)
 class Audio:
     MusicMixer = pygame.mixer.music
-    MusicChannel = pygame.mixer.Channel(0)
+    MusicChannel1 = pygame.mixer.Channel(0)
+    MusicChannel2 = pygame.mixer.Channel(11)
     EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
         pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6), pygame.mixer.Channel(7), 
         pygame.mixer.Channel(8), pygame.mixer.Channel(9), pygame.mixer.Channel(10)]
@@ -857,11 +859,11 @@ def shakeScreen():
 #    del pos
 def play_map_music(_current_map):
     try:
-        Audio.MusicChannel1.play(pygame.mixer.Sound(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid")), -1)
+        Audio.MusicChannel2.play(pygame.mixer.Sound(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid")), -1)
     except Exception:
         KDS.Logging.Log(KDS.Logging.LogType.warning, "No map music loaded. The audiofile is most likely still a .midi file.", True)
-        Audio.MusicChannel1.stop()
-    Audio.MusicChannel1.set_volume(music_volume)
+        Audio.MusicChannel2.stop()
+    Audio.MusicChannel2.set_volume(music_volume)
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
@@ -1951,7 +1953,7 @@ def settings_menu():
         if set_music_volume != music_volume:
             music_volume = set_music_volume
             pygame.mixer.music.set_volume(music_volume)
-            Audio.MusicChannel.set_volume(music_volume)
+            Audio.MusicChannel2.set_volume(music_volume)
         elif set_effect_volume != effect_volume:
             effect_volume = set_effect_volume
 
@@ -2030,8 +2032,8 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    Audio.MusicChannel1.play(pygame.mixer.Sound("Assets/Audio/lobbymusic.wav"), -1)
-    Audio.MusicChannel1.set_volume(music_volume)
+    Audio.MusicChannel2.play(pygame.mixer.Sound("Assets/Audio/lobbymusic.wav"), -1)
+    Audio.MusicChannel2.set_volume(music_volume)
 
     def settings_function():
         settings_menu()
@@ -2449,7 +2451,7 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
-        Audio.MusicChannel.stop()
+        Audio.MusicChannel2.stop()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
@@ -3150,7 +3152,7 @@ while main_running:
 
     if jukebox_collision:
         if FunctionKey:
-            Audio.MusicChannel1.pause()
+            Audio.MusicChannel2.pause()
             for x in range(len(jukebox_music)):
                 jukebox_music[x].stop()
             while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
@@ -3159,12 +3161,12 @@ while main_running:
             for i in range(len(lastJukeboxSong) - 1):
                 lastJukeboxSong[i] = lastJukeboxSong[i + 1]
             lastJukeboxSong[4] = jukeboxMusicPlaying
-            Audio.MusicChannel.play(jukebox_music[jukeboxMusicPlaying])
-            Audio.MusicChannel.set_volume(music_volume)
+            Audio.MusicChannel2.play(jukebox_music[jukeboxMusicPlaying])
+            Audio.MusicChannel2.set_volume(music_volume)
     else:
-        if not Audio.MusicChannel1.get_busy():
-            Audio.MusicChannel1.unpause()
-            Audio.MusicChannel1.set_volume(music_volume)
+        if not Audio.MusicChannel2.get_busy():
+            Audio.MusicChannel2.unpause()
+            Audio.MusicChannel2.set_volume(music_volume)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3245,16 +3247,16 @@ while main_running:
     if esc_menu:
         for x in range(len(jukebox_music)):
             jukebox_music[x].fadeout(500)
-        Audio.MusicChannel.fadeout(500)
+        Audio.MusicChannel2.fadeout(500)
         screen.blit(black_tint, (0, 0))
         main_display.fill(KDS.Colors.GetPrimary.Black)
         main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
         esc_menu_background = main_display.copy()
         esc_menu_f()
-        Audio.MusicChannel1.unpause()
+        Audio.MusicChannel2.unpause()
         Audio.MusicChannel2.unpause()
     if go_to_main_menu:
-        Audio.MusicChannel.stop()
+        Audio.MusicChannel2.stop()
         pygame.mixer.music.stop()
         main_menu()
     animation_counter += 1
