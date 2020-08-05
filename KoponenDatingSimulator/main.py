@@ -18,8 +18,6 @@ import math
 from pygame.locals import *
 #endregion
 #region PyGame Initialisation
-pygame.mixer.pre_init()
-pygame.mixer.init()
 pygame.init()
 KDS.Logging.init()
 
@@ -42,6 +40,7 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 #endregion
 #region Audio
+pygame.mixer.init()
 pygame.mixer.set_num_channels(12)
 pygame.mixer.set_reserved(0)
 pygame.mixer.set_reserved(11)
