@@ -2460,7 +2460,7 @@ while main_running:
             play_function(KDS.Gamemode.gamemode)
 #endregion
 #region Rendering
-    render_rect = pygame.Rect(0, 0, screen_size[0], screen_size[1])
+    render_rect = pygame.Rect(scroll[0], scroll[1], screen_size[0], screen_size[1])
     vertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
     horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
     for y in range(vertical_render_position[0], vertical_render_position[1]):
@@ -2468,38 +2468,38 @@ while main_running:
             if world_gen[0][y][x] in tile_textures:
                 screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
-    x = 0
-    for door in door_rects:
-        if doors_open[x]:
-            screen.blit(door_open, (door.x - scroll[0]+2, door.y - scroll[1]))
-        else:
-            if color_keys[x] == "red":
-                screen.blit(red_door_closed,
-                            (door.x - scroll[0], door.y - scroll[1]))
-            elif color_keys[x] == "green":
-                screen.blit(green_door_closed,
-                            (door.x - scroll[0], door.y - scroll[1]))
-            elif color_keys[x] == "blue":
-                screen.blit(blue_door_closed,
-                            (door.x - scroll[0], door.y - scroll[1]))
+    for i in range(len(door_rects)):
+        if door_rects[i].colliderect(render_rect):
+            if doors_open[i]:
+                screen.blit(door_open, (door.x - scroll[0]+2, door.y - scroll[1]))
             else:
-                screen.blit(door_closed, (door.x - scroll[0], door.y - scroll[1]))
-        x += 1
+                if color_keys[i] == "red":
+                    screen.blit(red_door_closed,
+                                (door.x - scroll[0], door.y - scroll[1]))
+                elif color_keys[i] == "green":
+                    screen.blit(green_door_closed,
+                                (door.x - scroll[0], door.y - scroll[1]))
+                elif color_keys[i] == "blue":
+                    screen.blit(blue_door_closed,
+                                (door.x - scroll[0], door.y - scroll[1]))
+                else:
+                    screen.blit(door_closed, (door.x - scroll[0], door.y - scroll[1]))
 
     for jukebox in jukeboxes:
-        screen.blit(jukebox_texture, (jukebox.x -
-                                      scroll[0], jukebox.y - scroll[1]))
+        if jukebox.colliderect(render_rect):
+            screen.blit(jukebox_texture, (jukebox.x -
+                                        scroll[0], jukebox.y - scroll[1]))
 
     for landmine in landmines:
-        screen.blit(landmine_texture, (landmine.x -
-                                       scroll[0], landmine.y - scroll[1]))
-        if player_rect.colliderect(landmine):
-            landmines.remove(landmine)
-            Audio.playSound(landmine_explosion)
-            player_health -= 60
-            if player_health < 0:
-                player_health = 0
-            explosion_positions.append((landmine.x-40, landmine.y-58))
+        if landmine.colliderect(render_rect):
+            screen.blit(landmine_texture, (landmine.x - scroll[0], landmine.y - scroll[1]))
+            if player_rect.colliderect(landmine):
+                landmines.remove(landmine)
+                Audio.playSound(landmine_explosion)
+                player_health -= 60
+                if player_health < 0:
+                    player_health = 0
+                explosion_positions.append((landmine.x-40, landmine.y-58))
         for zombie1 in zombies:
             if zombie1.rect.colliderect(landmine):
                 landmines.remove(landmine)
@@ -2508,7 +2508,6 @@ while main_running:
                 if zombie1.health < 0:
                     zombie1.health = 0
                 explosion_positions.append((landmine.x-40, landmine.y-58))
-
         for sergeant in sergeants:
             if sergeant.rect.colliderect(landmine):
                 landmines.remove(landmine)
@@ -2566,67 +2565,66 @@ while main_running:
         if state:
             plasmabullets.remove(bullet)
 
-    if len(plasmabullets) > 50:
+    while len(plasmabullets) > 50:
         plasmabullets.remove(plasmabullets[0])
 
     for explosion in explosion_positions:
         explosion_image, done_state = explosion_animation.update()
         if not done_state:
-            screen.blit(explosion_image,
-                        (explosion[0] - scroll[0], explosion[1] - scroll[1]))
+            if explosion.colliderect(render_rect):
+                screen.blit(explosion_image, (explosion[0] - scroll[0], explosion[1] - scroll[1]))
         else:
             explosion_positions.remove(explosion)
             explosion_animation.reset()
 
     item_collision_test(player_rect, item_rects)
-    b = 0
-    for item in item_rects:
-        if item_ids[b] == 'gasburner':
-            screen.blit(gasburner_off, (item.x - scroll[0], item.y - scroll[1]+10))
-        if item_ids[b] == "knife":
-            screen.blit(knife, (item.x - scroll[0], item.y - scroll[1]+26))
-        if item_ids[b] == "red_key":
-            screen.blit(red_key, (item.x - scroll[0], item.y - scroll[1]+16))
-        if item_ids[b] == "green_key":
-            screen.blit(green_key, (item.x - scroll[0], item.y - scroll[1]+16))
-        if item_ids[b] == "blue_key":
-            screen.blit(blue_key, (item.x - scroll[0], item.y - scroll[1]+16))
-        if item_ids[b] == "coffeemug":
-            screen.blit(
-                coffeemug, (item.x - scroll[0], item.y - scroll[1] + 14))
-        if item_ids[b] == "ss_bonuscard":
-            screen.blit(ss_bonuscard, (item.x - scroll[0], item.y - scroll[1]+14))
-        if item_ids[b] == "lappi_sytytyspalat":
-            screen.blit(lappi_sytytyspalat,
-                        (item.x - scroll[0], item.y - scroll[1]+17))
-        if item_ids[b] == "plasmarifle":
-            screen.blit(plasmarifle, (item.x - scroll[0], item.y - scroll[1]+17))
-        if item_ids[b] == "cell":
-            screen.blit(cell, (item.x - scroll[0], item.y - scroll[1]+17))
-        if item_ids[b] == "pistol":
-            screen.blit(pistol_texture,
-                        (item.x - scroll[0]-23, item.y - scroll[1]+18))
-        if item_ids[b] == "pistol_mag":
-            screen.blit(pistol_mag, (item.x - scroll[0], item.y - scroll[1]+19))
-        if item_ids[b] == "rk62":
-            screen.blit(rk62_texture, (item.x - scroll[0], item.y - scroll[1]+17))
-        if item_ids[b] == "rk62_mag":
-            screen.blit(rk62_mag, (item.x - scroll[0], item.y - scroll[1]+14))
-        if item_ids[b] == "medkit":
-            screen.blit(medkit, (item.x - scroll[0], item.y - scroll[1]+15))
-        if item_ids[b] == "shotgun":
-            screen.blit(shotgun, (item.x - scroll[0], item.y - scroll[1]+22))
-        if item_ids[b] == "shotgun_shells":
-            screen.blit(shotgun_shells_t,
-                        (item.x - scroll[0], item.y - scroll[1]+25))
-        if item_ids[b] == "iPuhelin":
-            screen.blit(iphone_texture,
-                        (item.x - scroll[0], item.y - scroll[1]+10))
-        if item_ids[b] == 'soulsphere':
-            screen.blit(soulsphere, (item.x - scroll[0], item.y - scroll[1]))
-        if item_ids[b] == 'turboneedle':
-            screen.blit(turboneedle, (item.x - scroll[0], item.y - scroll[1]))
-        b += 1
+    for i in range(len(item_rects)):
+        if item_rects[i].colliderect(render_rect):
+            if item_ids[i] == 'gasburner':
+                screen.blit(gasburner_off, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
+            if item_ids[i] == "knife":
+                screen.blit(knife, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+26))
+            if item_ids[i] == "red_key":
+                screen.blit(red_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+            if item_ids[i] == "green_key":
+                screen.blit(green_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+            if item_ids[i] == "blue_key":
+                screen.blit(blue_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+            if item_ids[i] == "coffeemug":
+                screen.blit(
+                    coffeemug, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1] + 14))
+            if item_ids[i] == "ss_bonuscard":
+                screen.blit(ss_bonuscard, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
+            if item_ids[i] == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,
+                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "plasmarifle":
+                screen.blit(plasmarifle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "cell":
+                screen.blit(cell, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "pistol":
+                screen.blit(pistol_texture,
+                            (item_rects[i].x - scroll[0]-23, item_rects[i].y - scroll[1]+18))
+            if item_ids[i] == "pistol_mag":
+                screen.blit(pistol_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+19))
+            if item_ids[i] == "rk62":
+                screen.blit(rk62_texture, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "rk62_mag":
+                screen.blit(rk62_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
+            if item_ids[i] == "medkit":
+                screen.blit(medkit, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+15))
+            if item_ids[i] == "shotgun":
+                screen.blit(shotgun, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+22))
+            if item_ids[i] == "shotgun_shells":
+                screen.blit(shotgun_shells_t,
+                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+25))
+            if item_ids[i] == "iPuhelin":
+                screen.blit(iphone_texture,
+                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
+            if item_ids[i] == 'soulsphere':
+                screen.blit(soulsphere, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
+            if item_ids[i] == 'turboneedle':
+                screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
 #endregion
 #region PlayerMovement
     if player_health > 0:
