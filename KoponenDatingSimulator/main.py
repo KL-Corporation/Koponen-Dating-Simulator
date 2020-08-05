@@ -21,7 +21,7 @@ from pygame.locals import *
 pygame.mixer.pre_init()
 pygame.mixer.init()
 pygame.init()
-pygame.mixer.set_num_channels(12)
+pygame.mixer.set_num_channels(11)
 KDS.Logging.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
@@ -44,10 +44,9 @@ screen = pygame.Surface(screen_size)
 #endregion
 #region Audio
 pygame.mixer.set_reserved(0)
-pygame.mixer.set_reserved(11)
 class Audio:
-    MusicChannel1 = pygame.mixer.Channel(0)
-    MusicChannel2 = pygame.mixer.Channel(11)
+    MusicMixer = pygame.mixer.music
+    MusicChannel = pygame.mixer.Channel(0)
     EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
         pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6), pygame.mixer.Channel(7), 
         pygame.mixer.Channel(8), pygame.mixer.Channel(9), pygame.mixer.Channel(10)]
@@ -1135,47 +1134,46 @@ def damage(health, min_damage: int, max_damage: int):
         health = 0
 
     return health
-def door_collision_test(render_rect):
+def door_collision_test():
+    x = 0
+
     def door_sound():
-        Audio.playSound(pygame.mixer.Sound(door_opening))
+        pygame.mixer.Sound.play(door_opening)
 
     global door_rects, doors_open, color_keys, player_movement
     hit_list = collision_test(player_rect, door_rects)
-    for i in range(len(door_rects)):
-        if door_rects[i].colliderect(render_rect):
-            for j in range(len(hit_list)):
-                if door_rects[i] == hit_list[j]:
-                    if player_movement[0] > 0 and doors_open[i] == False:
-                        player_rect.right = door_rects[i].left + 1
-                    elif player_movement[0] < 0 and doors_open[i] == False:
-                        player_rect.left = door_rects[i].right - 1
-                    if FunctionKey == True:
-                        color_key = color_keys[i]
-                        if doors_open[i]:
-                            color_key = "none"
-                        if color_key != "none":
-                            if color_key == "red":
-                                if player_keys["red"]:
-                                    doors_open[i] = not doors_open[i]
-                                    door_sound()
-                            elif color_key == "green":
-                                if player_keys["green"]:
-                                    doors_open[i] = not doors_open[i]
-                                    door_sound()
-                            elif color_key == "blue":
-                                if player_keys["blue"]:
-                                    doors_open[i] = not doors_open[i]
-                                    door_sound()
-                        else:
-                            doors_open[i] = not doors_open[i]
-                            door_sound()
-                        if not doors_open[i]:
-                            if direction:
-                                player_rect.left = door_rects[i].right - 1
-                            else:
-                                player_rect.right = door_rects[i].left + 1
+    if len(door_rects) > 0 and player_rect.colliderect(door_rects[0]):
+        pass
 
-                            
+    for recta in door_rects:
+        if recta.colliderect(render_rect):
+            for door in hit_list:
+                if recta == door:
+                    if player_movement[0] > 0 and doors_open[x] == False:
+                        player_rect.right = door.left + 1
+                    if not doors_open[x]:
+                        if FunctionKey == True:
+                            if color_keys[x] != "none":
+                                if color_keys[x] == "red":
+                                    if player_keys["red"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                                elif color_keys[x] == "green":
+                                    if player_keys["green"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                                elif color_keys[x] == "blue":
+                                    if player_keys["blue"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                            else:
+                                doors_open[x] = True
+                                door_sound()
+
+                    if player_movement[0] < 0 and doors_open[x] == False:
+                        player_rect.left = door.right - 1
+
+            x += 1
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
@@ -1952,8 +1950,8 @@ def settings_menu():
 
         if set_music_volume != music_volume:
             music_volume = set_music_volume
-            Audio.MusicChannel1.set_volume(music_volume)
-            Audio.MusicChannel2.set_volume(music_volume)
+            pygame.mixer.music.set_volume(music_volume)
+            Audio.MusicChannel.set_volume(music_volume)
         elif set_effect_volume != effect_volume:
             effect_volume = set_effect_volume
 
@@ -2451,8 +2449,8 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
-        Audio.MusicChannel1.stop()
-        Audio.MusicChannel2.set_volume(music_volume / 2)
+        Audio.MusicChannel.stop()
+        pygame.mixer.music.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
         animation_has_played = True
@@ -2476,7 +2474,7 @@ while main_running:
     for i in range(len(door_rects)):
         if door_rects[i].colliderect(render_rect):
             if doors_open[i]:
-                screen.blit(door_open, (door_rects[i].x - scroll[0] + 2, door_rects[i].y - scroll[1]))
+                screen.blit(door_open, (door_rects[i].x - scroll[0]+2, door_rects[i].y - scroll[1]))
             else:
                 if color_keys[i] == "red":
                     screen.blit(red_door_closed,
@@ -2522,6 +2520,7 @@ while main_running:
                 explosion_positions.append((landmine.x-40, landmine.y-58))
 
     if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
+
         if plasmarifle_cooldown > 3 and ammunition_plasma > 0:
             plasmarifle_cooldown = 0
 
@@ -2545,16 +2544,19 @@ while main_running:
             ammo_count = score_font.render(
                 "Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
+
         elif player_hand_item == "pistol":
 
             ammo_count = score_font.render(
                 "Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
+
         elif player_hand_item == "rk62":
 
             ammo_count = score_font.render(
                 "Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
+
         elif player_hand_item == "shotgun":
 
             ammo_count = score_font.render(
@@ -2683,7 +2685,7 @@ while main_running:
             crouch_collisions = move(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
         else:
             crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
-    except NameError:
+    except Exception:
         KDS.Logging.Log(KDS.Logging.LogType.debug, "check_crouch has not been assigned yet.", False)
         crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
 
@@ -2711,7 +2713,9 @@ while main_running:
         player_rect, collisions = move(player_rect, [0, 8], tile_rects)
 #endregion
 #region AI
+
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
+
 
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
@@ -2736,9 +2740,8 @@ while main_running:
                 elif sergeant.movement[0] < 0:
                     sergeant.direction = False
 
-                if sergeant.rect.colliderect(render_rect):
-                    screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
-                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
+                screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant.hits["right"] or sergeant.hits["left"]:
                     sergeant.movement[0] = -sergeant.movement[0]
@@ -2746,9 +2749,8 @@ while main_running:
             else:
                 u, i = sergeant_shoot_animation.update()
 
-                if sergeant.rect.colliderect(render_rect):
-                    screen.blit(pygame.transform.flip(u, sergeant.direction, False),
-                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
+                screen.blit(pygame.transform.flip(u, sergeant.direction, False),
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
@@ -2763,16 +2765,14 @@ while main_running:
         elif sergeant.playDeathAnimation:
             d, s = sergeant_death_animation.update()
             if not s:
-                if sergeant.rect.colliderect(render_rect):
-                    screen.blit(pygame.transform.flip(d, sergeant.direction, False),
-                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
+                screen.blit(pygame.transform.flip(d, sergeant.direction, False),
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
             if s:
                 sergeant.playDeathAnimation = False
                 sergeant_death_animation.reset()
         else:
-            if sergeant.rect.colliderect(render_rect):
-                screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction, False), 
-                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1] + 10))
+            screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
+                                              False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
 
     for zombie1 in zombies:
         if zombie1.health > 0:
@@ -2789,9 +2789,8 @@ while main_running:
                 else:
                     zombie1.walking = False
 
-                if zombie1.rect.colliderect(render_rect):
-                    screen.blit(pygame.transform.flip(wa, zombie1.direction, False),
-                                (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
+                screen.blit(pygame.transform.flip(wa, zombie1.direction, False),
+                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
 
                 if zombie1.hits["left"]:
                     zombie1.movement[0] = -zombie1.movement[0]
@@ -2806,22 +2805,20 @@ while main_running:
                     zombie1.direction = False
                 else:
                     zombie1.direction = True
-                if zombie1.rect.colliderect(render_rect):
-                    screen.blit(pygame.transform.flip(zombie_attack_animation.update(), zombie1.direction, False), 
-                                (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
+                screen.blit(pygame.transform.flip(zombie_attack_animation.update(
+                ), zombie1.direction, False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
 
         elif zombie1.playDeathAnimation:
             d, s = zombie_death_animation.update()
             if not s:
-                if zombie1.rect.colliderect(render_rect):
-                    screen.blit(pygame.transform.flip(d, zombie1.direction, False),
-                                (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
+                screen.blit(pygame.transform.flip(d, zombie1.direction, False),
+                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
             if s:
                 zombie1.playDeathAnimation = False
                 zombie_death_animation.reset()
-        elif zombie1.rect.colliderect(render_rect):
-            screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction, False), 
-                        (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1] + 14))
+        else:
+            screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction,
+                                              False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]+14))
 
     # Zombien käsittely loppuu tähän
 
@@ -2842,7 +2839,7 @@ while main_running:
     elif k_collisions["right"]:
         koponen_movingx = -koponen_movingx
 
-    door_collision_test(render_rect)
+    door_collision_test()
 #endregion
 #region UI
     score = score_font.render(
@@ -2886,6 +2883,7 @@ while main_running:
             running = True
         if player_movement[0] == 0:
             running = False
+
     animation = []
     if player_health > 0:
         if running:
@@ -2907,7 +2905,7 @@ while main_running:
             animation = death_animation.copy()
             animation_duration = 10
 #endregion
-#region Koponen Animation
+#region Koponen Movement
     if koponen_movement[0] != 0:
         koponen_animation = koponen_run.copy()
     else:
@@ -2923,6 +2921,20 @@ while main_running:
                 player_death_event = False
                 animation_has_played = True
 
+    if player_hand_item == "gasburner":
+        if gasburner_animation_stats[2] > gasburner_animation_stats[1]:
+            gasburner_animation_stats[0] += 1
+            gasburner_animation_stats[2] = 0
+            if gasburner_animation_stats[0] > 1:
+                gasburner_animation_stats[0] = 0
+
+    if player_hand_item == "knife":
+        if knife_animation_stats[2] > knife_animation_stats[1]:
+            knife_animation_stats[0] += 1
+            knife_animation_stats[2] = 0
+            if knife_animation_stats[0] > 1:
+                knife_animation_stats[0] = 0
+
     if toilet_animation_stats[2] > toilet_animation_stats[1]:
         toilet_animation_stats[0] += 1
         toilet_animation_stats[2] = 0
@@ -2936,18 +2948,6 @@ while main_running:
             koponen_animation_stats[0] = 0
 
     if player_hand_item != "none":
-        if player_hand_item == "gasburner":
-            if gasburner_animation_stats[2] > gasburner_animation_stats[1]:
-                gasburner_animation_stats[0] += 1
-                gasburner_animation_stats[2] = 0
-                if gasburner_animation_stats[0] > 1:
-                    gasburner_animation_stats[0] = 0
-        if player_hand_item == "knife":
-            if knife_animation_stats[2] > knife_animation_stats[1]:
-                knife_animation_stats[0] += 1
-                knife_animation_stats[2] = 0
-                if knife_animation_stats[0] > 1:
-                    knife_animation_stats[0] = 0   
         if player_health:
             if direction:
                 offset_c = 49
@@ -3109,21 +3109,20 @@ while main_running:
     h = 0
 #endregion
 #region Interactable Objects
-    for i in range(len(toilets)):
-        if toilets[i].colliderect(render_rect) and burning_toilets[h] == True:
+    for toilet in toilets:
+        if burning_toilets[h] == True:
             screen.blit(toilet_animation[toilet_animation_stats[0]],
-                        (toilets[i].x - scroll[0]+2, toilets[i].y - scroll[1] + 1))
+                        (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
         h += 1
     h = 0
-    for i in range(len(trashcans)):
-        if trashcans[i].colliderect(render_rect) and burning_trashcans[h] == True:
+    for trashcan2 in trashcans:
+        if burning_trashcans[h] == True:
             screen.blit(trashcan_animation[toilet_animation_stats[0]],
-                        (trashcans[i].x - scroll[0]+3, trashcans[i].y - scroll[1] + 6))
+                        (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
         h += 1
 
-    if koponen_rect.colliderect(render_rect):
-        screen.blit(koponen_animation[koponen_animation_stats[0]], (
-            koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
+    screen.blit(koponen_animation[koponen_animation_stats[0]], (
+        koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if player_health or player_death_event:
         if DebugMode:
@@ -3140,8 +3139,7 @@ while main_running:
                         (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
     for iron_bar in iron_bars:
-        if iron_bar.colliderect(render_rect):
-            screen.blit(iron_bar, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
+        screen.blit(iron_bar, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
 
     jukebox_collision = False
 
@@ -3161,8 +3159,8 @@ while main_running:
             for i in range(len(lastJukeboxSong) - 1):
                 lastJukeboxSong[i] = lastJukeboxSong[i + 1]
             lastJukeboxSong[4] = jukeboxMusicPlaying
-            Audio.MusicChannel2.play(jukebox_music[jukeboxMusicPlaying])
-            Audio.MusicChannel2.set_volume(music_volume)
+            Audio.MusicChannel.play(jukebox_music[jukeboxMusicPlaying])
+            Audio.MusicChannel.set_volume(music_volume)
     else:
         if not Audio.MusicChannel1.get_busy():
             Audio.MusicChannel1.unpause()
@@ -3233,7 +3231,8 @@ while main_running:
     Mission_Render_Data = KDS.Missions.RenderMission(screen)
 
     for i in range(KDS.Missions.GetRenderCount()):
-        KDS.Missions.RenderTask(screen, i)  
+        KDS.Missions.RenderTask(screen, i)
+       
 #endregion
 #region Screen Rendering
     if dark:
@@ -3244,8 +3243,9 @@ while main_running:
 #endregion
 #region Conditional Events
     if esc_menu:
-        Audio.MusicChannel1.pause()
-        Audio.MusicChannel2.pause()
+        for x in range(len(jukebox_music)):
+            jukebox_music[x].fadeout(500)
+        Audio.MusicChannel.fadeout(500)
         screen.blit(black_tint, (0, 0))
         main_display.fill(KDS.Colors.GetPrimary.Black)
         main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
@@ -3254,8 +3254,8 @@ while main_running:
         Audio.MusicChannel1.unpause()
         Audio.MusicChannel2.unpause()
     if go_to_main_menu:
-        Audio.MusicChannel1.stop()
-        Audio.MusicChannel2.stop()
+        Audio.MusicChannel.stop()
+        pygame.mixer.music.stop()
         main_menu()
     animation_counter += 1
     if player_hand_item == "gasburner":
