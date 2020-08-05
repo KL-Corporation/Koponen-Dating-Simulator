@@ -14,10 +14,14 @@ import pygame
 import os
 import random
 import threading
+import math
 from pygame.locals import *
 #endregion
 #region PyGame Initialisation
+pygame.mixer.pre_init()
+pygame.mixer.init()
 pygame.init()
+pygame.mixer.set_num_channels(11)
 KDS.Logging.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
@@ -39,28 +43,22 @@ main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 #endregion
 #region Audio
+pygame.mixer.set_reserved(0)
 class Audio:
+    MusicMixer = pygame.mixer.music
     MusicChannel = pygame.mixer.Channel(0)
-    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), pygame.mixer.Channel(4), pygame.mixer.Channel(5)]
+    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
+        pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6), pygame.mixer.Channel(7), 
+        pygame.mixer.Channel(8), pygame.mixer.Channel(9), pygame.mixer.Channel(10)]
     def playSound(sound: pygame.mixer.Sound):
-        audio_assigned = False
-        i = 0
-        while not audio_assigned and i < len(Audio.EffectChannels) - 1:
-            if not Audio.EffectChannels[i].get_busy():
-                Audio.EffectChannels[i].play(sound)
-                Audio.EffectChannels[i].set_volume(effect_volume)
-                audio_assigned = True
-            i += 1
-        if not audio_assigned:
-            Audio.EffectChannels[len(Audio.EffectChannels - 1)].queue(sound)
+        global effect_volume
+        play_channel = pygame.mixer.find_channel(True)
+        play_channel.play(sound)
+        play_channel.set_volume(effect_volume)
 
     def stopAllSounds():
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].stop()
-
-    def setVolume(volume: float):
-        for i in range(len(Audio.EffectChannels)):
-            Audio.EffectChannels[i].set_volume(volume)
 #endregion
 #region Animations
 class plasma_bullet:
@@ -308,12 +306,12 @@ player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
 player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
-floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png").convert()
-concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png").convert()
-wall1 = pygame.image.load("Assets/Textures/Building/wall0.png").convert()
-table1 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
-toilet1 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
-lamp1 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
+floor0 = pygame.image.load("Assets/Textures/Building/floor0v2.png").convert()
+concrete0 = pygame.image.load("Assets/Textures/Building/concrete0.png").convert()
+wall0 = pygame.image.load("Assets/Textures/Building/wall0.png").convert()
+table0 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
+toilet0 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
+lamp0 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
 trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
 ground1 = pygame.image.load("Assets/Textures/Building/ground0.png").convert()
 grass = pygame.image.load("Assets/Textures/Building/grass0.png").convert()
@@ -336,9 +334,9 @@ light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").co
 iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
 soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
 mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
-table1.set_colorkey(KDS.Colors.GetPrimary.White)
-toilet1.set_colorkey(KDS.Colors.GetPrimary.White)
-lamp1.set_colorkey(KDS.Colors.GetPrimary.White)
+table0.set_colorkey(KDS.Colors.GetPrimary.White)
+toilet0.set_colorkey(KDS.Colors.GetPrimary.White)
+lamp0.set_colorkey(KDS.Colors.GetPrimary.White)
 trashcan.set_colorkey(KDS.Colors.GetPrimary.White)
 door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
 red_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -683,9 +681,15 @@ task_items = list()
 color_keys = list()
 door_rects = list()
 doors_open = list()
+tile_textures = dict()
 
 def WorldGeneration():
-    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys, iron_barss
+    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
+    global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids
+    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures
+        
+    tile_textures = dict()
+
     buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
     decorationBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map")).convert()
     enemyBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map")).convert()
@@ -734,6 +738,11 @@ def WorldGeneration():
                 if Type == 0:
                     convertBuildingRules.append(array[1])
                     convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+                    if not "door" in array[0]:
+                        try:
+                            tile_textures[array[1]] = globals()[str(array[0])]
+                        except KeyError:
+                            tile_textures[array[1]] = globals()[str(array[0] + "_texture")]
                 elif Type == 1:
                     convertDecorationRules.append(array[1])
                     convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
@@ -771,7 +780,7 @@ def WorldGeneration():
 
     #Use the index to get the letter and make the file using the letters
 
-    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_barss = load_rects()
+    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars = load_rects()
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Zombies Initialised: " + str(len(zombies)), False)
     for zombie in zombies:
@@ -847,7 +856,7 @@ def shakeScreen():
 #    del original_path
 #    del pos
 def load_music_for_map(_current_map):
-    pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
+    Audio.MusicMixer.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
@@ -883,7 +892,7 @@ def load_rects():
     archviles = []
     ladders = []
     bulldogs = []
-    iron_barss = []
+    iron_bars = []
     w = [0, 0]
     for i in range(len(world_gen) - 1):
         y = 0
@@ -894,7 +903,7 @@ def load_rects():
                     if tile == 'f':
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 14, 21))
                     elif tile == 'e':
-                        w = list(toilet1.get_size())
+                        w = list(toilet0.get_size())
                         toilets.append(pygame.Rect(x * 34-2, y * 34, 34, 34))
                         burning_toilets.append(False)
                         tile_rects.append(pygame.Rect(x * 34, y * 34, w[0], w[1]))
@@ -914,7 +923,7 @@ def load_rects():
                     elif tile == 'n':
                         pass
                     elif tile == 's':
-                        iron_barss.append(pygame.Rect(x*34, y*34, 1, 1))
+                        iron_bars.append(pygame.Rect(x*34, y*34, 1, 1))
                     elif tile == 'A':
                         pass
                     elif tile == 'B':
@@ -935,7 +944,7 @@ def load_rects():
 
                 x += 1
             y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_barss
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -1939,7 +1948,6 @@ def settings_menu():
             Audio.MusicChannel.set_volume(music_volume)
         elif set_effect_volume != effect_volume:
             effect_volume = set_effect_volume
-            Audio.setVolume(effect_volume)
 
         y = 0
         for button in buttons:
@@ -1968,7 +1976,7 @@ def settings_menu():
         c = False
 
 def play_function(gamemode: KDS.Gamemode.Modes):
-    global main_menu_running, current_map, inventory
+    global main_menu_running, current_map, inventory, Audio, music_volume
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     inventory = ["none", "none", "none", "none", "none"]
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
@@ -1978,8 +1986,8 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     main_menu_running = False
     #load_music()
     load_music_for_map(current_map)
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(music_volume)
+    Audio.MusicMixer.play(-1)
+    Audio.MusicMixer.set_volume(music_volume)
     
     global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
     player_hand_item = "none"
@@ -2018,9 +2026,9 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    pygame.mixer.music.load("Assets/Audio/lobbymusic.wav")
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(music_volume)
+    Audio.MusicMixer.load("Assets/Audio/lobbymusic.wav")
+    Audio.MusicMixer.set_volume(music_volume)
+    Audio.MusicMixer.play(-1)
 
     def settings_function():
         settings_menu()
@@ -2270,23 +2278,24 @@ del background_surface
 
 esc_menu_background = pygame.image.load("level_background.png")
 """
-tile_textures = {'b': floor1,
-                    'c': wall1,
-                    'd': table1,
-                    'e': toilet1,
-                    'f': lamp1,
-                    'g': trashcan,
-                    'h': ground1,
-                    'i': grass,
-                    'j': concrete1,
-                    'o': bricks,
-                    'A': tree,
-                    'p': planks,
-                    'q': ladder_texture,
-                    'r': light_bricks,
-                    's': iron_bars,
-                    't': soil,
-                    'u': mossy_bricks}
+
+#tile_textures = [{'b': floor0,
+#                    'c': wall0,
+#                    'd': table0,
+#                    'e': toilet0,
+#                    'f': lamp0,
+#                    'g': trashcan,
+#                    'h': ground1,
+#                    'i': grass,
+#                    'j': concrete0,
+#                    'o': bricks,
+#                    'A': tree,
+#                    'p': planks,
+#                    'q': ladder_texture,
+#                    'r': light_bricks,
+#                    's': iron_bars,
+#                    't': soil,
+#                    'u': mossy_bricks}]
 
 #endregion
 #region Main Running
@@ -2424,7 +2433,7 @@ while main_running:
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
 
-    true_scroll[0] += (player_rect.x - true_scroll[0] - 285) / 12
+    true_scroll[0] += (player_rect.x - true_scroll[0] - (screen_size[0] / 2)) / 12
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
@@ -2451,8 +2460,9 @@ while main_running:
             play_function(KDS.Gamemode.gamemode)
 #endregion
 #region Rendering
-    vertical_render_position = [int(max(0, (scroll[1] / 34) - 1)), int(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 1))]
-    horisontal_render_position = [int(max(0, (scroll[0] / 34) - 1)), int(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 1))]
+    render_rect = pygame.Rect(0, 0, screen_size[0], screen_size[1])
+    vertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
+    horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
     for y in range(vertical_render_position[0], vertical_render_position[1]):
         for x in range(horisontal_render_position[0], horisontal_render_position[1]):
             if world_gen[0][y][x] in tile_textures:
@@ -3127,8 +3137,8 @@ while main_running:
             screen.blit(flames_animation.update(),
                         (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
-    for iron_bar in iron_barss:
-        screen.blit(iron_bars,(iron_bar.x - scroll[0],iron_bar.y - scroll[1]))
+    for iron_bar in iron_bars:
+        screen.blit(iron_bar, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
 
     jukebox_collision = False
 
@@ -3152,8 +3162,8 @@ while main_running:
             Audio.MusicChannel.set_volume(music_volume)
     else:
         if not pygame.mixer.music.get_busy():
-            pygame.mixer.music.play(-1)
-            pygame.mixer.music.set_volume(music_volume)
+            Audio.MusicMixer.set_volume(music_volume)
+            Audio.MusicMixer.play(-1)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3240,8 +3250,8 @@ while main_running:
         main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
         esc_menu_background = main_display.copy()
         esc_menu_f()
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(music_volume)
+        Audio.MusicMixer.set_volume(music_volume)
+        Audio.MusicMixer.play(-1)
     if go_to_main_menu:
         Audio.MusicChannel.stop()
         pygame.mixer.music.stop()
