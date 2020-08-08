@@ -1718,16 +1718,12 @@ def koponen_talk():
 #endregion
 #region Menus
 def esc_menu_f():
-
-    pygame.mouse.set_visible(True)
-    global esc_menu, go_to_main_menu
+    global esc_menu, go_to_main_menu, DebugMode, clock
     c = False
 
     def resume():
         global esc_menu
         esc_menu = False
-        pygame.mouse.set_visible(False)
-        pygame.mixer.unpause()
 
     def save():
         SaveData()
@@ -1753,25 +1749,26 @@ def esc_menu_f():
                     FullscreenSet()
                 if event.key == K_ESCAPE:
                     esc_menu = False
-                    pygame.mouse.set_visible(False)
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
             elif event.type == pygame.QUIT:
-                KDS_Quit()
-        
+                KDS_Quit() 
+
         game_background_scaling = FullscreenGet.size[1] / esc_menu_background.get_height()
         main_display.blit(pygame.transform.scale(esc_menu_background, (int(esc_menu_background.get_width() * game_background_scaling), int(esc_menu_background.get_height() * game_background_scaling))), (0, 0))
         pygame.draw.rect(main_display, (123, 134, 111), (int((window_size[0] / 2) - 250 * FullscreenGet.scaling), int((window_size[1] / 2) - 200 * FullscreenGet.scaling), int(500 * FullscreenGet.scaling), int(400 * FullscreenGet.scaling)))
         main_display.blit(pygame.transform.scale(
             text_icon, (int(250 * FullscreenGet.scaling), int(139 * FullscreenGet.scaling))), (int(window_size[0] / 2 - 125 * FullscreenGet.scaling), int(window_size[1] / 2 - 175 * FullscreenGet.scaling)))
 
-        pointer = list(pygame.mouse.get_pos())
-
         resume_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
         save_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
         settings_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
         main_menu_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+
+        if DebugMode:
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            main_display.blit(pygame.transform.scale(score_font.render(fps_text, True, KDS.Colors.GetPrimary.White), (int(score_font.size(fps_text)[0] * 2 * FullscreenGet.scaling), int(score_font.size(fps_text)[1] * 2 * FullscreenGet.scaling))), (int(10 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(10 * FullscreenGet.scaling + FullscreenGet.offset[1])))
 
         pygame.display.update()
         main_display.fill((0, 0, 0))
@@ -2267,23 +2264,6 @@ while main_running:
                 inventoryRight()
         elif event.type == pygame.QUIT:
             KDS_Quit()
-#endregion
-#region Conditional Events
-    if esc_menu:
-        Audio.MusicChannel1.fadeout(500)
-        Audio.MusicChannel2.fadeout(500)
-        pygame.mixer.music.fadeout(500)
-        screen.blit(black_tint, (0, 0))
-        main_display.fill(KDS.Colors.GetPrimary.Black)
-        main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
-        esc_menu_background = main_display.copy()
-        esc_menu_f()
-        pygame.mixer.music.play()
-    if go_to_main_menu:
-        Audio.MusicChannel1.stop()
-        Audio.MusicChannel2.stop()
-        pygame.mixer.music.stop()
-        main_menu()
 #endregion
 #region Inventory Code
     def inventoryDoubleOffsetCounter():
@@ -3124,6 +3104,26 @@ while main_running:
     if KDS.Missions.GetFinished() == True:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
+#endregion
+#region Conditional Events
+    if esc_menu:
+        Audio.MusicChannel1.fadeout(500)
+        Audio.MusicChannel2.fadeout(500)
+        pygame.mixer.music.fadeout(500)
+        screen.blit(black_tint, (0, 0))
+        main_display.fill(KDS.Colors.GetPrimary.Black)
+        main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
+        esc_menu_background = main_display.copy()
+        pygame.mouse.set_visible(True)
+        esc_menu_f()
+        pygame.mouse.set_visible(False)
+        pygame.mixer.music.play()
+    if go_to_main_menu:
+        Audio.MusicChannel1.stop()
+        Audio.MusicChannel2.stop()
+        pygame.mixer.music.stop()
+        pygame.mouse.set_visible(True)
+        main_menu()
 #endregion
 #region Ticks
     tick += 1
