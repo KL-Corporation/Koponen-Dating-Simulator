@@ -546,6 +546,7 @@ gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd
 go_to_main_menu = False
 
 main_menu_running = False
+tcagr_running = False
 mode_selection_running = False
 settings_running = False
 vertical_momentum = 0
@@ -1495,7 +1496,7 @@ def console():
 #endregion
 #region Terms and Conditions
 def agr(tcagr):
-
+    global tcagr_running
     if tcagr == False:
         tcagr_running = True
     else:
@@ -1504,11 +1505,8 @@ def agr(tcagr):
     global main_running
     c = False
 
-    buttons = []
-    texts = []
-    functions = []
-
-    def agree():
+    def tcagr_agree_function():
+        global tcagr_running
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Terms and Conditions have been accepted.", False)
         KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -1516,11 +1514,9 @@ def agr(tcagr):
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " +
                         KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"), False)
-        return False
+        tcagr_running = False
 
-    buttons.append(pygame.Rect(249, 353, 200, 160))
-    texts.append(button_font1.render("I Agree", True, KDS.Colors.GetPrimary.White))
-    functions.append(agree)
+    agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render("I Agree", True, KDS.Colors.GetPrimary.White))
 
     while tcagr_running:
         for event in pygame.event.get():
@@ -1533,30 +1529,13 @@ def agr(tcagr):
                         KDS_Quit()
                 elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-            elif event.type == MOUSEBUTTONDOWN:
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-        main_display.blit(agr_background, (0, 0))
-
-        y = 0
-        for button in buttons:
-            if button.collidepoint(pygame.mouse.get_pos()):
-                if c:
-                    tcagr_running = functions[y]()
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-                else:
-                    button_color = (115, 115, 115)
-            else:
-                button_color = (100, 100, 100)
-
-            pygame.draw.rect(main_display, button_color, button)
-
-            main_display.blit(texts[y], (button.x+10, button.y+5))
-            y += 1
-
+        main_display.blit(pygame.transform.scale(agr_background, (int(agr_background.get_width() * FullscreenGet.scaling), int(agr_background.get_height() * FullscreenGet.scaling))), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
+        agree_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
         pygame.display.update()
         c = False
 #endregion
