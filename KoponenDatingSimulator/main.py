@@ -518,7 +518,7 @@ selectedSave = 0
 
 gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
-toilet_animation_stats = [0, 5, 0]
+burning_animation_stats = [0, 5, 0]
 koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
 plasmarifle_cooldown = 0
@@ -1376,6 +1376,10 @@ koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
     "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, -1)
+menu_toilet_animation = KDS.Animator.Animation(
+    "toilet_anim", 3, 6, KDS.Colors.GetPrimary.White, -1)
+menu_trashcan_animation = KDS.Animator.Animation(
+    "trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
     "explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)
@@ -1941,6 +1945,11 @@ def settings_menu():
 
         main_display.blit(pygame.transform.scale(settings_background, (int(settings_background.get_width() * FullscreenGet.scaling), int(settings_background.get_height() * FullscreenGet.scaling))), (0, 0))
 
+        main_display.blit(pygame.transform.flip(pygame.transform.scale(
+            menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
+            int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+            False, False), (int((279 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((515 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+
         main_display.blit(pygame.transform.scale(music_volume_text, (int(music_volume_text_size[0] * FullscreenGet.scaling), int(music_volume_text_size[1] * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling), int(135 * FullscreenGet.scaling)))
         main_display.blit(pygame.transform.scale(effect_volume_text, (int(effect_volume_text_size[0] * FullscreenGet.scaling), int(effect_volume_text_size[1] * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling), int(185 * FullscreenGet.scaling)))
         set_music_volume = music_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
@@ -1979,6 +1988,7 @@ def settings_menu():
         pygame.display.update()
         main_display.fill((0, 0, 0))
         c = False
+        clock.tick(60)
 
 def play_function(gamemode: KDS.Gamemode.Modes):
     global main_menu_running, current_map, inventory, Audio, music_volume
@@ -2117,6 +2127,14 @@ def main_menu():
                 menu_gasburner_animation.update(), (int(menu_gasburner_animation.get_frame().get_width() * FullscreenGet.scaling),
                 int(menu_gasburner_animation.get_frame().get_height() * FullscreenGet.scaling))),
                 False, False), (int((625 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((450 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+            main_display.blit(pygame.transform.flip(pygame.transform.scale(
+                menu_toilet_animation.update(), (int(menu_toilet_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
+                int(menu_toilet_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                False, False), (int((823 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((507 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+            main_display.blit(pygame.transform.flip(pygame.transform.scale(
+                menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
+                int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                False, False), (int((283 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((585 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
 
             for y in range(len(main_menu_buttons)):
                 if main_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
@@ -2936,11 +2954,11 @@ while main_running:
             if knife_animation_stats[0] > 1:
                 knife_animation_stats[0] = 0
 
-    if toilet_animation_stats[2] > toilet_animation_stats[1]:
-        toilet_animation_stats[0] += 1
-        toilet_animation_stats[2] = 0
-        if toilet_animation_stats[0] > 2:
-            toilet_animation_stats[0] = 0
+    if burning_animation_stats[2] > burning_animation_stats[1]:
+        burning_animation_stats[0] += 1
+        burning_animation_stats[2] = 0
+        if burning_animation_stats[0] > 2:
+            burning_animation_stats[0] = 0
 
     if koponen_animation_stats[2] > koponen_animation_stats[1]:
         koponen_animation_stats[0] += 1
@@ -3112,13 +3130,13 @@ while main_running:
 #region Interactable Objects
     for toilet in toilets:
         if burning_toilets[h] == True:
-            screen.blit(toilet_animation[toilet_animation_stats[0]],
+            screen.blit(toilet_animation[burning_animation_stats[0]],
                         (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
         h += 1
     h = 0
     for trashcan2 in trashcans:
         if burning_trashcans[h] == True:
-            screen.blit(trashcan_animation[toilet_animation_stats[0]],
+            screen.blit(trashcan_animation[burning_animation_stats[0]],
                         (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
         h += 1
 
@@ -3266,7 +3284,7 @@ while main_running:
         knife_animation_stats[2] += 1
     FunctionKey = False
     weapon_fire = False
-    toilet_animation_stats[2] += 1
+    burning_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
     rk62_cooldown += 1
