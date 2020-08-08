@@ -2189,8 +2189,10 @@ while main_running:
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
-                    item_rects.append(pygame.Rect(
-                        player_rect.x, player_rect.y, 34, 34))
+                    if not direction:
+                        item_rects.append(pygame.Rect((player_rect.bottomright[0] - (iphone_texture.get_width() / 2), player_rect.bottomright[1]), (34, 34)))
+                    else:
+                        item_rects.append(pygame.Rect((player_rect.bottomleft[0] - (iphone_texture.get_width() / 2), player_rect.bottomleft[1]), (34, 34)))
                     item_ids.append(inventory[inventory_slot])
                     u = True
                     while u:
