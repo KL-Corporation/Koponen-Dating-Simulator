@@ -1,5 +1,6 @@
 import KDS.ConfigManager
 import pygame
+from pygame.locals import *
 import os
 
 slider_dragged = None
@@ -19,7 +20,7 @@ class New:
         8. handle_pressed_color (OPTIONAL): The color of the handle in idle state. [DEFAULT: (90, 90, 90)]
         """
 
-        def __init__(self, safe_name, slider_rect, handle_size: (int, int), handle_move_area_padding=(0, 0), slider_color=(120, 120, 120), handle_default_color=(100, 100, 100), handle_highlighted_color=(90, 90, 90), handle_pressed_color=(80, 80, 80)):
+        def __init__(self, safe_name, slider_rect, handle_size: (int, int), handle_move_area_padding=(0, 0), slider_color=(120, 120, 120), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90)):
             self.safe_name = safe_name
             self.slider_rect = slider_rect
             self.handle_rect = pygame.Rect(slider_rect.midleft[0] + (float(KDS.ConfigManager.LoadSetting("Settings", safe_name, "0")) * slider_rect.width) - (handle_size[0] / 2), 0, handle_size[0], handle_size[1])
@@ -32,8 +33,8 @@ class New:
         def update(self, surface, fullscreen_scaling, fullscreen_offset):
             """
             1. surface: The surface this slider is going to be rendered.
-            2. fullscreen_scaling: The fullscreen_scaling value the Fullscreen.Get.scaling command returns.
-            3. fullscreen_offset: The fullscreen_offset value the Fullscreen.Get.offset returns.
+            2. fullscreen_scaling: The fullscreen_scaling value FullscreenGet.scaling returns.
+            3. fullscreen_offset: The fullscreen_offset value FullscreenGet.offset returns.
             """
 
             global slider_dragged
@@ -70,3 +71,40 @@ class New:
             value = (handle_rect.centerx - slider_rect.midleft[0]) / (slider_rect.midright[0] - slider_rect.midleft[0] - handle_move_area_padding[0])
             KDS.ConfigManager.SetSetting("Settings", self.safe_name, str(value))
             return value
+    
+    class Button:
+
+        def __init__(self, rect, function, text, button_default_color=(100, 100, 100), button_highlighted_color=(115, 115, 115), button_pressed_color=(90, 90, 90), button_disabled_color=(75, 75, 75), enabled=True):
+            self.rect = rect
+            self.function = function
+            self.text = text
+            self.button_default_color = button_default_color
+            self.button_highlighted_color = button_highlighted_color
+            self.button_pressed_color = button_pressed_color
+            self.button_disabled_color = button_disabled_color
+            self.enabled = enabled
+            
+        def update(self, surface, clicked, fullscreen_scaling=1, fullscreen_offset=(0, 0)):
+            """
+            1. surface: The surface this button is going to be rendered.
+            2. fullscreen_scaling (OPTIONAL): The fullscreen_scaling value FullscreenGet.scaling returns.
+            3. fullscreen_offset (OPTIONAL): The fullscreen_offset value FullscreenGet.offset returns.
+            """
+
+            pointer = pygame.mouse.get_pos()
+            button_rect_scaled = pygame.Rect(self.rect.topleft[0] * fullscreen_scaling + fullscreen_offset[0], self.rect.topleft[1] * fullscreen_scaling + fullscreen_offset[1], self.rect.width * fullscreen_scaling, self.rect.height * fullscreen_scaling)
+            button_color = self.button_disabled_color
+            if self.enabled:
+                if button_rect_scaled.collidepoint(pointer):
+                    if clicked:
+                        self.function()
+                    button_color = self.button_highlighted_color
+                    if pygame.mouse.get_pressed()[0]:
+                        button_color = self.button_pressed_color
+                else:
+                    button_color = self.button_default_color
+
+            pygame.draw.rect(surface, button_color, button_rect_scaled)
+
+            text_size_scaled = (self.text.get_width() * fullscreen_scaling, self.text.get_height() * fullscreen_scaling)
+            surface.blit(pygame.transform.scale(self.text, (int(text_size_scaled[0]), int(text_size_scaled[1]))), (int(button_rect_scaled.center[0] - (text_size_scaled[0] / 2)), int(button_rect_scaled.center[1] - (text_size_scaled[1] / 2))))
