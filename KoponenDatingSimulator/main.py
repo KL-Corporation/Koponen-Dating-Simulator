@@ -1963,7 +1963,7 @@ def main_menu():
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
                 menu_gasburner_animation.update(), (int(menu_gasburner_animation.get_frame().get_width() * FullscreenGet.scaling),
                 int(menu_gasburner_animation.get_frame().get_height() * FullscreenGet.scaling))),
-                False, False), (int((625 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((450 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+                False, False), (int((625 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((445 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
                 menu_toilet_animation.update(), (int(menu_toilet_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
                 int(menu_toilet_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
@@ -2190,9 +2190,9 @@ while main_running:
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
                     if not direction:
-                        item_rects.append(pygame.Rect((player_rect.bottomright[0] - (iphone_texture.get_width() / 2), player_rect.bottomright[1]), (34, 34)))
+                        item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - (iphone_texture.get_width() / 2)), int(player_rect.bottomright[1])), (34, 34)))
                     else:
-                        item_rects.append(pygame.Rect((player_rect.bottomleft[0] - (iphone_texture.get_width() / 2), player_rect.bottomleft[1]), (34, 34)))
+                        item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - (iphone_texture.get_width() / 2)), int(player_rect.bottomleft[1])), (34, 34)))
                     item_ids.append(inventory[inventory_slot])
                     u = True
                     while u:
@@ -2366,27 +2366,26 @@ while main_running:
 
                 explosion_positions.append((landmine.x-40, landmine.y-58))
 
-    if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
-
-        if plasmarifle_cooldown > 3 and ammunition_plasma > 0:
-            plasmarifle_cooldown = 0
-
-            if direction:
-                j_direction = False
-            else:
-                j_direction = True
-            if j_direction:
-                plasmabullets.append(plasma_bullet(
-                    (player_rect.x+50, player_rect.y+17), j_direction, screen))
-            else:
-                plasmabullets.append(plasma_bullet(
-                    (player_rect.x-50, player_rect.y+17), j_direction, screen))
-
-            Audio.playSound(plasmarifle_f_sound)
-            ammunition_plasma -= 1
 
     if player_hand_item != "none":
         if player_hand_item == "plasmarifle":
+            
+            if plasmarifle_fire and plasmarifle_cooldown > 3 and ammunition_plasma > 0:
+                plasmarifle_cooldown = 0
+
+                if direction:
+                    j_direction = False
+                else:
+                    j_direction = True
+                if j_direction:
+                    plasmabullets.append(plasma_bullet(
+                        (player_rect.x + 50, player_rect.y + 17), j_direction, screen))
+                else:
+                    plasmabullets.append(plasma_bullet(
+                        (player_rect.x - 50, player_rect.y + 17), j_direction, screen))
+
+                Audio.playSound(plasmarifle_f_sound)
+                ammunition_plasma -= 1
 
             ammo_count = score_font.render(
                 "Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White)
@@ -2421,7 +2420,7 @@ while main_running:
     for explosion in explosion_positions:
         explosion_image, done_state = explosion_animation.update()
         if not done_state:
-            if explosion.colliderect(render_rect):
+            if pygame.Rect(explosion, (140, 70)).colliderect(render_rect):
                 screen.blit(explosion_image, (explosion[0] - scroll[0], explosion[1] - scroll[1]))
         else:
             explosion_positions.remove(explosion)
@@ -2560,9 +2559,7 @@ while main_running:
         player_rect, collisions = move(player_rect, [0, 8], tile_rects)
 #endregion
 #region AI
-
     koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
-
 
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
@@ -2620,6 +2617,7 @@ while main_running:
         else:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
                                               False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
+            
 
     for zombie1 in zombies:
         if zombie1.health > 0:
@@ -2794,8 +2792,7 @@ while main_running:
         if koponen_animation_stats[0] > 1:
             koponen_animation_stats[0] = 0
 
-    if player_hand_item != "none":
-        if player_health:
+    if player_hand_item != "none" and player_health:
             if direction:
                 offset_c = 49
                 offset_k = 75
@@ -2808,40 +2805,46 @@ while main_running:
                 offset_p = 14
                 offset_pi = 2
                 offset_rk = 14
-            if player_hand_item in Items_list:
-                o = Items[player_hand_item]
-                if direction:
-                    offset = player_rect.width - o.get_width() / 2
-                else:
-                    offset = -player_rect.width - -(o.get_width() / 2)
-
+                
             if player_hand_item == "gasburner":
+                offset = 11
+                if direction:
+                    offset = -offset - 29
                 if gasburnerBurning:
                     if gasburner_animation_stats[0]:
                         gasburner_fire.stop()
                         pygame.mixer.Sound.play(gasburner_fire)
                     screen.blit(pygame.transform.flip(gasburner_animation[gasburner_animation_stats[0]], direction, False), (
-                        player_rect.right-offset_c - scroll[0], player_rect.y - scroll[1]))
+                        int(player_rect.centerx + offset - scroll[0]), int(player_rect.y - scroll[1])))
                 else:
-                    screen.blit(pygame.transform.flip(gasburner_off, direction, False),
-                                (player_rect.right-offset_c - scroll[0], player_rect.y - scroll[1]))
-
+                    screen.blit(pygame.transform.flip(gasburner_off, direction, False), (
+                        int(player_rect.centerx + offset - scroll[0]), int(player_rect.y - scroll[1])))
             elif player_hand_item == "knife":
+                offset = 14
+                if direction:
+                    offset = -offset - 26
                 if knifeInUse:
+                    if direction:
+                        offset -= 20
+                    else:
+                        offset -= 1
                     screen.blit(pygame.transform.flip(knife_animation[knife_animation_stats[0]], direction, False), (
-                        player_rect.right-offset_k - scroll[0], player_rect.y - scroll[1]+14))
+                        player_rect.centerx + offset - scroll[0], player_rect.y - scroll[1] + 14))
                 else:
                     screen.blit(pygame.transform.flip(knife, direction, False), (
-                        player_rect.right-offset_c - scroll[0], player_rect.y - scroll[1]+14))
-
+                        player_rect.centerx + offset - scroll[0], player_rect.y - scroll[1] + 14))
             elif player_hand_item == "coffeemug":
+                offset = 24
+                if direction:
+                    offset = -offset
                 screen.blit(pygame.transform.flip(coffeemug, direction, False), (
-                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
-
+                    int(player_rect.centerx + offset - scroll[0] - (coffeemug.get_width() / 2)), int(player_rect.y - scroll[1] + 14)))
             elif player_hand_item == "iPuhelin":
+                offset = 20
+                if direction:
+                    offset = -offset
                 screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
-                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
-
+                    int(player_rect.centerx + offset - scroll[0] - (iphone_texture.get_width() / 2)), int(player_rect.y - scroll[1] + 10)))
             elif player_hand_item == "plasmarifle":
                 if plasmarifle_fire and ammunition_plasma > 0:
                     screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
@@ -2850,7 +2853,6 @@ while main_running:
                 else:
                     screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
                         player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
-
             elif player_hand_item == "pistol":
                 pistol_cooldown += 1
                 if weapon_fire and pistol_cooldown > 25:
@@ -2867,7 +2869,6 @@ while main_running:
                 else:
                     screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
                         player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
-
             elif player_hand_item == "rk62":
                 if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
                     rk_62_ammo -= 1
@@ -2891,7 +2892,6 @@ while main_running:
                         rk62_shot.stop()
                     screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
                         player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
-
             elif player_hand_item == "shotgun":
                 if not shotgun_loaded:
                     shotgun_cooldown += 1
