@@ -342,7 +342,7 @@ landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png").co
 ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png").convert()
 background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png").convert()
 light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").convert()
-iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
+iron_bars_texture = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
 soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
 mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
 table0.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -356,7 +356,7 @@ blue_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
 jukebox_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 landmine_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ladder_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-iron_bars.set_colorkey(KDS.Colors.GetPrimary.White)
+iron_bars_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
@@ -604,6 +604,8 @@ doubleWidthAdd = 0
 test_rect = pygame.Rect(0, 0, 60, 40)
 stand_size = (28, 63)
 crouch_size = (28, 34)
+jump_velocity = 2.0
+fall_mmultiplier = 2.5
 player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
@@ -753,9 +755,13 @@ def WorldGeneration():
                     convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
                     if not "door" in array[0]:
                         try:
-                            tile_textures[array[1]] = globals()[str(array[0])]
+                            global_texture = globals()[str(array[0])]
+                            if isinstance(global_texture, pygame.Surface):
+                                tile_textures[array[1]] = global_texture.copy()
                         except KeyError:
-                            tile_textures[array[1]] = globals()[str(array[0] + "_texture")]
+                            global_texture = globals()[str(array[0] + "_texture")]
+                            if isinstance(global_texture, pygame.Surface):
+                                tile_textures[array[1]] = global_texture.copy()
                 elif Type == 1:
                     convertDecorationRules.append(array[1])
                     convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
@@ -885,7 +891,9 @@ def load_ads():
         path = str("Assets/Textures/KoponenTalk/ads/" + ad)
         image = pygame.image.load(path).convert()
         if path.find("7"):
-            image.set_colorkey((255, 0, 0))
+            image.set_colorkey(KDS.Colors.GetPrimary.Red)
+        else:
+            image.set_colorkey(KDS.Colors.GetPrimary.White)
         ad_images.append(image)
         KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Initialised Ad File: " + ad, False)
@@ -2971,15 +2979,17 @@ while main_running:
 #endregion
 #region Interactable Objects
     for toilet in toilets:
-        if burning_toilets[h] == True:
-            screen.blit(toilet_animation[burning_animation_stats[0]],
-                        (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
+        if toilet.colliderect(render_rect):
+            if burning_toilets[h] == True:
+                screen.blit(toilet_animation[burning_animation_stats[0]],
+                            (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
         h += 1
     h = 0
     for trashcan2 in trashcans:
-        if burning_trashcans[h] == True:
-            screen.blit(trashcan_animation[burning_animation_stats[0]],
-                        (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
+        if trashcan2.colliderect(render_rect):
+            if burning_trashcans[h] == True:
+                screen.blit(trashcan_animation[burning_animation_stats[0]],
+                            (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
         h += 1
 
     screen.blit(koponen_animation[koponen_animation_stats[0]], (
@@ -3000,7 +3010,8 @@ while main_running:
                         (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
     for iron_bar in iron_bars:
-        screen.blit(iron_bar, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
+        if iron_bar.colliderect(render_rect):
+            screen.blit(iron_bars_texture, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
 
     jukebox_collision = False
 
