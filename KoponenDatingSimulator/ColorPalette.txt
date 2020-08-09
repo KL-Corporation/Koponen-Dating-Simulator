@@ -1,5 +1,0 @@
-Clouds: #ecf0f1
-Midnight Blue: #2c3e50
-Aviator Red: #F04747
-Emerald: #2ecc71
-Peter River: #3498db

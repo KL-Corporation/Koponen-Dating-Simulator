@@ -5,93 +5,80 @@ import os
 from inspect import currentframe, getframeinfo
 #endregion
 
+AppDataPath = ""
+saveDirPath = ""
+
+def init():
+    global AppDataPath, saveDirPath
+    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+    saveDirPath = os.path.join(AppDataPath, "saves")
+    if not os.path.exists(saveDirPath):
+        os.mkdir(saveDirPath)
+    elif not os.path.isdir(saveDirPath):
+        os.mkdir(saveDirPath)
+
 def LoadSave(SaveIndex: int, SaveDirectory: str, SaveName: str, DefaultValue: str):
+    global AppDataPath, saveDirPath
     """
     1. SaveIndex, The index of the currently played save.
     2. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     3. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     4. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    config = configparser.ConfigParser()
-    config.read("saves/save_" + str(SaveIndex) + ".kds")
-    try:
-        return config.get(SaveDirectory, SaveName)
-    except:
-        try:
-            config.set(SaveDirectory, SaveName, DefaultValue)
-            return DefaultValue
-        except:
-            try:
-                config.add_section(SaveDirectory)
-                config.set(SaveDirectory, SaveName, DefaultValue)
-                return DefaultValue
-            except:
-                frameinfo = getframeinfo(currentframe())
-                KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nException: " + str(Exception))
-    with open("saves/save_" + str(SaveIndex) + ".kds", "w") as savFile:
-        config.write(savFile)
+    return LoadFunction(os.path.join(saveDirPath, "save_" + str(SaveIndex) + ".kds"), SaveDirectory, SaveName, DefaultValue)
 def LoadSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
     """
     1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
+    return LoadFunction(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
+
+def LoadFunction(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue: str):
     config = configparser.ConfigParser()
-    config.read("settings.cfg")
-    try:
-        return config.get(SaveDirectory, SaveName)
-    except:
-        try:
+    config.read(FilePath)
+    if config.has_section(SaveDirectory):
+        if config.has_option(SaveDirectory, SaveName):
+            return config.get(SaveDirectory, SaveName)
+        else:
             config.set(SaveDirectory, SaveName, DefaultValue)
             return DefaultValue
-        except:
-            try:
-                config.add_section(SaveDirectory)
-                config.set(SaveDirectory, SaveName, DefaultValue)
-                return DefaultValue
-            except:
-                frameinfo = getframeinfo(currentframe())
-                KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + str(Exception))
-    with open("saves/save_" + "settings.cfg" + ".kds", "w") as savFile:
-        config.write(savFile)
+    else:
+        config.add_section(SaveDirectory)
+        if config.has_option(SaveDirectory, SaveName):
+            return config.get(SaveDirectory, SaveName)
+        else:
+            config.set(SaveDirectory, SaveName, DefaultValue)
+            return DefaultValue
+    with open(FilePath, "w") as cfgFile:
+        config.write(cfgFile)
 
 def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     """
+    Automatically fills FilePath to SaveFunction
     1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    config = configparser.ConfigParser()
-    config.read("settings.cfg")
-    try:
-        config.set(SaveDirectory, SaveName, SaveValue)
-    except:
-        try:
-            config.add_section(SaveDirectory)
-            config.set(SaveDirectory, SaveName, SaveValue)
-        except:
-                frameinfo = getframeinfo(currentframe())
-                KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + str(Exception))
-    with open("settings.cfg", "w") as cfg_file:
-        config.write(cfg_file)
+    SaveFunction(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, SaveValue)
+
 def SetSave(SaveIndex: int, SaveDirectory: str, SaveName: str, SaveValue: str):
     """
+    Automatically fills FilePath to SaveFunction
     1. SaveIndex, The index of the currently played save.
     2. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     3. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     4. SaveValue, The value that is going to be saved.
     """
+    SaveFunction(os.path.join(saveDirPath, "save_" + str(SaveIndex) + ".kds"), SaveDirectory, SaveName, SaveValue)
+
+def SaveFunction(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue: str):
     config = configparser.ConfigParser()
-    saveFilePath = "saves/save_" + str(SaveIndex) + ".kds"
-    config.read(saveFilePath)
-    try:
+    config.read(FilePath)
+    if config.has_section(SaveDirectory):
         config.set(SaveDirectory, SaveName, SaveValue)
-    except:
-        try:
-            config.add_section(SaveDirectory)
-            config.set(SaveDirectory, SaveName, SaveValue)
-        except:
-                frameinfo = getframeinfo(currentframe())
-                KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + str(Exception))
-    with open(saveFilePath, "w") as sav_file:
-        config.write(sav_file)
+    else:
+        config.add_section(SaveDirectory)
+        config.set(SaveDirectory, SaveName, SaveValue)
+    with open(FilePath, "w") as cfg_file:
+        config.write(cfg_file)

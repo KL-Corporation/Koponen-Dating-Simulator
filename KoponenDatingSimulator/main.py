@@ -17,9 +17,19 @@ import threading
 import math
 from pygame.locals import *
 #endregion
-#region PyGame Initialisation
+#region Priority Initialisation
+AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+if not os.path.exists(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
+    os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
+    os.mkdir(AppDataPath)
+
+elif not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
+    os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
+    os.mkdir(AppDataPath)
+
 pygame.init()
 KDS.Logging.init()
+KDS.ConfigManager.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(800))
@@ -1539,6 +1549,7 @@ def agr(tcagr):
         agree_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
         pygame.display.update()
         c = False
+    del agree_button
 #endregion
 #region Koponen Talk
 def koponen_talk():
@@ -1738,7 +1749,10 @@ def esc_menu_f():
         go_to_main_menu = True
 
     resume_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("Resume", True, KDS.Colors.GetPrimary.White))
-    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save, button_font.render("Save", True, KDS.Colors.GetPrimary.White))
+    save_button_enabled = True
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+        save_button_enabled = False
+    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save, button_font.render("Save", True, KDS.Colors.GetPrimary.White), (100, 100, 100), (115, 115, 115), (90, 90, 90), (75, 75, 75), save_button_enabled)
     settings_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.GetPrimary.White))
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
@@ -1812,7 +1826,7 @@ def settings_menu():
             elif event.type == pygame.QUIT:
                 KDS_Quit()
 
-        main_display.blit(pygame.transform.scale(settings_background, (int(settings_background.get_width() * FullscreenGet.scaling), int(settings_background.get_height() * FullscreenGet.scaling))), (FullscreenGet.offset[0], FullscreenGet.offset[1]))
+        main_display.blit(pygame.transform.scale(settings_background, (int(settings_background.get_width() * FullscreenGet.scaling), int(settings_background.get_height() * FullscreenGet.scaling))), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
 
         main_display.blit(pygame.transform.flip(pygame.transform.scale(
             menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
@@ -2081,7 +2095,7 @@ def main_menu():
         clock.tick(60)
 
 def level_finished_menu():
-    print("nothing")
+    print("Level finishing not added yet...")
 #endregion
 #region Check Terms
 agr(tcagr)
