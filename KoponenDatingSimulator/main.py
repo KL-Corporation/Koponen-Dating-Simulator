@@ -890,10 +890,7 @@ def load_ads():
     for ad in ad_files:
         path = str("Assets/Textures/KoponenTalk/ads/" + ad)
         image = pygame.image.load(path).convert()
-        if path.find("7"):
-            image.set_colorkey(KDS.Colors.GetPrimary.Red)
-        else:
-            image.set_colorkey(KDS.Colors.GetPrimary.White)
+        image.set_colorkey(KDS.Colors.GetPrimary.Red)
         ad_images.append(image)
         KDS.Logging.Log(KDS.Logging.LogType.debug,
                 "Initialised Ad File: " + ad, False)

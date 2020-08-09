@@ -43,8 +43,6 @@ def ToAlpha(image, alpha: int):
     1. image: The image you want to convert.
     2. alpha: The alpha (0 - 255) you want the image to be.
     """
-    temp = pygame.Surface((image.get_width(), image.get_height())).convert()
-    temp.blit(image, (0, 0))
-    temp.set_alpha(alpha)
-    return temp
+    image.set_alpha(alpha)
+    return image
 
