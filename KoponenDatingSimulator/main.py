@@ -448,30 +448,30 @@ Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
 text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 
-gasburner_clip = pygame.mixer.Sound("Assets/Audio/effects/gasburner_clip.wav")
-gasburner_fire = pygame.mixer.Sound("Assets/Audio/effects/gasburner_fire.wav")
-door_opening = pygame.mixer.Sound("Assets/Audio/effects/door.wav")
-player_death_sound = pygame.mixer.Sound("Assets/Audio/effects/dspldeth.wav")
-player_walking = pygame.mixer.Sound("Assets/Audio/effects/walking.wav")
-coffeemug_sound = pygame.mixer.Sound("Assets/Audio/effects/coffeemug.wav")
-knife_pickup = pygame.mixer.Sound("Assets/Audio/effects/knife.wav")
-key_pickup = pygame.mixer.Sound("Assets/Audio/effects/pickup_key.wav")
-ss_sound = pygame.mixer.Sound("Assets/Audio/effects/ss.wav")
-lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/effects/sytytyspalat.wav")
-landmine_explosion = pygame.mixer.Sound("Assets/Audio/effects/landmine.wav")
-hurt_sound = pygame.mixer.Sound("Assets/Audio/effects/dsplpain.wav")
-plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/effects/dsplasma.wav")
-weapon_pickup = pygame.mixer.Sound("Assets/Audio/effects/weapon_pickup.wav")
-item_pickup = pygame.mixer.Sound("Assets/Audio/effects/dsitemup.wav")
-plasma_hitting = pygame.mixer.Sound("Assets/Audio/effects/dsfirxpl.wav")
-pistol_shot = pygame.mixer.Sound("Assets/Audio/effects/pistolshot.wav")
-rk62_shot = pygame.mixer.Sound("Assets/Audio/effects/rk62_shot.wav")
-shotgun_shot = pygame.mixer.Sound("Assets/Audio/effects/shotgun.wav")
-player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
-archvile_attack = pygame.mixer.Sound("Assets/Audio/effects/dsflame.wav")
-archvile_death = pygame.mixer.Sound("Assets/Audio/effects/dsvildth.wav")
-fart = pygame.mixer.Sound("Assets/Audio/effects/fart_attack.wav")
-soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/effects/dsgetpow.wav")
+gasburner_clip = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_clip.wav")
+gasburner_fire = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_fire.wav")
+door_opening = pygame.mixer.Sound("Assets/Audio/Effects/door.wav")
+player_death_sound = pygame.mixer.Sound("Assets/Audio/Effects/dspldeth.wav")
+player_walking = pygame.mixer.Sound("Assets/Audio/Effects/walking.wav")
+coffeemug_sound = pygame.mixer.Sound("Assets/Audio/Effects/coffeemug.wav")
+knife_pickup = pygame.mixer.Sound("Assets/Audio/Effects/knife.wav")
+key_pickup = pygame.mixer.Sound("Assets/Audio/Effects/pickup_key.wav")
+ss_sound = pygame.mixer.Sound("Assets/Audio/Effects/ss.wav")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/Effects/sytytyspalat.wav")
+landmine_explosion = pygame.mixer.Sound("Assets/Audio/Effects/landmine.wav")
+hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplpain.wav")
+plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplasma.wav")
+weapon_pickup = pygame.mixer.Sound("Assets/Audio/Effects/weapon_pickup.wav")
+item_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsitemup.wav")
+plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/dsfirxpl.wav")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
+rk62_shot = pygame.mixer.Sound("Assets/Audio/Effects/rk62_shot.wav")
+shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun.wav")
+player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/player_shotgun.wav")
+archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
+archvile_death = pygame.mixer.Sound("Assets/Audio/Effects/dsvildth.wav")
+fart = pygame.mixer.Sound("Assets/Audio/Effects/fart_attack.wav")
+soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsgetpow.wav")
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
@@ -838,10 +838,10 @@ def load_items(path):
         item_map.append(list(row))
     return item_map
 def load_jukebox_music():
-    musikerna = os.listdir("Assets/Audio/jukebox_music/")
+    musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
     musics = []
     for musiken in musikerna:
-        musics.append(pygame.mixer.Sound("Assets/Audio/jukebox_music/" + musiken))
+        musics.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
     random.shuffle(musics)
     return musics
 
@@ -853,7 +853,7 @@ def shakeScreen():
 
 #def load_music():
 #    original_path = os.getcwd()
-#    os.chdir("Assets/Audio/music/")
+#    os.chdir("Assets/Audio/Music/")
 #    music_files = os.listdir()
 #
 #    random.shuffle(music_files)
@@ -1911,7 +1911,7 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    pygame.mixer.music.load("Assets/Audio/music/lobbymusic.wav")
+    pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(music_volume)
 
