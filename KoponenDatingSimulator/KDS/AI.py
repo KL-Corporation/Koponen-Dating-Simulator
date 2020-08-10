@@ -46,7 +46,8 @@ class SergeantZombie:
         self.xvar = False
         self.hitscanner_cooldown = 0
         self.shoot = False
-        self.bullet_pos =  [0,0]
+        self.bullet_pos =  [0, 0]
+        self.loot_dropped = False
 
     def hit_scan(self, _rect, _player_health, _tile_rects):
         _player_health, _tile_rects

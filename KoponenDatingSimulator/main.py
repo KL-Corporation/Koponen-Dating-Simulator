@@ -1053,9 +1053,6 @@ def load_doors():
             y += 1
 
     return door_rects, doors_open, color_keys
-#tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
-#item_rects, item_ids = load_item_rects()
-#door_rects, doors_open, color_keys = load_doors()
 def load_animation(name, number_of_images):
     animation_list = []
     for i in range(number_of_images):
@@ -2164,9 +2161,9 @@ while main_running:
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
                     if not direction:
-                        item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - (iphone_texture.get_width() / 2)), int(player_rect.bottomright[1])), (34, 34)))
+                        item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - 17), int(player_rect.bottomright[1])), (34, 34)))
                     else:
-                        item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - (iphone_texture.get_width() / 2)), int(player_rect.bottomleft[1])), (34, 34)))
+                        item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - 17), int(player_rect.bottomleft[1])), (34, 34)))
                     item_ids.append(inventory[inventory_slot])
                     u = True
                     while u:
@@ -2451,7 +2448,22 @@ while main_running:
 #endregion
 #region PlayerMovement
     fall_speed = 0.4
-    if moveUp and not moveDown and air_timer < 6 and moveUp_released:
+
+    player_movement = [0, 0]
+    onLadder = False
+    for ladder in ladders:
+        if player_rect.colliderect(ladder):
+            onLadder = True
+            vertical_momentum = 0
+            air_timer = 0
+            if moveUp:
+                player_movement[1] = -1
+            elif moveDown:
+                player_movement[1] = 1
+            else:
+                player_movement[1] = 0
+
+    if moveUp and not moveDown and air_timer < 6 and moveUp_released and not onLadder:
         moveUp_released = False
         vertical_momentum = -10
     elif vertical_momentum > 0:
@@ -2467,8 +2479,6 @@ while main_running:
             playerStamina -= 0.75
         elif playerSprinting and playerStamina <= 0:
             playerSprinting = False
-
-    player_movement = [0, 0]
 
     koponen_recog_rec.center = koponen_rect.center
 
@@ -2491,24 +2501,11 @@ while main_running:
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] -= 4
             KDS.Missions.SetProgress("tutorial", "walk", 0.005)
-
     player_movement[1] += vertical_momentum
     vertical_momentum += fall_speed
     if vertical_momentum > 8:
         vertical_momentum = 8
 
-    onLadder = False
-    for ladder in ladders:
-        if player_rect.colliderect(ladder):
-            onLadder = True
-            vertical_momentum = 0
-            air_timer = 0
-            if moveUp:
-                player_movement[1] = -1
-            elif moveDown:
-                player_movement[1] = 1
-            else:
-                player_movement[1] = 0
 
     if check_crouch == True:
         crouch_collisions = move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
@@ -2524,14 +2521,6 @@ while main_running:
     elif not moveDown and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1]:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
-
-
-    if not onLadder and not moveDown and moveUp and moveUp_released:
-        moveUp_released = False
-        if air_timer < 6:
-            vertical_momentum = -10
-    elif not moveUp:
-        moveUp_released = True
 
     toilet_collisions(player_rect, gasburnerBurning)
 
@@ -2567,8 +2556,9 @@ while main_running:
                 elif sergeant.movement[0] < 0:
                     sergeant.direction = False
 
-                screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
-                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
+                if sergeant.rect.colliderect(render_rect):
+                    screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
+                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant.hits["right"] or sergeant.hits["left"]:
                     sergeant.movement[0] = -sergeant.movement[0]
@@ -2576,8 +2566,9 @@ while main_running:
             else:
                 u, i = sergeant_shoot_animation.update()
 
-                screen.blit(pygame.transform.flip(u, sergeant.direction, False),
-                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
+                if sergeant.rect.colliderect(render_rect):
+                    screen.blit(pygame.transform.flip(u, sergeant.direction, False),
+                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
@@ -2591,7 +2582,7 @@ while main_running:
 
         elif sergeant.playDeathAnimation:
             d, s = sergeant_death_animation.update()
-            if not s:
+            if not s and sergeant.rect.colliderect(render_rect):
                 screen.blit(pygame.transform.flip(d, sergeant.direction, False),
                             (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
             if s:
@@ -2600,8 +2591,12 @@ while main_running:
         else:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
                                               False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
+            if not sergeant.loot_dropped:
+                sergeant.loot_dropped = True
+                if round(random.uniform(0, 3)) == 0:
+                    item_rects.append(pygame.Rect(sergeant.rect.x, sergeant.rect.y + (sergeant.rect.height / 2) - 2, sergeant.rect.width, sergeant.rect.height / 2))
+                    item_ids.append("shotgun_shells")
             
-
     for zombie1 in zombies:
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
@@ -2883,7 +2878,6 @@ while main_running:
             elif weapon_fire and shotgun_shells > 0:
                 shotgun_loaded = False
                 shotgun_cooldown = 0
-                print("BÄNG_" + str(int(random.uniform(0, 11))))
                 shotgun_shells -= 1
                 shotgun_thread = threading.Thread(target=shotgun_shots)
                 shotgun_thread.start()
@@ -3040,8 +3034,8 @@ while main_running:
                 inventoryDoubles[i] = True  # True, koska vie kaksi slottia
             elif inventory[i] == "shotgun":
                 # Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
-                screen.blit(shotgun, ((i * 34) + 20 +
-                                      (68 / shotgun.get_width() * 2), 80))
+                screen.blit(shotgun, (int((i * 34) + 20 +
+                                      (68 / shotgun.get_width() * 2)), 80))
                 inventoryDoubles[i] = True  # True, koska vie kaksi slottia
 
     for double in inventoryDoubles:
