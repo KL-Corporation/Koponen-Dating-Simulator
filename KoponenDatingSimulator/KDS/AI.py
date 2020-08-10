@@ -2,11 +2,18 @@ import pygame, threading
 
 pygame.mixer.init()
 
+def __collision_test(rect, tiles):
+    hit_list = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            hit_list.append(tile)
+    return hit_list
+
 def __move(rect, movement, tiles):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
     rect.x += movement[0]
-    hit_list = collision_test(rect, tiles)
+    hit_list = __collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0:
             rect.right = tile.left
@@ -15,7 +22,7 @@ def __move(rect, movement, tiles):
             rect.left = tile.right
             collision_types['left'] = True
     rect.y += int(movement[1])
-    hit_list = collision_test(rect, tiles)
+    hit_list = __collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.top
@@ -39,7 +46,8 @@ class SergeantZombie:
         self.xvar = False
         self.hitscanner_cooldown = 0
         self.shoot = False
-        self.bullet_pos =  [0,0]
+        self.bullet_pos =  [0, 0]
+        self.loot_dropped = False
 
     def hit_scan(self, _rect, _player_health, _tile_rects):
         _player_health, _tile_rects
