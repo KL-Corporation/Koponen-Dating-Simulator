@@ -1839,7 +1839,7 @@ def settings_menu():
         clock.tick(60)
 
 def play_function(gamemode: KDS.Gamemode.Modes):
-    global main_menu_running, current_map, inventory, Audio, music_volume
+    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     inventory = ["none", "none", "none", "none", "none"]
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
@@ -1849,7 +1849,6 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     main_menu_running = False
     play_map_music(current_map)
     
-    global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
     player_hand_item = "none"
 
     player_death_event = False

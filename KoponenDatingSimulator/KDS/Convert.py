@@ -7,7 +7,7 @@ def ToBool(value):
     Converts a value to bool with these rules:
     1. String [t, T, true and True = True] [f, F, false and False = False]
     2. Int [1 = True] [0 = False]
-    3. Float [1.0 = True] [0.0 = False]
+    3. Float [1.0 = True] [0.0 = False] (Will be rounded)
     4. Bool [True = True] [False = False]
     """
     if isinstance(value, str):
@@ -25,6 +25,7 @@ def ToBool(value):
         else:
             return None
     elif isinstance(value, float):
+        value = float(round(value))
         if value == 1.0:
             return True
         elif value == 0.0:
