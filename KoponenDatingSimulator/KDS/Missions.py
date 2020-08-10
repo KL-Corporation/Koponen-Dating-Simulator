@@ -137,7 +137,7 @@ def InitialiseMissions(LevelIndex):
     DeleteAll()
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-        KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+        KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti")
         KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
         KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
         KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
@@ -147,7 +147,7 @@ def InitialiseMissions(LevelIndex):
     elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         if LevelIndex < 2:
             KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto ja Välilyönti")
+            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti")
             KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
             KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
             KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
@@ -157,6 +157,9 @@ def InitialiseMissions(LevelIndex):
         elif LevelIndex == 2:
             KDS.Missions.InitialiseMission("koponen_talk", "Puhu Koposelle")
             KDS.Missions.InitialiseTask("koponen_talk", "talk", "Puhu Koposelle")
+        else:
+            KDS.Missions.InitialiseMission("null_mission", "null mission")
+            KDS.Missions.InitialiseTask("null_mission", "null", "null_mission")
 #endregion
 #region Data
 def GetFinished():

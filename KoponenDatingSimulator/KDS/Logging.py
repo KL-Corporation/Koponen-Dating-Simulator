@@ -3,21 +3,20 @@ import os
 from datetime import datetime
 
 def init():
-    try:
-        logFiles = os.listdir("logs/")
-    except:
-        os.mkdir("logs")
-        f = open("logs/initLog.log", "w+")
-        f.write("*THIS LOG INITIALISES THE LOGGING SYSTEM*\n\n\nDO NOT DELETE THIS LOG FILE!")
-        f.close()
-        logFiles = os.listdir("logs/")
+    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+    logPath = os.path.join(AppDataPath, "logs")
+    if os.path.exists(logPath) and os.path.isdir(logPath):
+        logFiles = os.listdir(logPath)
+    else:
+        os.mkdir(logPath)
+        logFiles = os.listdir(logPath)
 
     while len(logFiles) >= 5:
-        os.remove("logs/" + logFiles[0])
-        logFiles = os.listdir("logs/")
+        os.remove(os.path.join(logPath, logFiles[0]))
+        logFiles = os.listdir(logPath)
 
     now = datetime.now()
-    logFileName = "logs/log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log"
+    logFileName = os.path.join(logPath, "log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log")
     logging.basicConfig(filename=logFileName, level=logging.NOTSET)
     logging.debug("Created log file: " + logFileName)
     logging.info('Initialising Game...')
@@ -32,7 +31,7 @@ class LogType():
     debug = 10
     notset = 0
 
-def Log(Log_Type: LogType, Message: str, Console_Visible: bool):
+def Log(Log_Type: LogType, Message: str, Console_Visible=False):
     if Log_Type == LogType.execption:
         logging.exception(Message)
     elif Log_Type == LogType.log:

@@ -9,7 +9,7 @@ lamp0,f,255,255,0
 trashcan,g,64,64,64
 ground1,h,150,75,0
 grass,i,0,128,0
-concrete,j,192,192,192
+concrete0,j,192,192,192
 door,k,128,128,128
 red_door,l,255,128,128
 green_door,m,128,255,128
@@ -17,6 +17,10 @@ blue_door,n,128,128,255
 bricks,o,255,128,0
 planks,p,255,64,0
 ladder,q,255,192,0
+light_bricks,r,213,0,231
+iron_bars,s,23,41,22
+mossy_bricks,u,120,120,0
+soil,t,120,120,1
 
 decoration:
 tree,A,0,255,0
@@ -47,3 +51,5 @@ rk62_mag,&,192,64,255
 medkit,(,255,0,0
 shotgun,),128,64,0
 shotgun_shells,=,128,128,0
+soulsphere,+,128,128,1
+turboneedle,',128,128,2

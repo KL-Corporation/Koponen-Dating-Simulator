@@ -7,7 +7,7 @@ def ToBool(value):
     Converts a value to bool with these rules:
     1. String [t, T, true and True = True] [f, F, false and False = False]
     2. Int [1 = True] [0 = False]
-    3. Float [1.0 = True] [0.0 = False]
+    3. Float [1.0 = True] [0.0 = False] (Will be rounded)
     4. Bool [True = True] [False = False]
     """
     if isinstance(value, str):
@@ -25,6 +25,7 @@ def ToBool(value):
         else:
             return None
     elif isinstance(value, float):
+        value = float(round(value))
         if value == 1.0:
             return True
         elif value == 0.0:
@@ -43,7 +44,6 @@ def ToAlpha(image, alpha: int):
     1. image: The image you want to convert.
     2. alpha: The alpha (0 - 255) you want the image to be.
     """
-    temp = pygame.Surface((image.get_width(), image.get_height())).convert()
-    temp.blit(image, (0, 0))
-    temp.set_alpha(alpha)
-    return temp
+    image.set_alpha(alpha)
+    return image
+

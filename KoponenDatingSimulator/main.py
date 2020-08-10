@@ -8,18 +8,28 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
+import KDS.UI
 import KDS.LevelLoader
 import pygame
 import os
 import random
 import threading
-from datetime import datetime
+import math
 from pygame.locals import *
-from PIL import Image
 #endregion
-#region PyGame Initialisation
+#region Priority Initialisation
+AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+if not os.path.exists(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
+    os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
+    os.mkdir(AppDataPath)
+
+elif not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
+    os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
+    os.mkdir(AppDataPath)
+
 pygame.init()
 KDS.Logging.init()
+KDS.ConfigManager.init()
 
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(1200))
 KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(800))
@@ -30,36 +40,36 @@ display_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", st
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
 screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(
     600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
+window_size = display_size
+monitor_info = pygame.display.Info()
+monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 main_display = pygame.display.set_mode(display_size)
 screen = pygame.Surface(screen_size)
 #endregion
-#region Text Handling
-class pygame_print_text:
+#region Audio
+pygame.mixer.init()
+pygame.mixer.set_num_channels(12)
+pygame.mixer.set_reserved(0)
+pygame.mixer.set_reserved(11)
+class Audio:
+    MusicMixer = pygame.mixer.music
+    MusicChannel1 = pygame.mixer.Channel(0)
+    MusicChannel2 = pygame.mixer.Channel(11)
+    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
+        pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6), pygame.mixer.Channel(7), 
+        pygame.mixer.Channel(8), pygame.mixer.Channel(9), pygame.mixer.Channel(10)]
+    def playSound(sound: pygame.mixer.Sound):
+        global effect_volume
+        play_channel = pygame.mixer.find_channel(True)
+        play_channel.play(sound)
+        play_channel.set_volume(effect_volume)
 
-    def __init__(self, color, topleft, width, display):
-        self.text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
-        self.display_to_blit = display
-        self.color = tuple(color)
-        self.topleft = tuple(topleft)
-        self.width = width
-
-        self.row = 0
-        self.row_height = 30
-
-    def print_text(self, text):
-        self.screen_text = self.text_font.render(text, True, self.color)
-        self.display_to_blit.blit(
-            self.screen_text, (self.topleft[0], self.topleft[1]+self.row))
-        self.row += self.row_height
-
-    def resetRow(self):
-        self.row = 0
-
-    def skipRow(self):
-        self.row += self.row_height
+    def stopAllSounds():
+        for i in range(len(Audio.EffectChannels)):
+            Audio.EffectChannels[i].stop()
 #endregion
 #region Animations
 class plasma_bullet:
@@ -80,21 +90,20 @@ class plasma_bullet:
         for tile in tile_rects:
             if self.rect.colliderect(tile):
                 self.done = True
-                plasma_hitting.play()
+                Audio.playSound(plasma_hitting)
         for zombie1 in zombies:
             if self.rect.colliderect(zombie1) == True and zombie1.playDeathAnimation == True:
                 self.done = True
                 zombie1.health -= 10
-                plasma_hitting.play()
-
+                Audio.playSound(plasma_hitting)
         for sergeant in sergeants:
             if self.rect.colliderect(sergeant) and sergeant.playDeathAnimation:
                 self.done = True
                 sergeant.health -= 12
-                plasma_hitting.play()
-
+                Audio.playSound(plasma_hitting)
+                
         self.display.blit(
-            plasma_ammo, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+            plasma_ammo, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
         return self.done
 class Bullet:
@@ -198,14 +207,14 @@ class Archvile:
                 self.attacking = hit_scan(self)
                 if self.attacking == "player":
                     if not self.attack_anim:
-                        archvile_attack.play()
+                        Audio.playSound(archvile_attack)
                     self.attack_anim = True
                 self.counter = 0
             else:
                 self.attacking = "null"
 
             if not self.attack_anim:
-                self.rect, self.hits = move(
+                self.rect, self.hits = move_entity(
                     self.rect, self.movement, tile_rects)
                 if self.hits["right"] or self.hits["left"]:
                     self.movement[0] = -self.movement[0]
@@ -216,7 +225,7 @@ class Archvile:
                     self.direction = False
 
                 screen.blit(pygame.transform.flip(a_run, not self.direction,
-                                                  False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                                                  False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
             else:
                 i, u = arhcvile_attack_animation.update()
@@ -225,61 +234,75 @@ class Archvile:
 
                     if f != "wall" and player_rect.y-40 < archvile.rect.y:
                         player_health -= int(random.uniform(30, 80))
-                        landmine_explosion.play()
-
+                        Audio.playSound(landmine_explosion)
                     del f
 
                     arhcvile_attack_animation.reset()
                     self.attack_anim = False
                 screen.blit(pygame.transform.flip(
-                    i, not self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                    i, not self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
         elif self.playDeathAnimation:
             self.attacking = "null"
             self.attack_anim = False
             if self.playDeathSound:
                 self.playDeathSound = False
-                archvile_death.play()
+                Audio.playSound(archvile_death)
             l, p = archvile_death_animation.update()
             if not p:
                 screen.blit(pygame.transform.flip(l, not self.direction, False),
-                            (self.rect.x-scroll[0], self.rect.y-scroll[1]+15))
+                            (self.rect.x - scroll[0], self.rect.y - scroll[1]+15))
 
             if p:
                 self.playDeathAnimation = False
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction,
-                                              False), (self.rect.x-scroll[0], self.rect.y-scroll[1]+25))
+                                              False), (self.rect.x - scroll[0], self.rect.y - scroll[1]+25))
 #endregion
 #region Fullscreen
-def setFullscreen(reverseFullscreen):
-    global fullscreen_var, main_display
+class FullscreenGet:
+    try:
+        size
+        offset
+        scaling
+    except:
+        size = None
+        offset = None
+        scaling = None
+    size
+    offset
+    scaling
+
+def FullscreenSet(reverseFullscreen=False):
+    global isFullscreen, main_display, window_size
     if reverseFullscreen:
-        fullscreen_var = not fullscreen_var
-    if fullscreen_var:
+        isFullscreen = not isFullscreen
+    if isFullscreen:
         main_display = pygame.display.set_mode(display_size)
-        fullscreen_var = False
+        isFullscreen = False
+        window_size = display_size
     else:
-        main_display = pygame.display.set_mode(display_size, pygame.FULLSCREEN)
-        fullscreen_var = True
-    KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(fullscreen_var))
+        main_display = pygame.display.set_mode(monitor_size, pygame.FULLSCREEN)
+        isFullscreen = True
+        window_size = monitor_size
+    KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(isFullscreen))
+    FullscreenGet.size = (int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
+    FullscreenGet.offset = ((window_size[0] / 2) - (FullscreenGet.size[0] / 2), (window_size[1] / 2) - (FullscreenGet.size[1] / 2))
+    FullscreenGet.scaling = FullscreenGet.size[1] / display_size[1]
 #endregion
 #region Initialisation
-printer = pygame_print_text((7, 8, 10), (50, 50), 680, main_display)
-
-esc_menu_surface = pygame.Surface((500, 400))
-alpha = pygame.Surface(screen_size)
-alpha.fill((0, 0, 0))
-alpha.set_alpha(170)
+black_tint = pygame.Surface(screen_size)
+black_tint.fill((0, 0, 0))
+black_tint.set_alpha(170)
 
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
-    "Assets/Textures/UI/Menus/main_menu_bc.png")
-settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png")
-agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png")
+    "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
+settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
+agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
@@ -287,21 +310,22 @@ score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
+text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
-player_corpse.set_colorkey((255, 255, 255))
-player_img.set_colorkey((255, 255, 255))
+player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
-floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
-concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
-wall1 = pygame.image.load("Assets/Textures/Building/wall0.png")
-table1 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
-toilet1 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
-lamp1 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
+floor0 = pygame.image.load("Assets/Textures/Building/floor0v2.png").convert()
+concrete0 = pygame.image.load("Assets/Textures/Building/concrete0.png").convert()
+wall0 = pygame.image.load("Assets/Textures/Building/wall0.png").convert()
+table0 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
+toilet0 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
+lamp0 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
 trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Building/ground0.png")
-grass = pygame.image.load("Assets/Textures/Building/grass0.png")
+ground1 = pygame.image.load("Assets/Textures/Building/ground0.png").convert()
+grass = pygame.image.load("Assets/Textures/Building/grass0.png").convert()
 door_closed = pygame.image.load("Assets/Textures/Building/door_closed.png").convert()
 red_door_closed = pygame.image.load(
     "Assets/Textures/Building/red_door_closed.png").convert()
@@ -309,24 +333,30 @@ green_door_closed = pygame.image.load(
     "Assets/Textures/Building/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
     "Assets/Textures/Building/blue_door_closed.png").convert()
-door_open = pygame.image.load("Assets/Textures/Building/door_open2.png")
-bricks = pygame.image.load("Assets/Textures/Building/bricks.png")
-tree = pygame.image.load("Assets/Textures/Building/tree.png")
-planks = pygame.image.load("Assets/Textures/Building/planks.png")
-jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png")
-landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png")
-ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
-table1.set_colorkey((255, 255, 255))
-toilet1.set_colorkey((255, 255, 255))
-lamp1.set_colorkey((255, 255, 255))
-trashcan.set_colorkey((255, 255, 255))
-door_closed.set_colorkey((255, 255, 255))
-red_door_closed.set_colorkey((255, 255, 255))
-green_door_closed.set_colorkey((255, 255, 255))
-blue_door_closed.set_colorkey((255, 255, 255))
-jukebox_texture.set_colorkey((255, 255, 255))
-landmine_texture.set_colorkey((255, 255, 255))
-ladder_texture.set_colorkey((255, 255, 255))
+door_open = pygame.image.load("Assets/Textures/Building/door_open2.png").convert()
+bricks = pygame.image.load("Assets/Textures/Building/bricks.png").convert()
+tree = pygame.image.load("Assets/Textures/Building/tree.png").convert()
+planks = pygame.image.load("Assets/Textures/Building/planks.png").convert()
+jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png").convert()
+landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png").convert()
+ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png").convert()
+background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png").convert()
+light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").convert()
+iron_bars_texture = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
+soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
+mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
+table0.set_colorkey(KDS.Colors.GetPrimary.White)
+toilet0.set_colorkey(KDS.Colors.GetPrimary.White)
+lamp0.set_colorkey(KDS.Colors.GetPrimary.White)
+trashcan.set_colorkey(KDS.Colors.GetPrimary.White)
+door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+red_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+green_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+blue_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
+jukebox_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+landmine_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+ladder_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+iron_bars_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
@@ -349,6 +379,8 @@ zombie_corpse = pygame.image.load(
 pistol_texture = pygame.image.load("Assets/Textures/Items/pistol.png").convert()
 pistol_f_texture = pygame.image.load(
     "Assets/Textures/Items/pistol_firing.png").convert()
+soulsphere = pygame.image.load("Assets/Textures/Items/soulsphere.png").convert()
+turboneedle = pygame.image.load("Assets/Textures/Items/turboneedle.png").convert()
 pistol_mag = pygame.image.load("Assets/Textures/Items/pistol_mag.png").convert()
 rk62_texture = pygame.image.load("Assets/Textures/Items/rk62.png").convert()
 rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
@@ -369,75 +401,77 @@ archvile_corpse = pygame.image.load(
 iphone_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
 gamemode_bc_2_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png")).convert()
 gamemode_bc_2_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png")).convert()
 gamemode_bc_1_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png"))
+    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png")).convert()
 arrow_button = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 
-gasburner_off.set_colorkey((255, 255, 255))
-knife.set_colorkey((255, 255, 255))
-knife_blood.set_colorkey((255, 255, 255))
-red_key.set_colorkey((255, 255, 255))
-green_key.set_colorkey((255, 255, 255))
-blue_key.set_colorkey((255, 255, 255))
-coffeemug.set_colorkey((255, 255, 255))
+gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
+knife.set_colorkey(KDS.Colors.GetPrimary.White)
+knife_blood.set_colorkey(KDS.Colors.GetPrimary.White)
+red_key.set_colorkey(KDS.Colors.GetPrimary.White)
+green_key.set_colorkey(KDS.Colors.GetPrimary.White)
+blue_key.set_colorkey(KDS.Colors.GetPrimary.White)
+coffeemug.set_colorkey(KDS.Colors.GetPrimary.White)
 ss_bonuscard.set_colorkey((255, 0, 0))
-lappi_sytytyspalat.set_colorkey((255, 255, 255))
-plasmarifle.set_colorkey((255, 255, 255))
-plasma_ammo.set_colorkey((255, 255, 255))
-cell.set_colorkey((255, 255, 255))
-zombie_corpse.set_colorkey((255, 255, 255))
-pistol_texture.set_colorkey((255, 255, 255))
-pistol_f_texture.set_colorkey((255, 255, 255))
-pistol_mag.set_colorkey((255, 255, 255))
-rk62_texture.set_colorkey((255, 255, 255))
-rk62_f_texture.set_colorkey((255, 255, 255))
-rk62_mag.set_colorkey((255, 255, 255))
-sergeant_corpse.set_colorkey((255, 255, 255))
-sergeant_aiming.set_colorkey((255, 255, 255))
-sergeant_firing.set_colorkey((255, 255, 255))
-medkit.set_colorkey((255, 255, 255))
-shotgun.set_colorkey((255, 255, 255))
-shotgun_f.set_colorkey((255, 255, 255))
-shotgun_shells_t.set_colorkey((255, 255, 255))
-archvile_corpse.set_colorkey((255, 255, 255))
-iphone_texture.set_colorkey((255, 255, 255))
+lappi_sytytyspalat.set_colorkey(KDS.Colors.GetPrimary.White)
+plasmarifle.set_colorkey(KDS.Colors.GetPrimary.White)
+plasma_ammo.set_colorkey(KDS.Colors.GetPrimary.White)
+cell.set_colorkey(KDS.Colors.GetPrimary.White)
+zombie_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+pistol_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+pistol_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+pistol_mag.set_colorkey(KDS.Colors.GetPrimary.White)
+rk62_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+rk62_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+rk62_mag.set_colorkey(KDS.Colors.GetPrimary.White)
+sergeant_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+sergeant_aiming.set_colorkey(KDS.Colors.GetPrimary.White)
+sergeant_firing.set_colorkey(KDS.Colors.GetPrimary.White)
+medkit.set_colorkey(KDS.Colors.GetPrimary.White)
+shotgun.set_colorkey(KDS.Colors.GetPrimary.White)
+shotgun_f.set_colorkey(KDS.Colors.GetPrimary.White)
+shotgun_shells_t.set_colorkey(KDS.Colors.GetPrimary.White)
+archvile_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
+iphone_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
+turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
 
 text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
-text_icon.set_colorkey((255, 255, 255))
+text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 
-gasburner_clip = pygame.mixer.Sound("Assets/Audio/misc/gasburner_clip.wav")
-gasburner_fire = pygame.mixer.Sound("Assets/Audio/misc/gasburner_fire.wav")
-door_opening = pygame.mixer.Sound("Assets/Audio/misc/door.wav")
-player_death_sound = pygame.mixer.Sound("Assets/Audio/misc/dspldeth.wav")
-player_walking = pygame.mixer.Sound("Assets/Audio/misc/walking.wav")
-coffeemug_sound = pygame.mixer.Sound("Assets/Audio/misc/coffeemug.wav")
-knife_pickup = pygame.mixer.Sound("Assets/Audio/misc/knife.wav")
-key_pickup = pygame.mixer.Sound("Assets/Audio/misc/pickup_key.wav")
-ss_sound = pygame.mixer.Sound("Assets/Audio/misc/ss.wav")
-lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/misc/sytytyspalat.wav")
-landmine_explosion = pygame.mixer.Sound("Assets/Audio/misc/landmine.wav")
-hurt_sound = pygame.mixer.Sound("Assets/Audio/misc/dsplpain.wav")
-plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/misc/dsplasma.wav")
-weapon_pickup = pygame.mixer.Sound("Assets/Audio/misc/weapon_pickup.wav")
-item_pickup = pygame.mixer.Sound("Assets/Audio/misc/dsitemup.wav")
-plasma_hitting = pygame.mixer.Sound("Assets/Audio/misc/dsfirxpl.wav")
-pistol_shot = pygame.mixer.Sound("Assets/Audio/misc/pistolshot.wav")
-rk62_shot = pygame.mixer.Sound("Assets/Audio/misc/rk62_shot.wav")
-shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/shotgun.wav")
-player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/misc/player_shotgun.wav")
-archvile_attack = pygame.mixer.Sound("Assets/Audio/misc/dsflame.wav")
-archvile_death = pygame.mixer.Sound("Assets/Audio/misc/dsvildth.wav")
-fart = pygame.mixer.Sound("Assets/Audio/misc/fart_attack.wav")
-
+gasburner_clip = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_clip.wav")
+gasburner_fire = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_fire.wav")
+door_opening = pygame.mixer.Sound("Assets/Audio/Effects/door.wav")
+player_death_sound = pygame.mixer.Sound("Assets/Audio/Effects/dspldeth.wav")
+player_walking = pygame.mixer.Sound("Assets/Audio/Effects/walking.wav")
+coffeemug_sound = pygame.mixer.Sound("Assets/Audio/Effects/coffeemug.wav")
+knife_pickup = pygame.mixer.Sound("Assets/Audio/Effects/knife.wav")
+key_pickup = pygame.mixer.Sound("Assets/Audio/Effects/pickup_key.wav")
+ss_sound = pygame.mixer.Sound("Assets/Audio/Effects/ss.wav")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/Effects/sytytyspalat.wav")
+landmine_explosion = pygame.mixer.Sound("Assets/Audio/Effects/landmine.wav")
+hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplpain.wav")
+plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplasma.wav")
+weapon_pickup = pygame.mixer.Sound("Assets/Audio/Effects/weapon_pickup.wav")
+item_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsitemup.wav")
+plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/dsfirxpl.wav")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
+rk62_shot = pygame.mixer.Sound("Assets/Audio/Effects/rk62_shot.wav")
+shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun.wav")
+player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/player_shotgun.wav")
+archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
+archvile_death = pygame.mixer.Sound("Assets/Audio/Effects/dsvildth.wav")
+fart = pygame.mixer.Sound("Assets/Audio/Effects/fart_attack.wav")
+soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsgetpow.wav")
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
@@ -445,7 +479,9 @@ rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
-jukebox_tip = tip_font.render("Use jukebox [E]", True, (255, 255, 255))
+gradient_sphere = pygame.image.load("Assets/gradient_sphere.png").convert_alpha()
+
+jukebox_tip = tip_font.render("Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
 #endregion
 
 main_running = True
@@ -463,8 +499,8 @@ knifeInUse = False
 currently_on_mission = False
 current_mission = "none"
 player_name = "Sinä"
-pistolFire = False
-fullscreen_var = False
+weapon_fire = False
+isFullscreen = False
 shoot = False
 
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
@@ -475,24 +511,24 @@ if tcagr == None:
                     "Error parcing terms and conditions bool.", False)
     tcagr = False
 
-volume_data = int(KDS.ConfigManager.LoadSetting("Settings", "Volume", str(15)))
+music_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Music Volume", str(0.5)))
+effect_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Sound Effect Volume", str(0.5)))
 
-fullscreen_var = KDS.Convert.ToBool(
+isFullscreen = KDS.Convert.ToBool(
     KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
 
-if fullscreen_var == None:
+if isFullscreen == None:
     KDS.Logging.Log(KDS.Logging.LogType.error,
                     "Error parcing fullscreen bool.", False)
-setFullscreen(True)
+FullscreenSet(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
-                str(tcagr) + "\n- Volume: " + str(volume_data) + "\n- Fullscreen: " + str(fullscreen_var), False)
+                str(tcagr) + "\n- Music Volume: " + str(music_volume) + "\n- Sound Effect Volume: " + str(effect_volume) + "\n- Fullscreen: " + str(isFullscreen), False)
 
 selectedSave = 0
 
-volume = float(volume_data) / 100
 gasburner_animation_stats = [0, 4, 0]
 knife_animation_stats = [0, 10, 0]
-toilet_animation_stats = [0, 5, 0]
+burning_animation_stats = [0, 5, 0]
 koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
 plasmarifle_cooldown = 0
@@ -505,19 +541,23 @@ FunctionKey = False
 AltPressed = False
 F4Pressed = False
 esc_menu = False
-KeyW = False
-KeyS = False
+moveUp = False
+moveDown = False
+onLadder = False
 mouseLeftPressed = False
 shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
+dark = False
 
-gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
-gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8)
+gamemode_bc_1_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_2_alpha = KDS.Animator.Lerp(0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
 main_menu_running = False
+tcagr_running = False
+koponenTalking = False
 mode_selection_running = False
 settings_running = False
 vertical_momentum = 0
@@ -534,12 +574,15 @@ fart_counter = 0
 farting = False
 
 current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "02")
-max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "02"))
-map_names = (
-    "Placeholder",
-    "Beginnings...",
-    "More Monsters"
-)
+
+with open("Assets/Maps/map_names.txt", "r") as file:
+    cntnts = file.read()
+    cntnts = cntnts.split('\n')
+
+
+max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
+
+map_names = tuple(cntnts)
 
 ammunition_plasma = 50
 pistol_bullets = 8
@@ -559,14 +602,20 @@ inventory_slot = 0
 doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
-player_rect = pygame.Rect(100, 100, 28, 65)
+stand_size = (28, 63)
+crouch_size = (28, 34)
+jump_velocity = 2.0
+fall_multiplier = 2.5
+moveUp_released = True
+check_crouch = False
+player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
-koponen_movement = [0, 6]
+koponen_movement = [1, 6]
 koponen_movingx = 0
 koponen_happines = 40
 
-koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, (255, 255, 255))
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, KDS.Colors.GetPrimary.White)
 
 task = ""
 taskTaivutettu = ""
@@ -574,6 +623,7 @@ taskTaivutettu = ""
 DebugMode = False
 
 MenuMode = 0
+esc_menu_background = pygame.Surface(window_size)
 #endregion
 #region Save System
 def LoadSave():
@@ -626,9 +676,6 @@ def KDS_Quit():
     koponenTalking = False
     esc_menu = False
     settings_running = False
-    pygame.display.quit()
-    pygame.quit()
-    exit()
 #endregion
 #region World Generation
 world_gen = list()
@@ -651,13 +698,19 @@ task_items = list()
 color_keys = list()
 door_rects = list()
 doors_open = list()
+tile_textures = dict()
 
 def WorldGeneration():
-    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, task_items, door_rects, doors_open, color_keys
-    buildingBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map"))
-    decorationBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map"))
-    enemyBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map"))
-    itemBitmap = Image.open(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map"))
+    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
+    global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids
+    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures
+        
+    tile_textures = dict()
+
+    buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
+    decorationBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map")).convert()
+    enemyBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map")).convert()
+    itemBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map")).convert()
 
     convertBuildingRules = list()
     convertBuildingColors = list()
@@ -702,6 +755,15 @@ def WorldGeneration():
                 if Type == 0:
                     convertBuildingRules.append(array[1])
                     convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+                    if not "door" in array[0]:
+                        try:
+                            global_texture = globals()[str(array[0])]
+                            if isinstance(global_texture, pygame.Surface):
+                                tile_textures[array[1]] = global_texture.copy()
+                        except KeyError:
+                            global_texture = globals()[str(array[0] + "_texture")]
+                            if isinstance(global_texture, pygame.Surface):
+                                tile_textures[array[1]] = global_texture.copy()
                 elif Type == 1:
                     convertDecorationRules.append(array[1])
                     convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
@@ -717,19 +779,17 @@ def WorldGeneration():
     enemy_gen = list()
     item_gen = list()
 
-    BitmapSize = buildingBitmap.size
-    progress = 1
-    progressMax = BitmapSize[0] * BitmapSize[1]
+    BitmapSize = (buildingBitmap.get_width(), buildingBitmap.get_height())
     for i in range(BitmapSize[1]):
         building_layer = list()
         decoration_layer = list()
         enemy_layer = list()
         item_layer = list()
         for j in range(BitmapSize[0]):
-            building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.getpixel((j, i))[:3])])
-            decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.getpixel((j, i))[:3])])
-            enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.getpixel((j, i))[:3])])
-            item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.getpixel((j, i))[:3])])
+            building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.get_at((j, i))[:3])])
+            decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.get_at((j, i))[:3])])
+            enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.get_at((j, i))[:3])])
+            item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.get_at((j, i))[:3])])
         
         building_gen.append(building_layer)
         decoration_gen.append(decoration_layer)
@@ -741,7 +801,7 @@ def WorldGeneration():
 
     #Use the index to get the letter and make the file using the letters
 
-    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs = load_rects()
+    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars = load_rects()
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Zombies Initialised: " + str(len(zombies)), False)
     for zombie in zombies:
@@ -780,67 +840,43 @@ def load_items(path):
         item_map.append(list(row))
     return item_map
 def load_jukebox_music():
-    musikerna = os.listdir("Assets/Audio/jukebox_music/")
+    musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
     musics = []
-
     for musiken in musikerna:
-        musics.append(pygame.mixer.Sound("Assets/Audio/jukebox_music/" + musiken))
-
+        musics.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
     random.shuffle(musics)
-
     return musics
+
+jukebox_music = load_jukebox_music()
 
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
 
-def load_music():
-    original_path = os.getcwd()
-    os.chdir("Assets/Audio/music/")
-    music_files = os.listdir()
-
-    random.shuffle(music_files)
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Music Files Initialised: " + str(len(music_files)), False)
-    for track in music_files:
-        KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Music File: " + track, False)
-
-    pygame.mixer.music.stop()
-
-    pygame.mixer.music.load(music_files[0])
-
-    pos = 0
-    for track in music_files:
-        if pos:
-            pygame.mixer.music.queue(track)
-        pos += 1
-
-    os.chdir(original_path)
-    del original_path
-    del pos
-def load_music_for_map(_current_map):
-    pygame.mixer.music.stop()
+def play_map_music(_current_map):
     pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(music_volume)
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Ad Files Initialised: " + str(len(ad_files)), False)
-    for ad in ad_files:
-        KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Ad File: " + ad, False)
 
     ad_images = []
 
     for ad in ad_files:
         path = str("Assets/Textures/KoponenTalk/ads/" + ad)
-        ad_images.append(pygame.image.load(path))
+        image = pygame.image.load(path).convert()
+        image.set_colorkey(KDS.Colors.GetPrimary.Red)
+        ad_images.append(image)
+        KDS.Logging.Log(KDS.Logging.LogType.debug,
+                "Initialised Ad File: " + ad, False)
 
     return ad_images
 ad_images = load_ads()
-koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png")
+koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 def load_rects():
     tile_rects = []
@@ -855,6 +891,7 @@ def load_rects():
     archviles = []
     ladders = []
     bulldogs = []
+    iron_bars = []
     w = [0, 0]
     for i in range(len(world_gen) - 1):
         y = 0
@@ -865,7 +902,7 @@ def load_rects():
                     if tile == 'f':
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 14, 21))
                     elif tile == 'e':
-                        w = list(toilet1.get_size())
+                        w = list(toilet0.get_size())
                         toilets.append(pygame.Rect(x * 34-2, y * 34, 34, 34))
                         burning_toilets.append(False)
                         tile_rects.append(pygame.Rect(x * 34, y * 34, w[0], w[1]))
@@ -875,7 +912,7 @@ def load_rects():
                         burning_trashcans.append(False)
                         tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
                     elif tile == 'q':
-                        ladders.append(pygame.Rect(x * 34, y * 34, 34, 34))
+                        ladders.append(pygame.Rect((x * 34) + 16, (y * 34) - 2, 2, 38))
                     elif tile == 'k':
                         pass
                     elif tile == 'l':
@@ -884,6 +921,8 @@ def load_rects():
                         pass
                     elif tile == 'n':
                         pass
+                    elif tile == 's':
+                        iron_bars.append(pygame.Rect(x*34, y*34, 1, 1))
                     elif tile == 'A':
                         pass
                     elif tile == 'B':
@@ -904,7 +943,7 @@ def load_rects():
 
                 x += 1
             y += 1
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -968,6 +1007,12 @@ def load_item_rects():
             if item == '=':
                 item_ids.append("shotgun_shells")
                 append_rect()
+            if item == '+':
+                item_ids.append("soulsphere")
+                append_rect()
+            if item == "'":
+                item_ids.append("turboneedle")
+                append_rect()
             x += 1
         y += 1
     return item_rects, item_ids, task_items
@@ -1008,15 +1053,12 @@ def load_doors():
             y += 1
 
     return door_rects, doors_open, color_keys
-#tile_rects, toilets, burning_toilets, trashcans, burning_trashcans = load_rects()
-#item_rects, item_ids = load_item_rects()
-#door_rects, doors_open, color_keys = load_doors()
 def load_animation(name, number_of_images):
     animation_list = []
     for i in range(number_of_images):
         path = "Assets/Textures/Player/" + name + str(i) + ".png"
         img = pygame.image.load(path).convert()
-        img.set_colorkey((255, 255, 255))
+        img.set_colorkey(KDS.Colors.GetPrimary.White)
         animation_list.append(img)
     return animation_list
 #endregion
@@ -1095,33 +1137,34 @@ def door_collision_test():
         pass
 
     for recta in door_rects:
-        for door in hit_list:
-            if recta == door:
-                if player_movement[0] > 0 and doors_open[x] == False:
-                    player_rect.right = door.left + 1
-                if not doors_open[x]:
-                    if FunctionKey == True:
-                        if color_keys[x] != "none":
-                            if color_keys[x] == "red":
-                                if player_keys["red"]:
-                                    doors_open[x] = True
-                                    door_sound()
-                            elif color_keys[x] == "green":
-                                if player_keys["green"]:
-                                    doors_open[x] = True
-                                    door_sound()
-                            elif color_keys[x] == "blue":
-                                if player_keys["blue"]:
-                                    doors_open[x] = True
-                                    door_sound()
-                        else:
-                            doors_open[x] = True
-                            door_sound()
+        if recta.colliderect(render_rect):
+            for door in hit_list:
+                if recta == door:
+                    if player_movement[0] > 0 and doors_open[x] == False:
+                        player_rect.right = door.left + 1
+                    if not doors_open[x]:
+                        if FunctionKey == True:
+                            if color_keys[x] != "none":
+                                if color_keys[x] == "red":
+                                    if player_keys["red"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                                elif color_keys[x] == "green":
+                                    if player_keys["green"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                                elif color_keys[x] == "blue":
+                                    if player_keys["blue"]:
+                                        doors_open[x] = True
+                                        door_sound()
+                            else:
+                                doors_open[x] = True
+                                door_sound()
 
-                if player_movement[0] < 0 and doors_open[x] == False:
-                    player_rect.left = door.right - 1
+                    if player_movement[0] < 0 and doors_open[x] == False:
+                        player_rect.left = door.right - 1
 
-        x += 1
+            x += 1
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
@@ -1138,7 +1181,7 @@ def item_collision_test(rect, items):
             hit_list.append(item)
             if not itemTipVisible:
                 itemTip = tip_font.render(
-                    "Nosta Esine Painamalla [E]", True, (255, 255, 255))
+                    "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
                 screen.blit(
                     itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
                 itemTipVisible = True
@@ -1148,59 +1191,59 @@ def item_collision_test(rect, items):
                 if inventory[inventory_slot] == "none":
                     if i == "gasburner":
                         inventory[inventory_slot] = "gasburner"
-                        gasburner_clip.play()
+                        Audio.playSound(gasburner_clip)
                         item_rects.remove(item)
                         del item_ids[x]
 
                         s(5)
                     elif i == "knife":
                         inventory[inventory_slot] = "knife"
-                        knife_pickup.play()
+                        Audio.playSound(knife_pickup)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(5)
                     elif i == "plasmarifle":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "plasmarifle"
-                            weapon_pickup.play()
+                            Audio.playSound(weapon_pickup)
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
                     elif i == "ss_bonuscard":
                         inventory[inventory_slot] = "ss_bonuscard"
-                        ss_sound.play()
+                        Audio.playSound(ss_sound)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
                     elif i == "coffeemug":
                         inventory[inventory_slot] = "coffeemug"
-                        coffeemug_sound.play()
+                        Audio.playSound(coffeemug_sound)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(3)
                     elif i == "lappi_sytytyspalat":
                         inventory[inventory_slot] = "lappi_sytytyspalat"
-                        lappi_sytytyspalat_sound.play()
+                        Audio.playSound(lappi_sytytyspalat_sound)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
                     elif i == "pistol":
                         inventory[inventory_slot] = "pistol"
-                        weapon_pickup.play()
+                        Audio.playSound(weapon_pickup)
                         item_rects.remove(item)
                         del item_ids[x]
                         s(20)
                     elif i == "rk62":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "rk62"
-                            weapon_pickup.play()
+                            Audio.playSound(weapon_pickup)
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
                     elif i == "shotgun":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "shotgun"
-                            weapon_pickup.play()
+                            Audio.playSound(weapon_pickup)
                             item_rects.remove(item)
                             del item_ids[x]
                             s(20)
@@ -1211,38 +1254,38 @@ def item_collision_test(rect, items):
 
                 if i == "red_key":
                     player_keys["red"] = True
-                    key_pickup.play()
+                    Audio.playSound(key_pickup)
                     item_rects.remove(item)
                     del item_ids[x]
                 elif i == "green_key":
                     player_keys["green"] = True
-                    key_pickup.play()
+                    Audio.playSound(key_pickup)
                     item_rects.remove(item)
                     del item_ids[x]
                 elif i == "blue_key":
                     player_keys["blue"] = True
-                    key_pickup.play()
+                    Audio.playSound(key_pickup)
                     item_rects.remove(item)
                     del item_ids[x]
                 elif i == "cell":
                     ammunition_plasma += 30
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "pistol_mag":
                     pistol_bullets += 8
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "rk62_mag":
                     rk_62_ammo += 30
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "shotgun_shells":
                     shotgun_shells += 4
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
                     del item_ids[x]
                 elif i == "medkit":
                     if player_health < 100:
@@ -1250,7 +1293,19 @@ def item_collision_test(rect, items):
                         if player_health > 100:
                             player_health = 100
                     item_rects.remove(item)
-                    item_pickup.play()
+                    Audio.playSound(item_pickup)
+                    del item_ids[x]
+                elif i == "soulsphere":
+                    player_health += 100
+                    if player_health > 300:
+                        player_health = 300
+                    item_rects.remove(item)
+                    Audio.playSound(soulsphere_pickup)
+                    del item_ids[x]
+                elif i == "turboneedle":
+                    playerStamina = 250
+                    item_rects.remove(item)
+                    Audio.playSound(soulsphere_pickup)
                     del item_ids[x]
 
         x += 1
@@ -1277,31 +1332,34 @@ def toilet_collisions(rect, burnstate):
         o += 1
 #endregion
 #region Player
-def move(rect, movement, tiles):
+def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
     rect.x += movement[0]
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
-        if movement[0] > 0:
+        if movement[0] > 0 or skip_horisontal_movement_check:
             rect.right = tile.left
             collision_types['right'] = True
-        elif movement[0] < 0:
+        elif movement[0] < 0 or skip_horisontal_movement_check:
             rect.left = tile.right
             collision_types['left'] = True
     rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
-        if movement[1] > 0:
+        if movement[1] > 0 or skip_vertical_movement_check:
             rect.bottom = tile.top
             collision_types['bottom'] = True
-        elif movement[1] < 0:
+        elif movement[1] < 0 or skip_vertical_movement_check:
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
 
 stand_animation = load_animation("stand", 2)
 run_animation = load_animation("run", 2)
+short_stand_animation = load_animation("shortplayer_stand", 2)
+short_run_animation = load_animation("shortplayer_run", 2)
+
 gasburner_animation = load_animation("gasburner_on", 2)
 knife_animation = load_animation("knife", 2)
 toilet_animation = load_animation("toilet_anim", 3)
@@ -1310,31 +1368,35 @@ koponen_stand = load_animation("koponen_standing", 2)
 koponen_run = load_animation("koponen_running", 2)
 death_animation = load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 5, (255, 255, 255), -1)
+    "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, -1)
+menu_toilet_animation = KDS.Animator.Animation(
+    "toilet_anim", 3, 6, KDS.Colors.GetPrimary.White, -1)
+menu_trashcan_animation = KDS.Animator.Animation(
+    "trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
 explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, (255, 255, 255), 1)
+    "explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)
 plasmarifle_animation = KDS.Animator.Animation(
-    "plasmarifle_firing", 2, 3, (255, 255, 255), -1)
+    "plasmarifle_firing", 2, 3, KDS.Colors.GetPrimary.White, -1)
 zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, (255, 255, 255), 1)
+    "z_death", 5, 6, KDS.Colors.GetPrimary.White, 1)
 zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, (255, 255, 255), -1)
+    "z_walk", 3, 10, KDS.Colors.GetPrimary.White, -1)
 zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, (255, 255, 255), -1)
+    "z_attack", 4, 10, KDS.Colors.GetPrimary.White, -1)
 sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, (255, 255, 255), -1)
+    "seargeant_walking", 4, 8, KDS.Colors.GetPrimary.White, -1)
 sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, (255, 255, 255), 1)
+    "seargeant_shooting", 2, 6, KDS.Colors.GetPrimary.White, 1)
 
 archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, (255, 255, 255), -1)
+    "archvile_run", 3, 9, KDS.Colors.GetPrimary.White, -1)
 arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, (255, 255, 255), 1)
+    "archvile_attack", 6, 16, KDS.Colors.GetPrimary.White, 1)
 archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, (255, 255, 255), 1)
-flames_animation = KDS.Animator.Animation("flames", 5, 3, (255, 255, 255), -1)
-bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6,(255,255,255),-1)
+    "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, 1)
+flames_animation = KDS.Animator.Animation("flames", 5, 3, KDS.Colors.GetPrimary.White, -1)
+bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6, KDS.Colors.GetPrimary.White, - 1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
@@ -1353,7 +1415,7 @@ for animation in sergeant_shoot_animation.images:
 sergeant_shoot_animation.ticks = 43
 #endregion
 sergeant_death_animation = KDS.Animator.Animation(
-    "seargeant_dying", 5, 8, (255, 255, 255), 1)
+    "seargeant_dying", 5, 8, KDS.Colors.GetPrimary.White, 1)
 #endregion
 #region Console
 def console():
@@ -1426,7 +1488,7 @@ def console():
 #endregion
 #region Terms and Conditions
 def agr(tcagr):
-
+    global tcagr_running
     if tcagr == False:
         tcagr_running = True
     else:
@@ -1435,11 +1497,8 @@ def agr(tcagr):
     global main_running
     c = False
 
-    buttons = []
-    texts = []
-    functions = []
-
-    def agree():
+    def tcagr_agree_function():
+        global tcagr_running
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Terms and Conditions have been accepted.", False)
         KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -1447,53 +1506,36 @@ def agr(tcagr):
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " +
                         KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"), False)
-        return False
+        tcagr_running = False
 
-    buttons.append(pygame.Rect(249, 353, 200, 160))
-    texts.append(button_font1.render("I Agree", True, (255, 255, 255)))
-    functions.append(agree)
+    agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render("I Agree", True, KDS.Colors.GetPrimary.White))
 
     while tcagr_running:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
-                    setFullscreen(False)
-                if event.key == K_F4:
+                    FullscreenSet()
+                elif event.key == K_F4:
                     F4Pressed = True
                     if AltPressed == True and F4Pressed == True:
                         KDS_Quit()
-                if event.key == K_LALT or event.key == K_RALT:
+                elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-            if event.type == MOUSEBUTTONDOWN:
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
-        main_display.blit(agr_background, (0, 0))
-
-        y = 0
-        for button in buttons:
-            if button.collidepoint(pygame.mouse.get_pos()):
-                if c:
-                    tcagr_running = functions[y]()
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-                else:
-                    button_color = (115, 115, 115)
-            else:
-                button_color = (100, 100, 100)
-
-            pygame.draw.rect(main_display, button_color, button)
-
-            main_display.blit(texts[y], (button.x+10, button.y+5))
-            y += 1
-
+        main_display.blit(pygame.transform.scale(agr_background, (int(agr_background.get_width() * FullscreenGet.scaling), int(agr_background.get_height() * FullscreenGet.scaling))), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
+        agree_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
         pygame.display.update()
         c = False
+    del agree_button
 #endregion
 #region Koponen Talk
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes
+    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
+    conversations = list()
 
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
@@ -1512,11 +1554,6 @@ def koponen_talk():
 
     c = False
 
-    exit_button = pygame.Rect(940, 700, 230, 80)
-    mission_button = pygame.Rect(50, 700, 450, 80)
-    date_button = pygame.Rect(50, 610, 450, 80)
-    return_mission_button = pygame.Rect(510, 700, 420, 80)
-
     for i in range(len(koponen_talking_foreground_indexes), 0):
         koponen_talking_foreground_indexes[i] = koponen_talking_foreground_indexes[i - 1]
     random_foreground = int(random.uniform(0, len(ad_images)))
@@ -1525,17 +1562,9 @@ def koponen_talk():
     koponen_talking_foreground_indexes[4] = random_foreground
     koponen_talk_foreground = ad_images[random_foreground].copy()
 
-    def renderText(text):
-        text_object = button_font1.render(text, True, (255, 255, 255))
-        return text_object
-
-    exit_text = renderText("Exit")
-    mission_text = renderText("Ask for mission")
-    date_text = renderText("Ask for date")
-    return_mission = renderText("Return mission")
-
     def exit_function1():
-        return False
+        global koponenTalking
+        koponenTalking = False
 
     def mission_function():
         global currently_on_mission, current_mission, taskTaivutettu, task
@@ -1638,106 +1667,55 @@ def koponen_talk():
                 conversations.append("         {}".format(task))
 
     c = False
-    buttons = []
-    texts = []
-    functions = []
-    conversations = []
-
-    buttons.append(exit_button)
-    buttons.append(mission_button)
-    buttons.append(date_button)
-    buttons.append(return_mission_button)
-    texts.append(exit_text)
-    texts.append(mission_text)
-    texts.append(date_text)
-    texts.append(return_mission)
-    functions.append(exit_function1)
-    functions.append(mission_function)
-    functions.append(date_function)
-    functions.append(end_mission)
 
     conversations.append("Koponen: Hyvää päivää")
 
-    while koponenTalking:
+    exit_button = KDS.UI.New.Button(pygame.Rect(940, 700, 230, 80), exit_function1, button_font1.render("EXIT", True, KDS.Colors.GetPrimary.White))
+    mission_button = KDS.UI.New.Button(pygame.Rect(50, 700, 450, 80), mission_function, button_font1.render("REQUEST MISSION", True, KDS.Colors.GetPrimary.White))
+    date_button = KDS.UI.New.Button(pygame.Rect(50, 610, 450, 80), date_function, button_font1.render("ASK FOR A DATE", True, KDS.Colors.GetPrimary.White))
+    r_mission_button = KDS.UI.New.Button(pygame.Rect(510, 700, 420, 80), end_mission, button_font1.render("RETURN MISSION", True, KDS.Colors.GetPrimary.White))
 
+    while koponenTalking:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     koponenTalking = False
-            if event.type == MOUSEBUTTONUP:
+                elif event.key == K_F11:
+                    FullscreenSet()
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
-        main_display.blit(koponen_talking_background, (0, 0))
-        main_display.blit(koponen_talk_foreground, (40, 474))
-        pygame.draw.rect(main_display, (230, 230, 230), (40, 40, 700, 400))
-        pygame.draw.rect(main_display, (30, 30, 30), (40, 40, 700, 400), 3)
-        printer.resetRow()
+        main_display.blit(pygame.transform.scale(koponen_talking_background, (int(koponen_talking_background.get_width() * FullscreenGet.scaling), int(koponen_talking_background.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
+        main_display.blit(pygame.transform.scale(koponen_talk_foreground, (int(koponen_talk_foreground.get_width() * FullscreenGet.scaling), int(koponen_talk_foreground.get_height() * FullscreenGet.scaling))), (int(40 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(474 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+        pygame.draw.rect(main_display, (230, 230, 230), (int(40 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(40 * FullscreenGet.scaling + FullscreenGet.offset[1]), int(700 * FullscreenGet.scaling), int(400 * FullscreenGet.scaling)))
+        pygame.draw.rect(main_display, (30, 30, 30), (int(40 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(40 * FullscreenGet.scaling + FullscreenGet.offset[1]), int(700 * FullscreenGet.scaling), int(400 * FullscreenGet.scaling)), 3)
 
-        y = 0
+        exit_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+        mission_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+        date_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+        r_mission_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
 
-        for button in buttons:
-            if button.collidepoint(pygame.mouse.get_pos()):
-                if c:
-                    if not y:
-                        koponenTalking = functions[y]()
-                    else:
-                        functions[y]()
-                button_color = (115, 115, 115)
-
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-            else:
-                button_color = (100, 100, 100)
-
-            if y == 0:
-                text_offset = 60
-            else:
-                text_offset = 10
-
-            pygame.draw.rect(main_display, button_color, button)
-            main_display.blit(texts[y], (button.x+text_offset, button.y+14))
-            y += 1
-        if len(conversations) > 13:
-            conversations.remove(conversations[0])
-        for line in conversations:
-            printer.print_text(line)
+        while len(conversations) > 13:
+            del conversations[0]
+        for i in range(len(conversations)):
+            row_text = text_font.render(conversations[i], True, (7, 8, 10))
+            row_text_size = text_font.size(conversations[i])
+            main_display.blit(pygame.transform.scale(row_text, (int(row_text_size[0] * FullscreenGet.scaling), int(row_text_size[1] * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int((50 + (i * 30)) * FullscreenGet.scaling + FullscreenGet.offset[1])))
         c = False
         pygame.display.update()
+        main_display.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 #endregion
 #region Menus
 def esc_menu_f():
-    pygame.mouse.set_visible(True)
-    global esc_menu, go_to_main_menu
-    file = pygame.image.load("im314.png")
+    global esc_menu, go_to_main_menu, DebugMode, clock
     c = False
-    resume_button = pygame.Rect(150, 170, 200, 30)
-    save_button = pygame.Rect(150, 210, 200, 30)
-    settings_button = pygame.Rect(150, 250, 200, 30)
-    main_menu_button = pygame.Rect(150, 290, 200, 30)
-
-    resume_text = button_font.render("Resume", True, (255, 255, 255))
-    save_text = button_font.render("Save", True, (255, 255, 255))
-    settings_text = button_font.render("Settings", True, (255, 255, 255))
-    main_menu_text = button_font.render("Main menu", True, (255, 255, 255))
-    
-    buttons = []
-    functions = []
-    texts = []
-
-    texts.append(resume_text)
-    texts.append(save_text)
-    texts.append(settings_text)
-    texts.append(main_menu_text)
 
     def resume():
         global esc_menu
         esc_menu = False
-        pygame.mouse.set_visible(False)
-        pygame.mixer.unpause()
-        pygame.mixer.music.unpause()
 
     def save():
         SaveData()
@@ -1748,169 +1726,148 @@ def esc_menu_f():
     def goto_main_menu():
         global esc_menu, go_to_main_menu
         pygame.mixer.unpause()
-        pygame.mixer.music.unpause()
         esc_menu = False
         go_to_main_menu = True
 
-    functions.append(resume)
-    functions.append(save)
-    functions.append(settings)
-    functions.append(goto_main_menu)
-
-    buttons.append(resume_button)
-    buttons.append(save_button)
-    buttons.append(settings_button)
-    buttons.append(main_menu_button)
+    resume_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("Resume", True, KDS.Colors.GetPrimary.White))
+    save_button_enabled = True
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+        save_button_enabled = False
+    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save, button_font.render("Save", True, KDS.Colors.GetPrimary.White), (100, 100, 100), (115, 115, 115), (90, 90, 90), (75, 75, 75), save_button_enabled)
+    settings_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.GetPrimary.White))
+    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
     while esc_menu:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    FullscreenSet()
                 if event.key == K_ESCAPE:
                     esc_menu = False
-                    pygame.mouse.set_visible(False)
-                    pygame.mixer.music.unpause()
-            if event.type == MOUSEBUTTONUP:
+            elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == pygame.QUIT:
-                KDS_Quit()
-        esc_menu_surface.fill((123, 134, 111))
-        main_display.blit(file, (0, 0))
-        esc_menu_surface.blit(pygame.transform.scale(
-            text_icon, (250, 139)), (125, 10))
-        point = list(pygame.mouse.get_pos())
-        point[0] -= display_size[0] / 2 - 250
-        point[1] -= 120
-        y = 0
-        for button in buttons:
-            if button.collidepoint(int(point[0]), int(point[1])):
-                if c:
-                    functions[y]()
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-                else:
-                    button_color = (115, 115, 115)
-            else:
-                button_color = (100, 100, 100)
-            pygame.draw.rect(esc_menu_surface, button_color, button)
-            if y == 0:
-                x = 50
-            elif y == 1:
-                x = 40
-            else:
-                x = 30
+            elif event.type == pygame.QUIT:
+                KDS_Quit() 
 
-            esc_menu_surface.blit(texts[y], (button.x+x, button.y+3))
-            y += 1
+        game_background_scaling = FullscreenGet.size[1] / esc_menu_background.get_height()
+        main_display.blit(pygame.transform.scale(esc_menu_background, (int(esc_menu_background.get_width() * game_background_scaling), int(esc_menu_background.get_height() * game_background_scaling))), (0, 0))
+        pygame.draw.rect(main_display, (123, 134, 111), (int((window_size[0] / 2) - 250 * FullscreenGet.scaling), int((window_size[1] / 2) - 200 * FullscreenGet.scaling), int(500 * FullscreenGet.scaling), int(400 * FullscreenGet.scaling)))
+        main_display.blit(pygame.transform.scale(
+            text_icon, (int(250 * FullscreenGet.scaling), int(139 * FullscreenGet.scaling))), (int(window_size[0] / 2 - 125 * FullscreenGet.scaling), int(window_size[1] / 2 - 175 * FullscreenGet.scaling)))
 
-        main_display.blit(esc_menu_surface,
-                          (int(display_size[0] / 2 - 250), 120))
+        resume_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+        save_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+        settings_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+        main_menu_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+
+        if DebugMode:
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            main_display.blit(pygame.transform.scale(score_font.render(fps_text, True, KDS.Colors.GetPrimary.White), (int(score_font.size(fps_text)[0] * 2 * FullscreenGet.scaling), int(score_font.size(fps_text)[1] * 2 * FullscreenGet.scaling))), (int(10 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(10 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+
         pygame.display.update()
+        main_display.fill((0, 0, 0))
         c = False
 
-    del buttons, resume_button, settings_button, main_menu_button, c, resume, settings, goto_main_menu, functions, texts, resume_text, settings_text, main_menu_text
-
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, volume
+    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode
     c = False
     settings_running = True
-
-    return_button = pygame.Rect(465, 700, 270, 60)
-    music_slider = pygame.Rect(560, 141, 30, 28)
-
-    return_text = button_font1.render("Return", True, (255, 255, 255))
 
     def return_def():
         global settings_running
         settings_running = False
 
-    buttons = []
-    texts = []
-    functions = []
-
-    buttons.append(return_button)
-    texts.append(return_text)
-    functions.append(return_def)
-
-    dragSlider = False
+    return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render("Return", True, KDS.Colors.GetPrimary.White))
+    music_volume_slider = KDS.UI.New.Slider("Music Volume", pygame.Rect(450, 135, 340, 20), (20, 30))
+    effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30))
 
     while settings_running:
 
-        volume_text = button_font1.render(
-            "Music Volume", True, (255, 255, 255))
+        music_volume_text = button_font.render("Music Volume", True, KDS.Colors.GetPrimary.White)
+        effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_F11:
-                    setFullscreen(False)
-                if event.key == K_F4:
+                    FullscreenSet()
+                elif event.key == K_F4:
                     F4Pressed = True
                     if AltPressed == True and F4Pressed == True:
                         KDS_Quit()
-                if event.key == K_LALT or event.key == K_RALT:
+                elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-                if event.key == K_ESCAPE:
+                elif event.key == K_ESCAPE:
                     settings_running = False
-            if event.type == pygame.QUIT:
+                elif event.key == K_F3:
+                    DebugMode = not DebugMode
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
 
-        main_display.blit(settings_background, (0, 0))
+        main_display.blit(pygame.transform.scale(settings_background, (int(settings_background.get_width() * FullscreenGet.scaling), int(settings_background.get_height() * FullscreenGet.scaling))), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
 
-        main_display.blit(volume_text, (190, 130))
-        pygame.draw.rect(main_display, (120, 120, 120), (560, 145, 340, 20))
+        main_display.blit(pygame.transform.flip(pygame.transform.scale(
+            menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
+            int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+            False, False), (int((279 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((515 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
 
-        music_slider.x = int(560 + (volume * 100) * 3.4 - 15)
+        main_display.blit(pygame.transform.scale(music_volume_text, (int(music_volume_text.get_width() * FullscreenGet.scaling), int(music_volume_text.get_height() * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(135 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+        main_display.blit(pygame.transform.scale(effect_volume_text, (int(effect_volume_text.get_width() * FullscreenGet.scaling), int(effect_volume_text.get_height() * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(185 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+        set_music_volume = music_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
+        set_effect_volume = effect_volume_slider.update(main_display, FullscreenGet.scaling, FullscreenGet.offset)
 
-        if pygame.mouse.get_pressed()[0] == False:
-            dragSlider = False
+        if set_music_volume != music_volume:
+            music_volume = set_music_volume
+            pygame.mixer.music.set_volume(music_volume)
+            Audio.MusicChannel1.set_volume(music_volume)
+            Audio.MusicChannel2.set_volume(music_volume)
+        elif set_effect_volume != effect_volume:
+            effect_volume = set_effect_volume
 
-        if music_slider.collidepoint(pygame.mouse.get_pos()):
-            slider_color = (115, 115, 115)
-            if pygame.mouse.get_pressed()[0]:
-                dragSlider = True
-        if dragSlider:
-            slider_color = (90, 90, 90)
-            position = int(pygame.mouse.get_pos()[0])
-            if position < 560:
-                position = 560
-            if position > 900:
-                position = 900
-            position -= 560
-            position = int(position/3.4)
-            KDS.ConfigManager.SetSetting("Settings", "Volume", str(position))
-            volume = position/100
-            pygame.mixer.music.set_volume(volume)
-        else:
-            slider_color = (100, 100, 100)
+        return_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
 
-        pygame.draw.rect(main_display, (slider_color), music_slider)
+        if DebugMode:
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            main_display.blit(pygame.transform.scale(score_font.render(fps_text, True, KDS.Colors.GetPrimary.White), (int(score_font.size(fps_text)[0] * 2 * FullscreenGet.scaling), int(score_font.size(fps_text)[1] * 2 * FullscreenGet.scaling))), (int(10 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(10 * FullscreenGet.scaling + FullscreenGet.offset[1])))
 
-        y = 0
-        for button in buttons:
-
-            if button.collidepoint(pygame.mouse.get_pos()):
-                if c:
-                    functions[y]()
-                    pass
-                if pygame.mouse.get_pressed()[0]:
-                    button_color = (90, 90, 90)
-                else:
-                    button_color = (115, 115, 115)
-            else:
-                button_color = (100, 100, 100)
-
-            pygame.draw.rect(main_display, button_color, button)
-            main_display.blit(texts[y], (button.x+50, button.y+6))
-            y += 1
-
-        c = False
         pygame.display.update()
+        main_display.fill((0, 0, 0))
+        c = False
+        clock.tick(60)
+
+def play_function(gamemode: KDS.Gamemode.Modes):
+    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
+    KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+    inventory = ["none", "none", "none", "none", "none"]
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
+        inventory[0] = "iPuhelin"
+    WorldGeneration()
+    pygame.mouse.set_visible(False)
+    main_menu_running = False
+    play_map_music(current_map)
+    
+    player_hand_item = "none"
+
+    player_death_event = False
+    animation_has_played = False
+
+    player_rect.x = 100
+    player_rect.y = 100
+    player_health = 100
+    
+    for key in player_keys:
+        player_keys[key] = False
+    KDS.Logging.Log(KDS.Logging.LogType.info,
+                    "Press F4 to commit suicide", False)
+    KDS.Logging.Log(KDS.Logging.LogType.info,
+                    "Press Alt + F4 to get depression", False)
+    LoadSave()
 
 def main_menu():
-    global current_map, MenuMode
+    global current_map, MenuMode, DebugMode
 
     class Mode:
         MainMenu = 0
@@ -1921,12 +1878,6 @@ def main_menu():
 
     current_map_int = 0
     current_map_int = int(current_map)
-    try:
-        jukebox_music[jukeboxMusicPlaying].stop()
-    except:
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Jukebox music has not been defined yet.", False)
-    pygame.mixer.music.unpause()
 
     global main_menu_running, main_running, go_to_main_menu
     go_to_main_menu = False
@@ -1934,43 +1885,9 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    pygame.mixer.music.load("Assets/Audio/lobbymusic.wav")
+    pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(volume)
-
-    play_button = pygame.Rect(450, 180, 300, 60)
-    settings_button = pygame.Rect(450, 250, 300, 60)
-    quit_button = pygame.Rect(450, 320, 300, 60)
-
-    play_text = button_font1.render("PLAY", True, (255, 255, 255))
-    settings_text = button_font1.render("SETTINGS", True, (255, 255, 255))
-    quit_text = button_font1.render("QUIT", True, (255, 255, 255))
-
-    def play_function(gamemode: KDS.Gamemode.Modes):
-        global main_menu_running, current_map, inventory
-        KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-        inventory = ["none", "none", "none", "none", "none"]
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
-            inventory[0] = "iPuhelin"
-        WorldGeneration()
-        pygame.mouse.set_visible(False)
-        main_menu_running = False
-        #load_music()
-        load_music_for_map(current_map)
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(volume)
-        global player_keys, player_hand_item
-        player_hand_item = "none"
-
-        player_rect.x = 100
-        player_rect.y = 100
-        for key in player_keys:
-            player_keys[key] = False
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Press F4 to commit suicide", False)
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Press Alt + F4 to get depression", False)
-        LoadSave()
+    pygame.mixer.music.set_volume(music_volume)
 
     def settings_function():
         settings_menu()
@@ -2007,95 +1924,70 @@ def main_menu():
         global MenuMode
         MenuMode = Mode.ModeSelectionMenu
 
-    main_menu_buttons = list()
-    main_menu_functions = list()
-    main_menu_texts = list()
-    main_menu_buttons.append(play_button)
-    main_menu_buttons.append(settings_button)
-    main_menu_buttons.append(quit_button)
-    main_menu_functions.append(mode_selection_function)
-    main_menu_functions.append(settings_function)
-    main_menu_functions.append(KDS_Quit)
-    main_menu_texts.append(play_text)
-    main_menu_texts.append(settings_text)
-    main_menu_texts.append(quit_text)
-
-    mode_selection_buttons = list()
-    mode_selection_modes = list()
-    story_mode_button = pygame.Rect(0, 0, int(display_size[0]), int(display_size[1] / 2))
-    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), int(display_size[0]), int(display_size[1] / 2))
-    mode_selection_buttons.append(story_mode_button)
-    mode_selection_buttons.append(campaign_mode_button)
-    mode_selection_modes.append(KDS.Gamemode.Modes.Story)
-    mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
-
-    campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
-    campaign_left_button = pygame.Rect(50, 200, 66, 66)
-    campaign_play_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 300), 300, 100)
-    campaign_return_button = pygame.Rect(int(display_size[0] / 2 - 150), int(display_size[1] - 150), 300, 100)
-    campaign_menu_buttons = list()
-    campaign_menu_functions = list()
-    campaign_menu_buttons.append(campaign_left_button)
-    campaign_menu_buttons.append(campaign_right_button)
-    campaign_menu_buttons.append(campaign_play_button)
-    campaign_menu_buttons.append(campaign_return_button)
-    campaign_menu_functions.append(level_pick.left)
-    campaign_menu_functions.append(level_pick.right)
-    campaign_menu_functions.append(play_function)
-    campaign_menu_functions.append("useless, just like me.")
-    campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
-    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
-
+    main_menu_play_button = KDS.UI.New.Button(pygame.Rect(450, 180, 300, 60), mode_selection_function, button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White))
+    main_menu_settings_button = KDS.UI.New.Button(pygame.Rect(450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White))
+    main_menu_quit_button = KDS.UI.New.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White))
+    
     while main_menu_running:
-
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_F11:
-                    setFullscreen(False)
-                if event.key == K_F4:
+                    FullscreenSet()
+                elif event.key == K_F4:
                     F4Pressed = True
                     if AltPressed == True and F4Pressed == True:
                         KDS_Quit()
-                if event.key == K_LALT or event.key == K_RALT:
+                elif event.key == K_LALT or event.key == K_RALT:
                     AltPressed = True
-                if event.key == K_ESCAPE:
+                elif event.key == K_F3:
+                    DebugMode = not DebugMode
+                elif event.key == K_ESCAPE:
                     if MenuMode != Mode.MainMenu:
                         MenuMode = Mode.MainMenu
-            if event.type == pygame.QUIT:
+            elif event.type == pygame.QUIT:
                 KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
-            main_display.blit(main_menu_background, (0, 0))
-            main_display.blit(pygame.transform.flip(
-                menu_gasburner_animation.update(), False, False), (625, 450))
 
-            for y in range(len(main_menu_buttons)):
-                if main_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
-                    if c:
-                        main_menu_functions[y]()
-                        c = False
-                    button_color = (115, 115, 115)
-                    if pygame.mouse.get_pressed()[0]:
-                        button_color = (90, 90, 90)
-                else:
-                    button_color = (100, 100, 100)
+            main_display.blit(pygame.transform.scale(main_menu_background, FullscreenGet.size), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
+            main_display.blit(pygame.transform.flip(pygame.transform.scale(
+                menu_gasburner_animation.update(), (int(menu_gasburner_animation.get_frame().get_width() * FullscreenGet.scaling),
+                int(menu_gasburner_animation.get_frame().get_height() * FullscreenGet.scaling))),
+                False, False), (int((625 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((445 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+            main_display.blit(pygame.transform.flip(pygame.transform.scale(
+                menu_toilet_animation.update(), (int(menu_toilet_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
+                int(menu_toilet_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                False, False), (int((823 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((507 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+            main_display.blit(pygame.transform.flip(pygame.transform.scale(
+                menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
+                int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                False, False), (int((283 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((585 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
 
-                pygame.draw.rect(main_display, button_color, main_menu_buttons[y])
+            main_menu_play_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+            main_menu_settings_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
+            main_menu_quit_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
 
-                main_display.blit(main_menu_texts[y], (int(main_menu_buttons[y].x + ((main_menu_buttons[y].width - main_menu_texts[y].get_width()) / 2)), int(main_menu_buttons[y].y + ((main_menu_buttons[y].height - main_menu_texts[y].get_height()) / 2))))
+        elif MenuMode == Mode.ModeSelectionMenu:
+            mode_selection_buttons = list()
+            mode_selection_modes = list()
+            story_mode_button = pygame.Rect(int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1]), int(FullscreenGet.size[0]), int(FullscreenGet.size[1] / 2))
+            campaign_mode_button = pygame.Rect(int(0 + FullscreenGet.offset[0]), int(FullscreenGet.size[1] / 2), int(FullscreenGet.size[0]), int(FullscreenGet.size[1] / 2))
+            mode_selection_buttons.append(story_mode_button)
+            mode_selection_buttons.append(campaign_mode_button)
+            mode_selection_modes.append(KDS.Gamemode.Modes.Story)
+            mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
 
-        if MenuMode == Mode.ModeSelectionMenu:
-            main_display.blit(gamemode_bc_1_1, (0, 0))
-            main_display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
+            main_display.blit(pygame.transform.scale(gamemode_bc_1_1, (int(gamemode_bc_1_1.get_width() * FullscreenGet.scaling), int(gamemode_bc_1_1.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
+            main_display.blit(pygame.transform.scale(gamemode_bc_2_1, (int(gamemode_bc_2_1.get_width() * FullscreenGet.scaling), int(gamemode_bc_2_1.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int((display_size[1] * FullscreenGet.scaling) / 2 + FullscreenGet.offset[1])))
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(pygame.mouse.get_pos()):
                     if y == 0:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(False) * 255.0))), (0, 0))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(False) * 255.0)), (int(gamemode_bc_1_2.get_width() * FullscreenGet.scaling), int(gamemode_bc_1_2.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
                     elif y == 1:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(False) * 255.0))), (0, int(display_size[1] / 2)))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(False) * 255.0)), (int(gamemode_bc_2_2.get_width() * FullscreenGet.scaling), int(gamemode_bc_2_2.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int((display_size[1] * FullscreenGet.scaling) / 2 + FullscreenGet.offset[1])))
                     if c:
                         if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
                             MenuMode = Mode.StoryMenu
@@ -2107,15 +1999,34 @@ def main_menu():
                             KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nInvalid mode_selection_mode! Value: " + mode_selection_modes[y])
                 else:
                     if y == 0:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(round(gamemode_bc_1_alpha.update(True) * 255.0))), (0, 0))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(True) * 255.0)), (int(gamemode_bc_1_2.get_width() * FullscreenGet.scaling), int(gamemode_bc_1_2.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
                     elif y == 1:
-                        main_display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(round(gamemode_bc_2_alpha.update(True) * 255.0))), (0, int(display_size[1] / 2)))
+                        main_display.blit(pygame.transform.scale(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(True) * 255.0)), (int(gamemode_bc_2_2.get_width() * FullscreenGet.scaling), int(gamemode_bc_2_2.get_height() * FullscreenGet.scaling))), (int(0 + FullscreenGet.offset[0]), int((display_size[1] * FullscreenGet.scaling) / 2 + FullscreenGet.offset[1])))
 
-        if MenuMode == Mode.StoryMenu:
+        elif MenuMode == Mode.StoryMenu:
             print("Wow... So empty.")
 
-        if MenuMode == Mode.CampaignMenu:
-            pygame.draw.rect(main_display, (192, 192, 192), (50, 200, display_size[0] - 100, 66))
+        elif MenuMode == Mode.CampaignMenu:
+            campaign_right_button = pygame.Rect(int(FullscreenGet.size[0] - (50 * FullscreenGet.scaling) - (66 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int(200 * FullscreenGet.scaling + FullscreenGet.offset[1]), int(66 * FullscreenGet.scaling), int(66 * FullscreenGet.scaling))
+            campaign_left_button = pygame.Rect(int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(200 * FullscreenGet.scaling + FullscreenGet.offset[1]), int(66 * FullscreenGet.scaling), int(66 * FullscreenGet.scaling))
+            campaign_play_button = pygame.Rect(int(FullscreenGet.size[0] / 2 - (150 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int(FullscreenGet.size[1] - (300 * FullscreenGet.scaling) + FullscreenGet.offset[1]), int(300 * FullscreenGet.scaling), int(100 * FullscreenGet.scaling))
+            campaign_return_button = pygame.Rect(int(FullscreenGet.size[0] / 2 - (150 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int(FullscreenGet.size[1] - (150 * FullscreenGet.scaling) + FullscreenGet.offset[1]), int(300 * FullscreenGet.scaling), int(100 * FullscreenGet.scaling))
+            campaign_menu_buttons = list()
+            campaign_menu_functions = list()
+            campaign_menu_buttons.append(campaign_left_button)
+            campaign_menu_buttons.append(campaign_right_button)
+            campaign_menu_buttons.append(campaign_play_button)
+            campaign_menu_buttons.append(campaign_return_button)
+            campaign_menu_functions.append(level_pick.left)
+            campaign_menu_functions.append(level_pick.right)
+            campaign_menu_functions.append(play_function)
+            campaign_menu_functions.append("useless, just like me.")
+            campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
+            campaign_play_text_size = button_font1.size("START")
+            campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
+            campaign_return_text_size = button_font1.size("RETURN")
+
+            pygame.draw.rect(main_display, (192, 192, 192), (int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(200 * FullscreenGet.scaling + FullscreenGet.offset[1]), int(FullscreenGet.size[0] - (100 * FullscreenGet.scaling)), int(66 * FullscreenGet.scaling)))
             for y in range(len(campaign_menu_buttons)):
                 if campaign_menu_buttons[y].collidepoint(pygame.mouse.get_pos()):
                     if c:
@@ -2135,13 +2046,13 @@ def main_menu():
                 pygame.draw.rect(main_display, button_color, campaign_menu_buttons[y])
 
                 if y == 0:
-                    main_display.blit(pygame.transform.flip(arrow_button, True, False), (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
+                    main_display.blit(pygame.transform.scale(pygame.transform.flip(arrow_button, True, False), (int(arrow_button.get_width() * FullscreenGet.scaling), int(arrow_button.get_height() * FullscreenGet.scaling))), (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
                 elif y == 1:
-                    main_display.blit(arrow_button, (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
+                    main_display.blit(pygame.transform.scale(arrow_button, (int(arrow_button.get_width() * FullscreenGet.scaling), int(arrow_button.get_height() * FullscreenGet.scaling))), (int(campaign_menu_buttons[y].x + 8), int(campaign_menu_buttons[y].y + 8)))
                 elif y == 2:
-                    main_display.blit(campaign_play_text, (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
+                    main_display.blit(pygame.transform.scale(campaign_play_text, (int(campaign_play_text_size[0] * FullscreenGet.scaling), int(campaign_play_text_size[1] * FullscreenGet.scaling))), (int(campaign_play_button.x + (campaign_play_button.width / 4)), int(campaign_play_button.y + (campaign_play_button.height / 4))))
                 elif y == 3:
-                    main_display.blit(campaign_return_text, (int(campaign_return_button.x + (campaign_return_button.width / 5)), int(campaign_return_button.y + (campaign_return_button.height / 4))))
+                    main_display.blit(pygame.transform.scale(campaign_return_text, (int(campaign_return_text_size[0] * FullscreenGet.scaling), int(campaign_return_text_size[1] * FullscreenGet.scaling))), (int(campaign_return_button.x + (campaign_return_button.width / 5)), int(campaign_return_button.y + (campaign_return_button.height / 4))))
 
                 current_map_int = int(current_map)
 
@@ -2150,16 +2061,23 @@ def main_menu():
                 else:
                     map_name = map_names[0]
                 level_text = button_font1.render(current_map + " - " + map_name, True, (0, 0, 0))
-                main_display.blit(level_text, (125, 209))
+                level_text_size = button_font1.size(current_map + " - " + map_name)
+                main_display.blit(pygame.transform.scale(level_text, (int(level_text_size[0] * FullscreenGet.scaling), int(level_text_size[1] * FullscreenGet.scaling))), (int(125 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(209 * FullscreenGet.scaling + FullscreenGet.offset[1])))
+
+        if DebugMode:
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            main_display.blit(pygame.transform.scale(score_font.render(fps_text, True, KDS.Colors.GetPrimary.White), (int(score_font.size(fps_text)[0] * 2 * FullscreenGet.scaling), int(score_font.size(fps_text)[1] * 2 * FullscreenGet.scaling))), (int(10 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(10 * FullscreenGet.scaling + FullscreenGet.offset[1])))
 
         pygame.display.update()
         main_display.fill((0, 0, 0))
         c = False
         clock.tick(60)
+
+def level_finished_menu():
+    print("Level finishing not added yet...")
 #endregion
 #region Check Terms
 agr(tcagr)
-jukebox_music = load_jukebox_music()
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
     "Data", "TermsAccepted", str(False)))
 if tcagr != False:
@@ -2185,6 +2103,22 @@ def inventoryRight():
         else:
             inventory_slot += 1
 #endregion
+#region Useless shit
+"""
+wd = len(world_gen[0][0])*68
+hg = len(world_gen[0])*68
+background_surface = pygame.Surface((wd,hg))
+
+for y in range(len(world_gen[0])):
+    for x in range(len(world_gen[0][0])):
+        background_surface.blit(background_wall,(x*68,y*68))
+
+pygame.image.save(background_surface, "level_background.png")
+del background_surface
+
+esc_menu_background = pygame.image.load("level_background.png")
+"""
+#endregion
 #region Main Running
 while main_running:
 #region Events
@@ -2192,39 +2126,43 @@ while main_running:
         if event.type == KEYDOWN:
             if event.key == K_d:
                 playerMovingRight = True
-            if event.key == K_a:
+            elif event.key == K_a:
                 playerMovingLeft = True
-            if event.key == K_SPACE:
-                if air_timer < 6:
-                    vertical_momentum = -10
-            if event.key == K_LSHIFT:
-                playerSprinting = True
-            if event.key == K_e:
+            elif event.key == K_SPACE:
+                moveUp = True
+            elif event.key == K_LCTRL:
+                moveDown = True
+            elif event.key == K_LSHIFT:
+                if not moveDown:
+                    playerSprinting = True
+            elif event.key == K_e:
                 FunctionKey = True
-            if event.key == K_ESCAPE:
-                esc_menu = False if esc_menu else True
-            if event.key == K_j:
+            elif event.key == K_ESCAPE:
+                esc_menu = True
+            elif event.key == K_j:
                 inventoryLeft()
-            if event.key == K_k:
+            elif event.key == K_k:
                 inventoryRight()
-            if event.key == K_t:
+            elif event.key == K_t:
                 console()
-            if event.key == K_w:
-                KeyW = True
-            if event.key == K_s:
-                KeyS = True
-            if event.key == K_f:
+            elif event.key == K_w:
+                moveUp = True
+            elif event.key == K_s:
+                moveDown = True
+            elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
                     farting = True
-                    fart.play()
+                    Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
-            if event.key == K_q:
+            elif event.key == K_q:
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
-                    item_rects.append(pygame.Rect(
-                        player_rect.x, player_rect.y, 34, 34))
+                    if not direction:
+                        item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - 17), int(player_rect.bottomright[1])), (34, 34)))
+                    else:
+                        item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - 17), int(player_rect.bottomleft[1])), (34, 34)))
                     item_ids.append(inventory[inventory_slot])
                     u = True
                     while u:
@@ -2237,49 +2175,53 @@ while main_running:
                     inventory[inventory_slot + 1] = "none"
                     inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
-            if event.key == K_F3:
+            elif event.key == K_F3:
                 DebugMode = not DebugMode
-            if event.key == K_F4:
+            elif event.key == K_F4:
                 F4Pressed = True
                 if AltPressed == True and F4Pressed == True:
                     KDS_Quit()
                 else:
                     player_health = 0
-            if event.key == K_LALT or event.key == K_RALT:
+            elif event.key == K_LALT or event.key == K_RALT:
                 AltPressed = True
-            if event.key == K_F11:
-                setFullscreen(False)
-        if event.type == MOUSEBUTTONDOWN:
+            elif event.key == K_F11:
+                FullscreenSet()
+        elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseLeftPressed = True
                 rk62_sound_cooldown = 11
-                pistolFire = True
+                weapon_fire = True
                 if player_hand_item == "gasburner":
                     gasburnerBurning = True
                 if player_hand_item == "knife":
                     knifeInUse = True
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = True
-        if event.type == KEYUP:
+        elif event.type == KEYUP:
             if event.key == K_d:
                 playerMovingRight = False
-            if event.key == K_a:
+            elif event.key == K_a:
                 playerMovingLeft = False
-            if event.key == K_LSHIFT:
+            elif event.key == K_SPACE:
+                moveUp = False
+            elif event.key == K_LCTRL:
+                moveDown = False
+            elif event.key == K_LSHIFT:
                 playerSprinting = False
-            if event.key == K_F4:
+            elif event.key == K_F4:
                 F4Pressed = False
-            if event.key == K_LALT or event.key == K_RALT:
+            elif event.key == K_LALT or event.key == K_RALT:
                 AltPressed = False
-            if event.key == K_w:
-                KeyW = False
-            if event.key == K_s:
-                KeyS = False
-            if event.key == K_c:
+            elif event.key == K_w:
+                moveUp = False
+            elif event.key == K_s:
+                moveDown = False
+            elif event.key == K_c:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
-        if event.type == MOUSEBUTTONUP:
+        elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 mouseLeftPressed = False
                 if player_hand_item == "gasburner":
@@ -2288,11 +2230,11 @@ while main_running:
                     knifeInUse = False
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = False
-            if event.button == 4:
+            elif event.button == 4:
                 inventoryLeft()
-            if event.button == 5:
+            elif event.button == 5:
                 inventoryRight()
-        if event.type == pygame.QUIT:
+        elif event.type == pygame.QUIT:
             KDS_Quit()
 #endregion
 #region Inventory Code
@@ -2310,7 +2252,7 @@ while main_running:
     main_display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
 
-    true_scroll[0] += (player_rect.x - true_scroll[0] - 285) / 12
+    true_scroll[0] += (player_rect.x - true_scroll[0] - (screen_size[0] / 2)) / 12
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
@@ -2323,156 +2265,118 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
+        Audio.MusicChannel1.stop()
+        Audio.MusicChannel2.stop()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
         animation_has_played = True
+    elif player_health < 1:
+        try:
+            deathWait += 1
+        except Exception:
+            deathWait = 0
+        if deathWait == 240:
+            play_function(KDS.Gamemode.gamemode)
 #endregion
 #region Rendering
-    y = 0
-    for layer in world_gen[0]:
-        x = 0
-        for tile in layer:
-            if tile == 'b':
-                screen.blit(floor1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'c':
-                screen.blit(wall1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'd':
-                screen.blit(table1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'e':
-                screen.blit(toilet1, (x * 34-scroll[0], y * 34-scroll[1]+1))
-            if tile == 'f':
-                screen.blit(lamp1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'g':
-                screen.blit(trashcan, (x * 34-scroll[0]+2, y * 34-scroll[1]+7))
-            if tile == 'h':
-                screen.blit(ground1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'i':
-                screen.blit(grass, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'j':
-                screen.blit(concrete1, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'o':
-                screen.blit(bricks, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'A':
-                screen.blit(tree, (x * 34-scroll[0], y * 34-scroll[1]-50))
-            if tile == 'p':
-                screen.blit(planks, (x * 34-scroll[0], y * 34-scroll[1]))
-            if tile == 'q':
-                screen.blit(ladder_texture, (x * 34-scroll[0], y * 34-scroll[1]))
-            x += 1
-        y += 1
+    render_rect = pygame.Rect(scroll[0], scroll[1], screen_size[0], screen_size[1])
+    vertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
+    horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
+    for y in range(vertical_render_position[0], vertical_render_position[1]):
+        for x in range(horisontal_render_position[0], horisontal_render_position[1]):
+            if world_gen[0][y][x] in tile_textures:
+                screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
-    x = 0
-    for door in door_rects:
-        if doors_open[x]:
-            screen.blit(door_open, (door.x-scroll[0]+2, door.y-scroll[1]))
-        else:
-            if color_keys[x] == "red":
-                screen.blit(red_door_closed,
-                            (door.x-scroll[0], door.y-scroll[1]))
-            elif color_keys[x] == "green":
-                screen.blit(green_door_closed,
-                            (door.x-scroll[0], door.y-scroll[1]))
-            elif color_keys[x] == "blue":
-                screen.blit(blue_door_closed,
-                            (door.x-scroll[0], door.y-scroll[1]))
+    for i in range(len(door_rects)):
+        if door_rects[i].colliderect(render_rect):
+            if doors_open[i]:
+                screen.blit(door_open, (door_rects[i].x - scroll[0]+2, door_rects[i].y - scroll[1]))
             else:
-                screen.blit(door_closed, (door.x-scroll[0], door.y-scroll[1]))
-        x += 1
+                if color_keys[i] == "red":
+                    screen.blit(red_door_closed,
+                                (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
+                elif color_keys[i] == "green":
+                    screen.blit(green_door_closed,
+                                (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
+                elif color_keys[i] == "blue":
+                    screen.blit(blue_door_closed,
+                                (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
+                else:
+                    screen.blit(door_closed, (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
 
     for jukebox in jukeboxes:
-        screen.blit(jukebox_texture, (jukebox.x -
-                                      scroll[0], jukebox.y-scroll[1]))
-        if player_rect.colliderect(jukebox):
-            screen.blit(jukebox_tip, (jukebox.x -
-                                      scroll[0]-20, jukebox.y-scroll[1]-30))
-            if FunctionKey:
-                pygame.mixer.music.pause()
-                jukebox_music[jukeboxMusicPlaying].stop()
-                while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
-                    jukeboxMusicPlaying = int(
-                        random.uniform(0, len(jukebox_music)))
-
-                lastJukeboxSong[4] = lastJukeboxSong[3]
-                lastJukeboxSong[3] = lastJukeboxSong[2]
-                lastJukeboxSong[2] = lastJukeboxSong[1]
-                lastJukeboxSong[1] = lastJukeboxSong[0]
-                lastJukeboxSong[0] = jukeboxMusicPlaying
-                jukebox_music[jukeboxMusicPlaying].play()
-        else:
-            pygame.mixer.music.unpause()
-            for x in range(len(jukebox_music)):
-                jukebox_music[x].stop()
+        if jukebox.colliderect(render_rect):
+            screen.blit(jukebox_texture, (jukebox.x -
+                                        scroll[0], jukebox.y - scroll[1]))
 
     for landmine in landmines:
-        screen.blit(landmine_texture, (landmine.x -
-                                       scroll[0], landmine.y-scroll[1]))
-        if player_rect.colliderect(landmine):
-            landmines.remove(landmine)
-            landmine_explosion.play()
-            player_health -= 60
-            if player_health < 0:
-                player_health = 0
-            explosion_positions.append((landmine.x-40, landmine.y-58))
+        if landmine.colliderect(render_rect):
+            screen.blit(landmine_texture, (landmine.x - scroll[0], landmine.y - scroll[1]))
+            if player_rect.colliderect(landmine):
+                landmines.remove(landmine)
+                Audio.playSound(landmine_explosion)
+                player_health -= 60
+                if player_health < 0:
+                    player_health = 0
+                explosion_positions.append((landmine.x-40, landmine.y-58))
         for zombie1 in zombies:
             if zombie1.rect.colliderect(landmine):
                 landmines.remove(landmine)
-                landmine_explosion.play()
+                Audio.playSound(landmine_explosion)
                 zombie1.health -= 140
                 if zombie1.health < 0:
                     zombie1.health = 0
                 explosion_positions.append((landmine.x-40, landmine.y-58))
-
         for sergeant in sergeants:
             if sergeant.rect.colliderect(landmine):
                 landmines.remove(landmine)
-                landmine_explosion.play()
+                Audio.playSound(landmine_explosion)
                 sergeant.health -= 220
 
                 explosion_positions.append((landmine.x-40, landmine.y-58))
 
-    if player_hand_item == "plasmarifle" and plasmarifle_fire == True:
-
-        if plasmarifle_cooldown > 3 and ammunition_plasma > 0:
-            plasmarifle_cooldown = 0
-
-            if direction:
-                j_direction = False
-            else:
-                j_direction = True
-            if j_direction:
-                plasmabullets.append(plasma_bullet(
-                    (player_rect.x+50, player_rect.y+17), j_direction, screen))
-            else:
-                plasmabullets.append(plasma_bullet(
-                    (player_rect.x-50, player_rect.y+17), j_direction, screen))
-
-            plasmarifle_f_sound.play()
-            ammunition_plasma -= 1
 
     if player_hand_item != "none":
         if player_hand_item == "plasmarifle":
+            
+            if plasmarifle_fire and plasmarifle_cooldown > 3 and ammunition_plasma > 0:
+                plasmarifle_cooldown = 0
+
+                if direction:
+                    j_direction = False
+                else:
+                    j_direction = True
+                if j_direction:
+                    plasmabullets.append(plasma_bullet(
+                        (player_rect.x + 50, player_rect.y + 17), j_direction, screen))
+                else:
+                    plasmabullets.append(plasma_bullet(
+                        (player_rect.x - 50, player_rect.y + 17), j_direction, screen))
+
+                Audio.playSound(plasmarifle_f_sound)
+                ammunition_plasma -= 1
 
             ammo_count = score_font.render(
-                "Ammo: " + str(ammunition_plasma), True, (255, 255, 255))
+                "Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "pistol":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(pistol_bullets), True, (255, 255, 255))
+                "Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "rk62":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(rk_62_ammo), True, (255, 255, 255))
+                "Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
         elif player_hand_item == "shotgun":
 
             ammo_count = score_font.render(
-                "Ammo: " + str(shotgun_shells), True, (255, 255, 255))
+                "Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
     for bullet in plasmabullets:
@@ -2480,66 +2384,93 @@ while main_running:
         if state:
             plasmabullets.remove(bullet)
 
-    if len(plasmabullets) > 50:
+    while len(plasmabullets) > 50:
         plasmabullets.remove(plasmabullets[0])
 
     for explosion in explosion_positions:
         explosion_image, done_state = explosion_animation.update()
         if not done_state:
-            screen.blit(explosion_image,
-                        (explosion[0]-scroll[0], explosion[1]-scroll[1]))
+            if pygame.Rect(explosion, (140, 70)).colliderect(render_rect):
+                screen.blit(explosion_image, (explosion[0] - scroll[0], explosion[1] - scroll[1]))
         else:
             explosion_positions.remove(explosion)
             explosion_animation.reset()
 
     item_collision_test(player_rect, item_rects)
-    b = 0
-    for item in item_rects:
-        if item_ids[b] == 'gasburner':
-            screen.blit(gasburner_off, (item.x-scroll[0], item.y-scroll[1]+10))
-        if item_ids[b] == "knife":
-            screen.blit(knife, (item.x-scroll[0], item.y-scroll[1]+26))
-        if item_ids[b] == "red_key":
-            screen.blit(red_key, (item.x-scroll[0], item.y-scroll[1]+16))
-        if item_ids[b] == "green_key":
-            screen.blit(green_key, (item.x-scroll[0], item.y-scroll[1]+16))
-        if item_ids[b] == "blue_key":
-            screen.blit(blue_key, (item.x-scroll[0], item.y-scroll[1]+16))
-        if item_ids[b] == "coffeemug":
-            screen.blit(
-                coffeemug, (item.x - scroll[0], item.y - scroll[1] + 14))
-        if item_ids[b] == "ss_bonuscard":
-            screen.blit(ss_bonuscard, (item.x-scroll[0], item.y-scroll[1]+14))
-        if item_ids[b] == "lappi_sytytyspalat":
-            screen.blit(lappi_sytytyspalat,
-                        (item.x-scroll[0], item.y-scroll[1]+17))
-        if item_ids[b] == "plasmarifle":
-            screen.blit(plasmarifle, (item.x-scroll[0], item.y-scroll[1]+17))
-        if item_ids[b] == "cell":
-            screen.blit(cell, (item.x-scroll[0], item.y-scroll[1]+17))
-        if item_ids[b] == "pistol":
-            screen.blit(pistol_texture,
-                        (item.x-scroll[0]-23, item.y-scroll[1]+18))
-        if item_ids[b] == "pistol_mag":
-            screen.blit(pistol_mag, (item.x-scroll[0], item.y-scroll[1]+19))
-        if item_ids[b] == "rk62":
-            screen.blit(rk62_texture, (item.x-scroll[0], item.y-scroll[1]+17))
-        if item_ids[b] == "rk62_mag":
-            screen.blit(rk62_mag, (item.x-scroll[0], item.y-scroll[1]+14))
-        if item_ids[b] == "medkit":
-            screen.blit(medkit, (item.x-scroll[0], item.y-scroll[1]+15))
-        if item_ids[b] == "shotgun":
-            screen.blit(shotgun, (item.x-scroll[0], item.y-scroll[1]+22))
-        if item_ids[b] == "shotgun_shells":
-            screen.blit(shotgun_shells_t,
-                        (item.x-scroll[0], item.y-scroll[1]+25))
-        if item_ids[b] == "iPuhelin":
-            screen.blit(iphone_texture,
-                        (item.x-scroll[0], item.y-scroll[1]+10))
-        b += 1
-
+    for i in range(len(item_rects)):
+        if item_rects[i].colliderect(render_rect):
+            if item_ids[i] == 'gasburner':
+                screen.blit(gasburner_off, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
+            if item_ids[i] == "knife":
+                screen.blit(knife, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+26))
+            if item_ids[i] == "red_key":
+                screen.blit(red_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+            if item_ids[i] == "green_key":
+                screen.blit(green_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+            if item_ids[i] == "blue_key":
+                screen.blit(blue_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+            if item_ids[i] == "coffeemug":
+                screen.blit(
+                    coffeemug, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1] + 14))
+            if item_ids[i] == "ss_bonuscard":
+                screen.blit(ss_bonuscard, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
+            if item_ids[i] == "lappi_sytytyspalat":
+                screen.blit(lappi_sytytyspalat,
+                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "plasmarifle":
+                screen.blit(plasmarifle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "cell":
+                screen.blit(cell, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "pistol":
+                screen.blit(pistol_texture,
+                            (item_rects[i].x - scroll[0]-23, item_rects[i].y - scroll[1]+18))
+            if item_ids[i] == "pistol_mag":
+                screen.blit(pistol_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+19))
+            if item_ids[i] == "rk62":
+                screen.blit(rk62_texture, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+            if item_ids[i] == "rk62_mag":
+                screen.blit(rk62_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
+            if item_ids[i] == "medkit":
+                screen.blit(medkit, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+15))
+            if item_ids[i] == "shotgun":
+                screen.blit(shotgun, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+22))
+            if item_ids[i] == "shotgun_shells":
+                screen.blit(shotgun_shells_t,
+                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+25))
+            if item_ids[i] == "iPuhelin":
+                screen.blit(iphone_texture,
+                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
+            if item_ids[i] == 'soulsphere':
+                screen.blit(soulsphere, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
+            if item_ids[i] == 'turboneedle':
+                screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
 #endregion
 #region PlayerMovement
+    fall_speed = 0.4
+
+    player_movement = [0, 0]
+    onLadder = False
+    for ladder in ladders:
+        if player_rect.colliderect(ladder):
+            onLadder = True
+            vertical_momentum = 0
+            air_timer = 0
+            if moveUp:
+                player_movement[1] = -1
+            elif moveDown:
+                player_movement[1] = 1
+            else:
+                player_movement[1] = 0
+
+    if moveUp and not moveDown and air_timer < 6 and moveUp_released and not onLadder:
+        moveUp_released = False
+        vertical_momentum = -10
+    elif vertical_momentum > 0:
+        fall_speed *= fall_multiplier
+    elif not moveUp:
+        moveUp_released = True
+        fall_speed *= fall_multiplier
+   
     if player_health > 0:
         if playerSprinting == False and playerStamina < 100.0:
             playerStamina += 0.25
@@ -2548,51 +2479,58 @@ while main_running:
         elif playerSprinting and playerStamina <= 0:
             playerSprinting = False
 
-    player_movement = [0, 0]
-
     koponen_recog_rec.center = koponen_rect.center
 
     if playerMovingRight == True:
-        player_movement[0] += 4
+        if not moveDown:
+            player_movement[0] += 4
+        else:
+            player_movement[0] += 2
         KDS.Missions.SetProgress("tutorial", "walk", 0.005)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] += 4
             KDS.Missions.SetProgress("tutorial", "walk", 0.005)
 
     if playerMovingLeft == True:
-        player_movement[0] -= 4
+        if not moveDown:
+            player_movement[0] -= 4
+        else:
+            player_movement[0] -= 2
         KDS.Missions.SetProgress("tutorial", "walk", 0.005)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] -= 4
             KDS.Missions.SetProgress("tutorial", "walk", 0.005)
-
     player_movement[1] += vertical_momentum
-    vertical_momentum += 0.4
+    vertical_momentum += fall_speed
     if vertical_momentum > 8:
         vertical_momentum = 8
 
-    for ladder in ladders:
-        if player_rect.colliderect(ladder):
-            vertical_momentum = 0
-            if KeyW:
-                player_movement[1] = -1
-            elif KeyS:
-                player_movement[1] = 1
-            else:
-                player_movement[1] = 0
 
-#endregion
-#region AI
+    if check_crouch == True:
+        crouch_collisions = move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
+    else:
+        crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
+
+    if moveDown and not onLadder and player_rect.height != crouch_size[1]:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+        check_crouch = True
+    elif (not moveDown or onLadder) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+        check_crouch = False
+    elif not moveDown and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1]:
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+        check_crouch = True
+
     toilet_collisions(player_rect, gasburnerBurning)
 
     if player_health > 0:
-        player_rect, collisions = move(
+        player_rect, collisions = move_entity(
             player_rect, player_movement, tile_rects)
     else:
-        player_rect, collisions = move(player_rect, [0, 8], tile_rects)
-
-    koponen_rect, k_collisions = move(
-        koponen_rect, koponen_movement, tile_rects)
+        player_rect, collisions = move_entity(player_rect, [0, 8], tile_rects)
+#endregion
+#region AI
+    koponen_rect, k_collisions = move_entity(koponen_rect, koponen_movement, tile_rects)
 
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
@@ -2609,7 +2547,7 @@ while main_running:
             else:
                 hitscan = False
             if not sergeant.shoot:
-                sergeant.rect, sergeant.hits = move(
+                sergeant.rect, sergeant.hits = move_entity(
                     sergeant.rect, sergeant.movement, tile_rects)
 
                 if sergeant.movement[0] > 0:
@@ -2617,8 +2555,9 @@ while main_running:
                 elif sergeant.movement[0] < 0:
                     sergeant.direction = False
 
-                screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
-                            (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]))
+                if sergeant.rect.colliderect(render_rect):
+                    screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
+                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant.hits["right"] or sergeant.hits["left"]:
                     sergeant.movement[0] = -sergeant.movement[0]
@@ -2626,12 +2565,13 @@ while main_running:
             else:
                 u, i = sergeant_shoot_animation.update()
 
-                screen.blit(pygame.transform.flip(u, sergeant.direction, False),
-                            (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]))
+                if sergeant.rect.colliderect(render_rect):
+                    screen.blit(pygame.transform.flip(u, sergeant.direction, False),
+                                (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
 
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
-                    shotgun_shot.play()
+                    Audio.playSound(shotgun_shot)
                     if sergeant.hit_scan(player_rect, player_health, tile_rects):
                         player_health = damage(player_health, 20, 50)
                 if i:
@@ -2641,21 +2581,26 @@ while main_running:
 
         elif sergeant.playDeathAnimation:
             d, s = sergeant_death_animation.update()
-            if not s:
+            if not s and sergeant.rect.colliderect(render_rect):
                 screen.blit(pygame.transform.flip(d, sergeant.direction, False),
-                            (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]))
+                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
             if s:
                 sergeant.playDeathAnimation = False
                 sergeant_death_animation.reset()
         else:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
-                                              False), (sergeant.rect.x-scroll[0], sergeant.rect.y-scroll[1]+10))
-
+                                              False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
+            if not sergeant.loot_dropped:
+                sergeant.loot_dropped = True
+                if round(random.uniform(0, 3)) == 0:
+                    item_rects.append(pygame.Rect(sergeant.rect.x, sergeant.rect.y + (sergeant.rect.height / 2) - 2, sergeant.rect.width, sergeant.rect.height / 2))
+                    item_ids.append("shotgun_shells")
+            
     for zombie1 in zombies:
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
             if not search:
-                zombie1.rect, zombie1.hits = move(
+                zombie1.rect, zombie1.hits = move_entity(
                     zombie1.rect, zombie1.movement, tile_rects)
                 if zombie1.movement[0] != 0:
                     zombie1.walking = True
@@ -2683,19 +2628,19 @@ while main_running:
                 else:
                     zombie1.direction = True
                 screen.blit(pygame.transform.flip(zombie_attack_animation.update(
-                ), zombie1.direction, False), (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]))
+                ), zombie1.direction, False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
 
         elif zombie1.playDeathAnimation:
             d, s = zombie_death_animation.update()
             if not s:
                 screen.blit(pygame.transform.flip(d, zombie1.direction, False),
-                            (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]))
+                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
             if s:
                 zombie1.playDeathAnimation = False
                 zombie_death_animation.reset()
         else:
             screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction,
-                                              False), (zombie1.rect.x-scroll[0], zombie1.rect.y-scroll[1]+14))
+                                              False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]+14))
 
     # Zombien käsittely loppuu tähän
 
@@ -2708,7 +2653,7 @@ while main_running:
     
     for bulldog in bulldogs:
         bd_attr = bulldog.getAttributes()
-        screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x-scroll[0],bd_attr[0].y-scroll[1]))
+        screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x - scroll[0],bd_attr[0].y - scroll[1]))
         player_health -= bd_attr[3]
 
     if k_collisions["left"]:
@@ -2720,18 +2665,15 @@ while main_running:
 #endregion
 #region UI
     score = score_font.render(
-        ("Score: " + str(player_score)), True, (255, 255, 255))
-    if DebugMode:
-        fps = score_font.render(
-            "Fps: " + str(int(clock.get_fps())), True, (255, 255, 255))
+        ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
 
     if player_health < 0:
         player_health = 0
 
     health = score_font.render(
-        "Health: " + str(player_health), True, (255, 255, 255))
+        "HEALTH: " + str(player_health), True, KDS.Colors.GetPrimary.White)
     stamina = score_font.render(
-        "Stamina: " + str(round(int(playerStamina))), True, (255, 255, 255))
+        "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
 #endregion
 #region Pelaajan elämätilanteen käsittely
     if player_health < last_player_health and player_health != 0:
@@ -2742,7 +2684,7 @@ while main_running:
     last_player_health = player_health
 
     if hurted:
-        hurt_sound.play()
+        Audio.playSound(hurt_sound)
 #endregion
 #region More Collisions
     if collisions['bottom'] == True:
@@ -2767,12 +2709,18 @@ while main_running:
     animation = []
     if player_health > 0:
         if running:
-            animation = run_animation.copy()
+            if player_rect.height == stand_size[1]:
+                animation = run_animation.copy()
+            else:
+                animation = short_run_animation.copy()
             animation_duration = 7
             if playerSprinting:
                 animation_duration = 3
         else:
-            animation = stand_animation.copy()
+            if player_rect.height == stand_size[1]:
+                animation = stand_animation.copy()
+            else:
+                animation = short_stand_animation.copy()
             animation_duration = 10
     else:
         if player_death_event:
@@ -2809,11 +2757,11 @@ while main_running:
             if knife_animation_stats[0] > 1:
                 knife_animation_stats[0] = 0
 
-    if toilet_animation_stats[2] > toilet_animation_stats[1]:
-        toilet_animation_stats[0] += 1
-        toilet_animation_stats[2] = 0
-        if toilet_animation_stats[0] > 2:
-            toilet_animation_stats[0] = 0
+    if burning_animation_stats[2] > burning_animation_stats[1]:
+        burning_animation_stats[0] += 1
+        burning_animation_stats[2] = 0
+        if burning_animation_stats[0] > 2:
+            burning_animation_stats[0] = 0
 
     if koponen_animation_stats[2] > koponen_animation_stats[1]:
         koponen_animation_stats[0] += 1
@@ -2821,124 +2769,124 @@ while main_running:
         if koponen_animation_stats[0] > 1:
             koponen_animation_stats[0] = 0
 
-    if player_hand_item != "none":
-        if player_health:
+    if player_hand_item != "none" and player_health:
+        if direction:
+            offset_c = 49
+            offset_k = 75
+            offset_p = 75
+            offset_pi = 80
+            offset_rk = 80
+        else:
+            offset_c = 8
+            offset_k = 10
+            offset_p = 14
+            offset_pi = 2
+            offset_rk = 14
+            
+        if player_hand_item == "gasburner":
+            offset = 11
             if direction:
-                offset_c = 49
-                offset_k = 75
-                offset_p = 75
-                offset_pi = 80
-                offset_rk = 80
+                offset = -offset - 29
+            if gasburnerBurning:
+                if gasburner_animation_stats[0]:
+                    gasburner_fire.stop()
+                    pygame.mixer.Sound.play(gasburner_fire)
+                screen.blit(pygame.transform.flip(gasburner_animation[gasburner_animation_stats[0]], direction, False), (
+                    int(player_rect.centerx + offset - scroll[0]), int(player_rect.y - scroll[1])))
             else:
-                offset_c = 8
-                offset_k = 10
-                offset_p = 14
-                offset_pi = 2
-                offset_rk = 14
-            if player_hand_item in Items_list:
-                o = Items[player_hand_item]
+                screen.blit(pygame.transform.flip(gasburner_off, direction, False), (
+                    int(player_rect.centerx + offset - scroll[0]), int(player_rect.y - scroll[1])))
+        elif player_hand_item == "knife":
+            offset = 14
+            if direction:
+                offset = -offset - 26
+            if knifeInUse:
                 if direction:
-                    offset = player_rect.width - o.get_width() / 2
+                    offset -= 20
                 else:
-                    offset = -player_rect.width - -(o.get_width() / 2)
+                    offset -= 1
+                screen.blit(pygame.transform.flip(knife_animation[knife_animation_stats[0]], direction, False), (
+                    player_rect.centerx + offset - scroll[0], player_rect.y - scroll[1] + 14))
+            else:
+                screen.blit(pygame.transform.flip(knife, direction, False), (
+                    player_rect.centerx + offset - scroll[0], player_rect.y - scroll[1] + 14))
+        elif player_hand_item == "coffeemug":
+            offset = 24
+            if direction:
+                offset = -offset
+            screen.blit(pygame.transform.flip(coffeemug, direction, False), (
+                int(player_rect.centerx + offset - scroll[0] - (coffeemug.get_width() / 2)), int(player_rect.y - scroll[1] + 14)))
+        elif player_hand_item == "iPuhelin":
+            offset = 20
+            if direction:
+                offset = -offset
+            screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
+                int(player_rect.centerx + offset - scroll[0] - (iphone_texture.get_width() / 2)), int(player_rect.y - scroll[1] + 10)))
+        elif player_hand_item == "plasmarifle":
+            if plasmarifle_fire and ammunition_plasma > 0:
+                screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
-            if player_hand_item == "gasburner":
-                if gasburnerBurning:
-                    if gasburner_animation_stats[0]:
-                        gasburner_fire.stop()
-                        pygame.mixer.Sound.play(gasburner_fire)
-                    screen.blit(pygame.transform.flip(gasburner_animation[gasburner_animation_stats[0]], direction, False), (
-                        player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
-                else:
-                    screen.blit(pygame.transform.flip(gasburner_off, direction, False),
-                                (player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]))
-
-            elif player_hand_item == "knife":
-                if knifeInUse:
-                    screen.blit(pygame.transform.flip(knife_animation[knife_animation_stats[0]], direction, False), (
-                        player_rect.right-offset_k-scroll[0], player_rect.y-scroll[1]+14))
-                else:
-                    screen.blit(pygame.transform.flip(knife, direction, False), (
-                        player_rect.right-offset_c-scroll[0], player_rect.y-scroll[1]+14))
-
-            elif player_hand_item == "coffeemug":
-                screen.blit(pygame.transform.flip(coffeemug, direction, False), (
-                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
-                print(scroll[0])
-
-            elif player_hand_item == "iPuhelin":
-                screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
-                    int(player_rect.center[0] - offset - scroll[0]), int(player_rect.y - scroll[1] + 14)))
-
-            elif player_hand_item == "plasmarifle":
-                if plasmarifle_fire and ammunition_plasma > 0:
-                    screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
-
-                else:
-                    screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
-
-            elif player_hand_item == "pistol":
-                pistol_cooldown += 1
-                if pistolFire and pistol_cooldown > 25:
-                    pistol_cooldown = 0
-                    if pistol_bullets > 0:
-                        pistol_bullets -= 1
-                        screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
-                            player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
-                        bullet = Bullet(
-                            [player_rect.x, player_rect.y+20], direction, 50)
-                        hit = bullet.shoot(tile_rects)
-                        del hit, bullet
-                        pistol_shot.play()
-                else:
-                    screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
-                        player_rect.right-offset_pi-scroll[0], player_rect.y-scroll[1]+14))
-
-            elif player_hand_item == "rk62":
-                if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
-                    rk_62_ammo -= 1
-                    rk62_cooldown = 0
-                    screen.blit(pygame.transform.flip(rk62_f_texture, direction, False), (
-                        player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
+            else:
+                screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
+        elif player_hand_item == "pistol":
+            pistol_cooldown += 1
+            if weapon_fire and pistol_cooldown > 25:
+                pistol_cooldown = 0
+                if pistol_bullets > 0:
+                    pistol_bullets -= 1
+                    screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
+                        player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
                     bullet = Bullet(
-                        [player_rect.x, player_rect.y+20], direction, 25)
+                        [player_rect.x, player_rect.y+20], direction, 50)
                     hit = bullet.shoot(tile_rects)
-                    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                                    ("rk62 hit an object: " + str(hit)), False)
                     del hit, bullet
-                    rk62_sound_cooldown += 1
-                    if rk62_sound_cooldown > 10:
-                        rk62_sound_cooldown
-                        rk62_shot.stop()
-                        rk62_shot.play()
+                    Audio.playSound(pistol_shot)
+            else:
+                screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
+                    player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
+        elif player_hand_item == "rk62":
+            if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
+                rk_62_ammo -= 1
+                rk62_cooldown = 0
+                screen.blit(pygame.transform.flip(rk62_f_texture, direction, False), (
+                    player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
+                bullet = Bullet(
+                    [player_rect.x, player_rect.y+20], direction, 25)
+                hit = bullet.shoot(tile_rects)
+                KDS.Logging.Log(KDS.Logging.LogType.debug,
+                                ("rk62 hit an object: " + str(hit)), False)
+                del hit, bullet
+                rk62_sound_cooldown += 1
+                if rk62_sound_cooldown > 10:
+                    rk62_sound_cooldown
+                    rk62_shot.stop()
+                    Audio.playSound(rk62_shot)
 
-                else:
-                    if not mouseLeftPressed:
-                        rk62_shot.stop()
-                    screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
-                        player_rect.right-offset_rk-scroll[0], player_rect.y-scroll[1]+14))
+            else:
+                if not mouseLeftPressed:
+                    rk62_shot.stop()
+                screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
+                    player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
+        elif player_hand_item == "shotgun":
+            if not shotgun_loaded:
+                shotgun_cooldown += 1
+                if shotgun_cooldown > 60:
+                    shotgun_loaded = True
+            elif weapon_fire and shotgun_shells > 0:
+                shotgun_loaded = False
+                shotgun_cooldown = 0
+                shotgun_shells -= 1
+                shotgun_thread = threading.Thread(target=shotgun_shots)
+                shotgun_thread.start()
+                Audio.playSound(player_shotgun_shot)
+                screen.blit(pygame.transform.flip(shotgun_f, direction, False), (
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
-            elif player_hand_item == "shotgun":
-                if not shotgun_loaded:
-                    shotgun_cooldown += 1
-                    if shotgun_cooldown > 60:
-                        shotgun_loaded = True
-                else:
-                    shotgun_cooldown = 0
-                if pistolFire and shotgun_shells > 0 and shotgun_loaded:
-                    shotgun_shells -= 1
-                    shotgun_loaded = False
-                    shotgun_thread = threading.Thread(target=shotgun_shots)
-                    shotgun_thread.start()
-                    player_shotgun_shot.play()
-                    screen.blit(pygame.transform.flip(shotgun_f, direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
-
-                else:
-                    screen.blit(pygame.transform.flip(shotgun, direction, False), (
-                        player_rect.right-offset_p-scroll[0], player_rect.y-scroll[1]+14))
+            else:
+                screen.blit(pygame.transform.flip(shotgun, direction, False), (
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
 
     if farting:
         fart_counter += 1
@@ -2973,7 +2921,7 @@ while main_running:
 #region Koponen Tip
     if player_rect.colliderect(koponen_recog_rec):
         screen.blit(
-            koponen_talk_tip, (koponen_recog_rec.topleft[0]-scroll[0], koponen_recog_rec.topleft[1]-scroll[1]-10))
+            koponen_talk_tip, (koponen_recog_rec.topleft[0] - scroll[0], koponen_recog_rec.topleft[1] - scroll[1]-10))
         koponen_movement[0] = 0
         if knifeInUse:
             koponen_alive = False
@@ -2985,37 +2933,70 @@ while main_running:
 #endregion
 #region Interactable Objects
     for toilet in toilets:
-        if burning_toilets[h] == True:
-            screen.blit(toilet_animation[toilet_animation_stats[0]],
-                        (toilet.x-scroll[0]+2, toilet.y-scroll[1]+1))
+        if toilet.colliderect(render_rect):
+            if burning_toilets[h] == True:
+                screen.blit(toilet_animation[burning_animation_stats[0]],
+                            (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
         h += 1
     h = 0
     for trashcan2 in trashcans:
-        if burning_trashcans[h] == True:
-            screen.blit(trashcan_animation[toilet_animation_stats[0]],
-                        (trashcan2.x-scroll[0]+3, trashcan2.y-scroll[1]+6))
+        if trashcan2.colliderect(render_rect):
+            if burning_trashcans[h] == True:
+                screen.blit(trashcan_animation[burning_animation_stats[0]],
+                            (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
         h += 1
 
     screen.blit(koponen_animation[koponen_animation_stats[0]], (
-        koponen_rect.x-scroll[0], koponen_rect.y-scroll[1]))
+        koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if player_health or player_death_event:
+        if DebugMode:
+            pygame.draw.rect(screen, (0, 255, 0), (player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            player_rect.x-scroll[0], player_rect.y-scroll[1]))
+            int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2)), int(player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height())))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
-            player_rect.x-scroll[0], player_rect.y-scroll[1]))
+            player_rect.x - scroll[0], player_rect.y - scroll[1]))
 
     for archvile in archviles:
         if archvile.attack_anim:
             screen.blit(flames_animation.update(),
-                        (player_rect.x-scroll[0], player_rect.y-scroll[1]-20))
+                        (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
+    for iron_bar in iron_bars:
+        if iron_bar.colliderect(render_rect):
+            screen.blit(iron_bars_texture, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
+
+    jukebox_collision = False
+
+    for jukebox in jukeboxes:
+        if player_rect.colliderect(jukebox):
+            screen.blit(jukebox_tip, (jukebox.x - scroll[0]-20, jukebox.y - scroll[1]-30))
+            jukebox_collision = True
+
+    if jukebox_collision:
+        if FunctionKey:
+            pygame.mixer.music.stop()
+            for x in range(len(jukebox_music)):
+                jukebox_music[x].stop()
+            while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
+                jukeboxMusicPlaying = int(
+                    random.uniform(0, len(jukebox_music)))
+            for i in range(len(lastJukeboxSong) - 1):
+                lastJukeboxSong[i] = lastJukeboxSong[i + 1]
+            lastJukeboxSong[4] = jukeboxMusicPlaying
+            Audio.MusicChannel2.play(jukebox_music[jukeboxMusicPlaying])
+            Audio.MusicChannel2.set_volume(music_volume)
+    else:
+        if not pygame.mixer.music.get_busy():
+            Audio.MusicChannel2.stop()
+            pygame.mixer.music.play()
+            pygame.mixer.music.set_volume(music_volume)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
     if DebugMode:
-        screen.blit(fps, (10, 10))
+        screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (10, 10))
 #endregion
 #region UI Rendering
     for i in range(len(inventory)):
@@ -3052,8 +3033,8 @@ while main_running:
                 inventoryDoubles[i] = True  # True, koska vie kaksi slottia
             elif inventory[i] == "shotgun":
                 # Yksi 34 vaihdetaan 68, koska kyseinen esine vie kaksi paikkaa.
-                screen.blit(shotgun, ((i * 34) + 20 +
-                                      (68 / shotgun.get_width() * 2), 80))
+                screen.blit(shotgun, (int((i * 34) + 20 +
+                                      (68 / shotgun.get_width() * 2)), 80))
                 inventoryDoubles[i] = True  # True, koska vie kaksi slottia
 
     for double in inventoryDoubles:
@@ -3081,33 +3062,49 @@ while main_running:
        
 #endregion
 #region Screen Rendering
-    main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+    if dark:
+        screen.blit(black_tint, (0, 0))
+    main_display.fill(KDS.Colors.GetPrimary.Black)
+    main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
     pygame.display.update()
 #endregion
-#region Conditional Events
-    if esc_menu:
-        pygame.mixer.pause()
-        pygame.mixer.music.pause()
-        screen.blit(alpha, (0, 0))
-        main_display.blit(pygame.transform.scale(screen, display_size), (0, 0))
-        pygame.image.save(main_display, "im314.png")
-        esc_menu_f()
-    if go_to_main_menu:
-        pygame.mixer.music.stop()
-        main_menu()
+#region Data Update
     animation_counter += 1
     if player_hand_item == "gasburner":
         gasburner_animation_stats[2] += 1
     elif player_hand_item == "knife":
         knife_animation_stats[2] += 1
     FunctionKey = False
-    pistolFire = False
-    toilet_animation_stats[2] += 1
+    weapon_fire = False
+    burning_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
     rk62_cooldown += 1
     for sergeant in sergeants:
         sergeant.hitscanner_cooldown += 1
+    if KDS.Missions.GetFinished() == True:
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+            level_finished_menu()
+#endregion
+#region Conditional Events
+    if esc_menu:
+        Audio.MusicChannel1.fadeout(500)
+        Audio.MusicChannel2.fadeout(500)
+        pygame.mixer.music.fadeout(500)
+        screen.blit(black_tint, (0, 0))
+        main_display.fill(KDS.Colors.GetPrimary.Black)
+        main_display.blit(pygame.transform.scale(screen, FullscreenGet.size), (int(FullscreenGet.offset[0]), int(FullscreenGet.offset[1])))
+        esc_menu_background = main_display.copy()
+        pygame.mouse.set_visible(True)
+        esc_menu_f()
+        pygame.mouse.set_visible(False)
+        pygame.mixer.music.play()
+    if go_to_main_menu:
+        Audio.MusicChannel1.stop()
+        Audio.MusicChannel2.stop()
+        pygame.mixer.music.stop()
+        pygame.mouse.set_visible(True)
+        main_menu()
 #endregion
 #region Ticks
     tick += 1
@@ -3116,3 +3113,5 @@ while main_running:
     clock.tick(60)
 #endregion
 #endregion
+pygame.display.quit()
+pygame.quit()
