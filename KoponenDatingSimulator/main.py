@@ -214,7 +214,7 @@ class Archvile:
                 self.attacking = "null"
 
             if not self.attack_anim:
-                self.rect, self.hits = move(
+                self.rect, self.hits = move_entity(
                     self.rect, self.movement, tile_rects)
                 if self.hits["right"] or self.hits["left"]:
                     self.movement[0] = -self.movement[0]
@@ -605,7 +605,9 @@ test_rect = pygame.Rect(0, 0, 60, 40)
 stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
-fall_mmultiplier = 2.5
+fall_multiplier = 2.5
+moveUp_released = True
+check_crouch = False
 player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
@@ -1356,7 +1358,7 @@ def toilet_collisions(rect, burnstate):
         o += 1
 #endregion
 #region Player
-def move(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
+def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
     rect.x += movement[0]
@@ -2175,8 +2177,6 @@ while main_running:
                 playerMovingLeft = True
             elif event.key == K_SPACE:
                 moveUp = True
-                if not moveDown and air_timer < 6:
-                    vertical_momentum = -10
             elif event.key == K_LCTRL:
                 moveDown = True
             elif event.key == K_LSHIFT:
@@ -2194,8 +2194,6 @@ while main_running:
                 console()
             elif event.key == K_w:
                 moveUp = True
-                if not moveDown and air_timer < 6:
-                    vertical_momentum = -10
             elif event.key == K_s:
                 moveDown = True
             elif event.key == K_f:
@@ -2495,6 +2493,16 @@ while main_running:
                 screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
 #endregion
 #region PlayerMovement
+    fall_speed = 0.4
+    if moveUp and not moveDown and air_timer < 6 and moveUp_released:
+        moveUp_released = False
+        vertical_momentum = -10
+    elif vertical_momentum > 0:
+        fall_speed *= fall_multiplier
+    elif not moveUp:
+        moveUp_released = True
+        fall_speed *= fall_multiplier
+   
     if player_health > 0:
         if playerSprinting == False and playerStamina < 100.0:
             playerStamina += 0.25
@@ -2528,7 +2536,7 @@ while main_running:
             KDS.Missions.SetProgress("tutorial", "walk", 0.005)
 
     player_movement[1] += vertical_momentum
-    vertical_momentum += 0.4
+    vertical_momentum += fall_speed
     if vertical_momentum > 8:
         vertical_momentum = 8
 
@@ -2545,13 +2553,9 @@ while main_running:
             else:
                 player_movement[1] = 0
 
-    try:
-        if check_crouch == True:
-            crouch_collisions = move(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
-        else:
-            crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
-    except Exception:
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "check_crouch has not been assigned yet.", False)
+    if check_crouch == True:
+        crouch_collisions = move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
+    else:
         crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
 
     if moveDown and not onLadder and player_rect.height != crouch_size[1]:
@@ -2564,21 +2568,24 @@ while main_running:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
 
-    if not onLadder and not moveDown and moveUp:
-        moveUp = False
+
+    if not onLadder and not moveDown and moveUp and moveUp_released:
+        moveUp_released = False
         if air_timer < 6:
             vertical_momentum = -10
+    elif not moveUp:
+        moveUp_released = True
 
     toilet_collisions(player_rect, gasburnerBurning)
 
     if player_health > 0:
-        player_rect, collisions = move(
+        player_rect, collisions = move_entity(
             player_rect, player_movement, tile_rects)
     else:
-        player_rect, collisions = move(player_rect, [0, 8], tile_rects)
+        player_rect, collisions = move_entity(player_rect, [0, 8], tile_rects)
 #endregion
 #region AI
-    koponen_rect, k_collisions = move(koponen_rect, koponen_movement, tile_rects)
+    koponen_rect, k_collisions = move_entity(koponen_rect, koponen_movement, tile_rects)
 
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
@@ -2595,7 +2602,7 @@ while main_running:
             else:
                 hitscan = False
             if not sergeant.shoot:
-                sergeant.rect, sergeant.hits = move(
+                sergeant.rect, sergeant.hits = move_entity(
                     sergeant.rect, sergeant.movement, tile_rects)
 
                 if sergeant.movement[0] > 0:
@@ -2642,7 +2649,7 @@ while main_running:
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
             if not search:
-                zombie1.rect, zombie1.hits = move(
+                zombie1.rect, zombie1.hits = move_entity(
                     zombie1.rect, zombie1.movement, tile_rects)
                 if zombie1.movement[0] != 0:
                     zombie1.walking = True
