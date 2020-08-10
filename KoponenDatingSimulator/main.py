@@ -853,29 +853,6 @@ def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
 
-#def load_music():
-#    original_path = os.getcwd()
-#    os.chdir("Assets/Audio/Music/")
-#    music_files = os.listdir()
-#
-#    random.shuffle(music_files)
-#    KDS.Logging.Log(KDS.Logging.LogType.debug,
-#                    "Music Files Initialised: " + str(len(music_files)), False)
-#    for track in music_files:
-#        KDS.Logging.Log(KDS.Logging.LogType.debug,
-#                        "Initialised Music File: " + track, False)
-#
-#    pygame.mixer.music.load(music_files[0])
-#
-#    pos = 0
-#    for track in music_files:
-#        if pos:
-#            pygame.mixer.music.queue(track)
-#        pos += 1
-#
-#    os.chdir(original_path)
-#    del original_path
-#    del pos
 def play_map_music(_current_map):
     pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
     pygame.mixer.music.play(-1)
@@ -1873,7 +1850,6 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     WorldGeneration()
     pygame.mouse.set_visible(False)
     main_menu_running = False
-    #load_music()
     play_map_music(current_map)
     
     global player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
@@ -2146,25 +2122,6 @@ del background_surface
 
 esc_menu_background = pygame.image.load("level_background.png")
 """
-
-#tile_textures = [{'b': floor0,
-#                    'c': wall0,
-#                    'd': table0,
-#                    'e': toilet0,
-#                    'f': lamp0,
-#                    'g': trashcan,
-#                    'h': ground1,
-#                    'i': grass,
-#                    'j': concrete0,
-#                    'o': bricks,
-#                    'A': tree,
-#                    'p': planks,
-#                    'q': ladder_texture,
-#                    'r': light_bricks,
-#                    's': iron_bars,
-#                    't': soil,
-#                    'u': mossy_bricks}]
-
 #endregion
 #region Main Running
 while main_running:
