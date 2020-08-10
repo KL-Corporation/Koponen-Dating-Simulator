@@ -342,7 +342,7 @@ landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png").co
 ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png").convert()
 background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png").convert()
 light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").convert()
-iron_bar = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
+iron_bar = pygame.image.load("Assets/Textures/Building/iron_bars_texture.png").convert()
 soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
 mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
 table0.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -2280,6 +2280,8 @@ while main_running:
             play_function(KDS.Gamemode.gamemode)
 #endregion
 #region Rendering
+
+    # Rendering: World Generation
     render_rect = pygame.Rect(scroll[0], scroll[1], screen_size[0], screen_size[1])
     vertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
     horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
@@ -2288,6 +2290,8 @@ while main_running:
             if world_gen[0][y][x] in tile_textures:
                 screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
+
+    # Rendering: Doors
     for i in range(len(door_rects)):
         if door_rects[i].colliderect(render_rect):
             if doors_open[i]:
@@ -2305,11 +2309,13 @@ while main_running:
                 else:
                     screen.blit(door_closed, (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
 
+    # Rendering: Jukeboxes
     for jukebox in jukeboxes:
         if jukebox.colliderect(render_rect):
             screen.blit(jukebox_texture, (jukebox.x -
                                         scroll[0], jukebox.y - scroll[1]))
 
+    # Rendering: Landimes
     for landmine in landmines:
         if landmine.colliderect(render_rect):
             screen.blit(landmine_texture, (landmine.x - scroll[0], landmine.y - scroll[1]))
@@ -2320,6 +2326,8 @@ while main_running:
                 if player_health < 0:
                     player_health = 0
                 explosion_positions.append((landmine.x-40, landmine.y-58))
+
+    
         for zombie1 in zombies:
             if zombie1.rect.colliderect(landmine):
                 landmines.remove(landmine)
@@ -2336,7 +2344,7 @@ while main_running:
 
                 explosion_positions.append((landmine.x-40, landmine.y-58))
 
-
+    # Rendering: Player's hand item
     if player_hand_item != "none":
         if player_hand_item == "plasmarifle":
             
@@ -2379,6 +2387,7 @@ while main_running:
                 "Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White)
             screen.blit(ammo_count, (10, 360))
 
+    # Rendering: Bullets
     for bullet in plasmabullets:
         state = bullet.update(tile_rects)
         if state:
@@ -2387,6 +2396,7 @@ while main_running:
     while len(plasmabullets) > 50:
         plasmabullets.remove(plasmabullets[0])
 
+    # Rendering: Explosions
     for explosion in explosion_positions:
         explosion_image, done_state = explosion_animation.update()
         if not done_state:
@@ -2396,6 +2406,7 @@ while main_running:
             explosion_positions.remove(explosion)
             explosion_animation.reset()
 
+    # Rendering: Items
     item_collision_test(player_rect, item_rects)
     for i in range(len(item_rects)):
         if item_rects[i].colliderect(render_rect):

@@ -18,7 +18,7 @@ bricks,o,255,128,0
 planks,p,255,64,0
 ladder,q,255,192,0
 light_bricks,r,213,0,231
-iron_bars,s,23,41,22
+iron_bar,s,23,41,22
 mossy_bricks,u,120,120,0
 soil,t,120,120,1
 
