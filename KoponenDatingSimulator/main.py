@@ -332,7 +332,7 @@ landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png").co
 ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png").convert()
 background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png").convert()
 light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").convert()
-iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
+iron_bar = pygame.image.load("Assets/Textures/Building/iron_bars.png").convert()
 soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
 mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
 table0.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -346,7 +346,7 @@ blue_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
 jukebox_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 landmine_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ladder_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-iron_bars.set_colorkey(KDS.Colors.GetPrimary.White)
+iron_bar.set_colorkey(KDS.Colors.GetPrimary.White)
 tree.set_colorkey((0, 0, 0))
 
 gasburner_off = pygame.image.load(
@@ -2985,8 +2985,8 @@ while main_running:
             screen.blit(flames_animation.update(),
                         (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
-    for iron_bar in iron_bars:
-        screen.blit(iron_bar, (iron_bar.x - scroll[0], iron_bar.y - scroll[1]))
+    for iron_bar1 in iron_bars:
+        screen.blit(iron_bar, (iron_bar1.x - scroll[0], iron_bar1.y - scroll[1]))
 
     jukebox_collision = False
 
