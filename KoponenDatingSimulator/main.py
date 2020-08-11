@@ -699,13 +699,12 @@ color_keys = list()
 door_rects = list()
 doors_open = list()
 tile_textures = dict()
+tile_textures_loaded = False
 
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
     global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids
-    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures
-        
-    tile_textures = dict()
+    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures, tile_textures_loaded
 
     buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
     decorationBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map")).convert()
@@ -755,15 +754,23 @@ def WorldGeneration():
                 if Type == 0:
                     convertBuildingRules.append(array[1])
                     convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
-                    if not "door" in array[0]:
+                    if not tile_textures_loaded and not "door" in array[0]:
                         try:
-                            global_texture = globals()[str(array[0])]
-                            if isinstance(global_texture, pygame.Surface):
-                                tile_textures[array[1]] = global_texture.copy()
+                            global_texture1 = globals()[str(array[0])]
                         except KeyError:
-                            global_texture = globals()[str(array[0] + "_texture")]
-                            if isinstance(global_texture, pygame.Surface):
-                                tile_textures[array[1]] = global_texture.copy()
+                            global_texture1 = None
+                        try:
+                            global_texture2 = globals()[str(array[0] + "_texture")]
+                        except KeyError:
+                            global_texture2 = None
+                        
+                        if isinstance(global_texture1, pygame.Surface):
+                            tile_textures[array[1]] = global_texture1.copy()
+                        elif isinstance(global_texture2, pygame.Surface):
+                            tile_textures[array[1]] = global_texture2.copy()
+                        else:
+                            KDS.Logging.Log(KDS.Logging.LogType.error, "Texture not found. " + array[0], True)
+
                 elif Type == 1:
                     convertDecorationRules.append(array[1])
                     convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
@@ -773,6 +780,8 @@ def WorldGeneration():
                 elif Type == 3:
                     convertItemRules.append(array[1])
                     convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+
+    tile_textures_loaded = True
 
     building_gen = list()
     decoration_gen = list()
