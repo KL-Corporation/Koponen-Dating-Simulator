@@ -2109,22 +2109,6 @@ def inventoryRight():
         else:
             inventory_slot += 1
 #endregion
-#region Useless shit
-"""
-wd = len(world_gen[0][0])*68
-hg = len(world_gen[0])*68
-background_surface = pygame.Surface((wd,hg))
-
-for y in range(len(world_gen[0])):
-    for x in range(len(world_gen[0][0])):
-        background_surface.blit(background_wall,(x*68,y*68))
-
-pygame.image.save(background_surface, "level_background.png")
-del background_surface
-
-esc_menu_background = pygame.image.load("level_background.png")
-"""
-#endregion
 #region Main Running 
 while main_running:
 #region Events
