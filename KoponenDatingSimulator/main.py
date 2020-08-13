@@ -61,12 +61,13 @@ class Audio:
     EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
         pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6), pygame.mixer.Channel(7), 
         pygame.mixer.Channel(8), pygame.mixer.Channel(9), pygame.mixer.Channel(10)]
+    @staticmethod
     def playSound(sound: pygame.mixer.Sound):
         global effect_volume
         play_channel = pygame.mixer.find_channel(True)
         play_channel.play(sound)
         play_channel.set_volume(effect_volume)
-
+    @staticmethod
     def stopAllSounds():
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].stop()
@@ -107,6 +108,7 @@ class plasma_bullet:
 
         return self.done
 class Bullet:
+
 
     def __init__(self, _position, _direction, damage):
         self.position = _position
@@ -157,8 +159,10 @@ class Bullet:
             if counter > 300:
                 q = False
         return "null"
-class Archvile:
 
+monstersLeft = 0
+class Archvile:
+    global monstersLeft
     def __init__(self, position, health, speed):
         self.position = position
         self.health = health
@@ -255,6 +259,7 @@ class Archvile:
 
             if p:
                 self.playDeathAnimation = False
+                monstersLeft -= 1
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction,
@@ -345,6 +350,10 @@ light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png").co
 iron_bar = pygame.image.load("Assets/Textures/Building/iron_bars_texture.png").convert()
 soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
 mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png").convert()
+stone = pygame.image.load("Assets/Textures/Building/stone.png").convert()
+hay = pygame.image.load("Assets/Textures/Building/hay.png").convert()
+soil1 = pygame.image.load("Assets/Textures/Building/soil_2.png").convert()
+wood = pygame.image.load("Assets/Textures/Building/wood.png").convert()
 table0.set_colorkey(KDS.Colors.GetPrimary.White)
 toilet0.set_colorkey(KDS.Colors.GetPrimary.White)
 lamp0.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -571,6 +580,8 @@ player_death_event = False
 animation_has_played = False
 attack_counter = 0
 fart_counter = 0
+monsterAmount = 0
+monstersLeft = 0
 farting = False
 
 current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "02")
@@ -879,6 +890,7 @@ ad_images = load_ads()
 koponen_talking_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 def load_rects():
+    global monsterAmount, monstersLeft
     tile_rects = []
     toilets = []
     trashcans = []
@@ -931,18 +943,23 @@ def load_rects():
                         landmines.append(pygame.Rect(x * 34+6, y * 34+23, 22, 11))
                     elif tile == 'Z':
                         zombies.append(KDS.AI.Zombie((x * 34, y * 34 - 34), 100, 1))
+                        monsterAmount += 1
                     elif tile == 'S':
                         sergeants.append(KDS.AI.SergeantZombie(
                             (x * 34, y * 34 - 34), 220, 1))
+                        monsterAmount += 1
                     elif tile == 'V':
                         archviles.append(Archvile((x * 34, y * 34-51), 750, 2))
+                        monsterAmount += 1
                     elif tile == 'K':
                         bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
+                        monsterAmount += 1
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
                 x += 1
             y += 1
+    monstersLeft = monsterAmount
     return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars
 def load_item_rects():
     def append_rect():
@@ -1168,7 +1185,7 @@ def door_collision_test():
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells
+    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
 
     def s(score):
         global player_score
@@ -2410,6 +2427,8 @@ while main_running:
     item_collision_test(player_rect, item_rects)
     for i in range(len(item_rects)):
         if item_rects[i].colliderect(render_rect):
+            if DebugMode:
+                pygame.draw.rect(screen,(2,2,220),(item_rects[i].x-scroll[0],item_rects[i].y-scroll[1],item_rects[i].width,item_rects[i].height))
             if item_ids[i] == 'gasburner':
                 screen.blit(gasburner_off, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
             if item_ids[i] == "knife":
@@ -2547,6 +2566,8 @@ while main_running:
     sa = sergeant_walk_animation.update()
 
     for sergeant in sergeants:
+        if DebugMode:
+            pygame.draw.rect(screen,(220,2,2),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1],sergeant.rect.width,sergeant.rect.height))
         if sergeant.health > 0:
             if sergeant.hitscanner_cooldown > 100:
                 hitscan = sergeant.hit_scan(
@@ -2598,6 +2619,7 @@ while main_running:
             if s:
                 sergeant.playDeathAnimation = False
                 sergeant_death_animation.reset()
+                monstersLeft -= 1
         else:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
                                               False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
@@ -2608,6 +2630,8 @@ while main_running:
                     item_ids.append("shotgun_shells")
             
     for zombie1 in zombies:
+        if DebugMode:
+            pygame.draw.rect(screen,(220,2,2),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1],zombie1.rect.width,zombie1.rect.height))
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
             if not search:
@@ -2649,6 +2673,7 @@ while main_running:
             if s:
                 zombie1.playDeathAnimation = False
                 zombie_death_animation.reset()
+                monstersLeft -= 1
         else:
             screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction,
                                               False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]+14))
@@ -2657,12 +2682,19 @@ while main_running:
 
     arch_run = archvile_run_animation.update()
     for archvile in archviles:
+        if DebugMode:
+            pygame.draw.rect(screen,(220,2,2),(archvile.rect.x-scroll[0],archvile.rect.y-scroll[1],archvile.rect.width,archvile.rect.height))
         archvile.update(arch_run)
 
     for bulldog in bulldogs:
         bulldog.startUpdateThread(player_rect, tile_rects)
     
     for bulldog in bulldogs:
+        if DebugMode:
+            if bulldog.a:
+                pygame.draw.rect(screen,(220,2,2),(bulldog.rect.x-scroll[0],bulldog.rect.y-scroll[1],bulldog.rect.width,bulldog.rect.height))
+            else:
+                pygame.draw.rect(screen,(220,220,0),(bulldog.rect.x-scroll[0],bulldog.rect.y-scroll[1],bulldog.rect.width,bulldog.rect.height))
         bd_attr = bulldog.getAttributes()
         screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x - scroll[0],bd_attr[0].y - scroll[1]))
         player_health -= bd_attr[3]
@@ -2885,7 +2917,7 @@ while main_running:
                 shotgun_cooldown += 1
                 if shotgun_cooldown > 60:
                     shotgun_loaded = True
-            elif weapon_fire and shotgun_shells > 0:
+            if weapon_fire and shotgun_shells > 0 and shotgun_loaded:
                 shotgun_loaded = False
                 shotgun_cooldown = 0
                 shotgun_shells -= 1
@@ -3007,6 +3039,7 @@ while main_running:
     screen.blit(score, (10, 55))
     if DebugMode:
         screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (10, 10))
+        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (10, 20))
 #endregion
 #region UI Rendering
     for i in range(len(inventory)):
@@ -3069,7 +3102,8 @@ while main_running:
 
     for i in range(KDS.Missions.GetRenderCount()):
         KDS.Missions.RenderTask(screen, i)
-       
+
+
 #endregion
 #region Screen Rendering
     if dark:

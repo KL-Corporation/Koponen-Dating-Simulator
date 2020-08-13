@@ -21,6 +21,10 @@ light_bricks,r,213,0,231
 iron_bar,s,23,41,22
 mossy_bricks,u,120,120,0
 soil,t,120,120,1
+stone,v,120,120,2
+hay,w,120,120,3
+soil1,å,120,120,4
+wood,ä,120,120,5
 
 decoration:
 tree,A,0,255,0
