@@ -19,12 +19,9 @@ from pygame.locals import *
 #endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-if not os.path.exists(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
+if not os.path.exists(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")) or not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
     os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
-    os.mkdir(AppDataPath)
-
-elif not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
-    os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
+if not os.path.exists(AppDataPath) or not os.path.isdir(AppDataPath):
     os.mkdir(AppDataPath)
 
 pygame.init()
@@ -710,13 +707,12 @@ color_keys = list()
 door_rects = list()
 doors_open = list()
 tile_textures = dict()
+tile_textures_loaded = False
 
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
     global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids
-    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures
-        
-    tile_textures = dict()
+    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures, tile_textures_loaded
 
     buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
     decorationBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map")).convert()
@@ -766,15 +762,23 @@ def WorldGeneration():
                 if Type == 0:
                     convertBuildingRules.append(array[1])
                     convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
-                    if not "door" in array[0]:
+                    if not tile_textures_loaded and not "door" in array[0]:
                         try:
-                            global_texture = globals()[str(array[0])]
-                            if isinstance(global_texture, pygame.Surface):
-                                tile_textures[array[1]] = global_texture.copy()
+                            global_texture1 = globals()[str(array[0])]
                         except KeyError:
-                            global_texture = globals()[str(array[0] + "_texture")]
-                            if isinstance(global_texture, pygame.Surface):
-                                tile_textures[array[1]] = global_texture.copy()
+                            global_texture1 = None
+                        try:
+                            global_texture2 = globals()[str(array[0] + "_texture")]
+                        except KeyError:
+                            global_texture2 = None
+                        
+                        if isinstance(global_texture1, pygame.Surface):
+                            tile_textures[array[1]] = global_texture1.copy()
+                        elif isinstance(global_texture2, pygame.Surface):
+                            tile_textures[array[1]] = global_texture2.copy()
+                        else:
+                            KDS.Logging.Log(KDS.Logging.LogType.error, "Texture not found. " + array[0], True)
+
                 elif Type == 1:
                     convertDecorationRules.append(array[1])
                     convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
@@ -784,6 +788,8 @@ def WorldGeneration():
                 elif Type == 3:
                     convertItemRules.append(array[1])
                     convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+
+    tile_textures_loaded = True
 
     building_gen = list()
     decoration_gen = list()
@@ -1796,8 +1802,8 @@ def settings_menu():
         settings_running = False
 
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render("Return", True, KDS.Colors.GetPrimary.White))
-    music_volume_slider = KDS.UI.New.Slider("Music Volume", pygame.Rect(450, 135, 340, 20), (20, 30))
-    effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30))
+    music_volume_slider = KDS.UI.New.Slider("Music Volume", pygame.Rect(450, 135, 340, 20), (20, 30), 0.5)
+    effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30), 0.5)
 
     while settings_running:
 
@@ -2120,23 +2126,7 @@ def inventoryRight():
         else:
             inventory_slot += 1
 #endregion
-#region Useless shit
-"""
-wd = len(world_gen[0][0])*68
-hg = len(world_gen[0])*68
-background_surface = pygame.Surface((wd,hg))
-
-for y in range(len(world_gen[0])):
-    for x in range(len(world_gen[0][0])):
-        background_surface.blit(background_wall,(x*68,y*68))
-
-pygame.image.save(background_surface, "level_background.png")
-del background_surface
-
-esc_menu_background = pygame.image.load("level_background.png")
-"""
-#endregion
-#region Main Running
+#region Main Running 
 while main_running:
 #region Events
     for event in pygame.event.get():
