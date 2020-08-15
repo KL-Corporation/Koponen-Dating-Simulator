@@ -736,9 +736,13 @@ def WorldGeneration():
     convertItemColors = list()
     with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
         raw = f.read()
+        raw = raw.replace(" ", "")
         rowSplit = raw.split('\n')
 
+        #Adds air to all convert rules
         array = rowSplit[0].split(',')
+        array[2] = array[2].replace("(", "")
+        array[4] = array[4].replace(")", "")
         convertBuildingRules.append(array[1])
         convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
         convertDecorationRules.append(array[1])
@@ -751,8 +755,10 @@ def WorldGeneration():
         Type = -1
         for row in rowSplit:
             array = row.split(',')
+            if len(array) > 1:
+                array[2] = array[2].replace("(", "")
+                array[4] = array[4].replace(")", "")
             skip = True
-
             if array[0] == "building:":
                 Type = 0
             elif array[0] == "decoration:":
