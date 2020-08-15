@@ -1868,8 +1868,8 @@ def settings_menu():
         c = False
         clock.tick(60)
 
-def play_function(gamemode: KDS.Gamemode.Modes):
-    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait
+def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
+    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     inventory = ["none", "none", "none", "none", "none"]
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
@@ -1886,6 +1886,8 @@ def play_function(gamemode: KDS.Gamemode.Modes):
 
     player_rect.x = 100
     player_rect.y = 100
+    if reset_scroll:
+        true_scroll = [-200, -190]
     player_health = 100
 
     for key in player_keys:
@@ -2063,7 +2065,7 @@ def main_menu():
                         if y < 2:
                             campaign_menu_functions[y]()
                         elif y == 2:
-                            campaign_menu_functions[y](KDS.Gamemode.Modes.Campaign)
+                            campaign_menu_functions[y](KDS.Gamemode.Modes.Campaign, True)
                         else:
                             MenuMode = Mode.MainMenu
                         c = False
@@ -2288,7 +2290,7 @@ while main_running:
     elif player_health < 1:
         death_wait += 1
         if death_wait == 240:
-            play_function(KDS.Gamemode.gamemode)
+            play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
 
