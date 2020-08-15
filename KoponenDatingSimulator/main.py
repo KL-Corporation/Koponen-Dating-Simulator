@@ -18,7 +18,8 @@ import math
 from pygame.locals import *
 #endregion
 #region Priority Initialisation
-AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+AppDataPath = os.path.join(os.getenv('APPDATA'),
+                           "Koponen Development Inc", "Koponen Dating Simulator")
 if not os.path.exists(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")) or not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
     os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
 if not os.path.exists(AppDataPath) or not os.path.isdir(AppDataPath):
@@ -55,9 +56,10 @@ class Audio:
     MusicMixer = pygame.mixer.music
     MusicChannel1 = pygame.mixer.Channel(0)
     MusicChannel2 = pygame.mixer.Channel(11)
-    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3), 
-        pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6), pygame.mixer.Channel(7), 
-        pygame.mixer.Channel(8), pygame.mixer.Channel(9), pygame.mixer.Channel(10)]
+    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3),
+                      pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6),
+                      pygame.mixer.Channel(7), pygame.mixer.Channel(8), pygame.mixer.Channel(9),
+                      pygame.mixer.Channel(10)]
     @staticmethod
     def playSound(sound: pygame.mixer.Sound):
         global effect_volume
@@ -99,7 +101,7 @@ class plasma_bullet:
                 self.done = True
                 sergeant.health -= 12
                 Audio.playSound(plasma_hitting)
-                
+
         self.display.blit(
             plasma_ammo, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
@@ -226,7 +228,8 @@ class Archvile:
                     self.direction = False
 
                 screen.blit(pygame.transform.flip(a_run, not self.direction,
-                                                  False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+                                                  False), (self.rect.x - scroll[0],
+                                                           self.rect.y - scroll[1]))
 
             else:
                 i, u = arhcvile_attack_animation.update()
@@ -241,7 +244,8 @@ class Archvile:
                     arhcvile_attack_animation.reset()
                     self.attack_anim = False
                 screen.blit(pygame.transform.flip(
-                    i, not self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+                    i, not self.direction, False), (self.rect.x - scroll[0],
+                                                    self.rect.y - scroll[1]))
 
         elif self.playDeathAnimation:
             self.attacking = "null"
@@ -260,7 +264,8 @@ class Archvile:
 
         else:
             screen.blit(pygame.transform.flip(archvile_corpse, not self.direction,
-                                              False), (self.rect.x - scroll[0], self.rect.y - scroll[1]+25))
+                                              False), (self.rect.x - scroll[0],
+                                                       self.rect.y - scroll[1]+25))
 #endregion
 #region Fullscreen
 class FullscreenGet:
@@ -771,7 +776,7 @@ def WorldGeneration():
                             global_texture2 = globals()[str(array[0] + "_texture")]
                         except KeyError:
                             global_texture2 = None
-                        
+
                         if isinstance(global_texture1, pygame.Surface):
                             tile_textures[array[1]] = global_texture1.copy()
                         elif isinstance(global_texture2, pygame.Surface):
@@ -807,7 +812,7 @@ def WorldGeneration():
             decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.get_at((j, i))[:3])])
             enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.get_at((j, i))[:3])])
             item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.get_at((j, i))[:3])])
-        
+
         building_gen.append(building_layer)
         decoration_gen.append(decoration_layer)
         enemy_gen.append(enemy_layer)
@@ -889,7 +894,7 @@ def load_ads():
         image.set_colorkey(KDS.Colors.GetPrimary.Red)
         ad_images.append(image)
         KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Initialised Ad File: " + ad, False)
+                        "Initialised Ad File: " + ad, False)
 
     return ad_images
 ad_images = load_ads()
@@ -1771,7 +1776,7 @@ def esc_menu_f():
                 if event.button == 1:
                     c = True
             elif event.type == pygame.QUIT:
-                KDS_Quit() 
+                KDS_Quit()
 
         game_background_scaling = FullscreenGet.size[1] / esc_menu_background.get_height()
         main_display.blit(pygame.transform.scale(esc_menu_background, (int(esc_menu_background.get_width() * game_background_scaling), int(esc_menu_background.get_height() * game_background_scaling))), (0, 0))
@@ -1834,8 +1839,8 @@ def settings_menu():
 
         main_display.blit(pygame.transform.flip(pygame.transform.scale(
             menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
-            int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
-            False, False), (int((279 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((515 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+                                               int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                                                False, False), (int((279 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((515 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
 
         main_display.blit(pygame.transform.scale(music_volume_text, (int(music_volume_text.get_width() * FullscreenGet.scaling), int(music_volume_text.get_height() * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(135 * FullscreenGet.scaling + FullscreenGet.offset[1])))
         main_display.blit(pygame.transform.scale(effect_volume_text, (int(effect_volume_text.get_width() * FullscreenGet.scaling), int(effect_volume_text.get_height() * FullscreenGet.scaling))), (int(50 * FullscreenGet.scaling + FullscreenGet.offset[0]), int(185 * FullscreenGet.scaling + FullscreenGet.offset[1])))
@@ -1871,7 +1876,6 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     pygame.mouse.set_visible(False)
     main_menu_running = False
     play_map_music(current_map)
-    
     player_hand_item = "none"
 
     player_death_event = False
@@ -1880,7 +1884,7 @@ def play_function(gamemode: KDS.Gamemode.Modes):
     player_rect.x = 100
     player_rect.y = 100
     player_health = 100
-    
+
     for key in player_keys:
         player_keys[key] = False
     KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -1950,7 +1954,7 @@ def main_menu():
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(450, 180, 300, 60), mode_selection_function, button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White))
     main_menu_settings_button = KDS.UI.New.Button(pygame.Rect(450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White))
     main_menu_quit_button = KDS.UI.New.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White))
-    
+
     while main_menu_running:
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -1978,16 +1982,16 @@ def main_menu():
             main_display.blit(pygame.transform.scale(main_menu_background, FullscreenGet.size), (int(0 + FullscreenGet.offset[0]), int(0 + FullscreenGet.offset[1])))
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
                 menu_gasburner_animation.update(), (int(menu_gasburner_animation.get_frame().get_width() * FullscreenGet.scaling),
-                int(menu_gasburner_animation.get_frame().get_height() * FullscreenGet.scaling))),
-                False, False), (int((625 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((445 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+                                                    int(menu_gasburner_animation.get_frame().get_height() * FullscreenGet.scaling))),
+                                                    False, False), (int((625 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((445 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
                 menu_toilet_animation.update(), (int(menu_toilet_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
-                int(menu_toilet_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
-                False, False), (int((823 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((507 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+                                                 int(menu_toilet_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                                                    False, False), (int((823 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((507 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
             main_display.blit(pygame.transform.flip(pygame.transform.scale(
                 menu_trashcan_animation.update(), (int(menu_trashcan_animation.get_frame().get_width() * 2 * FullscreenGet.scaling),
-                int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
-                False, False), (int((283 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((585 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
+                                                   int(menu_trashcan_animation.get_frame().get_height() * 2 * FullscreenGet.scaling))),
+                                                    False, False), (int((283 * FullscreenGet.scaling) + FullscreenGet.offset[0]), int((585 * FullscreenGet.scaling) + FullscreenGet.offset[1])))
 
             main_menu_play_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
             main_menu_settings_button.update(main_display, c, FullscreenGet.scaling, FullscreenGet.offset)
@@ -2065,7 +2069,7 @@ def main_menu():
                         button_color = (90, 90, 90)
                 else:
                     button_color = (100, 100, 100)
-                
+
                 pygame.draw.rect(main_display, button_color, campaign_menu_buttons[y])
 
                 if y == 0:
