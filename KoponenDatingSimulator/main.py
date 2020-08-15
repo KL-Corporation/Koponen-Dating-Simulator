@@ -580,6 +580,7 @@ player_health = 100
 last_player_health = 100
 player_death_event = False
 animation_has_played = False
+death_wait = 0
 attack_counter = 0
 fart_counter = 0
 monsterAmount = 0
@@ -1868,7 +1869,7 @@ def settings_menu():
         clock.tick(60)
 
 def play_function(gamemode: KDS.Gamemode.Modes):
-    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played
+    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     inventory = ["none", "none", "none", "none", "none"]
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
@@ -1881,6 +1882,7 @@ def play_function(gamemode: KDS.Gamemode.Modes):
 
     player_death_event = False
     animation_has_played = False
+    death_wait = 0
 
     player_rect.x = 100
     player_rect.y = 100
@@ -2284,11 +2286,8 @@ while main_running:
         player_death_sound.set_volume(0.5)
         animation_has_played = True
     elif player_health < 1:
-        try:
-            deathWait += 1
-        except Exception:
-            deathWait = 0
-        if deathWait == 240:
+        death_wait += 1
+        if death_wait == 240:
             play_function(KDS.Gamemode.gamemode)
 #endregion
 #region Rendering
@@ -2536,13 +2535,13 @@ while main_running:
     else:
         crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
 
-    if moveDown and not onLadder and player_rect.height != crouch_size[1]:
+    if moveDown and not onLadder and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
-    elif (not moveDown or onLadder) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
+    elif (not moveDown or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
         check_crouch = False
-    elif not moveDown and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1]:
+    elif not moveDown and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
 
