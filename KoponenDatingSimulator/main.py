@@ -691,6 +691,7 @@ def KDS_Quit():
     settings_running = False
 #endregion
 #region World Generation
+#region Lists
 world_gen = list()
 item_gen = list()
 tile_rects = list()
@@ -713,7 +714,7 @@ door_rects = list()
 doors_open = list()
 tile_textures = dict()
 tile_textures_loaded = False
-
+#endregion
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
     global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids
