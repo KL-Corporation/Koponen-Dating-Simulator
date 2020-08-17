@@ -117,6 +117,7 @@ class Zombie:
             return self.attacking
 
 class Bulldog:
+
     a = False
 
     def __init__(self, position: tuple, health: int, speed: int, animation):
@@ -210,3 +211,6 @@ class Bulldog:
         if self.rect.colliderect(render_rect):
             surface.blit(pygame.transform.flip(self.animation.get_frame(), self.direction, False),(self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return self.damage
+
+class hostileEnemy:
+    pass
