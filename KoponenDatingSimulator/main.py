@@ -2191,10 +2191,6 @@ while main_running:
                 FunctionKey = True
             elif event.key == K_ESCAPE:
                 esc_menu = True
-            elif event.key == K_j:
-                inventoryLeft()
-            elif event.key == K_k:
-                inventoryRight()
             elif event.key in inventory_keys:
                 inventoryPick(inventory_keys.index(event.key))
             elif event.key == K_q:
