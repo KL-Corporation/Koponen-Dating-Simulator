@@ -616,6 +616,7 @@ rk_62_ammo = 30
 shotgun_shells = 8
 
 inventory = ["none", "none", "none", "none", "none"]
+inventory_keys = [K_1, K_2, K_3, K_4, K_5]
 inventoryDoubles = []
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -2157,11 +2158,11 @@ def inventoryRight():
 def inventoryPick(index: int):
     global inventory_slot, inventoryDoubles
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
-    if index > len(inventory):
-        index = len(inventory)
-    elif index - 2 < 0:
-        index = 2
-    if inventoryDoubles[checkSlot] == True:
+    if index >= len(inventory):
+        index = len(inventory) - 1
+    elif index < 0:
+        index = 0
+    if inventoryDoubles[index] == True:
         inventory_slot = index - 1
     else:
         inventory_slot = index
@@ -2194,6 +2195,8 @@ while main_running:
                 inventoryLeft()
             elif event.key == K_k:
                 inventoryRight()
+            elif event.key in inventory_keys:
+                inventoryPick(inventory_keys.index(event.key))
             elif event.key == K_q:
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
