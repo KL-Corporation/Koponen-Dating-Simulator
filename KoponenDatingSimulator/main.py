@@ -2138,22 +2138,35 @@ def inventoryLeft():
     global inventory_slot, inventoryDoubles, inventory
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
     checkSlot = inventory_slot - 2
-    if checkSlot < 0:
+    while checkSlot < 0:
         checkSlot = len(inventory) + checkSlot
-    if(inventoryDoubles[checkSlot] == True):
+    if inventoryDoubles[checkSlot] == True:
         inventory_slot -= 2
     else:
         inventory_slot -= 1
 def inventoryRight():
     global inventory_slot, inventoryDoubles
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
-    if inventory_slot < len(inventoryDoubles):
+    while inventory_slot >= len(inventory):
+        inventory_slot = len(inventory) - inventory_slot
+    if inventory_slot < len(inventory):
         if inventoryDoubles[inventory_slot] == True:
             inventory_slot += 2
         else:
             inventory_slot += 1
+def inventoryPick(index: int):
+    global inventory_slot, inventoryDoubles
+    KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
+    if index > len(inventory):
+        index = len(inventory)
+    elif index - 2 < 0:
+        index = 2
+    if inventoryDoubles[checkSlot] == True:
+        inventory_slot = index - 1
+    else:
+        inventory_slot = index
 #endregion
-#region Main Running 
+#region Main Running
 while main_running:
 #region Events
     for event in pygame.event.get():
@@ -2162,6 +2175,10 @@ while main_running:
                 playerMovingRight = True
             elif event.key == K_a:
                 playerMovingLeft = True
+            elif event.key == K_w:
+                moveUp = True
+            elif event.key == K_s:
+                moveDown = True
             elif event.key == K_SPACE:
                 moveUp = True
             elif event.key == K_LCTRL:
@@ -2177,18 +2194,6 @@ while main_running:
                 inventoryLeft()
             elif event.key == K_k:
                 inventoryRight()
-            elif event.key == K_t:
-                console()
-            elif event.key == K_w:
-                moveUp = True
-            elif event.key == K_s:
-                moveDown = True
-            elif event.key == K_f:
-                if playerStamina == 100:
-                    playerStamina = -1000
-                    farting = True
-                    Audio.playSound(fart)
-                    KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_q:
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
@@ -2209,6 +2214,14 @@ while main_running:
                     inventory[inventory_slot + 1] = "none"
                     inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
+            elif event.key == K_f:
+                if playerStamina == 100:
+                    playerStamina = -1000
+                    farting = True
+                    Audio.playSound(fart)
+                    KDS.Missions.SetProgress("tutorial", "fart", 1.0)
+            elif event.key == K_t:
+                console()
             elif event.key == K_F3:
                 DebugMode = not DebugMode
             elif event.key == K_F4:
@@ -2237,6 +2250,10 @@ while main_running:
                 playerMovingRight = False
             elif event.key == K_a:
                 playerMovingLeft = False
+            elif event.key == K_w:
+                moveUp = False
+            elif event.key == K_s:
+                moveDown = False
             elif event.key == K_SPACE:
                 moveUp = False
             elif event.key == K_LCTRL:
@@ -2247,10 +2264,6 @@ while main_running:
                 F4Pressed = False
             elif event.key == K_LALT or event.key == K_RALT:
                 AltPressed = False
-            elif event.key == K_w:
-                moveUp = False
-            elif event.key == K_s:
-                moveDown = False
             elif event.key == K_c:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
@@ -2278,8 +2291,6 @@ while main_running:
             if inventoryDoubles[i] == True:
                 inventoryDoubleOffset += 1
     inventoryDoubleOffsetCounter()
-    if inventory_slot >= len(inventory):
-        inventory_slot = len(inventory) - inventory_slot
     if inventory_slot < 0:
         inventory_slot = len(inventory) + inventory_slot
 
@@ -2655,7 +2666,7 @@ while main_running:
                     zombie1.walking = True
                     if zombie1.movement[0] > 0:
                         zombie1.direction = False
-                    else:
+                    elif zombie1.movement[0] < 0:
                         zombie1.direction = True
                 else:
                     zombie1.walking = False
@@ -2668,6 +2679,9 @@ while main_running:
                 elif zombie1.hits["right"]:
                     zombie1.movement[0] = -zombie1.movement[0]
             else:
+                zombie1.movement[0] = 0
+                zombie1.rect, zombie1.hits = move_entity(
+                    zombie1.rect, [0, zombie1.movement[1]], tile_rects)
                 attack_counter += 1
                 if attack_counter > 40:
                     attack_counter = 0
