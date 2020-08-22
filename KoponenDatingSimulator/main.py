@@ -49,9 +49,9 @@ screen = pygame.Surface(screen_size)
 #endregion
 #region Audio
 pygame.mixer.init()
-pygame.mixer.set_num_channels(12)
+pygame.mixer.set_num_channels(16)
 pygame.mixer.set_reserved(0)
-pygame.mixer.set_reserved(11)
+pygame.mixer.set_reserved(15)
 class Audio:
     MusicMixer = pygame.mixer.music
     MusicChannel1 = pygame.mixer.Channel(0)
@@ -59,7 +59,8 @@ class Audio:
     EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3),
                       pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6),
                       pygame.mixer.Channel(7), pygame.mixer.Channel(8), pygame.mixer.Channel(9),
-                      pygame.mixer.Channel(10)]
+                      pygame.mixer.Channel(10), pygame.mixer.Channel(11), pygame.mixer.Channel(12),
+                      pygame.mixer.Channel(13), pygame.mixer.Channel(14)]
     @staticmethod
     def playSound(sound: pygame.mixer.Sound):
         global effect_volume
@@ -70,6 +71,17 @@ class Audio:
     def stopAllSounds():
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].stop()
+    @staticmethod
+    def getBusyChannels():
+        busyChannels = list()
+        if Audio.MusicChannel1.get_busy():
+            busyChannels.append(Audio.MusicChannel1)
+        if Audio.MusicChannel2.get_busy():
+            busyChannels.append(Audio.MusicChannel2)
+        for channel in Audio.EffectChannels:
+            if channel.get_busy():
+                busyChannels.append(channel)
+        return busyChannels
 #endregion
 #region Animations
 class plasma_bullet:
@@ -3040,8 +3052,9 @@ while main_running:
 #region Debug Mode
     screen.blit(score, (10, 55))
     if DebugMode:
-        screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (10, 10))
-        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (10, 20))
+        screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (5, 5))
+        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
+        screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
 #endregion
 #region UI Rendering
     for i in range(len(inventory)):
