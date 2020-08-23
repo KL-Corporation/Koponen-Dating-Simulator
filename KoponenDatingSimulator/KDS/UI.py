@@ -11,7 +11,7 @@ class New:
 
         """
         1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
-        2. self.slider_rect: The pygame.Rect of the slider.
+        2. slider_rect: The pygame.Rect of the slider.
         3. handle_size: Width and height of the handle.
         4. handle_move_area_padding (OPTIONAL): Reduce the left and right move area of the handle. [DEFAULT: (0, 0)]
         5. slider_color (OPTIONAL): The color of the slider background. [DEFAULT: (120, 120, 120)]
