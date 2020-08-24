@@ -1163,6 +1163,7 @@ def damage(health, min_damage: int, max_damage: int):
         health = 0
 
     return health
+
 def door_collision_test():
     x = 0
 
@@ -1173,14 +1174,13 @@ def door_collision_test():
     hit_list = collision_test(player_rect, door_rects)
     if len(door_rects) > 0 and player_rect.colliderect(door_rects[0]):
         pass
-
     for recta in door_rects:
         if recta.colliderect(render_rect):
             for door in hit_list:
                 if recta == door:
                     if player_movement[0] > 0 and doors_open[x] == False:
                         player_rect.right = door.left + 1
-                    if not doors_open[x]:
+                    if doors_open[x] == False:
                         if FunctionKey == True:
                             if color_keys[x] != "none":
                                 if color_keys[x] == "red":
