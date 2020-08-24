@@ -1986,15 +1986,15 @@ def main_menu():
     mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
 
     mode_selection_buttons = list()
-    story_mode_button = pygame.Rect(0, 0, display_size[0], display_size[1] / 2)
-    campaign_mode_button = pygame.Rect(0, display_size[1] / 2, display_size[0], display_size[1] / 2)
+    story_mode_button = pygame.Rect(0, 0, display_size[0], int(display_size[1] / 2))
+    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), display_size[0], int(display_size[1] / 2))
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
 
     campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
     campaign_left_button = pygame.Rect(50, 200, 66, 66)
-    campaign_play_button = pygame.Rect(display_size[0] / 2 - 150, display_size[1] - 300, 300, 100)
-    campaign_return_button = pygame.Rect(display_size[0] / 2 - 150, display_size[1] - 150, 300, 100)
+    campaign_play_button = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 300, 300, 100)
+    campaign_return_button = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 150, 300, 100)
     campaign_menu_buttons = list()
     campaign_menu_functions = list()
     campaign_menu_buttons.append(campaign_left_button)
@@ -2028,8 +2028,7 @@ def main_menu():
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
                 elif event.key == K_ESCAPE:
-                    if MenuMode != Mode.MainMenu:
-                        MenuMode = Mode.MainMenu
+                    MenuMode = Mode.MainMenu
             elif event.type == pygame.QUIT:
                 KDS_Quit()
 
