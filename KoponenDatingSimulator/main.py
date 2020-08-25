@@ -1761,8 +1761,8 @@ def koponen_talk():
                 KDS_Quit()
         display.blit(pygame.transform.scale(koponen_talking_background, (int(koponen_talking_background.get_width()), int(koponen_talking_background.get_height()))), (0, 0))
         display.blit(pygame.transform.scale(koponen_talk_foreground, (int(koponen_talk_foreground.get_width()), int(koponen_talk_foreground.get_height()))), (40, 474))
-        pygame.draw.rect(display, (230, 230, 230), 40, 40, 700, 400)
-        pygame.draw.rect(display, (30, 30, 30), 40, 40, 700, 400, 3)
+        pygame.draw.rect(display, (230, 230, 230), pygame.Rect(40, 40, 700, 400))
+        pygame.draw.rect(display, (30, 30, 30), pygame.Rect(40, 40, 700, 400), 3)
 
         exit_button.update(display, mouse_pos, c)
         mission_button.update(display, mouse_pos, c)
@@ -2712,7 +2712,6 @@ while main_running:
                 elif zombie1.hits["right"]:
                     zombie1.movement[0] = -zombie1.movement[0]
             else:
-                zombie1.movement[0] = 0
                 zombie1.rect, zombie1.hits = move_entity(
                     zombie1.rect, [0, zombie1.movement[1]], tile_rects)
                 attack_counter += 1
