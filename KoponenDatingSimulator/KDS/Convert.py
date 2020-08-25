@@ -47,3 +47,7 @@ def ToAlpha(image, alpha: int):
     image.set_alpha(alpha)
     return image
 
+def ToGrayscale(image):
+    arr = pygame.surfarray.pixels3d(image)
+    arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
+    return pygame.surfarray.make_surface(arr)

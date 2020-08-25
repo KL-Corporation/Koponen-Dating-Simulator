@@ -3163,8 +3163,6 @@ while main_running:
 
     for i in range(KDS.Missions.GetRenderCount()):
         KDS.Missions.RenderTask(screen, i)
-
-
 #endregion
 #region Screen Rendering
     if dark:
