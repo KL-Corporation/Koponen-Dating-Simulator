@@ -555,7 +555,7 @@ plasmarifle_cooldown = 0
 rk62_cooldown = 0
 rk62_sound_cooldown = 0
 player_hand_item = "none"
-player_keys = {"red": False, "green": False, "blue": False}
+player_keys = { "red": False, "green": False, "blue": False }
 direction = True
 FunctionKey = False
 AltPressed = False
@@ -1174,35 +1174,39 @@ def door_collision_test():
     hit_list = collision_test(player_rect, door_rects)
     if len(door_rects) > 0 and player_rect.colliderect(door_rects[0]):
         pass
-    for recta in door_rects:
-        if recta.colliderect(render_rect):
-            for door in hit_list:
-                if recta == door:
-                    if player_movement[0] > 0 and doors_open[x] == False:
-                        player_rect.right = door.left + 1
-                    if doors_open[x] == False:
-                        if FunctionKey == True:
-                            if color_keys[x] != "none":
-                                if color_keys[x] == "red":
-                                    if player_keys["red"]:
-                                        doors_open[x] = True
-                                        door_sound()
-                                elif color_keys[x] == "green":
-                                    if player_keys["green"]:
-                                        doors_open[x] = True
-                                        door_sound()
-                                elif color_keys[x] == "blue":
-                                    if player_keys["blue"]:
-                                        doors_open[x] = True
-                                        door_sound()
+    for i in range(len(door_rects)):
+        if door_rects[i].colliderect(render_rect):
+            for j in range(len(hit_list)):
+                if door_rects[i] == hit_list[j]:
+                    if player_movement[0] > 0 and doors_open[i] == False:
+                        player_rect.right = door_rects[i].left + 1
+                    elif player_movement[0] < 0 and doors_open[i] == False:
+                        player_rect.left = door_rects[i].right - 1
+                    if FunctionKey == True:
+                        color_key = color_keys[i]
+                        if doors_open[i]:
+                            color_key = "none"
+                        if color_key != "none":
+                            if color_key == "red":
+                                if player_keys["red"]:
+                                    doors_open[i] = not doors_open[i]
+                                    door_sound()
+                            elif color_key == "green":
+                                if player_keys["green"]:
+                                    doors_open[i] = not doors_open[i]
+                                    door_sound()
+                            elif color_key == "blue":
+                                if player_keys["blue"]:
+                                    doors_open[i] = not doors_open[i]
+                                    door_sound()
+                        else:
+                            doors_open[i] = not doors_open[i]
+                            door_sound()
+                        if not doors_open[i]:
+                            if direction:
+                                player_rect.left = door_rects[i].right - 1
                             else:
-                                doors_open[x] = True
-                                door_sound()
-
-                    if player_movement[0] < 0 and doors_open[x] == False:
-                        player_rect.left = door.right - 1
-
-            x += 1
+                                player_rect.right = door_rects[i].left + 1
 def item_collision_test(rect, items):
     hit_list = []
     x = 0
@@ -1458,6 +1462,10 @@ sergeant_death_animation = KDS.Animator.Animation(
 #region Console
 def console():
     global inventory, player_keys, player_health, koponen_happines, bulldogs
+    wasFullscreen = False
+    if isFullscreen:
+        Fullscreen.Set()
+        wasFullscreen = True
 
     command_input = input("command: ")
     command_input = command_input.lower()
@@ -1465,21 +1473,41 @@ def console():
 
     if command_list[0] == "give":
         if command_list[1] != "key":
-            try:
-                inventory[inventory_slot] = command_list[1]
-                KDS.Logging.Log(KDS.Logging.LogType.info,
-                                "Item was given: " + str(command_list[1]), True)
-            except Exception:
-                KDS.Logging.Log(
-                    KDS.Logging.LogType.info, "That item does not exist: " + str(command_list[1]), True)
-        elif command_list[1] == "key":
-            try:
+            inventory[inventory_slot] = command_list[1]
+            KDS.Logging.Log(KDS.Logging.LogType.info,
+                            "Item was given: " + str(command_list[1]), True)
+        else:
+            if command_list[2] in player_keys:
                 player_keys[command_list[2]] = True
                 KDS.Logging.Log(KDS.Logging.LogType.info, "Item was given: " +
                                 str(command_list[1]) + " " + str(command_list[2]), True)
-            except Exception:
+            else:
                 KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " +
                                 str(command_list[1]) + " " + str(command_list[2]), True)
+    elif command_list[0] == "remove":
+        if command_list[1] == "item":
+            if inventory[inventory_slot] != "none":
+                old_item = inventory[inventory_slot]
+                inventory[inventory_slot] = "none"
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Item was removed: " + str(old_item), True)
+            else:
+                KDS.Logging.Log(
+                    KDS.Logging.LogType.info, "Selected inventory slot is empty already!", True)
+        elif command_list[1] == "key":
+            if command_list[2] in player_keys:
+                if player_keys[command_list[2]] == True:
+                    player_keys[command_list[2]] = False
+                    KDS.Logging.Log(KDS.Logging.LogType.info, "Item was removed: " +
+                                    str(command_list[1]) + " " + str(command_list[2]), True)
+                else:
+                    KDS.Logging.Log(
+                        KDS.Logging.LogType.info, "You don't have that item!", True)
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " +
+                                str(command_list[1]) + " " + str(command_list[2]), True)
+        else:
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Not a valid remove command.", True)
     elif command_list[0] == "playboy":
         koponen_happines = 1000
         KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -1522,7 +1550,10 @@ def console():
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for woof", True)
     else:
-        KDS.Logging.Log(KDS.Logging.LogType.info, "This command does not exist")
+        KDS.Logging.Log(KDS.Logging.LogType.info, "This command does not exist.", True)
+
+    if wasFullscreen:
+        Fullscreen.Set()
 #endregion
 #region Terms and Conditions
 def agr(tcagr):
