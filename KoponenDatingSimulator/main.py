@@ -1580,7 +1580,7 @@ def agr(tcagr):
     agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render("I Agree", True, KDS.Colors.GetPrimary.White))
 
     while tcagr_running:
-        mouse_pos = ((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling, (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling)
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
@@ -1747,7 +1747,7 @@ def koponen_talk():
     r_mission_button = KDS.UI.New.Button(pygame.Rect(510, 700, 420, 80), end_mission, button_font1.render("RETURN MISSION", True, KDS.Colors.GetPrimary.White))
 
     while koponenTalking:
-        mouse_pos = ((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling, (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling)
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -1811,7 +1811,7 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
     while esc_menu:
-        mouse_pos = ((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling, (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling)
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -1865,7 +1865,7 @@ def settings_menu():
     effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
 
     while settings_running:
-        mouse_pos = ((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling, (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling)
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
         music_volume_text = button_font.render("Music Volume", True, KDS.Colors.GetPrimary.White)
         effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
@@ -2042,7 +2042,7 @@ def main_menu():
     campaign_return_text_size = button_font1.size("RETURN")
 
     while main_menu_running:
-        mouse_pos = ((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling, (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling)
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -2059,7 +2059,10 @@ def main_menu():
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
                 elif event.key == K_ESCAPE:
-                    MenuMode = Mode.MainMenu
+                    if MenuMode == Mode.ModeSelectionMenu or MenuMode == Mode.MainMenu:
+                        MenuMode = Mode.MainMenu
+                    else:
+                        mode_selection_function()
             elif event.type == pygame.QUIT:
                 KDS_Quit()
 
@@ -2077,7 +2080,7 @@ def main_menu():
         elif MenuMode == Mode.ModeSelectionMenu:
 
             display.blit(gamemode_bc_1_1, (0, 0))
-            display.blit(gamemode_bc_2_1, (0, display_size[1] / 2))
+            display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(mouse_pos):
                     if y == 0:
@@ -2335,7 +2338,7 @@ while main_running:
     if farting:
         shakeScreen()
     player_hand_item = inventory[inventory_slot]
-    mouse_pos = ((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling, (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling)
+    mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 #endregion
 #region Player Death
     if player_health < 1 and not animation_has_played:
