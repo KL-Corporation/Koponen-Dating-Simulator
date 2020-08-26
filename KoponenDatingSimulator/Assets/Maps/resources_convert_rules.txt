@@ -36,6 +36,7 @@ sergeant,S,255,0,0
 archvile,V,0,0,255
 bulldog,K,255,255,0
 landmine,C,0,255,255
+imp,I,244,244,1
 
 items:
 gasburner,0,0,0,255

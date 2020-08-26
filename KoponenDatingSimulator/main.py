@@ -910,6 +910,7 @@ def load_rects():
     ladders = []
     bulldogs = []
     iron_bars = []
+    imps = []
     w = [0, 0]
     for i in range(len(world_gen) - 1):
         y = 0
@@ -960,6 +961,8 @@ def load_rects():
                     elif tile == 'K':
                         bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                         monsterAmount += 1
+                    elif tile == 'I':
+                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),))
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
@@ -1420,6 +1423,10 @@ archvile_death_animation = KDS.Animator.Animation(
     "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, 1)
 flames_animation = KDS.Animator.Animation("flames", 5, 3, KDS.Colors.GetPrimary.White, -1)
 bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6, KDS.Colors.GetPrimary.White, - 1)
+
+imp_walking = KDS.Animator.Animation("imp_walking",4,8,KDS.Colors.GetPrimary.White,-1)
+imp_attacking = KDS.Animator.Animation("imp_attacking",2,8,KDS.Colors.GetPrimary.White,-1)
+imp_dying = KDS.Animator.Animation("imp_dying", 5,8,KDS.Colors.GetPrimary.White, 1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
@@ -3119,6 +3126,9 @@ while main_running:
     if KDS.Missions.GetFinished() == True:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
+    
+    print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),(200,200))))
+
 #endregion
 #region Conditional Events
     if esc_menu:

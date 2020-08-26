@@ -1,5 +1,5 @@
-import pygame, threading
-
+import pygame, threading, multiprocessing
+import KDS.Animator, KDS.Math
 pygame.mixer.init()
 
 def __collision_test(rect, tiles):
@@ -213,4 +213,53 @@ class Bulldog:
         return self.damage
 
 class hostileEnemy:
+    def __init__(self:int, _health:int, _speed:int, _position:(int,int),__tilerects:list, _animation: KDS.Animator.Animation):
+        self.health = _health
+        self.speed = _speed
+        self.position = _position
+        self.textures = _animation
+        self.rect = pygame.Rect(_position[0],_position[1],_animation.images[0].width,_animation.images.height)
+        self.baseAimation = _animation
+        self.movement = [self.speed, 8]
+        self.collsisions = dict()
+        self.obstacleRects = __tilerects
+        self.sleep = True
+        self.direction = False
+
+    def dmg(self, dmgAmount):
+        self.health -= dmgAmount
+        if self.health < 0:
+            self.health = 0
+        
+    def _move(self):
+
+        def _movementUpdateThread(self):
+            
+            def __collision_test(rect, tiles):
+                hit_list = []
+                for tile in tiles:
+                    if rect.colliderect(tile):
+                        hit_list.append(tile)
+                return hit_list
+
+            self.rect, self.collsisions = __move(self.rect,self.movement,self.obstacleRects)
+
+        t = threading.Thread(target=_movementUpdateThread, args=[self])
+        t.start()
+
+class Imp(hostileEnemy):
+
+    def __init__(self, _health:int, _speed:int, _position: (int,int),__tilerects:list, _animation: KDS.Animator.Animation, _attack_animation: KDS.Animator.Animation, _death_animation: KDS.Animator.Animation):
+        super().__init__(_health, _speed, _position, _animation,__tilerects)
+        self.death_animation = _death_animation
+        self.attack_animation = _attack_animation
+        self.corpse_texture = self.death_animation.images[-1]
+
+    def update(self, searchObject: pygame.Rect, surface: pygame.Surface, searchObject_H: int):
+        pass
+
+class Projectile:
+    pass
+
+class Hitscanner:
     pass
