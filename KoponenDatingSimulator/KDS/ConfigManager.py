@@ -9,6 +9,8 @@ AppDataPath = ""
 saveDirPath = ""
 
 def init():
+    """Initialises the ConfigManager
+    """
     global AppDataPath, saveDirPath
     AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
     saveDirPath = os.path.join(AppDataPath, "saves")
@@ -35,6 +37,17 @@ def LoadSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
     return LoadFunction(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
 
 def LoadFunction(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue: str):
+    """The function LoadSave and LoadSetting uses for loading data.
+
+    Args:
+        FilePath (str): The path to the file where the value will be loaded.
+        SaveDirectory (str): The directory inside the file where the value will be loaded.
+        SaveName (str): The name that will be used to load the corresponding value.
+        DefaultValue (str): What will be returned if no value was found.
+
+    Returns:
+        str: The loaded value.
+    """
     config = configparser.ConfigParser()
     config.read(FilePath)
     if config.has_section(SaveDirectory):
@@ -73,6 +86,14 @@ def SetSave(SaveIndex: int, SaveDirectory: str, SaveName: str, SaveValue: str):
     SaveFunction(os.path.join(saveDirPath, "save_" + str(SaveIndex) + ".kds"), SaveDirectory, SaveName, SaveValue)
 
 def SaveFunction(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue: str):
+    """The function SetSave and SetSetting uses for saving data.
+
+    Args:
+        FilePath (str): The path to the file where the value will be saved.
+        SaveDirectory (str): The directory inside the file where the value will be saved.
+        SaveName (str): The name that will be used to save the corresponding value.
+        SaveValue (str): What will be saved to the path.
+    """
     config = configparser.ConfigParser()
     config.read(FilePath)
     if config.has_section(SaveDirectory):

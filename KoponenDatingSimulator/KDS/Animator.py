@@ -68,7 +68,16 @@ class Animation:
 
 class Legacy:
     @staticmethod
-    def load_animation(name, number_of_images):
+    def load_animation(name: str, number_of_images: int):
+        """Loads an animation sequence using the legacy Animator.
+
+        Args:
+            name (str): The name of your frames inside Assets => Textures => Player. (A number will be appended to the end to load each frame)
+            number_of_images (int): The number of images ("frames") your animation has.
+
+        Returns:
+            list: A list of all of the images in the animation
+        """
         animation_list = []
         for i in range(number_of_images):
             path = "Assets/Textures/Player/" + name + str(i) + ".png"

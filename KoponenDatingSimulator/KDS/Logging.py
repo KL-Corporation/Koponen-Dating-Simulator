@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 
 def init():
+    """Initialises the logger.
+    """
     AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
     logPath = os.path.join(AppDataPath, "logs")
     if os.path.exists(logPath) and os.path.isdir(logPath):
@@ -22,6 +24,8 @@ def init():
     logging.info('Initialising Game...')
 
 class LogType():
+    """The list of LogTypes you can log.
+    """
     execption = 70
     log = 60
     critical = 50
@@ -32,6 +36,13 @@ class LogType():
     notset = 0
 
 def Log(Log_Type: LogType, Message: str, Console_Visible=False):
+    """Log a log.
+
+    Args:
+        Log_Type (LogType): The type of your log.
+        Message (str): The message you want to log.
+        Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
+    """
     if Log_Type == LogType.execption:
         logging.exception(Message)
     elif Log_Type == LogType.log:
@@ -48,5 +59,6 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
         logging.debug(Message)
     elif Log_Type == LogType.notset:
         logging.NOTSET(Message)
+        
     if Console_Visible:
         print(Message)

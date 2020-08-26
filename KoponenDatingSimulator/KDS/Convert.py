@@ -40,14 +40,27 @@ def ToBool(value):
         KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nValue is not a valid type.", True)
 
 def ToAlpha(image, alpha: int):
-    """
-    1. image: The image you want to convert.
-    2. alpha: The alpha (0 - 255) you want the image to be.
+    """Adds transparency to an image.
+
+    Args:
+        image (pygame.Surface): The image to be converted.
+        alpha (int): The (0 - 255) alpha value the image will be converted to.
+
+    Returns:
+        pygame.Surface: The converted image.
     """
     image.set_alpha(alpha)
     return image
 
 def ToGrayscale(image):
+    """Converts an image to grayscale.
+
+    Args:
+        image (pygame.Surface): The image to be converted.
+
+    Returns:
+        pygame.Surface: The converted image.
+    """
     arr = pygame.surfarray.pixels3d(image)
     arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
     return pygame.surfarray.make_surface(arr)

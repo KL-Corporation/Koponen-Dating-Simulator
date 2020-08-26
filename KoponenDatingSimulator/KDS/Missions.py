@@ -30,19 +30,23 @@ Missions_Finished = False
 #endregion
 #region Initialise
 def InitialiseMission(Safe_Name: str, Visible_Name: str):
-    """
-    1. Safe_Name, A name that does not conflict with any other names.
-    2. Visible_Name, The name that will be displayed as the task header.
+    """Initialises a mission.
+
+    Args:
+        Safe_Name (str): A name that does not conflict with any other names.
+        Visible_Name (str): The name that will be displayed as the task header.
     """
     global Missions
     New_Mission = [Safe_Name, Visible_Name]
     Missions.append(New_Mission)
 
 def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str):
-    """
-    1. Mission_Name, The Safe_Name of the mission you want to add this task to.
-    2. Safe_Name, A name that does not conflict with any other names.
-    3. Visible_Name, The name that will be displayed as the task header.
+    """Initialises a task.
+
+    Args:
+        Mission_Name (str): The Safe_Name of the mission you want to add this task to.
+        Safe_Name (str): A name that does not conflict with any other names.
+        Visible_Name (str): The name that will be displayed as the task header.
     """
     global Missions
     New_Task = [Safe_Name, Visible_Name, 0.0, False]
@@ -56,10 +60,12 @@ def DeleteAll():
 #endregion
 #region Set
 def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
-    """
-    1. Mission_Name, The Safe_Name of the mission your task is under.
-    2. Task_Name, The Safe_Name of the task.
-    3. Add_Value, The value that will be added to your task.
+    """Adds a specified amount of progress to a task.
+
+    Args:
+        Mission_Name (str): The Safe_Name of the mission your task is under.
+        Task_Name (str): The Safe_Name of the task.
+        Add_Value (float): The value that will be added to your task.
     """
     global Active_Mission, Missions_Finished
     for i in range(len(Missions)):

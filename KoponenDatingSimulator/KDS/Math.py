@@ -22,7 +22,7 @@ def getDistance(point1: tuple, point2: tuple):
 
 def A_map(x, in_min, in_max, out_min, out_max):
     """
-    Converts a value to another value within the given arguments
+    Converts a value to another value within the given arguments.
     """
     try:
         rtn = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
