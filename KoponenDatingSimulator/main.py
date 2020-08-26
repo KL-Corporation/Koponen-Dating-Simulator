@@ -418,7 +418,7 @@ shotgun_shells_t = pygame.image.load(
     "Assets/Textures/Items/shotgun_shells.png").convert()
 archvile_corpse = pygame.image.load(
     "Assets/Textures/Animations/archvile_death_6.png").convert()
-iphone_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
+ipuhelin_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
@@ -458,12 +458,12 @@ shotgun.set_colorkey(KDS.Colors.GetPrimary.White)
 shotgun_f.set_colorkey(KDS.Colors.GetPrimary.White)
 shotgun_shells_t.set_colorkey(KDS.Colors.GetPrimary.White)
 archvile_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
-iphone_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+ipuhelin_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
 turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
-Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
+Items = {"iPuhelin": ipuhelin_texture, "coffeemug": coffeemug}
 
 text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
 text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -1211,25 +1211,30 @@ def door_collision_test():
                             else:
                                 player_rect.right = door_rects[i].left + 1
 def item_collision_test(rect, items):
-    hit_list = []
+    """Tests for item collisions.
+
+    Args:
+        rect (pygame.Rect): The rect to be tested.
+        items (list): A list of item rects to be tested on.
+
+    Returns:
+        list: A list of all collided rects.
+    """
+    hit_list = list()
     x = 0
     global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
+
+    itemTip = tip_font.render(
+        "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
 
     def s(score):
         global player_score
 
         player_score += score
 
-    itemTipVisible = False
     for item in items:
         if rect.colliderect(item):
             hit_list.append(item)
-            if not itemTipVisible:
-                itemTip = tip_font.render(
-                    "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
-                screen.blit(
-                    itemTip, (item.x - scroll[0] - 60, item.y - scroll[1] - 10))
-                itemTipVisible = True
             if FunctionKey == True:
                 i = item_ids[x]
 
@@ -1354,6 +1359,15 @@ def item_collision_test(rect, items):
                     del item_ids[x]
 
         x += 1
+    if len(hit_list) > 0:
+        shortest_dist = KDS.Math.getDistance(player_rect.center, hit_list[0].center)
+        shortest_index = 0
+        for i in range(len(hit_list)):
+            hit_dist = KDS.Math.getDistance(player_rect.center, hit_list[i].center)
+            if hit_dist < shortest_dist:
+                shortest_dist = hit_dist
+                shortest_index = i
+        screen.blit(itemTip, (int(hit_list[shortest_index].centerx - scroll[0] - (itemTip.get_width() / 2)), int(hit_list[shortest_index].top - scroll[1] - 10)))
     return hit_list
 def toilet_collisions(rect, burnstate):
     global burning_toilets, player_score, burning_trashcans
@@ -2492,53 +2506,79 @@ while main_running:
     item_collision_test(player_rect, item_rects)
     for i in range(len(item_rects)):
         if item_rects[i].colliderect(render_rect):
+            blit_texture = None
+            texture_offset_y = 0
             if DebugMode:
-                pygame.draw.rect(screen,(2,2,220),(item_rects[i].x-scroll[0],item_rects[i].y-scroll[1],item_rects[i].width,item_rects[i].height))
+                pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Blue), (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1], item_rects[i].width, item_rects[i].height))
             if item_ids[i] == 'gasburner':
-                screen.blit(gasburner_off, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
+                blit_texture = gasburner_off
+                texture_offset_y = 2
+                #screen.blit(gasburner_off, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
             if item_ids[i] == "knife":
-                screen.blit(knife, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+26))
+                blit_texture = knife
+                texture_offset_y = 1
+                #screen.blit(knife, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+26))
             if item_ids[i] == "red_key":
-                screen.blit(red_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+                blit_texture = red_key
+                #screen.blit(red_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
             if item_ids[i] == "green_key":
-                screen.blit(green_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+                blit_texture = green_key
+                #screen.blit(green_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
             if item_ids[i] == "blue_key":
-                screen.blit(blue_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
+                blit_texture = blue_key
+                #screen.blit(blue_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
             if item_ids[i] == "coffeemug":
-                screen.blit(
-                    coffeemug, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1] + 14))
+                blit_texture = coffeemug
+                #screen.blit(
+                    #coffeemug, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1] + 14))
             if item_ids[i] == "ss_bonuscard":
-                screen.blit(ss_bonuscard, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
+                blit_texture = ss_bonuscard
+                #screen.blit(ss_bonuscard, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
             if item_ids[i] == "lappi_sytytyspalat":
-                screen.blit(lappi_sytytyspalat,
-                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+                blit_texture = lappi_sytytyspalat
+                #screen.blit(lappi_sytytyspalat,
+                            #(item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
             if item_ids[i] == "plasmarifle":
-                screen.blit(plasmarifle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+                blit_texture = plasmarifle
+                #screen.blit(plasmarifle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
             if item_ids[i] == "cell":
-                screen.blit(cell, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+                blit_texture = cell
+                #screen.blit(cell, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
             if item_ids[i] == "pistol":
-                screen.blit(pistol_texture,
-                            (item_rects[i].x - scroll[0]-23, item_rects[i].y - scroll[1]+18))
+                blit_texture = pistol_texture
+                #screen.blit(pistol_texture,
+                            #(item_rects[i].x - scroll[0]-23, item_rects[i].y - scroll[1]+18))
             if item_ids[i] == "pistol_mag":
-                screen.blit(pistol_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+19))
+                blit_texture = pistol_mag
+                #screen.blit(pistol_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+19))
             if item_ids[i] == "rk62":
-                screen.blit(rk62_texture, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
+                blit_texture = rk62_texture
+                #screen.blit(rk62_texture, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
             if item_ids[i] == "rk62_mag":
-                screen.blit(rk62_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
+                blit_texture = rk62_mag
+                #screen.blit(rk62_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
             if item_ids[i] == "medkit":
-                screen.blit(medkit, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+15))
+                blit_texture = medkit
+                #screen.blit(medkit, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+15))
             if item_ids[i] == "shotgun":
-                screen.blit(shotgun, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+22))
+                blit_texture = shotgun
+                #screen.blit(shotgun, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+22))
             if item_ids[i] == "shotgun_shells":
-                screen.blit(shotgun_shells_t,
-                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+25))
+                blit_texture = shotgun_shells_t
+                #screen.blit(shotgun_shells_t,
+                            #(item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+25))
             if item_ids[i] == "iPuhelin":
-                screen.blit(iphone_texture,
-                            (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
+                blit_texture = ipuhelin_texture
+                #screen.blit(ipuhelin_texture,
+                            #(item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
             if item_ids[i] == 'soulsphere':
-                screen.blit(soulsphere, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
+                blit_texture = soulsphere
+                #screen.blit(soulsphere, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
             if item_ids[i] == 'turboneedle':
-                screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
+                blit_texture = turboneedle
+                #screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
+            if blit_texture != None:
+                screen.blit(blit_texture, (int(item_rects[i].centerx - scroll[0] - (blit_texture.get_width() / 2)), int(item_rects[i].bottom - scroll[1] - blit_texture.get_height() + texture_offset_y)))
 #endregion
 #region PlayerMovement
     fall_speed = 0.4
@@ -2930,8 +2970,8 @@ while main_running:
             offset = 20
             if direction:
                 offset = -offset
-            screen.blit(pygame.transform.flip(iphone_texture, direction, False), (
-                int(player_rect.centerx + offset - scroll[0] - (iphone_texture.get_width() / 2)), int(player_rect.y - scroll[1] + 10)))
+            screen.blit(pygame.transform.flip(ipuhelin_texture, direction, False), (
+                int(player_rect.centerx + offset - scroll[0] - (ipuhelin_texture.get_width() / 2)), int(player_rect.y - scroll[1] + 10)))
         elif player_hand_item == "plasmarifle":
             if plasmarifle_fire and ammunition_plasma > 0:
                 screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
@@ -3131,8 +3171,8 @@ while main_running:
                 screen.blit(pistol_texture, ((i * 34) + 10 +
                                              (34 / pistol_texture.get_width() * 2) - 30, 80))
             elif inventory[i] == "iPuhelin":
-                screen.blit(iphone_texture, (int((i * 34) + 10 +
-                                             (34 / iphone_texture.get_width() * 2)), 80))
+                screen.blit(ipuhelin_texture, (int((i * 34) + 10 +
+                                             (34 / ipuhelin_texture.get_width() * 2)), 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "plasmarifle":
                 screen.blit(plasmarifle, ((i * 34) + 15, 80))

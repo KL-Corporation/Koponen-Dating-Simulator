@@ -2,24 +2,22 @@ import KDS.Logging
 import math
 from inspect import currentframe, getframeinfo
 
-def getDistance(point1: tuple, point2: tuple): 
+def getDistance(point1: tuple, point2: tuple):
     """
     Calculates the distance between two points.
     """
-    try:
-        q = point1[0] - point2[0]
-        w = point1[1] - point2[1]
-        r = q ** 2 + w ** 2
+#    try:
+    q = point1[0] - point2[0]
+    w = point1[1] - point2[1]
+    r = q ** 2 + w ** 2
 
-        if r < 0:
-            r = -r
-
-        return math.sqrt(r)
-    except Exception:
+    return math.sqrt(abs(r))
+    """
+    except Exception as e:
         frameinfo = getframeinfo(currentframe())
-        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + Exception, True)
+        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + str(frameinfo.filename) + ", " + str(frameinfo.lineno) + ")\nException: " + str(e), True)
         return (0, 0)
-
+    """
 def A_map(x, in_min, in_max, out_min, out_max):
     """
     Converts a value to another value within the given arguments.
@@ -27,9 +25,9 @@ def A_map(x, in_min, in_max, out_min, out_max):
     try:
         rtn = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
         return rtn
-    except ZeroDivisionError:
+    except Exception as e:
         frameinfo = getframeinfo(currentframe())
-        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + "Cannot divide by zero (ZeroDivisionError)", True)
+        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + str(frameinfo.filename) + ", " + str(frameinfo.lineno) + ")\nException: " + str(e), True)
         return 0
 
 def getAngle(p1: tuple, p2: tuple):
@@ -49,9 +47,9 @@ def getAngle(p1: tuple, p2: tuple):
             a = a -360
 
         return a
-    except Exception:
+    except Exception as e:
         frameinfo = getframeinfo(currentframe())
-        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nException: " + Exception, True)
+        KDS.Logging.Log(KDS.Logging.LogType.execption, "Error! (" + str(frameinfo.filename) + ", " + str(frameinfo.lineno) + ")\nException: " + str(e), True)
         return 0
 
 def Lerp(a: float, b: float, t: float):
