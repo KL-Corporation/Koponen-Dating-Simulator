@@ -4,3 +4,4 @@ KoponenDatingSimulator/saves/*.kds
 *.pyc
 KoponenDatingSimulator/.vscode/
 KoponenDatingSimulator/.vs/
+.vscode/

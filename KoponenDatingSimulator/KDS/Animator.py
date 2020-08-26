@@ -8,7 +8,6 @@ class OnAnimationEnd:
     PingPong = 2
 
 class Animation:
-
     """
     Ensimmäinen argumentti odottaa animaation nimeä esim. "gasburner"
     Toinen argumentti odottaa kyseisen animaation kuvien määrää. Jos animaatiossa on 2 kuvaa, kannattaa toiseksi argumentiksi laittaa 2
@@ -66,6 +65,17 @@ class Animation:
         self.tick = 0
         self.loops_count = 0
         self.done = False
+
+class Legacy:
+    @staticmethod
+    def load_animation(name, number_of_images):
+        animation_list = []
+        for i in range(number_of_images):
+            path = "Assets/Textures/Player/" + name + str(i) + ".png"
+            img = pygame.image.load(path).convert()
+            img.set_colorkey(KDS.Colors.GetPrimary.White)
+            animation_list.append(img)
+        return animation_list
 
 class Lerp():
     """

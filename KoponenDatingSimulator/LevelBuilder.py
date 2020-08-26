@@ -455,3 +455,6 @@ while main:
 
     pygame.display.update()
     clock.tick(45)
+
+pygame.display.quit()
+pygame.quit()
