@@ -73,6 +73,11 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
         print(Message)
 
 def Profiler(enabled=True):
+    """Turns the profiler on or off.
+
+    Args:
+        enabled (bool, optional): Defines if the profiler will be enabled or disabled. Defaults to True.
+    """
     global profiler_running, profile, logFileName
     if enabled and not profiler_running:
         profiler_running = True

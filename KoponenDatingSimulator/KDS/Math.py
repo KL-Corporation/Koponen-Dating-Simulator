@@ -30,7 +30,7 @@ def A_map(x, in_min, in_max, out_min, out_max):
 
 def getAngle(p1: tuple, p2: tuple):
     """
-    Calculates the angle between two vectors
+    Calculates the angle between two vectors.
     """
     try:
         q = p1[0] - p2[0]
