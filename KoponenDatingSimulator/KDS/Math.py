@@ -41,7 +41,7 @@ def getAngle(p1: tuple, p2: tuple):
 
         a = math.degrees(math.atan(r))
         a = 360 - a
-        while a > 360:
+        while a >= 360:
             a = a - 360
 
         return a
