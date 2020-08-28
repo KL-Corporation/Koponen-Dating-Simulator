@@ -41,6 +41,8 @@ display_size = (1200, 800)
 display = pygame.Surface(display_size)
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
+
+profiler_enabled = False
 #endregion
 #region Audio
 pygame.mixer.init()
@@ -1862,6 +1864,7 @@ def esc_menu_f():
         settings_button.update(display, mouse_pos, c)
         main_menu_button.update(display, mouse_pos, c)
 
+        KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             fps_text = "FPS: " + str(int(round(clock.get_fps())))
             fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
@@ -1930,6 +1933,7 @@ def settings_menu():
 
         return_button.update(display, mouse_pos, c)
 
+        KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             fps_text = "FPS: " + str(int(round(clock.get_fps())))
             fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
@@ -2165,6 +2169,7 @@ def main_menu():
                 level_text = button_font1.render(current_map + " - " + map_name, True, (0, 0, 0))
                 display.blit(level_text, (125, 209))
 
+        KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             fps_text = "FPS: " + str(int(round(clock.get_fps())))
             fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
@@ -2391,7 +2396,7 @@ while main_running:
     for i in range(len(door_rects)):
         if door_rects[i].colliderect(render_rect):
             if doors_open[i]:
-                screen.blit(door_open, (door_rects[i].x - scroll[0]+2, door_rects[i].y - scroll[1]))
+                screen.blit(door_open, (door_rects[i].x - scroll[0] + 2, door_rects[i].y - scroll[1]))
             else:
                 if color_keys[i] == "red":
                     screen.blit(red_door_closed,
@@ -2672,7 +2677,7 @@ while main_running:
 
     for sergeant in sergeants:
         if DebugMode:
-            pygame.draw.rect(screen,(220,2,2),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1],sergeant.rect.width,sergeant.rect.height))
+            pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1],sergeant.rect.width,sergeant.rect.height))
         if sergeant.health > 0:
             if sergeant.hitscanner_cooldown > 100:
                 hitscan = sergeant.hit_scan(
@@ -2736,7 +2741,7 @@ while main_running:
             
     for zombie1 in zombies:
         if DebugMode:
-            pygame.draw.rect(screen,(220,2,2),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1],zombie1.rect.width,zombie1.rect.height))
+            pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1],zombie1.rect.width,zombie1.rect.height))
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
             if not search:
@@ -2790,7 +2795,7 @@ while main_running:
     arch_run = archvile_run_animation.update()
     for archvile in archviles:
         if DebugMode:
-            pygame.draw.rect(screen,(220,2,2),(archvile.rect.x-scroll[0],archvile.rect.y-scroll[1],archvile.rect.width,archvile.rect.height))
+            pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(archvile.rect.x-scroll[0],archvile.rect.y-scroll[1],archvile.rect.width,archvile.rect.height))
         archvile.update(arch_run)
 
     for bulldog in bulldogs:
@@ -2798,10 +2803,7 @@ while main_running:
     
     for bulldog in bulldogs:
         if DebugMode:
-            if bulldog.a:
-                pygame.draw.rect(screen,(220,2,2),(bulldog.rect.x-scroll[0],bulldog.rect.y-scroll[1],bulldog.rect.width,bulldog.rect.height))
-            else:
-                pygame.draw.rect(screen,(220,220,0),(bulldog.rect.x-scroll[0],bulldog.rect.y-scroll[1],bulldog.rect.width,bulldog.rect.height))
+            pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(bulldog.rect.x-scroll[0],bulldog.rect.y-scroll[1],bulldog.rect.width,bulldog.rect.height))
         bd_attr = bulldog.getAttributes()
         screen.blit(pygame.transform.flip(bd_attr[1],bd_attr[2], False),(bd_attr[0].x - scroll[0],bd_attr[0].y - scroll[1]))
         player_health -= bd_attr[3]
@@ -3101,7 +3103,7 @@ while main_running:
 
     if player_health or player_death_event:
         if DebugMode:
-            pygame.draw.rect(screen, (0, 255, 0), (player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
+            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
         screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
             int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2)), int(player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height())))
     else:
@@ -3144,6 +3146,7 @@ while main_running:
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
+    KDS.Logging.Profiler(DebugMode)
     if DebugMode:
         screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (5, 5))
         screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))

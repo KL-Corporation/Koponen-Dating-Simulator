@@ -1,12 +1,21 @@
 import logging
 import os
+import cProfile
+import pstats
+import io
+from pstats import SortKey
 from datetime import datetime
+
+AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+logPath = os.path.join(AppDataPath, "logs")
+logFileName = ""
+profiler_running = False
+profile = None
 
 def init():
     """Initialises the logger.
     """
-    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-    logPath = os.path.join(AppDataPath, "logs")
+    global AppDataPath, logPath, logFileName
     if os.path.exists(logPath) and os.path.isdir(logPath):
         logFiles = os.listdir(logPath)
     else:
@@ -62,3 +71,21 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
         
     if Console_Visible:
         print(Message)
+
+def Profiler(enabled=True):
+    global profiler_running, profile, logFileName
+    if enabled and not profiler_running:
+        profiler_running = True
+        profile = cProfile.Profile()
+        profile.enable()
+    elif not enabled and profiler_running:
+        profiler_running = False
+        profile.disable()
+        log_stream = open(logFileName, "a+")
+        log_stream.write("\n{}".format("=" * 80))
+        log_stream.write("\nEXPORTED PROFILER DATA\n\n")
+        ps = pstats.Stats(profile, stream=log_stream)
+        ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
+        ps.print_stats()
+        log_stream.write("\n{}".format("=" * 80))
+        log_stream.close()
