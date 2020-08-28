@@ -87,5 +87,5 @@ def Profiler(enabled=True):
         ps = pstats.Stats(profile, stream=log_stream)
         ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
         ps.print_stats()
-        log_stream.write("\n{}".format("=" * 80))
+        log_stream.write("\n{}\n\n".format("=" * 80))
         log_stream.close()
