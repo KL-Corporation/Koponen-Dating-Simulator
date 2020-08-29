@@ -3,7 +3,7 @@ import KDS.Logging
 from inspect import currentframe, getframeinfo
 def ToBool(value):
     """Converts a value to bool with these rules:
-        1. String: [t, T, true and True = True] [f, F, false and False = False]
+        1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [1 = True] [0 = False]
         3. Float: [1.0 = True] [0.0 = False] (Will be rounded)
         4. Bool: [True = True] [False = False]
@@ -16,9 +16,10 @@ def ToBool(value):
         bool: The converted bool.
     """
     if isinstance(value, str):
-        if value == "t" or value == "T" or value == "true" or value == "True":
+        value = value.lower()
+        if value == "t" or value == "true":
             return True
-        elif value == "f" or value == "F" or value == "false" or value == "False":
+        elif value == "f" or value == "false":
             return False
         else:
             return None
@@ -40,9 +41,9 @@ def ToBool(value):
     elif isinstance(value, bool):
         return value
     else:
-        return None
         frameinfo = getframeinfo(currentframe())
         KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nValue is not a valid type.", True)
+        return None
 
 def ToAlpha(image, alpha: int):
     """Adds transparency to an image.

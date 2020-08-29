@@ -3267,5 +3267,7 @@ while main_running:
     clock.tick(60)
 #endregion
 #endregion
+#region Application Quitting
 pygame.display.quit()
 pygame.quit()
+#endregion
