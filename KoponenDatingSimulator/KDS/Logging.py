@@ -26,8 +26,7 @@ def init():
         os.remove(os.path.join(logPath, logFiles[0]))
         logFiles = os.listdir(logPath)
 
-    now = datetime.now()
-    logFileName = os.path.join(logPath, "log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log")
+    logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
     logging.basicConfig(filename=logFileName, level=logging.NOTSET)
     logging.debug("Created log file: " + logFileName)
     logging.info('Initialising Game...')

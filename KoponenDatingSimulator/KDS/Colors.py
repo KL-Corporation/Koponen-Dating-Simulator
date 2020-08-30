@@ -19,4 +19,7 @@ class GetPrimary:
     Blue = (0, 0, 255)
     Magenta = (255, 0, 255)
     White = (255, 255, 255)
+    LightGray = (192, 192, 192)
+    Gray = (128, 128, 128)
+    DarkGray = (64, 64, 64)
     Black = (0, 0, 0)

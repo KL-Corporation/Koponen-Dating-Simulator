@@ -71,7 +71,7 @@ class Audio:
             Audio.EffectChannels[i].stop()
     @staticmethod
     def getBusyChannels():
-        busyChannels = list()
+        busyChannels = []
         if Audio.MusicChannel1.get_busy():
             busyChannels.append(Audio.MusicChannel1)
         if Audio.MusicChannel2.get_busy():
@@ -704,27 +704,27 @@ def KDS_Quit():
 #endregion
 #region World Generation
 #region Lists
-world_gen = list()
-item_gen = list()
-tile_rects = list()
-toilets = list()
-burning_toilets = list()
-trashcans = list()
-burning_trashcans = list()
-jukeboxes = list()
-landmines = list()
-zombies = list()
-sergeants = list()
-archviles = list()
-ladders = list()
-bulldogs = list()
-item_rects = list()
-item_ids = list()
-task_items = list()
-color_keys = list()
-door_rects = list()
-doors_open = list()
-tile_textures = dict()
+world_gen = []
+item_gen = []
+tile_rects = []
+toilets = []
+burning_toilets = []
+trashcans = []
+burning_trashcans = []
+jukeboxes = []
+landmines = []
+zombies = []
+sergeants = []
+archviles = []
+ladders = []
+bulldogs = []
+item_rects = []
+item_ids = []
+task_items = []
+color_keys = []
+door_rects = []
+doors_open = []
+tile_textures = {}
 tile_textures_loaded = False
 #endregion
 def WorldGeneration():
@@ -737,14 +737,14 @@ def WorldGeneration():
     enemyBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map")).convert()
     itemBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map")).convert()
 
-    convertBuildingRules = list()
-    convertBuildingColors = list()
-    convertDecorationRules = list()
-    convertDecorationColors = list()
-    convertEnemyRules = list()
-    convertEnemyColors = list()
-    convertItemRules = list()
-    convertItemColors = list()
+    convertBuildingRules = []
+    convertBuildingColors = []
+    convertDecorationRules = []
+    convertDecorationColors = []
+    convertEnemyRules = []
+    convertEnemyColors = []
+    convertItemRules = []
+    convertItemColors = []
     with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
         raw = f.read()
         raw = raw.replace(" ", "")
@@ -815,17 +815,17 @@ def WorldGeneration():
 
     tile_textures_loaded = True
 
-    building_gen = list()
-    decoration_gen = list()
-    enemy_gen = list()
-    item_gen = list()
+    building_gen = []
+    decoration_gen = []
+    enemy_gen = []
+    item_gen = []
 
     BitmapSize = (buildingBitmap.get_width(), buildingBitmap.get_height())
     for i in range(BitmapSize[1]):
-        building_layer = list()
-        decoration_layer = list()
-        enemy_layer = list()
-        item_layer = list()
+        building_layer = []
+        decoration_layer = []
+        enemy_layer = []
+        item_layer = []
         for j in range(BitmapSize[0]):
             building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.get_at((j, i))[:3])])
             decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.get_at((j, i))[:3])])
@@ -1068,9 +1068,9 @@ def load_item_rects():
     return item_rects, item_ids, task_items
 def load_doors():
     y = 0
-    door_rects = list()
-    doors_open = list()
-    color_keys = list()
+    door_rects = []
+    doors_open = []
+    color_keys = []
     for i in range(len(world_gen)):
         for layer in world_gen[i]:
             x = 0
@@ -1221,7 +1221,7 @@ def item_collision_test(rect, items):
     Returns:
         list: A list of all collided rects.
     """
-    hit_list = list()
+    hit_list = []
     x = 0
     global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
 
@@ -1628,7 +1628,7 @@ def agr(tcagr):
 #region Koponen Talk
 def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
-    conversations = list()
+    conversations = []
 
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
@@ -1828,7 +1828,7 @@ def esc_menu_f():
     save_button_enabled = True
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         save_button_enabled = False
-    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save, button_font.render("Save", True, KDS.Colors.GetPrimary.White), (100, 100, 100), (115, 115, 115), (90, 90, 90), (75, 75, 75), save_button_enabled)
+    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save, button_font.render("Save", True, KDS.Colors.GetPrimary.White), enabled=save_button_enabled)
     settings_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.GetPrimary.White))
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
@@ -2032,26 +2032,33 @@ def main_menu():
         global MenuMode
         MenuMode = Mode.ModeSelectionMenu
 
+    #region Main Menu
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(450, 180, 300, 60), mode_selection_function, button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White))
     main_menu_settings_button = KDS.UI.New.Button(pygame.Rect(450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White))
     main_menu_quit_button = KDS.UI.New.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White))
-    
-    mode_selection_modes = list()
+    #endregion
+    #region Mode Selection Menu
+    mode_selection_modes = []
     mode_selection_modes.append(KDS.Gamemode.Modes.Story)
     mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
-
-    mode_selection_buttons = list()
+    mode_selection_buttons = []
     story_mode_button = pygame.Rect(0, 0, display_size[0], int(display_size[1] / 2))
     campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), display_size[0], int(display_size[1] / 2))
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
-
+    #endregion
+    #region Story Menu
+    story_save_button_0 = pygame.Rect(14, 14, 378, 500)
+    story_save_button_1 = pygame.Rect(410, 14, 378, 500)
+    story_save_button_2 = pygame.Rect(806, 14, 378, 500)
+    #endregion 
+    #region Campaign Menu
     campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
     campaign_left_button = pygame.Rect(50, 200, 66, 66)
     campaign_play_button = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 300, 300, 100)
     campaign_return_button = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 150, 300, 100)
-    campaign_menu_buttons = list()
-    campaign_menu_functions = list()
+    campaign_menu_buttons = []
+    campaign_menu_functions = []
     campaign_menu_buttons.append(campaign_left_button)
     campaign_menu_buttons.append(campaign_right_button)
     campaign_menu_buttons.append(campaign_play_button)
@@ -2064,6 +2071,7 @@ def main_menu():
     campaign_play_text_size = button_font1.size("START")
     campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
     campaign_return_text_size = button_font1.size("RETURN")
+    #endregion
 
     while main_menu_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
@@ -2127,7 +2135,24 @@ def main_menu():
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
-            print("Wow... So empty.")
+            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_0, 10)
+            if story_save_button_0.collidepoint(mouse_pos):
+                save_button_color = KDS.Colors.GetPrimary.DarkGray
+            else:
+                save_button_color = KDS.Colors.GetPrimary.Gray
+            pygame.draw.rect(display, save_button_color, story_save_button_0)
+            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_1, 10)
+            if story_save_button_1.collidepoint(mouse_pos):
+                save_button_color = KDS.Colors.GetPrimary.DarkGray
+            else:
+                save_button_color = KDS.Colors.GetPrimary.Gray
+            pygame.draw.rect(display, save_button_color, story_save_button_1)
+            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_2, 10)
+            if story_save_button_2.collidepoint(mouse_pos):
+                save_button_color = KDS.Colors.GetPrimary.DarkGray
+            else:
+                save_button_color = KDS.Colors.GetPrimary.Gray
+            pygame.draw.rect(display, save_button_color, story_save_button_2)
 
         elif MenuMode == Mode.CampaignMenu:
 
