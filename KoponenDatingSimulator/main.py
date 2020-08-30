@@ -2048,9 +2048,12 @@ def main_menu():
     mode_selection_buttons.append(campaign_mode_button)
     #endregion
     #region Story Menu
-    story_save_button_0 = pygame.Rect(14, 14, 378, 500)
-    story_save_button_1 = pygame.Rect(410, 14, 378, 500)
-    story_save_button_2 = pygame.Rect(806, 14, 378, 500)
+    story_save_button_0_rect = pygame.Rect(14, 14, 378, 500)
+    story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
+    story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
+    story_save_button_0 = KDS.UI.New.Button(story_save_button_0_rect, play_function)
+    story_save_button_1 = KDS.UI.New.Button(story_save_button_1_rect, play_function)
+    story_save_button_2 = KDS.UI.New.Button(story_save_button_2_rect, play_function)
     #endregion 
     #region Campaign Menu
     campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
@@ -2135,24 +2138,12 @@ def main_menu():
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
-            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_0, 10)
-            if story_save_button_0.collidepoint(mouse_pos):
-                save_button_color = KDS.Colors.GetPrimary.DarkGray
-            else:
-                save_button_color = KDS.Colors.GetPrimary.Gray
-            pygame.draw.rect(display, save_button_color, story_save_button_0)
-            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_1, 10)
-            if story_save_button_1.collidepoint(mouse_pos):
-                save_button_color = KDS.Colors.GetPrimary.DarkGray
-            else:
-                save_button_color = KDS.Colors.GetPrimary.Gray
-            pygame.draw.rect(display, save_button_color, story_save_button_1)
-            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_2, 10)
-            if story_save_button_2.collidepoint(mouse_pos):
-                save_button_color = KDS.Colors.GetPrimary.DarkGray
-            else:
-                save_button_color = KDS.Colors.GetPrimary.Gray
-            pygame.draw.rect(display, save_button_color, story_save_button_2)
+            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_0_rect, 10)
+            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_1_rect, 10)
+            pygame.draw.rect(display, KDS.Colors.GetPrimary.DarkGray, story_save_button_2_rect, 10)
+            story_save_button_0.update(display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
+            story_save_button_1.update(display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
+            story_save_button_2.update(display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
 
         elif MenuMode == Mode.CampaignMenu:
 
