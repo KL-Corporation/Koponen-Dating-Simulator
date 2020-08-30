@@ -16,6 +16,7 @@ import random
 import threading
 import math
 from pygame.locals import *
+from inspect import currentframe, getframeinfo
 #endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
@@ -187,7 +188,7 @@ class Archvile:
         self.playDeathSound = True
 
     def update(self, a_run):
-        global player_health
+        global player_health, monstersLeft
         if not self.attack_anim:
             self.counter += 1
 
@@ -529,8 +530,7 @@ tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
     "Data", "TermsAccepted", str(False)))
 
 if tcagr == None:
-    KDS.Logging.Log(KDS.Logging.LogType.error,
-                    "Error parcing terms and conditions bool.", False)
+    KDS.Logging.AutoError("Error parcing terms and conditions bool.", getframeinfo(currentframe()))
     tcagr = False
 
 music_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Music Volume", str(0.5)))
@@ -540,8 +540,7 @@ isFullscreen = KDS.Convert.ToBool(
     KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
 
 if isFullscreen == None:
-    KDS.Logging.Log(KDS.Logging.LogType.error,
-                    "Error parcing fullscreen bool.", False)
+    KDS.Logging.Log("Error parcing fullscreen bool.", getframeinfo(currentframe()))
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
                 str(tcagr) + "\n- Music Volume: " + str(music_volume) + "\n- Sound Effect Volume: " + str(effect_volume) + "\n- Fullscreen: " + str(isFullscreen), False)
@@ -802,7 +801,7 @@ def WorldGeneration():
                         elif isinstance(global_texture2, pygame.Surface):
                             tile_textures[array[1]] = global_texture2.copy()
                         else:
-                            KDS.Logging.Log(KDS.Logging.LogType.error, "Texture not found. " + array[0], True)
+                            KDS.Logging.Log("Texture not found. " + array[0], getframeinfo(currentframe()))
 
                 elif Type == 1:
                     convertDecorationRules.append(array[1])
@@ -2120,7 +2119,7 @@ def main_menu():
                             c = False
                         else:
                             frameinfo = getframeinfo(currentframe())
-                            KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + frameinfo.lineno + ")\nInvalid mode_selection_mode! Value: " + mode_selection_modes[y])
+                            KDS.Logging.Log("Invalid mode_selection_mode! Value: " + str(mode_selection_modes[y]), getframeinfo(currentframe()))
                 else:
                     if y == 0:
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(True) * 255.0)), (story_mode_button.x, story_mode_button.y))

@@ -7,7 +7,7 @@ def ToBool(value):
         2. Int: [1 = True] [0 = False]
         3. Float: [1.0 = True] [0.0 = False] (Will be rounded)
         4. Bool: [True = True] [False = False]
-        5. Any Other: None
+        Will return None if requirements are not met.
         
     Args:
         value: The value you want to convert.
@@ -17,9 +17,9 @@ def ToBool(value):
     """
     if isinstance(value, str):
         value = value.lower()
-        if value == "t" or value == "true":
+        if value in ("t", "true"):
             return True
-        elif value == "f" or value == "false":
+        elif value in ("f", "false"):
             return False
         else:
             return None
@@ -41,22 +41,30 @@ def ToBool(value):
     elif isinstance(value, bool):
         return value
     else:
-        frameinfo = getframeinfo(currentframe())
-        KDS.Logging.Log(KDS.Logging.LogType.error, "Error! (" + frameinfo.filename + ", " + str(frameinfo.lineno) + ")\nValue is not a valid type.", True)
+        KDS.Logging.AutoError("Value is not a valid type.", getframeinfo(currentframe()))
         return None
 
-def ToAlpha(image, alpha: int):
+def ToAlpha(image, alpha):
     """Adds transparency to an image.
 
     Args:
         image (pygame.Surface): The image to be converted.
-        alpha (int): The (0 - 255) alpha value the image will be converted to.
+        alpha: The alpha value the image will be converted to.
+            int: (0 - 255)
+            float: (0.0 - 1.0)
 
     Returns:
         pygame.Surface: The converted image.
     """
-    image.set_alpha(alpha)
-    return image
+    if isinstance(alpha, int):
+        image.set_alpha(alpha)
+        return image
+    elif isinstance(alpha, float):
+        image.set_alpha(int(alpha * 255))
+        return image
+    else:
+        KDS.Logging.AutoError("Alpha is not a valid type.", getframeinfo(currentframe()))
+        return None
 
 def ToGrayscale(image):
     """Converts an image to grayscale.

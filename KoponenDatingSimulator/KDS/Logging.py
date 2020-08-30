@@ -72,6 +72,16 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
     if Console_Visible:
         print(Message)
 
+def AutoError(Message: str, Frame_Info):
+    """Generates an automatic error message.
+
+    Args:
+        Message (str): The error message.
+        Frame_Info: The frame information you get from getframeinfo(currentframe()).
+    """
+    
+    Log(LogType.error, "ERROR! File \"{}\", line {}, in {} [Exception: {}]".format(Frame_Info.filename, Frame_Info.lineno, Frame_Info.function, Message), True)
+
 def Profiler(enabled=True):
     """Turns the profiler on or off.
 
