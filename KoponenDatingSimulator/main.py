@@ -1,4 +1,5 @@
 #region Importing
+import pygame
 import KDS.AI
 import KDS.Animator
 import KDS.Colors
@@ -10,7 +11,7 @@ import KDS.Math
 import KDS.Missions
 import KDS.UI
 import KDS.LevelLoader
-import pygame
+import numpy as np
 import os
 import random
 import threading
@@ -993,7 +994,8 @@ def load_rects():
                         bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                         monsterAmount += 1
                     elif tile == 'I':
-                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),))
+                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),imp_walking, imp_dying, imp_attacking))
+                        
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
