@@ -34,6 +34,7 @@ enemies:
 zombie, Z, (0, 255, 0)
 sergeant, S, (255, 0, 0)
 archvile, V, (0, 0, 255)
+imp, I ,(0,0,90)
 bulldog, K, (255, 255, 0)
 landmine, C, (0, 255, 255)
 

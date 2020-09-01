@@ -100,3 +100,44 @@ class New:
 
             text_size_scaled = (self.text.get_width(), self.text.get_height())
             surface.blit(pygame.transform.scale(self.text, (int(text_size_scaled[0]), int(text_size_scaled[1]))), (int(self.rect.center[0] - (text_size_scaled[0] / 2)), int(self.rect.center[1] - (text_size_scaled[1] / 2))))
+
+    class TrueFalseButton:
+
+        def __init__(self, rect: pygame.Rect, current_state = False, button_default_color=(100,100,100), button_highlighted_color=(115,115,115), button_pressed_color=(90,90,90), button_disabled_color=(75,75,75), button_background_color=(150,150,150), enabled = True):
+            self.rect = rect
+            self.current_state = current_state
+            self.enabled = enabled
+            self.button_default_color = button_default_color
+            self.button_highlighted_color = button_highlighted_color
+            self.button_pressed_color = button_pressed_color
+            self.button_disabled_color = button_disabled_color
+            self.button_background_color = button_background_color
+            self.bc_rect = pygame.Rect(rect.x, rect.y, rect.width*2, rect.height)
+
+            if current_state:
+                self.rect.x += self.rect.width
+
+        def update(self, surface, mouse_pos: tuple, clicked, *args):
+            """
+            1. surface: The surface this button is going to be rendered.
+            2. mouse_pos: The SCALED position of the mouse.
+            3. clicked: A bool to determine if button's state should be flipped.
+            """
+
+            button_color = self.button_disabled_color
+            if self.enabled:
+                if self.bc_rect.collidepoint(mouse_pos):
+                    if clicked:
+                        if self.current_state:
+                            self.rect.x -= self.rect.width
+                        else:
+                            self.rect.x += self.rect.width
+                        self.current_state = not self.current_state
+                    button_color = self.button_highlighted_color
+                    if pygame.mouse.get_pressed()[0]:
+                        button_color = self.button_pressed_color
+                else:
+                    button_color = self.button_default_color
+            pygame.draw.rect(surface, self.button_background_color, self.bc_rect)
+            pygame.draw.rect(surface, button_color, self.rect)
+            return self.current_state

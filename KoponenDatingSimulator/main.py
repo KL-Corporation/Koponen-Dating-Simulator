@@ -185,7 +185,7 @@ class Archvile:
         self.playDeathSound = True
 
     def update(self, a_run):
-        global player_health
+        global player_health, monstersLeft
         if not self.attack_anim:
             self.counter += 1
 
@@ -411,6 +411,7 @@ sergeant_aiming = pygame.image.load(
     "Assets/Textures/Animations/seargeant_shooting_0.png").convert()
 sergeant_firing = pygame.image.load(
     "Assets/Textures/Animations/seargeant_shooting_1.png").convert()
+imp_fireball_texture = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
 medkit = pygame.image.load("Assets/Textures/Items/medkit.png").convert()
 shotgun = pygame.image.load("Assets/Textures/Items/shotgun.png").convert()
 shotgun_f = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
@@ -461,6 +462,7 @@ archvile_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 iphone_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
 turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
+imp_fireball_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": iphone_texture, "coffeemug": coffeemug}
@@ -597,6 +599,9 @@ monstersLeft = 0
 farting = False
 
 current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "01")
+with open("settings.stns", "r") as file:
+    clearlag = KDS.Convert.ToBool(file.read().split("=")[1])
+
 
 with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = file.read()
@@ -728,7 +733,7 @@ tile_textures_loaded = False
 #endregion
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
-    global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids
+    global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, imps
     global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures, tile_textures_loaded
 
     buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
@@ -841,7 +846,7 @@ def WorldGeneration():
 
     #Use the index to get the letter and make the file using the letters
 
-    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars = load_rects()
+    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars, imps = load_rects()
     KDS.Logging.Log(KDS.Logging.LogType.debug,
                     "Zombies Initialised: " + str(len(zombies)), False)
     for zombie in zombies:
@@ -985,14 +990,15 @@ def load_rects():
                         bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                         monsterAmount += 1
                     elif tile == 'I':
-                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),))
+                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),tile_rects, imp_walking, imp_attacking, imp_dying))
+                        monsterAmount += 1
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
                 x += 1
             y += 1
     monstersLeft = monsterAmount
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars, imps
 def load_item_rects():
     def append_rect():
         item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
@@ -1443,9 +1449,9 @@ archvile_death_animation = KDS.Animator.Animation(
 flames_animation = KDS.Animator.Animation("flames", 5, 3, KDS.Colors.GetPrimary.White, -1)
 bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6, KDS.Colors.GetPrimary.White, - 1)
 
-imp_walking = KDS.Animator.Animation("imp_walking",4,8,KDS.Colors.GetPrimary.White,-1)
-imp_attacking = KDS.Animator.Animation("imp_attacking",2,8,KDS.Colors.GetPrimary.White,-1)
-imp_dying = KDS.Animator.Animation("imp_dying", 5,8,KDS.Colors.GetPrimary.White, 1)
+imp_walking = KDS.Animator.Animation("imp_walking",4,19,KDS.Colors.GetPrimary.White,-1)
+imp_attacking = KDS.Animator.Animation("imp_attacking",2,16,KDS.Colors.GetPrimary.White,-1)
+imp_dying = KDS.Animator.Animation("imp_dying", 5,16,KDS.Colors.GetPrimary.White, 1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
@@ -1859,7 +1865,7 @@ def esc_menu_f():
         c = False
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed
+    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed, clearlag
     c = False
     settings_running = True
 
@@ -1870,12 +1876,14 @@ def settings_menu():
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render("Return", True, KDS.Colors.GetPrimary.White))
     music_volume_slider = KDS.UI.New.Slider("Music Volume", pygame.Rect(450, 135, 340, 20), (20, 30), 1)
     effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
+    clearlag_selector = KDS.UI.New.TrueFalseButton(pygame.Rect(450,240, 100, 30))
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
         music_volume_text = button_font.render("Music Volume", True, KDS.Colors.GetPrimary.White)
         effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
+        clear_lag_text = button_font.render("ClearLag off/on", True, KDS.Colors.GetPrimary.White)
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -1896,6 +1904,7 @@ def settings_menu():
                     DebugMode = not DebugMode
             elif event.type == pygame.QUIT:
                 KDS_Quit()
+        print(clearlag)
 
         display.blit(settings_background, (0, 0))
 
@@ -1903,8 +1912,10 @@ def settings_menu():
 
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
+        display.blit(clear_lag_text,(50,240))
         set_music_volume = music_volume_slider.update(display, mouse_pos)
         set_effect_volume = effect_volume_slider.update(display, mouse_pos)
+        
 
         if set_music_volume != music_volume:
             music_volume = set_music_volume
@@ -1915,6 +1926,12 @@ def settings_menu():
             effect_volume = set_effect_volume
 
         return_button.update(display, mouse_pos, c)
+        clearlag_state = clearlag_selector.update(display, mouse_pos, c)
+
+        if clearlag_state != clearlag:
+            clearlag = clearlag_state
+            with open("settings.stns", "w") as file:
+                file.write("ClearLag=" + str(clearlag))
 
         if DebugMode:
             fps_text = "FPS: " + str(int(round(clock.get_fps())))
@@ -2752,6 +2769,10 @@ while main_running:
         if DebugMode:
             pygame.draw.rect(screen,(220,2,2),(archvile.rect.x-scroll[0],archvile.rect.y-scroll[1],archvile.rect.width,archvile.rect.height))
         archvile.update(arch_run)
+    
+    for imp in imps:
+        imp._move()
+        imp.update(pygame.Rect(1,1,1,1), screen, 20, scroll)
 
     for bulldog in bulldogs:
         bulldog.startUpdateThread(player_rect, tile_rects)
@@ -3018,7 +3039,9 @@ while main_running:
             for sergeant in sergeants:
                 if damage_rect.colliderect(sergeant.rect):
                     sergeant.health -= 600
-
+            for imp in imps:
+                if damage_rect.colliderect(imp.rect):
+                    imp.dmg(600)
             del damage_rect
 
     if player_keys["red"]:
@@ -3196,7 +3219,7 @@ while main_running:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
     
-    print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),(200,200))))
+    #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),(200,200))))
 
 #endregion
 #region Conditional Events

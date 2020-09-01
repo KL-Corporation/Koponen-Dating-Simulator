@@ -66,6 +66,7 @@ green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
 blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
 coffeemug = pygame.image.load("Assets/Textures/Items/coffeemug.png").convert()
 ss_bonuscard = pygame.image.load("Assets/Textures/Items/ss_bonuscard.png").convert()
+imp = pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert()
 lappi_sytytyspalat = pygame.image.load(
     "Assets/Textures/Items/lappi_sytytyspalat.png").convert()
 plasmarifle = pygame.image.load("Assets/Textures/Items/plasmarifle.png").convert()
@@ -131,6 +132,7 @@ tile_textures = {'b': floor1,
                     'Z': zombie,
                     'S': serg,
                     'V': archvile,
+                    'I': imp,
                     'v': stone,
                     'w': hay,
                     'å': soil1,

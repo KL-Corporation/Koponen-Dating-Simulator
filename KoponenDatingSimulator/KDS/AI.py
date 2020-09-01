@@ -1,4 +1,5 @@
 import pygame, threading, multiprocessing
+import concurrent.futures
 import KDS.Animator, KDS.Math
 pygame.mixer.init()
 
@@ -218,12 +219,14 @@ class hostileEnemy:
         self.speed = _speed
         self.position = _position
         self.textures = _animation
-        self.rect = pygame.Rect(_position[0],_position[1],_animation.images[0].width,_animation.images.height)
-        self.baseAimation = _animation
+        #self.rect = pygame.Rect(_position[0],_position[1],_animation.images[0].width,_animation.images[0].height)
+        self.rect = pygame.Rect(_position[0], _position[1], 34, 68)
+        self.baseAnimation = _animation
         self.movement = [self.speed, 8]
         self.collsisions = dict()
         self.obstacleRects = __tilerects
         self.sleep = True
+        self.targetFound = False
         self.direction = False
 
     def dmg(self, dmgAmount):
@@ -233,30 +236,52 @@ class hostileEnemy:
         
     def _move(self):
 
-        def _movementUpdateThread(self):
-            
-            def __collision_test(rect, tiles):
-                hit_list = []
-                for tile in tiles:
-                    if rect.colliderect(tile):
-                        hit_list.append(tile)
-                return hit_list
+        def _movementUpdateThread(obj:Imp):
+            if not obj.sleep:
 
-            self.rect, self.collsisions = __move(self.rect,self.movement,self.obstacleRects)
+                def collision_test(rect, tiles):
+                    hits1 = []
+                    for tile in tiles:
+                        if rect.colliderect(tile):
+                            hits1.append(tile)
+                    return hits1
 
-        t = threading.Thread(target=_movementUpdateThread, args=[self])
-        t.start()
+                obj.rect.x += obj.movement[0]
+                
+                hit_list = collision_test(obj.rect, obj.obstacleRects)
+                for tile in hit_list:
+                    if obj.movement[0] > 0:
+                        obj.rect.right = tile.left
+                    elif obj.movement[0] < 0:
+                        obj.rect.left = tile.right
+                    
+                                
+                obj.rect.y += obj.movement[1]
+                hit_list = collision_test(obj.rect, obj.obstacleRects)
+                for tile in hit_list:
+                    if obj.movement[1] > 0:
+                        obj.rect.bottom = tile.top
+                    elif obj.movement[1] < 0:
+                        obj.rect.top = tile.bottom
+                
+            return obj
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+
+            th = executor.submit(_movementUpdateThread, self)
+            self = th.result()
+
 
 class Imp(hostileEnemy):
-
     def __init__(self, _health:int, _speed:int, _position: (int,int),__tilerects:list, _animation: KDS.Animator.Animation, _attack_animation: KDS.Animator.Animation, _death_animation: KDS.Animator.Animation):
-        super().__init__(_health, _speed, _position, _animation,__tilerects)
+        super().__init__(_health, _speed, _position,__tilerects, _animation)
         self.death_animation = _death_animation
         self.attack_animation = _attack_animation
         self.corpse_texture = self.death_animation.images[-1]
+        self.idle_texture = self.baseAnimation.images[1]
 
-    def update(self, searchObject: pygame.Rect, surface: pygame.Surface, searchObject_H: int):
-        pass
+    def update(self, searchObject: pygame.Rect, surface: pygame.Surface, searchObject_H: int, scroll: list):
+        surface.blit(pygame.transform.flip(self.baseAnimation.update(), False, self.direction), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
 
 class Projectile:
     pass
