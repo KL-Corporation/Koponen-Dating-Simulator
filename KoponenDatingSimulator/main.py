@@ -47,39 +47,44 @@ profiler_enabled = False
 #endregion
 #region Audio
 pygame.mixer.init()
-pygame.mixer.set_num_channels(16)
-pygame.mixer.set_reserved(0)
-pygame.mixer.set_reserved(15)
+pygame.mixer.set_num_channels(32)
 class Audio:
     MusicMixer = pygame.mixer.music
-    MusicChannel1 = pygame.mixer.Channel(0)
-    MusicChannel2 = pygame.mixer.Channel(11)
-    EffectChannels = [pygame.mixer.Channel(1), pygame.mixer.Channel(2), pygame.mixer.Channel(3),
-                      pygame.mixer.Channel(4), pygame.mixer.Channel(5), pygame.mixer.Channel(6),
-                      pygame.mixer.Channel(7), pygame.mixer.Channel(8), pygame.mixer.Channel(9),
-                      pygame.mixer.Channel(10), pygame.mixer.Channel(11), pygame.mixer.Channel(12),
-                      pygame.mixer.Channel(13), pygame.mixer.Channel(14)]
+    MusicVolume = 0.0
+    EffectVolume = 0.0
+    EffectChannels = []
+    for i in range(pygame.mixer.get_num_channels()):
+        EffectChannels.append(pygame.mixer.Channel(i))
     @staticmethod
-    def playSound(sound: pygame.mixer.Sound):
-        global effect_volume
+    def playSound(sound: pygame.mixer.Sound, volume=EffectVolume):
         play_channel = pygame.mixer.find_channel(True)
         play_channel.play(sound)
-        play_channel.set_volume(effect_volume)
+        play_channel.set_volume(volume)
+        return play_channel
     @staticmethod
     def stopAllSounds():
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].stop()
     @staticmethod
+    def pauseAllSounds():
+        for i in range(len(Audio.EffectChannels)):
+            Audio.EffectChannels[i].pause()
+    @staticmethod
+    def unpauseAllSounds():
+        for i in range(len(Audio.EffectChannels)):
+            Audio.EffectChannels[i].unpause()
+    @staticmethod
     def getBusyChannels():
         busyChannels = []
-        if Audio.MusicChannel1.get_busy():
-            busyChannels.append(Audio.MusicChannel1)
-        if Audio.MusicChannel2.get_busy():
-            busyChannels.append(Audio.MusicChannel2)
         for channel in Audio.EffectChannels:
             if channel.get_busy():
                 busyChannels.append(channel)
         return busyChannels
+    @staticmethod
+    def setVolume(volume: float):
+        EffectVolume = volume
+        for channel in Audio.EffectChannels:
+            channel.set_volume(EffectVolume)
 #endregion
 #region Animations
 class plasma_bullet:
@@ -279,15 +284,9 @@ class Archvile:
 #endregion
 #region Fullscreen
 class Fullscreen:
-    try:
-        size
-    except:
-        size = display_size
-        offset = (0, 0)
-        scaling = 0
-    size
-    offset
-    scaling
+    size = display_size
+    offset = (0, 0)
+    scaling = 0
 
     @staticmethod
     def Set(reverseFullscreen=False):
@@ -318,8 +317,7 @@ black_tint.set_alpha(170)
 #region Downloads
 pygame.display.set_caption("Koponen Dating Simulator")
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
-main_menu_background = pygame.image.load(
-    "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
+main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc.png").convert()
 settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 pygame.display.set_icon(game_icon)
@@ -514,6 +512,7 @@ playerSprinting = False
 plasmarifle_fire = False
 jukeboxMusicPlaying = 0
 lastJukeboxSong = [0, 0, 0, 0, 0]
+jukeboxChannel = pygame.mixer.Channel(0)
 playerStamina = 100.0
 gasburnerBurning = False
 plasmabullets = []
@@ -533,8 +532,8 @@ if tcagr == None:
     KDS.Logging.AutoError("Error parcing terms and conditions bool.", getframeinfo(currentframe()))
     tcagr = False
 
-music_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Music Volume", str(0.5)))
-effect_volume = float(KDS.ConfigManager.LoadSetting("Settings", "Sound Effect Volume", str(0.5)))
+Audio.MusicVolume = float(KDS.ConfigManager.LoadSetting("Settings", "MusicVolume", str(0.5)))
+Audio.EffectVolume = float(KDS.ConfigManager.LoadSetting("Settings", "SoundEffectVolume", str(0.5)))
 
 isFullscreen = KDS.Convert.ToBool(
     KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
@@ -543,7 +542,7 @@ if isFullscreen == None:
     KDS.Logging.Log("Error parcing fullscreen bool.", getframeinfo(currentframe()))
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
-                str(tcagr) + "\n- Music Volume: " + str(music_volume) + "\n- Sound Effect Volume: " + str(effect_volume) + "\n- Fullscreen: " + str(isFullscreen), False)
+                str(tcagr) + "\n- Music Volume: " + str(Audio.MusicVolume) + "\n- Sound Effect Volume: " + str(Audio.EffectVolume) + "\n- Fullscreen: " + str(isFullscreen), False)
 
 selectedSave = 0
 
@@ -624,7 +623,6 @@ global player_score
 player_score = 0
 true_scroll = [0, 0]
 inventory_slot = 0
-doubleWidthAdd = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
 stand_size = (28, 63)
@@ -671,6 +669,7 @@ def LoadSave():
     inventory[4] = KDS.ConfigManager.LoadSave(selectedSave, "PlayerData", "Inventory4", inventory[4])
 def SaveData():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
+    #region Player
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x))
     KDS.ConfigManager.SetSave(
@@ -691,6 +690,13 @@ def SaveData():
         selectedSave, "PlayerData", "Inventory3", inventory[3])
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Inventory4", inventory[4])
+    #endregion
+    #region Map
+    
+    #endregion
+    #region Enemies
+    
+    #endregion
 #endregion
 #region Quit Handling
 def KDS_Quit():
@@ -897,7 +903,7 @@ def shakeScreen():
 def play_map_music(_current_map):
     pygame.mixer.music.load(os.path.join("Assets", "Maps", "map" + _current_map, "music.mid"))
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(music_volume)
+    pygame.mixer.music.set_volume(Audio.MusicVolume)
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
 
@@ -1803,6 +1809,41 @@ def koponen_talk():
         window.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 #endregion
+#region Game Start
+def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
+    global main_menu_running, current_map, inventory, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
+    KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+    inventory = ["none", "none", "none", "none", "none"]
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
+        inventory[0] = "iPuhelin"
+    WorldGeneration()
+    pygame.mouse.set_visible(False)
+    main_menu_running = False
+    play_map_music(current_map)
+    player_hand_item = "none"
+
+    player_death_event = False
+    animation_has_played = False
+    death_wait = 0
+
+    player_rect.x = 100
+    player_rect.y = 100
+    if reset_scroll:
+        true_scroll = [-200, -190]
+    player_health = 100
+
+    for key in player_keys:
+        player_keys[key] = False
+    KDS.Logging.Log(KDS.Logging.LogType.info,
+                    "Press F4 to commit suicide", False)
+    KDS.Logging.Log(KDS.Logging.LogType.info,
+                    "Press Alt + F4 to get depression", False)
+    LoadSave()
+
+def load_campaign(reset_scroll):
+    global main_menu_running, current_map, inventory, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
+    KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
+#endregion
 #region Menus
 def esc_menu_f():
     global esc_menu, go_to_main_menu, DebugMode, clock, AltPressed, F4Pressed
@@ -1875,7 +1916,7 @@ def esc_menu_f():
         c = False
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed
+    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, AltPressed, F4Pressed
     c = False
     settings_running = True
 
@@ -1884,8 +1925,8 @@ def settings_menu():
         settings_running = False
 
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render("Return", True, KDS.Colors.GetPrimary.White))
-    music_volume_slider = KDS.UI.New.Slider("Music Volume", pygame.Rect(450, 135, 340, 20), (20, 30), 1)
-    effect_volume_slider = KDS.UI.New.Slider("Sound Effect Volume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
+    music_volume_slider = KDS.UI.New.Slider("MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1)
+    effect_volume_slider = KDS.UI.New.Slider("SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
@@ -1922,13 +1963,11 @@ def settings_menu():
         set_music_volume = music_volume_slider.update(display, mouse_pos)
         set_effect_volume = effect_volume_slider.update(display, mouse_pos)
 
-        if set_music_volume != music_volume:
-            music_volume = set_music_volume
-            pygame.mixer.music.set_volume(music_volume)
-            Audio.MusicChannel1.set_volume(music_volume)
-            Audio.MusicChannel2.set_volume(music_volume)
-        elif set_effect_volume != effect_volume:
-            effect_volume = set_effect_volume
+        if set_music_volume != Audio.MusicVolume:
+            MusicVolume = set_music_volume
+            pygame.mixer.music.set_volume(MusicVolume)
+        elif set_effect_volume != Audio.EffectVolume:
+            Audio.setVolume(set_effect_volume)
 
         return_button.update(display, mouse_pos, c)
 
@@ -1943,36 +1982,6 @@ def settings_menu():
         window.fill((0, 0, 0))
         c = False
         clock.tick(60)
-
-def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
-    global main_menu_running, current_map, inventory, Audio, music_volume, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
-    KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-    inventory = ["none", "none", "none", "none", "none"]
-    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
-        inventory[0] = "iPuhelin"
-    WorldGeneration()
-    pygame.mouse.set_visible(False)
-    main_menu_running = False
-    play_map_music(current_map)
-    player_hand_item = "none"
-
-    player_death_event = False
-    animation_has_played = False
-    death_wait = 0
-
-    player_rect.x = 100
-    player_rect.y = 100
-    if reset_scroll:
-        true_scroll = [-200, -190]
-    player_health = 100
-
-    for key in player_keys:
-        player_keys[key] = False
-    KDS.Logging.Log(KDS.Logging.LogType.info,
-                    "Press F4 to commit suicide", False)
-    KDS.Logging.Log(KDS.Logging.LogType.info,
-                    "Press Alt + F4 to get depression", False)
-    LoadSave()
 
 def main_menu():
     global current_map, MenuMode, DebugMode, AltPressed, F4Pressed
@@ -1995,7 +2004,7 @@ def main_menu():
 
     pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
     pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(music_volume)
+    pygame.mixer.music.set_volume(Audio.MusicVolume)
 
     def settings_function():
         settings_menu()
@@ -2225,11 +2234,10 @@ def inventoryRight():
     KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
     while inventory_slot >= len(inventory):
         inventory_slot = len(inventory) - inventory_slot
-    if inventory_slot < len(inventory):
-        if inventoryDoubles[inventory_slot] == True:
-            inventory_slot += 2
-        else:
-            inventory_slot += 1
+    if inventoryDoubles[inventory_slot] == True:
+        inventory_slot += 2
+    else:
+        inventory_slot += 1
     while inventory_slot >= len(inventory):
         inventory_slot = len(inventory) - inventory_slot
 def inventoryPick(index: int):
@@ -2360,8 +2368,9 @@ while main_running:
         elif event.type == pygame.QUIT:
             KDS_Quit()
 #endregion
-#region Inventory Code
+#region Data
     def inventoryDoubleOffsetCounter():
+        global inventoryDoubleOffset
         inventoryDoubleOffset = 0
         for i in range(0, inventory_slot - 1):
             if inventoryDoubles[i] == True:
@@ -2384,8 +2393,6 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
-        Audio.MusicChannel1.stop()
-        Audio.MusicChannel2.stop()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
@@ -2751,7 +2758,7 @@ while main_running:
             if not sergeant.loot_dropped:
                 sergeant.loot_dropped = True
                 if round(random.uniform(0, 3)) == 0:
-                    item_rects.append(pygame.Rect(sergeant.rect.x, sergeant.rect.y + (sergeant.rect.height / 2) - 2, sergeant.rect.width, sergeant.rect.height / 2))
+                    item_rects.append(pygame.Rect(sergeant.rect.x, int(sergeant.rect.y + (sergeant.rect.height / 2) - 2), sergeant.rect.width, int(sergeant.rect.height / 2)))
                     item_ids.append("shotgun_shells")
             
     for zombie1 in zombies:
@@ -3151,13 +3158,14 @@ while main_running:
             for i in range(len(lastJukeboxSong) - 1):
                 lastJukeboxSong[i] = lastJukeboxSong[i + 1]
             lastJukeboxSong[4] = jukeboxMusicPlaying
-            Audio.MusicChannel2.play(jukebox_music[jukeboxMusicPlaying])
-            Audio.MusicChannel2.set_volume(music_volume)
-    else:
-        if not pygame.mixer.music.get_busy():
-            Audio.MusicChannel2.stop()
-            pygame.mixer.music.play()
-            pygame.mixer.music.set_volume(music_volume)
+            jukeboxChannel = Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
+        if not jukeboxChannel.get_busy():
+            jukeboxMusicPlaying = -1
+    elif not pygame.mixer.music.get_busy():
+        jukeboxMusicPlaying = -1
+        jukeboxChannel.stop()
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(Audio.MusicVolume)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3186,8 +3194,8 @@ while main_running:
                 screen.blit(lappi_sytytyspalat, ((i * 34) + 15, 80))
                 inventoryDoubles[i] = False
             elif inventory[i] == "pistol":
-                screen.blit(pistol_texture, ((i * 34) + 10 +
-                                             (34 / pistol_texture.get_width() * 2) - 30, 80))
+                screen.blit(pistol_texture, (int((i * 34) + 10 +
+                                             (34 / pistol_texture.get_width() * 2) - 30), 80))
             elif inventory[i] == "iPuhelin":
                 screen.blit(ipuhelin_texture, (int((i * 34) + 10 +
                                              (34 / ipuhelin_texture.get_width() * 2)), 80))
@@ -3206,10 +3214,6 @@ while main_running:
                                       (68 / shotgun.get_width() * 2)), 80))
                 inventoryDoubles[i] = True  # True, koska vie kaksi slottia
 
-    for double in inventoryDoubles:
-        if double:
-            doubleWidthAdd += 1
-
     pygame.draw.rect(screen, (192, 192, 192), (10, 75, 170, 34), 3)
 
     if inventoryDoubles[inventory_slot] == True:
@@ -3218,7 +3222,7 @@ while main_running:
         scaledSlotWidth = 34
     inventoryDoubleOffset = inventoryDoubleOffsetCounter()
     pygame.draw.rect(screen, (70, 70, 70), ((
-        (inventory_slot + inventoryDoubleOffset) * 34) + 10, 75, scaledSlotWidth, 34), 3)
+        (inventory_slot) * 34) + 10, 75, scaledSlotWidth, 34), 3)
 
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
@@ -3257,9 +3261,8 @@ while main_running:
 #endregion
 #region Conditional Events
     if esc_menu:
-        Audio.MusicChannel1.fadeout(500)
-        Audio.MusicChannel2.fadeout(500)
-        pygame.mixer.music.fadeout(500)
+        pygame.mixer.music.stop()
+        Audio.pauseAllSounds()
         screen.blit(black_tint, (0, 0))
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size), (Fullscreen.offset[0], Fullscreen.offset[1]))
@@ -3268,9 +3271,9 @@ while main_running:
         esc_menu_f()
         pygame.mouse.set_visible(False)
         pygame.mixer.music.play()
+        Audio.unpauseAllSounds()
     if go_to_main_menu:
-        Audio.MusicChannel1.stop()
-        Audio.MusicChannel2.stop()
+        Audio.stopAllSounds()
         pygame.mixer.music.stop()
         pygame.mouse.set_visible(True)
         main_menu()

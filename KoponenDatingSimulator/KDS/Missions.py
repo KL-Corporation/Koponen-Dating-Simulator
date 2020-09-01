@@ -68,15 +68,16 @@ def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
         Add_Value (float): The value that will be added to your task.
     """
     global Active_Mission, Missions_Finished
-    for i in range(len(Missions)):
-        if Missions[i][0] == Mission_Name:
-            for j in range(len(Missions[i]) - 2):
-                j_var = j + 2
-                if Missions[i][j_var][0] == Task_Name:
-                    Missions[i][j_var][2] += Add_Value
-                    if Missions[i][j_var][2] >= 1.0:
-                        Missions[i][j_var][3] = True
-                        #Play audio?
+    if Mission_Name in Missions:
+        for i in range(len(Missions)):
+            if Missions[i][0] == Mission_Name:
+                if Task_Name in Missions[i]:
+                    for j in range(2, len(Missions[i])):
+                        if Missions[i][j][0] == Task_Name:
+                            Missions[i][j][2] += Add_Value
+                            if Missions[i][j][2] >= 1.0:
+                                Missions[i][j][3] = True
+                                #Play audio?
     All_Tasks_Done = True
     while All_Tasks_Done and not Missions_Finished:
         for i in range(len(Missions[Active_Mission]) - 2):
