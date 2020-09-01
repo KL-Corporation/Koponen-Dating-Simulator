@@ -1,4 +1,4 @@
-import pygame, threading, multiprocessing
+import pygame, threading, multiprocessing, numpy
 import concurrent.futures
 import KDS.Animator, KDS.Math
 pygame.mixer.init()
@@ -32,6 +32,8 @@ def __move(rect, movement, tiles):
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
+
+imp_sight_sound = pygame.mixer.Sound("Assets/Audio/entities/imp_sight.wav")
 
 class SergeantZombie:
 
@@ -220,7 +222,7 @@ class hostileEnemy:
         self.position = _position
         self.textures = _animation
         #self.rect = pygame.Rect(_position[0],_position[1],_animation.images[0].width,_animation.images[0].height)
-        self.rect = pygame.Rect(_position[0], _position[1], 34, 68)
+        self.rect = pygame.Rect(_position[0], _position[1], _animation.images[0].get_size()[0], _animation.images[0].get_size()[1]-2)
         self.baseAnimation = _animation
         self.movement = [self.speed, 8]
         self.collsisions = dict()
@@ -229,13 +231,22 @@ class hostileEnemy:
         self.targetFound = False
         self.direction = False
 
+    def r(self):
+        while True:
+            self.rect.y += 1
+            for obstacle in self.obstacleRects:
+                if self.rect.colliderect(obstacle):
+                    return "continue"
+                    
+            if self.rect.y > len(self.obstacleRects)*35+500:
+                return "destroy"
+
     def dmg(self, dmgAmount):
         self.health -= dmgAmount
         if self.health < 0:
             self.health = 0
         
     def _move(self):
-
         def _movementUpdateThread(obj:Imp):
             if not obj.sleep:
 
@@ -252,8 +263,14 @@ class hostileEnemy:
                 for tile in hit_list:
                     if obj.movement[0] > 0:
                         obj.rect.right = tile.left
+                        speed = -speed
+                        obj.movement[0] = speed
+                        obj.direction = True
                     elif obj.movement[0] < 0:
                         obj.rect.left = tile.right
+                        speed = -speed
+                        obj.movement[0] = speed
+                        obj.direction = False
                     
                                 
                 obj.rect.y += obj.movement[1]
@@ -263,13 +280,17 @@ class hostileEnemy:
                         obj.rect.bottom = tile.top
                     elif obj.movement[1] < 0:
                         obj.rect.top = tile.bottom
+            if obj.speed < 0:
+                obj.direction = True
+            elif obj.speed > 0:
+                obj.direction = False
                 
-            return obj
+            return obj.rect, obj.movement, obj.direction
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
 
             th = executor.submit(_movementUpdateThread, self)
-            self = th.result()
+            self.rect, self.movement, self.direction = th.result()
 
 
 class Imp(hostileEnemy):
@@ -282,6 +303,16 @@ class Imp(hostileEnemy):
 
     def update(self, searchObject: pygame.Rect, surface: pygame.Surface, searchObject_H: int, scroll: list):
         surface.blit(pygame.transform.flip(self.baseAnimation.update(), False, self.direction), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+
+        def search_target(obj: Imp, target):
+            def angle_search(max_angle, direction, target: pygame.Rect):
+                angle = KDS.Math.getAngle((obj.rect.centerx, obj.rect.centery), (target.centerx, target.centery))
+
+
+        #with concurrent.futures.ThreadPoolExecutor() as executor:
+
+        #    th = executor.submit(search_target, self, searchObject)
+        #    self.sleep, self.targetFound, self.movement
 
 class Projectile:
     pass

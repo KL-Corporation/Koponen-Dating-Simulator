@@ -11,7 +11,7 @@ import KDS.Math
 import KDS.Missions
 import KDS.UI
 import KDS.LevelLoader
-import numpy as np
+import numpy
 import os
 import random
 import threading
@@ -1008,7 +1008,12 @@ def load_rects():
                         monsterAmount += 1
                     elif tile == 'I':
                         imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),tile_rects, imp_walking, imp_attacking, imp_dying))
-                        monsterAmount += 1
+                        imp_temp = imps[-1].r()
+                        if imp_temp == "continue":
+                            monsterAmount += 1
+                        else:
+                            del imps[-1]
+                        del imp_temp
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
@@ -2852,7 +2857,7 @@ while main_running:
     
     for imp in imps:
         imp._move()
-        imp.update(pygame.Rect(1,1,1,1), screen, 20, scroll)
+        imp.update(player_rect, screen, 20, scroll)
 
     for bulldog in bulldogs:
         bulldog.startUpdateThread(player_rect, tile_rects)
@@ -3292,7 +3297,7 @@ while main_running:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
     
-    #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),(200,200))))
+    print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
 
 #endregion
 #region Conditional Events
