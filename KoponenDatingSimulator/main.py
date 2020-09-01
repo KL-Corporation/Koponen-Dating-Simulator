@@ -315,6 +315,8 @@ def ResizeWindow(set_size: tuple):
     global window_resize_size
     if not isFullscreen:
         window_resize_size = set_size
+        KDS.ConfigManager.SetSetting("Settings", "DisplaySizeX", str(set_size[0]))
+        KDS.ConfigManager.SetSetting("Settings", "DisplaySizeY", str(set_size[1]))
     Fullscreen.Set(True)
 #endregion
 #region Initialisation

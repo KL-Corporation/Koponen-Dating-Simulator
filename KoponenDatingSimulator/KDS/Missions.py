@@ -28,7 +28,7 @@ for i in range(textOffset):
     textOffsetString += " "
 Missions_Finished = False
 #endregion
-#region Initialise
+#region Initialize
 def InitialiseMission(Safe_Name: str, Visible_Name: str):
     """Initialises a mission.
 
