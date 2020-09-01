@@ -1,4 +1,4 @@
-air, a, 0, 0, 0, (Air will be transparent, but do not use this value.)
+﻿air, a, 0, 0, 0, (Air will be transparent, but do not use this value.)
 
 building:
 floor0, b, (0, 255, 0)
@@ -37,6 +37,7 @@ archvile, V, (0, 0, 255)
 imp, I ,(0,0,90)
 bulldog, K, (255, 255, 0)
 landmine, C, (0, 255, 255)
+imp, I, (0, 0, 142)
 
 items:
 gasburner, 0, (0, 0, 255)

@@ -1,10 +1,21 @@
 import logging
 import os
+import cProfile
+import pstats
+import io
+from pstats import SortKey
 from datetime import datetime
 
+AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+logPath = os.path.join(AppDataPath, "logs")
+logFileName = ""
+profiler_running = False
+profile = None
+
 def init():
-    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-    logPath = os.path.join(AppDataPath, "logs")
+    """Initialises the logger.
+    """
+    global AppDataPath, logPath, logFileName
     if os.path.exists(logPath) and os.path.isdir(logPath):
         logFiles = os.listdir(logPath)
     else:
@@ -15,13 +26,14 @@ def init():
         os.remove(os.path.join(logPath, logFiles[0]))
         logFiles = os.listdir(logPath)
 
-    now = datetime.now()
-    logFileName = os.path.join(logPath, "log_" + now.strftime("%Y-%m-%d-%H-%M-%S") + ".log")
+    logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
     logging.basicConfig(filename=logFileName, level=logging.NOTSET)
     logging.debug("Created log file: " + logFileName)
     logging.info('Initialising Game...')
 
 class LogType():
+    """The list of LogTypes you can log.
+    """
     execption = 70
     log = 60
     critical = 50
@@ -32,6 +44,13 @@ class LogType():
     notset = 0
 
 def Log(Log_Type: LogType, Message: str, Console_Visible=False):
+    """Log a log.
+
+    Args:
+        Log_Type (LogType): The type of your log.
+        Message (str): The message you want to log.
+        Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
+    """
     if Log_Type == LogType.execption:
         logging.exception(Message)
     elif Log_Type == LogType.log:
@@ -48,5 +67,39 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
         logging.debug(Message)
     elif Log_Type == LogType.notset:
         logging.NOTSET(Message)
+        
     if Console_Visible:
         print(Message)
+
+def AutoError(Message: str, Frame_Info):
+    """Generates an automatic error message.
+
+    Args:
+        Message (str): The error message.
+        Frame_Info: The frame information you get from getframeinfo(currentframe()).
+    """
+    
+    Log(LogType.error, "ERROR! File \"{}\", line {}, in {} [Exception: {}]".format(Frame_Info.filename, Frame_Info.lineno, Frame_Info.function, Message), True)
+
+def Profiler(enabled=True):
+    """Turns the profiler on or off.
+
+    Args:
+        enabled (bool, optional): Defines if the profiler will be enabled or disabled. Defaults to True.
+    """
+    global profiler_running, profile, logFileName
+    if enabled and not profiler_running:
+        profiler_running = True
+        profile = cProfile.Profile()
+        profile.enable()
+    elif not enabled and profiler_running:
+        profiler_running = False
+        profile.disable()
+        log_stream = open(logFileName, "a+")
+        log_stream.write("\n{}".format("=" * 80))
+        log_stream.write("\nEXPORTED PROFILER DATA\n\n")
+        ps = pstats.Stats(profile, stream=log_stream)
+        ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
+        ps.print_stats()
+        log_stream.write("\n{}\n\n".format("=" * 80))
+        log_stream.close()
