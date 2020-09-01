@@ -1,4 +1,5 @@
 #region Importing
+import pygame
 import KDS.AI
 import KDS.Animator
 import KDS.Colors
@@ -10,7 +11,7 @@ import KDS.Math
 import KDS.Missions
 import KDS.UI
 import KDS.LevelLoader
-import pygame
+import numpy as np
 import os
 import random
 import threading
@@ -37,7 +38,8 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
 window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", str(
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
-window = pygame.display.set_mode(window_size)
+window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
+window_resize_size = window_size
 display_size = (1200, 800)
 display = pygame.Surface(display_size)
 screen_size = (600, 400)
@@ -282,7 +284,7 @@ class Archvile:
                                               False), (self.rect.x - scroll[0],
                                                        self.rect.y - scroll[1]+25))
 #endregion
-#region Fullscreen
+#region Window
 class Fullscreen:
     size = display_size
     offset = (0, 0)
@@ -290,24 +292,30 @@ class Fullscreen:
 
     @staticmethod
     def Set(reverseFullscreen=False):
-        global isFullscreen, window, window_size
+        global isFullscreen, window, window_size, window_resize_size
         if reverseFullscreen:
             isFullscreen = not isFullscreen
         if isFullscreen:
-            window = pygame.display.set_mode(display_size)
+            window_size = window_resize_size
+            window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
             isFullscreen = False
-            window_size = display_size
         else:
-            window = pygame.display.set_mode(monitor_size, pygame.FULLSCREEN)
-            isFullscreen = True
             window_size = monitor_size
+            window = pygame.display.set_mode(window_size, pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
+            isFullscreen = True
         KDS.ConfigManager.SetSetting("Settings", "Fullscreen", str(isFullscreen))
         if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
             Fullscreen.size = (int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
+            Fullscreen.scaling = window_size[1] / display_size[1]
         else:
             Fullscreen.size = (int(window_size[0]), int(window_size[0] / (display_size[0] / display_size[1])))
+            Fullscreen.scaling = window_size[0] / display_size[0]
         Fullscreen.offset = (int((window_size[0] / 2) - (Fullscreen.size[0] / 2)), int((window_size[1] / 2) - (Fullscreen.size[1] / 2)))
-        Fullscreen.scaling = window_size[1] / display_size[1]
+def ResizeWindow(set_size: tuple):
+    global window_resize_size
+    if not isFullscreen:
+        window_resize_size = set_size
+    Fullscreen.Set(True)
 #endregion
 #region Initialisation
 black_tint = pygame.Surface(screen_size)
@@ -992,7 +1000,8 @@ def load_rects():
                         bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                         monsterAmount += 1
                     elif tile == 'I':
-                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),))
+                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),imp_walking, imp_dying, imp_attacking))
+                        
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
@@ -1624,6 +1633,8 @@ def agr(tcagr):
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
+            elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
         display.blit(agr_background, (0, 0))
         agree_button.update(display, mouse_pos, c)
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
@@ -1787,6 +1798,8 @@ def koponen_talk():
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
+            elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
         display.blit(pygame.transform.scale(koponen_talking_background, (int(koponen_talking_background.get_width()), int(koponen_talking_background.get_height()))), (0, 0))
         display.blit(pygame.transform.scale(koponen_talk_foreground, (int(koponen_talk_foreground.get_width()), int(koponen_talk_foreground.get_height()))), (40, 474))
         pygame.draw.rect(display, (230, 230, 230), pygame.Rect(40, 40, 700, 400))
@@ -1893,7 +1906,9 @@ def esc_menu_f():
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-
+            elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
+            
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
         pygame.draw.rect(display, (123, 134, 111), (int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
         display.blit(pygame.transform.scale(
@@ -1953,7 +1968,9 @@ def settings_menu():
                     DebugMode = not DebugMode
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-
+            elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
+        
         display.blit(settings_background, (0, 0))
 
         display.blit(pygame.transform.flip(menu_trashcan_animation.update(), False, False), (279, 515))
@@ -2109,6 +2126,8 @@ def main_menu():
                         mode_selection_function()
             elif event.type == pygame.QUIT:
                 KDS_Quit()
+            elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
 
         if MenuMode == Mode.MainMenu:
 
@@ -2367,6 +2386,8 @@ while main_running:
                 inventoryRight()
         elif event.type == pygame.QUIT:
             KDS_Quit()
+        elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
 #endregion
 #region Data
     def inventoryDoubleOffsetCounter():
