@@ -356,6 +356,7 @@ while main:
 
     if not inputThread_running and main == True:
         thread = threading.Thread(target=inputThread, args=[txt])
+        thread.daemon = True
         thread.start()
 
     main_display.fill((20,20,29))

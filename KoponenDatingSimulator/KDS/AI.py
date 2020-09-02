@@ -1,6 +1,6 @@
-import pygame, threading, multiprocessing, numpy
+import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
-import KDS.Animator, KDS.Math
+import KDS.Animator, KDS.Math, KDS.Colors
 pygame.mixer.init()
 
 def __collision_test(rect, tiles):
@@ -34,6 +34,8 @@ def __move(rect, movement, tiles):
     return rect, collision_types
 
 imp_sight_sound = pygame.mixer.Sound("Assets/Audio/entities/imp_sight.wav")
+
+imp_sight_sound.set_volume(0.4)
 
 class SergeantZombie:
 
@@ -216,20 +218,23 @@ class Bulldog:
         return self.damage
 
 class hostileEnemy:
-    def __init__(self:int, _health:int, _speed:int, _position:(int,int),__tilerects:list, _animation: KDS.Animator.Animation):
+    def __init__(self:int, _health:int, _speed:int, _position:(int,int),__tilerects:list, _animation_name: str):
         self.health = _health
-        self.speed = _speed
+        self.speed = -_speed
         self.position = _position
-        self.textures = _animation
-        #self.rect = pygame.Rect(_position[0],_position[1],_animation.images[0].width,_animation.images[0].height)
-        self.rect = pygame.Rect(_position[0], _position[1], _animation.images[0].get_size()[0], _animation.images[0].get_size()[1]-2)
-        self.baseAnimation = _animation
+        self.baseAnimation = KDS.Animator.Animation(_animation_name,4,14,KDS.Colors.GetPrimary.White,-1)
+        #self.rect = pygame.Rect(_position[0],_position[1],self.baseAnimation.images[0].width,self.baseAnimation.images[0].height)
+        self.rect = pygame.Rect(_position[0], _position[1], self.baseAnimation.images[0].get_size()[0], self.baseAnimation.images[0].get_size()[1]-2)
         self.movement = [self.speed, 8]
         self.collsisions = dict()
         self.obstacleRects = __tilerects
         self.sleep = True
         self.targetFound = False
         self.direction = False
+        self.search_results = [True, False, self.movement]
+        self.search_counter = random.randint(0, 30)
+
+        self.baseAnimation.tick = random.randint(0, len(self.baseAnimation.images)-1)
 
     def r(self):
         while True:
@@ -260,19 +265,16 @@ class hostileEnemy:
                 obj.rect.x += obj.movement[0]
                 
                 hit_list = collision_test(obj.rect, obj.obstacleRects)
+                obj.collsisions = {"Right": False, "Left": False}
                 for tile in hit_list:
                     if obj.movement[0] > 0:
                         obj.rect.right = tile.left
-                        speed = -speed
-                        obj.movement[0] = speed
-                        obj.direction = True
-                    elif obj.movement[0] < 0:
+                        obj.collsisions["Right"] = True
+
+                    if obj.movement[0] < 0:
                         obj.rect.left = tile.right
-                        speed = -speed
-                        obj.movement[0] = speed
-                        obj.direction = False
-                    
-                                
+                        obj.collsisions["Left"] = True
+
                 obj.rect.y += obj.movement[1]
                 hit_list = collision_test(obj.rect, obj.obstacleRects)
                 for tile in hit_list:
@@ -280,39 +282,96 @@ class hostileEnemy:
                         obj.rect.bottom = tile.top
                     elif obj.movement[1] < 0:
                         obj.rect.top = tile.bottom
-            if obj.speed < 0:
+                if obj.collsisions["Right"]:
+                    obj.speed = -obj.speed
+                    obj.movement[0] = obj.speed
+                if obj.collsisions["Left"]:
+                    obj.speed = -obj.speed
+                    obj.movement[0] = obj.speed
+
+
+            if obj.speed > 0:
                 obj.direction = True
-            elif obj.speed > 0:
+            elif obj.speed < 0:
                 obj.direction = False
                 
-            return obj.rect, obj.movement, obj.direction
+            return obj.rect, obj.movement, obj.direction, obj.speed
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-
-            th = executor.submit(_movementUpdateThread, self)
-            self.rect, self.movement, self.direction = th.result()
-
+        return _movementUpdateThread(self)
 
 class Imp(hostileEnemy):
-    def __init__(self, _health:int, _speed:int, _position: (int,int),__tilerects:list, _animation: KDS.Animator.Animation, _attack_animation: KDS.Animator.Animation, _death_animation: KDS.Animator.Animation):
-        super().__init__(_health, _speed, _position,__tilerects, _animation)
-        self.death_animation = _death_animation
-        self.attack_animation = _attack_animation
-        self.corpse_texture = self.death_animation.images[-1]
+    def __init__(self, _health:int, _speed:int, _position: (int,int), __tilerects:list, _animation_name: str, _attack_animation: str, _death_animation: str):
+        super().__init__(_health, _speed, _position,__tilerects, _animation_name)
+        self._death_animation = KDS.Animator.Animation(_death_animation, 5,16,KDS.Colors.GetPrimary.White, 1)
+        self._attack_animation = KDS.Animator.Animation(_attack_animation,2,16,KDS.Colors.GetPrimary.White,-1)
+        self.corpse_texture = self._death_animation.images[-1]
         self.idle_texture = self.baseAnimation.images[1]
+        self.playSightSound = True
 
-    def update(self, searchObject: pygame.Rect, surface: pygame.Surface, searchObject_H: int, scroll: list):
-        surface.blit(pygame.transform.flip(self.baseAnimation.update(), False, self.direction), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+    def update(self, searchObject: pygame.Rect, surface: pygame.Surface, searchObject_H: int, scroll: list, debug_mode = False):
+        surface.blit(pygame.transform.flip(self.baseAnimation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+        self.search_counter += 1
 
-        def search_target(obj: Imp, target):
+        def search_target(obj: Imp, target: pygame.Rect):
             def angle_search(max_angle, direction, target: pygame.Rect):
-                angle = KDS.Math.getAngle((obj.rect.centerx, obj.rect.centery), (target.centerx, target.centery))
+                angle = int(KDS.Math.getAngle((obj.rect.centerx, obj.rect.centery), (target.centerx, target.centery)))
+                
+                if (direction and target.x > obj.rect.x) or (not direction and target.x < obj.rect.x) and KDS.Math.getDistance(obj.rect.topleft, target.topleft) < 1600:
+                    if 90-KDS.Math.toPositive(angle) < max_angle:
+                        return angle
+                return None
+
+            angle_result = angle_search(60, obj.direction, target)
+            
+            if angle_result != None:
+                #Tästä eteen päin koodin tarkempi tarkastelu ehdottomasti kielletty
+                if angle_result > 0:
+                    angle_result = 90-angle_result
+                elif angle_result < 0:
+                    angle_result = -90 - angle_result
+                
+                slope = KDS.Math.getSlope(angle_result)
+
+                counter = 0
+
+                if obj.direction:
+                    t = 20
+                else:
+                    t = -20
+                #print(int(KDS.Math.getDistance(searchObject.topleft, obj.rect.topleft)))
+                #counter = int(KDS.Math.getDistance(searchObject.topleft, obj.rect.topleft)/20)
+
+                while counter < 33:
+                    if debug_mode:
+                        pygame.draw.rect(surface, (255, 100, 45), (obj.rect.centerx + counter*t - scroll[0], obj.rect.centery + counter*t* slope - scroll[1], 5 ,5) )
+                    for obstacle in obj.obstacleRects:
+                        if obstacle.collidepoint(obj.rect.centerx + counter*t, obj.rect.centery + counter*t* slope):
+                            if obj.sleep:
+                                return True, False, obj.movement
+                            else:
+                                return False, False, obj.movement
+                            counter = 100
+
+                    if searchObject.collidepoint(obj.rect.centerx + counter*t, obj.rect.centery + counter*t* slope):
+                        if obj.playSightSound:
+                            imp_sight_sound.play()
+                            obj.playSightSound = False
+                        counter = 100
+                        return False, True, obj.movement
+
+                    counter += 1
 
 
-        #with concurrent.futures.ThreadPoolExecutor() as executor:
-
-        #    th = executor.submit(search_target, self, searchObject)
-        #    self.sleep, self.targetFound, self.movement
+            else:
+                if obj.sleep:
+                    return True, False, obj.movement
+                else:
+                    return False, False, obj.movement
+        if self.search_counter > 30:
+            self.search_results = search_target(self, searchObject)
+            self.search_counter = 0
+        return self.search_results
+        #search_target(self, searchObject)
 
 class Projectile:
     pass

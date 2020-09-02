@@ -26,6 +26,26 @@ def A_map(x, in_min, in_max, out_min, out_max):
         KDS.Logging.AutoError(e, getframeinfo(currentframe()))
         return 0
 
+def toPositive(value):
+    if value > 0:
+        return value
+    elif value < 0:
+        return -value
+    else:
+        return 0
+
+def getSlope(p1: tuple, p2: tuple):
+    """
+    Calculates slope of straight going trough two points
+    """
+    return (p2[1] - p1[1])/(p2[0]- p1[0])
+
+def getSlope(angle): #Angle in degrees
+    """
+    Calculates slope of straight from angle
+    """
+    return math.tan(math.radians(angle)) 
+
 def getAngle(p1: tuple, p2: tuple):
     """
     Calculates the angle between two vectors.

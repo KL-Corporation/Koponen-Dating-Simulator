@@ -14,7 +14,7 @@ import KDS.LevelLoader
 import numpy
 import os
 import random
-import threading
+import threading, concurrent.futures
 import math
 from pygame.locals import *
 from inspect import currentframe, getframeinfo
@@ -1007,13 +1007,14 @@ def load_rects():
                         bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                         monsterAmount += 1
                     elif tile == 'I':
-                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),tile_rects, imp_walking, imp_attacking, imp_dying))
+                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),tile_rects, "imp_walking", "imp_attacking", "imp_dying"))
                         imp_temp = imps[-1].r()
                         if imp_temp == "continue":
                             monsterAmount += 1
                         else:
                             del imps[-1]
                         del imp_temp
+                        pass
                     else:
                         tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
@@ -2849,15 +2850,17 @@ while main_running:
 
     # Zombien käsittely loppuu tähän
 
+    #//////////////////////////////////////////////////////////////
+    #*****    New enemies handling & enemies thread handling ******#
     arch_run = archvile_run_animation.update()
     for archvile in archviles:
         if DebugMode:
             pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(archvile.rect.x-scroll[0],archvile.rect.y-scroll[1],archvile.rect.width,archvile.rect.height))
         archvile.update(arch_run)
-    
-    for imp in imps:
-        imp._move()
-        imp.update(player_rect, screen, 20, scroll)
+
+    with concurrent.futures.ThreadPoolExecutor() as e:
+        I_thread_results = [e.submit(imp._move) for imp in imps]
+        I_updatethread_results = [e.submit(imp.update, player_rect, screen, 20, scroll, DebugMode) for imp in imps]
 
     for bulldog in bulldogs:
         bulldog.startUpdateThread(player_rect, tile_rects)
@@ -3297,7 +3300,7 @@ while main_running:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
     
-    print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
+    #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
 
 #endregion
 #region Conditional Events
@@ -3319,10 +3322,22 @@ while main_running:
         pygame.mouse.set_visible(True)
         main_menu()
 #endregion
+#region Gathering all threading results
+
+    #Imps
+    for x in range(len(imps)):
+        if I_thread_results[x].result() != None:
+            imps[x].rect, imps[x].movement, imps[x].direction, imps[x].speed = I_thread_results[x].result()
+        if I_updatethread_results[x].result() != None:
+            imps[x].sleep, imps[x].targetFound, imps[x].movement = I_updatethread_results[x].result()
+
+
+#endregion
 #region Ticks
     tick += 1
     if tick > 60:
         tick = 0
+
     clock.tick(60)
 #endregion
 #endregion
