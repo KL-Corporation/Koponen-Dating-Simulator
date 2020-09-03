@@ -885,6 +885,7 @@ def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 #endregion
 #region Loading
+
 def load_map(path):
     with open(path, 'r') as f:
         data = f.read()
@@ -893,6 +894,44 @@ def load_map(path):
     for row in data:
         game_map.append(list(row))
     return game_map
+
+class tile:
+
+    with open("Assets/Textures/tile_textures.txt", "r") as f:
+        data = f.read().split("\n")
+    textures = {}
+    for element in data:
+        num = int(element.split(",")[0])
+        res = element.split(",")[1]
+        textures[num] = res
+
+    def __init__(self, position, serialNumber: int):
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.texture = textures[serialNumber]
+
+def load_map_new(relative_path):
+    tiles = numpy.array()
+    items = numpy.array()
+    enemies = numpy.array()
+    decoration = numpy.array()
+
+
+    with open(relative_path, "r") as level:
+        levelData = level.read().split("\n")
+        for row in levelData:
+            for block in row.split("/"):
+                blockData = block.split()
+                #Tänne jokaisen blockin käsittelyyn liittyvä koodi
+
+                if blockData[0] == "0":
+                    pass
+                elif blockData[0] == "1":
+                    pass
+                elif blockData[0] == "2":
+                    pass
+                elif blockData[0] == "3":
+                    pass
+
 def load_items(path):
     with open(path, 'r') as f:
         data = f.read()
@@ -3337,7 +3376,7 @@ while main_running:
     tick += 1
     if tick > 60:
         tick = 0
-
+    print(tile.textures)
     clock.tick(60)
 #endregion
 #endregion

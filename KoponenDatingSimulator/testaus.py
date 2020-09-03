@@ -1,4 +1,4 @@
-import os, shutil, pygame, math, concurrent.futures, time
+import os, shutil, pygame, math, concurrent.futures, time, numpy
 
 pygame.init()
 main_display = pygame.display.set_mode((600,600))
@@ -16,13 +16,13 @@ print(round(math.tan(math.radians(angle))))
 
 print("ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss")
 
-def sleep(value):
-    print(f"Sleeping {value} seconds")
-    time.sleep(value)
-    print("Done sleeping")
 
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    for _ in range(10):
-        thread = executor.submit(sleep, 1)
-    
-print("All done")
+objectTypes = {0: "tile", 1: "item", 2: "entity", 3: "decoration"}
+with open("Assets/Maps/map06/level.map", "r") as level:
+    levelData = level.read().split("\n")
+    for row in levelData:
+        for block in row.split("/"):
+            blockData = block.split()
+            print(blockData)
+            #Tänne jokaisen blockin käsittelyyn liittyvä koodi
+            blockType = objectTypes[int(blockData[0])]
