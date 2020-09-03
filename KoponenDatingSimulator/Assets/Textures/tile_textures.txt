@@ -7,9 +7,9 @@
 007,bricks.png
 008,grass0.png
 009,hay.png
-010,iron_bars.png
+010,iron_bars_texture.png
 011,soil.png
-012,soil2.png
+012,soil_2.png
 013,stone.png
 014,table0.png
 015,toilet0.png
@@ -25,4 +25,3 @@
 025,blue_door_closed.png
 026,green_door_closed.png
 027,wood.png
-028,iron_bars_texture.png

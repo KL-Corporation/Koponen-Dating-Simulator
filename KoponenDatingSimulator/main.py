@@ -619,7 +619,7 @@ with open("Assets/Maps/map_names.txt", "r") as file:
 
 
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
-
+max_map = len(cntnts)-1
 map_names = tuple(cntnts)
 
 ammunition_plasma = 50
@@ -748,6 +748,9 @@ doors_open = []
 tile_textures = {}
 tile_textures_loaded = False
 #endregion
+def WorldGeneration_new():
+    pass
+
 def WorldGeneration():
     global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
     global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, imps
@@ -895,42 +898,98 @@ def load_map(path):
         game_map.append(list(row))
     return game_map
 
-class tile:
+with open("Assets/Textures/tile_textures.txt", "r") as f:
+    data = f.read().split("\n")
+t_textures = {}
+for element in data:
+    num = int(element.split(",")[0])
+    res = element.split(",")[1]
+    t_textures[num] = pygame.image.load("Assets/Textures/Building/" + res).convert()
+    t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
-    with open("Assets/Textures/tile_textures.txt", "r") as f:
-        data = f.read().split("\n")
-    textures = {}
-    for element in data:
-        num = int(element.split(",")[0])
-        res = element.split(",")[1]
-        textures[num] = res
+with open("Assets/Textures/item_textures.txt", "r") as f:
+    data = f.read().split("\n")
+i_textures = {}
+for element in data:
+    num = int(element.split(",")[0])
+    res = element.split(",")[1]
+    i_textures[num] = pygame.image.load("Assets/Textures/Items/" + res).convert()
+    i_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
-    def __init__(self, position, serialNumber: int):
+class Tile:
+
+    def __init__(self, position: (int, int), serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        self.texture = textures[serialNumber]
+        if serialNumber:
+            self.texture = t_textures[serialNumber]
+            self.air = False
+        else:
+            self.air = True
+
+    @staticmethod
+    def render(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int)): #Tile_list is a 2d numpy array
+        x = int(position[0]/34)
+        y = int(position[1]/34)
+        x -= 10
+        y-= 10
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        max_x = len(Tile_list[0])-1
+        max_y = len(Tile_list) -1
+        end_x = x+30
+        end_y = y+12
+        if end_x > max_x:
+            end_x = max_x
+        if end_y > max_y:
+            end_y = max_y
+
+        print("x"+str(x)+"y"+str(y))
+        for row in Tile_list[y:end_y]:
+            for renderable in row[x:end_x]:
+                if not renderable.air:
+                    Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
+
+class Item:
+
+    def __init__(self, position: (int, int), serialNumber: int):
+        if serialNumber:
+            self.texture = i_textures[serialNumber]
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
 
 def load_map_new(relative_path):
-    tiles = numpy.array()
-    items = numpy.array()
-    enemies = numpy.array()
-    decoration = numpy.array()
+    items = numpy.array([])
+    enemies = numpy.array([])
+    decoration = numpy.array([])
 
 
     with open(relative_path, "r") as level:
         levelData = level.read().split("\n")
-        for row in levelData:
-            for block in row.split("/"):
-                blockData = block.split()
-                #Tänne jokaisen blockin käsittelyyn liittyvä koodi
 
-                if blockData[0] == "0":
-                    pass
-                elif blockData[0] == "1":
-                    pass
-                elif blockData[0] == "2":
-                    pass
-                elif blockData[0] == "3":
-                    pass
+    #Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
+    tiles = numpy.array( [[Tile((x*34, y*34), 0) for x in range(len(levelData[0].split("/")))] for y in range(len(levelData))] )
+
+    y = 0
+    for row in levelData:
+        x = 0
+        for block in row.split("/"):
+            blockData = list(block)
+            #Tänne jokaisen blockin käsittelyyn liittyvä koodi
+            serialNumber = int(blockData[1]+blockData[2]+blockData[3])
+            if blockData[0] == "0":
+                tiles[y][x] = Tile((x*34, y*34), serialNumber=serialNumber)
+            elif blockData[0] == "1":
+                items = numpy.append(items, Item((x*34, y*34), serialNumber=serialNumber))
+            elif blockData[0] == "2":
+                pass
+            elif blockData[0] == "3":
+                pass
+
+            x += 1
+        y += 1
+
+    return tiles, items, enemies, decoration
 
 def load_items(path):
     with open(path, 'r') as f:
@@ -2334,6 +2393,9 @@ def inventoryPick(index: int):
         inventory_slot = index
 #endregion
 #region Main Running
+
+tiles, items, enemies, decoration = load_map_new("Assets/Maps/map06/level.map")
+
 while main_running:
 #region Events
     for event in pygame.event.get():
@@ -2488,13 +2550,14 @@ while main_running:
 #region Rendering
 
     # Rendering: World Generation
-    vertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
-    horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
-    for y in range(vertical_render_position[0], vertical_render_position[1]):
-        for x in range(horisontal_render_position[0], horisontal_render_position[1]):
-            if world_gen[0][y][x] in tile_textures:
-                screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
+    #ertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
+    #horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
+    #for y in range(vertical_render_position[0], vertical_render_position[1]):
+    #    for x in range(horisontal_render_position[0], horisontal_render_position[1]):
+    #        if world_gen[0][y][x] in tile_textures:
+    #            screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
+    Tile.render(tiles, screen, scroll, (player_rect.x, player_rect.y))
 
     # Rendering: Doors
     for i in range(len(door_rects)):
@@ -3370,14 +3433,13 @@ while main_running:
         if I_updatethread_results[x].result() != None:
             imps[x].sleep, imps[x].targetFound, imps[x].movement = I_updatethread_results[x].result()
 
-
 #endregion
 #region Ticks
     tick += 1
     if tick > 60:
         tick = 0
-    print(tile.textures)
     clock.tick(60)
+
 #endregion
 #endregion
 #region Application Quitting
