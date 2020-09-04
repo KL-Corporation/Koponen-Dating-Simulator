@@ -945,18 +945,40 @@ class Tile:
         if end_y > max_y:
             end_y = max_y
 
-        print("x"+str(x)+"y"+str(y))
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
                     Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
+
+itemTip = tip_font.render(
+    "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
 
 class Item:
 
     def __init__(self, position: (int, int), serialNumber: int):
         if serialNumber:
             self.texture = i_textures[serialNumber]
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[1]), self.texture.get_size()[0], self.texture.get_size()[1])
+
+    @staticmethod
+    def render(Item_list, Surface: pygame.Surface, scroll: list, position: (int, int)): #Item_list is a 2d numpy array
+
+        for renderable in Item_list:
+            if KDS.Math.getDistance(renderable.rect.topleft, player_rect.topleft) < 1600:
+                Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
+
+    @staticmethod
+    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool):
+        index = 0
+        for item in Item_list:
+            if collidingRect.colliderect(item.rect):
+                Surface.blit(itemTip, (item.rect.x-40-scroll[0], item.rect.y-30-scroll[1]))
+                if functionKey:
+                    Item_list = numpy.delete(Item_list, index)
+            index += 1
+                    
+        return Item_list
+
 
 def load_map_new(relative_path):
     items = numpy.array([])
@@ -1281,12 +1303,7 @@ def shotgun_shots():
             dir_counter = 0
         if counter > 80:
             q = False
-def collision_test(rect, tiles):
-    hit_list = []
-    for tile in tiles:
-        if rect.colliderect(tile):
-            hit_list.append(tile)
-    return hit_list
+
 def damage(health, min_damage: int, max_damage: int):
     health -= int(random.uniform(min_damage, max_damage))
     if health < 0:
@@ -1517,6 +1534,32 @@ def toilet_collisions(rect, burnstate):
         o += 1
 #endregion
 #region Player
+def collision_test(rect, Tile_list):
+    hit_list = []
+    x = int((rect.x/34)-3)
+    y = int((rect.y/34)-3)
+    if x < 0:
+        x = 0
+    if y < 0:
+        y = 0
+
+    max_x = len(Tile_list[0])-1
+    max_y = len(Tile_list)-1
+    end_x = x+6
+    end_y = y+6
+
+    if end_x > max_x:
+        end_x = max_x
+
+    if end_y > max_y:
+        end_y = max_y
+    
+    for row in Tile_list[y:end_y]:
+        for tile in row[x:end_x]:
+            if rect.colliderect(tile.rect) and not tile.air:
+                hit_list.append(tile.rect)
+    return hit_list
+
 def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
@@ -2557,7 +2600,13 @@ while main_running:
     #        if world_gen[0][y][x] in tile_textures:
     #            screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
+
+
+    ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
+    items = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey)
+
     Tile.render(tiles, screen, scroll, (player_rect.x, player_rect.y))
+    Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
 
     # Rendering: Doors
     for i in range(len(door_rects)):
@@ -2671,7 +2720,9 @@ while main_running:
             explosion_animation.reset()
 
     # Rendering: Items
-    item_collision_test(player_rect, item_rects)
+    
+    #item_collision_test(player_rect, item_rects)
+    """
     for i in range(len(item_rects)):
         blit_texture = None
         texture_offset_y = 0
@@ -2746,6 +2797,7 @@ while main_running:
             #screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
         if blit_texture != None:
             screen.blit(blit_texture, (int(item_rects[i].centerx - scroll[0] - (blit_texture.get_width() / 2)), int(item_rects[i].bottom - scroll[1] - blit_texture.get_height() + texture_offset_y)))
+            """
 #endregion
 #region PlayerMovement
     fall_speed = 0.4
@@ -2809,7 +2861,7 @@ while main_running:
 
 
     if check_crouch == True:
-        crouch_collisions = move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tile_rects, False, True)[1]
+        crouch_collisions = move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
     else:
         crouch_collisions = collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
 
@@ -2823,16 +2875,16 @@ while main_running:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
 
-    toilet_collisions(player_rect, gasburnerBurning)
+    #toilet_collisions(player_rect, gasburnerBurning)
 
     if player_health > 0:
         player_rect, collisions = move_entity(
-            player_rect, player_movement, tile_rects)
+            player_rect, player_movement, tiles)
     else:
-        player_rect, collisions = move_entity(player_rect, [0, 8], tile_rects)
+        player_rect, collisions = move_entity(player_rect, [0, 8], tiles)
 #endregion
 #region AI
-    koponen_rect, k_collisions = move_entity(koponen_rect, koponen_movement, tile_rects)
+    koponen_rect, k_collisions = move_entity(koponen_rect, koponen_movement, tiles)
 
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
@@ -2979,7 +3031,7 @@ while main_running:
     elif k_collisions["right"]:
         koponen_movingx = -koponen_movingx
 
-    door_collision_test()
+    #door_collision_test()
 #endregion
 #region UI
     score = score_font.render(

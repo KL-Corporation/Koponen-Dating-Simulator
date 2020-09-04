@@ -1,3 +1,4 @@
+000,empty.png
 001,blue_key.png
 002,cell.png
 003,coffeemug.png
