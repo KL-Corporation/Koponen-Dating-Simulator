@@ -630,11 +630,17 @@ shotgun_shells = 8
 inventory = ["none", "none", "none", "none", "none"]
 inventory_keys = [K_1, K_2, K_3, K_4, K_5]
 inventoryDoubles = []
+inventoryDobulesSerialNumbers = []
+with open("Assets/Textures/item_doubles.txt", "r") as file:
+    data = file.read().split("\n")
+    for d in data:
+        inventoryDobulesSerialNumbers.append(int(d))
+
 inventoryDoubleOffset = 0
 for none in inventory:
     inventoryDoubles.append(False)
 
-global player_score
+
 player_score = 0
 true_scroll = [0, 0]
 inventory_slot = 0
@@ -916,10 +922,17 @@ for element in data:
     i_textures[num] = pygame.image.load("Assets/Textures/Items/" + res).convert()
     i_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
+with open("Assets/Textures/inventory_items.txt", "r") as f:
+    data = f.read().split("\n")
+inventory_items = []
+for element in data:
+    inventory_items.append(int(element))
+
 class Tile:
 
     def __init__(self, position: (int, int), serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.serialNumber = serialNumber
         if serialNumber:
             self.texture = t_textures[serialNumber]
             self.air = False
@@ -952,6 +965,110 @@ class Tile:
 
 itemTip = tip_font.render(
     "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
+player_score = 0
+class pickupFunctions:
+    @staticmethod
+    def gasburner_p():
+        global player_score
+        gasburner_clip.play()
+        player_score += 10
+
+        return False
+
+    @staticmethod
+    def coffeemug_p():
+        global player_score
+        coffeemug_sound.play()
+        player_score += 6
+
+        return False
+
+    @staticmethod
+    def knife_p():
+        global player_score
+        knife_pickup.play()
+        player_score += 10
+
+        return False
+    
+    @staticmethod
+    def ss_bonuscard_p():
+        global player_score
+        ss_sound.play()
+        player_score += 10
+
+        return False
+
+    @staticmethod
+    def lappi_sytytyspalat_p():
+        global player_score
+        lappi_sytytyspalat_sound.play()
+        player_score += 10
+
+        return False
+
+    @staticmethod
+    def iPuhelin_p():
+        global player_score
+        item_pickup.play()
+        player_score -= 10
+
+        return False
+
+    @staticmethod
+    def plasmarifle_p():
+        global player_score
+        weapon_pickup.play()
+        player_score += 20
+
+        return False
+
+    @staticmethod
+    def pistol_p():
+        global player_score
+        weapon_pickup.play()
+        player_score += 20
+
+        return False
+
+    @staticmethod
+    def rk62_p():
+        global player_score
+        weapon_pickup.play()
+        player_score += 20
+
+        return False
+
+    @staticmethod
+    def shotgun_p():
+        global player_score
+        weapon_pickup.play()
+        player_score += 20
+
+        return False
+
+    @staticmethod
+    def cell_p():
+        global player_score, ammunition_plasma
+        item_pickup.play()
+        player_score += 1
+
+        ammunition_plasma += 30
+
+        return True
+        
+Pfunctions = {
+    2: pickupFunctions.cell_p,
+    3: pickupFunctions.coffeemug_p,
+    4: pickupFunctions.gasburner_p,
+    6: pickupFunctions.iPuhelin_p,
+    7: pickupFunctions.knife_p,
+    8: pickupFunctions.lappi_sytytyspalat_p,
+    10:pickupFunctions.pistol_p,
+    12:pickupFunctions.plasmarifle_p,
+    15:pickupFunctions.rk62_p,
+    16:pickupFunctions.shotgun_p
+}
 
 class Item:
 
@@ -959,6 +1076,7 @@ class Item:
         if serialNumber:
             self.texture = i_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[1]), self.texture.get_size()[0], self.texture.get_size()[1])
+        self.serialNumber = serialNumber
 
     @staticmethod
     def render(Item_list, Surface: pygame.Surface, scroll: list, position: (int, int)): #Item_list is a 2d numpy array
@@ -968,16 +1086,30 @@ class Item:
                 Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
-    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool):
+    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: list, inventory_slot):
         index = 0
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 Surface.blit(itemTip, (item.rect.x-40-scroll[0], item.rect.y-30-scroll[1]))
                 if functionKey:
-                    Item_list = numpy.delete(Item_list, index)
+                    if item.serialNumber not in inventoryDobulesSerialNumbers:
+                        if inventory[inventory_slot] == "none":
+                            temp_var = Pfunctions[item.serialNumber]()
+                            if not temp_var:
+                                inventory[inventory_slot] = item.serialNumber
+                            Item_list = numpy.delete(Item_list, index)
+                        elif item.serialNumber not in inventory_items:
+                            Pfunctions.functions[item.serialNumber]()
+                            Item_list = numpy.delete(Item_list, index)
+                    else:
+                        if inventory_slot < len(inventory)-1 and inventory[inventory_slot] == "none":
+                            if inventory[inventory_slot+1] == "none":
+                                inventory[inventory_slot] = item.serialNumber
+                                inventory[inventory_slot+1] = "doubleItemPlaceholder"
+                                Item_list = numpy.delete(Item_list, index)
             index += 1
                     
-        return Item_list
+        return Item_list, inventory
 
 
 def load_map_new(relative_path):
@@ -2603,8 +2735,7 @@ while main_running:
 
 
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    items = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey)
-
+    items, inventory = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey, inventory, inventory_slot)
     Tile.render(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
 
