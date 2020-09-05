@@ -551,7 +551,7 @@ isFullscreen = KDS.Convert.ToBool(
     KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
 
 if isFullscreen == None:
-    KDS.Logging.Log("Error parcing fullscreen bool.", getframeinfo(currentframe()))
+    KDS.Logging.AutoError("Error parcing fullscreen bool.", getframeinfo(currentframe()))
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
                 str(tcagr) + "\n- Music Volume: " + str(Audio.MusicVolume) + "\n- Sound Effect Volume: " + str(Audio.EffectVolume) + "\n- Fullscreen: " + str(isFullscreen), False)
@@ -835,7 +835,7 @@ class WorldData():
                                 elif isinstance(global_texture2, pygame.Surface):
                                     WorldData.Legacy.tile_textures[array[1]] = global_texture2.copy()
                                 else:
-                                    KDS.Logging.Log("Texture not found. " + array[0], getframeinfo(currentframe()))
+                                    KDS.Logging.AutoError("Texture not found. " + array[0], getframeinfo(currentframe()))
 
                         elif Type == 1:
                             convertDecorationRules.append(array[1])
@@ -909,25 +909,29 @@ class WorldData():
         WorldData.MapSize = (max_map_width , len(map_data))
 
         #Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
-        tiles = numpy.array( [[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0])] for y in range(WorldData.MapSize[1])] )
+        tiles = numpy.array( [[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)] )
 
         y = 0
         for row in map_data:
             x = 0
-            for block in row.split("/"):
-                blockData = list(block)
+            for datapoint in row.split(" "):
                 #Tänne jokaisen blockin käsittelyyn liittyvä koodi
-                serialNumber = int(blockData[1] + blockData[2] + blockData[3])
-                if blockData[0] == "0":
-                    tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
-                elif blockData[0] == "1":
-                    items = numpy.append(items, Item((x * 34, y * 34), serialNumber=serialNumber))
-                elif blockData[0] == "2":
-                    pass
-                elif blockData[0] == "3":
-                    pass
-
-                x += 1
+                if datapoint != "/":
+                    data = list(datapoint)
+                    if len(data) > 1 and int(datapoint) != 0:
+                        serialNumber = int(data[1] + data[2] + data[3])
+                        if data[0] == "0":
+                            tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
+                        elif data[0] == "1":
+                            items = numpy.append(items, Item((x * 34, y * 34), serialNumber=serialNumber))
+                        elif data[0] == "2":
+                            pass
+                        elif data[0] == "3":
+                            pass
+                    elif int(datapoint) != 0:
+                        KDS.Logging.AutoError("Data format incorrect! Data: {}".format(data), getframeinfo(currentframe()))
+                else:
+                    x += 1
             y += 1
 #endregion
 #region Pickup Sound
@@ -975,7 +979,7 @@ class Tile:
         x = int(position[0] / 34)
         y = int(position[1] / 34)
         x -= 10
-        y-= 10
+        y -= 10
         if x < 0:
             x = 0
         if y < 0:
@@ -2450,8 +2454,7 @@ def main_menu():
                             MenuMode = Mode.CampaignMenu
                             c = False
                         else:
-                            frameinfo = getframeinfo(currentframe())
-                            KDS.Logging.Log("Invalid mode_selection_mode! Value: " + str(mode_selection_modes[y]), getframeinfo(currentframe()))
+                            KDS.Logging.AutoError("Invalid mode_selection_mode! Value: " + str(mode_selection_modes[y]), getframeinfo(currentframe()))
                 else:
                     if y == 0:
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(True) * 255.0)), (story_mode_button.x, story_mode_button.y))
