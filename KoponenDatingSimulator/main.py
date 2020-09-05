@@ -2,6 +2,7 @@
 import pygame
 import KDS.AI
 import KDS.Animator
+from KDS.Animator import Legacy
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
@@ -108,12 +109,12 @@ class plasma_bullet:
             if self.rect.colliderect(tile):
                 self.done = True
                 Audio.playSound(plasma_hitting)
-        for zombie1 in zombies:
+        for zombie1 in WorldData.Legacy.zombies:
             if self.rect.colliderect(zombie1) == True and zombie1.playDeathAnimation == True:
                 self.done = True
                 zombie1.health -= 10
                 Audio.playSound(plasma_hitting)
-        for sergeant in sergeants:
+        for sergeant in WorldData.Legacy.sergeants:
             if self.rect.colliderect(sergeant) and sergeant.playDeathAnimation:
                 self.done = True
                 sergeant.health -= 12
@@ -134,7 +135,7 @@ class Bullet:
 
     def shoot(self, _tile_rects):
 
-        global zombies, screen, sergeants
+        global screen
 
         if self.direction:
             self.move = 28
@@ -151,20 +152,20 @@ class Bullet:
                     q = False
                     return "wall"
 
-            for zombie1 in zombies:
+            for zombie1 in WorldData.Legacy.zombies:
                 if zombie1.health > 0:
                     if zombie1.rect.collidepoint(tuple(self.position)):
                         zombie1.health -= self.damage
                         q = False
                         return "enemy"
 
-            for sergeant in sergeants:
+            for sergeant in WorldData.Legacy.sergeants:
                 if sergeant.health > 0:
                     if sergeant.rect.collidepoint(tuple(self.position)):
                         sergeant.health -= self.damage
                         q = False
                         return "enemy"
-            for archvile in archviles:
+            for archvile in WorldData.Legacy.archviles:
                 if archvile.health > 0:
                     if archvile.rect.collidepoint(tuple(self.position)):
                         archvile.health -= self.damage
@@ -209,7 +210,7 @@ class Archvile:
                 else:
                     scan_position[0] -= 27
 
-                for tile in tile_rects:
+                for tile in WorldData.Legacy.tile_rects:
                     if tile.collidepoint(scan_position):
                         return "wall"
 
@@ -235,7 +236,7 @@ class Archvile:
 
             if not self.attack_anim:
                 self.rect, self.hits = move_entity(
-                    self.rect, self.movement, tile_rects)
+                    self.rect, self.movement, WorldData.Legacy.tile_rects)
                 if self.hits["right"] or self.hits["left"]:
                     self.movement[0] = -self.movement[0]
 
@@ -273,7 +274,7 @@ class Archvile:
             l, p = archvile_death_animation.update()
             if not p:
                 screen.blit(pygame.transform.flip(l, not self.direction, False),
-                            (self.rect.x - scroll[0], self.rect.y - scroll[1]+15))
+                            (self.rect.x - scroll[0], self.rect.y - scroll[1] + 15))
 
             if p:
                 self.playDeathAnimation = False
@@ -729,181 +730,212 @@ def KDS_Quit():
     esc_menu = False
     settings_running = False
 #endregion
-#region World Generation
-#region Lists
-world_gen = []
-item_gen = []
-tile_rects = []
-toilets = []
-burning_toilets = []
-trashcans = []
-burning_trashcans = []
-jukeboxes = []
-landmines = []
-zombies = []
-sergeants = []
-archviles = []
-ladders = []
-bulldogs = []
-item_rects = []
-item_ids = []
-task_items = []
-color_keys = []
-door_rects = []
-doors_open = []
-tile_textures = {}
-tile_textures_loaded = False
-#endregion
-def WorldGeneration_new():
-    pass
+#region World Data
+imps = []
+iron_bars = []
+class WorldData():
+    
+    MapSize = (0, 0)
+    
+    class Legacy:
+        #region Lists
+        world_gen = []
+        item_gen = []
+        tile_rects = []
+        toilets = []
+        burning_toilets = []
+        trashcans = []
+        burning_trashcans = []
+        jukeboxes = []
+        landmines = []
+        zombies = []
+        sergeants = []
+        archviles = []
+        ladders = []
+        bulldogs = []
+        item_rects = []
+        item_ids = []
+        task_items = []
+        color_keys = []
+        door_rects = []
+        doors_open = []
+        tile_textures = {}
+        tile_textures_loaded = False
+        #endregion
 
-def WorldGeneration():
-    global world_gen, item_gen, tile_rects, toilets, burning_toilets, trashcans, burning_trashcans
-    global jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, item_rects, item_ids, imps
-    global task_items, door_rects, doors_open, color_keys, iron_bars, tile_textures, tile_textures_loaded
+        @staticmethod
+        def WorldGeneration():
+            global imps, iron_bars
+            
+            buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
+            decorationBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map")).convert()
+            enemyBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map")).convert()
+            itemBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map")).convert()
 
-    buildingBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_buildings.map")).convert()
-    decorationBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_decorations.map")).convert()
-    enemyBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_enemies.map")).convert()
-    itemBitmap = pygame.image.load(os.path.join("Assets", "Maps", "map" + current_map, "map_items.map")).convert()
+            convertBuildingRules = []
+            convertBuildingColors = []
+            convertDecorationRules = []
+            convertDecorationColors = []
+            convertEnemyRules = []
+            convertEnemyColors = []
+            convertItemRules = []
+            convertItemColors = []
+            with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
+                raw = f.read()
+                raw = raw.replace(" ", "")
+                rowSplit = raw.split('\n')
 
-    convertBuildingRules = []
-    convertBuildingColors = []
-    convertDecorationRules = []
-    convertDecorationColors = []
-    convertEnemyRules = []
-    convertEnemyColors = []
-    convertItemRules = []
-    convertItemColors = []
-    with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
-        raw = f.read()
-        raw = raw.replace(" ", "")
-        rowSplit = raw.split('\n')
-
-        #Adds air to all convert rules
-        array = rowSplit[0].split(',')
-        array[2] = array[2].replace("(", "")
-        array[4] = array[4].replace(")", "")
-        convertBuildingRules.append(array[1])
-        convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
-        convertDecorationRules.append(array[1])
-        convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
-        convertEnemyRules.append(array[1])
-        convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
-        convertItemRules.append(array[1])
-        convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
-
-        Type = -1
-        for row in rowSplit:
-            array = row.split(',')
-            if len(array) > 1:
+                #Adds air to all convert rules
+                array = rowSplit[0].split(',')
                 array[2] = array[2].replace("(", "")
                 array[4] = array[4].replace(")", "")
-            skip = True
-            if array[0] == "building:":
-                Type = 0
-            elif array[0] == "decoration:":
-                Type = 1
-            elif array[0] == "enemies:":
-                Type = 2
-            elif array[0] == "items:":
-                Type = 3
-            else:
-                if len(array[0]) > 0 and rowSplit.index(row) != 0:
-                    skip = False
+                convertBuildingRules.append(array[1])
+                convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+                convertDecorationRules.append(array[1])
+                convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
+                convertEnemyRules.append(array[1])
+                convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
+                convertItemRules.append(array[1])
+                convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
 
-            if skip == False and Type != -1:
-                if Type == 0:
-                    convertBuildingRules.append(array[1])
-                    convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
-                    if not tile_textures_loaded and not "door" in array[0]:
-                        try:
-                            global_texture1 = globals()[str(array[0])]
-                        except KeyError:
-                            global_texture1 = None
-                        try:
-                            global_texture2 = globals()[str(array[0] + "_texture")]
-                        except KeyError:
-                            global_texture2 = None
+                Type = -1
+                for row in rowSplit:
+                    array = row.split(',')
+                    if len(array) > 1:
+                        array[2] = array[2].replace("(", "")
+                        array[4] = array[4].replace(")", "")
+                    skip = True
+                    if array[0] == "building:":
+                        Type = 0
+                    elif array[0] == "decoration:":
+                        Type = 1
+                    elif array[0] == "enemies:":
+                        Type = 2
+                    elif array[0] == "items:":
+                        Type = 3
+                    else:
+                        if len(array[0]) > 0 and rowSplit.index(row) != 0:
+                            skip = False
 
-                        if isinstance(global_texture1, pygame.Surface):
-                            tile_textures[array[1]] = global_texture1.copy()
-                        elif isinstance(global_texture2, pygame.Surface):
-                            tile_textures[array[1]] = global_texture2.copy()
-                        else:
-                            KDS.Logging.Log("Texture not found. " + array[0], getframeinfo(currentframe()))
+                    if skip == False and Type != -1:
+                        if Type == 0:
+                            convertBuildingRules.append(array[1])
+                            convertBuildingColors.append((int(array[2]), int(array[3]), int(array[4])))
+                            if not WorldData.Legacy.tile_textures_loaded and not "door" in array[0]:
+                                try:
+                                    global_texture1 = globals()[str(array[0])]
+                                except KeyError:
+                                    global_texture1 = None
+                                try:
+                                    global_texture2 = globals()[str(array[0] + "_texture")]
+                                except KeyError:
+                                    global_texture2 = None
 
-                elif Type == 1:
-                    convertDecorationRules.append(array[1])
-                    convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
-                elif Type == 2:
-                    convertEnemyRules.append(array[1])
-                    convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
-                elif Type == 3:
-                    convertItemRules.append(array[1])
-                    convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
+                                if isinstance(global_texture1, pygame.Surface):
+                                    WorldData.Legacy.tile_textures[array[1]] = global_texture1.copy()
+                                elif isinstance(global_texture2, pygame.Surface):
+                                    WorldData.Legacy.tile_textures[array[1]] = global_texture2.copy()
+                                else:
+                                    KDS.Logging.Log("Texture not found. " + array[0], getframeinfo(currentframe()))
 
-    tile_textures_loaded = True
+                        elif Type == 1:
+                            convertDecorationRules.append(array[1])
+                            convertDecorationColors.append((int(array[2]), int(array[3]), int(array[4])))
+                        elif Type == 2:
+                            convertEnemyRules.append(array[1])
+                            convertEnemyColors.append((int(array[2]), int(array[3]), int(array[4])))
+                        elif Type == 3:
+                            convertItemRules.append(array[1])
+                            convertItemColors.append((int(array[2]), int(array[3]), int(array[4])))
 
-    building_gen = []
-    decoration_gen = []
-    enemy_gen = []
-    item_gen = []
+            WorldData.Legacy.tile_textures_loaded = True
 
-    BitmapSize = (buildingBitmap.get_width(), buildingBitmap.get_height())
-    for i in range(BitmapSize[1]):
-        building_layer = []
-        decoration_layer = []
-        enemy_layer = []
-        item_layer = []
-        for j in range(BitmapSize[0]):
-            building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.get_at((j, i))[:3])])
-            decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.get_at((j, i))[:3])])
-            enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.get_at((j, i))[:3])])
-            item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.get_at((j, i))[:3])])
+            building_gen = []
+            decoration_gen = []
+            enemy_gen = []
+            WorldData.Legacy.item_gen = []
 
-        building_gen.append(building_layer)
-        decoration_gen.append(decoration_layer)
-        enemy_gen.append(enemy_layer)
-        item_gen.append(item_layer)
+            BitmapSize = buildingBitmap.get_size()
+            for i in range(BitmapSize[1]):
+                building_layer = []
+                decoration_layer = []
+                enemy_layer = []
+                item_layer = []
+                for j in range(BitmapSize[0]):
+                    building_layer.append(convertBuildingRules[convertBuildingColors.index(buildingBitmap.get_at((j, i))[:3])])
+                    decoration_layer.append(convertDecorationRules[convertDecorationColors.index(decorationBitmap.get_at((j, i))[:3])])
+                    enemy_layer.append(convertEnemyRules[convertEnemyColors.index(enemyBitmap.get_at((j, i))[:3])])
+                    item_layer.append(convertItemRules[convertItemColors.index(itemBitmap.get_at((j, i))[:3])])
+
+                building_gen.append(building_layer)
+                decoration_gen.append(decoration_layer)
+                enemy_gen.append(enemy_layer)
+                WorldData.Legacy.item_gen.append(item_layer)
 
 
-    world_gen = (building_gen, decoration_gen, enemy_gen, item_gen)
+            WorldData.Legacy.world_gen = (building_gen, decoration_gen, enemy_gen, WorldData.Legacy.item_gen)
 
-    #Use the index to get the letter and make the file using the letters
+            #Use the index to get the letter and make the file using the letters
 
-    tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars, imps = load_rects()
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Zombies Initialised: " + str(len(zombies)), False)
-    for zombie in zombies:
-        KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Zombie: " + str(zombie), False)
+            WorldData.Legacy.tile_rects, WorldData.Legacy.toilets, WorldData.Legacy.burning_toilets, WorldData.Legacy.trashcans, WorldData.Legacy.burning_trashcans, WorldData.Legacy.jukeboxes, WorldData.Legacy.landmines, WorldData.Legacy.zombies, WorldData.Legacy.sergeants, WorldData.Legacy.archviles, WorldData.Legacy.ladders, WorldData.Legacy.bulldogs, iron_bars, imps = load_rects()
+            KDS.Logging.Log(KDS.Logging.LogType.debug,
+                            "Zombies Initialised: " + str(len(WorldData.Legacy.zombies)), False)
+            for zombie in WorldData.Legacy.zombies:
+                KDS.Logging.Log(KDS.Logging.LogType.debug,
+                                "Initialised Zombie: " + str(zombie), False)
 
-    item_rects, item_ids, task_items = load_item_rects()
-    random.shuffle(task_items)
+            WorldData.Legacy.item_rects, WorldData.Legacy.item_ids, WorldData.Legacy.task_items = load_item_rects()
+            random.shuffle(WorldData.Legacy.task_items)
 
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Items Initialised: " + str(len(item_ids)), False)
-    for i_id in item_ids:
-        KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Item: (ID)" + i_id, False)
-    door_rects, doors_open, color_keys = load_doors()
+            KDS.Logging.Log(KDS.Logging.LogType.debug,
+                            "Items Initialised: " + str(len(WorldData.Legacy.item_ids)), False)
+            for i_id in WorldData.Legacy.item_ids:
+                KDS.Logging.Log(KDS.Logging.LogType.debug,
+                                "Initialised Item: (ID)" + i_id, False)
+            WorldData.Legacy.door_rects, WorldData.Legacy.doors_open, WorldData.Legacy.color_keys = load_doors()
+        
+    @staticmethod
+    def LoadMap():
+        global tiles, items, enemies, decoration
+        map_file = open(os.path.join("Assets", "Maps", "map" + current_map, "level.map"))
+        map_data = map_file.read().split("\n")
+        items = numpy.array([])
+        enemies = numpy.array([])
+        decoration = numpy.array([])
+
+        max_map_width = 0
+        for i in range(len(map_data)):
+            if len(map_data[i]) > max_map_width:
+                max_map_width = len(map_data[i])
+        WorldData.MapSize = (max_map_width , len(map_data))
+
+        #Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
+        tiles = numpy.array( [[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0])] for y in range(WorldData.MapSize[1])] )
+
+        y = 0
+        for row in map_data:
+            x = 0
+            for block in row.split("/"):
+                blockData = list(block)
+                #Tänne jokaisen blockin käsittelyyn liittyvä koodi
+                serialNumber = int(blockData[1] + blockData[2] + blockData[3])
+                if blockData[0] == "0":
+                    tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
+                elif blockData[0] == "1":
+                    items = numpy.append(items, Item((x * 34, y * 34), serialNumber=serialNumber))
+                elif blockData[0] == "2":
+                    pass
+                elif blockData[0] == "3":
+                    pass
+
+                x += 1
+            y += 1
 #endregion
 #region Pickup Sound
 def play_key_pickup():
     pygame.mixer.Sound.play(key_pickup)
 #endregion
 #region Loading
-
-def load_map(path):
-    with open(path, 'r') as f:
-        data = f.read()
-    data = data.split('\n')
-    game_map = []
-    for row in data:
-        game_map.append(list(row))
-    return game_map
-
 with open("Assets/Textures/tile_textures.txt", "r") as f:
     data = f.read().split("\n")
 t_textures = {}
@@ -941,8 +973,8 @@ class Tile:
 
     @staticmethod
     def render(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int)): #Tile_list is a 2d numpy array
-        x = int(position[0]/34)
-        y = int(position[1]/34)
+        x = int(position[0] / 34)
+        y = int(position[1] / 34)
         x -= 10
         y-= 10
         if x < 0:
@@ -951,8 +983,8 @@ class Tile:
             y = 0
         max_x = len(Tile_list[0])-1
         max_y = len(Tile_list) -1
-        end_x = x+30
-        end_y = y+12
+        end_x = x + 30
+        end_y = y + 12
         if end_x > max_x:
             end_x = max_x
         if end_y > max_y:
@@ -961,7 +993,7 @@ class Tile:
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
-                    Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
+                    Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
 itemTip = tip_font.render(
     "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
@@ -1103,47 +1135,13 @@ class Item:
                             Item_list = numpy.delete(Item_list, index)
                     else:
                         if inventory_slot < len(inventory)-1 and inventory[inventory_slot] == "none":
-                            if inventory[inventory_slot+1] == "none":
+                            if inventory[inventory_slot + 1] == "none":
                                 inventory[inventory_slot] = item.serialNumber
-                                inventory[inventory_slot+1] = "doubleItemPlaceholder"
+                                inventory[inventory_slot + 1] = "doubleItemPlaceholder"
                                 Item_list = numpy.delete(Item_list, index)
             index += 1
                     
         return Item_list, inventory
-
-
-def load_map_new(relative_path):
-    items = numpy.array([])
-    enemies = numpy.array([])
-    decoration = numpy.array([])
-
-
-    with open(relative_path, "r") as level:
-        levelData = level.read().split("\n")
-
-    #Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
-    tiles = numpy.array( [[Tile((x*34, y*34), 0) for x in range(len(levelData[0].split("/")))] for y in range(len(levelData))] )
-
-    y = 0
-    for row in levelData:
-        x = 0
-        for block in row.split("/"):
-            blockData = list(block)
-            #Tänne jokaisen blockin käsittelyyn liittyvä koodi
-            serialNumber = int(blockData[1]+blockData[2]+blockData[3])
-            if blockData[0] == "0":
-                tiles[y][x] = Tile((x*34, y*34), serialNumber=serialNumber)
-            elif blockData[0] == "1":
-                items = numpy.append(items, Item((x*34, y*34), serialNumber=serialNumber))
-            elif blockData[0] == "2":
-                pass
-            elif blockData[0] == "3":
-                pass
-
-            x += 1
-        y += 1
-
-    return tiles, items, enemies, decoration
 
 def load_items(path):
     with open(path, 'r') as f:
@@ -1209,26 +1207,26 @@ def load_rects():
     iron_bars = []
     imps = []
     w = [0, 0]
-    for i in range(len(world_gen) - 1):
+    for i in range(len(WorldData.Legacy.world_gen) - 1):
         y = 0
-        for layer in world_gen[i]:
+        for layer in WorldData.Legacy.world_gen[i]:
             x = 0
             for tile in layer:
                 if tile != 'a':
                     if tile == 'f':
-                        tile_rects.append(pygame.Rect(x * 34, y * 34, 14, 21))
+                        WorldData.Legacy.tile_rects.append(pygame.Rect(x * 34, y * 34, 14, 21))
                     elif tile == 'e':
                         w = list(toilet0.get_size())
-                        toilets.append(pygame.Rect(x * 34-2, y * 34, 34, 34))
-                        burning_toilets.append(False)
-                        tile_rects.append(pygame.Rect(x * 34, y * 34, w[0], w[1]))
+                        WorldData.Legacy.toilets.append(pygame.Rect(x * 34-2, y * 34, 34, 34))
+                        WorldData.Legacy.burning_toilets.append(False)
+                        WorldData.Legacy.tile_rects.append(pygame.Rect(x * 34, y * 34, w[0], w[1]))
                     elif tile == 'g':
                         w = list(trashcan.get_size())
-                        trashcans.append(pygame.Rect(x * 34-1, y * 34, w[0]+2, w[1]))
-                        burning_trashcans.append(False)
-                        tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
+                        WorldData.Legacy.trashcans.append(pygame.Rect(x * 34-1, y * 34, w[0]+2, w[1]))
+                        WorldData.Legacy.burning_trashcans.append(False)
+                        WorldData.Legacy.tile_rects.append(pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
                     elif tile == 'q':
-                        ladders.append(pygame.Rect((x * 34) + 16, (y * 34) - 2, 2, 38))
+                        WorldData.Legacy.ladders.append(pygame.Rect((x * 34) + 16, (y * 34) - 2, 2, 38))
                     elif tile == 'k':
                         pass
                     elif tile == 'l':
@@ -1238,28 +1236,28 @@ def load_rects():
                     elif tile == 'n':
                         pass
                     elif tile == 's':
-                        iron_bars.append(pygame.Rect(x*34, y*34, 1, 1))
+                        iron_bars.append(pygame.Rect(x * 34, y * 34, 1, 1))
                     elif tile == 'A':
                         pass
                     elif tile == 'B':
-                        jukeboxes.append(pygame.Rect(x * 34, y * 34 - 26, 42, 60))
+                        WorldData.Legacy.jukeboxes.append(pygame.Rect(x * 34, y * 34 - 26, 42, 60))
                     elif tile == 'C':
-                        landmines.append(pygame.Rect(x * 34+6, y * 34+23, 22, 11))
+                        WorldData.Legacy.landmines.append(pygame.Rect(x * 34+6, y * 34+23, 22, 11))
                     elif tile == 'Z':
-                        zombies.append(KDS.AI.Zombie((x * 34, y * 34 - 34), 100, 1))
+                        WorldData.Legacy.zombies.append(KDS.AI.Zombie((x * 34, y * 34 - 34), 100, 1))
                         monsterAmount += 1
                     elif tile == 'S':
-                        sergeants.append(KDS.AI.SergeantZombie(
+                        WorldData.Legacy.sergeants.append(KDS.AI.SergeantZombie(
                             (x * 34, y * 34 - 34), 220, 1))
                         monsterAmount += 1
                     elif tile == 'V':
-                        archviles.append(Archvile((x * 34, y * 34-51), 750, 2))
+                        WorldData.Legacy.archviles.append(Archvile((x * 34, y * 34-51), 750, 2))
                         monsterAmount += 1
                     elif tile == 'K':
-                        bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
+                        WorldData.Legacy.bulldogs.append(KDS.AI.Bulldog((x * 34, y * 34), 80, 3, bulldog_run_animation))
                         monsterAmount += 1
                     elif tile == 'I':
-                        imps.append(KDS.AI.Imp(280,1,(x*34,y*34-34),tile_rects, "imp_walking", "imp_attacking", "imp_dying"))
+                        imps.append(KDS.AI.Imp(280,1,(x * 34,y * 34-34),WorldData.Legacy.tile_rects, "imp_walking", "imp_attacking", "imp_dying"))
                         imp_temp = imps[-1].r()
                         if imp_temp == "continue":
                             monsterAmount += 1
@@ -1268,121 +1266,121 @@ def load_rects():
                         del imp_temp
                         pass
                     else:
-                        tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
+                        WorldData.Legacy.tile_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
 
                 x += 1
             y += 1
     monstersLeft = monsterAmount
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars, imps
+    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, WorldData.Legacy.landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars, imps
 def load_item_rects():
     def append_rect():
-        item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
-    item_rects = []
-    item_ids = []
-    task_items = []
+        WorldData.Legacy.item_rects.append(pygame.Rect(x * 34, y * 34, 34, 34))
+    WorldData.Legacy.item_rects = []
+    WorldData.Legacy.item_ids = []
+    WorldData.Legacy.task_items = []
     y = 0
-    for layer in item_gen:
+    for layer in WorldData.Legacy.item_gen:
         x = 0
         for item in layer:
             if item == '0':
                 append_rect()
-                item_ids.append("gasburner")
+                WorldData.Legacy.item_ids.append("gasburner")
             if item == '1':
                 append_rect()
-                item_ids.append("knife")
+                WorldData.Legacy.item_ids.append("knife")
             if item == '2':
                 append_rect()
-                item_ids.append("red_key")
+                WorldData.Legacy.item_ids.append("red_key")
             if item == '3':
                 append_rect()
-                item_ids.append("green_key")
+                WorldData.Legacy.item_ids.append("green_key")
             if item == '4':
                 append_rect()
-                item_ids.append("blue_key")
+                WorldData.Legacy.item_ids.append("blue_key")
             if item == '5':
-                item_ids.append("coffeemug")
-                task_items.append("coffeemug")
+                WorldData.Legacy.item_ids.append("coffeemug")
+                WorldData.Legacy.task_items.append("coffeemug")
                 append_rect()
             if item == '6':
-                task_items.append("ss_bonuscard")
-                item_ids.append("ss_bonuscard")
+                WorldData.Legacy.task_items.append("ss_bonuscard")
+                WorldData.Legacy.item_ids.append("ss_bonuscard")
                 append_rect()
             if item == '7':
-                item_ids.append("lappi_sytytyspalat")
+                WorldData.Legacy.item_ids.append("lappi_sytytyspalat")
                 append_rect()
             if item == '8':
-                item_ids.append("plasmarifle")
+                WorldData.Legacy.item_ids.append("plasmarifle")
                 append_rect()
             if item == '9':
-                item_ids.append("cell")
+                WorldData.Legacy.item_ids.append("cell")
                 append_rect()
             if item == '!':
-                item_ids.append("pistol")
+                WorldData.Legacy.item_ids.append("pistol")
                 append_rect()
             if item == '#':
-                item_ids.append("pistol_mag")
+                WorldData.Legacy.item_ids.append("pistol_mag")
                 append_rect()
             if item == '%':
-                item_ids.append("rk62")
+                WorldData.Legacy.item_ids.append("rk62")
                 append_rect()
             if item == '&':
-                item_ids.append("rk62_mag")
+                WorldData.Legacy.item_ids.append("rk62_mag")
                 append_rect()
             if item == '(':
-                item_ids.append("medkit")
+                WorldData.Legacy.item_ids.append("medkit")
                 append_rect()
             if item == ')':
-                item_ids.append("shotgun")
+                WorldData.Legacy.item_ids.append("shotgun")
                 append_rect()
             if item == '=':
-                item_ids.append("shotgun_shells")
+                WorldData.Legacy.item_ids.append("shotgun_shells")
                 append_rect()
             if item == '+':
-                item_ids.append("soulsphere")
+                WorldData.Legacy.item_ids.append("soulsphere")
                 append_rect()
             if item == "'":
-                item_ids.append("turboneedle")
+                WorldData.Legacy.item_ids.append("turboneedle")
                 append_rect()
             x += 1
         y += 1
-    return item_rects, item_ids, task_items
+    return WorldData.Legacy.item_rects, WorldData.Legacy.item_ids, WorldData.Legacy.task_items
 def load_doors():
     y = 0
-    door_rects = []
-    doors_open = []
-    color_keys = []
-    for i in range(len(world_gen)):
-        for layer in world_gen[i]:
+    WorldData.Legacy.door_rects = []
+    WorldData.Legacy.doors_open = []
+    WorldData.Legacy.color_keys = []
+    for i in range(len(WorldData.Legacy.world_gen)):
+        for layer in WorldData.Legacy.world_gen[i]:
             x = 0
             for door in layer:
                 if door == 'k':
                     size = list(door_closed.get_size())
-                    door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0]+1, size[1]))
-                    doors_open.append(False)
-                    color_keys.append("none")
+                    WorldData.Legacy.door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0] + 1, size[1]))
+                    WorldData.Legacy.doors_open.append(False)
+                    WorldData.Legacy.color_keys.append("none")
                 elif door == 'l':
                     size = list(red_door_closed.get_size())
-                    door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0]+1, size[1]))
-                    doors_open.append(False)
-                    color_keys.append("red")
+                    WorldData.Legacy.door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0] + 1, size[1]))
+                    WorldData.Legacy.doors_open.append(False)
+                    WorldData.Legacy.color_keys.append("red")
                 elif door == 'm':
                     size = list(green_door_closed.get_size())
-                    door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0]+1, size[1]))
-                    doors_open.append(False)
-                    color_keys.append("green")
+                    WorldData.Legacy.door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0] + 1, size[1]))
+                    WorldData.Legacy.doors_open.append(False)
+                    WorldData.Legacy.color_keys.append("green")
                 elif door == 'n':
                     size = list(blue_door_closed.get_size())
-                    door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0]+1, size[1]))
-                    doors_open.append(False)
-                    color_keys.append("blue")
+                    WorldData.Legacy.door_rects.append(pygame.Rect(
+                        x * 34-1, y * 34, size[0] + 1, size[1]))
+                    WorldData.Legacy.doors_open.append(False)
+                    WorldData.Legacy.color_keys.append("blue")
                 x += 1
             y += 1
 
-    return door_rects, doors_open, color_keys
+    return WorldData.Legacy.door_rects, WorldData.Legacy.doors_open, WorldData.Legacy.color_keys
 #endregion
 #region Collisions
 def shotgun_shots():
@@ -1397,24 +1395,24 @@ def shotgun_shots():
     dir_counter = 0
     while q:
 
-        for tile in tile_rects:
+        for tile in WorldData.Legacy.tile_rects:
             for shot in shots:
                 if tile.collidepoint(shot):
                     shots.remove(shot)
 
-        for zombie1 in zombies:
+        for zombie1 in WorldData.Legacy.zombies:
             for shot in shots:
                 if zombie1.rect.collidepoint(shot):
                     shots.remove(shot)
                     zombie1.health -= 35
 
-        for sergeant in sergeants:
+        for sergeant in WorldData.Legacy.sergeants:
             for shot in shots:
                 if sergeant.rect.collidepoint(shot):
                     shots.remove(shot)
                     sergeant.health -= 35
 
-        for archvile in archviles:
+        for archvile in WorldData.Legacy.archviles:
             for shot in shots:
                 if archvile.rect.collidepoint(shot):
                     shots.remove(shot)
@@ -1449,42 +1447,42 @@ def door_collision_test():
     def door_sound():
         pygame.mixer.Sound.play(door_opening)
 
-    global door_rects, doors_open, color_keys, player_movement
-    hit_list = collision_test(player_rect, door_rects)
-    if len(door_rects) > 0 and player_rect.colliderect(door_rects[0]):
+    global player_movement
+    hit_list = collision_test(player_rect, WorldData.Legacy.door_rects)
+    if len(WorldData.Legacy.door_rects) > 0 and player_rect.colliderect(WorldData.Legacy.door_rects[0]):
         pass
-    for i in range(len(door_rects)):
+    for i in range(len(WorldData.Legacy.door_rects)):
         for j in range(len(hit_list)):
-            if door_rects[i] == hit_list[j]:
-                if player_movement[0] > 0 and doors_open[i] == False:
-                    player_rect.right = door_rects[i].left + 1
-                elif player_movement[0] < 0 and doors_open[i] == False:
-                    player_rect.left = door_rects[i].right - 1
+            if WorldData.Legacy.door_rects[i] == hit_list[j]:
+                if player_movement[0] > 0 and WorldData.Legacy.doors_open[i] == False:
+                    player_rect.right = WorldData.Legacy.door_rects[i].left + 1
+                elif player_movement[0] < 0 and WorldData.Legacy.doors_open[i] == False:
+                    player_rect.left = WorldData.Legacy.door_rects[i].right - 1
                 if FunctionKey == True:
-                    color_key = color_keys[i]
-                    if doors_open[i]:
+                    color_key = WorldData.Legacy.color_keys[i]
+                    if WorldData.Legacy.doors_open[i]:
                         color_key = "none"
                     if color_key != "none":
                         if color_key == "red":
                             if player_keys["red"]:
-                                doors_open[i] = not doors_open[i]
+                                WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
                                 door_sound()
                         elif color_key == "green":
                             if player_keys["green"]:
-                                doors_open[i] = not doors_open[i]
+                                WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
                                 door_sound()
                         elif color_key == "blue":
                             if player_keys["blue"]:
-                                doors_open[i] = not doors_open[i]
+                                WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
                                 door_sound()
                     else:
-                        doors_open[i] = not doors_open[i]
+                        WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
                         door_sound()
-                    if not doors_open[i]:
+                    if not WorldData.Legacy.doors_open[i]:
                         if direction:
-                            player_rect.left = door_rects[i].right - 1
+                            player_rect.left = WorldData.Legacy.door_rects[i].right - 1
                         else:
-                            player_rect.right = door_rects[i].left + 1
+                            player_rect.right = WorldData.Legacy.door_rects[i].left + 1
 def item_collision_test(rect, items):
     """Tests for item collisions.
 
@@ -1497,7 +1495,7 @@ def item_collision_test(rect, items):
     """
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory, inventory_slot, item_ids, player_keys, item_rects, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
+    global player_hand_item, player_score, inventory, inventory_slot, player_keys, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
 
     itemTip = tip_font.render(
         "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
@@ -1511,127 +1509,127 @@ def item_collision_test(rect, items):
         if rect.colliderect(item):
             hit_list.append(item)
             if FunctionKey == True:
-                i = item_ids[x]
+                i = WorldData.Legacy.item_ids[x]
 
                 if inventory[inventory_slot] == "none":
                     if i == "gasburner":
                         inventory[inventory_slot] = "gasburner"
                         Audio.playSound(gasburner_clip)
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
 
                         s(5)
                     elif i == "knife":
                         inventory[inventory_slot] = "knife"
                         Audio.playSound(knife_pickup)
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
                         s(5)
                     elif i == "plasmarifle":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "plasmarifle"
                             Audio.playSound(weapon_pickup)
-                            item_rects.remove(item)
-                            del item_ids[x]
+                            WorldData.Legacy.item_rects.remove(item)
+                            del WorldData.Legacy.item_ids[x]
                             s(20)
                     elif i == "ss_bonuscard":
                         inventory[inventory_slot] = "ss_bonuscard"
                         Audio.playSound(ss_sound)
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
                         s(20)
                     elif i == "coffeemug":
                         inventory[inventory_slot] = "coffeemug"
                         Audio.playSound(coffeemug_sound)
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
                         s(3)
                     elif i == "lappi_sytytyspalat":
                         inventory[inventory_slot] = "lappi_sytytyspalat"
                         Audio.playSound(lappi_sytytyspalat_sound)
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
                         s(20)
                     elif i == "pistol":
                         inventory[inventory_slot] = "pistol"
                         Audio.playSound(weapon_pickup)
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
                         s(20)
                     elif i == "rk62":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "rk62"
                             Audio.playSound(weapon_pickup)
-                            item_rects.remove(item)
-                            del item_ids[x]
+                            WorldData.Legacy.item_rects.remove(item)
+                            del WorldData.Legacy.item_ids[x]
                             s(20)
                     elif i == "shotgun":
                         if inventory_slot != len(inventory) - 1:
                             inventory[inventory_slot] = "shotgun"
                             Audio.playSound(weapon_pickup)
-                            item_rects.remove(item)
-                            del item_ids[x]
+                            WorldData.Legacy.item_rects.remove(item)
+                            del WorldData.Legacy.item_ids[x]
                             s(20)
                     elif i == "iPuhelin":
                         inventory[inventory_slot] = "iPuhelin"
-                        item_rects.remove(item)
-                        del item_ids[x]
+                        WorldData.Legacy.item_rects.remove(item)
+                        del WorldData.Legacy.item_ids[x]
 
                 if i == "red_key":
                     player_keys["red"] = True
                     Audio.playSound(key_pickup)
-                    item_rects.remove(item)
-                    del item_ids[x]
+                    WorldData.Legacy.item_rects.remove(item)
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "green_key":
                     player_keys["green"] = True
                     Audio.playSound(key_pickup)
-                    item_rects.remove(item)
-                    del item_ids[x]
+                    WorldData.Legacy.item_rects.remove(item)
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "blue_key":
                     player_keys["blue"] = True
                     Audio.playSound(key_pickup)
-                    item_rects.remove(item)
-                    del item_ids[x]
+                    WorldData.Legacy.item_rects.remove(item)
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "cell":
                     ammunition_plasma += 30
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(item_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "pistol_mag":
                     pistol_bullets += 8
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(item_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "rk62_mag":
                     rk_62_ammo += 30
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(item_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "shotgun_shells":
                     shotgun_shells += 4
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(item_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "medkit":
                     if player_health < 100:
                         player_health += 25
                         if player_health > 100:
                             player_health = 100
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(item_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "soulsphere":
                     player_health += 100
                     if player_health > 300:
                         player_health = 300
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(soulsphere_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
                 elif i == "turboneedle":
                     playerStamina = 250
-                    item_rects.remove(item)
+                    WorldData.Legacy.item_rects.remove(item)
                     Audio.playSound(soulsphere_pickup)
-                    del item_ids[x]
+                    del WorldData.Legacy.item_ids[x]
 
         x += 1
     if len(hit_list) > 0:
@@ -1645,24 +1643,24 @@ def item_collision_test(rect, items):
         screen.blit(itemTip, (int(hit_list[shortest_index].centerx - scroll[0] - (itemTip.get_width() / 2)), int(hit_list[shortest_index].top - scroll[1] - 10)))
     return hit_list
 def toilet_collisions(rect, burnstate):
-    global burning_toilets, player_score, burning_trashcans
+    global player_score
     o = 0
-    for toilet in toilets:
+    for toilet in WorldData.Legacy.toilets:
         if rect.colliderect(toilet):
             if not rect.bottom == toilet.top:
                 if (rect.colliderect(toilet) and burnstate):
-                    if burning_toilets[o] == False:
+                    if WorldData.Legacy.burning_toilets[o] == False:
                         player_score += 15
-                    burning_toilets[o] = True
+                    WorldData.Legacy.burning_toilets[o] = True
         o += 1
     o = 0
-    for trashcan1 in trashcans:
+    for trashcan1 in WorldData.Legacy.trashcans:
         if rect.colliderect(trashcan1):
             if not rect.bottom == trashcan1.top:
                 if (rect.colliderect(trashcan1) and burnstate):
-                    if burning_trashcans[o] == False:
+                    if WorldData.Legacy.burning_trashcans[o] == False:
                         player_score += 15
-                    burning_trashcans[o] = True
+                    WorldData.Legacy.burning_trashcans[o] = True
         o += 1
 #endregion
 #region Player
@@ -1783,7 +1781,7 @@ sergeant_death_animation = KDS.Animator.Animation(
 #endregion
 #region Console
 def console():
-    global inventory, player_keys, player_health, koponen_happines, bulldogs
+    global inventory, player_keys, player_health, koponen_happines
     wasFullscreen = False
     if isFullscreen:
         Fullscreen.Set()
@@ -1862,7 +1860,7 @@ def console():
         if len(command_list) > 1:
             woofState = KDS.Convert.ToBool(command_list[1])
             if woofState != None:
-                for dog in bulldogs:
+                for dog in WorldData.Legacy.bulldogs:
                     KDS.Logging.Log(KDS.Logging.LogType.info, str(dog) + " woof status has been set to: " + str(woofState), True)
                     KDS.AI.Bulldog.SetAngry(dog, woofState)
             else:
@@ -1929,7 +1927,7 @@ def agr(tcagr):
 #endregion
 #region Koponen Talk
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, task_items, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
+    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
     conversations = []
 
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
@@ -1970,9 +1968,9 @@ def koponen_talk():
             conversations.append("         tehtävä kesken")
             conversations.append("Koponen: Tehtäväsi oli tuoda minulle")
             conversations.append("         {}.".format(task))
-        elif task_items:
-            current_mission = task_items[0]
-            task_items.remove(task_items[0])
+        elif WorldData.Legacy.task_items:
+            current_mission = WorldData.Legacy.task_items[0]
+            WorldData.Legacy.task_items.remove(WorldData.Legacy.task_items[0])
         if current_mission == "coffeemug":
             task = "kahvikuppi"
             taskTaivutettu = "kahvikupin"
@@ -2114,7 +2112,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
     inventory = ["none", "none", "none", "none", "none"]
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story or int(current_map) < 2:
         inventory[0] = "iPuhelin"
-    WorldGeneration()
+    WorldData.LoadMap()
     pygame.mouse.set_visible(False)
     main_menu_running = False
     play_map_music(current_map)
@@ -2568,9 +2566,6 @@ def inventoryPick(index: int):
         inventory_slot = index
 #endregion
 #region Main Running
-
-tiles, items, enemies, decoration = load_map_new("Assets/Maps/map06/level.map")
-
 while main_running:
 #region Events
     for event in pygame.event.get():
@@ -2601,16 +2596,16 @@ while main_running:
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
                     if not direction:
-                        item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - 17), int(player_rect.bottomright[1])), (34, 34)))
+                        WorldData.Legacy.item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - 17), int(player_rect.bottomright[1])), (34, 34)))
                     else:
-                        item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - 17), int(player_rect.bottomleft[1])), (34, 34)))
-                    item_ids.append(inventory[inventory_slot])
+                        WorldData.Legacy.item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - 17), int(player_rect.bottomleft[1])), (34, 34)))
+                    WorldData.Legacy.item_ids.append(inventory[inventory_slot])
                     u = True
                     while u:
-                        item_rects[-1].y += 30
-                        for tile in tile_rects:
-                            if item_rects[-1].colliderect(tile):
-                                item_rects[-1].bottom = tile.top
+                        WorldData.Legacy.item_rects[-1].y += 30
+                        for tile in WorldData.Legacy.tile_rects:
+                            if WorldData.Legacy.item_rects[-1].colliderect(tile):
+                                WorldData.Legacy.item_rects[-1].bottom = tile.top
                                 u = False
                 if inventoryDoubles[inventory_slot] == True:
                     inventory[inventory_slot + 1] = "none"
@@ -2725,12 +2720,12 @@ while main_running:
 #region Rendering
 
     # Rendering: World Generation
-    #ertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
-    #horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
+    #ertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(WorldData.Legacy.world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
+    #horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(WorldData.Legacy.world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
     #for y in range(vertical_render_position[0], vertical_render_position[1]):
     #    for x in range(horisontal_render_position[0], horisontal_render_position[1]):
-    #        if world_gen[0][y][x] in tile_textures:
-    #            screen.blit(tile_textures[world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
+    #        if WorldData.Legacy.world_gen[0][y][x] in WorldData.Legacy.tile_textures:
+    #            screen.blit(WorldData.Legacy.tile_textures[WorldData.Legacy.world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
 
 
@@ -2740,32 +2735,32 @@ while main_running:
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
 
     # Rendering: Doors
-    for i in range(len(door_rects)):
-        if doors_open[i]:
-            screen.blit(door_open, (door_rects[i].x - scroll[0] + 2, door_rects[i].y - scroll[1]))
+    for i in range(len(WorldData.Legacy.door_rects)):
+        if WorldData.Legacy.doors_open[i]:
+            screen.blit(door_open, (WorldData.Legacy.door_rects[i].x - scroll[0] + 2, WorldData.Legacy.door_rects[i].y - scroll[1]))
         else:
-            if color_keys[i] == "red":
+            if WorldData.Legacy.color_keys[i] == "red":
                 screen.blit(red_door_closed,
-                            (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
-            elif color_keys[i] == "green":
+                            (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
+            elif WorldData.Legacy.color_keys[i] == "green":
                 screen.blit(green_door_closed,
-                            (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
-            elif color_keys[i] == "blue":
+                            (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
+            elif WorldData.Legacy.color_keys[i] == "blue":
                 screen.blit(blue_door_closed,
-                            (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
+                            (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
             else:
-                screen.blit(door_closed, (door_rects[i].x - scroll[0], door_rects[i].y - scroll[1]))
+                screen.blit(door_closed, (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
 
     # Rendering: Jukeboxes
-    for jukebox in jukeboxes:
+    for jukebox in WorldData.Legacy.jukeboxes:
         screen.blit(jukebox_texture, (jukebox.x -
                                     scroll[0], jukebox.y - scroll[1]))
 
     # Rendering: Landimes
-    for landmine in landmines:
+    for landmine in WorldData.Legacy.landmines:
         screen.blit(landmine_texture, (landmine.x - scroll[0], landmine.y - scroll[1]))
         if player_rect.colliderect(landmine):
-            landmines.remove(landmine)
+            WorldData.Legacy.landmines.remove(landmine)
             Audio.playSound(landmine_explosion)
             player_health -= 60
             if player_health < 0:
@@ -2773,17 +2768,17 @@ while main_running:
             explosion_positions.append((landmine.x-40, landmine.y-58))
 
     
-        for zombie1 in zombies:
+        for zombie1 in WorldData.Legacy.zombies:
             if zombie1.rect.colliderect(landmine):
-                landmines.remove(landmine)
+                WorldData.Legacy.landmines.remove(landmine)
                 Audio.playSound(landmine_explosion)
                 zombie1.health -= 140
                 if zombie1.health < 0:
                     zombie1.health = 0
                 explosion_positions.append((landmine.x-40, landmine.y-58))
-        for sergeant in sergeants:
+        for sergeant in WorldData.Legacy.sergeants:
             if sergeant.rect.colliderect(landmine):
-                landmines.remove(landmine)
+                WorldData.Legacy.landmines.remove(landmine)
                 Audio.playSound(landmine_explosion)
                 sergeant.health -= 220
 
@@ -2834,7 +2829,7 @@ while main_running:
 
     # Rendering: Bullets
     for bullet in plasmabullets:
-        state = bullet.update(tile_rects)
+        state = bullet.update(WorldData.Legacy.tile_rects)
         if state:
             plasmabullets.remove(bullet)
 
@@ -2852,82 +2847,82 @@ while main_running:
 
     # Rendering: Items
     
-    #item_collision_test(player_rect, item_rects)
+    #item_collision_test(player_rect, WorldData.Legacy.item_rects)
     """
-    for i in range(len(item_rects)):
+    for i in range(len(WorldData.Legacy.item_rects)):
         blit_texture = None
         texture_offset_y = 0
         if DebugMode:
-            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Blue), (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1], item_rects[i].width, item_rects[i].height))
-        if item_ids[i] == 'gasburner':
+            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Blue), (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1], WorldData.Legacy.item_rects[i].width, WorldData.Legacy.item_rects[i].height))
+        if WorldData.Legacy.item_ids[i] == 'gasburner':
             blit_texture = gasburner_off
             texture_offset_y = 2
-            #screen.blit(gasburner_off, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
-        if item_ids[i] == "knife":
+            #screen.blit(gasburner_off, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 10))
+        if WorldData.Legacy.item_ids[i] == "knife":
             blit_texture = knife
             texture_offset_y = 1
-            #screen.blit(knife, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+26))
-        if item_ids[i] == "red_key":
+            #screen.blit(knife, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1]+26))
+        if WorldData.Legacy.item_ids[i] == "red_key":
             blit_texture = red_key
-            #screen.blit(red_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
-        if item_ids[i] == "green_key":
+            #screen.blit(red_key, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 16))
+        if WorldData.Legacy.item_ids[i] == "green_key":
             blit_texture = green_key
-            #screen.blit(green_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
-        if item_ids[i] == "blue_key":
+            #screen.blit(green_key, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 16))
+        if WorldData.Legacy.item_ids[i] == "blue_key":
             blit_texture = blue_key
-            #screen.blit(blue_key, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+16))
-        if item_ids[i] == "coffeemug":
+            #screen.blit(blue_key, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 16))
+        if WorldData.Legacy.item_ids[i] == "coffeemug":
             blit_texture = coffeemug
             #screen.blit(
-                #coffeemug, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1] + 14))
-        if item_ids[i] == "ss_bonuscard":
+                #coffeemug, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 14))
+        if WorldData.Legacy.item_ids[i] == "ss_bonuscard":
             blit_texture = ss_bonuscard
-            #screen.blit(ss_bonuscard, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
-        if item_ids[i] == "lappi_sytytyspalat":
+            #screen.blit(ss_bonuscard, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 14))
+        if WorldData.Legacy.item_ids[i] == "lappi_sytytyspalat":
             blit_texture = lappi_sytytyspalat
             #screen.blit(lappi_sytytyspalat,
-                        #(item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
-        if item_ids[i] == "plasmarifle":
+                        #(WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 17))
+        if WorldData.Legacy.item_ids[i] == "plasmarifle":
             blit_texture = plasmarifle
-            #screen.blit(plasmarifle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
-        if item_ids[i] == "cell":
+            #screen.blit(plasmarifle, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 17))
+        if WorldData.Legacy.item_ids[i] == "cell":
             blit_texture = cell
-            #screen.blit(cell, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
-        if item_ids[i] == "pistol":
+            #screen.blit(cell, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 17))
+        if WorldData.Legacy.item_ids[i] == "pistol":
             blit_texture = pistol_texture
             #screen.blit(pistol_texture,
-                        #(item_rects[i].x - scroll[0]-23, item_rects[i].y - scroll[1]+18))
-        if item_ids[i] == "pistol_mag":
+                        #(WorldData.Legacy.item_rects[i].x - scroll[0]-23, WorldData.Legacy.item_rects[i].y - scroll[1] + 18))
+        if WorldData.Legacy.item_ids[i] == "pistol_mag":
             blit_texture = pistol_mag
-            #screen.blit(pistol_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+19))
-        if item_ids[i] == "rk62":
+            #screen.blit(pistol_mag, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 19))
+        if WorldData.Legacy.item_ids[i] == "rk62":
             blit_texture = rk62_texture
-            #screen.blit(rk62_texture, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+17))
-        if item_ids[i] == "rk62_mag":
+            #screen.blit(rk62_texture, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 17))
+        if WorldData.Legacy.item_ids[i] == "rk62_mag":
             blit_texture = rk62_mag
-            #screen.blit(rk62_mag, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+14))
-        if item_ids[i] == "medkit":
+            #screen.blit(rk62_mag, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 14))
+        if WorldData.Legacy.item_ids[i] == "medkit":
             blit_texture = medkit
-            #screen.blit(medkit, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+15))
-        if item_ids[i] == "shotgun":
+            #screen.blit(medkit, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 15))
+        if WorldData.Legacy.item_ids[i] == "shotgun":
             blit_texture = shotgun
-            #screen.blit(shotgun, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+22))
-        if item_ids[i] == "shotgun_shells":
+            #screen.blit(shotgun, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1]+22))
+        if WorldData.Legacy.item_ids[i] == "shotgun_shells":
             blit_texture = shotgun_shells_t
             #screen.blit(shotgun_shells_t,
-                        #(item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+25))
-        if item_ids[i] == "iPuhelin":
+                        #(WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1]+25))
+        if WorldData.Legacy.item_ids[i] == "iPuhelin":
             blit_texture = ipuhelin_texture
             #screen.blit(ipuhelin_texture,
-                        #(item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]+10))
-        if item_ids[i] == 'soulsphere':
+                        #(WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1] + 10))
+        if WorldData.Legacy.item_ids[i] == 'soulsphere':
             blit_texture = soulsphere
-            #screen.blit(soulsphere, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
-        if item_ids[i] == 'turboneedle':
+            #screen.blit(soulsphere, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1]))
+        if WorldData.Legacy.item_ids[i] == 'turboneedle':
             blit_texture = turboneedle
-            #screen.blit(turboneedle, (item_rects[i].x - scroll[0], item_rects[i].y - scroll[1]))
+            #screen.blit(turboneedle, (WorldData.Legacy.item_rects[i].x - scroll[0], WorldData.Legacy.item_rects[i].y - scroll[1]))
         if blit_texture != None:
-            screen.blit(blit_texture, (int(item_rects[i].centerx - scroll[0] - (blit_texture.get_width() / 2)), int(item_rects[i].bottom - scroll[1] - blit_texture.get_height() + texture_offset_y)))
+            screen.blit(blit_texture, (int(WorldData.Legacy.item_rects[i].centerx - scroll[0] - (blit_texture.get_width() / 2)), int(WorldData.Legacy.item_rects[i].bottom - scroll[1] - blit_texture.get_height() + texture_offset_y)))
             """
 #endregion
 #region PlayerMovement
@@ -2935,7 +2930,7 @@ while main_running:
 
     player_movement = [0, 0]
     onLadder = False
-    for ladder in ladders:
+    for ladder in WorldData.Legacy.ladders:
         if player_rect.colliderect(ladder):
             onLadder = True
             vertical_momentum = 0
@@ -3020,13 +3015,13 @@ while main_running:
     wa = zombie_walk_animation.update()
     sa = sergeant_walk_animation.update()
 
-    for sergeant in sergeants:
+    for sergeant in WorldData.Legacy.sergeants:
         if DebugMode:
             pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(sergeant.rect.x-scroll[0],sergeant.rect.y-scroll[1],sergeant.rect.width,sergeant.rect.height))
         if sergeant.health > 0:
             if sergeant.hitscanner_cooldown > 100:
                 hitscan = sergeant.hit_scan(
-                    player_rect, player_health, tile_rects)
+                    player_rect, player_health, WorldData.Legacy.tile_rects)
                 sergeant.hitscanner_cooldown = 0
                 if hitscan:
                     sergeant.shoot = True
@@ -3035,7 +3030,7 @@ while main_running:
                 hitscan = False
             if not sergeant.shoot:
                 sergeant.rect, sergeant.hits = move_entity(
-                    sergeant.rect, sergeant.movement, tile_rects)
+                    sergeant.rect, sergeant.movement, WorldData.Legacy.tile_rects)
 
                 if sergeant.movement[0] > 0:
                     sergeant.direction = True
@@ -3057,7 +3052,7 @@ while main_running:
                 if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
                     sergeant.xvar = True
                     Audio.playSound(shotgun_shot)
-                    if sergeant.hit_scan(player_rect, player_health, tile_rects):
+                    if sergeant.hit_scan(player_rect, player_health, WorldData.Legacy.tile_rects):
                         player_health = damage(player_health, 20, 50)
                 if i:
                     sergeant_shoot_animation.reset()
@@ -3075,21 +3070,21 @@ while main_running:
                 monstersLeft -= 1
         else:
             screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
-                                              False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]+10))
+                                              False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1] + 10))
             if not sergeant.loot_dropped:
                 sergeant.loot_dropped = True
                 if round(random.uniform(0, 3)) == 0:
-                    item_rects.append(pygame.Rect(sergeant.rect.x, int(sergeant.rect.y + (sergeant.rect.height / 2) - 2), sergeant.rect.width, int(sergeant.rect.height / 2)))
-                    item_ids.append("shotgun_shells")
+                    WorldData.Legacy.item_rects.append(pygame.Rect(sergeant.rect.x, int(sergeant.rect.y + (sergeant.rect.height / 2) - 2), sergeant.rect.width, int(sergeant.rect.height / 2)))
+                    WorldData.Legacy.item_ids.append("shotgun_shells")
             
-    for zombie1 in zombies:
+    for zombie1 in WorldData.Legacy.zombies:
         if DebugMode:
             pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(zombie1.rect.x-scroll[0],zombie1.rect.y-scroll[1],zombie1.rect.width,zombie1.rect.height))
         if zombie1.health > 0:
             search = zombie1.search(player_rect)
             if not search:
                 zombie1.rect, zombie1.hits = move_entity(
-                    zombie1.rect, zombie1.movement, tile_rects)
+                    zombie1.rect, zombie1.movement, WorldData.Legacy.tile_rects)
                 if zombie1.movement[0] != 0:
                     zombie1.walking = True
                     if zombie1.movement[0] > 0:
@@ -3108,7 +3103,7 @@ while main_running:
                     zombie1.movement[0] = -zombie1.movement[0]
             else:
                 zombie1.rect, zombie1.hits = move_entity(
-                    zombie1.rect, [0, zombie1.movement[1]], tile_rects)
+                    zombie1.rect, [0, zombie1.movement[1]], WorldData.Legacy.tile_rects)
                 attack_counter += 1
                 if attack_counter > 40:
                     attack_counter = 0
@@ -3131,14 +3126,14 @@ while main_running:
                 monstersLeft -= 1
         else:
             screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction,
-                                              False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]+14))
+                                              False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1] + 14))
 
     # Zombien käsittely loppuu tähän
 
     #//////////////////////////////////////////////////////////////
     #*****    New enemies handling & enemies thread handling ******#
     arch_run = archvile_run_animation.update()
-    for archvile in archviles:
+    for archvile in WorldData.Legacy.archviles:
         if DebugMode:
             pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(archvile.rect.x-scroll[0],archvile.rect.y-scroll[1],archvile.rect.width,archvile.rect.height))
         archvile.update(arch_run)
@@ -3147,10 +3142,10 @@ while main_running:
         I_thread_results = [e.submit(imp._move) for imp in imps]
         I_updatethread_results = [e.submit(imp.update, player_rect, screen, 20, scroll, DebugMode) for imp in imps]
 
-    for bulldog in bulldogs:
-        bulldog.startUpdateThread(player_rect, tile_rects)
+    for bulldog in WorldData.Legacy.bulldogs:
+        bulldog.startUpdateThread(player_rect, WorldData.Legacy.tile_rects)
     
-    for bulldog in bulldogs:
+    for bulldog in WorldData.Legacy.bulldogs:
         if DebugMode:
             pygame.draw.rect(screen,(KDS.Colors.GetPrimary.Red),(bulldog.rect.x-scroll[0],bulldog.rect.y-scroll[1],bulldog.rect.width,bulldog.rect.height))
         bd_attr = bulldog.getAttributes()
@@ -3326,11 +3321,11 @@ while main_running:
         elif player_hand_item == "plasmarifle":
             if plasmarifle_fire and ammunition_plasma > 0:
                 screen.blit(pygame.transform.flip(plasmarifle_animation.update(), direction, False), (
-                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1] + 14))
 
             else:
                 screen.blit(pygame.transform.flip(plasmarifle, direction, False), (
-                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1] + 14))
         elif player_hand_item == "pistol":
             pistol_cooldown += 1
             if weapon_fire and pistol_cooldown > 25:
@@ -3338,24 +3333,24 @@ while main_running:
                 if pistol_bullets > 0:
                     pistol_bullets -= 1
                     screen.blit(pygame.transform.flip(pistol_f_texture, not direction, False), (
-                        player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
+                        player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1] + 14))
                     bullet = Bullet(
                         [player_rect.x, player_rect.y+20], direction, 50)
-                    hit = bullet.shoot(tile_rects)
+                    hit = bullet.shoot(WorldData.Legacy.tile_rects)
                     del hit, bullet
                     Audio.playSound(pistol_shot)
             else:
                 screen.blit(pygame.transform.flip(pistol_texture, not direction, False), (
-                    player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_pi - scroll[0], player_rect.y - scroll[1] + 14))
         elif player_hand_item == "rk62":
             if mouseLeftPressed and rk_62_ammo > 0 and rk62_cooldown > 4:
                 rk_62_ammo -= 1
                 rk62_cooldown = 0
                 screen.blit(pygame.transform.flip(rk62_f_texture, direction, False), (
-                    player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1] + 14))
                 bullet = Bullet(
                     [player_rect.x, player_rect.y+20], direction, 25)
-                hit = bullet.shoot(tile_rects)
+                hit = bullet.shoot(WorldData.Legacy.tile_rects)
                 KDS.Logging.Log(KDS.Logging.LogType.debug,
                                 ("rk62 hit an object: " + str(hit)), False)
                 del hit, bullet
@@ -3369,7 +3364,7 @@ while main_running:
                 if not mouseLeftPressed:
                     rk62_shot.stop()
                 screen.blit(pygame.transform.flip(rk62_texture, direction, False), (
-                    player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_rk - scroll[0], player_rect.y - scroll[1] + 14))
         elif player_hand_item == "shotgun":
             if not shotgun_loaded:
                 shotgun_cooldown += 1
@@ -3383,11 +3378,11 @@ while main_running:
                 shotgun_thread.start()
                 Audio.playSound(player_shotgun_shot)
                 screen.blit(pygame.transform.flip(shotgun_f, direction, False), (
-                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1] + 14))
 
             else:
                 screen.blit(pygame.transform.flip(shotgun, direction, False), (
-                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1]+14))
+                    player_rect.right-offset_p - scroll[0], player_rect.y - scroll[1] + 14))
 
     if farting:
         fart_counter += 1
@@ -3400,13 +3395,13 @@ while main_running:
             damage_rect.centerx = player_rect.centerx
             damage_rect.centery = player_rect.centery
 
-            for archvile in archviles:
+            for archvile in WorldData.Legacy.archviles:
                 if damage_rect.colliderect(archvile.rect):
                     archvile.health -= 600
-            for zombie1 in zombies:
+            for zombie1 in WorldData.Legacy.zombies:
                 if damage_rect.colliderect(zombie1.rect):
                     zombie1.health -= 600
-            for sergeant in sergeants:
+            for sergeant in WorldData.Legacy.sergeants:
                 if damage_rect.colliderect(sergeant.rect):
                     sergeant.health -= 600
             for imp in imps:
@@ -3435,14 +3430,14 @@ while main_running:
     h = 0
 #endregion
 #region Interactable Objects
-    for toilet in toilets:
-        if burning_toilets[h] == True:
+    for toilet in WorldData.Legacy.toilets:
+        if WorldData.Legacy.burning_toilets[h] == True:
             screen.blit(toilet_animation[burning_animation_stats[0]],
-                        (toilet.x - scroll[0]+2, toilet.y - scroll[1]+1))
+                        (toilet.x - scroll[0]+2, toilet.y - scroll[1] + 1))
         h += 1
     h = 0
-    for trashcan2 in trashcans:
-        if burning_trashcans[h] == True:
+    for trashcan2 in WorldData.Legacy.trashcans:
+        if WorldData.Legacy.burning_trashcans[h] == True:
             screen.blit(trashcan_animation[burning_animation_stats[0]],
                         (trashcan2.x - scroll[0]+3, trashcan2.y - scroll[1]+6))
         h += 1
@@ -3459,7 +3454,7 @@ while main_running:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x - scroll[0], player_rect.y - scroll[1]))
 
-    for archvile in archviles:
+    for archvile in WorldData.Legacy.archviles:
         if archvile.attack_anim:
             screen.blit(flames_animation.update(),
                         (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
@@ -3469,7 +3464,7 @@ while main_running:
 
     jukebox_collision = False
 
-    for jukebox in jukeboxes:
+    for jukebox in WorldData.Legacy.jukeboxes:
         if player_rect.colliderect(jukebox):
             screen.blit(jukebox_tip, (jukebox.x - scroll[0]-20, jukebox.y - scroll[1]-30))
             jukebox_collision = True
@@ -3579,7 +3574,7 @@ while main_running:
     koponen_animation_stats[2] += 1
     plasmarifle_cooldown += 1
     rk62_cooldown += 1
-    for sergeant in sergeants:
+    for sergeant in WorldData.Legacy.sergeants:
         sergeant.hitscanner_cooldown += 1
     if KDS.Missions.GetFinished() == True:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
