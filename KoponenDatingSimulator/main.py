@@ -1148,6 +1148,9 @@ class pickupFunctions: #Jokaiselle itemille määritetään funktio, joka kutsut
         
         return True
         
+class itemFunctions: #Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
+    pass
+
 Pfunctions = {
     0: pickupFunctions.empyOperation,
     1: pickupFunctions.blue_key_p,
@@ -1168,6 +1171,8 @@ Pfunctions = {
     16:pickupFunctions.shotgun_p
     17:pickupFunctions.shotgun_shells_p
 }
+
+Ufunctions = {}
 
 class Item:
 
