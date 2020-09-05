@@ -1001,7 +1001,8 @@ class Tile:
 itemTip = tip_font.render(
     "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
 player_score = 0
-class pickupFunctions:
+
+class pickupFunctions: #Jokaiselle itemille määritetään funktio, joka kutsutaan, kun item poimitaan maasta
     @staticmethod
     def gasburner_p():
         global player_score
@@ -1089,20 +1090,87 @@ class pickupFunctions:
         player_score += 1
 
         ammunition_plasma += 30
+        return True
 
+    @staticmethod
+    def red_key_p():
+        global player_keys
+        key_pickup.play()
+        player_keys["red"] = True
+
+        return True
+
+    @staticmethod
+    def green_key_p():
+        global player_keys
+        key_pickup.play()
+        player_keys["green"] = True
+
+        return True
+
+    @staticmethod
+    def blue_key_p():
+        global player_keys
+        key_pickup.play()
+        player_keys["blue"] = True
+
+        return True
+
+    @staticmethod
+    def medkit_p():
+        global player_health
+        item_pickup.play()
+        if player_health < 100:
+            player_health += 25
+            if player_health > 100:
+                player_health = 100
+
+        return True
+
+    @staticmethod
+    def pistol_mag_p():
+        global pistol_bullets
+        item_pickup.play()
+        pistol_bullets += 7
+
+        return True
+
+    @staticmethod
+    def rk_mag_p():
+        global rk_62_ammo
+        rk_62_ammo += 30
+        item_pickup.play()
+
+        return True
+
+    @staticmethod
+    def shotgun_shells_p()
+
+    @staticmethod
+    def empyOperation():
+        pass
+        
         return True
         
 Pfunctions = {
+    0: pickupFunctions.empyOperation,
+    1: pickupFunctions.blue_key_p,
     2: pickupFunctions.cell_p,
     3: pickupFunctions.coffeemug_p,
     4: pickupFunctions.gasburner_p,
+    5: pickupFunctions.green_key_p,
     6: pickupFunctions.iPuhelin_p,
     7: pickupFunctions.knife_p,
     8: pickupFunctions.lappi_sytytyspalat_p,
+    9: pickupFunctions.medkit_p,
     10:pickupFunctions.pistol_p,
+    11:pickupFunctions.pistol_mag_p,
     12:pickupFunctions.plasmarifle_p,
+    13:pickupFunctions.red_key_p,
+    14:pickupFunctions.rk_mag_p,
     15:pickupFunctions.rk62_p,
     16:pickupFunctions.shotgun_p
+    17:pickupFunctions.shotgun_shells_p
 }
 
 class Item:
@@ -1134,7 +1202,7 @@ class Item:
                                 inventory[inventory_slot] = item.serialNumber
                             Item_list = numpy.delete(Item_list, index)
                         elif item.serialNumber not in inventory_items:
-                            Pfunctions.functions[item.serialNumber]()
+                            Pfunctions[item.serialNumber]()
                             Item_list = numpy.delete(Item_list, index)
                     else:
                         if inventory_slot < len(inventory)-1 and inventory[inventory_slot] == "none":
