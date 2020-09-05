@@ -67,6 +67,8 @@ class Animation:
         self.done = False
 
 class Legacy:
+    """The legacy animator
+    """
     @staticmethod
     def load_animation(name: str, number_of_images: int):
         """Loads an animation sequence using the legacy Animator.

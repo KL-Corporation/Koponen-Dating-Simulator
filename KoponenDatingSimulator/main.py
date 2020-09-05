@@ -2,7 +2,6 @@
 import pygame
 import KDS.AI
 import KDS.Animator
-from KDS.Animator import Legacy
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
