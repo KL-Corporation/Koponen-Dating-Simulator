@@ -963,6 +963,61 @@ inventory_items = []
 for element in data:
     inventory_items.append(int(element))
 
+class Inventory:
+
+    def __init__(self, size):
+        self.storage = ["none" for _ in range(size)]
+        self.size = size
+        self.SIndex = 0
+
+    def render(self, Surface:pygame.Surface):
+        pygame.draw.rect(Surface, (192, 192, 192), (10, 75, self.size*34, 34), 3)
+        
+        if self.storage[self.SIndex] in inventoryDobulesSerialNumbers:
+            slotwidth = 68
+        else:
+            slotwidth = 34
+
+        pygame.draw.rect(screen, (70, 70, 70), ((
+            (self.SIndex) * 34) + 10, 75, slotwidth, 34), 3)
+
+        index = 0
+        for i in self.storage:
+            if i in i_textures:
+                Surface.blit(i_textures[i], (index*34+10 +i_textures[i].get_size()[0]/4 , 75 + i_textures[i].get_size()[1]/4) )
+            index+= 1
+
+    def moveRight(self):
+        self.SIndex += 1
+        if self.SIndex < self.size:
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex += 1
+    
+        if self.SIndex > self.size-1:
+            self.SIndex = 0
+
+    def moveLeft(self):
+        self.SIndex -= 1
+        if self.SIndex >= 0:
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex -= 1
+        if self.SIndex < 0:
+            self.SIndex = self.size-1
+
+    def dropItem(self):
+        if self.storage[self.SIndex] != "none":
+            if self.SIndex < self.size-1:
+                if self.storage[self.SIndex+1] == "doubleItemPlaceholder":
+                    serialNumber = self.storage[self.SIndex]
+                    self.storage[self.SIndex] = "none"
+                    self.storage[self.SIndex+1] = "none"
+                    return serialNumber
+            serialNumber = self.storage[self.SIndex]
+            self.storage[self.SIndex] = "none"
+            return serialNumber
+
+player_inventory = Inventory(5)
+
 class Tile:
 
     def __init__(self, position: (int, int), serialNumber: int):
@@ -1144,7 +1199,26 @@ class pickupFunctions: #Jokaiselle itemille määritetään funktio, joka kutsut
         return True
 
     @staticmethod
-    def shotgun_shells_p()
+    def shotgun_shells_p():
+        global shotgun_shells
+        shotgun_shells += 4
+        item_pickup.play()
+
+        return True
+
+    @staticmethod
+    def soulsphere_p():
+        global player_health
+        player_health += 100
+        if player_health > 200:
+            player_health = 200
+
+        return True
+
+    @staticmethod
+    def turboneedle_p():
+        global playerStamina
+        playerStamina += 250
 
     @staticmethod
     def empyOperation():
@@ -1172,8 +1246,11 @@ Pfunctions = {
     13:pickupFunctions.red_key_p,
     14:pickupFunctions.rk_mag_p,
     15:pickupFunctions.rk62_p,
-    16:pickupFunctions.shotgun_p
-    17:pickupFunctions.shotgun_shells_p
+    16:pickupFunctions.shotgun_p,
+    17:pickupFunctions.shotgun_shells_p,
+    18:pickupFunctions.soulsphere_p,
+    19:pickupFunctions.ss_bonuscard_p,
+    20:pickupFunctions.turboneedle_p
 }
 
 Ufunctions = {}
@@ -1194,26 +1271,26 @@ class Item:
                 Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
-    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: list, inventory_slot):
+    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
         index = 0
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 Surface.blit(itemTip, (item.rect.x-40-scroll[0], item.rect.y-30-scroll[1]))
                 if functionKey:
                     if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory[inventory_slot] == "none":
+                        if inventory.storage[inventory.SIndex] == "none":
                             temp_var = Pfunctions[item.serialNumber]()
                             if not temp_var:
-                                inventory[inventory_slot] = item.serialNumber
+                                inventory.storage[inventory.SIndex] = item.serialNumber
                             Item_list = numpy.delete(Item_list, index)
                         elif item.serialNumber not in inventory_items:
                             Pfunctions[item.serialNumber]()
                             Item_list = numpy.delete(Item_list, index)
                     else:
-                        if inventory_slot < len(inventory)-1 and inventory[inventory_slot] == "none":
-                            if inventory[inventory_slot + 1] == "none":
-                                inventory[inventory_slot] = item.serialNumber
-                                inventory[inventory_slot + 1] = "doubleItemPlaceholder"
+                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
+                            if inventory.storage[inventory.SIndex + 1] == "none":
+                                inventory.storage[inventory.SIndex] = item.serialNumber
+                                inventory.storage[inventory.SIndex + 1] = "doubleItemPlaceholder"
                                 Item_list = numpy.delete(Item_list, index)
             index += 1
                     
@@ -2667,6 +2744,9 @@ while main_running:
             elif event.key in inventory_keys:
                 inventoryPick(inventory_keys.index(event.key))
             elif event.key == K_q:
+                serialNumber = player_inventory.dropItem()
+                items = numpy.append(items, Item((player_rect.x, player_rect.y), serialNumber=serialNumber))
+                """
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
@@ -2686,6 +2766,7 @@ while main_running:
                     inventory[inventory_slot + 1] = "none"
                     inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
+                """
             elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -2750,9 +2831,9 @@ while main_running:
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = False
             elif event.button == 4:
-                inventoryLeft()
+                player_inventory.moveLeft()
             elif event.button == 5:
-                inventoryRight()
+                player_inventory.moveRight()
         elif event.type == pygame.QUIT:
             KDS_Quit()
         elif event.type == pygame.VIDEORESIZE:
@@ -2777,7 +2858,7 @@ while main_running:
     scroll[1] = int(scroll[1])
     if farting:
         shakeScreen()
-    player_hand_item = inventory[inventory_slot]
+    player_hand_item = "none"
     mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 #endregion
 #region Player Death
@@ -2789,7 +2870,7 @@ while main_running:
         animation_has_played = True
     elif player_health < 1:
         death_wait += 1
-        if death_wait == 240:
+        if death_wait > 240:
             play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
@@ -2805,9 +2886,13 @@ while main_running:
 
 
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    items, inventory = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey, inventory, inventory_slot)
+    items, inventory = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey, player_inventory)
     Tile.render(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
+    player_inventory.render(screen)
+    print(player_inventory.storage)
+
+    ###########################################
 
     # Rendering: Doors
     for i in range(len(WorldData.Legacy.door_rects)):
@@ -3573,6 +3658,7 @@ while main_running:
         screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
 #endregion
 #region UI Rendering
+    """
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
@@ -3620,6 +3706,7 @@ while main_running:
     inventoryDoubleOffset = inventoryDoubleOffsetCounter()
     pygame.draw.rect(screen, (70, 70, 70), ((
         (inventory_slot) * 34) + 10, 75, scaledSlotWidth, 34), 3)
+        """
 
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
