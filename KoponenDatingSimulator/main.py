@@ -1144,7 +1144,8 @@ class pickupFunctions: #Jokaiselle itemille määritetään funktio, joka kutsut
         return True
 
     @staticmethod
-    def shotgun_shells_p()
+    def shotgun_shells_p():
+        pass
 
     @staticmethod
     def empyOperation():
@@ -1163,14 +1164,14 @@ Pfunctions = {
     7: pickupFunctions.knife_p,
     8: pickupFunctions.lappi_sytytyspalat_p,
     9: pickupFunctions.medkit_p,
-    10:pickupFunctions.pistol_p,
-    11:pickupFunctions.pistol_mag_p,
-    12:pickupFunctions.plasmarifle_p,
-    13:pickupFunctions.red_key_p,
-    14:pickupFunctions.rk_mag_p,
-    15:pickupFunctions.rk62_p,
-    16:pickupFunctions.shotgun_p
-    17:pickupFunctions.shotgun_shells_p
+    10: pickupFunctions.pistol_p,
+    11: pickupFunctions.pistol_mag_p,
+    12: pickupFunctions.plasmarifle_p,
+    13: pickupFunctions.red_key_p,
+    14: pickupFunctions.rk_mag_p,
+    15: pickupFunctions.rk62_p,
+    16: pickupFunctions.shotgun_p,
+    17: pickupFunctions.shotgun_shells_p
 }
 
 class Item:
@@ -2001,13 +2002,7 @@ def koponen_talk():
     global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, playerMovingLeft, playerMovingRight, playerSprinting, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
     conversations = []
 
-    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-        KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
-    elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
-        if int(current_map) < 2:
-            KDS.Missions.SetProgress("koponen_introduction", "talk", 1.0)
-        elif int(current_map) == 2:
-            KDS.Missions.SetProgress("koponen_talk", "talk", 1.0)
+    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.KoponenTalk)
 
     koponenTalking = True
     pygame.mouse.set_visible(True)
@@ -2602,7 +2597,7 @@ if tcagr != False:
 #region Inventory Slot Switching
 def inventoryLeft():
     global inventory_slot, inventoryDoubles, inventory
-    KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
+    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
     checkSlot = inventory_slot - 2
     while checkSlot < 0:
         checkSlot = len(inventory) + checkSlot
@@ -2614,7 +2609,7 @@ def inventoryLeft():
         inventory_slot = len(inventory) + inventory_slot
 def inventoryRight():
     global inventory_slot, inventoryDoubles
-    KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
+    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
     while inventory_slot >= len(inventory):
         inventory_slot = len(inventory) - inventory_slot
     if inventoryDoubles[inventory_slot] == True:
@@ -2625,7 +2620,7 @@ def inventoryRight():
         inventory_slot = len(inventory) - inventory_slot
 def inventoryPick(index: int):
     global inventory_slot, inventoryDoubles
-    KDS.Missions.SetProgress("tutorial", "inventory", 0.2)
+    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
     if index >= len(inventory):
         index = len(inventory) - 1
     elif index < 0:
@@ -3036,20 +3031,20 @@ while main_running:
             player_movement[0] += 4
         else:
             player_movement[0] += 2
-        KDS.Missions.SetProgress("tutorial", "walk", 0.005)
+        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] += 4
-            KDS.Missions.SetProgress("tutorial", "walk", 0.005)
+            KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
 
     if playerMovingLeft == True:
         if not moveDown:
             player_movement[0] -= 4
         else:
             player_movement[0] -= 2
-        KDS.Missions.SetProgress("tutorial", "walk", 0.005)
+        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
         if playerSprinting == True and playerStamina > 0:
             player_movement[0] -= 4
-            KDS.Missions.SetProgress("tutorial", "walk", 0.005)
+            KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
     player_movement[1] += vertical_momentum
     vertical_momentum += fall_speed
     if vertical_momentum > 8:
