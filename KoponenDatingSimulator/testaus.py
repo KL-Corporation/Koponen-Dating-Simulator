@@ -1,5 +1,5 @@
 import os, shutil, pygame, math, concurrent.futures, time, numpy
-
+from pygame.locals import *
 pygame.init()
 main_display = pygame.display.set_mode((600,600))
 
@@ -21,11 +21,34 @@ class Rect:
         self.rect = (10,10,10,10)
 
 
-ar = [[1,2,3,4],[1,2,3,4,5,6,7],[1,2,3,4,5,6,7,8,9]]
-print(max(ar))
+class Triangle:
+    def __init__(self):
+        self.triangle = (20, 30, 21)
 
-def func(**kwargs):
-    for key, ans in kwargs.items():
-        
+array = numpy.array([])
 
-func(f=1,s=2,l=3)
+array = numpy.append(array, Rect())
+array = numpy.append(array, Triangle())
+
+print(array)
+
+for i in array:
+    if isinstance(i, Triangle):
+        print("i on kolmio")
+das = pygame.image.load("Assets/Textures/Items/gasburner_off.png")
+flip = False
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == K_a:
+                flip = not flip
+
+    main_display.blit(pygame.transform.flip(das, flip, False), (100, 100))
+    pygame.display.update()
+
+    
