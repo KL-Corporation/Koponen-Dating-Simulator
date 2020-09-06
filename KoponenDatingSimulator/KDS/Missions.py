@@ -28,6 +28,11 @@ for i in range(textOffset):
     textOffsetString += " "
 Missions_Finished = False
 #endregion
+#region Listeners
+InventorySlotSwitching = []
+Movement = []
+KoponenTalk = []
+#endregion
 #region Initialize
 def InitialiseMission(Safe_Name: str, Visible_Name: str):
     """Initialises a mission.
@@ -40,32 +45,69 @@ def InitialiseMission(Safe_Name: str, Visible_Name: str):
     New_Mission = [Safe_Name, Visible_Name]
     Missions.append(New_Mission)
 
-def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str):
+def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str, Listener=None, ListenerAddProgress=0.0):
     """Initialises a task.
 
     Args:
         Mission_Name (str): The Safe_Name of the mission you want to add this task to.
         Safe_Name (str): A name that does not conflict with any other names.
         Visible_Name (str): The name that will be displayed as the task header.
+        Listener (ListenerTypes, optional): A custom listener that will add a certain amount of progress when triggered. Defaults to None.
+        ListenerAddProgress (float, optional): The amount of progress that will be added when the listener is triggered. Defaults to 0.0.
     """
     global Missions
-    New_Task = [Safe_Name, Visible_Name, 0.0, False]
     for j in range(len(Missions)):
         if Missions[j][0] == Mission_Name:
-            Missions[j].append(New_Task)
+            Missions[j].append([Safe_Name, Visible_Name, 0.0, False])
+            if Listener != None:
+                if Listener == ListenerTypes.InventorySlotSwitching:
+                    InventorySlotSwitching.append([Mission_Name, Safe_Name, ListenerAddProgress])
+                elif Listener == ListenerTypes.Movement:
+                    Movement.append([Mission_Name, Safe_Name, ListenerAddProgress])
+                elif Listener == ListenerTypes.KoponenTalk:
+                    KoponenTalk.append([Mission_Name, Safe_Name, ListenerAddProgress])
 
 def DeleteAll():
     global Missions
     Missions = list()
 #endregion
-#region Set
-def SetProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
+#region Progress
+def SetProgress(Mission_Name: str, Task_Name: str, Set_Value: float):
     """Adds a specified amount of progress to a task.
 
     Args:
         Mission_Name (str): The Safe_Name of the mission your task is under.
         Task_Name (str): The Safe_Name of the task.
-        Add_Value (float): The value that will be added to your task.
+        Set_Value (float): The value that will be set as your task progress.
+    """
+    global Active_Mission, Missions_Finished
+    if Mission_Name in Missions:
+        for i in range(len(Missions)):
+            if Missions[i][0] == Mission_Name:
+                if Task_Name in Missions[i]:
+                    for j in range(2, len(Missions[i])):
+                        if Missions[i][j][0] == Task_Name:
+                            Missions[i][j][2] += Set_Value
+                            if Missions[i][j][2] >= 1.0:
+                                Missions[i][j][3] = True
+                                #Play audio?
+    All_Tasks_Done = True
+    while All_Tasks_Done and not Missions_Finished:
+        for i in range(len(Missions[Active_Mission]) - 2):
+            if All_Tasks_Done == True:
+                All_Tasks_Done = KDS.Convert.ToBool(Missions[Active_Mission][i + 2][3])
+        if All_Tasks_Done:
+            if Active_Mission + 1 < len(Missions[Active_Mission]) - 2:
+                Active_Mission += 1
+            else:
+                Missions_Finished = True
+def AddProgress(Mission_Name: str, Task_Name: str, Add_Value: float):
+    """Adds a specified amount of progress to a task.
+
+    Args:
+        Mission_Name (str): The Safe_Name of the mission your task is under.
+        Task_Name (str): The Safe_Name of the task.
+        Add_Value (float): The value that will be added to your task progress.
     """
     global Active_Mission, Missions_Finished
     if Mission_Name in Missions:
@@ -143,32 +185,52 @@ def RenderTask(surface: pygame.Surface, index: int):
 def InitialiseMissions(LevelIndex):
     DeleteAll()
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-        KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-        KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti")
-        KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
-        KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-        KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
+        InitialiseMission("tutorial", "Tutoriaali")
+        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", ListenerTypes.Movement, 0.005)
+        InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", ListenerTypes.InventorySlotSwitching, 0.2)
+        InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
+        InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
 
-        KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-        KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
+        InitialiseMission("koponen_introduction", "Tutustu Koposeen")
+        InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", ListenerTypes.KoponenTalk, 1.0)
     elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         if LevelIndex < 2:
-            KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti")
-            KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä")
-            KDS.Missions.InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-            KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
+            InitialiseMission("tutorial", "Tutoriaali")
+            InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", ListenerTypes.Movement, 0.005)
+            InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", ListenerTypes.InventorySlotSwitching, 0.2)
+            InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
+            InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q")
 
-            KDS.Missions.InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-            KDS.Missions.InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle")
+            InitialiseMission("koponen_introduction", "Tutustu Koposeen")
+            InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", ListenerTypes.KoponenTalk, 1.0)
         elif LevelIndex == 2:
-            KDS.Missions.InitialiseMission("koponen_talk", "Puhu Koposelle")
-            KDS.Missions.InitialiseTask("koponen_talk", "talk", "Puhu Koposelle")
+            InitialiseMission("koponen_talk", "Puhu Koposelle")
+            InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", ListenerTypes.KoponenTalk, 1.0)
         else:
-            KDS.Missions.InitialiseMission("null_mission", "null mission")
-            KDS.Missions.InitialiseTask("null_mission", "null", "null_mission")
+            InitialiseMission("mission_error", "ERROR! Mission loaded incorrectly.")
+            InitialiseTask("mission_error", "task_error", "ERROR! Task loaded incorrectly.")
 #endregion
 #region Data
 def GetFinished():
     return Missions_Finished
+#endregion
+#region Listeners
+class ListenerTypes:
+    InventorySlotSwitching = "InventorySlotSwitching"
+    Movement = "Movement"
+    KoponenTalk = "KoponenTalk"
+
+def TriggerListener(Type):
+    ListenerList = None
+    if Type == ListenerTypes.InventorySlotSwitching:
+        ListenerList = InventorySlotSwitching
+    elif Type == ListenerTypes.Movement:
+        ListenerList = Movement
+    elif Type == ListenerTypes.KoponenTalk:
+        ListenerList = KoponenTalk
+    if Listener != None:
+        for listener in ListenerList:
+            AddProgress(listener[0], listener[1], listener[2])
+    else:
+        KDS.Logging.AutoError("Listener Type not valid!", getframeinfo(currentframe()))
 #endregion
