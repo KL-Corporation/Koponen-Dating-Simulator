@@ -896,16 +896,13 @@ class WorldData():
     @staticmethod
     def LoadMap():
         global tiles, items, enemies, decoration
-        map_file = open(os.path.join("Assets", "Maps", "map" + current_map, "level.map"))
-        map_data = map_file.read().split("\n")
+        with open(os.path.join("Assets", "Maps", "map" + current_map, "level.map"), "r") as map_file:
+            map_data = map_file.read().split("\n")
         items = numpy.array([])
         enemies = numpy.array([])
         decoration = numpy.array([])
 
-        max_map_width = 0
-        for i in range(len(map_data)):
-            if len(map_data[i]) > max_map_width:
-                max_map_width = len(map_data[i])
+        max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width , len(map_data))
 
         #Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
@@ -962,6 +959,67 @@ with open("Assets/Textures/inventory_items.txt", "r") as f:
 inventory_items = []
 for element in data:
     inventory_items.append(int(element))
+
+class Inventory:
+
+    def __init__(self, size):
+        self.storage = ["none" for _ in range(size)]
+        self.size = size
+        self.SIndex = 0
+
+    def render(self, Surface:pygame.Surface):
+        pygame.draw.rect(Surface, (192, 192, 192), (10, 75, self.size*34, 34), 3)
+        
+        if self.storage[self.SIndex] in inventoryDobulesSerialNumbers:
+            slotwidth = 68
+        else:
+            slotwidth = 34
+
+        pygame.draw.rect(screen, (70, 70, 70), ((
+            (self.SIndex) * 34) + 10, 75, slotwidth, 34), 3)
+
+        index = 0
+        for i in self.storage:
+            if i in i_textures:
+                Surface.blit(i_textures[i], (index*34+10 +i_textures[i].get_size()[0]/4 , 75 + i_textures[i].get_size()[1]/4) )
+            index+= 1
+
+    def moveRight(self):
+        self.SIndex += 1
+        if self.SIndex < self.size:
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex += 1
+    
+        if self.SIndex > self.size-1:
+            self.SIndex = 0
+
+    def moveLeft(self):
+        self.SIndex -= 1
+        if self.SIndex >= 0:
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex -= 1
+        if self.SIndex < 0:
+            self.SIndex = self.size-1
+
+    def dropItem(self):
+        if self.storage[self.SIndex] != "none":
+            if self.SIndex < self.size-1:
+                if self.storage[self.SIndex+1] == "doubleItemPlaceholder":
+                    serialNumber = self.storage[self.SIndex]
+                    self.storage[self.SIndex] = "none"
+                    self.storage[self.SIndex+1] = "none"
+                    return serialNumber
+            serialNumber = self.storage[self.SIndex]
+            self.storage[self.SIndex] = "none"
+            return serialNumber
+
+    def useItem(self, Surface:pygame.Surface):
+        if self.storage[self.SIndex] != "none":
+            dumpValues = Ufunctions[self.storage[self.SIndex]](f=1)
+            Surface.blit(dumpValues, (player_rect.x-scroll[0], player_rect.y-scroll[1]) )
+        return None
+
+player_inventory = Inventory(5)
 
 class Tile:
 
@@ -1145,7 +1203,25 @@ class pickupFunctions: #Jokaiselle itemille määritetään funktio, joka kutsut
 
     @staticmethod
     def shotgun_shells_p():
-        pass
+        global shotgun_shells
+        shotgun_shells += 4
+        item_pickup.play()
+
+        return True
+
+    @staticmethod
+    def soulsphere_p():
+        global player_health
+        player_health += 100
+        if player_health > 200:
+            player_health = 200
+
+        return True
+
+    @staticmethod
+    def turboneedle_p():
+        global playerStamina
+        playerStamina += 250
 
     @staticmethod
     def empyOperation():
@@ -1153,6 +1229,36 @@ class pickupFunctions: #Jokaiselle itemille määritetään funktio, joka kutsut
         
         return True
         
+class itemFunctions: #Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
+    
+    #Ensimmäisenä funktion tulee palauttaa itemin näytöllä näytettävä tekstuuri
+
+    @staticmethod
+    def gasburner_u(**kwargs):
+
+        return gasburner_animation_object.update()
+
+    @staticmethod
+    def coffeemug_u(**kwargs):
+
+        return coffeemug
+
+    @staticmethod
+    def iPuhelin_u(**kwargs):
+
+        return ipuhelin_texture
+
+    @staticmethod
+    def knife_u(**kwargs):
+
+        return knife_animation_object.update()
+
+    @staticmethod
+    def empyOperation(**kwargs):
+
+        return i_textures[0]
+
+
 Pfunctions = {
     0: pickupFunctions.empyOperation,
     1: pickupFunctions.blue_key_p,
@@ -1164,14 +1270,26 @@ Pfunctions = {
     7: pickupFunctions.knife_p,
     8: pickupFunctions.lappi_sytytyspalat_p,
     9: pickupFunctions.medkit_p,
-    10: pickupFunctions.pistol_p,
-    11: pickupFunctions.pistol_mag_p,
-    12: pickupFunctions.plasmarifle_p,
-    13: pickupFunctions.red_key_p,
-    14: pickupFunctions.rk_mag_p,
-    15: pickupFunctions.rk62_p,
-    16: pickupFunctions.shotgun_p,
-    17: pickupFunctions.shotgun_shells_p
+    10:pickupFunctions.pistol_p,
+    11:pickupFunctions.pistol_mag_p,
+    12:pickupFunctions.plasmarifle_p,
+    13:pickupFunctions.red_key_p,
+    14:pickupFunctions.rk_mag_p,
+    15:pickupFunctions.rk62_p,
+    16:pickupFunctions.shotgun_p,
+    17:pickupFunctions.shotgun_shells_p,
+    18:pickupFunctions.soulsphere_p,
+    19:pickupFunctions.ss_bonuscard_p,
+    20:pickupFunctions.turboneedle_p
+}
+
+Ufunctions = {
+    0: itemFunctions.empyOperation,
+    3: itemFunctions.coffeemug_u,
+    4: itemFunctions.gasburner_u,
+    6: itemFunctions.iPuhelin_u,
+    7: itemFunctions.knife_u
+
 }
 
 class Item:
@@ -1190,26 +1308,27 @@ class Item:
                 Surface.blit(renderable.texture, (renderable.rect.x-scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
-    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: list, inventory_slot):
+    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
         index = 0
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 Surface.blit(itemTip, (item.rect.x-40-scroll[0], item.rect.y-30-scroll[1]))
                 if functionKey:
                     if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory[inventory_slot] == "none":
+                        if inventory.storage[inventory.SIndex] == "none":
                             temp_var = Pfunctions[item.serialNumber]()
                             if not temp_var:
-                                inventory[inventory_slot] = item.serialNumber
+                                inventory.storage[inventory.SIndex] = item.serialNumber
                             Item_list = numpy.delete(Item_list, index)
                         elif item.serialNumber not in inventory_items:
                             Pfunctions[item.serialNumber]()
                             Item_list = numpy.delete(Item_list, index)
                     else:
-                        if inventory_slot < len(inventory)-1 and inventory[inventory_slot] == "none":
-                            if inventory[inventory_slot + 1] == "none":
-                                inventory[inventory_slot] = item.serialNumber
-                                inventory[inventory_slot + 1] = "doubleItemPlaceholder"
+                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
+                            if inventory.storage[inventory.SIndex + 1] == "none":
+                                Pfunctions[item.serialNumber]()
+                                inventory.storage[inventory.SIndex] = item.serialNumber
+                                inventory.storage[inventory.SIndex + 1] = "doubleItemPlaceholder"
                                 Item_list = numpy.delete(Item_list, index)
             index += 1
                     
@@ -1799,6 +1918,8 @@ koponen_run = KDS.Animator.Legacy.load_animation("koponen_running", 2)
 death_animation = KDS.Animator.Legacy.load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
     "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, -1)
+gasburner_animation_object = KDS.Animator.Animation(
+    "gasburner_on", 2, 5, KDS.Colors.GetPrimary.White, -1)
 menu_toilet_animation = KDS.Animator.Animation(
     "menu_toilet_anim", 3, 6, KDS.Colors.GetPrimary.White, -1)
 menu_trashcan_animation = KDS.Animator.Animation(
@@ -1831,6 +1952,8 @@ bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6, KDS.Colors.GetPr
 imp_walking = KDS.Animator.Animation("imp_walking",4,19,KDS.Colors.GetPrimary.White,-1)
 imp_attacking = KDS.Animator.Animation("imp_attacking",2,16,KDS.Colors.GetPrimary.White,-1)
 imp_dying = KDS.Animator.Animation("imp_dying", 5,16,KDS.Colors.GetPrimary.White, 1)
+
+knife_animation_object = KDS.Animator.Animation("knife", 2, 20, KDS.Colors.GetPrimary.White, -1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
 for _ in range(5):
@@ -2657,6 +2780,9 @@ while main_running:
             elif event.key in inventory_keys:
                 inventoryPick(inventory_keys.index(event.key))
             elif event.key == K_q:
+                serialNumber = player_inventory.dropItem()
+                items = numpy.append(items, Item((player_rect.x, player_rect.y), serialNumber=serialNumber))
+                """
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":
                         KDS.Missions.SetProgress("tutorial", "trash", 1.0)
@@ -2676,6 +2802,7 @@ while main_running:
                     inventory[inventory_slot + 1] = "none"
                     inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
+                """
             elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -2740,9 +2867,9 @@ while main_running:
                 if player_hand_item == "plasmarifle":
                     plasmarifle_fire = False
             elif event.button == 4:
-                inventoryLeft()
+                player_inventory.moveLeft()
             elif event.button == 5:
-                inventoryRight()
+                player_inventory.moveRight()
         elif event.type == pygame.QUIT:
             KDS_Quit()
         elif event.type == pygame.VIDEORESIZE:
@@ -2767,7 +2894,7 @@ while main_running:
     scroll[1] = int(scroll[1])
     if farting:
         shakeScreen()
-    player_hand_item = inventory[inventory_slot]
+    player_hand_item = "none"
     mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 #endregion
 #region Player Death
@@ -2779,7 +2906,7 @@ while main_running:
         animation_has_played = True
     elif player_health < 1:
         death_wait += 1
-        if death_wait == 240:
+        if death_wait > 240:
             play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
@@ -2795,9 +2922,14 @@ while main_running:
 
 
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    items, inventory = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey, inventory, inventory_slot)
+    items, inventory = Item.checkCollisions(items, player_rect, screen, scroll, FunctionKey, player_inventory)
     Tile.render(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
+    player_inventory.useItem(screen)
+    player_inventory.render(screen)
+
+
+    ###########################################
 
     # Rendering: Doors
     for i in range(len(WorldData.Legacy.door_rects)):
@@ -2989,6 +3121,7 @@ while main_running:
         if blit_texture != None:
             screen.blit(blit_texture, (int(WorldData.Legacy.item_rects[i].centerx - scroll[0] - (blit_texture.get_width() / 2)), int(WorldData.Legacy.item_rects[i].bottom - scroll[1] - blit_texture.get_height() + texture_offset_y)))
             """
+    
 #endregion
 #region PlayerMovement
     fall_speed = 0.4
@@ -3194,7 +3327,7 @@ while main_running:
                                               False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1] + 14))
 
     # Zombien käsittely loppuu tähän
-
+    
     #//////////////////////////////////////////////////////////////
     #*****    New enemies handling & enemies thread handling ******#
     arch_run = archvile_run_animation.update()
@@ -3563,6 +3696,7 @@ while main_running:
         screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
 #endregion
 #region UI Rendering
+    """
     for i in range(len(inventory)):
         if inventory[i] != "none":
             if inventory[i] == "gasburner":
@@ -3610,6 +3744,7 @@ while main_running:
     inventoryDoubleOffset = inventoryDoubleOffsetCounter()
     pygame.draw.rect(screen, (70, 70, 70), ((
         (inventory_slot) * 34) + 10, 75, scaledSlotWidth, 34), 3)
+        """
 
     screen.blit(health, (10, 120))
     screen.blit(stamina, (10, 130))
@@ -3649,6 +3784,8 @@ while main_running:
 
 #endregion
 #region Conditional Events
+    if player_rect.y > len(tiles)*34+400:
+        player_health = 0
     if esc_menu:
         pygame.mixer.music.stop()
         Audio.pauseAllSounds()

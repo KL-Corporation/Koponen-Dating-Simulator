@@ -20,18 +20,12 @@ class Rect:
     def __init__(self):
         self.rect = (10,10,10,10)
 
-d2_array = [
-    [1,1,1],
-    [1,1,1],
-    [1,1,1],
-    [1,1,1],
-    [1,1,1],
-    [1,1,1],
-]
-#array = numpy.empty((4,4))
-array = numpy.array([Rect(), Rect(), Rect()])
-#array[1][1] = Rect()
-a = numpy.array([1,2,3,4,5,6,7,8,9])
-print(a)
-a = numpy.delete(a, 2)
-print(a)
+
+ar = [[1,2,3,4],[1,2,3,4,5,6,7],[1,2,3,4,5,6,7,8,9]]
+print(max(ar))
+
+def func(**kwargs):
+    for key, ans in kwargs.items():
+        
+
+func(f=1,s=2,l=3)

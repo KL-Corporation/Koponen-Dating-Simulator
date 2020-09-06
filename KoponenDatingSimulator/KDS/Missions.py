@@ -224,6 +224,7 @@ class ListenerTypes:
 def TriggerListener(Type):
     global InventorySlotSwitching_Listeners, Movement_Listeners, KoponenTalk_Listeners
     ListenerList = None
+    Listener = 1
     if Type == ListenerTypes.InventorySlotSwitching:
         ListenerList = InventorySlotSwitching_Listeners
     elif Type == ListenerTypes.Movement:
