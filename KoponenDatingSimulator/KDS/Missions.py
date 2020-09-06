@@ -222,6 +222,7 @@ class ListenerTypes:
 
 def TriggerListener(Type):
     ListenerList = None
+    Listener = 1
     if Type == ListenerTypes.InventorySlotSwitching:
         ListenerList = InventorySlotSwitching
     elif Type == ListenerTypes.Movement:
