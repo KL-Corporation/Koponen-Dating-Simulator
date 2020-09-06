@@ -1,5 +1,6 @@
 #region Importing
 import pygame
+import KDS.Animator
 import KDS.ConfigManager
 import KDS.Convert
 import KDS.Gamemode
@@ -58,7 +59,7 @@ def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str, Listene
     global Missions, InventorySlotSwitching_Listeners, Movement_Listeners, KoponenTalk_Listeners
     for j in range(len(Missions)):
         if Missions[j][0] == Mission_Name:
-            Missions[j].append([Safe_Name, Visible_Name, 0.0, False])
+            Missions[j].append([Safe_Name, Visible_Name, 0.0, False, (255, 255, 255), KDS.Animator.Lerp(0.0, 1.0, 3, KDS.Animator.OnAnimationEnd.Loop)])
             break
     if Listener != None:
         if Listener == ListenerTypes.InventorySlotSwitching:
@@ -77,21 +78,19 @@ def Progress(Mission_Name: str, Task_Name: str, Value: float, Add: bool):
     """Do not use this, please.
     """
     global Active_Mission, Missions_Finished
-    if Mission_Name in Missions:
-        for i in range(len(Missions)):
-            if Missions[i][0] == Mission_Name:
-                if Task_Name in Missions[i]:
-                    for j in range(2, len(Missions[i])):
-                        if Missions[i][j][0] == Task_Name:
-                            if Add:
-                                Missions[i][j][2] += Value
-                            else:
-                                Missions[i][j][2] = Value
-                            if Missions[i][j][2] >= 1.0:
-                                Missions[i][j][3] = True
-                                #Play audio?
-                                break
-                break
+    for i in range(len(Missions)):
+        if Missions[i][0] == Mission_Name:
+            for j in range(2, len(Missions[i])):
+                if Missions[i][j][0] == Task_Name:
+                    if Add:
+                        Missions[i][j][2] += Value
+                    else:
+                        Missions[i][j][2] = Value
+                    if Missions[i][j][2] >= 1.0:
+                        Missions[i][j][3] = True
+                        #Play audio?
+                        break
+            break
     All_Tasks_Done = True
     while All_Tasks_Done and not Missions_Finished:
         for i in range(len(Missions[Active_Mission]) - 2):
@@ -161,15 +160,24 @@ def RenderTask(surface: pygame.Surface, index: int):
     text_height = task_font.size(Missions[Active_Mission][index_var][1])[1]
     progress_width = task_font.size(Mission_Progress)[0]
     if Missions[Active_Mission][index_var][2] >= 1.0:
-        Color = BackgroundFinishedColor
+        task_color = BackgroundFinishedColor
     else:
-        Color = BackgroundColor
+        task_color = BackgroundColor
+    if task_color != Missions[Active_Mission][index_var][4]:
+        fade = Missions[Active_Mission][index_var][5].update()
+        if fade == 1.0:
+            draw_color = task_color
+            Missions[Active_Mission][index_var][4] = task_color
+        else:
+            draw_color = (task_color[0] + ((Missions[Active_Mission][index_var][4][0] - task_color[0]) * fade), task_color[1] + ((Missions[Active_Mission][index_var][4][1] - task_color[1]) * fade), task_color[2] + ((Missions[Active_Mission][index_var][4][2] - task_color[2]) * fade))
+    else:
+        draw_color = task_color
     Max_Text_Width = GetMaxWidth()
     backgroundRect = (screen_size[0] - Max_Text_Width, 20 + ((text_height + 5) * index), Max_Text_Width, text_height + 5)
     taskpos = (screen_size[0] - Max_Text_Width, 22.5 + ((text_height + 5) * index))
     progresspos = (screen_size[0] - progress_width, 22.5 + ((text_height + 5) * index))
 
-    pygame.draw.rect(surface, Color, backgroundRect)
+    pygame.draw.rect(surface, draw_color, backgroundRect)
     surface.blit(task_rendered, taskpos)
     surface.blit(progress_rendered, progresspos)
 #endregion
@@ -233,7 +241,6 @@ def TriggerListener(Type):
     if ListenerList != None:
         for listener in ListenerList:
             AddProgress(listener[0], listener[1], listener[2])
-            print(listener)
     else:
         KDS.Logging.AutoError("Listener Type not valid!", getframeinfo(currentframe()))
 #endregion

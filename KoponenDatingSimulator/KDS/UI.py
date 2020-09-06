@@ -120,10 +120,8 @@ class New:
                 draw_color = button_color
             pygame.draw.rect(surface, draw_color, self.rect)
 
-            pygame.draw.rect(surface, button_color, self.rect)
-
-            text_size_scaled = (self.text.get_width(), self.text.get_height())
-            surface.blit(pygame.transform.scale(self.text, (int(text_size_scaled[0]), int(text_size_scaled[1]))), (int(self.rect.center[0] - (text_size_scaled[0] / 2)), int(self.rect.center[1] - (text_size_scaled[1] / 2))))
+            if self.text != None:
+                surface.blit(pygame.transform.scale(self.text, (int(self.text.get_width()), int(self.text.get_height()))), (int(self.rect.center[0] - (self.text.get_width() / 2)), int(self.rect.center[1] - (self.text.get_height() / 2))))
 
     class TrueFalseButton:
 
