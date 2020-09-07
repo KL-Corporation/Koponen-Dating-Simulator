@@ -37,6 +37,9 @@ monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
+game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
+pygame.display.set_icon(game_icon)
+pygame.display.set_caption("Koponen Dating Simulator")
 window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", str(
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
 window = pygame.display.set_mode(
@@ -356,15 +359,12 @@ black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
 
 # region Downloads
-pygame.display.set_caption("Koponen Dating Simulator")
-game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
     "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
 settings_background = pygame.image.load(
     "Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
-pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
 score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
@@ -735,7 +735,6 @@ DebugMode = False
 
 MenuMode = 0
 esc_menu_background = pygame.Surface(display_size)
-<<<<<<< Updated upstream
 #endregion
 #region Save System
 def LoadSave(save_index: int):
@@ -755,40 +754,6 @@ def LoadSave(save_index: int):
 def SaveData():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, farting
     #region Player
-=======
-# endregion
-# region Save System
-
-
-def LoadSave():
-    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, playerStamina
-    player_rect.x = int(KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerPosition", "X", str(player_rect.x)))
-    player_rect.y = int(KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerPosition", "Y", str(player_rect.y)))
-    player_health = int(KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Health", str(player_health)))
-    last_player_health = player_health
-    player_name = KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Name", player_name)
-    playerStamina = float(KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Stamina", str(playerStamina)))
-    inventory[0] = KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Inventory0", inventory[0])
-    inventory[1] = KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Inventory1", inventory[1])
-    inventory[2] = KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Inventory2", inventory[2])
-    inventory[3] = KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Inventory3", inventory[3])
-    inventory[4] = KDS.ConfigManager.LoadSave(
-        selectedSave, "PlayerData", "Inventory4", inventory[4])
-
-
-def SaveData():
-    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health
-    # region Player
->>>>>>> Stashed changes
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerPosition", "X", str(player_rect.x))
     KDS.ConfigManager.SetSave(
@@ -809,7 +774,6 @@ def SaveData():
         selectedSave, "PlayerData", "Inventory3", inventory[3])
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Inventory4", inventory[4])
-<<<<<<< Updated upstream
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Farting", str(farting))
     #endregion
@@ -821,19 +785,6 @@ def SaveData():
     #endregion
 #endregion
 #region Quit Handling
-=======
-    # endregion
-    # region Map
-
-    # endregion
-    # region Enemies
-
-    # endregion
-# endregion
-# region Quit Handling
-
-
->>>>>>> Stashed changes
 def KDS_Quit():
     global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave, tick
     main_menu_running = False
@@ -2892,7 +2843,6 @@ def main_menu():
     story_save_button_0_rect = pygame.Rect(14, 14, 378, 500)
     story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
     story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
-<<<<<<< Updated upstream
     story_save_button_0 = KDS.UI.New.Button(story_save_button_0_rect, play_function)
     story_save_button_1 = KDS.UI.New.Button(story_save_button_1_rect, play_function)
     story_save_button_2 = KDS.UI.New.Button(story_save_button_2_rect, play_function)
@@ -2909,39 +2859,6 @@ def main_menu():
     campaign_left_button = KDS.UI.New.Button(campaign_left_button_rect, level_pick.left)
     campaign_right_button = KDS.UI.New.Button(campaign_right_button_rect, level_pick.right)
     #endregion
-=======
-    story_save_button_0 = KDS.UI.New.Button(
-        story_save_button_0_rect, play_function)
-    story_save_button_1 = KDS.UI.New.Button(
-        story_save_button_1_rect, play_function)
-    story_save_button_2 = KDS.UI.New.Button(
-        story_save_button_2_rect, play_function)
-    # endregion
-    # region Campaign Menu
-    campaign_right_button = pygame.Rect(display_size[0] - 50 - 66, 200, 66, 66)
-    campaign_left_button = pygame.Rect(50, 200, 66, 66)
-    campaign_play_button = pygame.Rect(
-        int(display_size[0] / 2) - 150, display_size[1] - 300, 300, 100)
-    campaign_return_button = pygame.Rect(
-        int(display_size[0] / 2) - 150, display_size[1] - 150, 300, 100)
-    campaign_menu_buttons = []
-    campaign_menu_functions = []
-    campaign_menu_buttons.append(campaign_left_button)
-    campaign_menu_buttons.append(campaign_right_button)
-    campaign_menu_buttons.append(campaign_play_button)
-    campaign_menu_buttons.append(campaign_return_button)
-    campaign_menu_functions.append(level_pick.left)
-    campaign_menu_functions.append(level_pick.right)
-    campaign_menu_functions.append(play_function)
-    campaign_menu_functions.append("useless, just like me.")
-    campaign_play_text = button_font1.render(
-        "START", True, (KDS.Colors.Get.EmeraldGreen))
-    campaign_play_text_size = button_font1.size("START")
-    campaign_return_text = button_font1.render(
-        "RETURN", True, (KDS.Colors.Get.AviatorRed))
-    campaign_return_text_size = button_font1.size("RETURN")
-    # endregion
->>>>>>> Stashed changes
 
     while main_menu_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -3029,7 +2946,6 @@ def main_menu():
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
 
         elif MenuMode == Mode.CampaignMenu:
-<<<<<<< Updated upstream
             pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
 
             campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign, True)
@@ -3047,53 +2963,6 @@ def main_menu():
                 map_name = map_names[0]
             level_text = button_font1.render("{} - {}".format(current_map, map_name), True, (0, 0, 0))
             display.blit(level_text, (125, 209))
-=======
-
-            pygame.draw.rect(display, (192, 192, 192),
-                             (50, 200, int(display_size[0] - 100), 66))
-            for y in range(len(campaign_menu_buttons)):
-                if campaign_menu_buttons[y].collidepoint(mouse_pos):
-                    if c:
-                        if y < 2:
-                            campaign_menu_functions[y]()
-                        elif y == 2:
-                            campaign_menu_functions[y](
-                                KDS.Gamemode.Modes.Campaign, True)
-                        else:
-                            MenuMode = Mode.MainMenu
-                        c = False
-                    button_color = (115, 115, 115)
-                    if pygame.mouse.get_pressed()[0]:
-                        button_color = (90, 90, 90)
-                else:
-                    button_color = (100, 100, 100)
-
-                pygame.draw.rect(display, button_color,
-                                 campaign_menu_buttons[y])
-
-                if y == 0:
-                    display.blit(pygame.transform.flip(arrow_button, True, False),
-                                 (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
-                elif y == 1:
-                    display.blit(
-                        arrow_button, (campaign_menu_buttons[y].x + 8, campaign_menu_buttons[y].y + 8))
-                elif y == 2:
-                    display.blit(campaign_play_text, (int(campaign_play_button.x + (campaign_play_button.width / 4)),
-                                                      int(campaign_play_button.y + (campaign_play_button.height / 4))))
-                elif y == 3:
-                    display.blit(campaign_return_text, (int(campaign_return_button.x + (campaign_return_button.width / 5)),
-                                                        int(campaign_return_button.y + (campaign_return_button.height / 4))))
-
-                current_map_int = int(current_map)
-
-                if current_map_int < len(map_names):
-                    map_name = map_names[current_map_int]
-                else:
-                    map_name = map_names[0]
-                level_text = button_font1.render(
-                    current_map + " - " + map_name, True, (0, 0, 0))
-                display.blit(level_text, (125, 209))
->>>>>>> Stashed changes
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
@@ -4264,16 +4133,9 @@ while main_running:
     if tick > 60:
         tick = 0
     clock.tick(60)
-<<<<<<< Updated upstream
 #endregion
 #endregion
 #region Application Quitting
-=======
-
-# endregion
-# endregion
-# region Application Quitting
->>>>>>> Stashed changes
 pygame.display.quit()
 pygame.quit()
 # endregion
