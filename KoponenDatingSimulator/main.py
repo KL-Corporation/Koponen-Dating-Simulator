@@ -51,6 +51,11 @@ display = pygame.Surface(display_size)
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
+loadingscreen = pygame.image.load("Assets/Textures/loadingscreen.png").convert()
+
+window.blit(pygame.transform.scale(loadingscreen, (window_size)),(0,0))
+pygame.display.update()
+
 profiler_enabled = False
 # endregion
 # region Audio
