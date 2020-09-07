@@ -1177,6 +1177,20 @@ class Tile:
                     Surface.blit(renderable.texture, (renderable.rect.x -
                                                       scroll[0], renderable.rect.y - scroll[1]))
 
+#region Erikois-tilet >>>>>>>>>>>>>>
+class Toilet(Tile):
+    pass
+class Trashcan(Tile):
+    pass
+class Jukebox(Tile):
+    pass
+class Door(Tile):
+    pass
+class Landmine(Tile):
+    pass
+
+
+#endregion
 
 itemTip = tip_font.render(
     "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
