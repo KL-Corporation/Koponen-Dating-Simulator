@@ -38,6 +38,9 @@ monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
+game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
+pygame.display.set_icon(game_icon)
+pygame.display.set_caption("Koponen Dating Simulator")
 window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", str(
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
 window = pygame.display.set_mode(
@@ -357,15 +360,12 @@ black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
 
 # region Downloads
-pygame.display.set_caption("Koponen Dating Simulator")
-game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 main_menu_background = pygame.image.load(
     "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
 settings_background = pygame.image.load(
     "Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
-pygame.display.set_icon(game_icon)
 clock = pygame.time.Clock()
 
 score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
