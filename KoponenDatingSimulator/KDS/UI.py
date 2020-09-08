@@ -153,11 +153,11 @@ class New:
             self.handle_color_fade = KDS.Animator.Lerp(0.0, 1.0, fade_lerp_duration, KDS.Animator.OnAnimationEnd.Loop)
             self.handle_move_animation = KDS.Animator.Lerp(0.0, 1.0, move_lerp_duration, KDS.Animator.OnAnimationEnd.Stop)
             if self.state:
-                self.handle_rect = pygame.Rect(self.range[1], switch_rect.centery - handle_size[1] / 2, handle_size[0], handle_size[1])
-                self.handle_move_animation.set(0)
-            else:
                 self.handle_rect = pygame.Rect(self.range[0], switch_rect.centery - handle_size[1] / 2, handle_size[0], handle_size[1])
                 self.handle_move_animation.set(move_lerp_duration)
+            else:
+                self.handle_rect = pygame.Rect(self.range[1], switch_rect.centery - handle_size[1] / 2, handle_size[0], handle_size[1])
+                self.handle_move_animation.set(0)
 
         def update(self, surface, mouse_pos, clicked):
             """
@@ -183,10 +183,10 @@ class New:
             else:
                 handle_draw_color = handle_color
             if self.state:
-                handle_move = self.handle_move_animation.update(True)
+                handle_move = self.handle_move_animation.update(False)
                 self.handle_rect.x = KDS.Math.Lerp(self.range[0], self.range[1], handle_move)
             else:
-                handle_move = self.handle_move_animation.update(False)
+                handle_move = self.handle_move_animation.update(True)
                 self.handle_rect.x = KDS.Math.Lerp(self.range[0], self.range[1], handle_move)
             switch_color = (KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move), KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move), KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move))
             pygame.draw.rect(surface, switch_color, self.switch_rect)

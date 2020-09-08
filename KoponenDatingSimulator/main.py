@@ -18,6 +18,7 @@ import random
 import threading
 import concurrent.futures
 import math
+import sys
 from pygame.locals import *
 from inspect import currentframe, getframeinfo
 #endregion
@@ -64,8 +65,8 @@ pygame.mixer.set_num_channels(32)
 
 class Audio:
     MusicMixer = pygame.mixer.music
-    MusicVolume = float(KDS.ConfigManager.LoadSetting("Settings", "MusicVolume", str(0.5)))
-    EffectVolume = float(KDS.ConfigManager.LoadSetting("Settings", "SoundEffectVolume", str(0.5)))
+    MusicVolume = float(KDS.ConfigManager.LoadSetting("Settings", "MusicVolume", str(1)))
+    EffectVolume = float(KDS.ConfigManager.LoadSetting("Settings", "SoundEffectVolume", str(1)))
     EffectChannels = []
     for i in range(pygame.mixer.get_num_channels()):
         EffectChannels.append(pygame.mixer.Channel(i))
@@ -574,6 +575,7 @@ jukebox_tip = tip_font.render(
     "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
 #endregion
 
+restart = False
 clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
 
 main_running = True
@@ -611,8 +613,8 @@ if isFullscreen == None:
     KDS.Logging.AutoError("Error parcing fullscreen bool.",
                           getframeinfo(currentframe()))
 Fullscreen.Set(True)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded:\n- Terms Accepted: " +
-                str(tcagr) + "\n- Music Volume: " + str(Audio.MusicVolume) + "\n- Sound Effect Volume: " + str(Audio.EffectVolume) + "\n- Fullscreen: " + str(isFullscreen), False)
+KDS.Logging.Log(KDS.Logging.LogType.debug, 
+                "Settings Loaded:\n - Terms Accepted: {}\n - Music Volume: {}\n - Sound Effect Volume: {}\n - Fullscreen: {}\n - Clear Lag: {}".format(tcagr, Audio.MusicVolume, Audio.EffectVolume, isFullscreen, clearLag), False)
 
 selectedSave = 0
 
@@ -782,8 +784,6 @@ def KDS_Quit():
     koponenTalking = False
     esc_menu = False
     settings_running = False
-
-
 #endregion
 #region World Data
 imps = []
@@ -2671,6 +2671,12 @@ def settings_menu():
         global settings_running
         settings_running = False
 
+    def reset_settings():
+        global restart
+        os.remove(os.path.join(AppDataPath, "settings.cfg"))
+        restart = True
+        KDS_Quit()
+    
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
         "Return", True, KDS.Colors.GetPrimary.White))
     music_volume_slider = KDS.UI.New.Slider(
@@ -2678,17 +2684,18 @@ def settings_menu():
     effect_volume_slider = KDS.UI.New.Slider(
         "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
     clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50))
+    reset_settings_button = KDS.UI.New.Button(pygame.Rect(465, 450, 220, 40), reset_settings, button_font.render(
+        "Reset Settings", True, KDS.Colors.GetPrimary.White))
+    music_volume_text = button_font.render(
+        "Music Volume", True, KDS.Colors.GetPrimary.White)
+    effect_volume_text = button_font.render(
+        "Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
+    clear_lag_text = button_font.render(
+        "Clear Lag", True, KDS.Colors.GetPrimary.White)
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
             (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
-
-        music_volume_text = button_font.render(
-            "Music Volume", True, KDS.Colors.GetPrimary.White)
-        effect_volume_text = button_font.render(
-            "Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
-        clear_lag_text = button_font.render(
-            "Clear Lag", True, KDS.Colors.GetPrimary.White)
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2731,6 +2738,7 @@ def settings_menu():
             Audio.setVolume(set_effect_volume)
 
         return_button.update(display, mouse_pos, c)
+        reset_settings_button.update(display, mouse_pos, c)
         clearLag = clearLag_switch.update(display, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
@@ -2747,7 +2755,6 @@ def settings_menu():
         window.fill((0, 0, 0))
         c = False
         clock.tick(60)
-
 
 def main_menu():
     global current_map, MenuMode, DebugMode, AltPressed, F4Pressed
@@ -2970,7 +2977,6 @@ def main_menu():
 
 def level_finished_menu():
     print("Level finishing not added yet...")
-
 #endregion
 #region Check Terms
 agr(tcagr)
@@ -4124,4 +4130,6 @@ while main_running:
 #region Application Quitting
 pygame.display.quit()
 pygame.quit()
+if restart:
+    os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 #endregion
