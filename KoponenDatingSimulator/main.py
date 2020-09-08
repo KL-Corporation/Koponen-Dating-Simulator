@@ -574,7 +574,7 @@ jukebox_tip = tip_font.render(
     "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
 #endregion
 
-clearlag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
+clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
 
 main_running = True
 playerMovingRight = False
@@ -2663,7 +2663,7 @@ def esc_menu_f():
         clock.tick(60)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed, clearlag
+    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed, clearLag
     c = False
     settings_running = True
 
@@ -2677,7 +2677,7 @@ def settings_menu():
         "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1)
     effect_volume_slider = KDS.UI.New.Slider(
         "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
-    clearlag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50))
+    clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50))
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -2688,7 +2688,7 @@ def settings_menu():
         effect_volume_text = button_font.render(
             "Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
         clear_lag_text = button_font.render(
-            "ClearLag off/on", True, KDS.Colors.GetPrimary.White)
+            "Clear Lag", True, KDS.Colors.GetPrimary.White)
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2731,7 +2731,7 @@ def settings_menu():
             Audio.setVolume(set_effect_volume)
 
         return_button.update(display, mouse_pos, c)
-        clearlag = clearlag_switch.update(display, mouse_pos, c)
+        clearLag = clearLag_switch.update(display, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
