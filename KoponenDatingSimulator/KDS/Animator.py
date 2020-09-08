@@ -103,6 +103,9 @@ class Lerp():
         self.onAnimationEnd = On_Animation_End
         self.PingPong = False
 
+    def set(self, progress: int):
+        self.tick = max(0, min(self.ticks, progress))
+
     def update(self, reverse=False):
         """
         Ensimmäinen argumentti määrittää kumpaan suuntaan lerp kulkee
