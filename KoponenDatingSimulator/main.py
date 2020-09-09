@@ -973,12 +973,13 @@ class WorldData():
 
     @staticmethod
     def LoadMap():
-        global tiles, items, enemies, decoration
+        global tiles, items, enemies, decoration, specialTiles
         with open(os.path.join("Assets", "Maps", "map" + current_map, "level.map"), "r") as map_file:
             map_data = map_file.read().split("\n")
         items = numpy.array([])
         enemies = numpy.array([])
         decoration = numpy.array([])
+        specialTiles = numpy.array([])
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -997,8 +998,12 @@ class WorldData():
                     if len(data) > 1 and int(datapoint) != 0:
                         serialNumber = int(data[1] + data[2] + data[3])
                         if data[0] == "0":
-                            tiles[y][x] = Tile(
-                                (x * 34, y * 34), serialNumber=serialNumber)
+                            if serialNumber not in specialTilesSerialNumbers:
+                                tiles[y][x] = Tile(
+                                    (x * 34, y * 34), serialNumber=serialNumber)
+                            else:
+                                tiles[y][x] = specialTilesD[serialNumber](
+                                    (x * 34, y * 34), serialNumber=serialNumber)
                         elif data[0] == "1":
                             items = numpy.append(items, Item(
                                 (x * 34, y * 34), serialNumber=serialNumber))
@@ -1122,6 +1127,8 @@ class Inventory:
 
 player_inventory = Inventory(5)
 
+with open("Assets/Textures/special_tiles.txt", 'r') as f:
+    specialTilesSerialNumbers = [int(number) for number in f.read().split("\n")]
 
 class Tile:
 
@@ -1133,21 +1140,22 @@ class Tile:
             self.air = False
         else:
             self.air = True
+        self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
 
     @staticmethod
     # Tile_list is a 2d numpy array
-    def render(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int)):
+    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int), *args):
         x = int(position[0] / 34)
         y = int(position[1] / 34)
-        x -= 10
-        y -= 10
+        x -= 9
+        y -= 5
         if x < 0:
             x = 0
         if y < 0:
             y = 0
         max_x = len(Tile_list[0])-1
         max_y = len(Tile_list) - 1
-        end_x = x + 30
+        end_x = x + 20
         end_y = y + 12
         if end_x > max_x:
             end_x = max_x
@@ -1157,12 +1165,19 @@ class Tile:
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
-                    Surface.blit(renderable.texture, (renderable.rect.x -
-                                                      scroll[0], renderable.rect.y - scroll[1]))
+                        Surface.blit(renderable.texture, (renderable.rect.x -
+                                                        scroll[0], renderable.rect.y - scroll[1]))
 
 #region Erikois-tilet >>>>>>>>>>>>>>
+
 class Toilet(Tile):
-    pass
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), -1)
+
+    def update(self):
+        print(f"Toilet {self} was updated")
+
 class Trashcan(Tile):
     pass
 class Jukebox(Tile):
@@ -1172,6 +1187,9 @@ class Door(Tile):
 class Landmine(Tile):
     pass
 
+specialTilesD = {
+    15: Toilet
+}
 
 #endregion
 
@@ -1469,7 +1487,7 @@ class Item:
         for renderable in Item_list:
             if KDS.Math.getDistance(renderable.rect.topleft, player_rect.topleft) < 1600:
                 Surface.blit(renderable.texture, (renderable.rect.x -
-                                                  scroll[0], renderable.rect.y-scroll[1]))
+                                                    scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
     def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
@@ -2125,7 +2143,7 @@ short_run_animation = KDS.Animator.Legacy.load_animation("shortplayer_run", 2)
 
 gasburner_animation = KDS.Animator.Legacy.load_animation("gasburner_on", 2)
 knife_animation = KDS.Animator.Legacy.load_animation("knife", 2)
-toilet_animation = KDS.Animator.Legacy.load_animation("toilet_anim", 3)
+#toilet_animation = KDS.Animator.Legacy.load_animation("toilet_anim", 3)
 trashcan_animation = KDS.Animator.Legacy.load_animation("trashcan", 3)
 koponen_stand = KDS.Animator.Legacy.load_animation("koponen_standing", 2)
 koponen_run = KDS.Animator.Legacy.load_animation("koponen_running", 2)
@@ -3206,7 +3224,7 @@ while main_running:
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     items, inventory = Item.checkCollisions(
         items, player_rect, screen, scroll, FunctionKey, player_inventory)
-    Tile.render(tiles, screen, scroll, (player_rect.x, player_rect.y))
+    Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, mouseLeftPressed)
     player_inventory.render(screen)
@@ -3493,6 +3511,7 @@ while main_running:
     if player_health > 0:
         player_rect, collisions = move_entity(
             player_rect, player_movement, tiles)
+
     else:
         player_rect, collisions = move_entity(player_rect, [0, 8], tiles)
 #endregion
@@ -4124,7 +4143,7 @@ while main_running:
     tick += 1
     if tick > 60:
         tick = 0
-    clock.tick(60)
+    clock.tick(6_0)
 #endregion
 #endregion
 #region Application Quitting
