@@ -8,16 +8,16 @@ class OnAnimationEnd:
     PingPong = 2
 
 class Animation:
-    """
-    Ensimmäinen argumentti odottaa animaation nimeä esim. "gasburner"
-    Toinen argumentti odottaa kyseisen animaation kuvien määrää. Jos animaatiossa on 2 kuvaa, kannattaa toiseksi argumentiksi laittaa 2
-    Kolmas argumentti odottaa yhden kuvan kestoa tickeinä.
-    Animaation kuvat tulee tallentaa animations-kansioon png-muodossa tähän malliin:
-        gasburner_0, gasburner_1, gasburner_2, gasburner_3 ja niin edelleen
-    animation_name - string, number_of_images - int, duration - int
-    """
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops:int): #loops = -1, if infinite loops
+        """Initialises an animation.
 
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey, loops): #loops = -1, if infinite loops
+        Args:
+            animation_name (str): The name of the animation. Will load the corresponding files from the Animations folder. Name will be converted to [animation_name]_[animation_index].
+            number_of_images (int): The frame count of your animation.
+            duration (int): The duration of every frame in ticks.
+            colorkey (tuple): The color that will be converted to alpha in every frame.
+            loops (int): The amount of times you want the animation to loop. (-1 = infinite)
+        """
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
@@ -45,6 +45,11 @@ class Animation:
     #update-funktio palauttaa aina yhden pygame image-objektin
 
     def update(self):
+        """Updates the animation
+
+        Returns:
+            Surface | Surface, bool: Returns the image to blit and an animation finished bool if loops is not infinite.
+        """
         self.tick += 1
         if self.tick > self.ticks:
             self.tick = 0
@@ -89,13 +94,15 @@ class Legacy:
         return animation_list
 
 class Lerp():
-    """
-    Ensimmäinen argumentti odottaa lerpin lähtöarvoa
-    Toinen argumentti odottaa lerpin päättymisarvoa
-    Kolmas argumentti odottaa kyseisen lerpin kestoa. Jos lerpin pitäisi kestää 2 tickiä, kannattaa kolmanneksi argumentiksi laittaa 2
-    Neljäs argumentti määrittää mitä lerp lerp tekee päättyessään. Näiden toiminnan voit jo varmaan arvata nimestäkin.
-    """
     def __init__(self, From: float, To: float, duration: int, On_Animation_End: OnAnimationEnd):
+        """Initialises a Lerp animation.
+
+        Args:
+            From (float): The starting point of the lerp animation.
+            To (float): The ending point of the lerp animation.
+            duration (int): The amount of ticks it takes to finish the entire lerp animation.
+            On_Animation_End (OnAnimationEnd): What will the animator do when the animaton has finished.
+        """
         self.From = From
         self.To = To
         self.ticks = duration
@@ -107,9 +114,13 @@ class Lerp():
         self.tick = max(0, min(self.ticks, progress))
 
     def update(self, reverse=False):
-        """
-        Ensimmäinen argumentti määrittää kumpaan suuntaan lerp kulkee
-        Toinen argumentti määrittää mitä lerp tekee, kun se pääsee loppuun.
+        """Updates the lerp animation
+
+        Args:
+            reverse (bool, optional): Determines the lertp direction. Defaults to False.
+
+        Returns:
+            float: The lerped float value.
         """
         if not reverse and not self.PingPong:
             self.tick += 1

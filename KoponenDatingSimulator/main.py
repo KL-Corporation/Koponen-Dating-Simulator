@@ -19,8 +19,21 @@ import threading
 import concurrent.futures
 import math
 import sys
+import asyncio
 from pygame.locals import *
 from inspect import currentframe, getframeinfo
+#endregion
+#region Loading Screen
+"""
+loading_animation = KDS.Animator.Animation("loading_screen", 60, 30, KDS.Colors.GetPrimary.Red, -1)
+loading_finished = False
+async def loadingscreen():
+    if not loading_finished:
+        display.blit(loading_animation.update(), ())
+        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
+            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        pygame.display.update()
+"""
 #endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
@@ -51,11 +64,6 @@ display_size = (1200, 800)
 display = pygame.Surface(display_size)
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
-
-loadingscreen = pygame.image.load("Assets/Textures/loadingscreen.png").convert()
-
-window.blit(pygame.transform.scale(loadingscreen, (window_size)),(0,0))
-pygame.display.update()
 
 profiler_enabled = False
 #endregion
