@@ -25,12 +25,13 @@ class New:
         8. handle_pressed_color (OPTIONAL): The color of the handle in idle state. [DEFAULT: (90, 90, 90)]
         """
 
-        def __init__(self, safe_name, slider_rect, handle_size: (int, int), default_value=0.0, handle_move_area_padding=(0, 0), slider_color=(120, 120, 120), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), lerp_duration=3):
+        def __init__(self, safe_name, slider_rect, handle_size: (int, int), default_value=0.0, handle_move_area_padding=(0, 0), slider_default_color=(120, 120, 120), slider_fill_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), lerp_duration=3):
             self.safe_name = safe_name
             self.slider_rect = slider_rect
             self.handle_rect = pygame.Rect(self.slider_rect.midleft[0] + (float(KDS.ConfigManager.LoadSetting("Settings", safe_name, str(default_value))) * self.slider_rect.width) - (handle_size[0] / 2), slider_rect.centery - (handle_size[1] / 2), handle_size[0], handle_size[1])
             self.handle_move_area_padding = handle_move_area_padding
-            self.slider_color = slider_color
+            self.slider_default_color = slider_default_color
+            self.slider_fill_color = slider_fill_color
             self.handle_default_color = handle_default_color
             self.handle_highlighted_color = handle_highlighted_color
             self.handle_pressed_color = handle_pressed_color
@@ -65,7 +66,6 @@ class New:
                     handle_color = self.handle_default_color
             self.handle_rect.centerx = position
 
-            pygame.draw.rect(surface, self.slider_color, self.slider_rect)
             if handle_color != self.handle_old_color:
                 fade = self.handle_color_fade.update()
                 if fade == 1.0:
@@ -75,6 +75,8 @@ class New:
                     handle_draw_color = (KDS.Math.Lerp(self.handle_old_color[0], handle_color[0], fade), KDS.Math.Lerp(self.handle_old_color[1], handle_color[1], fade), KDS.Math.Lerp(self.handle_old_color[2], handle_color[2], fade))
             else:
                 handle_draw_color = handle_color
+            pygame.draw.rect(surface, self.slider_default_color, self.slider_rect)
+            pygame.draw.rect(surface, self.slider_fill_color, pygame.Rect(self.slider_rect.x, self.slider_rect.y, self.handle_rect.centerx - self.slider_rect.x, self.slider_rect.height))
             pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
             value = (self.handle_rect.centerx - self.slider_rect.midleft[0]) / (self.slider_rect.midright[0] - self.slider_rect.midleft[0] - self.handle_move_area_padding[0])
             KDS.ConfigManager.SetSetting("Settings", self.safe_name, str(value))

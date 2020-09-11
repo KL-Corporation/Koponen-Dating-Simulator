@@ -11,7 +11,7 @@ import KDS.Math
 import KDS.Missions
 import KDS.UI
 import KDS.LevelLoader
-import KDS.TileScript
+import KDS.World
 import numpy
 import os
 import random
@@ -1165,8 +1165,8 @@ class Tile:
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
-                        Surface.blit(renderable.texture, (renderable.rect.x -
-                                                        scroll[0], renderable.rect.y - scroll[1]))
+                    Surface.blit(renderable.texture, (renderable.rect.x -
+                                                    scroll[0], renderable.rect.y - scroll[1]))
 
 #region Erikois-tilet >>>>>>>>>>>>>>
 
@@ -4143,7 +4143,7 @@ while main_running:
     tick += 1
     if tick > 60:
         tick = 0
-    clock.tick(6_0)
+    clock.tick(60)
 #endregion
 #endregion
 #region Application Quitting
