@@ -55,6 +55,9 @@ screen = pygame.Surface(screen_size)
 
 clock = pygame.time.Clock()
 profiler_enabled = False
+
+window.blit(pygame.image.load("Assets/Textures/UI/loadingScreen.png"), (0, 0))
+pygame.display.update()
 #endregion
 #region Window
 class Fullscreen:
@@ -99,9 +102,6 @@ def ResizeWindow(set_size: tuple):
         KDS.ConfigManager.SetSetting(
             "Settings", "WindowSizeY", str(set_size[1]))
     Fullscreen.Set(True)
-
-window.blit(pygame.transform.scale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
-pygame.display.update()
 #endregion
 #region Audio
 pygame.mixer.init()
@@ -2369,8 +2369,7 @@ def agr(tcagr):
                 ResizeWindow(event.size)
         display.blit(agr_background, (0, 0))
         agree_button.update(display, mouse_pos, c)
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
         c = False
     del agree_button
