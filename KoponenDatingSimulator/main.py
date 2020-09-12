@@ -23,18 +23,6 @@ import asyncio
 from pygame.locals import *
 from inspect import currentframe, getframeinfo
 #endregion
-#region Loading Screen
-"""
-loading_animation = KDS.Animator.Animation("loading_screen", 60, 30, KDS.Colors.GetPrimary.Red, -1)
-loading_finished = False
-async def loadingscreen():
-    if not loading_finished:
-        display.blit(loading_animation.update(), ())
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
-        pygame.display.update()
-"""
-#endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
                            "Koponen Development Inc", "Koponen Dating Simulator")
@@ -55,8 +43,8 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
-window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeX", str(
-    1200))), int(KDS.ConfigManager.LoadSetting("Settings", "DisplaySizeY", str(800))))
+window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "WindowSizeX", str(
+    1200))), int(KDS.ConfigManager.LoadSetting("Settings", "WindowSizeY", str(800))))
 window = pygame.display.set_mode(
     window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_resize_size = window_size
@@ -65,7 +53,55 @@ display = pygame.Surface(display_size)
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
+clock = pygame.time.Clock()
 profiler_enabled = False
+#endregion
+#region Window
+class Fullscreen:
+    size = display_size
+    offset = (0, 0)
+    scaling = 0
+
+    @staticmethod
+    def Set(reverseFullscreen=False):
+        global isFullscreen, window, window_size, window_resize_size
+        if reverseFullscreen:
+            isFullscreen = not isFullscreen
+        if isFullscreen:
+            window_size = window_resize_size
+            window = pygame.display.set_mode(
+                window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
+            isFullscreen = False
+        else:
+            window_size = monitor_size
+            window = pygame.display.set_mode(
+                window_size, pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
+            isFullscreen = True
+        KDS.ConfigManager.SetSetting(
+            "Settings", "Fullscreen", str(isFullscreen))
+        if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
+            Fullscreen.size = (
+                int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
+            Fullscreen.scaling = window_size[1] / display_size[1]
+        else:
+            Fullscreen.size = (int(window_size[0]), int(
+                window_size[0] / (display_size[0] / display_size[1])))
+            Fullscreen.scaling = window_size[0] / display_size[0]
+        Fullscreen.offset = (int((window_size[0] / 2) - (Fullscreen.size[0] / 2)), int(
+            (window_size[1] / 2) - (Fullscreen.size[1] / 2)))
+
+def ResizeWindow(set_size: tuple):
+    global window_resize_size
+    if not isFullscreen:
+        window_resize_size = set_size
+        KDS.ConfigManager.SetSetting(
+            "Settings", "WindowSizeX", str(set_size[0]))
+        KDS.ConfigManager.SetSetting(
+            "Settings", "WindowSizeY", str(set_size[1]))
+    Fullscreen.Set(True)
+
+window.blit(pygame.transform.scale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
+pygame.display.update()
 #endregion
 #region Audio
 pygame.mixer.init()
@@ -313,57 +349,10 @@ class Archvile:
                                               False), (self.rect.x - scroll[0],
                                                        self.rect.y - scroll[1]+25))
 #endregion
-#region Window
-
-class Fullscreen:
-    size = display_size
-    offset = (0, 0)
-    scaling = 0
-
-    @staticmethod
-    def Set(reverseFullscreen=False):
-        global isFullscreen, window, window_size, window_resize_size
-        if reverseFullscreen:
-            isFullscreen = not isFullscreen
-        if isFullscreen:
-            window_size = window_resize_size
-            window = pygame.display.set_mode(
-                window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
-            isFullscreen = False
-        else:
-            window_size = monitor_size
-            window = pygame.display.set_mode(
-                window_size, pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
-            isFullscreen = True
-        KDS.ConfigManager.SetSetting(
-            "Settings", "Fullscreen", str(isFullscreen))
-        if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
-            Fullscreen.size = (
-                int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
-            Fullscreen.scaling = window_size[1] / display_size[1]
-        else:
-            Fullscreen.size = (int(window_size[0]), int(
-                window_size[0] / (display_size[0] / display_size[1])))
-            Fullscreen.scaling = window_size[0] / display_size[0]
-        Fullscreen.offset = (int((window_size[0] / 2) - (Fullscreen.size[0] / 2)), int(
-            (window_size[1] / 2) - (Fullscreen.size[1] / 2)))
-
-def ResizeWindow(set_size: tuple):
-    global window_resize_size
-    if not isFullscreen:
-        window_resize_size = set_size
-        KDS.ConfigManager.SetSetting(
-            "Settings", "DisplaySizeX", str(set_size[0]))
-        KDS.ConfigManager.SetSetting(
-            "Settings", "DisplaySizeY", str(set_size[1]))
-    Fullscreen.Set(True)
-
-#endregion
 #region Initialisation
 black_tint = pygame.Surface(screen_size)
 black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
-
 #region Downloads
 main_menu_background = pygame.image.load(
     "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
@@ -371,7 +360,6 @@ settings_background = pygame.image.load(
     "Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
-clock = pygame.time.Clock()
 
 score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
@@ -1089,21 +1077,35 @@ class Inventory:
             index += 1
 
     def moveRight(self):
+        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
         self.SIndex += 1
         if self.SIndex < self.size:
             if self.storage[self.SIndex] == "doubleItemPlaceholder":
                 self.SIndex += 1
 
-        if self.SIndex > self.size-1:
+        if self.SIndex > self.size - 1:
             self.SIndex = 0
 
     def moveLeft(self):
+        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
         self.SIndex -= 1
         if self.SIndex >= 0:
             if self.storage[self.SIndex] == "doubleItemPlaceholder":
                 self.SIndex -= 1
         if self.SIndex < 0:
-            self.SIndex = self.size-1
+            self.SIndex = self.size - 1
+
+    def pickSlot(self, index):
+        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
+        self.SIndex = index
+        if self.SIndex < self.size:
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex -= 1
+
+        if self.SIndex > self.size - 1:
+            self.SIndex = self.size - 1
+        elif self.SIndex < 0:
+            self.SIndex = 0
 
     def dropItem(self):
         if self.storage[self.SIndex] != "none":
@@ -1129,9 +1131,7 @@ class Inventory:
         return None
 
     def getHandItem(self):
-
         return self.storage[self.SIndex]
-
 
 player_inventory = Inventory(5)
 
@@ -2784,7 +2784,7 @@ def settings_menu():
 
 def main_menu():
     global current_map, MenuMode, DebugMode, AltPressed, F4Pressed
-
+    
     class Mode:
         MainMenu = 0
         ModeSelectionMenu = 1
@@ -2880,7 +2880,6 @@ def main_menu():
     campaign_left_button = KDS.UI.New.Button(campaign_left_button_rect, level_pick.left)
     campaign_right_button = KDS.UI.New.Button(campaign_right_button_rect, level_pick.right)
     #endregion
-
     while main_menu_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
             (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
@@ -3011,53 +3010,6 @@ tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
 if tcagr != False:
     main_menu()
 #endregion
-#region Inventory Slot Switching
-
-
-def inventoryLeft():
-    global inventory_slot, inventoryDoubles, inventory
-    KDS.Missions.TriggerListener(
-        KDS.Missions.ListenerTypes.InventorySlotSwitching)
-    checkSlot = inventory_slot - 2
-    while checkSlot < 0:
-        checkSlot = len(inventory) + checkSlot
-    if inventoryDoubles[checkSlot] == True:
-        inventory_slot -= 2
-    else:
-        inventory_slot -= 1
-    while inventory_slot < 0:
-        inventory_slot = len(inventory) + inventory_slot
-
-
-def inventoryRight():
-    global inventory_slot, inventoryDoubles
-    KDS.Missions.TriggerListener(
-        KDS.Missions.ListenerTypes.InventorySlotSwitching)
-    while inventory_slot >= len(inventory):
-        inventory_slot = len(inventory) - inventory_slot
-    if inventoryDoubles[inventory_slot] == True:
-        inventory_slot += 2
-    else:
-        inventory_slot += 1
-    while inventory_slot >= len(inventory):
-        inventory_slot = len(inventory) - inventory_slot
-
-
-def inventoryPick(index: int):
-    global inventory_slot, inventoryDoubles
-    KDS.Missions.TriggerListener(
-        KDS.Missions.ListenerTypes.InventorySlotSwitching)
-    if index >= len(inventory):
-        index = len(inventory) - 1
-    elif index < 0:
-        index = 0
-    if inventoryDoubles[index] == True:
-        inventory_slot = index - 1
-    else:
-        inventory_slot = index
-
-
-#endregion
 #region Main Running
 while main_running:
     #region Events
@@ -3083,7 +3035,7 @@ while main_running:
             elif event.key == K_ESCAPE:
                 esc_menu = True
             elif event.key in inventory_keys:
-                inventoryPick(inventory_keys.index(event.key))
+                player_inventory.pickSlot(inventory_keys.index(event.key))
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none":
                     serialNumber = player_inventory.dropItem()
@@ -4138,14 +4090,12 @@ while main_running:
         main_menu()
 #endregion
 #region Gathering all threading results
-
     # Imps
     for x in range(len(imps)):
         if I_thread_results[x].result() != None:
             imps[x].rect, imps[x].movement, imps[x].direction, imps[x].speed = I_thread_results[x].result()
         if I_updatethread_results[x].result() != None:
             imps[x].sleep, imps[x].targetFound, imps[x].movement = I_updatethread_results[x].result()
-
 #endregion
 #region Ticks
     tick += 1
