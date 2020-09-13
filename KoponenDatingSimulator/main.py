@@ -2709,7 +2709,7 @@ def settings_menu():
     effect_volume_slider = KDS.UI.New.Slider(
         "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
     clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50))
-    reset_settings_button = KDS.UI.New.Button(pygame.Rect(465, 450, 220, 40), reset_settings, button_font.render(
+    reset_settings_button = KDS.UI.New.Button(pygame.Rect(465, 360, 220, 40), reset_settings, button_font.render(
         "Reset Settings", True, KDS.Colors.GetPrimary.White))
     music_volume_text = button_font.render(
         "Music Volume", True, KDS.Colors.GetPrimary.White)
