@@ -6,11 +6,11 @@ import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
 import KDS.Gamemode
+import KDS.LevelLoader
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.UI
-import KDS.LevelLoader
 import KDS.World
 import numpy
 import os
@@ -1493,17 +1493,23 @@ class Item:
     def render(Item_list, Surface: pygame.Surface, scroll: list, position: (int, int)):
 
         for renderable in Item_list:
-            if KDS.Math.getDistance(renderable.rect.topleft, player_rect.topleft) < 1600:
-                Surface.blit(renderable.texture, (renderable.rect.x -
-                                                    scroll[0], renderable.rect.y-scroll[1]))
+            if DebugMode:
+                pygame.draw.rect(screen, KDS.Colors.GetPrimary.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
     def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
         index = 0
+        collision = False
+        shortest_index = 0
+        shortest_distance = sys.maxsize
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
-                Surface.blit(itemTip, (item.rect.x-40 -
-                                       scroll[0], item.rect.y-30-scroll[1]))
+                collision = True
+                distance = KDS.Math.getDistance(item.rect.midbottom, player_rect.midbottom)
+                if distance < shortest_distance:
+                    shortest_index = index
+                    shortest_distance = distance
                 if functionKey:
                     if item.serialNumber not in inventoryDobulesSerialNumbers:
                         if inventory.storage[inventory.SIndex] == "none":
@@ -1523,6 +1529,9 @@ class Item:
                                                   1] = "doubleItemPlaceholder"
                                 Item_list = numpy.delete(Item_list, index)
             index += 1
+        
+        if collision:
+            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
 
         return Item_list, inventory
 
