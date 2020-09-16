@@ -695,6 +695,7 @@ for none in inventory:
     inventoryDoubles.append(False)
 
 player_score = 0
+
 true_scroll = [0, 0]
 inventory_slot = 0
 
@@ -732,11 +733,11 @@ def LoadSave(save_index: int):
     last_player_health = player_health
     player_name = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Name", player_name)
     playerStamina = float(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Stamina", str(playerStamina)))
-    inventory[0] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory0", inventory[0])
-    inventory[1] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory1", inventory[1])
-    inventory[2] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory2", inventory[2])
-    inventory[3] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory3", inventory[3])
-    inventory[4] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory4", inventory[4])
+    player_inventory.storage[0] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory0", player_inventory.storage[0])
+    player_inventory.storage[1] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory1", player_inventory.storage[1])
+    player_inventory.storage[2] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory2", player_inventory.storage[2])
+    player_inventory.storage[3] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory3", player_inventory.storage[3])
+    player_inventory.storage[4] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory4", player_inventory.storage[4])
     farting = KDS.Convert.ToBool(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Farting", "f"))
 def SaveData():
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, farting
@@ -752,15 +753,15 @@ def SaveData():
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Stamina", str(playerStamina))
     KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory0", inventory[0])
+        selectedSave, "PlayerData", "Inventory0", player_inventory.storage[0])
     KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory1", inventory[1])
+        selectedSave, "PlayerData", "Inventory1", player_inventory.storage[1])
     KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory2", inventory[2])
+        selectedSave, "PlayerData", "Inventory2", player_inventory.storage[2])
     KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory3", inventory[3])
+        selectedSave, "PlayerData", "Inventory3", player_inventory.storage[3])
     KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory4", inventory[4])
+        selectedSave, "PlayerData", "Inventory4", player_inventory.storage[4])
     KDS.ConfigManager.SetSave(
         selectedSave, "PlayerData", "Farting", str(farting))
     #endregion
@@ -1193,6 +1194,8 @@ class Toilet(Tile):
         
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
             self.burning = True
+            global player_score
+            player_score += 20
         if self.burning:
             return self.animation.update()
         else:
@@ -1431,22 +1434,31 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def pistol_u(*args):
-
-        return pistol_texture
+        if args[0][0]:
+            return pistol_f_texture
+        else:
+            return pistol_texture
 
     @staticmethod
     def plasmarifle_u(*args):
-
-        return plasmarifle
+        if args[0][0]:
+            return plasmarifle_animation.update()
+        else:
+            return plasmarifle
 
     @staticmethod
     def rk62_u(*args):
-        return rk62_texture
+        if args[0][0]:
+            return rk62_f_texture
+        else:
+            return rk62_texture
 
     @staticmethod
     def shotgun_u(*args):
-
-        return shotgun
+        if args[0][0]:
+            return shotgun_f
+        else:
+            return shotgun
 
     @staticmethod
     def ss_bonuscard_u(*args):
@@ -1831,7 +1843,6 @@ def load_doors():
     return WorldData.Legacy.door_rects, WorldData.Legacy.doors_open, WorldData.Legacy.color_keys
 #endregion
 #region Collisions
-
 
 def shotgun_shots():
     shots = []
@@ -2598,7 +2609,7 @@ def koponen_talk():
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
     global main_menu_running, current_map, inventory, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-    inventory = ["none", "none", "none", "none", "none"]
+    player_inventory.storage = ["none", "none", "none", "none", "none"]
     if int(current_map) < 2:
         inventory[0] = "iPuhelin"
     WorldData.LoadMap()
@@ -4120,6 +4131,7 @@ while main_running:
         pygame.mixer.music.stop()
         pygame.mouse.set_visible(True)
         main_menu()
+
 #endregion
 #region Gathering all threading results
     # Imps
