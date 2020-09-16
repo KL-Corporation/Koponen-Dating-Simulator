@@ -1007,7 +1007,7 @@ class WorldData():
                             pass
                         elif data[0] == "3":
                             pass
-                    elif int(datapoint) != 0:
+                    elif int(datapoint) != 0: 
                         KDS.Logging.AutoError("Data format incorrect! Data: {}".format(
                             data), getframeinfo(currentframe()))
                 else:
@@ -1155,7 +1155,7 @@ class Tile:
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int), *args):
         x = int(position[0] / 34)
         y = int(position[1] / 34)
-        x -= 9
+        x -= 10
         y -= 5
         if x < 0:
             x = 0
@@ -1173,18 +1173,30 @@ class Tile:
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
-                    Surface.blit(renderable.texture, (renderable.rect.x -
-                                                    scroll[0], renderable.rect.y - scroll[1]))
+                    if not renderable.specialTileFlag:
+                        Surface.blit(renderable.texture, (renderable.rect.x -
+                                                        scroll[0], renderable.rect.y - scroll[1]))
+                    else: 
+                        Surface.blit(renderable.update(), (renderable.rect.x -
+                                                        scroll[0], renderable.rect.y - scroll[1]))                        
 
 #region Erikois-tilet >>>>>>>>>>>>>>
 
 class Toilet(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position:(int, int), serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
+        self.burning = _burning
+        self.texture = toilet0
         self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), -1)
 
     def update(self):
-        print(f"Toilet {self} was updated")
+        
+        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
+            self.burning = True
+        if self.burning:
+            return self.animation.update()
+        else:
+            return self.texture
 
 class Trashcan(Tile):
     pass
@@ -1382,11 +1394,19 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def gasburner_u(*args):
+        global gasburnerBurning
+        
         if args[0][0] == True:
+            gasburnerBurning = True
+            gasburner_fire.stop()
+            gasburner_fire.play()
             return gasburner_animation_object.update()
         else:
+            gasburner_fire.stop()
+            gasburnerBurning = False
             return gasburner_off
 
+            
     @staticmethod
     def coffeemug_u(*args):
 
@@ -1500,6 +1520,7 @@ class Item:
     @staticmethod
     def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
         index = 0
+        showItemTip = True
         collision = False
         shortest_index = 0
         shortest_distance = sys.maxsize
@@ -1517,9 +1538,11 @@ class Item:
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item.serialNumber
                             Item_list = numpy.delete(Item_list, index)
+                            showItemTip = False
                         elif item.serialNumber not in inventory_items:
                             Pfunctions[item.serialNumber]()
                             Item_list = numpy.delete(Item_list, index)
+                            showItemTip = False
                     else:
                         if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
                             if inventory.storage[inventory.SIndex + 1] == "none":
@@ -1528,9 +1551,10 @@ class Item:
                                 inventory.storage[inventory.SIndex +
                                                   1] = "doubleItemPlaceholder"
                                 Item_list = numpy.delete(Item_list, index)
+                                showItemTip = False
             index += 1
         
-        if collision:
+        if collision and showItemTip:
             Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
 
         return Item_list, inventory
