@@ -1,4 +1,7 @@
 #region Importing
+import os
+from inspect import currentframe, getframeinfo, getsourcefile
+os.chdir(os.path.dirname(os.path.abspath(getsourcefile(lambda:0))))
 import pygame
 import KDS.AI
 import KDS.Animator
@@ -13,7 +16,6 @@ import KDS.Missions
 import KDS.UI
 import KDS.World
 import numpy
-import os
 import random
 import threading
 import concurrent.futures
@@ -21,7 +23,6 @@ import math
 import sys
 import asyncio
 from pygame.locals import *
-from inspect import currentframe, getframeinfo
 #endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
