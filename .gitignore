@@ -5,3 +5,4 @@ KoponenDatingSimulator/saves/*.kds
 KoponenDatingSimulator/.vscode/
 KoponenDatingSimulator/.vs/
 .vscode/
+*.db
