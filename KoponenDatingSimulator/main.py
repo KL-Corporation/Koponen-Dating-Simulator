@@ -1,7 +1,7 @@
 #region Importing
 import os
 from inspect import currentframe, getframeinfo, getsourcefile
-os.chdir(os.path.dirname(os.path.abspath(getsourcefile(lambda:0))))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import pygame
 import KDS.AI
 import KDS.Animator
