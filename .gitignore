@@ -2,7 +2,6 @@ KoponenDatingSimulator/logs/*.log
 KoponenDatingSimulator/settings.cfg
 KoponenDatingSimulator/saves/*.kds
 *.pyc
-KoponenDatingSimulator/.vscode/
-KoponenDatingSimulator/.vs/
-.vscode/
+*.vscode/
+*.vs/
 *.db
