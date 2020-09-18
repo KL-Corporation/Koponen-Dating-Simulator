@@ -33,7 +33,7 @@ def __move(rect, movement, tiles):
             collision_types['top'] = True
     return rect, collision_types
 
-imp_sight_sound = pygame.mixer.Sound("Assets/Audio/entities/imp_sight.wav")
+imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
 
 imp_sight_sound.set_volume(0.4)
 

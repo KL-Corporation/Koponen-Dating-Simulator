@@ -8,7 +8,7 @@ class OnAnimationEnd:
     PingPong = 2
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops:int): #loops = -1, if infinite loops
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops: int): #loops = -1, if infinite loops
         """Initialises an animation.
 
         Args:
@@ -31,12 +31,11 @@ class Animation:
         for i in range(number_of_images):
             path = "Assets/Textures/Animations/" + animation_name + "_" + str(i) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
-            image.set_colorkey(self.colorkey) #Kaikki osat kuvasata joiden väri on RGB 255,255,255 muutetaan läpinäkyviksi
+            image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
 
             for _ in range(duration):
                 self.images.append(image)
 
-        print(self.images)
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Images Initialised: " + str(len(self.images)), False)
         for image in self.images:
             KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: " + str(image), False)
