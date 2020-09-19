@@ -2657,6 +2657,13 @@ def esc_menu_f():
     global esc_menu, go_to_main_menu, DebugMode, clock, AltPressed, F4Pressed, c
     c = False
 
+    esc_surface = pygame.Surface(display_size)
+    
+    esc_menu_background_proc = esc_menu_background.copy()
+    esc_menu_background_proc.blit(black_tint, (0, 0))
+    blurred = Image.frombytes("RGB", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGB")).filter(ImageFilter.GaussianBlur(radius=6))
+    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGB"), screen_size, "RGB")
+
     def resume():
         global esc_menu
         esc_menu = False
@@ -2685,10 +2692,11 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
-    anim_x = 0.0
-    anim_y = 0.0
+    anim_lerp_x = KDS.Animator.Lerp(1.0, 0.0, 15, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
+        display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
+        anim_x = anim_lerp_x.update(False)
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
             (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
@@ -2712,17 +2720,17 @@ def esc_menu_f():
             elif event.type == pygame.VIDEORESIZE:
                 ResizeWindow(event.size)
 
-        display.blit(pygame.transform.scale(
-            esc_menu_background, display_size), (0, 0))
-        pygame.draw.rect(display, (123, 134, 111), (int(
+        esc_surface.blit(pygame.transform.scale(
+            esc_menu_background_blur, display_size), (0, 0))
+        pygame.draw.rect(esc_surface, (123, 134, 111), (int(
             (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
-        display.blit(pygame.transform.scale(
+        esc_surface.blit(pygame.transform.scale(
             text_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
-        resume_button.update(display, mouse_pos, c)
-        save_button.update(display, mouse_pos, c)
-        settings_button.update(display, mouse_pos, c)
-        main_menu_button.update(display, mouse_pos, c)
+        resume_button.update(esc_surface, mouse_pos, c)
+        save_button.update(esc_surface, mouse_pos, c)
+        settings_button.update(esc_surface, mouse_pos, c)
+        main_menu_button.update(esc_surface, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
@@ -2731,11 +2739,13 @@ def esc_menu_f():
                 fps_text, True, KDS.Colors.GetPrimary.White)
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-
+        esc_surface.set_alpha(int(255 * anim_x))
+        display.blit(esc_surface, (0, 0))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        window.fill((0, 0, 0))
+        window.fill(KDS.Colors.GetPrimary.Black)
+        display.fill(KDS.Colors.GetPrimary.Black)
         c = False
         clock.tick(60)
 
@@ -4128,12 +4138,10 @@ while main_running:
     if esc_menu:
         pygame.mixer.music.stop()
         Audio.pauseAllSounds()
-        screen.blit(black_tint, (0, 0))
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
                     (Fullscreen.offset[0], Fullscreen.offset[1]))
-        blurred = Image.frombytes("RGB", screen_size, pygame.image.tostring(screen, "RGB")).filter(ImageFilter.GaussianBlur(radius=6))
-        esc_menu_background = pygame.image.fromstring(blurred.tobytes("raw", "RGB"), screen_size, "RGB")
+        esc_menu_background = screen.copy()
         pygame.mouse.set_visible(True)
         esc_menu_f()
         pygame.mouse.set_visible(False)
@@ -4144,7 +4152,6 @@ while main_running:
         pygame.mixer.music.stop()
         pygame.mouse.set_visible(True)
         main_menu()
-
 #endregion
 #region Gathering all threading results
     # Imps

@@ -92,7 +92,7 @@ class Legacy:
             animation_list.append(img)
         return animation_list
 
-class Lerp():
+class Lerp:
     def __init__(self, From: float, To: float, duration: int, On_Animation_End: OnAnimationEnd):
         """Initialises a Lerp animation.
 
@@ -121,7 +121,9 @@ class Lerp():
         Returns:
             float: The lerped float value.
         """
-        if not reverse and not self.PingPong:
+        if self.PingPong:
+            reverse = not reverse
+        if not reverse:
             self.tick += 1
             if self.tick > self.ticks:
                 if self.onAnimationEnd == OnAnimationEnd.Stop:
@@ -139,4 +141,5 @@ class Lerp():
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
+
         return KDS.Math.Lerp(self.From, self.To, self.tick / self.ticks)
