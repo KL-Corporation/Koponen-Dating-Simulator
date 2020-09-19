@@ -83,3 +83,5 @@ class itemTools:
     class rk62:
         def __init__(self):
             self.counter = 0
+
+rk62_C = itemTools.rk62()

@@ -362,11 +362,20 @@ settings_background = pygame.image.load(
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 
+<<<<<<< Updated upstream
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
+=======
+score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
+tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
+button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
+button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
+text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
+harbinger_font = pygame.font.Font("harbinger.otf", 25, bold=0, italic=0)
+>>>>>>> Stashed changes
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load(
@@ -1120,7 +1129,7 @@ class Inventory:
 
     def useItem(self, Surface: pygame.Surface, *args):
         if self.storage[self.SIndex] != "none":
-            dumpValues = Ufunctions[self.storage[self.SIndex]](args)
+            dumpValues = Ufunctions[self.storage[self.SIndex]](args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
             else:
@@ -1390,7 +1399,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
 
 class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
-    rk62_C = KDS.World.itemTools.rk62()
+    #rk62_C = KDS.World.itemTools.rk62()
     # Ensimmäisenä funktion tulee palauttaa itemin näytöllä näytettävä tekstuuri
 
     @staticmethod
@@ -1446,9 +1455,18 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def rk62_u(*args):
-        if args[0][0]:
+        global rk_62_ammo       
+        args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
+            KDS.World.rk62_C.counter = 0
+            rk62_shot.stop()
+            rk62_shot.play()
+            rk_62_ammo -= 1
             return rk62_f_texture
         else:
+            if not args[0][0]:
+                rk62_shot.stop() 
+            KDS.World.rk62_C.counter += 1
             return rk62_texture
 
     @staticmethod
