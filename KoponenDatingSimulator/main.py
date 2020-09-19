@@ -565,9 +565,6 @@ rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
-gradient_sphere = pygame.image.load(
-    "Assets/gradient_sphere.png").convert_alpha()
-
 jukebox_tip = tip_font.render(
     "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
 #endregion
