@@ -8,28 +8,22 @@ from datetime import datetime
 
 AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
 logPath = os.path.join(AppDataPath, "logs")
-logFileName = ""
 profiler_running = False
 profile = None
 
-def init():
-    """Initialises the logger.
-    """
-    global AppDataPath, logPath, logFileName
-    if os.path.exists(logPath) and os.path.isdir(logPath):
-        logFiles = os.listdir(logPath)
-    else:
-        os.mkdir(logPath)
-        logFiles = os.listdir(logPath)
+if os.path.exists(logPath) and os.path.isdir(logPath):
+    logFiles = os.listdir(logPath)
+else:
+    os.mkdir(logPath)
+    logFiles = os.listdir(logPath)
 
-    while len(logFiles) >= 5:
-        os.remove(os.path.join(logPath, logFiles[0]))
-        logFiles = os.listdir(logPath)
+while len(logFiles) >= 5:
+    os.remove(os.path.join(logPath, logFiles[0]))
+    logFiles = os.listdir(logPath)
 
-    logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
-    logging.basicConfig(filename=logFileName, level=logging.NOTSET)
-    logging.debug("Created log file: " + logFileName)
-    logging.info('Initialising Game...')
+logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
+logging.basicConfig(filename=logFileName, level=logging.NOTSET)
+logging.debug("Created log file: " + logFileName)
 
 class LogType():
     """The list of LogTypes you can log.

@@ -8,7 +8,7 @@ class OnAnimationEnd:
     PingPong = 2
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops: int): #loops = -1, if infinite loops
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops: int, filetype=".png"): #loops = -1, if infinite loops
         """Initialises an animation.
 
         Args:
@@ -28,17 +28,17 @@ class Animation:
             self.loops_count = 0
             self.done = False
 
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising {} Animation Images...".format(number_of_images), False)
         for i in range(number_of_images):
-            path = "Assets/Textures/Animations/" + animation_name + "_" + str(i) + ".png" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
+            converted_animation_name = animation_name + "_" + str(i) + filetype
+            path = "Assets/Textures/Animations/" + converted_animation_name #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
+            KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: {}".format(converted_animation_name), False)
 
-            for _ in range(duration):
+            for j in range(duration):
                 self.images.append(image)
 
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Images Initialised: " + str(len(self.images)), False)
-        for image in self.images:
-            KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: " + str(image), False)
                 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin

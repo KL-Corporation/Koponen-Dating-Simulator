@@ -5,19 +5,12 @@ import os
 from inspect import currentframe, getframeinfo
 #endregion
 
-AppDataPath = ""
-saveDirPath = ""
-
-def init():
-    """Initialises the ConfigManager
-    """
-    global AppDataPath, saveDirPath
-    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-    saveDirPath = os.path.join(AppDataPath, "saves")
-    if not os.path.exists(saveDirPath):
-        os.mkdir(saveDirPath)
-    elif not os.path.isdir(saveDirPath):
-        os.mkdir(saveDirPath)
+AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+saveDirPath = os.path.join(AppDataPath, "saves")
+if not os.path.exists(saveDirPath):
+    os.mkdir(saveDirPath)
+elif not os.path.isdir(saveDirPath):
+    os.mkdir(saveDirPath)
 
 def LoadSave(SaveIndex: int, SaveDirectory: str, SaveName: str, DefaultValue: str):
     global AppDataPath, saveDirPath
