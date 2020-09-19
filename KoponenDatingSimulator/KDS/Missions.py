@@ -17,8 +17,8 @@ textOffset = 2
 pygame.init()
 
 screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
-mission_font = pygame.font.Font("courier.ttf", 15, bold=1, italic=0)
-task_font = pygame.font.Font("courier.ttf", 10, bold=0, italic=0)
+mission_font = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
+task_font = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
 
 Missions = list()
 Active_Mission = 0

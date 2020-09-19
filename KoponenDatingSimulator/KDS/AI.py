@@ -34,7 +34,6 @@ def __move(rect, movement, tiles):
     return rect, collision_types
 
 imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
-
 imp_sight_sound.set_volume(0.4)
 
 class SergeantZombie:

@@ -1,4 +1,7 @@
 #region Importing
+import os
+from inspect import currentframe, getframeinfo, getsourcefile
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import pygame
 import KDS.AI
 import KDS.Animator
@@ -13,7 +16,6 @@ import KDS.Missions
 import KDS.UI
 import KDS.World
 import numpy
-import os
 import random
 import threading
 import concurrent.futures
@@ -21,7 +23,6 @@ import math
 import sys
 import asyncio
 from pygame.locals import *
-from inspect import currentframe, getframeinfo
 #endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
@@ -361,11 +362,11 @@ settings_background = pygame.image.load(
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 
-score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
-tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
-button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
-button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
-text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
+score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
+tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
+button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
+button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
+text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load(
@@ -373,48 +374,48 @@ player_corpse = pygame.image.load(
 player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
-floor0 = pygame.image.load("Assets/Textures/Building/floor0v2.png").convert()
+floor0 = pygame.image.load("Assets/Textures/Map/floor0v2.png").convert()
 concrete0 = pygame.image.load(
-    "Assets/Textures/Building/concrete0.png").convert()
-wall0 = pygame.image.load("Assets/Textures/Building/wall0.png").convert()
-table0 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
-toilet0 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
-lamp0 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
-trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Building/ground0.png").convert()
-grass = pygame.image.load("Assets/Textures/Building/grass0.png").convert()
+    "Assets/Textures/Map/concrete0.png").convert()
+wall0 = pygame.image.load("Assets/Textures/Map/wall0.png").convert()
+table0 = pygame.image.load("Assets/Textures/Map/table0.png").convert()
+toilet0 = pygame.image.load("Assets/Textures/Map/toilet0.png").convert()
+lamp0 = pygame.image.load("Assets/Textures/Map/lamp0.png").convert()
+trashcan = pygame.image.load("Assets/Textures/Map/trashcan.png").convert()
+ground1 = pygame.image.load("Assets/Textures/Map/ground0.png").convert()
+grass = pygame.image.load("Assets/Textures/Map/grass0.png").convert()
 door_closed = pygame.image.load(
-    "Assets/Textures/Building/door_closed.png").convert()
+    "Assets/Textures/Map/door_closed.png").convert()
 red_door_closed = pygame.image.load(
-    "Assets/Textures/Building/red_door_closed.png").convert()
+    "Assets/Textures/Map/red_door_closed.png").convert()
 green_door_closed = pygame.image.load(
-    "Assets/Textures/Building/green_door_closed.png").convert()
+    "Assets/Textures/Map/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
-    "Assets/Textures/Building/blue_door_closed.png").convert()
+    "Assets/Textures/Map/blue_door_closed.png").convert()
 door_open = pygame.image.load(
-    "Assets/Textures/Building/door_open2.png").convert()
-bricks = pygame.image.load("Assets/Textures/Building/bricks.png").convert()
-tree = pygame.image.load("Assets/Textures/Building/tree.png").convert()
-planks = pygame.image.load("Assets/Textures/Building/planks.png").convert()
+    "Assets/Textures/Map/door_open2.png").convert()
+bricks = pygame.image.load("Assets/Textures/Map/bricks.png").convert()
+tree = pygame.image.load("Assets/Textures/Map/tree.png").convert()
+planks = pygame.image.load("Assets/Textures/Map/planks.png").convert()
 jukebox_texture = pygame.image.load(
-    "Assets/Textures/Building/jukebox.png").convert()
+    "Assets/Textures/Map/jukebox.png").convert()
 landmine_texture = pygame.image.load(
-    "Assets/Textures/Building/landmine.png").convert()
+    "Assets/Textures/Map/landmine.png").convert()
 ladder_texture = pygame.image.load(
-    "Assets/Textures/Building/ladder.png").convert()
+    "Assets/Textures/Map/ladder.png").convert()
 background_wall = pygame.image.load(
-    "Assets/Textures/Building/background_wall.png").convert()
+    "Assets/Textures/Map/background_wall.png").convert()
 light_bricks = pygame.image.load(
-    "Assets/Textures/Building/light_bricks.png").convert()
+    "Assets/Textures/Map/light_bricks.png").convert()
 iron_bar = pygame.image.load(
-    "Assets/Textures/Building/iron_bars_texture.png").convert()
-soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
+    "Assets/Textures/Map/iron_bars_texture.png").convert()
+soil = pygame.image.load("Assets/Textures/Map/soil.png").convert()
 mossy_bricks = pygame.image.load(
-    "Assets/Textures/Building/mossy_bricks.png").convert()
-stone = pygame.image.load("Assets/Textures/Building/stone.png").convert()
-hay = pygame.image.load("Assets/Textures/Building/hay.png").convert()
-soil1 = pygame.image.load("Assets/Textures/Building/soil_2.png").convert()
-wood = pygame.image.load("Assets/Textures/Building/wood.png").convert()
+    "Assets/Textures/Map/mossy_bricks.png").convert()
+stone = pygame.image.load("Assets/Textures/Map/stone.png").convert()
+hay = pygame.image.load("Assets/Textures/Map/hay.png").convert()
+soil1 = pygame.image.load("Assets/Textures/Map/soil_2.png").convert()
+wood = pygame.image.load("Assets/Textures/Map/wood.png").convert()
 table0.set_colorkey(KDS.Colors.GetPrimary.White)
 toilet0.set_colorkey(KDS.Colors.GetPrimary.White)
 lamp0.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -563,9 +564,6 @@ plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
-
-gradient_sphere = pygame.image.load(
-    "Assets/gradient_sphere.png").convert_alpha()
 
 jukebox_tip = tip_font.render(
     "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
@@ -1031,7 +1029,7 @@ for element in data:
     num = int(element.split(",")[0])
     res = element.split(",")[1]
     t_textures[num] = pygame.image.load(
-        "Assets/Textures/Building/" + res).convert()
+        "Assets/Textures/Map/" + res).convert()
     t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
 with open("Assets/Textures/item_textures.txt", "r") as f:
