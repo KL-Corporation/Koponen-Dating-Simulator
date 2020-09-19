@@ -1392,7 +1392,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
 
 class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
-
+    rk62_C = KDS.World.itemTools.rk62()
     # Ensimmäisenä funktion tulee palauttaa itemin näytöllä näytettävä tekstuuri
 
     @staticmethod

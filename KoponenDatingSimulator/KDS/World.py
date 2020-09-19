@@ -78,3 +78,8 @@ class Bullet:
 
     def update(self,Surface:pygame.Surface):
         pass
+
+class itemTools:
+    class rk62:
+        def __init__(self):
+            self.counter = 0
