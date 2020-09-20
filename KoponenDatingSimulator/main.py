@@ -2750,7 +2750,7 @@ def esc_menu_f():
         clock.tick(60)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed, clearLag
+    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, AltPressed, F4Pressed, clearLag
     c = False
     settings_running = True
 
