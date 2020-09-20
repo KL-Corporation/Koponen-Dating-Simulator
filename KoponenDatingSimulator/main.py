@@ -363,12 +363,21 @@ settings_background = pygame.image.load(
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 
+<<<<<<< Updated upstream
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+=======
+score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
+tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
+button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
+button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
+text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
+harbinger_font = pygame.font.Font("harbinger.otf", 25, bold=0, italic=0)
+>>>>>>> Stashed changes
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load(
