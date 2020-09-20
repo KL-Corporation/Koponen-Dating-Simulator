@@ -34,6 +34,8 @@ if not os.path.exists(AppDataPath) or not os.path.isdir(AppDataPath):
     os.mkdir(AppDataPath)
 
 pygame.init()
+KDS.Logging.init()
+KDS.ConfigManager.init()
 
 monitor_info = pygame.display.Info()
 monitor_size = (monitor_info.current_w, monitor_info.current_h)
@@ -573,6 +575,7 @@ jukebox_tip = tip_font.render(
     "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
 
 restart = False
+reset_data = False
 clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
 
 main_running = True
@@ -777,8 +780,8 @@ def SaveData():
     #endregion
 #endregion
 #region Quit Handling
-def KDS_Quit(_restart=False):
-    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave, tick, restart
+def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
+    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave, tick, restart, reset_data
     main_menu_running = False
     main_running = False
     tcagr_running = False
@@ -786,6 +789,7 @@ def KDS_Quit(_restart=False):
     esc_menu = False
     settings_running = False
     restart = _restart
+    reset_data = _reset_data
 #endregion
 #region World Data
 imps = []
@@ -2764,8 +2768,7 @@ def settings_menu():
         importlib.reload(KDS.ConfigManager)
     
     def reset_data():
-        shutil.rmtree(AppDataPath)
-        KDS_Quit(True)
+        KDS_Quit(True, True)
     
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
         "Return", True, KDS.Colors.GetPrimary.White))
@@ -4169,8 +4172,11 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+KDS.Logging.Quit()
 pygame.display.quit()
 pygame.quit()
+if reset_data:
+    shutil.rmtree(AppDataPath)
 if restart:
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 #endregion
