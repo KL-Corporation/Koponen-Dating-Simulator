@@ -1,6 +1,6 @@
 #region Importing
 import os
-from inspect import currentframe, getframeinfo, getsourcefile
+from inspect import currentframe, getframeinfo
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import pygame
 import KDS.AI
@@ -19,10 +19,11 @@ import numpy
 import random
 import threading
 import concurrent.futures
-import math
 import sys
-import asyncio
+import importlib
+import shutil
 from pygame.locals import *
+from PIL import Image, ImageFilter
 #endregion
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
@@ -351,10 +352,12 @@ class Archvile:
                                                        self.rect.y - scroll[1]+25))
 #endregion
 #region Initialisation
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 black_tint = pygame.Surface(screen_size)
 black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
 #region Downloads
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
 main_menu_background = pygame.image.load(
     "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
 settings_background = pygame.image.load(
@@ -362,11 +365,12 @@ settings_background = pygame.image.load(
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 
-score_font = pygame.font.Font("gamefont.ttf", 10, bold=0, italic=0)
-tip_font = pygame.font.Font("gamefont2.ttf", 10, bold=0, italic=0)
-button_font = pygame.font.Font("gamefont2.ttf", 26, bold=0, italic=0)
-button_font1 = pygame.font.Font("gamefont2.ttf", 52, bold=0, italic=0)
-text_font = pygame.font.Font("courier.ttf", 30, bold=0, italic=0)
+score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
+tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
+button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
+button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
+text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
+harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
 player_corpse = pygame.image.load(
@@ -374,48 +378,48 @@ player_corpse = pygame.image.load(
 player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
-floor0 = pygame.image.load("Assets/Textures/Building/floor0v2.png").convert()
+floor0 = pygame.image.load("Assets/Textures/Map/floor0v2.png").convert()
 concrete0 = pygame.image.load(
-    "Assets/Textures/Building/concrete0.png").convert()
-wall0 = pygame.image.load("Assets/Textures/Building/wall0.png").convert()
-table0 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
-toilet0 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
-lamp0 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
-trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Building/ground0.png").convert()
-grass = pygame.image.load("Assets/Textures/Building/grass0.png").convert()
+    "Assets/Textures/Map/concrete0.png").convert()
+wall0 = pygame.image.load("Assets/Textures/Map/wall0.png").convert()
+table0 = pygame.image.load("Assets/Textures/Map/table0.png").convert()
+toilet0 = pygame.image.load("Assets/Textures/Map/toilet0.png").convert()
+lamp0 = pygame.image.load("Assets/Textures/Map/lamp0.png").convert()
+trashcan = pygame.image.load("Assets/Textures/Map/trashcan.png").convert()
+ground1 = pygame.image.load("Assets/Textures/Map/ground0.png").convert()
+grass = pygame.image.load("Assets/Textures/Map/grass0.png").convert()
 door_closed = pygame.image.load(
-    "Assets/Textures/Building/door_closed.png").convert()
+    "Assets/Textures/Map/door_closed.png").convert()
 red_door_closed = pygame.image.load(
-    "Assets/Textures/Building/red_door_closed.png").convert()
+    "Assets/Textures/Map/red_door_closed.png").convert()
 green_door_closed = pygame.image.load(
-    "Assets/Textures/Building/green_door_closed.png").convert()
+    "Assets/Textures/Map/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
-    "Assets/Textures/Building/blue_door_closed.png").convert()
+    "Assets/Textures/Map/blue_door_closed.png").convert()
 door_open = pygame.image.load(
-    "Assets/Textures/Building/door_open2.png").convert()
-bricks = pygame.image.load("Assets/Textures/Building/bricks.png").convert()
-tree = pygame.image.load("Assets/Textures/Building/tree.png").convert()
-planks = pygame.image.load("Assets/Textures/Building/planks.png").convert()
+    "Assets/Textures/Map/door_open2.png").convert()
+bricks = pygame.image.load("Assets/Textures/Map/bricks.png").convert()
+tree = pygame.image.load("Assets/Textures/Map/tree.png").convert()
+planks = pygame.image.load("Assets/Textures/Map/planks.png").convert()
 jukebox_texture = pygame.image.load(
-    "Assets/Textures/Building/jukebox.png").convert()
+    "Assets/Textures/Map/jukebox.png").convert()
 landmine_texture = pygame.image.load(
-    "Assets/Textures/Building/landmine.png").convert()
+    "Assets/Textures/Map/landmine.png").convert()
 ladder_texture = pygame.image.load(
-    "Assets/Textures/Building/ladder.png").convert()
+    "Assets/Textures/Map/ladder.png").convert()
 background_wall = pygame.image.load(
-    "Assets/Textures/Building/background_wall.png").convert()
+    "Assets/Textures/Map/background_wall.png").convert()
 light_bricks = pygame.image.load(
-    "Assets/Textures/Building/light_bricks.png").convert()
+    "Assets/Textures/Map/light_bricks.png").convert()
 iron_bar = pygame.image.load(
-    "Assets/Textures/Building/iron_bars_texture.png").convert()
-soil = pygame.image.load("Assets/Textures/Building/soil.png").convert()
+    "Assets/Textures/Map/iron_bars_texture.png").convert()
+soil = pygame.image.load("Assets/Textures/Map/soil.png").convert()
 mossy_bricks = pygame.image.load(
-    "Assets/Textures/Building/mossy_bricks.png").convert()
-stone = pygame.image.load("Assets/Textures/Building/stone.png").convert()
-hay = pygame.image.load("Assets/Textures/Building/hay.png").convert()
-soil1 = pygame.image.load("Assets/Textures/Building/soil_2.png").convert()
-wood = pygame.image.load("Assets/Textures/Building/wood.png").convert()
+    "Assets/Textures/Map/mossy_bricks.png").convert()
+stone = pygame.image.load("Assets/Textures/Map/stone.png").convert()
+hay = pygame.image.load("Assets/Textures/Map/hay.png").convert()
+soil1 = pygame.image.load("Assets/Textures/Map/soil_2.png").convert()
+wood = pygame.image.load("Assets/Textures/Map/wood.png").convert()
 table0.set_colorkey(KDS.Colors.GetPrimary.White)
 toilet0.set_colorkey(KDS.Colors.GetPrimary.White)
 lamp0.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -565,14 +569,13 @@ rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
 
-gradient_sphere = pygame.image.load(
-    "Assets/gradient_sphere.png").convert_alpha()
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
+#endregion
 jukebox_tip = tip_font.render(
     "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
-#endregion
 
 restart = False
+reset_data = False
 clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
 
 main_running = True
@@ -595,6 +598,7 @@ weapon_fire = False
 isFullscreen = False
 shoot = False
 
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
 tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
     "Data", "TermsAccepted", str(False)))
 
@@ -611,8 +615,8 @@ if isFullscreen == None:
                           getframeinfo(currentframe()))
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
-                "Settings Loaded:\n - Terms Accepted: {}\n - Music Volume: {}\n - Sound Effect Volume: {}\n - Fullscreen: {}\n - Clear Lag: {}".format(tcagr, Audio.MusicVolume, Audio.EffectVolume, isFullscreen, clearLag), False)
-
+                "Settings Loading Complete.\nSettings Loaded:\n - Terms Accepted: {}\n - Music Volume: {}\n - Sound Effect Volume: {}\n - Fullscreen: {}\n - Clear Lag: {}".format(tcagr, Audio.MusicVolume, Audio.EffectVolume, isFullscreen, clearLag), False)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
 selectedSave = 0
 
 gasburner_animation_stats = [0, 4, 0]
@@ -724,6 +728,8 @@ DebugMode = False
 
 MenuMode = 0
 esc_menu_background = pygame.Surface(display_size)
+
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Save System
 def LoadSave(save_index: int):
@@ -774,14 +780,16 @@ def SaveData():
     #endregion
 #endregion
 #region Quit Handling
-def KDS_Quit():
-    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave, tick
+def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
+    global main_running, main_menu_running, tcagr_running, koponenTalking, esc_menu, settings_running, selectedSave, tick, restart, reset_data
     main_menu_running = False
     main_running = False
     tcagr_running = False
     koponenTalking = False
     esc_menu = False
     settings_running = False
+    restart = _restart
+    reset_data = _reset_data
 #endregion
 #region World Data
 imps = []
@@ -1025,6 +1033,7 @@ def play_key_pickup():
 
 #endregion
 #region Loading
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
 with open("Assets/Textures/tile_textures.txt", "r") as f:
     data = f.read().split("\n")
 t_textures = {}
@@ -1032,7 +1041,7 @@ for element in data:
     num = int(element.split(",")[0])
     res = element.split(",")[1]
     t_textures[num] = pygame.image.load(
-        "Assets/Textures/Building/" + res).convert()
+        "Assets/Textures/Map/" + res).convert()
     t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
 with open("Assets/Textures/item_textures.txt", "r") as f:
@@ -1074,8 +1083,7 @@ class Inventory:
         index = 0
         for i in self.storage:
             if i in i_textures:
-                Surface.blit(i_textures[i], (index*34+10 + i_textures[i].get_size()[
-                             0]/4, 75 + i_textures[i].get_size()[1]/4))
+                Surface.blit(i_textures[i], (int(index * 34 + 10 + i_textures[i].get_size()[0] / 4), int(75 + i_textures[i].get_size()[1] / 4)))
             index += 1
 
     def moveRight(self):
@@ -1099,15 +1107,11 @@ class Inventory:
 
     def pickSlot(self, index):
         KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
-        self.SIndex = index
-        if self.SIndex < self.size:
-            if self.storage[self.SIndex] == "doubleItemPlaceholder":
-                self.SIndex -= 1
-
-        if self.SIndex > self.size - 1:
-            self.SIndex = self.size - 1
-        elif self.SIndex < 0:
-            self.SIndex = 0
+        if 0 < index < len(self.storage)-1:
+            if self.storage[index] == "doubleItemPlaceholder":
+                self.SIndex = index-2
+            else:
+                self.SIndex = index-1
 
     def dropItem(self):
         if self.storage[self.SIndex] != "none":
@@ -1123,7 +1127,7 @@ class Inventory:
 
     def useItem(self, Surface: pygame.Surface, *args):
         if self.storage[self.SIndex] != "none":
-            dumpValues = Ufunctions[self.storage[self.SIndex]](args)
+            dumpValues = Ufunctions[self.storage[self.SIndex]](args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
             else:
@@ -1139,7 +1143,8 @@ player_inventory = Inventory(5)
 
 with open("Assets/Textures/special_tiles.txt", 'r') as f:
     specialTilesSerialNumbers = [int(number) for number in f.read().split("\n")]
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
 
     def __init__(self, position: (int, int), serialNumber: int):
@@ -1201,7 +1206,6 @@ class Toilet(Tile):
             return self.animation.update()
         else:
             return self.texture
-
 class Trashcan(Tile):
     pass
 class Jukebox(Tile):
@@ -1214,13 +1218,12 @@ class Landmine(Tile):
 specialTilesD = {
     15: Toilet
 }
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 #endregion
 
 itemTip = tip_font.render(
     "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
 player_score = 0
-
 
 class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kutsutaan, kun item poimitaan maasta
     @staticmethod
@@ -1393,7 +1396,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
 
 class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
-
+    #rk62_C = KDS.World.itemTools.rk62()
     # Ensimmäisenä funktion tulee palauttaa itemin näytöllä näytettävä tekstuuri
 
     @staticmethod
@@ -1449,9 +1452,18 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def rk62_u(*args):
-        if args[0][0]:
+        global rk_62_ammo       
+        args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
+            KDS.World.rk62_C.counter = 0
+            rk62_shot.stop()
+            rk62_shot.play()
+            rk_62_ammo -= 1
             return rk62_f_texture
         else:
+            if not args[0][0]:
+                rk62_shot.stop() 
+            KDS.World.rk62_C.counter += 1
             return rk62_texture
 
     @staticmethod
@@ -1511,7 +1523,7 @@ Ufunctions = {
 
 }
 
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Items...")
 class Item:
 
     def __init__(self, position: (int, int), serialNumber: int):
@@ -1571,7 +1583,7 @@ class Item:
             Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
 
         return Item_list, inventory
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
 def load_items(path):
     with open(path, 'r') as f:
@@ -1613,7 +1625,7 @@ def load_ads():
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Ad Files Initialised: " + str(len(ad_files)), False)
+                    "Initialising {} Ad Files...".format(len(ad_files)), False)
 
     ad_images = []
 
@@ -1623,16 +1635,15 @@ def load_ads():
         image.set_colorkey(KDS.Colors.GetPrimary.Red)
         ad_images.append(image)
         KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Ad File: " + ad, False)
+                        "Initialised Ad File: {}".format(ad), False)
 
     return ad_images
 
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Animations...")
 ad_images = load_ads()
 koponen_talking_background = pygame.image.load(
     "Assets/Textures/KoponenTalk/background.png").convert()
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
-
 
 def load_rects():
     global monsterAmount, monstersLeft
@@ -2136,7 +2147,6 @@ def toilet_collisions(rect, burnstate):
 #endregion
 #region Player
 
-
 def collision_test(rect, Tile_list):
     hit_list = []
     x = int((rect.x/34)-3)
@@ -2186,7 +2196,6 @@ def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, ski
             rect.top = tile.bottom
             collision_types['top'] = True
     return rect, collision_types
-
 
 stand_animation = KDS.Animator.Legacy.load_animation("stand", 2)
 run_animation = KDS.Animator.Legacy.load_animation("run", 2)
@@ -2247,6 +2256,7 @@ knife_animation_object = KDS.Animator.Animation(
     "knife", 2, 20, KDS.Colors.GetPrimary.White, -1)
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Sergeant Shoot Animation Images...")
 for _ in range(5):
     for _ in range(6):
         sergeant_shoot_animation.images.append(sergeant_aiming)
@@ -2255,19 +2265,15 @@ for _ in range(2):
 for _ in range(2):
     for _ in range(6):
         sergeant_shoot_animation.images.append(sergeant_aiming)
-KDS.Logging.Log(KDS.Logging.LogType.debug,
-                "Sergeant Shoot Animation Images Initialised: " + str(len(sergeant_shoot_animation.images)), False)
-for animation in sergeant_shoot_animation.images:
-    KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialised Sergeant Shoot Animation Image: " + str(animation), False)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Successfully Initialised {} Sergeant Shoot Animation Images...".format(len(sergeant_shoot_animation.images)), False)
 sergeant_shoot_animation.ticks = 43
 #endregion
 sergeant_death_animation = KDS.Animator.Animation(
     "seargeant_dying", 5, 8, KDS.Colors.GetPrimary.White, 1)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
-
-
 def console():
     global inventory, player_keys, player_health, koponen_happines
     wasFullscreen = False
@@ -2605,8 +2611,6 @@ def koponen_talk():
     pygame.mouse.set_visible(False)
 #endregion
 #region Game Start
-
-
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
     global main_menu_running, current_map, inventory, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -2650,8 +2654,15 @@ def load_campaign(reset_scroll):
 #endregion
 #region Menus
 def esc_menu_f():
-    global esc_menu, go_to_main_menu, DebugMode, clock, AltPressed, F4Pressed
+    global esc_menu, go_to_main_menu, DebugMode, clock, AltPressed, F4Pressed, c
     c = False
+
+    esc_surface = pygame.Surface(display_size)
+    
+    esc_menu_background_proc = esc_menu_background.copy()
+    esc_menu_background_proc.blit(black_tint, (0, 0))
+    blurred = Image.frombytes("RGB", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGB")).filter(ImageFilter.GaussianBlur(radius=6))
+    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGB"), screen_size, "RGB")
 
     def resume():
         global esc_menu
@@ -2681,7 +2692,11 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
+    anim_lerp_x = KDS.Animator.Lerp(1.0, 0.0, 15, KDS.Animator.OnAnimationEnd.Stop)
+
     while esc_menu:
+        display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
+        anim_x = anim_lerp_x.update(False)
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
             (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
@@ -2689,7 +2704,7 @@ def esc_menu_f():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     Fullscreen.Set()
-                if event.key == K_ESCAPE:
+                elif event.key == K_ESCAPE:
                     esc_menu = False
                 elif event.key == K_F4:
                     F4Pressed = True
@@ -2705,17 +2720,17 @@ def esc_menu_f():
             elif event.type == pygame.VIDEORESIZE:
                 ResizeWindow(event.size)
 
-        display.blit(pygame.transform.scale(
-            esc_menu_background, display_size), (0, 0))
-        pygame.draw.rect(display, (123, 134, 111), (int(
+        esc_surface.blit(pygame.transform.scale(
+            esc_menu_background_blur, display_size), (0, 0))
+        pygame.draw.rect(esc_surface, (123, 134, 111), (int(
             (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
-        display.blit(pygame.transform.scale(
+        esc_surface.blit(pygame.transform.scale(
             text_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
-        resume_button.update(display, mouse_pos, c)
-        save_button.update(display, mouse_pos, c)
-        settings_button.update(display, mouse_pos, c)
-        main_menu_button.update(display, mouse_pos, c)
+        resume_button.update(esc_surface, mouse_pos, c)
+        save_button.update(esc_surface, mouse_pos, c)
+        settings_button.update(esc_surface, mouse_pos, c)
+        main_menu_button.update(esc_surface, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
@@ -2724,16 +2739,18 @@ def esc_menu_f():
                 fps_text, True, KDS.Colors.GetPrimary.White)
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-
+        esc_surface.set_alpha(int(255 * anim_x))
+        display.blit(esc_surface, (0, 0))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        window.fill((0, 0, 0))
+        window.fill(KDS.Colors.GetPrimary.Black)
+        display.fill(KDS.Colors.GetPrimary.Black)
         c = False
         clock.tick(60)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, music_volume, effect_volume, DebugMode, AltPressed, F4Pressed, clearLag
+    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, AltPressed, F4Pressed, clearLag
     c = False
     settings_running = True
 
@@ -2742,10 +2759,12 @@ def settings_menu():
         settings_running = False
 
     def reset_settings():
-        global restart
+        return_def()
         os.remove(os.path.join(AppDataPath, "settings.cfg"))
-        restart = True
-        KDS_Quit()
+        importlib.reload(KDS.ConfigManager)
+    
+    def reset_data():
+        KDS_Quit(True, True)
     
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
         "Return", True, KDS.Colors.GetPrimary.White))
@@ -2754,8 +2773,8 @@ def settings_menu():
     effect_volume_slider = KDS.UI.New.Slider(
         "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
     clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50))
-    reset_settings_button = KDS.UI.New.Button(pygame.Rect(465, 360, 220, 40), reset_settings, button_font.render(
-        "Reset Settings", True, KDS.Colors.GetPrimary.White))
+    reset_settings_button = KDS.UI.New.Button(pygame.Rect(465, 340, 220, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.GetPrimary.White))
+    reset_data_button = KDS.UI.New.Button(pygame.Rect(465, 390, 220, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.GetPrimary.White))
     music_volume_text = button_font.render(
         "Music Volume", True, KDS.Colors.GetPrimary.White)
     effect_volume_text = button_font.render(
@@ -2809,6 +2828,7 @@ def settings_menu():
 
         return_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
+        reset_data_button.update(display, mouse_pos, c)
         clearLag = clearLag_switch.update(display, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
@@ -4117,7 +4137,6 @@ while main_running:
     if esc_menu:
         pygame.mixer.music.stop()
         Audio.pauseAllSounds()
-        screen.blit(black_tint, (0, 0))
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
                     (Fullscreen.offset[0], Fullscreen.offset[1]))
@@ -4132,7 +4151,6 @@ while main_running:
         pygame.mixer.music.stop()
         pygame.mouse.set_visible(True)
         main_menu()
-
 #endregion
 #region Gathering all threading results
     # Imps
@@ -4150,8 +4168,11 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+KDS.Logging.Quit()
 pygame.display.quit()
 pygame.quit()
+if reset_data:
+    shutil.rmtree(AppDataPath)
 if restart:
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 #endregion

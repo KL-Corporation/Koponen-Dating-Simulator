@@ -6,16 +6,13 @@ import io
 from pstats import SortKey
 from datetime import datetime
 
+running = True
 AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
 logPath = os.path.join(AppDataPath, "logs")
-logFileName = ""
 profiler_running = False
 profile = None
 
 def init():
-    """Initialises the logger.
-    """
-    global AppDataPath, logPath, logFileName
     if os.path.exists(logPath) and os.path.isdir(logPath):
         logFiles = os.listdir(logPath)
     else:
@@ -27,9 +24,8 @@ def init():
         logFiles = os.listdir(logPath)
 
     logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
-    logging.basicConfig(filename=logFileName, level=logging.NOTSET)
+    logging.basicConfig(filename=logFileName, level=logging.NOTSET, datefmt="%H:%M:%S")
     logging.debug("Created log file: " + logFileName)
-    logging.info('Initialising Game...')
 
 class LogType():
     """The list of LogTypes you can log.
@@ -51,25 +47,28 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
         Message (str): The message you want to log.
         Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
     """
-    if Log_Type == LogType.execption:
-        logging.exception(Message)
-    elif Log_Type == LogType.log:
-        logging.log(Message)
-    elif Log_Type == LogType.critical:
-        logging.critical(Message)
-    elif Log_Type == LogType.error:
-        logging.error(Message)
-    elif Log_Type == LogType.warning:
-        logging.warning(Message)
-    elif Log_Type == LogType.info:
-        logging.info(Message)
-    elif Log_Type == LogType.debug:
-        logging.debug(Message)
-    elif Log_Type == LogType.notset:
-        logging.NOTSET(Message)
-        
-    if Console_Visible:
-        print(Message)
+    if running:
+        if Log_Type == LogType.execption:
+            logging.exception(Message)
+        elif Log_Type == LogType.log:
+            logging.log(Message)
+        elif Log_Type == LogType.critical:
+            logging.critical(Message)
+        elif Log_Type == LogType.error:
+            logging.error(Message)
+        elif Log_Type == LogType.warning:
+            logging.warning(Message)
+        elif Log_Type == LogType.info:
+            logging.info(Message)
+        elif Log_Type == LogType.debug:
+            logging.debug(Message)
+        elif Log_Type == LogType.notset:
+            logging.NOTSET(Message)
+            
+        if Console_Visible:
+            print(Message)
+    else:
+        print("Log not successful! Logger has been shut down already.")
 
 def AutoError(Message: str, Frame_Info):
     """Generates an automatic error message.
@@ -103,3 +102,8 @@ def Profiler(enabled=True):
         ps.print_stats()
         log_stream.write("\n{}\n\n".format("=" * 80))
         log_stream.close()
+        
+def Quit():
+    global running
+    running = False
+    logging.shutdown()
