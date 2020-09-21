@@ -63,8 +63,6 @@ def LoadFunction(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue:
         else:
             config.set(SaveDirectory, SaveName, DefaultValue)
             return DefaultValue
-    with open(FilePath, "w") as cfgFile:
-        config.write(cfgFile)
 
 def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     """
