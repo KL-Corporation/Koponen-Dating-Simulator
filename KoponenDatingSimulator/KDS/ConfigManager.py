@@ -48,12 +48,18 @@ def LoadFunction(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue:
             return config.get(SaveDirectory, SaveName)
         else:
             config.set(SaveDirectory, SaveName, DefaultValue)
+            with open(FilePath, "w") as cfg_file:
+                config.write(cfg_file)
+                cfg_file.close()
             return DefaultValue
     else:
         config.add_section(SaveDirectory)
         if config.has_option(SaveDirectory, SaveName):
             return config.get(SaveDirectory, SaveName)
         else:
+            with open(FilePath, "w") as cfg_file:
+                config.write(cfg_file)
+                cfg_file.close()
             config.set(SaveDirectory, SaveName, DefaultValue)
             return DefaultValue
 
@@ -94,3 +100,4 @@ def SaveFunction(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue: st
         config.set(SaveDirectory, SaveName, SaveValue)
     with open(FilePath, "w") as cfg_file:
         config.write(cfg_file)
+        cfg_file.close()
