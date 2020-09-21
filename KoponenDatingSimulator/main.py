@@ -486,6 +486,7 @@ archvile_corpse = pygame.image.load(
     "Assets/Textures/Animations/archvile_death_6.png").convert()
 ipuhelin_texture = pygame.image.load(
     "Assets/Textures/Items/iPuhelin.png").convert()
+rk62_bullet_t = pygame.image.load("Assets/Textures/Animations/rk62_bullet.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
@@ -685,6 +686,8 @@ ammunition_plasma = 50
 pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
+
+Projectiles = []
 
 inventory = ["none", "none", "none", "none", "none"]
 inventory_keys = [K_1, K_2, K_3, K_4, K_5]
@@ -979,7 +982,7 @@ class WorldData():
 
     @staticmethod
     def LoadMap():
-        global tiles, items, enemies, decoration, specialTiles
+        global tiles, items, enemies, decoration, specialTiles, Projectiles
         with open(os.path.join("Assets", "Maps", "map" + current_map, "level.map"), "r") as map_file:
             map_data = map_file.read().split("\n")
         items = numpy.array([])
@@ -1445,20 +1448,28 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def plasmarifle_u(*args):
-        if args[0][0]:
+        global ammunition_plasma
+        args[1].blit(harbinger_font.render("Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White), (10, 360))                    
+        if args[0][0] and ammunition_plasma > 0 and KDS.World.plasmarifle_C.counter > 3:
+            KDS.World.plasmarifle_C.counter = 0
+            plasmarifle_f_sound.play()
+            ammunition_plasma -= 1
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx,player_rect.centery-30,2,2),direction, 27, tiles, plasma_ammo))
             return plasmarifle_animation.update()
         else:
+            KDS.World.plasmarifle_C.counter += 1
             return plasmarifle
 
     @staticmethod
     def rk62_u(*args):
-        global rk_62_ammo       
+        global rk_62_ammo, tiles, Projectiles
         args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
             rk62_shot.play()
             rk_62_ammo -= 1
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx,player_rect.centery-30,2,2),direction, -1, tiles))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -3252,6 +3263,12 @@ while main_running:
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, mouseLeftPressed)
     player_inventory.render(screen)
+
+    for Projectile in Projectiles:
+        v = Projectile.update(screen, scroll)
+        
+        if v == "wall" or v == "air":
+            Projectiles.remove(Projectile)
 
     ###########################################
 

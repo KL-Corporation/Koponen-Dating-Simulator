@@ -10,7 +10,6 @@ def collision_test(rect: pygame.Rect, Tile_list):
         x = 0
     if y < 0:
         y = 0
-
     max_x = len(Tile_list[0])-1
     max_y = len(Tile_list)-1
     end_x = x+6
@@ -74,14 +73,43 @@ class Bullet:
         self.speed = speed
         self.texture = texture
         self.maxDistance = maxDistance
+        self.movedDistance = 0
         self.environment_obstacles = environment_obstacles
 
-    def update(self,Surface:pygame.Surface):
-        pass
+    def update(self,Surface:pygame.Surface, scroll: list):
+        if self.texture:
+            Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+        if self.speed == -1:
+            for _ in range(int(self.maxDistance/18)):
+                if self.direction:
+                    self.rect.x -= 18                  
+                else:
+                    self.rect.x += 18
+                collision_list = collision_test(self.rect, self.environment_obstacles)
+                if collision_list:
+                    return "wall"
+            return "air"
+        else:
+            if self.direction:
+                self.rect.x -= self.speed
+                self.movedDistance += self.speed             
+            else:
+                self.rect.x += self.speed
+                self.movedDistance += self.speed
+
+            collision_list = collision_test(self.rect, self.environment_obstacles)
+            if collision_list:
+                return "wall"
+            if self.movedDistance > self.maxDistance:
+                return "air"
 
 class itemTools:
     class rk62:
         def __init__(self):
             self.counter = 0
+    class plasmarifle:
+        def __init__(self):
+            self.counter = 0
 
 rk62_C = itemTools.rk62()
+plasmarifle_C = itemTools.plasmarifle()
