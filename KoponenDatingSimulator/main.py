@@ -1107,15 +1107,11 @@ class Inventory:
 
     def pickSlot(self, index):
         KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
-        self.SIndex = index
-        if self.SIndex < self.size:
-            if self.storage[self.SIndex] == "doubleItemPlaceholder":
-                self.SIndex -= 1
-
-        if self.SIndex > self.size - 1:
-            self.SIndex = self.size - 1
-        elif self.SIndex < 0:
-            self.SIndex = 0
+        if 0 < index < len(self.storage)-1:
+            if self.storage[index] == "doubleItemPlaceholder":
+                self.SIndex = index-2
+            else:
+                self.SIndex = index-1
 
     def dropItem(self):
         if self.storage[self.SIndex] != "none":
