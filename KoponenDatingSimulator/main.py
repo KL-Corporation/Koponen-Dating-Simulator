@@ -29,9 +29,9 @@ from PIL import Image, ImageFilter
 #region Priority Initialisation
 AppDataPath = os.path.join(os.getenv('APPDATA'),
                            "Koponen Development Inc", "Koponen Dating Simulator")
-if not os.path.exists(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")) or not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
+if not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
     os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
-if not os.path.exists(AppDataPath) or not os.path.isdir(AppDataPath):
+if not os.path.isdir(AppDataPath):
     os.mkdir(AppDataPath)
 
 pygame.init()
@@ -670,8 +670,10 @@ with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = file.read()
     cntnts = cntnts.split('\n')
 
+#######################################TEMPORARY#######################################
+max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", f"{len(cntnts) - 1:02d}")
+#######################################TEMPORARY#######################################
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
-max_map = len(cntnts)-1
 map_names = tuple(cntnts)
 
 ammunition_plasma = 50
@@ -1097,11 +1099,11 @@ class Inventory:
 
     def dropItem(self):
         if self.storage[self.SIndex] != "none":
-            if self.SIndex < self.size-1:
-                if self.storage[self.SIndex+1] == "doubleItemPlaceholder":
+            if self.SIndex < self.size - 1:
+                if self.storage[self.SIndex + 1] == "doubleItemPlaceholder":
                     serialNumber = self.storage[self.SIndex]
                     self.storage[self.SIndex] = "none"
-                    self.storage[self.SIndex+1] = "none"
+                    self.storage[self.SIndex + 1] = "none"
                     return serialNumber
             serialNumber = self.storage[self.SIndex]
             self.storage[self.SIndex] = "none"
@@ -2875,10 +2877,7 @@ def main_menu():
                 current_map_int = 1
             if current_map_int > max_map:
                 current_map_int = max_map
-            if current_map_int < 10:
-                current_map = "0" + str(current_map_int)
-            else:
-                current_map = str(current_map_int)
+            current_map = f"{current_map_int:02d}"
             KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
 
     def menu_mode_selector(mode):
@@ -3082,7 +3081,7 @@ while main_running:
                 if player_inventory.getHandItem() != "none":
                     serialNumber = player_inventory.dropItem()
                     items = numpy.append(items, Item(
-                        (player_rect.x, player_rect.y), serialNumber=serialNumber))
+                        (player_rect.centerx, player_rect.bottom - 34), serialNumber=serialNumber))
                 """
                 if inventory[inventory_slot] != "none":
                     if inventory[inventory_slot] == "iPuhelin":

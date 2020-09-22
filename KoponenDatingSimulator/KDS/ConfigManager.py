@@ -9,7 +9,7 @@ AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Kop
 saveDirPath = os.path.join(AppDataPath, "saves")
 
 def init():
-    if not os.path.exists(saveDirPath) or not os.path.isdir(saveDirPath):
+    if not os.path.isdir(saveDirPath):
         os.mkdir(saveDirPath)
 
 def LoadSave(SaveIndex: int, SaveDirectory: str, SaveName: str, DefaultValue: str):
@@ -48,7 +48,7 @@ def LoadFunction(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue:
             return config.get(SaveDirectory, SaveName)
         else:
             config.set(SaveDirectory, SaveName, DefaultValue)
-            with open(FilePath, "w") as cfg_file:
+            with open(FilePath, "w+") as cfg_file:
                 config.write(cfg_file)
                 cfg_file.close()
             return DefaultValue
@@ -57,7 +57,7 @@ def LoadFunction(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue:
         if config.has_option(SaveDirectory, SaveName):
             return config.get(SaveDirectory, SaveName)
         else:
-            with open(FilePath, "w") as cfg_file:
+            with open(FilePath, "w+") as cfg_file:
                 config.write(cfg_file)
                 cfg_file.close()
             config.set(SaveDirectory, SaveName, DefaultValue)
@@ -98,6 +98,6 @@ def SaveFunction(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue: st
     else:
         config.add_section(SaveDirectory)
         config.set(SaveDirectory, SaveName, SaveValue)
-    with open(FilePath, "w") as cfg_file:
+    with open(FilePath, "w+") as cfg_file:
         config.write(cfg_file)
         cfg_file.close()

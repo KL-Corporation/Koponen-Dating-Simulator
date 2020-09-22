@@ -31,7 +31,7 @@ def init():
 class LogType():
     """The list of LogTypes you can log.
     """
-    execption = 70
+    exception = 70
     log = 60
     critical = 50
     error = 40
@@ -49,7 +49,7 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
         Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
     """
     if running:
-        if Log_Type == LogType.execption:
+        if Log_Type == LogType.exception:
             logging.exception(Message)
         elif Log_Type == LogType.log:
             logging.log(Message)
