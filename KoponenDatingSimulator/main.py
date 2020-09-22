@@ -671,7 +671,7 @@ with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = cntnts.split('\n')
 
 #######################################TEMPORARY#######################################
-max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", f"{len(cntnts) - 1:02d}")
+max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", str(f"{len(cntnts) - 1:02d}"))
 #######################################TEMPORARY#######################################
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
 map_names = tuple(cntnts)
@@ -2877,7 +2877,7 @@ def main_menu():
                 current_map_int = 1
             if current_map_int > max_map:
                 current_map_int = max_map
-            current_map = f"{current_map_int:02d}"
+            current_map = str(f"{current_map_int:02d}")
             KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
 
     def menu_mode_selector(mode):
