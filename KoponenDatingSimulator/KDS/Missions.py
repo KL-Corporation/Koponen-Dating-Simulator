@@ -5,7 +5,7 @@ import KDS.ConfigManager
 import KDS.Convert
 import KDS.Gamemode
 import KDS.Logging
-from inspect import currentframe, getframeinfo
+from inspect import currentframe
 #endregion
 #region Settings
 HeaderColor = (128, 128, 128)
@@ -242,5 +242,5 @@ def TriggerListener(Type):
         for listener in ListenerList:
             AddProgress(listener[0], listener[1], listener[2])
     else:
-        KDS.Logging.AutoError("Listener Type not valid!", getframeinfo(currentframe()))
+        KDS.Logging.AutoError("Listener Type not valid!", currentframe())
 #endregion

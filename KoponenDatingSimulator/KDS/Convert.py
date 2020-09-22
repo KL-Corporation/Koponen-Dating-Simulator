@@ -1,6 +1,6 @@
 import pygame
 import KDS.Logging
-from inspect import currentframe, getframeinfo
+from inspect import currentframe
 def ToBool(value):
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
@@ -41,7 +41,7 @@ def ToBool(value):
     elif isinstance(value, bool):
         return value
     else:
-        KDS.Logging.AutoError("Value is not a valid type.", getframeinfo(currentframe()))
+        KDS.Logging.AutoError("Value is not a valid type.", currentframe())
         return None
 
 def ToAlpha(image, alpha):
@@ -63,7 +63,7 @@ def ToAlpha(image, alpha):
         image.set_alpha(int(alpha * 255))
         return image
     else:
-        KDS.Logging.AutoError("Alpha is not a valid type.", getframeinfo(currentframe()))
+        KDS.Logging.AutoError("Alpha is not a valid type.", currentframe())
         return None
 
 def ToGrayscale(image):

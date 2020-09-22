@@ -1,3 +1,4 @@
+from inspect import getframeinfo
 import logging
 import os
 import cProfile
@@ -70,15 +71,15 @@ def Log(Log_Type: LogType, Message: str, Console_Visible=False):
     else:
         print("Log not successful! Logger has been shut down already.")
 
-def AutoError(Message: str, Frame_Info):
+def AutoError(Message: str, _currentframe):
     """Generates an automatic error message.
 
     Args:
         Message (str): The error message.
-        Frame_Info: The frame information you get from getframeinfo(currentframe()).
+        _currentframe: The current frame you get from currentframe().
     """
-    
-    Log(LogType.error, "ERROR! File \"{}\", line {}, in {} [Exception: {}]".format(Frame_Info.filename, Frame_Info.lineno, Frame_Info.function, Message), True)
+    _frameinfo = getframeinfo(_currentframe)
+    Log(LogType.error, f"ERROR! File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function} [Exception: {Message}]", True)
 
 def Profiler(enabled=True):
     """Turns the profiler on or off.

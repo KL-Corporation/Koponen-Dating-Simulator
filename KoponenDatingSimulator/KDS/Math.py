@@ -1,6 +1,6 @@
 import KDS.Logging
 import math
-from inspect import currentframe, getframeinfo
+from inspect import currentframe
 
 def getDistance(point1: tuple, point2: tuple):
     """
@@ -12,7 +12,7 @@ def getDistance(point1: tuple, point2: tuple):
         r = q ** 2 + w ** 2
         return math.sqrt(abs(r))
     except Exception as e:
-        KDS.Logging.AutoError(e, getframeinfo(currentframe()))
+        KDS.Logging.AutoError(e, currentframe())
         return (0, 0)
         
 def A_map(x, in_min, in_max, out_min, out_max):
@@ -23,7 +23,7 @@ def A_map(x, in_min, in_max, out_min, out_max):
         rtn = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
         return rtn
     except Exception as e:
-        KDS.Logging.AutoError(e, getframeinfo(currentframe()))
+        KDS.Logging.AutoError(e, currentframe())
         return 0
 
 def toPositive(value):
@@ -64,7 +64,7 @@ def getAngle(p1: tuple, p2: tuple):
 
         return a
     except Exception as e:
-        KDS.Logging.AutoError(e, getframeinfo(currentframe()))
+        KDS.Logging.AutoError(e, currentframe())
         return 0
 
 def Lerp(a: float, b: float, t: float):
