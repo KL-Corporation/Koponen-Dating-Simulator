@@ -614,7 +614,7 @@ if isFullscreen == None:
                           currentframe())
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
-                "Settings Loading Complete.\nSettings Loaded:\n - Terms Accepted: {}\n - Music Volume: {}\n - Sound Effect Volume: {}\n - Fullscreen: {}\n - Clear Lag: {}".format(tcagr, Audio.MusicVolume, Audio.EffectVolume, isFullscreen, clearLag), False)
+                f"Settings Loading Complete.\nSettings Loaded:\n - Terms Accepted: {tcagr}\n - Music Volume: {Audio.MusicVolume}\n - Sound Effect Volume: {Audio.EffectVolume}\n - Fullscreen: {isFullscreen}\n - Clear Lag: {clearLag}", False)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
 selectedSave = 0
 
@@ -671,7 +671,7 @@ with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = cntnts.split('\n')
 
 #######################################TEMPORARY#######################################
-max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", str(f"{len(cntnts) - 1:02d}"))
+max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", f"{len(cntnts) - 1:02d}")
 #######################################TEMPORARY#######################################
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
 map_names = tuple(cntnts)
@@ -1617,7 +1617,7 @@ def load_ads():
 
     random.shuffle(ad_files)
     KDS.Logging.Log(KDS.Logging.LogType.debug,
-                    "Initialising {} Ad Files...".format(len(ad_files)), False)
+                    f"Initialising {len(ad_files)} Ad Files...", False)
 
     ad_images = []
 
@@ -1627,7 +1627,7 @@ def load_ads():
         image.set_colorkey(KDS.Colors.GetPrimary.Red)
         ad_images.append(image)
         KDS.Logging.Log(KDS.Logging.LogType.debug,
-                        "Initialised Ad File: {}".format(ad), False)
+                        f"Initialised Ad File: {ad}", False)
 
     return ad_images
 
@@ -2257,7 +2257,7 @@ for _ in range(2):
 for _ in range(2):
     for _ in range(6):
         sergeant_shoot_animation.images.append(sergeant_aiming)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Successfully Initialised {} Sergeant Shoot Animation Images...".format(len(sergeant_shoot_animation.images)), False)
+KDS.Logging.Log(KDS.Logging.LogType.debug, f"Successfully Initialised {len(sergeant_shoot_animation.images)} Sergeant Shoot Animation Images...", False)
 sergeant_shoot_animation.ticks = 43
 #endregion
 sergeant_death_animation = KDS.Animator.Animation(
@@ -2320,7 +2320,7 @@ def console():
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You are now a playboy", True)
         KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Koponen happines: {}".format(koponen_happines), True)
+                        f"Koponen happines: {koponen_happiness}", True)
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
@@ -2445,12 +2445,12 @@ def koponen_talk():
     def mission_function():
         global currently_on_mission, current_mission, taskTaivutettu, task
 
-        conversations.append("{}: Saisinko tehtävän?".format(player_name))
+        conversations.append(f"{player_name}: Saisinko tehtävän?")
         if currently_on_mission:
             conversations.append("Koponen: Olen pahoillani, sinulla on")
             conversations.append("         tehtävä kesken")
             conversations.append("Koponen: Tehtäväsi oli tuoda minulle")
-            conversations.append("         {}.".format(task))
+            conversations.append(f"         {task}.")
         elif WorldData.Legacy.task_items:
             current_mission = WorldData.Legacy.task_items[0]
             WorldData.Legacy.task_items.remove(WorldData.Legacy.task_items[0])
@@ -2469,14 +2469,14 @@ def koponen_talk():
             conversations.append("         tehtävät")
         elif currently_on_mission == False:
             conversations.append(
-                "Koponen: Toisitko minulle {}".format(taskTaivutettu))
+                f"Koponen: Toisitko minulle {taskTaivutettu}")
             currently_on_mission = True
 
     def date_function():
         global koponen_happines
 
         conversations.append(
-            "{}: Tulisitko kanssani treffeille?".format(player_name))
+            f"{player_name}: Tulisitko kanssani treffeille?")
 
         if koponen_happines > 90:
             conversations.append("Koponen: Tulisin mielelläni kanssasi")
@@ -2540,7 +2540,7 @@ def koponen_talk():
                 conversations.append("Koponen: Housuistasi ei löydy")
                 conversations.append("         pyytämääni esinettä.")
                 conversations.append("Koponen: Tehtäväsi oli tuoda minulle.")
-                conversations.append("         {}".format(task))
+                conversations.append(f"         {task}")
 
     c = False
 
@@ -2877,7 +2877,7 @@ def main_menu():
                 current_map_int = 1
             if current_map_int > max_map:
                 current_map_int = max_map
-            current_map = str(f"{current_map_int:02d}")
+            current_map = f"{current_map_int:02d}"
             KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
 
     def menu_mode_selector(mode):
@@ -3022,7 +3022,7 @@ def main_menu():
                 map_name = map_names[current_map_int]
             else:
                 map_name = map_names[0]
-            level_text = button_font1.render("{} - {}".format(current_map, map_name), True, (0, 0, 0))
+            level_text = button_font1.render(f"{current_map} - {map_name}", True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
         KDS.Logging.Profiler(DebugMode)
