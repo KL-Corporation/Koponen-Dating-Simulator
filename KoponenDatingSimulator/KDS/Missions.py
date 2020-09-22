@@ -16,7 +16,13 @@ textOffset = 2
 #region init
 pygame.init()
 
+<<<<<<< Updated upstream
 screen_size = (600, 400)
+=======
+print("KDS.Missions\nWritten by Koponen Development Inc 2020")
+
+screen_size = (int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeX", str(600))), int(KDS.ConfigManager.LoadSetting("Settings", "ScreenSizeY", str(400))))
+>>>>>>> Stashed changes
 mission_font = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
 task_font = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
 

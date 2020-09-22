@@ -10,6 +10,8 @@ import os
 
 slider_dragged = None
 
+print("KDS.UI\nWritten by Koponen Development Inc 2020")
+
 class New:
     
     class Slider:

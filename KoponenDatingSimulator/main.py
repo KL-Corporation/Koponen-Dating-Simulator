@@ -1185,23 +1185,51 @@ class Toilet(Tile):
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
             self.burning = True
             global player_score
+            player_score += 30
+        if self.burning:
+            return self.animation.update()
+        else:
+            return self.texture
+
+class Trashcan(Tile):
+    def __init__(self, position:(int, int), serialNumber: int, _burning=False):        
+        super().__init__(position, serialNumber)
+        self.burning = _burning
+        self.texture = trashcan
+        self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
+
+    def update(self):
+        
+        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 48 and gasburnerBurning and not self.burning:
+            self.burning = True
+            global player_score
             player_score += 20
         if self.burning:
             return self.animation.update()
         else:
             return self.texture
-class Trashcan(Tile):
-    pass
+
 class Jukebox(Tile):
-    pass
+    def __init__(self, position:(int, int), serialNumber: int):        
+        positionC = (position[0], position[1]-26)
+        super().__init__(positionC, serialNumber)
+        self.texture = jukebox_texture
+        self.rect = pygame.Rect(position[0], position[1]-27, 1, 1)
+
+    def update(self):
+        return self.texture
+
 class Door(Tile):
     pass
 class Landmine(Tile):
     pass
 
 specialTilesD = {
-    15: Toilet
+    15: Toilet,
+    16: Trashcan,
+    19: Jukebox
 }
+
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 #endregion
 
@@ -1276,9 +1304,10 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
 
     @staticmethod
     def rk62_p():
-        global player_score
+        global player_score, rk_62_ammo
         weapon_pickup.play()
         player_score += 20
+        rk_62_ammo += 30
 
         return False
 
@@ -1374,8 +1403,6 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
 
     @staticmethod
     def empyOperation():
-        pass
-
         return True
 
 
@@ -1422,9 +1449,16 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
 
     @staticmethod
     def pistol_u(*args):
-        if args[0][0]:
+        global pistol_bullets, Projectile, tiles
+        args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White), (10, 360))      
+        if args[0][0] and KDS.World.pistol_C.counter > 50 and pistol_bullets > 0:
+            pistol_shot.play()
+            KDS.World.pistol_C.counter = 0
+            pistol_bullets -= 1
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+30*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 55))
             return pistol_f_texture
         else:
+            KDS.World.pistol_C.counter += 1
             return pistol_texture
 
     @staticmethod
@@ -1435,7 +1469,15 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
             KDS.World.plasmarifle_C.counter = 0
             plasmarifle_f_sound.play()
             ammunition_plasma -= 1
+<<<<<<< Updated upstream
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx, player_rect.centery - 18, 2, 2),direction, 27, tiles, plasma_ammo))
+=======
+            if direction:
+                temp = 80
+            else:
+                temp = -80
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2),direction, 27, tiles, 20, plasma_ammo))
+>>>>>>> Stashed changes
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -1450,7 +1492,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
             rk62_shot.stop()
             rk62_shot.play()
             rk_62_ammo -= 1
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx,player_rect.centery-30,2,2),direction, -1, tiles))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 25))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -1460,14 +1502,21 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
 
     @staticmethod
     def shotgun_u(*args):
-        if args[0][0]:
+        global shotgun_shells, Projectile, tile
+        args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White), (10, 360))
+        if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
+            KDS.World.shotgun_C.counter = 0
+            player_shotgun_shot.play()
+            shotgun_shells -= 1
+            shotgun_shots()
             return shotgun_f
         else:
+            KDS.World.shotgun_C.counter += 1
             return shotgun
 
     @staticmethod
     def ss_bonuscard_u(*args):
-
+        
         return ss_bonuscard
 
     @staticmethod
@@ -2194,11 +2243,6 @@ run_animation = KDS.Animator.Legacy.load_animation("run", 2)
 short_stand_animation = KDS.Animator.Legacy.load_animation(
     "shortplayer_stand", 2)
 short_run_animation = KDS.Animator.Legacy.load_animation("shortplayer_run", 2)
-
-gasburner_animation = KDS.Animator.Legacy.load_animation("gasburner_on", 2)
-knife_animation = KDS.Animator.Legacy.load_animation("knife", 2)
-#toilet_animation = KDS.Animator.Legacy.load_animation("toilet_anim", 3)
-trashcan_animation = KDS.Animator.Legacy.load_animation("trashcan", 3)
 koponen_stand = KDS.Animator.Legacy.load_animation("koponen_standing", 2)
 koponen_run = KDS.Animator.Legacy.load_animation("koponen_running", 2)
 death_animation = KDS.Animator.Legacy.load_animation("death", 5)
@@ -2246,6 +2290,7 @@ imp_dying = KDS.Animator.Animation(
 
 knife_animation_object = KDS.Animator.Animation(
     "knife", 2, 20, KDS.Colors.GetPrimary.White, -1)
+
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Sergeant Shoot Animation Images...")
@@ -3080,6 +3125,7 @@ while main_running:
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none":
                     serialNumber = player_inventory.dropItem()
+<<<<<<< Updated upstream
                     items = numpy.append(items, Item(
                         (player_rect.centerx, player_rect.bottom - 34), serialNumber=serialNumber))
                 """
@@ -3103,6 +3149,20 @@ while main_running:
                     inventoryDoubles[inventory_slot] = False
                 inventory[inventory_slot] = "none"
                 """
+=======
+                    tempItem = Item((player_rect.x, player_rect.y), serialNumber=serialNumber)
+                    counter = 0
+                    while True:
+                        tempItem.rect.y += tempItem.rect.height
+                        for collision in collision_test(tempItem.rect, tiles):
+                            tempItem.rect.bottom = collision.top
+                            counter = 250
+                        counter += 1
+                        if counter > 250:
+                            break
+                        
+                    items = numpy.append(items, tempItem)
+>>>>>>> Stashed changes
             elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -3219,7 +3279,11 @@ while main_running:
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
+<<<<<<< Updated upstream
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey))
+=======
+    player_inventory.useItem(screen, mouseLeftPressed, weapon_fire)
+>>>>>>> Stashed changes
     player_inventory.render(screen)
 
     for Projectile in Projectiles:

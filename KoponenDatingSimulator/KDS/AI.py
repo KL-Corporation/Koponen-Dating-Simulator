@@ -3,6 +3,8 @@ import concurrent.futures
 import KDS.Animator, KDS.Math, KDS.Colors
 pygame.mixer.init()
 
+print("KDS.AI\nWritten by Koponen Development Inc and KSE LLC 2020")
+
 def __collision_test(rect, tiles):
     hit_list = []
     for tile in tiles:

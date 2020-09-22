@@ -2,6 +2,8 @@ import pygame, numpy, math
 
 pygame.init()
 
+print("KDS.World\nWritten by Koponen Development Inc 2020")
+
 def collision_test(rect: pygame.Rect, Tile_list):
     hit_list = []
     x = int((rect.x/34)-3)
@@ -66,7 +68,7 @@ class Tile:
                                                       scroll[0], renderable.rect.y - scroll[1]))
 
 class Bullet:
-    def __init__(self, rect, direction: int, speed:int, environment_obstacles, texture = None, maxDistance = 2000): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect, direction: int, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
@@ -105,11 +107,19 @@ class Bullet:
 
 class itemTools:
     class rk62:
-        def __init__(self):
-            self.counter = 0
+        def __init__(self, arg = 0):
+            self.counter = arg
     class plasmarifle:
-        def __init__(self):
-            self.counter = 0
+        def __init__(self, arg = 0):
+            self.counter = arg
+    class pistol:
+        def __init__(self, arg = 0):
+            self.counter = arg
+    class shotgun:
+        def __init__(self, arg = 0):
+            self.counter = arg
 
-rk62_C = itemTools.rk62()
-plasmarifle_C = itemTools.plasmarifle()
+rk62_C = itemTools.rk62(100)
+plasmarifle_C = itemTools.plasmarifle(100)
+pistol_C = itemTools.pistol(100)
+shotgun_C = itemTools.shotgun(100)

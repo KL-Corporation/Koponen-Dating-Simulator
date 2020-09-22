@@ -2,6 +2,8 @@ import KDS.Logging
 import math
 from inspect import currentframe
 
+print("KDS.Math\nWritten by Koponen Development Inc 2020")
+
 def getDistance(point1: tuple, point2: tuple):
     """
     Calculates the distance between two points.
@@ -40,7 +42,7 @@ def getSlope(p1: tuple, p2: tuple):
     """
     return (p2[1] - p1[1])/(p2[0]- p1[0])
 
-def getSlope(angle): #Angle in degrees
+def getSlope2(angle): #Angle in degrees
     """
     Calculates slope of straight from angle
     """
@@ -66,6 +68,10 @@ def getAngle(p1: tuple, p2: tuple):
     except Exception as e:
         KDS.Logging.AutoError(e, currentframe())
         return 0
+
+def Jd(var: bool):
+    #Converts boolean to -1 or 1
+    return -1 if bool else 1
 
 def Lerp(a: float, b: float, t: float):
     """
