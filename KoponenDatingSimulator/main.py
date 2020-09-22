@@ -1469,15 +1469,11 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.World.plasmarifle_C.counter = 0
             plasmarifle_f_sound.play()
             ammunition_plasma -= 1
-<<<<<<< Updated upstream
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx, player_rect.centery - 18, 2, 2),direction, 27, tiles, plasma_ammo))
-=======
             if direction:
                 temp = 80
             else:
                 temp = -80
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2),direction, 27, tiles, 20, plasma_ammo))
->>>>>>> Stashed changes
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -3125,31 +3121,6 @@ while main_running:
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none":
                     serialNumber = player_inventory.dropItem()
-<<<<<<< Updated upstream
-                    items = numpy.append(items, Item(
-                        (player_rect.centerx, player_rect.bottom - 34), serialNumber=serialNumber))
-                """
-                if inventory[inventory_slot] != "none":
-                    if inventory[inventory_slot] == "iPuhelin":
-                        KDS.Missions.SetProgress("tutorial", "trash", 1.0)
-                    if not direction:
-                        WorldData.Legacy.item_rects.append(pygame.Rect((int(player_rect.bottomright[0] - 17), int(player_rect.bottomright[1])), (34, 34)))
-                    else:
-                        WorldData.Legacy.item_rects.append(pygame.Rect((int(player_rect.bottomleft[0] - 17), int(player_rect.bottomleft[1])), (34, 34)))
-                    WorldData.Legacy.item_ids.append(inventory[inventory_slot])
-                    u = True
-                    while u:
-                        WorldData.Legacy.item_rects[-1].y += 30
-                        for tile in WorldData.Legacy.tile_rects:
-                            if WorldData.Legacy.item_rects[-1].colliderect(tile):
-                                WorldData.Legacy.item_rects[-1].bottom = tile.top
-                                u = False
-                if inventoryDoubles[inventory_slot] == True:
-                    inventory[inventory_slot + 1] = "none"
-                    inventoryDoubles[inventory_slot] = False
-                inventory[inventory_slot] = "none"
-                """
-=======
                     tempItem = Item((player_rect.x, player_rect.y), serialNumber=serialNumber)
                     counter = 0
                     while True:
@@ -3162,7 +3133,6 @@ while main_running:
                             break
                         
                     items = numpy.append(items, tempItem)
->>>>>>> Stashed changes
             elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -3279,11 +3249,7 @@ while main_running:
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
-<<<<<<< Updated upstream
-    player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey))
-=======
     player_inventory.useItem(screen, mouseLeftPressed, weapon_fire)
->>>>>>> Stashed changes
     player_inventory.render(screen)
 
     for Projectile in Projectiles:
