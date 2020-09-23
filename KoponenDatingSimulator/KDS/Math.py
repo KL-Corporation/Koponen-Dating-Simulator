@@ -2,8 +2,6 @@ import KDS.Logging
 import math
 from inspect import currentframe
 
-print("KDS.Math\nWritten by Koponen Development Inc 2020")
-
 def getDistance(point1: tuple, point2: tuple):
     """
     Calculates the distance between two points.

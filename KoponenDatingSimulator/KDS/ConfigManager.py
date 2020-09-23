@@ -5,8 +5,6 @@ import os
 from inspect import currentframe, getframeinfo
 #endregion
 
-print("KDS.ConfigManager\nWritten by NALStudio")
-
 AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
 saveDirPath = os.path.join(AppDataPath, "saves")
 

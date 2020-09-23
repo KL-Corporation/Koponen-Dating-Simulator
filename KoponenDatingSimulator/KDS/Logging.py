@@ -7,8 +7,6 @@ import io
 from pstats import SortKey
 from datetime import datetime
 
-print("KDS.Logging\nWritten by NALStudio")
-
 running = True
 AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
 logPath = os.path.join(AppDataPath, "logs")

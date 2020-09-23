@@ -1,13 +1,7 @@
 import pygame
 import KDS.Logging
-<<<<<<< Updated upstream
 from inspect import currentframe
-=======
-from inspect import currentframe, getframeinfo
 
-print("KDS.Convert\nWritten by Koponen Development Inc 2020")
-
->>>>>>> Stashed changes
 def ToBool(value):
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)

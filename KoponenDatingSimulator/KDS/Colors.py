@@ -1,7 +1,5 @@
 #The official unofficial color palette that this game is not built around
 
-print("KDS.Colors\nWritten by Koponen Development Inc 2020")
-
 class Get:
     """Get a color from the official unofficial color palette of the game.
     """

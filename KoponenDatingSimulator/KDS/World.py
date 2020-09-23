@@ -2,8 +2,6 @@ import pygame, numpy, math
 
 pygame.init()
 
-print("KDS.World\nWritten by Koponen Development Inc 2020")
-
 def collision_test(rect: pygame.Rect, Tile_list):
     hit_list = []
     x = int((rect.x/34)-3)

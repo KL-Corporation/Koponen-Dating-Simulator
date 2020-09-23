@@ -2,8 +2,6 @@ import KDS.Logging
 import KDS.Math
 import pygame
 
-print("KDS.Animator\nWritten by Koponen Development Inc 2020")
-
 class OnAnimationEnd:
     Stop = 0
     Loop = 1

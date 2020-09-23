@@ -1,7 +1,5 @@
 import KDS.Missions
 
-print("KDS.Gamemode\nWritten by NALStudio")
-
 class Modes:
     """The list of gamemodes this game has.
     """
