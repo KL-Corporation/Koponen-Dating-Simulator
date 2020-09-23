@@ -1203,7 +1203,8 @@ class Landmine(Tile):
     def update(self):
         if self.rect.colliderect(player_rect):
             self.air = True
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)))           
+            landmine_explosion.play()
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (self.rect.x-60, self.rect.y-60)))           
         return self.texture
 
 specialTilesD = {
@@ -3003,6 +3004,11 @@ while main_running:
         
         if v == "wall" or v == "air":
             Projectiles.remove(Projectile)
+    
+    for unit in Explosions:
+        finished = unit.update(screen, scroll)
+        if finished:
+            Explosions.remove(unit)
 
     ###########################################
 
