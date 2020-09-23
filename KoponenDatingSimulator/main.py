@@ -23,16 +23,20 @@ import concurrent.futures
 import sys
 import importlib
 import shutil
+import zipfile
 from pygame.locals import *
 from PIL import Image, ImageFilter
 #endregion
 #region Priority Initialisation
-AppDataPath = os.path.join(os.getenv('APPDATA'),
-                           "Koponen Development Inc", "Koponen Dating Simulator")
+class PersistentPaths:
+    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+    CachePath = os.path.join(AppDataPath, "cache")
 if not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
     os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
-if not os.path.isdir(AppDataPath):
-    os.mkdir(AppDataPath)
+if not os.path.isdir(PersistentPaths.AppDataPath):
+    os.mkdir(PersistentPaths.AppDataPath)
+if not os.path.isdir(PersistentPaths.CachePath):
+    os.mkdir(PersistentPaths.CachePath)
 
 pygame.init()
 KDS.Logging.init()
@@ -48,8 +52,7 @@ pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "WindowSizeX", str(
     1200))), int(KDS.ConfigManager.LoadSetting("Settings", "WindowSizeY", str(800))))
-window = pygame.display.set_mode(
-    window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
+window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_resize_size = window_size
 display_size = (1200, 800)
 display = pygame.Surface(display_size)
@@ -669,6 +672,7 @@ current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "01")
 with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = file.read()
     cntnts = cntnts.split('\n')
+    file.close()
 
 #######################################TEMPORARY#######################################
 max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", f"{len(cntnts) - 1:02d}")
@@ -690,6 +694,7 @@ with open("Assets/Textures/item_doubles.txt", "r") as file:
     data = file.read().split("\n")
     for d in data:
         inventoryDobulesSerialNumbers.append(int(d))
+    file.close()
 
 inventoryDoubleOffset = 0
 for none in inventory:
@@ -843,6 +848,7 @@ class WorldData():
             convertItemColors = []
             with open(os.path.join("Assets", "Maps", "resources_convert_rules.txt"), 'r') as f:
                 raw = f.read()
+                f.close()
                 raw = raw.replace(" ", "")
                 rowSplit = raw.split('\n')
 
@@ -974,8 +980,32 @@ class WorldData():
     @staticmethod
     def LoadMap():
         global tiles, items, enemies, decoration, specialTiles, Projectiles
-        with open(os.path.join("Assets", "Maps", "map" + current_map, "level.map"), "r") as map_file:
+        MapPath = os.path.join("Assets", "Maps", "map" + current_map)
+        PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
+        if os.path.isdir(PersistentMapPath):
+            shutil.rmtree(PersistentMapPath)
+        if os.path.isdir(MapPath):
+            shutil.copytree(MapPath, PersistentMapPath)
+        elif os.path.isfile(MapPath + ".map"):
+            with zipfile.ZipFile(MapPath + ".map", "r") as mapZip:
+                mapZip.extractall(PersistentMapPath)
+                mapZip.close()
+        else:
+            KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
+            
+        for fname in os.listdir(PersistentMapPath):
+            fpath = os.path.join(PersistentMapPath, fname)
+            if os.path.isdir(fpath):
+                for _fname in os.listdir(fpath):
+                    _fpath = os.path.join(fpath, _fname)
+                    if os.path.isfile(_fpath):
+                        shutil.copy(_fpath, PersistentMapPath)
+                    else:
+                        KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
+                shutil.rmtree(fpath)
+        with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
+            map_file.close()
         items = numpy.array([])
         enemies = numpy.array([])
         decoration = numpy.array([])
@@ -1016,11 +1046,16 @@ class WorldData():
                 else:
                     x += 1
             y += 1
+        
+        pygame.mixer.music.load(os.path.join(PersistentMapPath, "music.mp3"))
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(Audio.MusicVolume)
 #endregion
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
 with open("Assets/Textures/tile_textures.txt", "r") as f:
     data = f.read().split("\n")
+    f.close()
 t_textures = {}
 for element in data:
     num = int(element.split(",")[0])
@@ -1031,6 +1066,7 @@ for element in data:
 
 with open("Assets/Textures/item_textures.txt", "r") as f:
     data = f.read().split("\n")
+    f.close()
 i_textures = {}
 for element in data:
     num = int(element.split(",")[0])
@@ -1041,6 +1077,7 @@ for element in data:
 
 with open("Assets/Textures/inventory_items.txt", "r") as f:
     data = f.read().split("\n")
+    f.close()
 inventory_items = []
 for element in data:
     inventory_items.append(int(element))
@@ -1127,6 +1164,7 @@ player_inventory = Inventory(5)
 
 with open("Assets/Textures/special_tiles.txt", 'r') as f:
     specialTilesSerialNumbers = [int(number) for number in f.read().split("\n")]
+    f.close()
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
@@ -1625,6 +1663,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 def load_items(path):
     with open(path, 'r') as f:
         data = f.read()
+        f.close()
     data = data.split('\n')
     item_map = []
     for row in data:
@@ -1648,14 +1687,6 @@ jukebox_music = load_jukebox_music()
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
     scroll[1] += random.randint(-10, 10)
-
-
-def play_map_music(_current_map):
-    pygame.mixer.music.load(os.path.join(
-        "Assets", "Maps", "map" + _current_map, "music.mid"))
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(Audio.MusicVolume)
-
 
 def load_ads():
     ad_files = os.listdir("Assets/Textures/KoponenTalk/ads")
@@ -2433,7 +2464,6 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
     WorldData.LoadMap()
     pygame.mouse.set_visible(False)
     main_menu_running = False
-    play_map_music(current_map)
     player_hand_item = "none"
 
     player_death_event = False
@@ -2570,7 +2600,7 @@ def settings_menu():
 
     def reset_settings():
         return_def()
-        os.remove(os.path.join(AppDataPath, "settings.cfg"))
+        os.remove(os.path.join(PersistentPaths.AppDataPath, "settings.cfg"))
         importlib.reload(KDS.ConfigManager)
     
     def reset_data():
@@ -3828,7 +3858,7 @@ KDS.Logging.Quit()
 pygame.display.quit()
 pygame.quit()
 if reset_data:
-    shutil.rmtree(AppDataPath)
+    shutil.rmtree(PersistentPaths.AppDataPath)
 if restart:
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 #endregion
