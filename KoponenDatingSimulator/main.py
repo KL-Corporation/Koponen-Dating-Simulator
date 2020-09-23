@@ -492,8 +492,9 @@ player_shotgun_shot.set_volume(0.8)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
 #endregion
-jukebox_tip = tip_font.render(
-    "Use jukebox [E]", True, KDS.Colors.GetPrimary.White)
+jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
+jukebox_tip.blit(tip_font.render("Use Jukebox [Press: E]", True, KDS.Colors.GetPrimary.White), (0, 0))
+jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetPrimary.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
 
 restart = False
 reset_data = False

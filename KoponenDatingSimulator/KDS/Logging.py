@@ -14,6 +14,7 @@ profiler_running = False
 profile = None
 
 def init():
+    global logFileName
     if os.path.exists(logPath) and os.path.isdir(logPath):
         logFiles = os.listdir(logPath)
     else:
