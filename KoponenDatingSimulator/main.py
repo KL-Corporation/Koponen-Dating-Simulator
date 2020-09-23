@@ -1140,6 +1140,7 @@ class Tile:
         else:
             self.air = True
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
+        self.checkCollision = True
 
     @staticmethod
     # Tile_list is a 2d numpy array
@@ -1179,6 +1180,7 @@ class Toilet(Tile):
         self.burning = _burning
         self.texture = toilet0
         self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), -1)
+        self.checkCollision = True
 
     def update(self):
         
@@ -1197,6 +1199,7 @@ class Trashcan(Tile):
         self.burning = _burning
         self.texture = trashcan
         self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
+        self.checkCollision = True
 
     def update(self):
         
@@ -1214,9 +1217,32 @@ class Jukebox(Tile):
         positionC = (position[0], position[1]-26)
         super().__init__(positionC, serialNumber)
         self.texture = jukebox_texture
-        self.rect = pygame.Rect(position[0], position[1]-27, 1, 1)
+        self.rect = pygame.Rect(position[0], position[1]-27, 40, 60)
+        self.checkCollision = False
 
     def update(self):
+        global jukeboxMusicPlaying, jukeboxChannel
+        if self.rect.colliderect(player_rect):
+            screen.blit(jukebox_tip, (self.rect.x - scroll[0]-20, self.rect.y - scroll[1]-30))
+            if KDS.Keys.GetPressed(KDS.Keys.functionKey):
+                pygame.mixer.music.stop()
+                for x in range(len(jukebox_music)):
+                    jukebox_music[x].stop()
+                while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
+                    jukeboxMusicPlaying = int(random.uniform(0, len(jukebox_music)))
+                for i in range(len(lastJukeboxSong) - 1):
+                    lastJukeboxSong[i] = lastJukeboxSong[i + 1]
+                lastJukeboxSong[4] = jukeboxMusicPlaying
+                jukeboxChannel = Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
+
+                if not jukeboxChannel.get_busy():
+                    jukeboxMusicPlaying = -1
+                elif not pygame.mixer.music.get_busy():
+                    jukeboxMusicPlaying = -1
+                    jukeboxChannel.stop()
+                    pygame.mixer.music.play(-1)
+                    pygame.mixer.music.set_volume(Audio.MusicVolume)
+
         return self.texture
 
 class Door(Tile):
@@ -1989,7 +2015,7 @@ def collision_test(rect, Tile_list):
 
     for row in Tile_list[y:end_y]:
         for tile in row[x:end_x]:
-            if rect.colliderect(tile.rect) and not tile.air:
+            if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
                 hit_list.append(tile.rect)
     return hit_list
 
