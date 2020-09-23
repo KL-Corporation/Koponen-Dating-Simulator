@@ -1,0 +1,47 @@
+building:
+a = air
+b = floor0
+c = wall0
+d = table0
+e = toilet0
+f = lamp0
+g = trashcan
+h = ground1
+i = grass
+j = concrete
+k = door
+l = red_door
+m = green_door
+n = blue_door
+o = bricks
+p = planks
+q = ladder
+r
+s
+t
+u
+decoration:
+A = tree
+B = jukebox
+enemies and other shit:
+Z = zombie
+S = sergeant
+V = archvile
+items:
+0 = gasburner
+1 = knife
+2 = red_key
+3 = green_key
+4 = blue_key
+5 = coffeemug
+6 = ss_bonuscard
+7 = lappi_sytytyspalat
+8 = plasmarifle
+9 = cell
+! = pistol
+# = pistol_mag
+% = rk62
+& = rk62_mag
+( = medkit
+) = shotgun
+= = shotgun_shells
