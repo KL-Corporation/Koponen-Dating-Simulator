@@ -3249,7 +3249,7 @@ while main_running:
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
-    player_inventory.useItem(screen, mouseLeftPressed, weapon_fire)
+    player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
     player_inventory.render(screen)
 
     for Projectile in Projectiles:
