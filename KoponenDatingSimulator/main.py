@@ -41,6 +41,7 @@ if not os.path.isdir(PersistentPaths.CachePath):
     os.mkdir(PersistentPaths.CachePath)
 KDS.System.hide(PersistentPaths.CachePath)
 
+pygame.mixer.init()
 pygame.init()
 KDS.Logging.init()
 KDS.ConfigManager.init()
@@ -113,7 +114,6 @@ def ResizeWindow(set_size: tuple):
     Fullscreen.Set(True)
 #endregion
 #region Audio
-pygame.mixer.init()
 pygame.mixer.set_num_channels(32)
 
 class Audio:
@@ -1162,17 +1162,21 @@ class Trashcan(Tile):
 
 class Jukebox(Tile):
     def __init__(self, position:(int, int), serialNumber: int):        
-        positionC = (position[0], position[1]-26)
+        positionC = (position[0], position[1] - 26)
         super().__init__(positionC, serialNumber)
         self.texture = jukebox_texture
-        self.rect = pygame.Rect(position[0], position[1]-27, 40, 60)
+        self.rect = pygame.Rect(position[0], position[1] - 27, 40, 60)
         self.checkCollision = False
 
     def update(self):
         global jukeboxMusicPlaying, jukeboxChannel
+        if not jukeboxChannel.get_busy() and not Audio.MusicMixer.get_busy():
+            jukeboxMusicPlaying = -1
+            Audio.MusicMixer.unpause()
+            Audio.MusicMixer.set_volume(Audio.MusicVolume)
         if self.rect.colliderect(player_rect):
-            screen.blit(jukebox_tip, (self.rect.x - scroll[0]-20, self.rect.y - scroll[1]-30))
-            if KDS.Keys.GetPressed(KDS.Keys.functionKey):
+            screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1]-30))
+            if KDS.Keys.GetClicked(KDS.Keys.functionKey):
                 Audio.MusicMixer.pause()
                 for x in range(len(jukebox_music)):
                     jukebox_music[x].stop()
@@ -1182,12 +1186,15 @@ class Jukebox(Tile):
                     lastJukeboxSong[i] = lastJukeboxSong[i + 1]
                 lastJukeboxSong[4] = jukeboxMusicPlaying
                 jukeboxChannel = Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
-
-                if not Audio.MusicMixer.get_busy():
-                    jukeboxMusicPlaying = -1
-                    jukeboxChannel.stop()
-                    Audio.MusicMixer.unpause()
-                    Audio.MusicMixer.set_volume(Audio.MusicVolume)
+            elif KDS.Keys.GetHeld(KDS.Keys.functionKey):
+                jukeboxMusicPlaying = -1
+                jukeboxChannel.stop()
+                Audio.MusicMixer.unpause()
+                Audio.MusicMixer.set_volume(Audio.MusicVolume)
+        if jukeboxMusicPlaying != -1:
+            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, player_rect.midbottom) / 350
+            jukebox_volume = KDS.Math.Lerp(0, 1, KDS.Math.Clamp(lerp_multiplier, 0, 1))
+            jukeboxChannel.set_volume(jukebox_volume * Audio.MusicVolume)
 
         return self.texture
 
@@ -2854,6 +2861,7 @@ if tcagr != False:
 #region Main Running
 while main_running:
 #region Events
+    KDS.Keys.Update()
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_d:
@@ -2929,6 +2937,8 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.moveDown, False)
             elif event.key == K_LSHIFT:
                 KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
+            elif event.key == K_e:
+                KDS.Keys.SetPressed(KDS.Keys.functionKey, False)
             elif event.key == K_c:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
@@ -3678,10 +3688,7 @@ while main_running:
             lastJukeboxSong[4] = jukeboxMusicPlaying
             jukeboxChannel = Audio.playSound(
                 jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
-        if not jukeboxChannel.get_busy():
-            jukeboxMusicPlaying = -1
     elif not Audio.MusicMixer.get_busy():
-        jukeboxMusicPlaying = -1
         jukeboxChannel.stop()
         Audio.MusicMixer.unpause()
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
@@ -3717,7 +3724,6 @@ while main_running:
 #endregion
 #region Data Update
     animation_counter += 1
-    KDS.Keys.SetPressed(KDS.Keys.functionKey, False)
     weapon_fire = False
     koponen_animation_stats[2] += 1
     for sergeant in WorldData.Legacy.sergeants:
@@ -3766,8 +3772,10 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.Quit()
+pygame.mixer.quit()
 pygame.display.quit()
 pygame.quit()
 if reset_data:

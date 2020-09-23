@@ -76,3 +76,6 @@ def Lerp(a: float, b: float, t: float):
     Linearly interpolates between a and b by t.
     """
     return (t * a) + ((1 - t) * b)
+
+def Clamp(value, _min, _max):
+    return max(_min, min(value, _max))
