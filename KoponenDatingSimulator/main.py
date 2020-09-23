@@ -14,6 +14,7 @@ import KDS.LevelLoader
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
+import KDS.System
 import KDS.UI
 import KDS.World
 import numpy
@@ -38,6 +39,7 @@ if not os.path.isdir(PersistentPaths.AppDataPath):
     os.mkdir(PersistentPaths.AppDataPath)
 if not os.path.isdir(PersistentPaths.CachePath):
     os.mkdir(PersistentPaths.CachePath)
+KDS.System.hide(PersistentPaths.CachePath)
 
 pygame.init()
 KDS.Logging.init()
@@ -3768,6 +3770,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.Quit()
 pygame.display.quit()
 pygame.quit()
