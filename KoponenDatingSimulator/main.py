@@ -161,8 +161,6 @@ class Audio:
             channel.set_volume(EffectVolume)
 #endregion
 #region Animations
-    
-
 monstersLeft = 0
 
 class Archvile:
@@ -959,9 +957,9 @@ class WorldData():
                     x += 1
             y += 1
         
-        pygame.mixer.music.load(os.path.join(PersistentMapPath, "music.mp3"))
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(Audio.MusicVolume)
+        Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.mp3"))
+        Audio.MusicMixer.play(-1)
+        Audio.MusicMixer.set_volume(Audio.MusicVolume)
 #endregion
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
@@ -1175,7 +1173,7 @@ class Jukebox(Tile):
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.x - scroll[0]-20, self.rect.y - scroll[1]-30))
             if KDS.Keys.GetPressed(KDS.Keys.functionKey):
-                pygame.mixer.music.stop()
+                Audio.MusicMixer.pause()
                 for x in range(len(jukebox_music)):
                     jukebox_music[x].stop()
                 while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
@@ -1185,13 +1183,11 @@ class Jukebox(Tile):
                 lastJukeboxSong[4] = jukeboxMusicPlaying
                 jukeboxChannel = Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
 
-                if not jukeboxChannel.get_busy():
-                    jukeboxMusicPlaying = -1
-                elif not pygame.mixer.music.get_busy():
+                if not Audio.MusicMixer.get_busy():
                     jukeboxMusicPlaying = -1
                     jukeboxChannel.stop()
-                    pygame.mixer.music.play(-1)
-                    pygame.mixer.music.set_volume(Audio.MusicVolume)
+                    Audio.MusicMixer.unpause()
+                    Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
         return self.texture
 
@@ -2608,7 +2604,7 @@ def settings_menu():
 
         if set_music_volume != Audio.MusicVolume:
             MusicVolume = set_music_volume
-            pygame.mixer.music.set_volume(MusicVolume)
+            Audio.MusicMixer.set_volume(MusicVolume)
         elif set_effect_volume != Audio.EffectVolume:
             Audio.setVolume(set_effect_volume)
 
@@ -2651,9 +2647,9 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(Audio.MusicVolume)
+    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.wav")
+    Audio.MusicMixer.play(-1)
+    Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
     def settings_function():
         settings_menu()
@@ -2746,7 +2742,7 @@ def main_menu():
                     if MenuMode == Mode.ModeSelectionMenu or MenuMode == Mode.MainMenu:
                         MenuMode = Mode.MainMenu
                     else:
-                        mode_selection_function()
+                        menu_mode_selector(Mode.ModeSelectionMenu)
             elif event.type == pygame.QUIT:
                 KDS_Quit()
             elif event.type == pygame.VIDEORESIZE:
@@ -2975,7 +2971,7 @@ while main_running:
 #region Player Death
     if player_health < 1 and not animation_has_played:
         player_death_event = True
-        pygame.mixer.music.stop()
+        Audio.MusicMixer.stop()
         pygame.mixer.Sound.play(player_death_sound)
         player_death_sound.set_volume(0.5)
         animation_has_played = True
@@ -3665,7 +3661,7 @@ while main_running:
 
     if jukebox_collision:
         if KDS.Keys.GetPressed(KDS.Keys.functionKey):
-            pygame.mixer.music.stop()
+            Audio.MusicMixer.pause()
             for x in range(len(jukebox_music)):
                 jukebox_music[x].stop()
             while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
@@ -3678,11 +3674,11 @@ while main_running:
                 jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
         if not jukeboxChannel.get_busy():
             jukeboxMusicPlaying = -1
-    elif not pygame.mixer.music.get_busy():
+    elif not Audio.MusicMixer.get_busy():
         jukeboxMusicPlaying = -1
         jukeboxChannel.stop()
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(Audio.MusicVolume)
+        Audio.MusicMixer.unpause()
+        Audio.MusicMixer.set_volume(Audio.MusicVolume)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
@@ -3731,7 +3727,7 @@ while main_running:
     if player_rect.y > len(tiles)*34+400:
         player_health = 0
     if esc_menu:
-        pygame.mixer.music.stop()
+        Audio.MusicMixer.pause()
         Audio.pauseAllSounds()
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
@@ -3740,11 +3736,11 @@ while main_running:
         pygame.mouse.set_visible(True)
         esc_menu_f()
         pygame.mouse.set_visible(False)
-        pygame.mixer.music.play()
+        Audio.MusicMixer.unpause()
         Audio.unpauseAllSounds()
     if go_to_main_menu:
         Audio.stopAllSounds()
-        pygame.mixer.music.stop()
+        Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
         main_menu()
 #endregion
