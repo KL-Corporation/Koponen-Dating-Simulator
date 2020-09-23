@@ -16,7 +16,6 @@ textOffset = 2
 #region init
 pygame.init()
 
-screen_size = (600, 400)
 mission_font = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
 task_font = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
 
@@ -130,10 +129,7 @@ def GetMaxWidth():
     global task_font, mission_font
     Max_Text_Width, temp = mission_font.size(Missions[Active_Mission][1])
     for i in range(len(Missions[Active_Mission]) - 2):
-        tempVar = i + 2
-        temp_width, temp_height = task_font.size(Missions[Active_Mission][tempVar][1] + textOffsetString + str(100))
-        if Max_Text_Width < temp_width:
-            Max_Text_Width = temp_width
+        Max_Text_Width = max(Max_Text_Width, task_font.size(Missions[Active_Mission][i + 2][1] + textOffsetString + str(100))[0])
     return Max_Text_Width
 def RenderMission(surface: pygame.Surface):
     global Missions, mission_font, BackgroundColor, Active_Mission, HeaderColor
@@ -173,9 +169,10 @@ def RenderTask(surface: pygame.Surface, index: int):
     else:
         draw_color = task_color
     Max_Text_Width = GetMaxWidth()
-    backgroundRect = (screen_size[0] - Max_Text_Width, 20 + ((text_height + 5) * index), Max_Text_Width, text_height + 5)
-    taskpos = (screen_size[0] - Max_Text_Width, 22.5 + ((text_height + 5) * index))
-    progresspos = (screen_size[0] - progress_width, 22.5 + ((text_height + 5) * index))
+    surface_size = surface.get_size()
+    backgroundRect = (surface_size[0] - Max_Text_Width, 20 + ((text_height + 5) * index), Max_Text_Width, text_height + 5)
+    taskpos = (surface_size[0] - Max_Text_Width, 22.5 + ((text_height + 5) * index))
+    progresspos = (surface_size[0] - progress_width, 22.5 + ((text_height + 5) * index))
 
     pygame.draw.rect(surface, draw_color, backgroundRect)
     surface.blit(task_rendered, taskpos)
