@@ -1,6 +1,8 @@
-import os, pygame
+import os, pygame, numpy
 from pygame.locals import *
 import threading
+import KDS.Colors
+
 
 pygame.init()
 display_size = (1600, 800)
@@ -20,41 +22,10 @@ txt = ""
 background_color = True
 dark_mode = True
 
-floor1 = pygame.image.load("Assets/Textures/Building/floor0v2.png")
-concrete1 = pygame.image.load("Assets/Textures/Building/concrete0.png")
-wall1 = pygame.image.load("Assets/Textures/Building/wall0.png")
-table1 = pygame.image.load("Assets/Textures/Building/table0.png").convert()
-toilet1 = pygame.image.load("Assets/Textures/Building/toilet0.png").convert()
-lamp1 = pygame.image.load("Assets/Textures/Building/lamp0.png").convert()
-trashcan = pygame.image.load("Assets/Textures/Building/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Building/ground0.png")
-grass = pygame.image.load("Assets/Textures/Building/grass0.png")
-door_closed = pygame.image.load("Assets/Textures/Building/door_closed.png").convert()
-red_door_closed = pygame.image.load(
-    "Assets/Textures/Building/red_door_closed.png").convert()
-green_door_closed = pygame.image.load(
-    "Assets/Textures/Building/green_door_closed.png").convert()
-blue_door_closed = pygame.image.load(
-    "Assets/Textures/Building/blue_door_closed.png").convert()
-door_open = pygame.image.load("Assets/Textures/Building/door_open2.png")
-bricks = pygame.image.load("Assets/Textures/Building/bricks.png")
-tree = pygame.image.load("Assets/Textures/Building/tree.png")
-planks = pygame.image.load("Assets/Textures/Building/planks.png")
-jukebox_texture = pygame.image.load("Assets/Textures/Building/jukebox.png")
-landmine_texture = pygame.image.load("Assets/Textures/Building/landmine.png")
-ladder_texture = pygame.image.load("Assets/Textures/Building/ladder.png")
-background_wall = pygame.image.load("Assets/Textures/Building/background_wall.png")
-light_bricks = pygame.image.load("Assets/Textures/Building/light_bricks.png")
-iron_bars = pygame.image.load("Assets/Textures/Building/iron_bars_texture.png").convert()
-soil = pygame.image.load("Assets/Textures/Building/soil.png")
-mossy_bricks = pygame.image.load("Assets/Textures/Building/mossy_bricks.png")
 archvile = pygame.image.load("Assets/Textures/Animations/archvile_run_0.png")
 zombie = pygame.image.load("Assets/Textures/Animations/z_attack_0.png")
 serg = pygame.image.load("Assets/Textures/Animations/seargeant_shooting_1.png")
-stone = pygame.image.load("Assets/Textures/Building/stone.png").convert()
-hay = pygame.image.load("Assets/Textures/Building/hay.png").convert()
-soil1 = pygame.image.load("Assets/Textures/Building/soil_2.png").convert()
-wood = pygame.image.load("Assets/Textures/Building/wood.png").convert()
+
 
 gasburner_off = pygame.image.load(
     "Assets/Textures/Items/gasburner_off.png").convert()
@@ -90,57 +61,29 @@ shotgun_shells_t = pygame.image.load(
     "Assets/Textures/Items/shotgun_shells.png").convert()
 iphone_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 
-tip_font = pygame.font.Font("gamefont2.ttf", 23, bold=0, italic=0)
+tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 23, bold=0, italic=0)
 
-item_textures = {'0':gasburner_off,
-                    '1': gasburner_off,
-                    '2': knife,
-                    '3': red_key,
-                    '4': green_key,
-                    '5': blue_key,
-                    '6': ss_bonuscard,
-                    '7': lappi_sytytyspalat,
-                    '8': plasmarifle,
-                    '9': cell,
-                    '!': pistol_texture,
-                    '#': pistol_mag,
-                    '%': rk62_texture,
-                    '&': rk62_mag,
-                    '(': medkit,
-                    ')': shotgun,
-                    '=': shotgun_shells_t,
-                    '+': soulsphere,
-                    "'": turboneedle}
+with open("Assets/Textures/tile_textures.txt", "r") as f:
+    data = f.read().split("\n")
+    f.close()
+t_textures = {}
+for element in data:
+    num = int(element.split(",")[0])
+    res = element.split(",")[1]
+    t_textures[num] = pygame.image.load(
+        "Assets/Textures/Map/" + res).convert()
+    t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
-tile_textures = {'b': floor1,
-                    'c': wall1,
-                    'd': table1,
-                    'e': toilet1,
-                    'f': lamp1,
-                    'g': trashcan,
-                    'h': ground1,
-                    'i': grass,
-                    'j': concrete1,
-                    'o': bricks,
-                    'A': tree,
-                    'p': planks,
-                    'q': ladder_texture,
-                    'r': light_bricks,
-                    's': iron_bars,
-                    't': soil,
-                    'u': mossy_bricks,
-                    'Z': zombie,
-                    'S': serg,
-                    'V': archvile,
-                    'I': imp,
-                    'v': stone,
-                    'w': hay,
-                    'å': soil1,
-                    'ä': wood,
-                    'C': landmine_texture,
-                    'l':red_door_closed,
-                    'n':green_door_closed,
-                    'm':blue_door_closed}
+with open("Assets/Textures/item_textures.txt", "r") as f:
+    data = f.read().split("\n")
+    f.close()
+i_textures = {}
+for element in data:
+    num = int(element.split(",")[0])
+    res = element.split(",")[1]
+    i_textures[num] = pygame.image.load(
+        "Assets/Textures/Items/" + res).convert()
+    i_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
 
 
@@ -342,9 +285,9 @@ while main:
                     colors = dark_colors.copy()
             if event.key == K_e:
                 current_block = material_selector(current_block)
-                if current_block in tile_textures:
+                if current_block in t_textures:
                     current_modifier = "tile"
-                elif current_block in item_textures:
+                elif current_block in i_textures:
                     current_modifier = "item"
                 elif current_block == "a":
                     pass
@@ -366,10 +309,6 @@ while main:
         main = False
     if input_data == "export":
         save(textmap, item_map)
-    if input_data in tile_textures:
-        current_modifier = "tile"
-    elif input_data in item_textures:
-        current_modifier = "item"
     elif input_data == "a":
         pass
     else:
@@ -393,16 +332,6 @@ while main:
             rectwidth = 50
             rectheight = 50
 
-            y = 0
-            u = 0
-            for j in textmap:
-                x = 0
-                row = []
-                for o in j:
-                    row.append(pygame.Rect(x*rectwidth, y*rectheight, rectwidth, rectheight))
-                    x += 1
-                tile_rects.append(row)
-                y += 1
         except Exception:
             print("Please state the level size (int,int)")
             data_counter = 0
