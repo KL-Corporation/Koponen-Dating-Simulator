@@ -118,9 +118,16 @@ class itemTools:
             self.counter = arg
 
 class Explosion:
-    def __init__(self, animation):
+    def __init__(self, animation, pos: (int, int)):
         self.animation = animation
+        self.xpos = pos[0]
+        self.ypos = pos[1]
 
+    def update(self, Surface: pygame.Surface, scroll: list):
+        txtre, finished = self.animation.update()
+        Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
+        return finished
+    
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)
 pistol_C = itemTools.pistol(100)
