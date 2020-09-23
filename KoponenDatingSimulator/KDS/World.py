@@ -117,6 +117,10 @@ class itemTools:
         def __init__(self, arg = 0):
             self.counter = arg
 
+class Explosion:
+    def __init__(self, animation):
+        self.animation = animation
+
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)
 pistol_C = itemTools.pistol(100)

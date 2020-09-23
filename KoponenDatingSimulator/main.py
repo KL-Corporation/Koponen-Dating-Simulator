@@ -23,6 +23,7 @@ import concurrent.futures
 import sys
 import importlib
 import shutil
+import json
 import zipfile
 from pygame.locals import *
 from PIL import Image, ImageFilter
@@ -158,92 +159,7 @@ class Audio:
             channel.set_volume(EffectVolume)
 #endregion
 #region Animations
-class plasma_bullet:
-
-    def __init__(self, starting_position, direction, display_to_blit):
-        self.done = False
-        self.direction = direction
-        self.display = display_to_blit
-        self.rect = pygame.Rect(
-            starting_position[0], starting_position[1], 2, 2)
-
-    def update(self, tile_rects):
-        if self.direction:
-            self.rect.centerx += 14
-        else:
-            self.rect.centerx -= 14
-
-        for tile in tile_rects:
-            if self.rect.colliderect(tile):
-                self.done = True
-                Audio.playSound(plasma_hitting)
-        for zombie1 in WorldData.Legacy.zombies:
-            if self.rect.colliderect(zombie1) == True and zombie1.playDeathAnimation == True:
-                self.done = True
-                zombie1.health -= 10
-                Audio.playSound(plasma_hitting)
-        for sergeant in WorldData.Legacy.sergeants:
-            if self.rect.colliderect(sergeant) and sergeant.playDeathAnimation:
-                self.done = True
-                sergeant.health -= 12
-                Audio.playSound(plasma_hitting)
-
-        self.display.blit(
-            plasma_ammo, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
-
-        return self.done
     
-class Bullet:
-
-    def __init__(self, _position, _direction, damage):
-        self.position = _position
-        self.direction = not _direction
-        self.move = 0
-        self.damage = damage
-
-    def shoot(self, _tile_rects):
-
-        global screen
-
-        if self.direction:
-            self.move = 28
-        else:
-            self.move = -28
-        q = True
-        counter = 0
-        while q:
-
-            self.position[0] += self.move
-
-            for tile in _tile_rects:
-                if tile.collidepoint(self.position):
-                    q = False
-                    return "wall"
-
-            for zombie1 in WorldData.Legacy.zombies:
-                if zombie1.health > 0:
-                    if zombie1.rect.collidepoint(tuple(self.position)):
-                        zombie1.health -= self.damage
-                        q = False
-                        return "enemy"
-
-            for sergeant in WorldData.Legacy.sergeants:
-                if sergeant.health > 0:
-                    if sergeant.rect.collidepoint(tuple(self.position)):
-                        sergeant.health -= self.damage
-                        q = False
-                        return "enemy"
-            for archvile in WorldData.Legacy.archviles:
-                if archvile.health > 0:
-                    if archvile.rect.collidepoint(tuple(self.position)):
-                        archvile.health -= self.damage
-                        q = False
-                        return "enemy"
-
-            counter += 1
-            if counter > 300:
-                q = False
-        return "null"
 
 monstersLeft = 0
 
@@ -621,14 +537,8 @@ KDS.Logging.Log(KDS.Logging.LogType.debug,
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
 selectedSave = 0
 
-gasburner_animation_stats = [0, 4, 0]
-knife_animation_stats = [0, 10, 0]
-burning_animation_stats = [0, 5, 0]
 koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
-plasmarifle_cooldown = 0
-rk62_cooldown = 0
-rk62_sound_cooldown = 0
 player_hand_item = "none"
 player_keys = {"red": False, "green": False, "blue": False}
 direction = True
@@ -686,6 +596,7 @@ rk_62_ammo = 30
 shotgun_shells = 8
 
 Projectiles = []
+Explosions = []
 
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
@@ -703,7 +614,6 @@ for none in inventory:
 player_score = 0
 
 true_scroll = [0, 0]
-inventory_slot = 0
 
 test_rect = pygame.Rect(0, 0, 60, 40)
 stand_size = (28, 63)
@@ -1286,12 +1196,23 @@ class Jukebox(Tile):
 class Door(Tile):
     pass
 class Landmine(Tile):
-    pass
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = landmine_texture
+        self.rect = pygame.Rect(position[0], position[1]+26, 22, 11)
+        self.checkCollision = False
+
+    def update(self):
+        if self.rect.colliderect(player_rect):
+            self.air = True
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)))           
+        return self.texture
 
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
-    19: Jukebox
+    19: Jukebox,
+    21: Landmine
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -2994,12 +2915,6 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, True)
                 rk62_sound_cooldown = 11
                 weapon_fire = True
-                if player_hand_item == "gasburner":
-                    gasburnerBurning = True
-                if player_hand_item == "knife":
-                    knifeInUse = True
-                if player_hand_item == "plasmarifle":
-                    plasmarifle_fire = True
         elif event.type == KEYUP:
             if event.key == K_d:
                 KDS.Keys.SetPressed(KDS.Keys.moveRight, False)
@@ -3022,12 +2937,6 @@ while main_running:
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
-                if player_hand_item == "gasburner":
-                    gasburnerBurning = False
-                if player_hand_item == "knife":
-                    knifeInUse = False
-                if player_hand_item == "plasmarifle":
-                    plasmarifle_fire = False
             elif event.button == 4:
                 player_inventory.moveLeft()
             elif event.button == 5:
@@ -3540,26 +3449,6 @@ while main_running:
                 player_death_event = False
                 animation_has_played = True
 
-    if player_hand_item == "gasburner":
-        if gasburner_animation_stats[2] > gasburner_animation_stats[1]:
-            gasburner_animation_stats[0] += 1
-            gasburner_animation_stats[2] = 0
-            if gasburner_animation_stats[0] > 1:
-                gasburner_animation_stats[0] = 0
-
-    if player_hand_item == "knife":
-        if knife_animation_stats[2] > knife_animation_stats[1]:
-            knife_animation_stats[0] += 1
-            knife_animation_stats[2] = 0
-            if knife_animation_stats[0] > 1:
-                knife_animation_stats[0] = 0
-
-    if burning_animation_stats[2] > burning_animation_stats[1]:
-        burning_animation_stats[0] += 1
-        burning_animation_stats[2] = 0
-        if burning_animation_stats[0] > 2:
-            burning_animation_stats[0] = 0
-
     if koponen_animation_stats[2] > koponen_animation_stats[1]:
         koponen_animation_stats[0] += 1
         koponen_animation_stats[2] = 0
@@ -3824,16 +3713,9 @@ while main_running:
 #endregion
 #region Data Update
     animation_counter += 1
-    if player_hand_item == "gasburner":
-        gasburner_animation_stats[2] += 1
-    elif player_hand_item == "knife":
-        knife_animation_stats[2] += 1
     KDS.Keys.SetPressed(KDS.Keys.functionKey, False)
     weapon_fire = False
-    burning_animation_stats[2] += 1
     koponen_animation_stats[2] += 1
-    plasmarifle_cooldown += 1
-    rk62_cooldown += 1
     for sergeant in WorldData.Legacy.sergeants:
         sergeant.hitscanner_cooldown += 1
     if KDS.Missions.GetFinished() == True:
