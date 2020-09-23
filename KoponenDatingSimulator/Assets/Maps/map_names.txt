@@ -5,3 +5,4 @@ Shooting Ran... School.
 The Factory
 Powerplant
 New test map
+zip test map
