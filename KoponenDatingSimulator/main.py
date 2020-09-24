@@ -1104,7 +1104,7 @@ class Tile:
             y = 0
         max_x = len(Tile_list[0])-1
         max_y = len(Tile_list) - 1
-        end_x = x + 20
+        end_x = x + 22
         end_y = y + 12
         if end_x > max_x:
             end_x = max_x
