@@ -502,7 +502,7 @@ clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLa
 
 main_running = True
 plasmarifle_fire = False
-jukeboxMusicPlaying = 0
+jukeboxMusicPlaying = -1
 lastJukeboxSong = [0, 0, 0, 0, 0]
 jukeboxChannel = pygame.mixer.Channel(0)
 playerStamina = 100.0
@@ -1169,29 +1169,32 @@ class Jukebox(Tile):
         self.rect = pygame.Rect(position[0], position[1] - 27, 40, 60)
         self.checkCollision = False
 
+    def stopPlayingTrack(self):
+        global jukeboxMusicPlaying, jukeboxChannel
+        for music in jukebox_music:
+            music.stop()
+        jukeboxMusicPlaying = -1
+        Audio.MusicMixer.unpause()
+        Audio.MusicMixer.set_volume(Audio.MusicVolume)
+
     def update(self):
         global jukeboxMusicPlaying, jukeboxChannel
-        if not jukeboxChannel.get_busy() and not Audio.MusicMixer.get_busy():
-            jukeboxMusicPlaying = -1
-            Audio.MusicMixer.unpause()
-            Audio.MusicMixer.set_volume(Audio.MusicVolume)
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1]-30))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+                self.stopPlayingTrack()
                 Audio.MusicMixer.pause()
-                for x in range(len(jukebox_music)):
-                    jukebox_music[x].stop()
-                while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
+                loopStopper = 0
+                while (jukeboxMusicPlaying in lastJukeboxSong or jukeboxMusicPlaying == -1) and loopStopper < 10:
                     jukeboxMusicPlaying = int(random.uniform(0, len(jukebox_music)))
-                for i in range(len(lastJukeboxSong) - 1):
-                    lastJukeboxSong[i] = lastJukeboxSong[i + 1]
-                lastJukeboxSong[4] = jukeboxMusicPlaying
+                    loopStopper += 1
+                lastJukeboxSong.pop(0)
+                lastJukeboxSong.append(jukeboxMusicPlaying)
                 jukeboxChannel = Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
             elif KDS.Keys.GetHeld(KDS.Keys.functionKey):
-                jukeboxMusicPlaying = -1
-                jukeboxChannel.stop()
-                Audio.MusicMixer.unpause()
-                Audio.MusicMixer.set_volume(Audio.MusicVolume)
+                self.stopPlayingTrack()
+        if not jukeboxChannel.get_busy() and not Audio.MusicMixer.get_busy():
+            self.stopPlayingTrack()
         if jukeboxMusicPlaying != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, player_rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(0, 1, KDS.Math.Clamp(lerp_multiplier, 0, 1))
@@ -3681,7 +3684,7 @@ while main_running:
             Audio.MusicMixer.pause()
             for x in range(len(jukebox_music)):
                 jukebox_music[x].stop()
-            while jukeboxMusicPlaying == lastJukeboxSong[0] or jukeboxMusicPlaying == lastJukeboxSong[1] or jukeboxMusicPlaying == lastJukeboxSong[2] or jukeboxMusicPlaying == lastJukeboxSong[3] or jukeboxMusicPlaying == lastJukeboxSong[4]:
+            while jukeboxMusicPlaying in lastJukeboxSong:
                 jukeboxMusicPlaying = int(
                     random.uniform(0, len(jukebox_music)))
             for i in range(len(lastJukeboxSong) - 1):
