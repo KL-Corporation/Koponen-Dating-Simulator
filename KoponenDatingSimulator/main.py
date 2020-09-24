@@ -504,7 +504,6 @@ main_running = True
 plasmarifle_fire = False
 jukeboxMusicPlaying = -1
 lastJukeboxSong = [0, 0, 0, 0, 0]
-jukeboxChannel = pygame.mixer.Channel(0)
 playerStamina = 100.0
 gasburnerBurning = False
 plasmabullets = []
@@ -1170,7 +1169,7 @@ class Jukebox(Tile):
         self.checkCollision = False
 
     def stopPlayingTrack(self):
-        global jukeboxMusicPlaying, jukeboxChannel
+        global jukeboxMusicPlaying
         for music in jukebox_music:
             music.stop()
         jukeboxMusicPlaying = -1
@@ -1178,7 +1177,7 @@ class Jukebox(Tile):
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
     def update(self):
-        global jukeboxMusicPlaying, jukeboxChannel
+        global jukeboxMusicPlaying
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1]-30))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
@@ -1190,15 +1189,13 @@ class Jukebox(Tile):
                     loopStopper += 1
                 lastJukeboxSong.pop(0)
                 lastJukeboxSong.append(jukeboxMusicPlaying)
-                jukeboxChannel = Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
+                Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
             elif KDS.Keys.GetHeld(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
-        if not jukeboxChannel.get_busy() and not Audio.MusicMixer.get_busy():
-            self.stopPlayingTrack()
         if jukeboxMusicPlaying != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, player_rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(0, 1, KDS.Math.Clamp(lerp_multiplier, 0, 1))
-            jukeboxChannel.set_volume(jukebox_volume * Audio.MusicVolume)
+            jukebox_music[jukeboxMusicPlaying].set_volume(jukebox_volume)
 
         return self.texture
 
@@ -1632,12 +1629,9 @@ def load_jukebox_music():
     musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
     musics = []
     for musiken in musikerna:
-        musics.append(pygame.mixer.Sound(
-            "Assets/Audio/JukeboxMusic/" + musiken))
+        musics.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
     random.shuffle(musics)
     return musics
-
-
 jukebox_music = load_jukebox_music()
 
 
@@ -3671,31 +3665,6 @@ while main_running:
         screen.blit(iron_bar, (iron_bar1.x -
                                scroll[0], iron_bar1.y - scroll[1]))
 
-    jukebox_collision = False
-
-    for jukebox in WorldData.Legacy.jukeboxes:
-        if player_rect.colliderect(jukebox):
-            screen.blit(jukebox_tip, (jukebox.x -
-                                      scroll[0]-20, jukebox.y - scroll[1]-30))
-            jukebox_collision = True
-
-    if jukebox_collision:
-        if KDS.Keys.GetPressed(KDS.Keys.functionKey):
-            Audio.MusicMixer.pause()
-            for x in range(len(jukebox_music)):
-                jukebox_music[x].stop()
-            while jukeboxMusicPlaying in lastJukeboxSong:
-                jukeboxMusicPlaying = int(
-                    random.uniform(0, len(jukebox_music)))
-            for i in range(len(lastJukeboxSong) - 1):
-                lastJukeboxSong[i] = lastJukeboxSong[i + 1]
-            lastJukeboxSong[4] = jukeboxMusicPlaying
-            jukeboxChannel = Audio.playSound(
-                jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
-    elif not Audio.MusicMixer.get_busy():
-        jukeboxChannel.stop()
-        Audio.MusicMixer.unpause()
-        Audio.MusicMixer.set_volume(Audio.MusicVolume)
 #endregion
 #region Debug Mode
     screen.blit(score, (10, 55))
