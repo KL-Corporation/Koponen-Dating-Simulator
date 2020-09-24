@@ -52,6 +52,7 @@ Atextures = {
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
+brush = "0000"
 
 keys_pressed = {
     "RETURN": False,
@@ -62,6 +63,7 @@ keys_pressed = {
     "K_CTRL": False
 }
 ##################################################
+
 def blitText(Surface: pygame.Surface, txt: str, position: (int, int), color = KDS.Colors.GetPrimary.White):
     Surface.blit(harbinger_font.render(txt, True, color), position)
 class tileInfo:
@@ -97,11 +99,11 @@ class tileInfo:
                 if unit.rect.collidepoint(mpos[0]+scroll[0]*scalesize, mpos[1]+scroll[1]*scalesize):
                     pygame.draw.rect(Surface,(20,20,20),(blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
-                    if pygame.mouse.get_pressed[0]:
+                    if pygame.mouse.get_pressed()[0]:
                         if brush != "0000":
-                            unit.serialNumber = "0000 0000 0000 0000 / "
+                            unit.setNewSerialNumber(brush)                     
                         else:
-                            unit.setNewSerialNumber(brush)
+                            unit.serialNumber = "0000 0000 0000 0000 / "
         
         blitText(main_display, f"({bpos[0]}, {bpos[1]})", (1430, 770), KDS.Colors.Get.AviatorRed)
                 #print(unit.rect.topleft)
@@ -174,13 +176,20 @@ def openMap(): #Returns a 2d array
         return None
 
 def consoleHandler(inputString: str):
-    pass
+    global brush
+    commandlist = inputString.strip().split()
+    if commandlist[0] == "set":
+        if commandlist[1] == "brush":
+            if len(commandlist[2]) == 4 and commandlist[2].isnumeric():
+                brush = commandlist[2]
+            
 
 def main():
     g = inputConsole("Grid size: (int,int) >>>  ").replace(" ", "").split(",")
     gridSize = (int(g[0]), int(g[1]))
     grid = loadGrid(gridSize)
 
+    inputConsole_output = None
 
     while True:
         for event in pygame.event.get(): #Event loop
@@ -233,8 +242,7 @@ def main():
             else:
                 print("saveMap returned None")
 
-        if inputConsole_output != None:
-            pass
+        consoleHandler(inputConsole_output)
 
         main_display.fill((30,50,60))
         tileInfo.renderUpdate(main_display, scroll, grid)
