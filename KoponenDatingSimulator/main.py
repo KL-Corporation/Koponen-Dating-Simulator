@@ -951,8 +951,6 @@ class WorldData():
                             pass
                         elif data[0] == "3":
                             pass
-                    elif int(datapoint) != 0: 
-                        KDS.Logging.AutoError(f"Data format incorrect! Data: {data}", currentframe())
                 else:
                     x += 1
             y += 1
@@ -1095,8 +1093,8 @@ class Tile:
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int), *args):
         x = int(position[0] / 34)
         y = int(position[1] / 34)
-        x -= 10
-        y -= 5
+        x -= 11
+        y -= 8
         if x < 0:
             x = 0
         if y < 0:
@@ -1104,7 +1102,7 @@ class Tile:
         max_x = len(Tile_list[0])-1
         max_y = len(Tile_list) - 1
         end_x = x + 22
-        end_y = y + 12
+        end_y = y + 15
         if end_x > max_x:
             end_x = max_x
         if end_y > max_y:

@@ -13,7 +13,7 @@ root = tkinter.Tk()
 root.withdraw()
 pygame.init()
 display_size = (1600, 800)
-scalesize = 50
+scalesize = 55
 
 main_display = pygame.display.set_mode(display_size)
 pygame.display.set_caption("KDS Level Builder")
@@ -53,6 +53,7 @@ dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
 brush = "0000"
+currentSaveName = ''
 
 keys_pressed = {
     "RETURN": False,
@@ -79,7 +80,7 @@ class tileInfo:
         self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier+4:]
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brush = "0000"):
+    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh = "0000", updttiles=True):
         if scroll[0] < 0:
             scroll[0] = 0
         if scroll[1] < 0:
@@ -89,8 +90,8 @@ class tileInfo:
             for unit in row[scroll[0]:int((display_size[0]/scalesize)+2)]:
                 blitPos = (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize)
                 mpos = pygame.mouse.get_pos()
-                unit.serialNumber = unit.serialNumber.replace(" / ", "")
-                srlist = unit.serialNumber.split()
+                tempSerial = unit.serialNumber.replace(" / ", "")
+                srlist = tempSerial.split()
                 for number in srlist:
                     try:
                         Surface.blit(Atextures[number[0]][number], (blitPos[0],blitPos[1]))
@@ -99,14 +100,15 @@ class tileInfo:
                 if unit.rect.collidepoint(mpos[0]+scroll[0]*scalesize, mpos[1]+scroll[1]*scalesize):
                     pygame.draw.rect(Surface,(20,20,20),(blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
-                    if pygame.mouse.get_pressed()[0]:
-                        if brush != "0000":
-                            unit.setNewSerialNumber(brush)                     
+                    if pygame.mouse.get_pressed()[0] and updttiles:
+                        if brsh != "0000":
+                            unit.setNewSerialNumber(brsh)                     
                         else:
                             unit.serialNumber = "0000 0000 0000 0000 / "
         
         blitText(main_display, f"({bpos[0]}, {bpos[1]})", (1430, 770), KDS.Colors.Get.AviatorRed)
                 #print(unit.rect.topleft)
+        return renderList
 
 def loadGrid(size):
     rlist = []
@@ -152,6 +154,7 @@ def saveMap(grd, name: str):
         f.write(outputString)
 
 def openMap(): #Returns a 2d array
+    global currentSaveName
     fileName = filedialog.askopenfilename(filetypes = (("KDS Data file", "*.dat"), ("All files", "*.*")))
     if fileName:
         with open(fileName, 'r') as f:
@@ -170,6 +173,7 @@ def openMap(): #Returns a 2d array
         #        unit.serialNumber = tUnit + " /"
         
         #return tempGrid
+        currentSaveName = fileName
         return temporaryGrid
 
     else: 
@@ -183,13 +187,64 @@ def consoleHandler(inputString: str):
             if len(commandlist[2]) == 4 and commandlist[2].isnumeric():
                 brush = commandlist[2]
             
+def materialMenu(previousMaterial):
+    r = True
+    rscroll = 0
+    blocksize = 70
+
+    class selectorRect:
+        def __init__(self, rect: pygame.Rect, serialNumber):
+            self.rect = rect
+            self.serialNumber = serialNumber
+
+    selectorRects = []
+
+    y = 0
+    x = 0
+    for collection in Atextures:
+        for item in Atextures[collection]:
+            selectorRects.append(selectorRect(pygame.Rect(x*100+100, y*90+40, blocksize, blocksize), item))
+            x+=1
+            if x > 4:
+                x = 0
+                y += 1
+
+    while r:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                pygame.quit()
+                quit()
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    r = False
+                    return previousMaterial
+            elif event.type == MOUSEBUTTONDOWN:
+                if event.button == 5:
+                    rscroll += 1
+                elif event.button == 4:
+                    rscroll -= 1
+                    if rscroll < 0:
+                        rscroll = 0
+        mpos = pygame.mouse.get_pos()
+        main_display.fill((20,20,20))
+        for selection in selectorRects:
+            sorting = selection.serialNumber[0]
+            main_display.blit(pygame.transform.scale(Atextures[sorting][selection.serialNumber],(blocksize,blocksize)), (selection.rect.x,selection.rect.y-rscroll*30))
+            if selection.rect.collidepoint(mpos[0],mpos[1]+rscroll*30):
+                pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y-rscroll*30, blocksize, blocksize), 3)
+                if pygame.mouse.get_pressed()[0]:
+                    return selection.serialNumber
+        pygame.display.update()
 
 def main():
+    global currentSaveName, brush
     g = inputConsole("Grid size: (int,int) >>>  ").replace(" ", "").split(",")
     gridSize = (int(g[0]), int(g[1]))
     grid = loadGrid(gridSize)
 
     inputConsole_output = None
+    updateTiles = True
 
     while True:
         for event in pygame.event.get(): #Event loop
@@ -207,6 +262,9 @@ def main():
                         scroll[1] -= 1
                     else:
                         scroll[0] -= 1
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    updateTiles = True
             elif event.type == KEYDOWN:
                 if event.key == K_LCTRL:
                     keys_pressed["K_CTRL"] = True
@@ -215,6 +273,8 @@ def main():
                 elif event.key == K_s:
                     keys_pressed["K_s"] = True
                 elif event.key == K_e:
+                    brush = materialMenu(brush)
+                    updateTiles = False
                     keys_pressed["K_e"] = True
                 elif event.key == K_o:
                     keys_pressed["K_o"] = True
@@ -233,19 +293,30 @@ def main():
                     keys_pressed["K_SHIFT"] = False
 
         if keys_pressed["K_s"] and keys_pressed["K_CTRL"]:
-            saveMap(grid, "level.dat")
-            print("Map was saved succesfully")
-        elif keys_pressed["K_o"] and keys_pressed["K_CTRL"]:
+            if not currentSaveName:
+                savePath = filedialog.asksaveasfilename()
+                saveMap(grid, savePath)
+                currentSaveName = savePath
+            else:
+                saveMap(grid, currentSaveName)
+        if keys_pressed["K_s"] and keys_pressed["K_CTRL"] and keys_pressed["K_SHIFT"]:
+                savePath = filedialog.asksaveasfilename()
+                saveMap(grid, savePath)
+                currentSaveName = savePath
+
+        if keys_pressed["K_o"] and keys_pressed["K_CTRL"]:
             tempGr = openMap()
             if tempGr:
                 grid = tempGr
             else:
                 print("saveMap returned None")
 
-        consoleHandler(inputConsole_output)
+        if inputConsole_output:
+            consoleHandler(inputConsole_output)
+            inputConsole_output = None
 
-        main_display.fill((30,50,60))
-        tileInfo.renderUpdate(main_display, scroll, grid)
+        main_display.fill((30,20,60))
+        grid = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
         pygame.display.update()
         clock.tick(60)
 

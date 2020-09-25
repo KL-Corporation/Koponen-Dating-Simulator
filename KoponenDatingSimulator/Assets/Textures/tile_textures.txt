@@ -25,3 +25,4 @@
 025,blue_door_closed.png
 026,green_door_closed.png
 027,wood.png
+028,ground0.png
