@@ -2651,7 +2651,7 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.wav")
+    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.mp3")
     Audio.MusicMixer.play(-1)
     Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
@@ -2989,14 +2989,6 @@ while main_running:
 #endregion
 #region Rendering
 
-    # Rendering: World Generation
-    #ertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(WorldData.Legacy.world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
-    #horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(WorldData.Legacy.world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
-    # for y in range(vertical_render_position[0], vertical_render_position[1]):
-    #    for x in range(horisontal_render_position[0], horisontal_render_position[1]):
-    #        if WorldData.Legacy.world_gen[0][y][x] in WorldData.Legacy.tile_textures:
-    #            screen.blit(WorldData.Legacy.tile_textures[WorldData.Legacy.world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
-
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     items, inventory = Item.checkCollisions(
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
@@ -3038,23 +3030,6 @@ while main_running:
             else:
                 screen.blit(
                     door_closed, (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
-
-    # Rendering: Jukeboxes
-    for jukebox in WorldData.Legacy.jukeboxes:
-        screen.blit(jukebox_texture, (jukebox.x -
-                                      scroll[0], jukebox.y - scroll[1]))
-
-    # Rendering: Landimes
-    for landmine in WorldData.Legacy.landmines:
-        screen.blit(landmine_texture, (landmine.x -
-                                       scroll[0], landmine.y - scroll[1]))
-        if player_rect.colliderect(landmine):
-            WorldData.Legacy.landmines.remove(landmine)
-            Audio.playSound(landmine_explosion)
-            player_health -= 60
-            if player_health < 0:
-                player_health = 0
-            explosion_positions.append((landmine.x-40, landmine.y-58))
 
         for zombie1 in WorldData.Legacy.zombies:
             if zombie1.rect.colliderect(landmine):
