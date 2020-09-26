@@ -1198,7 +1198,40 @@ class Jukebox(Tile):
         return self.texture
 
 class Door(Tile):
-    pass
+
+    def __init__(self, position:(int, int), serialNumber: int, closingCounter = 600):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.opentexture = door_open
+        self.rect = pygame.Rect(position[0], position[1], 5, 68)
+        self.checkCollision = True
+        self.open = False
+        self.maxclosingCounter = closingCounter
+        self.closingCounter = 0
+    
+    def update(self):
+        keys = {
+            24: "red",
+            25: "green",
+            26: "blue"
+        }
+        if self.open:
+            self.closingCounter += 1
+            if self.closingCounter > self.maxclosingCounter:
+                door_opening.play()
+                self.open = False
+                self.checkCollision = True
+                self.closingCounter = 0
+        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery), (self.rect.centerx,self.rect.centery)) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
+            if self.serialNumber == 23 or player_keys[keys[self.serialNumber]]:
+                door_opening.play()
+                self.open = not self.open
+                self.checkCollision = not self.checkCollision
+        if not self.open:
+            return self.texture
+        else:
+            return self.opentexture
+
 class Landmine(Tile):
     def __init__(self, position:(int, int), serialNumber: int):        
         super().__init__(position, serialNumber)
@@ -1217,7 +1250,11 @@ specialTilesD = {
     15: Toilet,
     16: Trashcan,
     19: Jukebox,
-    21: Landmine
+    21: Landmine,
+    23: Door,
+    24: Door,
+    25: Door,
+    26: Door
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -3550,7 +3587,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
-pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
+pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.mp3")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.Quit()
 pygame.mixer.quit()
