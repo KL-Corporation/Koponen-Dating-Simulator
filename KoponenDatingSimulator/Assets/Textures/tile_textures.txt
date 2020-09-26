@@ -31,3 +31,4 @@
 031,leaves.png
 032,rustywall.png
 033,codewall.png
+034,metal_grid.png
