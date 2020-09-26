@@ -79,16 +79,23 @@ class tileInfo:
             serialIdentifier += 1
         self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier+4:]
 
+    def getSerialNumber(self, index):
+        if index > 0:
+            index += 1
+        return self.serialNumber[index: index+4]
+
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh = "0000", updttiles=True):
+        brushtemp = brsh
         if scroll[0] < 0:
             scroll[0] = 0
         if scroll[1] < 0:
             scroll[1] = 0
         bpos = [0,0]
-        for row in renderList[scroll[1]:int((display_size[1]/scalesize)+2)]:
-            for unit in row[scroll[0]:int((display_size[0]/scalesize)+2)]:
+        for row in renderList[scroll[1]:scroll[1]+int((display_size[1]/scalesize)+2)]:
+            for unit in row[scroll[0]:scroll[0]+int((display_size[0]/scalesize)+2)]:
                 blitPos = (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize)
+                pygame.draw.rect(Surface, (80, 30, 30), (blitPos[0], blitPos[1], scalesize, scalesize))
                 mpos = pygame.mouse.get_pos()
                 tempSerial = unit.serialNumber.replace(" / ", "")
                 srlist = tempSerial.split()
@@ -98,6 +105,8 @@ class tileInfo:
                     except:
                         pass
                 if unit.rect.collidepoint(mpos[0]+scroll[0]*scalesize, mpos[1]+scroll[1]*scalesize):
+                    if pygame.mouse.get_pressed()[1]:
+                        brushtemp = unit.getSerialNumber(0)
                     pygame.draw.rect(Surface,(20,20,20),(blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
                     if pygame.mouse.get_pressed()[0] and updttiles:
@@ -108,7 +117,7 @@ class tileInfo:
         
         blitText(main_display, f"({bpos[0]}, {bpos[1]})", (1430, 770), KDS.Colors.Get.AviatorRed)
                 #print(unit.rect.topleft)
-        return renderList
+        return renderList, brushtemp
 
 def loadGrid(size):
     rlist = []
@@ -205,7 +214,7 @@ def materialMenu(previousMaterial):
         for item in Atextures[collection]:
             selectorRects.append(selectorRect(pygame.Rect(x*100+100, y*90+40, blocksize, blocksize), item))
             x+=1
-            if x > 4:
+            if x > 6:
                 x = 0
                 y += 1
 
@@ -254,14 +263,14 @@ def main():
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
                     if keys_pressed["K_SHIFT"]:
-                        scroll[1] += 1
-                    else:
-                        scroll[0] += 1
-                elif event.button == 5:
-                    if keys_pressed["K_SHIFT"]:
                         scroll[1] -= 1
                     else:
                         scroll[0] -= 1
+                elif event.button == 5:
+                    if keys_pressed["K_SHIFT"]:
+                        scroll[1] += 1
+                    else:
+                        scroll[0] += 1
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     updateTiles = True
@@ -316,7 +325,7 @@ def main():
             inputConsole_output = None
 
         main_display.fill((30,20,60))
-        grid = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
+        grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
         pygame.display.update()
         clock.tick(60)
 

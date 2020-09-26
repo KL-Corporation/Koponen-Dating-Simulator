@@ -32,3 +32,5 @@
 032,rustywall.png
 033,codewall.png
 034,metal_grid.png
+035,wolfensteinwall1.png
+036,wolfensteinwall2.png
