@@ -1087,6 +1087,8 @@ class Tile:
             self.air = True
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = True
+        if self.serialNumber == 10:
+            self.checkCollision = False
 
     @staticmethod
     # Tile_list is a 2d numpy array
