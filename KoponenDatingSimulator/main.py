@@ -598,6 +598,7 @@ shotgun_shells = 8
 
 Projectiles = []
 Explosions = []
+onLadder = False
 
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
@@ -1088,6 +1089,8 @@ class Tile:
             self.air = True
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = True
+        if self.serialNumber == 10:
+            self.checkCollision = False
 
     @staticmethod
     # Tile_list is a 2d numpy array
@@ -1199,7 +1202,40 @@ class Jukebox(Tile):
         return self.texture
 
 class Door(Tile):
-    pass
+
+    def __init__(self, position:(int, int), serialNumber: int, closingCounter = 600):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.opentexture = door_open
+        self.rect = pygame.Rect(position[0], position[1], 5, 68)
+        self.checkCollision = True
+        self.open = False
+        self.maxclosingCounter = closingCounter
+        self.closingCounter = 0
+    
+    def update(self):
+        keys = {
+            24: "red",
+            25: "green",
+            26: "blue"
+        }
+        if self.open:
+            self.closingCounter += 1
+            if self.closingCounter > self.maxclosingCounter:
+                door_opening.play()
+                self.open = False
+                self.checkCollision = True
+                self.closingCounter = 0
+        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery), (self.rect.centerx,self.rect.centery)) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
+            if self.serialNumber == 23 or player_keys[keys[self.serialNumber]]:
+                door_opening.play()
+                self.open = not self.open
+                self.checkCollision = not self.checkCollision
+        if not self.open:
+            return self.texture
+        else:
+            return self.opentexture
+
 class Landmine(Tile):
     def __init__(self, position:(int, int), serialNumber: int):        
         super().__init__(position, serialNumber)
@@ -1214,11 +1250,29 @@ class Landmine(Tile):
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (self.rect.x-60, self.rect.y-60)))           
         return self.texture
 
+class Ladder(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = ladder_texture
+        self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
+        self.checkCollision = False
+
+    def update(self):
+        global onLadder
+        if self.rect.colliderect(player_rect):
+            onLadder = True
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
+    18: Ladder,
     19: Jukebox,
-    21: Landmine
+    21: Landmine,
+    23: Door,
+    24: Door,
+    25: Door,
+    26: Door
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -1662,140 +1716,6 @@ ad_images = load_ads()
 koponen_talking_background = pygame.image.load(
     "Assets/Textures/KoponenTalk/background.png").convert()
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
-
-def load_rects():
-    global monsterAmount, monstersLeft
-    tile_rects = []
-    toilets = []
-    trashcans = []
-    burning_toilets = []
-    burning_trashcans = []
-    jukeboxes = []
-    landmines = []
-    zombies = []
-    sergeants = []
-    archviles = []
-    ladders = []
-    bulldogs = []
-    iron_bars = []
-    imps = []
-    w = [0, 0]
-    for i in range(len(WorldData.Legacy.world_gen) - 1):
-        y = 0
-        for layer in WorldData.Legacy.world_gen[i]:
-            x = 0
-            for tile in layer:
-                if tile != 'a':
-                    if tile == 'f':
-                        WorldData.Legacy.tile_rects.append(
-                            pygame.Rect(x * 34, y * 34, 14, 21))
-                    elif tile == 'e':
-                        w = list(toilet0.get_size())
-                        WorldData.Legacy.toilets.append(
-                            pygame.Rect(x * 34-2, y * 34, 34, 34))
-                        WorldData.Legacy.burning_toilets.append(False)
-                        WorldData.Legacy.tile_rects.append(
-                            pygame.Rect(x * 34, y * 34, w[0], w[1]))
-                    elif tile == 'g':
-                        w = list(trashcan.get_size())
-                        WorldData.Legacy.trashcans.append(
-                            pygame.Rect(x * 34-1, y * 34, w[0]+2, w[1]))
-                        WorldData.Legacy.burning_trashcans.append(False)
-                        WorldData.Legacy.tile_rects.append(
-                            pygame.Rect(x * 34, y * 34+8, w[0], w[1]))
-                    elif tile == 'q':
-                        WorldData.Legacy.ladders.append(
-                            pygame.Rect((x * 34) + 16, (y * 34) - 2, 2, 38))
-                    elif tile == 'k':
-                        pass
-                    elif tile == 'l':
-                        pass
-                    elif tile == 'm':
-                        pass
-                    elif tile == 'n':
-                        pass
-                    elif tile == 's':
-                        iron_bars.append(pygame.Rect(x * 34, y * 34, 1, 1))
-                    elif tile == 'A':
-                        pass
-                    elif tile == 'B':
-                        WorldData.Legacy.jukeboxes.append(
-                            pygame.Rect(x * 34, y * 34 - 26, 42, 60))
-                    elif tile == 'C':
-                        WorldData.Legacy.landmines.append(
-                            pygame.Rect(x * 34+6, y * 34+23, 22, 11))
-                    elif tile == 'Z':
-                        WorldData.Legacy.zombies.append(
-                            KDS.AI.Zombie((x * 34, y * 34 - 34), 100, 1))
-                        monsterAmount += 1
-                    elif tile == 'S':
-                        WorldData.Legacy.sergeants.append(KDS.AI.SergeantZombie(
-                            (x * 34, y * 34 - 34), 220, 1))
-                        monsterAmount += 1
-                    elif tile == 'V':
-                        WorldData.Legacy.archviles.append(
-                            Archvile((x * 34, y * 34-51), 750, 2))
-                        monsterAmount += 1
-                    elif tile == 'K':
-                        WorldData.Legacy.bulldogs.append(KDS.AI.Bulldog(
-                            (x * 34, y * 34), 80, 3, bulldog_run_animation))
-                        monsterAmount += 1
-                    elif tile == 'I':
-                        imps.append(KDS.AI.Imp(280, 1, (x * 34, y * 34-34),
-                                               WorldData.Legacy.tile_rects, "imp_walking", "imp_attacking", "imp_dying"))
-                        imp_temp = imps[-1].r()
-                        if imp_temp == "continue":
-                            monsterAmount += 1
-                        else:
-                            del imps[-1]
-                        del imp_temp
-                        pass
-                    else:
-                        WorldData.Legacy.tile_rects.append(
-                            pygame.Rect(x * 34, y * 34, 34, 34))
-
-                x += 1
-            y += 1
-    monstersLeft = monsterAmount
-    return tile_rects, toilets, burning_toilets, trashcans, burning_trashcans, jukeboxes, WorldData.Legacy.landmines, zombies, sergeants, archviles, ladders, bulldogs, iron_bars, imps
-
-def load_doors():
-    y = 0
-    WorldData.Legacy.door_rects = []
-    WorldData.Legacy.doors_open = []
-    WorldData.Legacy.color_keys = []
-    for i in range(len(WorldData.Legacy.world_gen)):
-        for layer in WorldData.Legacy.world_gen[i]:
-            x = 0
-            for door in layer:
-                if door == 'k':
-                    size = list(door_closed.get_size())
-                    WorldData.Legacy.door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0] + 1, size[1]))
-                    WorldData.Legacy.doors_open.append(False)
-                    WorldData.Legacy.color_keys.append("none")
-                elif door == 'l':
-                    size = list(red_door_closed.get_size())
-                    WorldData.Legacy.door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0] + 1, size[1]))
-                    WorldData.Legacy.doors_open.append(False)
-                    WorldData.Legacy.color_keys.append("red")
-                elif door == 'm':
-                    size = list(green_door_closed.get_size())
-                    WorldData.Legacy.door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0] + 1, size[1]))
-                    WorldData.Legacy.doors_open.append(False)
-                    WorldData.Legacy.color_keys.append("green")
-                elif door == 'n':
-                    size = list(blue_door_closed.get_size())
-                    WorldData.Legacy.door_rects.append(pygame.Rect(
-                        x * 34-1, y * 34, size[0] + 1, size[1]))
-                    WorldData.Legacy.doors_open.append(False)
-                    WorldData.Legacy.color_keys.append("blue")
-                x += 1
-            y += 1
-
-    return WorldData.Legacy.door_rects, WorldData.Legacy.doors_open, WorldData.Legacy.color_keys
 #endregion
 #region Collisions
 
@@ -1858,51 +1778,6 @@ def damage(health, min_damage: int, max_damage: int):
 
     return health
 
-
-def door_collision_test():
-    x = 0
-
-    def door_sound():
-        pygame.mixer.Sound.play(door_opening)
-
-    global player_movement
-    hit_list = collision_test(player_rect, WorldData.Legacy.door_rects)
-    if len(WorldData.Legacy.door_rects) > 0 and player_rect.colliderect(WorldData.Legacy.door_rects[0]):
-        pass
-    for i in range(len(WorldData.Legacy.door_rects)):
-        for j in range(len(hit_list)):
-            if WorldData.Legacy.door_rects[i] == hit_list[j]:
-                if player_movement[0] > 0 and WorldData.Legacy.doors_open[i] == False:
-                    player_rect.right = WorldData.Legacy.door_rects[i].left + 1
-                elif player_movement[0] < 0 and WorldData.Legacy.doors_open[i] == False:
-                    player_rect.left = WorldData.Legacy.door_rects[i].right - 1
-                if KDS.Keys.GetPressed(KDS.Keys.functionKey):
-                    color_key = WorldData.Legacy.color_keys[i]
-                    if WorldData.Legacy.doors_open[i]:
-                        color_key = "none"
-                    if color_key != "none":
-                        if color_key == "red":
-                            if player_keys["red"]:
-                                WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
-                                door_sound()
-                        elif color_key == "green":
-                            if player_keys["green"]:
-                                WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
-                                door_sound()
-                        elif color_key == "blue":
-                            if player_keys["blue"]:
-                                WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
-                                door_sound()
-                    else:
-                        WorldData.Legacy.doors_open[i] = not WorldData.Legacy.doors_open[i]
-                        door_sound()
-                    if not WorldData.Legacy.doors_open[i]:
-                        if direction:
-                            player_rect.left = WorldData.Legacy.door_rects[i].right - 1
-                        else:
-                            player_rect.right = WorldData.Legacy.door_rects[i].left + 1
-
-
 def item_collision_test(rect, items):
     """Tests for item collisions.
 
@@ -1925,26 +1800,6 @@ def item_collision_test(rect, items):
 
         player_score += score
 
-def toilet_collisions(rect, burnstate):
-    global player_score
-    o = 0
-    for toilet in WorldData.Legacy.toilets:
-        if rect.colliderect(toilet):
-            if not rect.bottom == toilet.top:
-                if (rect.colliderect(toilet) and burnstate):
-                    if WorldData.Legacy.burning_toilets[o] == False:
-                        player_score += 15
-                    WorldData.Legacy.burning_toilets[o] = True
-        o += 1
-    o = 0
-    for trashcan1 in WorldData.Legacy.trashcans:
-        if rect.colliderect(trashcan1):
-            if not rect.bottom == trashcan1.top:
-                if (rect.colliderect(trashcan1) and burnstate):
-                    if WorldData.Legacy.burning_trashcans[o] == False:
-                        player_score += 15
-                    WorldData.Legacy.burning_trashcans[o] = True
-        o += 1
 #endregion
 #region Player
 
@@ -2652,7 +2507,7 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.wav")
+    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.mp3")
     Audio.MusicMixer.play(-1)
     Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
@@ -2975,6 +2830,7 @@ while main_running:
     player_hand_item = "none"
     mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
         (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+    onLadder = False
 #endregion
 #region Player Death
     if player_health < 1 and not animation_has_played:
@@ -2989,14 +2845,6 @@ while main_running:
             play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
-
-    # Rendering: World Generation
-    #ertical_render_position = [math.floor(max(0, (scroll[1] / 34) - 0)), math.ceil(min(len(WorldData.Legacy.world_gen[0]), ((scroll[1] + screen_size[1]) / 34) + 0))]
-    #horisontal_render_position = [math.floor(max(0, (scroll[0] / 34) - 0)), math.ceil(min(len(WorldData.Legacy.world_gen[0][0]), ((scroll[0] + screen_size[0]) / 34) + 0))]
-    # for y in range(vertical_render_position[0], vertical_render_position[1]):
-    #    for x in range(horisontal_render_position[0], horisontal_render_position[1]):
-    #        if WorldData.Legacy.world_gen[0][y][x] in WorldData.Legacy.tile_textures:
-    #            screen.blit(WorldData.Legacy.tile_textures[WorldData.Legacy.world_gen[0][y][x]], (x * 34 - scroll[0], y * 34 - scroll[1]))
 
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     items, inventory = Item.checkCollisions(
@@ -3020,96 +2868,22 @@ while main_running:
     ###########################################
     ###########################################
     ###########################################
-
-    # Rendering: Doors
-    for i in range(len(WorldData.Legacy.door_rects)):
-        if WorldData.Legacy.doors_open[i]:
-            screen.blit(
-                door_open, (WorldData.Legacy.door_rects[i].x - scroll[0] + 2, WorldData.Legacy.door_rects[i].y - scroll[1]))
-        else:
-            if WorldData.Legacy.color_keys[i] == "red":
-                screen.blit(red_door_closed,
-                            (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
-            elif WorldData.Legacy.color_keys[i] == "green":
-                screen.blit(green_door_closed,
-                            (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
-            elif WorldData.Legacy.color_keys[i] == "blue":
-                screen.blit(blue_door_closed,
-                            (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
-            else:
-                screen.blit(
-                    door_closed, (WorldData.Legacy.door_rects[i].x - scroll[0], WorldData.Legacy.door_rects[i].y - scroll[1]))
-
-    # Rendering: Jukeboxes
-    for jukebox in WorldData.Legacy.jukeboxes:
-        screen.blit(jukebox_texture, (jukebox.x -
-                                      scroll[0], jukebox.y - scroll[1]))
-
-    # Rendering: Landimes
-    for landmine in WorldData.Legacy.landmines:
-        screen.blit(landmine_texture, (landmine.x -
-                                       scroll[0], landmine.y - scroll[1]))
-        if player_rect.colliderect(landmine):
-            WorldData.Legacy.landmines.remove(landmine)
-            Audio.playSound(landmine_explosion)
-            player_health -= 60
-            if player_health < 0:
-                player_health = 0
-            explosion_positions.append((landmine.x-40, landmine.y-58))
-
-        for zombie1 in WorldData.Legacy.zombies:
-            if zombie1.rect.colliderect(landmine):
-                WorldData.Legacy.landmines.remove(landmine)
-                Audio.playSound(landmine_explosion)
-                zombie1.health -= 140
-                if zombie1.health < 0:
-                    zombie1.health = 0
-                explosion_positions.append((landmine.x-40, landmine.y-58))
-        for sergeant in WorldData.Legacy.sergeants:
-            if sergeant.rect.colliderect(landmine):
-                WorldData.Legacy.landmines.remove(landmine)
-                Audio.playSound(landmine_explosion)
-                sergeant.health -= 220
-
-                explosion_positions.append((landmine.x-40, landmine.y-58))
-
-    # Rendering: Player's hand item
-
-    # Rendering: Bullets
-    for bullet in plasmabullets:
-        state = bullet.update(WorldData.Legacy.tile_rects)
-        if state:
-            plasmabullets.remove(bullet)
-
-    while len(plasmabullets) > 50:
-        plasmabullets.remove(plasmabullets[0])
-
-    # Rendering: Explosions
-    for explosion in explosion_positions:
-        explosion_image, done_state = explosion_animation.update()
-        if not done_state:
-            screen.blit(explosion_image,
-                        (explosion[0] - scroll[0], explosion[1] - scroll[1]))
-        else:
-            explosion_positions.remove(explosion)
-            explosion_animation.reset()
 #endregion
 #region PlayerMovement
     fall_speed = 0.4
 
     player_movement = [0, 0]
-    onLadder = False
-    for ladder in WorldData.Legacy.ladders:
-        if player_rect.colliderect(ladder):
-            onLadder = True
-            vertical_momentum = 0
-            air_timer = 0
-            if KDS.Keys.GetPressed(KDS.Keys.moveUp):
-                player_movement[1] = -1
-            elif KDS.Keys.GetPressed(KDS.Keys.moveDown):
-                player_movement[1] = 1
-            else:
-                player_movement[1] = 0
+
+    if onLadder:
+        print("kkk")
+        vertical_momentum = 0
+        air_timer = 0
+        if KDS.Keys.GetPressed(KDS.Keys.moveUp):
+            player_movement[1] = -1
+        elif KDS.Keys.GetPressed(KDS.Keys.moveDown):
+            player_movement[1] = 1
+        else:
+            player_movement[1] = 0
 
     if KDS.Keys.GetPressed(KDS.Keys.moveUp) and not KDS.Keys.GetPressed(KDS.Keys.moveDown) and air_timer < 6 and moveUp_released and not onLadder:
         moveUp_released = False
@@ -3339,7 +3113,6 @@ while main_running:
     elif k_collisions["right"]:
         koponen_movingx = -koponen_movingx
 
-    # door_collision_test()
 #endregion
 #region UI
     score = score_font.render(
@@ -3576,7 +3349,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
-pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.wav")
+pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.mp3")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.Quit()
 pygame.mixer.quit()

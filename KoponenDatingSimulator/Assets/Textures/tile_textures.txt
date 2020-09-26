@@ -26,3 +26,9 @@
 026,green_door_closed.png
 027,wood.png
 028,ground0.png
+029,stonewall.png
+030,redbrickwall.png
+031,leaves.png
+032,rustywall.png
+033,codewall.png
+034,metal_grid.png
