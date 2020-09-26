@@ -599,6 +599,7 @@ shotgun_shells = 8
 Projectiles = []
 Explosions = []
 onLadder = False
+renderUI = True
 
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
@@ -2852,7 +2853,8 @@ while main_running:
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
-    player_inventory.render(screen)
+    if renderUI:
+        player_inventory.render(screen)
 
     for Projectile in Projectiles:
         v = Projectile.update(screen, scroll)
@@ -3115,6 +3117,7 @@ while main_running:
 
 #endregion
 #region UI
+
     score = score_font.render(
         ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
 
@@ -3282,14 +3285,15 @@ while main_running:
                                       "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
 #endregion
 #region UI Rendering
-    screen.blit(health, (10, 120))
-    screen.blit(stamina, (10, 130))
+    if renderUI:
+        screen.blit(health, (10, 120))
+        screen.blit(stamina, (10, 130))
 
-    missions_background_width = KDS.Missions.GetMaxWidth()
-    Mission_Render_Data = KDS.Missions.RenderMission(screen)
+        missions_background_width = KDS.Missions.GetMaxWidth()
+        Mission_Render_Data = KDS.Missions.RenderMission(screen)
 
-    for i in range(KDS.Missions.GetRenderCount()):
-        KDS.Missions.RenderTask(screen, i)
+        for i in range(KDS.Missions.GetRenderCount()):
+            KDS.Missions.RenderTask(screen, i)
 #endregion
 #region Screen Rendering
     if dark:
