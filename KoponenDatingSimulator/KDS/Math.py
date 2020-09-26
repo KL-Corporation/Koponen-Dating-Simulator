@@ -72,10 +72,21 @@ def Jd(var: bool):
     return -1 if bool else 1
 
 def Lerp(a: float, b: float, t: float):
+    """Linearly interpolates between a and b by t.
+
+    The parameter t is clamped to the range [0, 1].
     """
-    Linearly interpolates between a and b by t.
+    t = Clamp(t, 0.0, 1.0)
+    return a + ((b - a) * t)
+
+def SmoothStep(a: float, b: float, t: float):
+    """Smoothly interpolates between a and b by t.
+    
+    The parameter t is clamped to the range [0, 1].
     """
-    return (t * a) + ((1 - t) * b)
+    t = Clamp(t, 0, 1)
+    t = t * t * (3.0 - (2.0 * t))
+    return Lerp(a, b, t)
 
 def Clamp(value, _min, _max):
     return max(_min, min(value, _max))

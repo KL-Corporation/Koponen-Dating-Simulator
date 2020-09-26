@@ -58,7 +58,7 @@ def InitialiseTask(Mission_Name: str, Safe_Name: str, Visible_Name: str, Listene
     global Missions, InventorySlotSwitching_Listeners, Movement_Listeners, KoponenTalk_Listeners
     for j in range(len(Missions)):
         if Missions[j][0] == Mission_Name:
-            Missions[j].append([Safe_Name, Visible_Name, 0.0, False, (255, 255, 255), KDS.Animator.Lerp(0.0, 1.0, 3, KDS.Animator.OnAnimationEnd.Loop)])
+            Missions[j].append([Safe_Name, Visible_Name, 0.0, False, (255, 255, 255), KDS.Animator.Float(0.0, 1.0, 3, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)])
             break
     if Listener != None:
         if Listener == ListenerTypes.InventorySlotSwitching:

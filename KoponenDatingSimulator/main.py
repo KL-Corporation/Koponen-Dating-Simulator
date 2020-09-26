@@ -26,6 +26,7 @@ import importlib
 import shutil
 import json
 import zipfile
+import math
 from pygame.locals import *
 from PIL import Image, ImageFilter
 #endregion
@@ -549,10 +550,10 @@ shotgun_cooldown = 0
 pistol_cooldown = 0
 dark = False
 
-gamemode_bc_1_alpha = KDS.Animator.Lerp(
-    0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
-gamemode_bc_2_alpha = KDS.Animator.Lerp(
-    0.0, 1.0, 8, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_1_alpha = KDS.Animator.Float(
+    0.0, 1.0, 8, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_2_alpha = KDS.Animator.Float(
+    0.0, 1.0, 8, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
@@ -2484,7 +2485,7 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
-    anim_lerp_x = KDS.Animator.Lerp(1.0, 0.0, 15, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.FloatAnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
@@ -2528,7 +2529,7 @@ def esc_menu_f():
                 fps_text, True, KDS.Colors.GetPrimary.White)
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-        esc_surface.set_alpha(int(255 * anim_x))
+        esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(esc_surface, (0, 0))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
@@ -2774,10 +2775,10 @@ def main_menu():
                 if mode_selection_buttons[y].collidepoint(mouse_pos):
                     if y == 0:
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(
-                            False) * 255.0)), (story_mode_button.x, story_mode_button.y))
+                            True) * 255.0)), (story_mode_button.x, story_mode_button.y))
                     elif y == 1:
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(
-                            False) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
+                            True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
                     if c:
                         if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
                             MenuMode = Mode.StoryMenu
@@ -2790,10 +2791,10 @@ def main_menu():
                 else:
                     if y == 0:
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(
-                            True) * 255.0)), (story_mode_button.x, story_mode_button.y))
+                            False) * 255.0)), (story_mode_button.x, story_mode_button.y))
                     elif y == 1:
                         display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(
-                            True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
+                            False) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
             pygame.draw.rect(

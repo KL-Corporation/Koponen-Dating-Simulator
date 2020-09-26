@@ -1,6 +1,8 @@
+from inspect import currentframe
 import KDS.Logging
 import KDS.Math
 import pygame
+import math
 
 class OnAnimationEnd:
     Stop = 0
@@ -92,21 +94,31 @@ class Legacy:
             animation_list.append(img)
         return animation_list
 
-class Lerp:
-    def __init__(self, From: float, To: float, duration: int, On_Animation_End: OnAnimationEnd):
-        """Initialises a Lerp animation.
+class FloatAnimationType:
+    Linear = "Linear"
+    EaseIn = "EaseIn"
+    EaseOut = "EaseOut"
+    Exponential = "Exponential"
+    SmoothStep = "SmoothStep"
+    SmootherStep = "SmootherStep"
+    
+class Float:
+    def __init__(self, From: float, To: float, Duration: int, Type: FloatAnimationType, _OnAnimationEnd: OnAnimationEnd):
+        """Initialises a float animation.
 
         Args:
-            From (float): The starting point of the lerp animation.
-            To (float): The ending point of the lerp animation.
-            duration (int): The amount of ticks it takes to finish the entire lerp animation.
-            On_Animation_End (OnAnimationEnd): What will the animator do when the animaton has finished.
+            From (float): The starting point of the float animation.
+            To (float): The ending point of the float animation.
+            Duration (int): The amount of ticks it takes to finish the entire float animation.
+            Type (FloatAnimationType): The type of float animation you want.
+            _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         self.From = From
         self.To = To
-        self.ticks = duration
+        self.ticks = Duration
         self.tick = 0
-        self.onAnimationEnd = On_Animation_End
+        self.onAnimationEnd = _OnAnimationEnd
+        self.type = Type
         self.PingPong = False
 
     def set(self, progress: int):
@@ -141,5 +153,23 @@ class Lerp:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
-
-        return KDS.Math.Lerp(self.From, self.To, self.tick / self.ticks)
+        if self.type == FloatAnimationType.Linear:
+            t = self.tick / self.ticks
+            return KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == FloatAnimationType.EaseIn:
+            t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
+            return KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == FloatAnimationType.EaseOut:
+            t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
+            return KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == FloatAnimationType.Exponential:
+            t = self.tick / self.ticks
+            return KDS.Math.Lerp(self.From, self.To, t * t)
+        elif self.type == FloatAnimationType.SmoothStep:
+            t = self.tick / self.ticks
+            return KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
+        elif self.type == FloatAnimationType.SmootherStep:
+            t = self.tick / self.ticks
+            return KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
+        else:
+            KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
