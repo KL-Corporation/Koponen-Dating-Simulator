@@ -1248,6 +1248,13 @@ class Landmine(Tile):
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (self.rect.x-60, self.rect.y-60)))           
         return self.texture
 
+class Ladder:
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = landmine_texture
+        self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
+        self.checkCollision = False
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
