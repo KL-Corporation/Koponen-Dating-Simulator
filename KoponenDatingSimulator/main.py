@@ -1201,8 +1201,8 @@ class Jukebox(Tile):
             elif KDS.Keys.GetHeld(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
         if jukeboxMusicPlaying != -1:
-            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, player_rect.midbottom) / 350
-            jukebox_volume = KDS.Math.Lerp(0, 1, KDS.Math.Clamp(lerp_multiplier, 0, 1))
+            lerp_multiplier = KDS.Math.getDistance((self.rect.centerx,self.rect.centery), (player_rect.centerx,player_rect.centery)) / 350
+            jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
             jukebox_music[jukeboxMusicPlaying].set_volume(jukebox_volume)
 
         return self.texture
@@ -1524,7 +1524,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
                 temp = 80
             else:
                 temp = -80
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2),direction, 27, tiles, 20, plasma_ammo))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2),direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)))
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -1549,13 +1549,15 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def shotgun_u(*args):
-        global shotgun_shells, Projectile, tile
+        global shotgun_shells, Projectiles, tile
         args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
             KDS.World.shotgun_C.counter = 0
             player_shotgun_shot.play()
             shotgun_shells -= 1
             shotgun_shots()
+            for _ in range(7):
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1

@@ -1,4 +1,4 @@
-import pygame, numpy, math
+import pygame, numpy, math, random
 
 pygame.init()
 
@@ -66,7 +66,7 @@ class Tile:
                                                       scroll[0], renderable.rect.y - scroll[1]))
 
 class Bullet:
-    def __init__(self, rect, direction: int, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect, direction: int, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
@@ -75,6 +75,9 @@ class Bullet:
         self.maxDistance = maxDistance
         self.movedDistance = 0
         self.environment_obstacles = environment_obstacles
+        if not slope:
+            slope = -1
+        self.slope = slope
 
     def update(self,Surface:pygame.Surface, scroll: list):
         if self.texture:
@@ -85,6 +88,7 @@ class Bullet:
                     self.rect.x -= 18                  
                 else:
                     self.rect.x += 18
+                self.rect.y += self.slope
                 collision_list = collision_test(self.rect, self.environment_obstacles)
                 if collision_list:
                     return "wall"
@@ -96,6 +100,7 @@ class Bullet:
             else:
                 self.rect.x += self.speed
                 self.movedDistance += self.speed
+            self.rect.y += self.slope
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
             if collision_list:
