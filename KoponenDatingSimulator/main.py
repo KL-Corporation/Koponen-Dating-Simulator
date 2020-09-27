@@ -408,6 +408,8 @@ archvile_corpse = pygame.image.load(
 ipuhelin_texture = pygame.image.load(
     "Assets/Textures/Items/iPuhelin.png").convert()
 rk62_bullet_t = pygame.image.load("Assets/Textures/Animations/rk62_bullet.png").convert()
+ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
+ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
@@ -456,6 +458,8 @@ soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
 turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
 imp_fireball_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
+ppsh41_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": ipuhelin_texture, "coffeemug": coffeemug}
@@ -474,6 +478,7 @@ key_pickup = pygame.mixer.Sound("Assets/Audio/Effects/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("Assets/Audio/Effects/ss.wav")
 lappi_sytytyspalat_sound = pygame.mixer.Sound(
     "Assets/Audio/Effects/sytytyspalat.wav")
+ppsh41_shot = pygame.mixer.Sound("Assets/Audio/Effects/sgunshot.wav")
 landmine_explosion = pygame.mixer.Sound("Assets/Audio/Effects/landmine.wav")
 hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplpain.wav")
 plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplasma.wav")
@@ -600,6 +605,7 @@ ammunition_plasma = 50
 pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
+ppsh41_ammo = 72
 
 Projectiles = []
 Explosions = []
@@ -1044,11 +1050,11 @@ class Inventory:
 
     def pickSlot(self, index):
         KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
-        if 0 < index < len(self.storage)-1:
+        if 0 <= index <= len(self.storage)-1:
             if self.storage[index] == "doubleItemPlaceholder":
-                self.SIndex = index-2
-            else:
                 self.SIndex = index-1
+            else:
+                self.SIndex = index
 
     def dropItem(self):
         if self.storage[self.SIndex] != "none":
@@ -1452,6 +1458,16 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
         global playerStamina
         playerStamina += 250
 
+        return True
+
+    @staticmethod
+    def ppsh41_p():
+        global player_score
+        player_score += 20
+        weapon_pickup.play()
+
+        return False
+
     @staticmethod
     def empyOperation():
         return True
@@ -1549,7 +1565,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
 
     @staticmethod
     def shotgun_u(*args):
-        global shotgun_shells, Projectiles, tile
+        global shotgun_shells, Projectiles, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
             KDS.World.shotgun_C.counter = 0
@@ -1562,6 +1578,23 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
         else:
             KDS.World.shotgun_C.counter += 1
             return shotgun
+    
+    @staticmethod
+    def ppsh41_u(*args):
+        global tiles, Projectiles, ppsh41_ammo
+        args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
+            KDS.World.ppsh41_C.counter = 0
+            ppsh41_shot.stop()
+            ppsh41_shot.play()
+            ppsh41_ammo -= 1
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 10))
+            return ppsh41_f_texture
+        else:
+            if not args[0][0]:
+                ppsh41_shot.stop() 
+            KDS.World.ppsh41_C.counter += 1
+            return ppsh41_texture
 
     @staticmethod
     def ss_bonuscard_u(*args):
@@ -1595,7 +1628,8 @@ Pfunctions = {
     17: pickupFunctions.shotgun_shells_p,
     18: pickupFunctions.soulsphere_p,
     19: pickupFunctions.ss_bonuscard_p,
-    20: pickupFunctions.turboneedle_p
+    20: pickupFunctions.turboneedle_p,
+    21: pickupFunctions.ppsh41_p
 }
 
 Ufunctions = {
@@ -1609,7 +1643,8 @@ Ufunctions = {
     12: itemFunctions.plasmarifle_u,
     15: itemFunctions.rk62_u,
     16: itemFunctions.shotgun_u,
-    19: itemFunctions.ss_bonuscard_u
+    19: itemFunctions.ss_bonuscard_u,
+    21: itemFunctions.ppsh41_u
 
 }
 
@@ -3246,25 +3281,6 @@ while main_running:
         if fart_counter > 250:
             farting = False
             fart_counter = 0
-
-            damage_rect = pygame.Rect(0, 0, 800, 600)
-
-            damage_rect.centerx = player_rect.centerx
-            damage_rect.centery = player_rect.centery
-
-            for archvile in WorldData.Legacy.archviles:
-                if damage_rect.colliderect(archvile.rect):
-                    archvile.health -= 600
-            for zombie1 in WorldData.Legacy.zombies:
-                if damage_rect.colliderect(zombie1.rect):
-                    zombie1.health -= 600
-            for sergeant in WorldData.Legacy.sergeants:
-                if damage_rect.colliderect(sergeant.rect):
-                    sergeant.health -= 600
-            for imp in imps:
-                if damage_rect.colliderect(imp.rect):
-                    imp.dmg(600)
-            del damage_rect
 
     if player_keys["red"]:
         screen.blit(red_key, (10, 20))
