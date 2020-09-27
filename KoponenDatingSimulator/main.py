@@ -2591,8 +2591,8 @@ def main_menu():
     #Main menu variables:
     framecounter = 0
     current_frame = 0
-    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 45, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-    framechange_lerp._set(255)
+    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.Float.AnimationType.SmoothStep, KDS.Animator.OnAnimationEnd.Stop)
+    framechange_lerp.tick = framechange_lerp.ticks
 
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(
         450, 180, 300, 60), menu_mode_selector, button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White))
@@ -2679,11 +2679,7 @@ def main_menu():
             Frame4 = pygame.Surface(display_size)
             Frame4.blit(main_menu_background_4, (0, 0))
 
-            frames = []
-            frames.append(Frame1)
-            frames.append(Frame2)
-            frames.append(Frame3)
-            frames.append(Frame4)
+            frames = [Frame1, Frame2, Frame3, Frame4]
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
             display.blit(frames[current_frame-1], (0, 0))
@@ -2694,12 +2690,12 @@ def main_menu():
 
             display.blit(main_menu_title, (391, 43))
             framecounter += 1
-            if framecounter > 500:
+            if framecounter > 1000:
                 current_frame += 1
                 framecounter = 0
                 if current_frame > len(frames)-1:
                     current_frame = 0
-                framechange_lerp._set(0)
+                framechange_lerp.tick = 0
                 frames[current_frame].set_alpha(0)
                 frames[current_frame-1].set_alpha(255)
         elif MenuMode == Mode.ModeSelectionMenu:
@@ -2709,11 +2705,9 @@ def main_menu():
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(mouse_pos):
                     if y == 0:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(
-                            True) * 255.0)), (story_mode_button.x, story_mode_button.y))
+                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(True) * 255.0)), (story_mode_button.x, story_mode_button.y))
                     elif y == 1:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(
-                            True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
+                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
                     if c:
                         if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
                             MenuMode = Mode.StoryMenu
@@ -2725,11 +2719,9 @@ def main_menu():
                                 mode_selection_modes[y]), currentframe())
                 else:
                     if y == 0:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(
-                            False) * 255.0)), (story_mode_button.x, story_mode_button.y))
+                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(False) * 255.0)), (story_mode_button.x, story_mode_button.y))
                     elif y == 1:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(
-                            False) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
+                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(False) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
             pygame.draw.rect(

@@ -1,13 +1,17 @@
 from inspect import currentframe
+from operator import index
+
+from pygame import Surface
 import KDS.Logging
 import KDS.Math
+import KDS.Colors
 import pygame
 import math
 
 class OnAnimationEnd:
-    Stop = 0
-    Loop = 1
-    PingPong = 2
+    Stop = "stop"
+    Loop = "loop"
+    PingPong = "pingpong"
 
 class Animation:
     def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops: int, filetype=".png"): #loops = -1, if infinite loops
@@ -64,7 +68,12 @@ class Animation:
         else:
             return self.images[self.tick], self.done
 
-    def get_frame(self):
+    def get_frame(self) -> pygame.Surface:
+        """Returns the currently active frame.
+
+        Returns:
+            pygame.Surface: Currently active frame.
+        """
         return self.images[self.tick]
 
     def reset(self):
@@ -104,7 +113,7 @@ class Float:
         SmoothStep = "SmoothStep"
         SmootherStep = "SmootherStep"
         
-    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or str, _OnAnimationEnd: OnAnimationEnd):
+    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or str, _OnAnimationEnd: OnAnimationEnd or str):
         """Initialises a float animation.
 
         Args:
@@ -122,10 +131,34 @@ class Float:
         self.type = Type
         self.PingPong = False
 
-    #Set was already a type of variable so...
-    def _set(self, progress: int):
-        self.tick = max(0, min(self.ticks, progress))
+    def get_value(self) -> float:
+        """Returns the current value.
 
+        Returns:
+            float: Current value.
+        """
+        if self.type == Float.AnimationType.Linear:
+            t = self.tick / self.ticks
+            return KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == Float.AnimationType.EaseIn:
+            t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
+            return KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == Float.AnimationType.EaseOut:
+            t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
+            return KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == Float.AnimationType.Exponential:
+            t = self.tick / self.ticks
+            return KDS.Math.Lerp(self.From, self.To, t * t)
+        elif self.type == Float.AnimationType.SmoothStep:
+            t = self.tick / self.ticks
+            return KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
+        elif self.type == Float.AnimationType.SmootherStep:
+            t = self.tick / self.ticks
+            return KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
+        else:
+            KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
+            return 0
+    
     def update(self, reverse=False):
         """Updates the lerp animation
 
@@ -155,23 +188,4 @@ class Float:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
-        if self.type == Float.AnimationType.Linear:
-            t = self.tick / self.ticks
-            return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.EaseIn:
-            t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
-            return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.EaseOut:
-            t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
-            return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.Exponential:
-            t = self.tick / self.ticks
-            return KDS.Math.Lerp(self.From, self.To, t * t)
-        elif self.type == Float.AnimationType.SmoothStep:
-            t = self.tick / self.ticks
-            return KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
-        elif self.type == Float.AnimationType.SmootherStep:
-            t = self.tick / self.ticks
-            return KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
-        else:
-            KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
+        return self.get_value()
