@@ -419,6 +419,8 @@ gamemode_bc_2_2 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png")).convert()
 arrow_button = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
+main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc2.png").convert()
+main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -451,6 +453,7 @@ ipuhelin_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
 turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
 imp_fireball_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": ipuhelin_texture, "coffeemug": coffeemug}
@@ -550,9 +553,9 @@ shotgun_cooldown = 0
 pistol_cooldown = 0
 dark = False
 
-gamemode_bc_1_alpha = KDS.Animator.Float(
+gamemode_bc_1_alpha = KDS.Animator._Float(
     0.0, 1.0, 8, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-gamemode_bc_2_alpha = KDS.Animator.Float(
+gamemode_bc_2_alpha = KDS.Animator._Float(
     0.0, 1.0, 8, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
@@ -2341,7 +2344,7 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.FloatAnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator._Float(0.0, 1.0, 15, KDS.Animator.FloatAnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
@@ -2545,6 +2548,13 @@ def main_menu():
         MenuMode = mode
 
     #region Main Menu
+
+    #Main menu variables:
+    framecounter = 0
+    current_frame = 0
+    framechange_lerp = KDS.Animator._Float(0.0, 255.0, 45, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+    framechange_lerp._set(255)
+
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(
         450, 180, 300, 60), menu_mode_selector, button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White))
     main_menu_settings_button = KDS.UI.New.Button(pygame.Rect(
@@ -2610,19 +2620,40 @@ def main_menu():
                 ResizeWindow(event.size)
 
         if MenuMode == Mode.MainMenu:
-
-            display.blit(main_menu_background, (0, 0))
-            display.blit(pygame.transform.flip(
+            
+            #Frame 1
+            Frame1 = pygame.Surface(display_size)
+            Frame1.blit(main_menu_background, (0, 0))
+            Frame1.blit(pygame.transform.flip(
                 menu_gasburner_animation.update(), False, False), (625, 445))
-            display.blit(pygame.transform.flip(
+            Frame1.blit(pygame.transform.flip(
                 menu_toilet_animation.update(), False, False), (823, 507))
-            display.blit(pygame.transform.flip(
+            Frame1.blit(pygame.transform.flip(
                 menu_trashcan_animation.update(), False, False), (283, 585))
+            #Frame 2
+            Frame2 = pygame.Surface(display_size)
+            Frame2.blit(main_menu_background_2, (0,0))
+            frames = []
+            frames.append(Frame1)
+            frames.append(Frame2)
+            frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
+            display.blit(frames[current_frame-1], (0, 0))
+            display.blit(frames[current_frame], (0,0))
             main_menu_play_button.update(display, mouse_pos, c, Mode.ModeSelectionMenu)
             main_menu_settings_button.update(display, mouse_pos, c)
             main_menu_quit_button.update(display, mouse_pos, c)
 
+            display.blit(main_menu_title, (391, 43))
+            framecounter += 1
+            if framecounter > 500:
+                current_frame += 1
+                framecounter = 0
+                if current_frame > 1:
+                    current_frame = 0
+                framechange_lerp._set(0)
+                frames[current_frame].set_alpha(0)
+                frames[current_frame-1].set_alpha(255)
         elif MenuMode == Mode.ModeSelectionMenu:
 
             display.blit(gamemode_bc_1_1, (0, 0))
@@ -2759,6 +2790,8 @@ while main_running:
                     farting = True
                     Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
+            elif event.key == K_F1:
+                renderUI = not renderUI
             elif event.key == K_t:
                 console()
             elif event.key == K_F3:
@@ -2877,7 +2910,6 @@ while main_running:
     player_movement = [0, 0]
 
     if onLadder:
-        print("kkk")
         vertical_momentum = 0
         air_timer = 0
         if KDS.Keys.GetPressed(KDS.Keys.moveUp):
@@ -3274,7 +3306,6 @@ while main_running:
 
 #endregion
 #region Debug Mode
-    screen.blit(score, (10, 55))
     KDS.Logging.Profiler(DebugMode)
     if DebugMode:
         screen.blit(score_font.render(
@@ -3288,6 +3319,7 @@ while main_running:
     if renderUI:
         screen.blit(health, (10, 120))
         screen.blit(stamina, (10, 130))
+        screen.blit(score, (10, 55))
 
         missions_background_width = KDS.Missions.GetMaxWidth()
         Mission_Render_Data = KDS.Missions.RenderMission(screen)

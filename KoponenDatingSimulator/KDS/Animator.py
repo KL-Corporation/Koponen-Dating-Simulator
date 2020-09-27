@@ -102,7 +102,8 @@ class FloatAnimationType:
     SmoothStep = "SmoothStep"
     SmootherStep = "SmootherStep"
     
-class Float:
+    #Float is already a name of a variable
+class _Float:
     def __init__(self, From: float, To: float, Duration: int, Type: FloatAnimationType, _OnAnimationEnd: OnAnimationEnd):
         """Initialises a float animation.
 
@@ -121,7 +122,8 @@ class Float:
         self.type = Type
         self.PingPong = False
 
-    def set(self, progress: int):
+    #Set was already a type of variable so...
+    def _set(self, progress: int):
         self.tick = max(0, min(self.ticks, progress))
 
     def update(self, reverse=False):
