@@ -1,7 +1,4 @@
 from inspect import currentframe
-from operator import index
-
-from pygame import Surface
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
