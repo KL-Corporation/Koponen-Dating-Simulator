@@ -93,25 +93,25 @@ class Legacy:
             img.set_colorkey(KDS.Colors.GetPrimary.White)
             animation_list.append(img)
         return animation_list
-
-class FloatAnimationType:
-    Linear = "Linear"
-    EaseIn = "EaseIn"
-    EaseOut = "EaseOut"
-    Exponential = "Exponential"
-    SmoothStep = "SmoothStep"
-    SmootherStep = "SmootherStep"
     
-    #Float is already a name of a variable
-class _Float:
-    def __init__(self, From: float, To: float, Duration: int, Type: FloatAnimationType, _OnAnimationEnd: OnAnimationEnd):
+    #Float is not already a name of a variable, float is. Also it doesn't matter... It is still accessed by KDS.Animator.Float because it is not imported as from KDS.Animator so it will not conflict.
+class Float:
+    class AnimationType:
+        Linear = "Linear"
+        EaseIn = "EaseIn"
+        EaseOut = "EaseOut"
+        Exponential = "Exponential"
+        SmoothStep = "SmoothStep"
+        SmootherStep = "SmootherStep"
+        
+    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or str, _OnAnimationEnd: OnAnimationEnd):
         """Initialises a float animation.
 
         Args:
             From (float): The starting point of the float animation.
             To (float): The ending point of the float animation.
             Duration (int): The amount of ticks it takes to finish the entire float animation.
-            Type (FloatAnimationType): The type of float animation you want.
+            Type (AnimationType): The type of float animation you want.
             _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         self.From = From
@@ -155,22 +155,22 @@ class _Float:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
-        if self.type == FloatAnimationType.Linear:
+        if self.type == Float.AnimationType.Linear:
             t = self.tick / self.ticks
             return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == FloatAnimationType.EaseIn:
+        elif self.type == Float.AnimationType.EaseIn:
             t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
             return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == FloatAnimationType.EaseOut:
+        elif self.type == Float.AnimationType.EaseOut:
             t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
             return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == FloatAnimationType.Exponential:
+        elif self.type == Float.AnimationType.Exponential:
             t = self.tick / self.ticks
             return KDS.Math.Lerp(self.From, self.To, t * t)
-        elif self.type == FloatAnimationType.SmoothStep:
+        elif self.type == Float.AnimationType.SmoothStep:
             t = self.tick / self.ticks
             return KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
-        elif self.type == FloatAnimationType.SmootherStep:
+        elif self.type == Float.AnimationType.SmootherStep:
             t = self.tick / self.ticks
             return KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
         else:

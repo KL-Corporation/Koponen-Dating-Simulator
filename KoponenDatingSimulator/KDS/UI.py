@@ -36,7 +36,7 @@ class New:
             self.handle_highlighted_color = handle_highlighted_color
             self.handle_pressed_color = handle_pressed_color
             self.handle_old_color = handle_default_color
-            self.handle_color_fade = KDS.Animator._Float(0.0, 1.0, lerp_duration, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+            self.handle_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
 
         def update(self, surface, mouse_pos):
             """
@@ -93,7 +93,7 @@ class New:
             self.button_pressed_color = button_pressed_color
             self.button_disabled_color = button_disabled_color
             self.button_old_color = button_default_color
-            self.button_color_fade = KDS.Animator._Float(0.0, 1.0, lerp_duration, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+            self.button_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
             self.enabled = enabled
             
         def update(self, surface, mouse_pos: tuple, clicked, *args):
@@ -152,8 +152,8 @@ class New:
             self.handle_highlighted_color = handle_highlighted_color
             self.handle_pressed_color = handle_pressed_color
             self.handle_old_color = handle_default_color
-            self.handle_color_fade = KDS.Animator._Float(0.0, 1.0, fade_lerp_duration, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
-            self.handle_move_animation = KDS.Animator._Float(0.0, 1.0, move_lerp_duration, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+            self.handle_color_fade = KDS.Animator.Float(0.0, 1.0, fade_lerp_duration, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+            self.handle_move_animation = KDS.Animator.Float(0.0, 1.0, move_lerp_duration, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
             if self.state:
                 self.handle_rect = pygame.Rect(self.range[0], switch_rect.centery - handle_size[1] / 2, handle_size[0], handle_size[1])
                 self.handle_move_animation._set(move_lerp_duration)

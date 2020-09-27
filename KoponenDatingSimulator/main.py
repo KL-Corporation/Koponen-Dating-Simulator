@@ -560,10 +560,10 @@ shotgun_cooldown = 0
 pistol_cooldown = 0
 dark = False
 
-gamemode_bc_1_alpha = KDS.Animator._Float(
-    0.0, 1.0, 8, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-gamemode_bc_2_alpha = KDS.Animator._Float(
-    0.0, 1.0, 8, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_1_alpha = KDS.Animator.Float(
+    0.0, 1.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_2_alpha = KDS.Animator.Float(
+    0.0, 1.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
@@ -2383,7 +2383,7 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
-    anim_lerp_x = KDS.Animator._Float(0.0, 1.0, 15, KDS.Animator.FloatAnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
@@ -2591,7 +2591,7 @@ def main_menu():
     #Main menu variables:
     framecounter = 0
     current_frame = 0
-    framechange_lerp = KDS.Animator._Float(0.0, 255.0, 45, KDS.Animator.FloatAnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 45, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
     framechange_lerp._set(255)
 
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(
