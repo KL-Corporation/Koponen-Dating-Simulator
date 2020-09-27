@@ -39,7 +39,7 @@ class Animation:
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
             KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: {}".format(converted_animation_name), False)
 
-            for j in range(duration):
+            for _ in range(duration):
                 self.images.append(image)
 
                 
@@ -52,9 +52,13 @@ class Animation:
         Returns:
             Surface | Surface, bool: Returns the image to blit and an animation finished bool if loops is not infinite.
         """
+
         self.tick += 1
         if self.tick > self.ticks:
-            self.tick = 0
+            if self.loops == -1:
+                self.tick = 0
+            else:
+                self.tick = self.ticks - 1
             if self.loops != -1:
                 self.loops_count += 1
                 if self.loops_count == self.loops:

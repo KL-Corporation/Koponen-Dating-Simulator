@@ -75,11 +75,10 @@ class Bullet:
         self.maxDistance = maxDistance
         self.movedDistance = 0
         self.environment_obstacles = environment_obstacles
-        if not slope:
-            slope = -1
+        self.damage = damage
         self.slope = slope
 
-    def update(self,Surface:pygame.Surface, scroll: list):
+    def update(self,Surface:pygame.Surface, scroll: list, targets):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
         if self.speed == -1:
@@ -89,10 +88,16 @@ class Bullet:
                 else:
                     self.rect.x += 18
                 self.rect.y += self.slope
-                collision_list = collision_test(self.rect, self.environment_obstacles)
-                if collision_list:
-                    return "wall"
-            return "air"
+                #collision_list = collision_test(self.rect, self.environment_obstacles)
+                for target in targets:
+                    if self.rect.colliderect(target.rect) and target.health > 0:
+                        target.dmg(self.damage)
+                        target.sleep = False
+                        return "wall", targets
+                #if collision_list:
+                #    return "wall", targets
+
+            return "air", targets
         else:
             if self.direction:
                 self.rect.x -= self.speed
@@ -103,10 +108,15 @@ class Bullet:
             self.rect.y += self.slope
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
+            for target in targets:
+                if target.rect.colliderect(self.rect) and target.health > 0:
+                    target.sleep = False
+                    target.dmg(self.damage)
+                    return "wall", targets
             if collision_list:
-                return "wall"
+                return "wall", targets
             if self.movedDistance > self.maxDistance:
-                return "air"
+                return "air", targets
 
 class itemTools:
     class rk62:

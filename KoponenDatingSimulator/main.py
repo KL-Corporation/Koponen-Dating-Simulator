@@ -611,6 +611,10 @@ Projectiles = []
 Explosions = []
 onLadder = False
 renderUI = True
+items = numpy.array([])
+enemies = numpy.array([])
+decoration = numpy.array([])
+specialTiles = numpy.array([])
 
 inventory = ["none", "none", "none", "none", "none"]
 inventoryDoubles = []
@@ -629,7 +633,6 @@ player_score = 0
 
 true_scroll = [0, 0]
 
-test_rect = pygame.Rect(0, 0, 60, 40)
 stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
@@ -913,7 +916,6 @@ class WorldData():
         elif os.path.isfile(MapPath + ".map"):
             with zipfile.ZipFile(MapPath + ".map", "r") as mapZip:
                 mapZip.extractall(PersistentMapPath)
-                mapZip.close()
         else:
             KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
             
@@ -929,11 +931,6 @@ class WorldData():
                 shutil.rmtree(fpath)
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
-            map_file.close()
-        items = numpy.array([])
-        enemies = numpy.array([])
-        decoration = numpy.array([])
-        specialTiles = numpy.array([])
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -941,6 +938,10 @@ class WorldData():
         # Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
         tiles = numpy.array([[Tile((x * 34, y * 34), 0) for x in range(
             WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
+
+        enemySerialNumbers = {
+            1: KDS.AI.Imp
+        }
 
         y = 0
         for row in map_data:
@@ -962,14 +963,14 @@ class WorldData():
                             items = numpy.append(items, Item(
                                 (x * 34, y * 34), serialNumber=serialNumber))
                         elif data[0] == "2":
-                            pass
+                            enemies = numpy.append(enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif data[0] == "3":
                             pass
                 else:
                     x += 1
             y += 1
         
-        Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.mp3"))
+        Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
         Audio.MusicMixer.play(-1)
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
 #endregion
@@ -1516,7 +1517,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def pistol_u(*args):
-        global pistol_bullets, Projectile, tiles
+        global pistol_bullets, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White), (10, 360))      
         if args[0][0] and KDS.World.pistol_C.counter > 50 and pistol_bullets > 0:
             pistol_shot.play()
@@ -1540,7 +1541,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
                 temp = 80
             else:
                 temp = -80
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2),direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)))
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -1548,14 +1549,14 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def rk62_u(*args):
-        global rk_62_ammo, tiles, Projectiles
+        global rk_62_ammo, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
             rk62_shot.play()
             rk_62_ammo -= 1
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+50*KDS.Math.Jd(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -1565,7 +1566,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def shotgun_u(*args):
-        global shotgun_shells, Projectiles, tiles
+        global shotgun_shells, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
             KDS.World.shotgun_C.counter = 0
@@ -1573,7 +1574,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             shotgun_shells -= 1
             shotgun_shots()
             for _ in range(7):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1581,14 +1582,14 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     
     @staticmethod
     def ppsh41_u(*args):
-        global tiles, Projectiles, ppsh41_ammo
+        global tiles, ppsh41_ammo
         args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
             KDS.World.ppsh41_C.counter = 0
             ppsh41_shot.stop()
             ppsh41_shot.play()
             ppsh41_ammo -= 1
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 10))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 10))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
@@ -2550,7 +2551,7 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.mp3")
+    Audio.MusicMixer.load("Assets/Audio/music/lobbymusic.ogg")
     Audio.MusicMixer.play(-1)
     Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
@@ -2917,13 +2918,22 @@ while main_running:
     items, inventory = Item.checkCollisions(
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
+    for enemy in enemies:
+        enemy.update(screen, scroll, tiles, player_rect)
+
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
     if renderUI:
         player_inventory.render(screen)
 
     for Projectile in Projectiles:
-        v = Projectile.update(screen, scroll)
+        result = Projectile.update(screen, scroll, enemies)
+        print(result)
+        if result:
+            v = result[0]
+            enemies = result[1]
+        else:
+            v = None
         
         if v == "wall" or v == "air":
             Projectiles.remove(Projectile)
@@ -3314,10 +3324,6 @@ while main_running:
             screen.blit(flames_animation.update(),
                         (player_rect.x - scroll[0], player_rect.y - scroll[1]-20))
 
-    for iron_bar1 in iron_bars:
-        screen.blit(iron_bar, (iron_bar1.x -
-                               scroll[0], iron_bar1.y - scroll[1]))
-
 #endregion
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
@@ -3399,7 +3405,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
-pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.mp3")
+pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.ogg")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.Quit()
 pygame.mixer.quit()
