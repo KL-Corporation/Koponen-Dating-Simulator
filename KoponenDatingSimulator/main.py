@@ -420,6 +420,8 @@ gamemode_bc_2_2 = pygame.image.load(
 arrow_button = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
 main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc2.png").convert()
+main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc3.png").convert()
+main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -2633,9 +2635,18 @@ def main_menu():
             #Frame 2
             Frame2 = pygame.Surface(display_size)
             Frame2.blit(main_menu_background_2, (0,0))
+            #Frame 3
+            Frame3 = pygame.Surface(display_size)
+            Frame3.blit(main_menu_background_3, (0, 0))
+            #Frame 4
+            Frame4 = pygame.Surface(display_size)
+            Frame4.blit(main_menu_background_4, (0, 0))
+
             frames = []
             frames.append(Frame1)
             frames.append(Frame2)
+            frames.append(Frame3)
+            frames.append(Frame4)
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
             display.blit(frames[current_frame-1], (0, 0))
@@ -2649,7 +2660,7 @@ def main_menu():
             if framecounter > 500:
                 current_frame += 1
                 framecounter = 0
-                if current_frame > 1:
+                if current_frame > len(frames)-1:
                     current_frame = 0
                 framechange_lerp._set(0)
                 frames[current_frame].set_alpha(0)
@@ -2797,7 +2808,7 @@ while main_running:
             elif event.key == K_F3:
                 DebugMode = not DebugMode
             elif event.key == K_F4:
-                if pygame.key.get_pressed(K_LALT):
+                if pygame.key.get_pressed() == K_LALT:
                     KDS_Quit()
                 else:
                     player_health = 0
@@ -2842,13 +2853,6 @@ while main_running:
             ResizeWindow(event.size)
 #endregion
 #region Data
-    def inventoryDoubleOffsetCounter():
-        global inventoryDoubleOffset
-        inventoryDoubleOffset = 0
-        for i in range(0, inventory_slot - 1):
-            if inventoryDoubles[i] == True:
-                inventoryDoubleOffset += 1
-        return inventoryDoubleOffset
 
     window.fill((20, 25, 20))
     screen.fill((20, 25, 20))

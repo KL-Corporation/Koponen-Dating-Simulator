@@ -68,7 +68,7 @@ keys_pressed = {
 def blitText(Surface: pygame.Surface, txt: str, position: (int, int), color = KDS.Colors.GetPrimary.White):
     Surface.blit(harbinger_font.render(txt, True, color), position)
 class tileInfo:
-    def __init__(self, position: (int, int), serialNumber = "0001 0000 0000 0000 / "):
+    def __init__(self, position: (int, int), serialNumber = "0000 0000 0000 0000 / "):
         self.rect = pygame.Rect(position[0], position[1], scalesize, scalesize)
         self.serialNumber = serialNumber
 
