@@ -27,7 +27,6 @@ import shutil
 import json
 import zipfile
 import math
-import faulthandler
 from pygame.locals import *
 from PIL import Image, ImageFilter
 #endregion
@@ -46,6 +45,7 @@ KDS.System.hide(PersistentPaths.CachePath)
 pygame.mixer.init()
 pygame.init()
 KDS.Logging.init()
+
 KDS.ConfigManager.init()
 
 monitor_info = pygame.display.Info()
@@ -290,15 +290,15 @@ current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "01")
 max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "99"))
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
                 f"""Settings Loading Complete.
-                Settings Loaded:
-                 - Terms Accepted: {tcagr}
-                 - Music Volume: {Audio.MusicVolume}
-                 - Sound Effect Volume: {Audio.EffectVolume}
-                 - Fullscreen: {isFullscreen}
-                 - Clear Lag: {clearLag}
-                 - Current Map: {current_map}
-                 - Max Map: {max_map}
-                 """, False)
+I===== Settings Loaded =====I
+   - Terms Accepted: {tcagr}
+   - Music Volume: {Audio.MusicVolume}
+   - Sound Effect Volume: {Audio.EffectVolume}
+   - Fullscreen: {isFullscreen}
+   - Clear Lag: {clearLag}
+   - Current Map: {current_map}
+   - Max Map: {max_map}
+I===== Settings Loaded =====I""", False)
 #region Downloads
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
 main_menu_background = pygame.image.load(
