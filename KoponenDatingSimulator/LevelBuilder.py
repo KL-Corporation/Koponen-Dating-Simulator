@@ -20,6 +20,14 @@ pygame.display.set_caption("KDS Level Builder")
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+
+def aspectScale(surfaceToScale: pygame.Surface, size: tuple):
+    if surfaceToScale.get_width() / surfaceToScale.get_height() > size[0] / size[1]:
+        scaling = size[0] / surfaceToScale.get_width()
+    else:
+        scaling = size[1] / surfaceToScale.get_height()
+    return pygame.transform.scale(surfaceToScale, (int(surfaceToScale.get_width() * scaling), int(surfaceToScale.get_height() * scaling)))
+
 consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 
 with open("Assets/Textures/tile_textures.txt", "r") as f:
@@ -29,7 +37,7 @@ t_textures = {}
 for element in data:
     num = num = f"0{element.split(',')[0]}"
     res = element.split(",")[1]
-    t_textures[num] = pygame.transform.scale(pygame.image.load("Assets/Textures/Map/" + res).convert(), (scalesize, scalesize))
+    t_textures[num] = aspectScale(pygame.image.load("Assets/Textures/Map/" + res).convert(), (scalesize, scalesize))
     t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
 with open("Assets/Textures/item_textures.txt", "r") as f:
@@ -129,6 +137,7 @@ def loadGrid(size):
     return rlist
 
 def inputConsole(daInput = ">>>  "):
+    pygame.key.set_repeat(1000, 31)
     r = True
     rstring = ''
     while r:
@@ -145,13 +154,13 @@ def inputConsole(daInput = ">>>  "):
                     return rstring.strip()
                 elif event.key == K_BACKSPACE:
                     rstring = rstring[:-1]
-                else:
-                    if event.unicode:
-                        rstring += event.unicode
-        main_display.fill((0,0,0))
-        main_display.blit(pygame.transform.scale(consoleBackground, display_size),( (display_size[0]/2)-consoleBackground.get_size()[0]/2, (display_size[1]/2)-consoleBackground.get_size()[1]/2 )  )
+                elif event.unicode:
+                    rstring += event.unicode
+        main_display.fill(consoleBackground.get_at((0, 0)))
+        main_display.blit(aspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
         main_display.blit(harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White), (10, 10))
         pygame.display.update()
+    pygame.key.set_repeat(0, 0)
 
 def saveMap(grd, name: str):
     outputString = ''
@@ -239,7 +248,7 @@ def materialMenu(previousMaterial):
         main_display.fill((20,20,20))
         for selection in selectorRects:
             sorting = selection.serialNumber[0]
-            main_display.blit(pygame.transform.scale(Atextures[sorting][selection.serialNumber],(blocksize,blocksize)), (selection.rect.x,selection.rect.y-rscroll*30))
+            main_display.blit(aspectScale(Atextures[sorting][selection.serialNumber],(blocksize,blocksize)), (selection.rect.x,selection.rect.y-rscroll*30))
             if selection.rect.collidepoint(mpos[0],mpos[1]+rscroll*30):
                 pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y-rscroll*30, blocksize, blocksize), 3)
                 if pygame.mouse.get_pressed()[0]:
@@ -334,5 +343,4 @@ if __name__ == "__main__":
 else:
     print("This program cannot be imported!")
 
-        
         
