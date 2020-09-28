@@ -41,7 +41,7 @@ class LogType():
     debug = 10
     notset = 0
 
-def Log(Log_Type: LogType, Message: str, Console_Visible=False):
+def Log(Log_Type: LogType or int, Message: str, Console_Visible=False):
     """Log a log.
 
     Args:

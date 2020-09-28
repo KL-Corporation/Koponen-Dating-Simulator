@@ -67,9 +67,6 @@ screen = pygame.Surface(screen_size)
 
 clock = pygame.time.Clock()
 profiler_enabled = False
-
-window.blit(pygame.image.load("Assets/Textures/UI/loadingScreen.png"), (0, 0))
-pygame.display.update()
 #endregion
 #region Window
 class Fullscreen:
@@ -278,6 +275,27 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 black_tint = pygame.Surface(screen_size)
 black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
+isFullscreen = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
+Fullscreen.Set(True)
+window.fill(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert().get_at((0, 0)))
+window.blit(KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
+pygame.display.update()
+clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
+tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)))
+current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "01")
+max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "99"))
+KDS.Logging.Log(KDS.Logging.LogType.debug, 
+                f"""Settings Loading Complete.
+                Settings Loaded:
+                 - Terms Accepted: {tcagr}
+                 - Music Volume: {Audio.MusicVolume}
+                 - Sound Effect Volume: {Audio.EffectVolume}
+                 - Fullscreen: {isFullscreen}
+                 - Clear Lag: {clearLag}
+                 - Current Map: {current_map}
+                 - Max Map: {max_map}
+                 """, False)
 #region Downloads
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
 main_menu_background = pygame.image.load(
@@ -510,7 +528,6 @@ jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetP
 
 restart = False
 reset_data = False
-clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
 
 main_running = True
 plasmarifle_fire = False
@@ -528,24 +545,6 @@ weapon_fire = False
 isFullscreen = False
 shoot = False
 
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
-    "Data", "TermsAccepted", str(False)))
-
-if tcagr == None:
-    KDS.Logging.AutoError(
-        "Error parcing terms and conditions bool.", currentframe())
-    tcagr = False
-
-isFullscreen = KDS.Convert.ToBool(
-    KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
-
-if isFullscreen == None:
-    KDS.Logging.AutoError("Error parcing fullscreen bool.",
-                          currentframe())
-Fullscreen.Set(True)
-KDS.Logging.Log(KDS.Logging.LogType.debug, 
-                f"Settings Loading Complete.\nSettings Loaded:\n - Terms Accepted: {tcagr}\n - Music Volume: {Audio.MusicVolume}\n - Sound Effect Volume: {Audio.EffectVolume}\n - Fullscreen: {isFullscreen}\n - Clear Lag: {clearLag}", False)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
 selectedSave = 0
 
@@ -589,17 +588,11 @@ monsterAmount = 0
 monstersLeft = 0
 farting = False
 
-current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "01")
-
 with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = file.read()
     cntnts = cntnts.split('\n')
     file.close()
 
-#######################################TEMPORARY#######################################
-max_map = KDS.ConfigManager.SetSetting("Settings", "MaxMap", f"{len(cntnts) - 1:02d}")
-#######################################TEMPORARY#######################################
-max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "05"))
 map_names = tuple(cntnts)
 
 ammunition_plasma = 50
@@ -2452,6 +2445,7 @@ def settings_menu():
         return_def()
         os.remove(os.path.join(PersistentPaths.AppDataPath, "settings.cfg"))
         importlib.reload(KDS.ConfigManager)
+        Fullscreen.Set(True)
     
     def reset_data():
         KDS_Quit(True, True)
