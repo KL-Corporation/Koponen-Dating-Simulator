@@ -27,6 +27,7 @@ import shutil
 import json
 import zipfile
 import math
+import faulthandler
 from pygame.locals import *
 from PIL import Image, ImageFilter
 #endregion
