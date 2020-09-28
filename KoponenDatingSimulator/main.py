@@ -943,7 +943,8 @@ class WorldData():
             WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
 
         enemySerialNumbers = {
-            1: KDS.AI.Imp
+            1: KDS.AI.Imp,
+            2: KDS.AI.SergeantZombie
         }
 
         y = 0
@@ -3303,6 +3304,9 @@ while main_running:
         if fart_counter > 250:
             farting = False
             fart_counter = 0
+            for enemy in enemies:
+                if KDS.Math.getDistance(enemy.rect.topleft, player_rect.topleft) < 1500:
+                    enemy.dmg(random.randint(500, 1000))
 
     if player_keys["red"]:
         screen.blit(red_key, (10, 20))
