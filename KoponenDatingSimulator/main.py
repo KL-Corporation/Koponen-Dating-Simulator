@@ -124,7 +124,9 @@ class Audio:
         EffectChannels.append(pygame.mixer.Channel(c_i))
 
     @staticmethod
-    def playSound(sound: pygame.mixer.Sound, volume: float = EffectVolume):
+    def playSound(sound: pygame.mixer.Sound, volume: float = -1):
+        if volume == -1:
+            volume = Audio.EffectVolume
         play_channel = pygame.mixer.find_channel(True)
         play_channel.play(sound)
         play_channel.set_volume(volume)
@@ -271,6 +273,7 @@ class Archvile:
                                                        self.rect.y - scroll[1]+25))
 #endregion
 #region Initialisation
+KDS.AI.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 black_tint = pygame.Surface(screen_size)
 black_tint.fill((0, 0, 0))

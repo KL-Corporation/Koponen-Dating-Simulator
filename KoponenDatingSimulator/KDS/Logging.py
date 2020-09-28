@@ -82,7 +82,7 @@ def AutoError(Message: str, _currentframe):
     _frameinfo = getframeinfo(_currentframe)
     Log(LogType.error, f"ERROR! File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function} [Exception: {Message}]", True)
 
-def Profiler(enabled=True):
+def Profiler(enabled):
     """Turns the profiler on or off.
 
     Args:

@@ -1,7 +1,13 @@
 import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
-import KDS.Animator, KDS.Math, KDS.Colors
+import KDS.Animator, KDS.Math, KDS.Colors, KDS.Logging
 pygame.mixer.init()
+
+Audio = None
+
+def init(AudioClass):
+    global Audio, debugMode
+    Audio = AudioClass
 
 def __collision_test(rect, Tile_list):
     hit_list = []
@@ -94,7 +100,8 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
             end_y = max_y
         for row in obstacles[y:end_y]:
             for tile in row[x:end_x]:
-                pygame.draw.rect(Surface, (255,255, 0), (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                if KDS.Logging.profiler_running:
+                    pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Yellow, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
                 if not tile.air:
                     return False
                 if tile.rect.colliderect(targetRect):
@@ -244,12 +251,10 @@ class HostileEnemy:
         s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
         if s:
             self.sleep = False
-            print(f"Pelaaja löytyi {random.randint(1, 100)}")
         if self.health > 0 and not self.sleep:
             if s:
                 if not self.attackRunning:
                     if random.randint(1, 30) == 25:
-                        print("Osui")
                         self.attackRunning = True
             if self.attackRunning:
                 if self.attackF:
@@ -261,7 +266,7 @@ class HostileEnemy:
                     self.attackRunning = False
             else:
                 if self.playSightSound:
-                    self.sight_sound.play()
+                    Audio.playSound(self.sight_sound)
                     self.playSightSound = False
                 self.rect, c = move(self.rect, self.movement, tiles)
                 if c["right"] or c["left"]:
@@ -273,7 +278,7 @@ class HostileEnemy:
             Surface.blit(pygame.transform.flip(self.i_anim.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))          
         elif self.health < 1:
             if self.playDeathSound:
-                self.death_sound.play()
+                Audio.playSound(self.death_sound)
                 self.playDeathSound = False
             self.rect, c = move(self.rect, [0,8], tiles)
             Surface.blit(pygame.transform.flip(self.d_anim.update()[0], self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
@@ -285,7 +290,6 @@ class HostileEnemy:
         self.health -= dmgAmount
         if self.health < 0:
             self.health = 0
-
 
 class Imp(HostileEnemy):
     def __init__(self, pos):
