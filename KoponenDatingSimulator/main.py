@@ -558,7 +558,7 @@ onLadder = False
 shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
-dark = False
+dark = True
 
 gamemode_bc_1_alpha = KDS.Animator.Float(
     0.0, 1.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
@@ -603,6 +603,8 @@ ppsh41_ammo = 72
 
 Projectiles = []
 Explosions = []
+Lights = []
+LightScroll = [0, 0]
 onLadder = False
 renderUI = True
 items = numpy.array([])
@@ -925,6 +927,13 @@ class WorldData():
                 shutil.rmtree(fpath)
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
+
+        with open(os.path.join(PersistentMapPath, "levelprop.json"), "r") as map_prop_file:
+            map_props = map_prop_file.read()
+            map_props = json.loads(map_props)
+
+            global dark
+            dark = map_props["dark"]
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -1270,6 +1279,19 @@ class Ladder(Tile):
             onLadder = True
         return self.texture
 
+class Lamp(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = lamp0
+        self.rect = pygame.Rect(position[0], position[1], 14, 21)
+        self.checkCollision = True
+
+    def update(self):
+        if random.randint(0, 10) != 10:
+            btmidth = 80
+            screen.blit(KDS.World.Lighting.lamp_cone(10, btmidth, 90, (40, 40, 40)), (self.rect.centerx-btmidth/2-scroll[0], self.rect.centery+5-scroll[1]), special_flags=BLEND_RGBA_ADD)
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1277,6 +1299,7 @@ specialTilesD = {
     19: Jukebox,
     21: Landmine,
     23: Door,
+    22: Lamp,
     24: Door,
     25: Door,
     26: Door
@@ -2882,10 +2905,13 @@ while main_running:
     window.fill((20, 25, 20))
     screen.fill((20, 25, 20))
 
-    true_scroll[0] += (player_rect.x - true_scroll[0] -
-                       (screen_size[0] / 2)) / 12
+    Lights.clear()
+
+    true_scroll[0] += (player_rect.x - true_scroll[0] -(screen_size[0] / 2)) / 12
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
+
     scroll = true_scroll.copy()
+    lscroll = LightScroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
     if farting:
@@ -2922,11 +2948,11 @@ while main_running:
         player_inventory.render(screen)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, enemies)
-        print(result)
+        result = Projectile.update(screen, scroll, enemies, player_rect, player_health)
         if result:
             v = result[0]
             enemies = result[1]
+            player_health = result[2]
         else:
             v = None
         
@@ -3345,9 +3371,11 @@ while main_running:
 #region Screen Rendering
     if dark:
         screen.blit(black_tint, (0, 0))
+
     window.fill(KDS.Colors.GetPrimary.Black)
     window.blit(pygame.transform.scale(screen, Fullscreen.size),
                 (Fullscreen.offset[0], Fullscreen.offset[1]))
+    #Updating display object
     pygame.display.update()
 #endregion
 #region Data Update
@@ -3363,7 +3391,7 @@ while main_running:
     #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
 
 #endregion
-#region Conditional Events
+#region Conditional Eventsd
     if player_rect.y > len(tiles)*34+400:
         player_health = 0
     if esc_menu:

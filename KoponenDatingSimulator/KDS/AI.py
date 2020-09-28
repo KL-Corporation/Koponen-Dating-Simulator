@@ -53,16 +53,16 @@ def move(rect, movement, tiles):
     return rect, collision_types
 
 imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
+imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.wav")
 imp_sight_sound.set_volume(0.4)
+imp_death_sound.set_volume(0.5)
 
 def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacles,  maxAngle=40, maxSearchUnits=24):
     if direction:
         if targetRect.x > searchRect.x:
-            print("Kohde on väärässä suunnassa")
             return False
     else:
         if targetRect.x < searchRect.x:
-            print("Kohde on väärässä suunnassa")
             return False
             
     angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), (targetRect.centerx, targetRect.centery))
@@ -276,7 +276,7 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
-    def __init__(self, rect : pygame.Rect, w, a, d, i, sight_sound, health, mv, sleep = True, direction = False):
+    def __init__(self, rect : pygame.Rect, w, a, d, i, sight_sound, death_sound, health, mv, sleep = True, direction = False):
         self.rect = rect
         self.health = 175
         self.sleep = sleep
@@ -287,6 +287,7 @@ class HostileEnemy:
         self.i_anim = i
 
         self.sight_sound = sight_sound
+        self.death_sound = death_sound
 
         self.target_found = False
         self.playDeathSound = True
@@ -312,7 +313,7 @@ class HostileEnemy:
             Surface.blit(pygame.transform.flip(self.i_anim.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))          
         elif self.health < 1:
             if self.playDeathSound:
-                self.sight_sound.play()
+                self.death_sound.play()
                 self.playDeathSound = False
             self.rect, c = move(self.rect, [0,8], tiles)
             Surface.blit(pygame.transform.flip(self.d_anim.update()[0], self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
@@ -334,7 +335,7 @@ class Imp(HostileEnemy):
         a_anim = KDS.Animator.Animation("imp_attacking", 2, 16, KDS.Colors.GetPrimary.White, -1)
         d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, health=health, mv=[1, 8])
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8])
         self.corpse = self.d_anim.images[-1]
 
 

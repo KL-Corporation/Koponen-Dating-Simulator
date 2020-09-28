@@ -69,7 +69,7 @@ def getAngle(p1: tuple, p2: tuple):
 
 def Jd(var: bool):
     #Converts boolean to -1 or 1
-    return -1 if bool else 1
+    return -1 if var else 1
 
 def Lerp(a: float, b: float, t: float):
     """Linearly interpolates between a and b by t.

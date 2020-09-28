@@ -156,10 +156,10 @@ class New:
             self.handle_move_animation = KDS.Animator.Float(0.0, 1.0, move_lerp_duration, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
             if self.state:
                 self.handle_rect = pygame.Rect(self.range[0], switch_rect.centery - handle_size[1] / 2, handle_size[0], handle_size[1])
-                self.handle_move_animation._set(move_lerp_duration)
+                #self.handle_move_animation.(move_lerp_duration)
             else:
                 self.handle_rect = pygame.Rect(self.range[1], switch_rect.centery - handle_size[1] / 2, handle_size[0], handle_size[1])
-                self.handle_move_animation._set(0)
+                #self.handle_move_animation._set(0)
 
         def update(self, surface, mouse_pos, clicked):
             """

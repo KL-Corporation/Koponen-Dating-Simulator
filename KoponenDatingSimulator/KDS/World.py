@@ -78,7 +78,7 @@ class Bullet:
         self.damage = damage
         self.slope = slope
 
-    def update(self,Surface:pygame.Surface, scroll: list, targets):
+    def update(self,Surface:pygame.Surface, scroll: list, targets, plr_rct, plr_htlt):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
         if self.speed == -1:
@@ -88,16 +88,22 @@ class Bullet:
                 else:
                     self.rect.x += 18
                 self.rect.y += self.slope
-                #collision_list = collision_test(self.rect, self.environment_obstacles)
+                collision_list = collision_test(self.rect, self.environment_obstacles)
                 for target in targets:
                     if self.rect.colliderect(target.rect) and target.health > 0:
                         target.dmg(self.damage)
                         target.sleep = False
-                        return "wall", targets
-                #if collision_list:
-                #    return "wall", targets
+                        return "wall", targets, plr_htlt
+                
+                if plr_rct.colliderect(self.rect):
+                    plr_htlt -= self.damage
+                    if plr_htlt < 0:
+                        plr_htlt = 0
+                    return "wall", targets, plr_htlt
+                if collision_list:
+                    return "wall", targets, plr_htlt
 
-            return "air", targets
+            return "air", targets, plr_htlt
         else:
             if self.direction:
                 self.rect.x -= self.speed
@@ -112,11 +118,32 @@ class Bullet:
                 if target.rect.colliderect(self.rect) and target.health > 0:
                     target.sleep = False
                     target.dmg(self.damage)
-                    return "wall", targets
+                    return "wall", targets, plr_htlt
+            if plr_rct.colliderect(self.rect):
+                plr_htlt -= self.damage
+                if plr_htlt < 0:
+                    plr_htlt = 0
+                return "wall", targets, plr_htlt
             if collision_list:
-                return "wall", targets
+                return "wall", targets, plr_htlt
             if self.movedDistance > self.maxDistance:
-                return "air", targets
+                return "air", targets, plr_htlt
+
+class Lighting:
+
+    @staticmethod
+    def circle_surface(radius, color):
+        surf = pygame.Surface((radius*2, radius*2))
+        pygame.draw.circle(surf, color, (radius, radius), radius)
+        surf.set_colorkey((0,0,0))
+        return surf
+
+    @staticmethod
+    def lamp_cone(topwidth, bottomwidth, height, color):
+        surf = pygame.Surface((bottomwidth, height))
+        pygame.draw.polygon(surf, color, [(bottomwidth/2+topwidth/2,0),(bottomwidth/2 - topwidth/2,0),(0, height),(bottomwidth, height)])
+        surf.set_colorkey((0,0,0))
+        return surf
 
 class itemTools:
     class rk62:
