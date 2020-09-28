@@ -2686,7 +2686,7 @@ def main_menu():
 
             display.blit(main_menu_title, (391, 43))
             framecounter += 1
-            if framecounter > 1000:
+            if framecounter > 600:
                 current_frame += 1
                 framecounter = 0
                 if current_frame > len(frames)-1:
