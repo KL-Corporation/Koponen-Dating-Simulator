@@ -3397,7 +3397,7 @@ while main_running:
     #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
 
 #endregion
-#region Conditional Eventsd
+#region Conditional Events
     if player_rect.y > len(tiles)*34+400:
         player_health = 0
     if esc_menu:
