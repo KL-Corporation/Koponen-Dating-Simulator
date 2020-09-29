@@ -248,7 +248,10 @@ class HostileEnemy:
         self.clearlagcounter = 0
 
     def update(self, Surface: pygame.Surface, scroll:[int, int], tiles, targetRect):
-        s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
+        if self.health:
+            s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
+        else:
+            s = False
         if s:
             self.sleep = False
         if self.health > 0 and not self.sleep:
@@ -264,6 +267,7 @@ class HostileEnemy:
                 Surface.blit(pygame.transform.flip(animation, self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
                 if dResult:
                     self.attackRunning = False
+                    self.a_anim.reset()
             else:
                 if self.playSightSound:
                     Audio.playSound(self.sight_sound)

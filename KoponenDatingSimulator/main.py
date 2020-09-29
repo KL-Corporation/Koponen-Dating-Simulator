@@ -1296,6 +1296,16 @@ class Lamp(Tile):
             screen.blit(KDS.World.Lighting.lamp_cone(10, btmidth, 90, (40, 40, 40)), (self.rect.centerx-btmidth/2-scroll[0], self.rect.centery+5-scroll[1]), special_flags=BLEND_RGBA_ADD)
         return self.texture
 
+class DecorativeHead(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[43]
+        self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1306,7 +1316,8 @@ specialTilesD = {
     22: Lamp,
     24: Door,
     25: Door,
-    26: Door
+    26: Door,
+    43: DecorativeHead
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")

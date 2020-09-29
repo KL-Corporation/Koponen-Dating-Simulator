@@ -34,3 +34,10 @@
 034,metal_grid.png
 035,wolfensteinwall1.png
 036,wolfensteinwall2.png
+037,birch.png
+038,concrete1.png
+039,old_bricks.png
+040,roadconcrete.png
+041,spruce_leaves.png
+042,woodlog0.png
+043,decorative_head.png
