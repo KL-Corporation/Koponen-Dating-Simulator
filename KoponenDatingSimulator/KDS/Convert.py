@@ -83,8 +83,8 @@ def ToGrayscale(image: pygame.Surface):
     arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
     return pygame.surfarray.make_surface(arr)
 
-def AspectScale(image: pygame.Surface, size: tuple):
-    if image.get_width() / image.get_height() > size[0] / size[1]:
+def AspectScale(image: pygame.Surface, size: tuple, horizontalOnly: bool = False, verticalOnly: bool = False):
+    if (image.get_width() / image.get_height() > size[0] / size[1] or horizontalOnly) and not verticalOnly:
         scaling = size[0] / image.get_width()
     else:
         scaling = size[1] / image.get_height()

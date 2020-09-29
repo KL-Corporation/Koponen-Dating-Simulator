@@ -1,5 +1,6 @@
 import os
 import sys
+from numpy.core.fromnumeric import size
 import pygame
 from pygame.locals import *
 import threading
@@ -21,6 +22,7 @@ pygame.display.set_caption("KDS Level Builder")
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
 
 consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 
@@ -31,7 +33,7 @@ t_textures = {}
 for element in data:
     num = num = f"0{element.split(',')[0]}"
     res = element.split(",")[1]
-    t_textures[num] = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Map/" + res).convert(), (scalesize, scalesize))
+    t_textures[num] = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Map/" + res).convert(), (scalesize, scalesize), horizontalOnly=True)
     t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
 with open("Assets/Textures/item_textures.txt", "r") as f:
@@ -130,11 +132,22 @@ def loadGrid(size):
         rlist.append(row)
     return rlist
 
-def inputConsole(daInput = ">>>  "):
-    pygame.key.set_repeat(1000, 31)
+def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False):
+    pygame.key.set_repeat(500, 31)
     r = True
     rstring = ''
     while r:
+        inputValid = True
+        if gridSizeExtras and len(rstring) > 0:
+            gridSizeStringParced = rstring.strip().replace(" ", "").split(",")
+            valuesInt = True
+            try:
+                int(gridSizeStringParced[0])
+                int(gridSizeStringParced[1])
+            except:
+                valuesInt = False
+            if len(gridSizeStringParced) != 2 or not valuesInt:
+                inputValid = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 r = False
@@ -142,17 +155,28 @@ def inputConsole(daInput = ">>>  "):
                 quit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == K_ESCAPE:
-                    r = False
-                    return None
+                    if allowEscape:
+                        r = False
+                        return None
                 elif event.key == K_RETURN:
-                    return rstring.strip()
+                    if inputValid:
+                        return rstring.strip()
+                    elif allowEscape:
+                        return None
                 elif event.key == K_BACKSPACE:
                     rstring = rstring[:-1]
                 elif event.unicode:
                     rstring += event.unicode
         main_display.fill(consoleBackground.get_at((0, 0)))
         main_display.blit(KDS.Convert.AspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
-        main_display.blit(harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White), (10, 10))
+        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
+        main_display.blit(consoleText, (10, 10))
+        if not inputValid:
+            notValidSurf = pygame.Surface(harbinger_font.size(rstring))
+            notValidSurf.fill(KDS.Colors.GetPrimary.Red)
+            notValidSurf.set_alpha(128)
+            main_display.blit(notValidSurf, (harbinger_font.size(daInput)[0] + 10, 10))
+            main_display.blit(harbinger_font_small.render("[value not valid]", True, KDS.Colors.GetPrimary.White), (consoleText.get_width() + 20, 15))
         pygame.display.update()
     pygame.key.set_repeat(0, 0)
 
@@ -251,7 +275,7 @@ def materialMenu(previousMaterial):
 
 def main():
     global currentSaveName, brush
-    g = inputConsole("Grid size: (int,int) >>>  ").replace(" ", "").split(",")
+    g = inputConsole("Grid size: (int,int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
     gridSize = (int(g[0]), int(g[1]))
     grid = loadGrid(gridSize)
 
