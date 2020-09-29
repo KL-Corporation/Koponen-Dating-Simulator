@@ -128,7 +128,7 @@ def loadGrid(size):
     for y in range(size[1]):
         row = []
         for x in range(size[0]):
-            row.append(tileInfo((x*scalesize,y*scalesize)))
+            row.append(tileInfo((x * scalesize,y * scalesize)))
         rlist.append(row)
     return rlist
 
