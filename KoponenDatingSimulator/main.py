@@ -56,8 +56,8 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
-window_size = (int(KDS.ConfigManager.LoadSetting("Settings", "WindowSizeX", str(
-    1200))), int(KDS.ConfigManager.LoadSetting("Settings", "WindowSizeY", str(800))))
+window_size = (int(KDS.ConfigManager.GetSetting("Settings", "WindowSizeX", str(
+    1200))), int(KDS.ConfigManager.GetSetting("Settings", "WindowSizeY", str(800))))
 window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_resize_size = window_size
 display_size = (1200, 800)
@@ -117,8 +117,8 @@ pygame.mixer.set_num_channels(32)
 
 class Audio:
     MusicMixer = pygame.mixer.music
-    MusicVolume = float(KDS.ConfigManager.LoadSetting("Settings", "MusicVolume", str(1)))
-    EffectVolume = float(KDS.ConfigManager.LoadSetting("Settings", "SoundEffectVolume", str(1)))
+    MusicVolume = float(KDS.ConfigManager.GetSetting("Settings", "MusicVolume", str(1)))
+    EffectVolume = float(KDS.ConfigManager.GetSetting("Settings", "SoundEffectVolume", str(1)))
     EffectChannels = []
     for c_i in range(pygame.mixer.get_num_channels()):
         EffectChannels.append(pygame.mixer.Channel(c_i))
@@ -279,15 +279,15 @@ black_tint = pygame.Surface(screen_size)
 black_tint.fill((0, 0, 0))
 black_tint.set_alpha(170)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-isFullscreen = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
+isFullscreen = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Settings", "Fullscreen", str(False)))
 Fullscreen.Set(True)
 window.fill(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert().get_at((0, 0)))
 window.blit(KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
 pygame.display.update()
-clearLag = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "ClearLag", str(False)))
-tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", str(False)))
-current_map = KDS.ConfigManager.LoadSetting("Settings", "CurrentMap", "01")
-max_map = int(KDS.ConfigManager.LoadSetting("Settings", "MaxMap", "99"))
+clearLag = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Settings", "ClearLag", str(False)))
+tcagr = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Data", "TermsAccepted", str(False)))
+current_map = KDS.ConfigManager.GetSetting("Settings", "CurrentMap", "01")
+max_map = int(KDS.ConfigManager.GetSetting("Settings", "MaxMap", "99"))
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
                 f"""Settings Loading Complete.
 I===== Settings Loaded =====I
@@ -660,6 +660,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Save System
 def LoadSave(save_index: int):
+    """
     global Saving, player_rect, player_name, player_health, last_player_health, playerStamina, farting
     player_rect.x = int(KDS.ConfigManager.LoadSave(save_index, "PlayerPosition", "X", str(player_rect.x)))
     player_rect.y = int(KDS.ConfigManager.LoadSave(save_index, "PlayerPosition", "Y", str(player_rect.y)))
@@ -673,7 +674,9 @@ def LoadSave(save_index: int):
     player_inventory.storage[3] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory3", player_inventory.storage[3])
     player_inventory.storage[4] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory4", player_inventory.storage[4])
     farting = KDS.Convert.ToBool(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Farting", "f"))
+    """
 def SaveData():
+    """
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, farting
     #region Player
     KDS.ConfigManager.SetSave(
@@ -705,6 +708,7 @@ def SaveData():
     #region Enemies
     
     #endregion
+    """
 #endregion
 #region Quit Handling
 def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
@@ -2119,7 +2123,7 @@ def agr(tcagr):
                         "You said you will not get offended... Dick!", False)
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " +
-                        KDS.ConfigManager.LoadSetting("Data", "TermsAccepted", "False"), False)
+                        KDS.ConfigManager.GetSetting("Data", "TermsAccepted", "False"), False)
         tcagr_running = False
 
     agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render(
@@ -2810,7 +2814,7 @@ def level_finished_menu():
 #endregion
 #region Check Terms
 agr(tcagr)
-tcagr = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting(
+tcagr = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(
     "Data", "TermsAccepted", str(False)))
 if tcagr != False:
     main_menu()
