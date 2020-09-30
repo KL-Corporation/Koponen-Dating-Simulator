@@ -448,8 +448,8 @@ main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_b
 main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 
-light_sphere = pygame.image.load("Assets/Textures/light_350_soft.png").convert_alpha()
-orange_light_sphere1 = pygame.image.load("Assets/Textures/orange_gradient_sphere.png").convert_alpha()
+light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
+orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -626,18 +626,12 @@ enemies = numpy.array([])
 decoration = numpy.array([])
 specialTiles = numpy.array([])
 
-inventory = ["none", "none", "none", "none", "none"]
-inventoryDoubles = []
 inventoryDobulesSerialNumbers = []
 with open("Assets/Textures/item_doubles.txt", "r") as file:
     data = file.read().split("\n")
     for d in data:
         inventoryDobulesSerialNumbers.append(int(d))
     file.close()
-
-inventoryDoubleOffset = 0
-for none in inventory:
-    inventoryDoubles.append(False)
 
 player_score = 0
 
@@ -1035,9 +1029,10 @@ for element in data:
     inventory_items.append(int(element))
 
 class Inventory:
+    emptySlot = "none"
 
     def __init__(self, size):
-        self.storage = ["none" for _ in range(size)]
+        self.storage = [Inventory.emptySlot for _ in range(size)]
         self.size = size
         self.SIndex = 0
 
@@ -1087,19 +1082,19 @@ class Inventory:
                 self.SIndex = index
 
     def dropItem(self):
-        if self.storage[self.SIndex] != "none":
+        if self.storage[self.SIndex] != Inventory.emptySlot:
             if self.SIndex < self.size - 1:
                 if self.storage[self.SIndex + 1] == "doubleItemPlaceholder":
                     serialNumber = self.storage[self.SIndex]
-                    self.storage[self.SIndex] = "none"
-                    self.storage[self.SIndex + 1] = "none"
+                    self.storage[self.SIndex] = Inventory.emptySlot
+                    self.storage[self.SIndex + 1] = Inventory.emptySlot
                     return serialNumber
             serialNumber = self.storage[self.SIndex]
-            self.storage[self.SIndex] = "none"
+            self.storage[self.SIndex] = Inventory.emptySlot
             return serialNumber
 
     def useItem(self, Surface: pygame.Surface, *args):
-        if self.storage[self.SIndex] != "none":
+        if self.storage[self.SIndex] != Inventory.emptySlot:
             dumpValues = Ufunctions[self.storage[self.SIndex]](args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
@@ -1136,24 +1131,17 @@ class Tile:
 
     @staticmethod
     # Tile_list is a 2d numpy array
-    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, position: (int, int), *args):
-        x = int(position[0] / 34)
-        y = int(position[1] / 34)
-        x -= 11
-        y -= 8
-        if x < 0:
-            x = 0
-        if y < 0:
-            y = 0
-        max_x = len(Tile_list[0])-1
-        max_y = len(Tile_list) - 1
-        end_x = x + 22
-        end_y = y + 15
-        if end_x > max_x:
-            end_x = max_x
-        if end_y > max_y:
-            end_y = max_y
-
+    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: (int, int), *args):
+        x = int(round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2))) - 4
+        y = int(round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2))) - 4
+        x = max(x, 0)
+        y = max(y, 0)
+        max_x = len(Tile_list[0])
+        max_y = len(Tile_list)
+        end_x = int(round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2))) + 4
+        end_y = int(round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2))) + 4
+        end_x = min(end_x, max_x)
+        end_y = min(end_y, max_y)
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
@@ -1741,7 +1729,7 @@ class Item:
                     shortest_distance = distance
                 if functionKey:
                     if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory.storage[inventory.SIndex] == "none":
+                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
                             temp_var = Pfunctions[item.serialNumber]()
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item.serialNumber
@@ -1752,8 +1740,8 @@ class Item:
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                     else:
-                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
-                            if inventory.storage[inventory.SIndex + 1] == "none":
+                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == Inventory.emptySlot:
+                            if inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
                                 Pfunctions[item.serialNumber]()
                                 inventory.storage[inventory.SIndex] = item.serialNumber
                                 inventory.storage[inventory.SIndex +
@@ -1891,7 +1879,7 @@ def item_collision_test(rect, items):
     """
     hit_list = []
     x = 0
-    global player_hand_item, player_score, inventory, inventory_slot, player_keys, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
+    global player_hand_item, player_score, player_keys, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
 
     itemTip = tip_font.render(
         "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
@@ -2028,7 +2016,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 def console():
-    global inventory, player_keys, player_health, koponen_happines
+    global player_keys, player_health, koponen_happines
     wasFullscreen = False
     if isFullscreen:
         Fullscreen.Set()
@@ -2040,7 +2028,7 @@ def console():
 
     if command_list[0] == "give":
         if command_list[1] != "key":
-            inventory[inventory_slot] = command_list[1]
+            player_inventory.storage[player_inventory.SIndex] = command_list[1]
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Item was given: " + str(command_list[1]), True)
         else:
@@ -2053,9 +2041,9 @@ def console():
                                 str(command_list[1]) + " " + str(command_list[2]), True)
     elif command_list[0] == "remove":
         if command_list[1] == "item":
-            if inventory[inventory_slot] != "none":
-                old_item = inventory[inventory_slot]
-                inventory[inventory_slot] = "none"
+            if player_inventory.storage[player_inventory.SIndex] != Inventory.emptySlot:
+                old_item = player_inventory.storage[player_inventory.SIndex]
+                player_inventory.storage[player_inventory.SIndex] = Inventory.emptySlot
                 KDS.Logging.Log(KDS.Logging.LogType.info,
                                 "Item was removed: " + str(old_item), True)
             else:
@@ -2177,7 +2165,7 @@ def agr(tcagr):
 #endregion
 #region Koponen Talk
 def koponen_talk():
-    global main_running, inventory, currently_on_mission, inventory, player_score, ad_images, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
+    global main_running, currently_on_mission, player_score, ad_images, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
     conversations = []
 
     KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.KoponenTalk)
@@ -2283,13 +2271,13 @@ def koponen_talk():
             conversations.append("Koponen: Sinulla ei ole palautettavaa")
             conversations.append("         tehtävää")
         else:
-            if current_mission in inventory:
-                missionRemoveRange = range(len(inventory))
+            if current_mission in player_inventory.storage:
+                missionRemoveRange = range(len(player_inventory.storage))
                 itemFound = False
                 for i in missionRemoveRange:
                     if itemFound == False:
-                        if inventory[i] == current_mission:
-                            inventory[i] = "none"
+                        if player_inventory.storage[i] == current_mission:
+                            player_inventory.storage[i] = Inventory.emptySlot
                             itemFound = True
                 conversations.append("Koponen: Loistavaa työtä")
                 conversations.append("Game: Player score +60")
@@ -2362,11 +2350,19 @@ def koponen_talk():
 #endregion
 #region Game Start
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
-    global main_menu_running, current_map, inventory, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
+    global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-    player_inventory.storage = ["none", "none", "none", "none", "none"]
+    for inventory_slot in player_inventory.storage:
+        inventory_slot = Inventory.emptySlot
+    
+    global items, enemies, decoration, specialTiles
+    items = numpy.array([])
+    enemies = numpy.array([])
+    decoration = numpy.array([])
+    specialTiles = numpy.array([])
+    
     if int(current_map) < 2:
-        inventory[0] = "iPuhelin"
+        player_inventory.storage[0] = "iPuhelin"
     Px, Py = WorldData.LoadMap()
     pygame.mouse.set_visible(False)
     main_menu_running = False
@@ -2398,7 +2394,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
 
 
 def load_campaign(reset_scroll):
-    global main_menu_running, current_map, inventory, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
+    global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
     KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
 #endregion
 #region Menus
@@ -2947,7 +2943,7 @@ while main_running:
 
     Lights.clear()
 
-    true_scroll[0] += (player_rect.x - true_scroll[0] -(screen_size[0] / 2)) / 12
+    true_scroll[0] += (player_rect.x - true_scroll[0] - (screen_size[0] / 2)) / 12
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
 
     scroll = true_scroll.copy()
@@ -2976,9 +2972,9 @@ while main_running:
 #region Rendering
 
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    items, inventory = Item.checkCollisions(
+    items, player_inventory = Item.checkCollisions(
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
-    Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
+    Tile.renderUpdate(tiles, screen, scroll, player_rect.center)
     for enemy in enemies:
         enemy.update(screen, scroll, tiles, player_rect)
 
