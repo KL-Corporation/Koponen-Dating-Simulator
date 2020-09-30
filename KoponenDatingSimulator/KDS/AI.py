@@ -316,7 +316,7 @@ class SergeantZombie(HostileEnemy):
         i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.GetPrimary.White, -1)
         a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 16, KDS.Colors.GetPrimary.White, 1)
         d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
-        rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
+        rect = pygame.Rect(pos[0], pos[1]-36, 34, 63)
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8])
         self.corpse = self.d_anim.images[-1]
 

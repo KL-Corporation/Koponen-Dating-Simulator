@@ -276,7 +276,7 @@ class Archvile:
 KDS.AI.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 black_tint = pygame.Surface(screen_size)
-black_tint.fill((0, 0, 0))
+black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
 isFullscreen = KDS.Convert.ToBool(KDS.ConfigManager.LoadSetting("Settings", "Fullscreen", str(False)))
@@ -448,6 +448,8 @@ main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_b
 main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 
+light_sphere = pygame.image.load("Assets/Textures/light_350_soft.png").convert_alpha()
+
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
 knife_blood.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -610,6 +612,8 @@ Lights = []
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
+player_light_sphere_radius = 300
+light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
 items = numpy.array([])
 enemies = numpy.array([])
 decoration = numpy.array([])
@@ -1293,7 +1297,7 @@ class Lamp(Tile):
     def update(self):
         if random.randint(0, 10) != 10:
             btmidth = 80
-            screen.blit(KDS.World.Lighting.lamp_cone(10, btmidth, 90, (40, 40, 40)), (self.rect.centerx-btmidth/2-scroll[0], self.rect.centery+5-scroll[1]), special_flags=BLEND_RGBA_ADD)
+            Lights.append(KDS.World.Lighting.Light((self.rect.x-btmidth/2+5, self.rect.y+13), KDS.World.Lighting.lamp_cone(10, btmidth, 90, (200, 200, 200))))
         return self.texture
 
 class DecorativeHead(Tile):
@@ -2958,8 +2962,6 @@ while main_running:
 
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
-    if renderUI:
-        player_inventory.render(screen)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, enemies, player_rect, player_health)
@@ -2978,6 +2980,37 @@ while main_running:
         if finished:
             Explosions.remove(unit)
 
+    #Valojen käsittely
+    if dark:
+        black_tint.fill((20, 20, 20))
+        for light in Lights:
+            black_tint.blit(light.surf, (light.position[0]-scroll[0], light.position[1]-scroll[1]))
+        black_tint.blit(light_sphere, (player_rect.centerx-scroll[0]-player_light_sphere_radius/2, player_rect.centery-scroll[1]-player_light_sphere_radius/2))
+        screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
+    #UI
+    if renderUI:
+        score = score_font.render(
+            ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
+
+        if player_health < 0:
+            player_health = 0
+
+        health = score_font.render(
+            "HEALTH: " + str(player_health), True, KDS.Colors.GetPrimary.White)
+        stamina = score_font.render(
+            "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
+
+        screen.blit(health, (10, 120))
+        screen.blit(stamina, (10, 130))
+        screen.blit(score, (10, 55))
+
+        missions_background_width = KDS.Missions.GetMaxWidth()
+        Mission_Render_Data = KDS.Missions.RenderMission(screen)
+
+        for i in range(KDS.Missions.GetRenderCount()):
+            KDS.Missions.RenderTask(screen, i)
+
+        player_inventory.render(screen)
     ###########################################
     ###########################################
     ###########################################
@@ -3073,126 +3106,7 @@ while main_running:
     koponen_rect, k_collisions = move_entity(
         koponen_rect, koponen_movement, tiles)
 
-    wa = zombie_walk_animation.update()
-    sa = sergeant_walk_animation.update()
 
-    for sergeant in WorldData.Legacy.sergeants:
-        if DebugMode:
-            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Red), (sergeant.rect.x -
-                                                                   scroll[0], sergeant.rect.y-scroll[1], sergeant.rect.width, sergeant.rect.height))
-        if sergeant.health > 0:
-            if sergeant.hitscanner_cooldown > 100:
-                hitscan = sergeant.hit_scan(
-                    player_rect, player_health, WorldData.Legacy.tile_rects)
-                sergeant.hitscanner_cooldown = 0
-                if hitscan:
-                    sergeant.shoot = True
-
-            else:
-                hitscan = False
-            if not sergeant.shoot:
-                sergeant.rect, sergeant.hits = move_entity(
-                    sergeant.rect, sergeant.movement, WorldData.Legacy.tile_rects)
-
-                if sergeant.movement[0] > 0:
-                    sergeant.direction = True
-                elif sergeant.movement[0] < 0:
-                    sergeant.direction = False
-
-                screen.blit(pygame.transform.flip(sa, sergeant.direction, False),
-                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
-
-                if sergeant.hits["right"] or sergeant.hits["left"]:
-                    sergeant.movement[0] = -sergeant.movement[0]
-
-            else:
-                u, i = sergeant_shoot_animation.update()
-
-                screen.blit(pygame.transform.flip(u, sergeant.direction, False),
-                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
-
-                if sergeant_shoot_animation.tick > 30 and not sergeant.xvar:
-                    sergeant.xvar = True
-                    Audio.playSound(shotgun_shot)
-                    if sergeant.hit_scan(player_rect, player_health, WorldData.Legacy.tile_rects):
-                        player_health = damage(player_health, 20, 50)
-                if i:
-                    sergeant_shoot_animation.reset()
-                    sergeant.shoot = False
-                    sergeant.xvar = False
-
-        elif sergeant.playDeathAnimation:
-            d, s = sergeant_death_animation.update()
-            if not s:
-                screen.blit(pygame.transform.flip(d, sergeant.direction, False),
-                            (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1]))
-            if s:
-                sergeant.playDeathAnimation = False
-                sergeant_death_animation.reset()
-                monstersLeft -= 1
-        else:
-            screen.blit(pygame.transform.flip(sergeant_corpse, sergeant.direction,
-                                              False), (sergeant.rect.x - scroll[0], sergeant.rect.y - scroll[1] + 10))
-            if not sergeant.loot_dropped:
-                sergeant.loot_dropped = True
-                if round(random.uniform(0, 3)) == 0:
-                    WorldData.Legacy.item_rects.append(pygame.Rect(sergeant.rect.x, int(
-                        sergeant.rect.y + (sergeant.rect.height / 2) - 2), sergeant.rect.width, int(sergeant.rect.height / 2)))
-                    WorldData.Legacy.item_ids.append("shotgun_shells")
-
-    for zombie1 in WorldData.Legacy.zombies:
-        if DebugMode:
-            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Red), (zombie1.rect.x -
-                                                                   scroll[0], zombie1.rect.y-scroll[1], zombie1.rect.width, zombie1.rect.height))
-        if zombie1.health > 0:
-            search = zombie1.search(player_rect)
-            if not search:
-                zombie1.rect, zombie1.hits = move_entity(
-                    zombie1.rect, zombie1.movement, WorldData.Legacy.tile_rects)
-                if zombie1.movement[0] != 0:
-                    zombie1.walking = True
-                    if zombie1.movement[0] > 0:
-                        zombie1.direction = False
-                    elif zombie1.movement[0] < 0:
-                        zombie1.direction = True
-                else:
-                    zombie1.walking = False
-
-                screen.blit(pygame.transform.flip(wa, zombie1.direction, False),
-                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
-
-                if zombie1.hits["left"]:
-                    zombie1.movement[0] = -zombie1.movement[0]
-                elif zombie1.hits["right"]:
-                    zombie1.movement[0] = -zombie1.movement[0]
-            else:
-                zombie1.rect, zombie1.hits = move_entity(
-                    zombie1.rect, [0, zombie1.movement[1]], WorldData.Legacy.tile_rects)
-                attack_counter += 1
-                if attack_counter > 40:
-                    attack_counter = 0
-                    player_health -= int(random.uniform(1, 11))
-                if player_rect.centerx > zombie1.rect.centerx:
-                    zombie1.direction = False
-                else:
-                    zombie1.direction = True
-                screen.blit(pygame.transform.flip(zombie_attack_animation.update(
-                ), zombie1.direction, False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
-
-        elif zombie1.playDeathAnimation:
-            d, s = zombie_death_animation.update()
-            if not s:
-                screen.blit(pygame.transform.flip(d, zombie1.direction, False),
-                            (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1]))
-            if s:
-                zombie1.playDeathAnimation = False
-                zombie_death_animation.reset()
-                monstersLeft -= 1
-        else:
-            screen.blit(pygame.transform.flip(zombie_corpse, zombie1.direction,
-                                              False), (zombie1.rect.x - scroll[0], zombie1.rect.y - scroll[1] + 14))
-
-    # Zombien käsittely loppuu tähän
 
     # //////////////////////////////////////////////////////////////
     #*****    New enemies handling & enemies thread handling ******#
@@ -3208,37 +3122,13 @@ while main_running:
         I_updatethread_results = [e.submit(
             imp.update, player_rect, screen, 20, scroll, DebugMode) for imp in imps]
 
-    for bulldog in WorldData.Legacy.bulldogs:
-        bulldog.startUpdateThread(player_rect, WorldData.Legacy.tile_rects)
-
-    for bulldog in WorldData.Legacy.bulldogs:
-        if DebugMode:
-            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Red), (bulldog.rect.x -
-                                                                   scroll[0], bulldog.rect.y-scroll[1], bulldog.rect.width, bulldog.rect.height))
-        bd_attr = bulldog.getAttributes()
-        screen.blit(pygame.transform.flip(
-            bd_attr[1], bd_attr[2], False), (bd_attr[0].x - scroll[0], bd_attr[0].y - scroll[1]))
-        player_health -= bd_attr[3]
-
     if k_collisions["left"]:
         koponen_movingx = -koponen_movingx
     elif k_collisions["right"]:
         koponen_movingx = -koponen_movingx
 
 #endregion
-#region UI
 
-    score = score_font.render(
-        ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
-
-    if player_health < 0:
-        player_health = 0
-
-    health = score_font.render(
-        "HEALTH: " + str(player_health), True, KDS.Colors.GetPrimary.White)
-    stamina = score_font.render(
-        "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
-#endregion
 #region Pelaajan elämätilanteen käsittely
     if player_health < last_player_health and player_health != 0:
         hurted = True
@@ -3386,8 +3276,6 @@ while main_running:
             KDS.Missions.RenderTask(screen, i)
 #endregion
 #region Screen Rendering
-    if dark:
-        screen.blit(black_tint, (0, 0))
 
     window.fill(KDS.Colors.GetPrimary.Black)
     window.blit(pygame.transform.scale(screen, Fullscreen.size),

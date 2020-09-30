@@ -144,6 +144,11 @@ class Lighting:
         pygame.draw.polygon(surf, color, [(bottomwidth/2+topwidth/2,0),(bottomwidth/2 - topwidth/2,0),(0, height),(bottomwidth, height)])
         surf.set_colorkey((0,0,0))
         return surf
+    
+    class Light:
+        def __init__(self, position, surf):
+            self.surf = surf
+            self.position = position
 
 class itemTools:
     class rk62:
