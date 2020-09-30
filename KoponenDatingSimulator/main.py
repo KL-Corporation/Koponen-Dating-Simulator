@@ -65,6 +65,8 @@ display = pygame.Surface(display_size)
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
+KDS.AI.initTextures()
+
 clock = pygame.time.Clock()
 profiler_enabled = False
 #endregion
@@ -2980,7 +2982,9 @@ while main_running:
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.x, player_rect.y))
     for enemy in enemies:
-        enemy.update(screen, scroll, tiles, player_rect)
+        result = enemy.update(screen, scroll, tiles, player_rect)
+        if result:
+            Projectiles.append(result)
 
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)

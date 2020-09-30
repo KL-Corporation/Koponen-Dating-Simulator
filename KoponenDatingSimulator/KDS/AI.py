@@ -1,7 +1,8 @@
 import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
-import KDS.Animator, KDS.Math, KDS.Colors, KDS.Logging
+import KDS.Animator, KDS.Math, KDS.Colors, KDS.Logging, KDS.World
 pygame.mixer.init()
+pygame.init()
 
 Audio = None
 
@@ -58,6 +59,7 @@ def move(rect, movement, tiles):
             collision_types['top'] = True
     return rect, collision_types
 
+
 imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
 imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.wav")
 zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav")
@@ -67,17 +69,28 @@ imp_death_sound.set_volume(0.5)
 zombie_sight_sound.set_volume(0.4)
 zombie_death_sound.set_volume(0.5)
 
+initCompleted = False
+
+imp_fireball = None
+def initTextures():
+    global initCompleted, imp_fireball
+
+    imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
+    imp_fireball.set_colorkey((255,255,255))
+
+    initCompleted = True
+
 def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacles,  maxAngle=40, maxSearchUnits=24):
     if direction:
         if targetRect.x > searchRect.x:
-            return False
+            return False, 0
     else:
         if targetRect.x < searchRect.x:
-            return False
+            return False, 0
             
     angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), (targetRect.centerx, targetRect.centery))
     if KDS.Math.toPositive(angle) < maxAngle:
-        return False
+        return False, 0
     if angle > 0:
         angle = 90-angle
     elif angle < 0:
@@ -103,9 +116,10 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
                 if KDS.Logging.profiler_running:
                     pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Yellow, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
                 if not tile.air:
-                    return False
+                    return False, 0
                 if tile.rect.colliderect(targetRect):
-                    return True
+                    return True, slope
+    return False, 0
 
 class Zombie:
 
@@ -227,6 +241,10 @@ class Bulldog:
 
 class HostileEnemy:
     def __init__(self, rect : pygame.Rect, w, a, d, i, sight_sound, death_sound, health, mv, sleep = True, direction = False):
+        global initCompleted
+        if not initCompleted:
+            raise Exception("KDS.Error: AI textures are not initialized")
+
         self.rect = rect
         self.health = 175
         self.sleep = sleep
@@ -248,8 +266,9 @@ class HostileEnemy:
         self.clearlagcounter = 0
 
     def update(self, Surface: pygame.Surface, scroll:[int, int], tiles, targetRect):
+        enemyProjectiles = None
         if self.health:
-            s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
+            s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)[0]
         else:
             s = False
         if s:
@@ -260,12 +279,14 @@ class HostileEnemy:
                     if random.randint(1, 30) == 25:
                         self.attackRunning = True
             if self.attackRunning:
-                if self.attackF:
-                    self.attack()
-                    self.attakF = False
                 animation, dResult = self.a_anim.update()
                 Surface.blit(pygame.transform.flip(animation, self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
                 if dResult:
+                    df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
+                    if df:
+                        print(sl2)
+                        enemyProjectiles = self.attack(sl2, tiles)
+                    self.attakF = False
                     self.attackRunning = False
                     self.a_anim.reset()
             else:
@@ -290,6 +311,8 @@ class HostileEnemy:
             if self.clearlagcounter > 3600:
                 self.clearlagcounter = 3600
 
+        return enemyProjectiles
+
     def dmg(self, dmgAmount):
         self.health -= dmgAmount
         if self.health < 0:
@@ -300,14 +323,14 @@ class Imp(HostileEnemy):
         health = 200
         w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.GetPrimary.White, -1)
         i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.GetPrimary.White, -1)
-        a_anim = KDS.Animator.Animation("imp_attacking", 2, 16, KDS.Colors.GetPrimary.White, 1)
+        a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.GetPrimary.White, 1)
         d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8])
         self.corpse = self.d_anim.images[-1]
     
-    def attack(self):
-        print("Imp")
+    def attack(self, slope, env_obstacles):
+        return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope)
 
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
@@ -320,8 +343,8 @@ class SergeantZombie(HostileEnemy):
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8])
         self.corpse = self.d_anim.images[-1]
 
-    def attack(self):
-        print("Sergeant")
+    def attack(self, slope, env_obstacles):
+        return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 60), slope=slope)
 
 class Projectile:
     pass
