@@ -22,8 +22,9 @@ jsonText += f"\n{json.dumps(sverigeKötbullar.__dict__)}"
 
 with open(os.path.join(os.path.dirname(__file__), "testi.json"), "w") as f:
     f.write(jsonText)
-    f.close()
+
 
 with open(os.path.join(os.path.dirname(__file__), "testi.json"), "r") as f:
     print(json.loads(f.read()))
-    f.close()
+
+    
