@@ -449,6 +449,7 @@ main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_b
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 
 light_sphere = pygame.image.load("Assets/Textures/light_350_soft.png").convert_alpha()
+orange_light_sphere1 = pygame.image.load("Assets/Textures/orange_gradient_sphere.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -612,8 +613,14 @@ Lights = []
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
+darknes = (255, 255, 255)
+
 player_light_sphere_radius = 300
+decor_head_light_sphere_radius = 150
+
 light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
+orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
+
 items = numpy.array([])
 enemies = numpy.array([])
 decoration = numpy.array([])
@@ -943,8 +950,10 @@ class WorldData():
             map_props = map_prop_file.read()
             map_props = json.loads(map_props)
 
-            global dark
+            global dark, darknes
             dark = map_props["dark"]
+            dval = map_props["darknes"]
+            darknes = (dval, dval, dval)
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -1312,6 +1321,7 @@ class DecorativeHead(Tile):
         self.checkCollision = False
 
     def update(self):
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx-decor_head_light_sphere_radius/2, self.rect.centery-decor_head_light_sphere_radius/2), orange_light_sphere1))
         return self.texture
 
 specialTilesD = {
@@ -2986,7 +2996,7 @@ while main_running:
 
     #Valojen käsittely
     if dark:
-        black_tint.fill((20, 20, 20))
+        black_tint.fill(darknes)
         for light in Lights:
             black_tint.blit(light.surf, (light.position[0]-scroll[0], light.position[1]-scroll[1]))
         black_tint.blit(light_sphere, (player_rect.centerx-scroll[0]-player_light_sphere_radius/2, player_rect.centery-scroll[1]-player_light_sphere_radius/2))
