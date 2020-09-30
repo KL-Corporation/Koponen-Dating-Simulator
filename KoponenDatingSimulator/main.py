@@ -3006,8 +3006,8 @@ while main_running:
     if dark:
         black_tint.fill(darknes)
         for light in Lights:
-            black_tint.blit(light.surf, (light.position[0]-scroll[0], light.position[1]-scroll[1]))
-        black_tint.blit(light_sphere, (player_rect.centerx-scroll[0]-player_light_sphere_radius/2, player_rect.centery-scroll[1]-player_light_sphere_radius/2))
+            black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
+        black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:
