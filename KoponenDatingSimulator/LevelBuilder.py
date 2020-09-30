@@ -47,9 +47,15 @@ for element in data:
         "Assets/Textures/Items/" + res).convert()
     i_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
 
+e_textures = {
+    "2001": pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert(),
+    "2002": pygame.image.load("Assets/Textures/Animations/seargeant_walking_0.png").convert()
+}
+
 Atextures = {
     "0": t_textures,
-    "1": i_textures
+    "1": i_textures,
+    "2": e_textures
 }
 """ GLOBAL VARIABLES """
 

@@ -1,4 +1,5 @@
 {
   "dark": true,
-  "darknes": 120
+  "darknes": 120,
+  "startPosition": "100,100"
 }

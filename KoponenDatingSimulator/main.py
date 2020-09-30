@@ -583,7 +583,7 @@ animation_counter = 0
 animation_duration = 0
 animation_image = 0
 air_timer = 0
-player_health = 100
+player_health = 100.00
 last_player_health = 100
 player_death_event = False
 animation_has_played = False
@@ -953,6 +953,9 @@ class WorldData():
             global dark, darknes
             dark = map_props["dark"]
             dval = map_props["darknes"]
+            pPs = map_props["startPosition"]
+            Px = int(pPs.split(",")[0])
+            Py = int(pPs.split(",")[1])
             darknes = (dval, dval, dval)
 
         max_map_width = len(max(map_data))
@@ -997,6 +1000,8 @@ class WorldData():
         Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
         Audio.MusicMixer.play(-1)
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
+
+        return Px, Py
 #endregion
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
@@ -1321,6 +1326,9 @@ class DecorativeHead(Tile):
         self.checkCollision = False
 
     def update(self):
+        global player_health
+        if self.rect.colliderect(player_rect) and player_health <100:
+            player_health += 0.01
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx-decor_head_light_sphere_radius/2, self.rect.centery-decor_head_light_sphere_radius/2), orange_light_sphere1))
         return self.texture
 
@@ -2359,7 +2367,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
     player_inventory.storage = ["none", "none", "none", "none", "none"]
     if int(current_map) < 2:
         inventory[0] = "iPuhelin"
-    WorldData.LoadMap()
+    Px, Py = WorldData.LoadMap()
     pygame.mouse.set_visible(False)
     main_menu_running = False
     player_hand_item = "none"
@@ -2368,8 +2376,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
     animation_has_played = False
     death_wait = 0
 
-    player_rect.x = 100
-    player_rect.y = 100
+    player_rect.x = Px
+    player_rect.y = Py
     if reset_scroll:
         true_scroll = [-200, -190]
     player_health = 100
@@ -3010,7 +3018,7 @@ while main_running:
             player_health = 0
 
         health = score_font.render(
-            "HEALTH: " + str(player_health), True, KDS.Colors.GetPrimary.White)
+            "HEALTH: " + str(int(player_health)), True, KDS.Colors.GetPrimary.White)
         stamina = score_font.render(
             "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
 
