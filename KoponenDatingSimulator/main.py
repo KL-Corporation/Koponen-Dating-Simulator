@@ -452,6 +452,7 @@ main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.pn
 
 light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
 orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
+blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -619,9 +620,11 @@ darknes = (255, 255, 255)
 
 player_light_sphere_radius = 300
 decor_head_light_sphere_radius = 150
+blue_light_scale = 40
 
 light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
 orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
+blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scale, blue_light_scale))
 
 items = numpy.array([])
 enemies = numpy.array([])
@@ -1588,6 +1591,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
                 temp = 80
             else:
                 temp = -80
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-temp, player_rect.centery-19), blue_light_sphere1))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)))
             return plasmarifle_animation.update()
         else:

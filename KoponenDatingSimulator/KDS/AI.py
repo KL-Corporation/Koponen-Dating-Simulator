@@ -276,7 +276,7 @@ class HostileEnemy:
         if self.health > 0 and not self.sleep:
             if s:
                 if not self.attackRunning:
-                    if random.randint(1, 30) == 25:
+                    if random.randint(1, 80) == 25:
                         self.attackRunning = True
             if self.attackRunning:
                 animation, dResult = self.a_anim.update()
@@ -285,7 +285,7 @@ class HostileEnemy:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
                         print(sl2)
-                        enemyProjectiles = self.attack(sl2*-1, tiles)
+                        enemyProjectiles = self.attack((sl2*-1)*3, tiles)
                     self.attakF = False
                     self.attackRunning = False
                     self.a_anim.reset()

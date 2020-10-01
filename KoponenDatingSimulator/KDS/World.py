@@ -77,17 +77,24 @@ class Bullet:
         self.environment_obstacles = environment_obstacles
         self.damage = damage
         self.slope = slope
+        self.slopeBuffer = 0.00
 
     def update(self,Surface:pygame.Surface, scroll: list, targets, plr_rct, plr_htlt):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+            #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if self.speed == -1:
             for _ in range(int(self.maxDistance/18)):
                 if self.direction:
                     self.rect.x -= 18                  
                 else:
                     self.rect.x += 18
-                self.rect.y += self.slope
+
+                self.slopeBuffer += self.slope
+                #print(self.slopeBuffer)
+                if self.slopeBuffer > 1 or self.slopeBuffer < -1:
+                    self.rect.y += self.slopeBuffer
+                    self.slopeBuffer = 0
                 collision_list = collision_test(self.rect, self.environment_obstacles)
                 for target in targets:
                     if self.rect.colliderect(target.rect) and target.health > 0:
@@ -111,7 +118,12 @@ class Bullet:
             else:
                 self.rect.x += self.speed
                 self.movedDistance += self.speed
-            self.rect.y += self.slope
+            
+            self.slopeBuffer += self.slope
+            #print(self.slopeBuffer)
+            if self.slopeBuffer > 1 or self.slopeBuffer < -1:
+                self.rect.y += self.slopeBuffer
+                self.slopeBuffer = 0
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
             for target in targets:
