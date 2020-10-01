@@ -285,7 +285,7 @@ class HostileEnemy:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
                         print(sl2)
-                        enemyProjectiles = self.attack(sl2, tiles)
+                        enemyProjectiles = self.attack(sl2*-1, tiles)
                     self.attakF = False
                     self.attackRunning = False
                     self.a_anim.reset()
@@ -330,6 +330,7 @@ class Imp(HostileEnemy):
         self.corpse = self.d_anim.images[-1]
     
     def attack(self, slope, env_obstacles):
+        print(slope)
         return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope)
 
 class SergeantZombie(HostileEnemy):
