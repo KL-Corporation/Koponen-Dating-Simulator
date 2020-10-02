@@ -451,6 +451,7 @@ main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_b
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 
 light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
+light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").convert_alpha()
 orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
 blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
 
@@ -623,6 +624,7 @@ decor_head_light_sphere_radius = 150
 blue_light_scale = 40
 
 light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
+light_sphere2 = pygame.transform.scale(light_sphere2, (player_light_sphere_radius, player_light_sphere_radius))
 orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
 blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scale, blue_light_scale))
 
@@ -1573,6 +1575,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+30*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 55))
             return pistol_f_texture
         else:
@@ -1588,10 +1591,10 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(plasmarifle_f_sound)
             ammunition_plasma -= 1
             if direction:
-                temp = 80
+                temp = 100
             else:
                 temp = -80
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-temp, player_rect.centery-19), blue_light_sphere1))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-temp/1.4, player_rect.centery-30), blue_light_sphere1))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)))
             return plasmarifle_animation.update()
         else:
@@ -1607,6 +1610,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             rk62_shot.stop()
             Audio.playSound(rk62_shot)
             rk_62_ammo -= 1
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+50*KDS.Math.Jd(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25))
             return rk62_f_texture
         else:
@@ -1624,6 +1628,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(player_shotgun_shot)
             shotgun_shells -= 1
             shotgun_shots()
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             for _ in range(7):
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
             return shotgun_f
@@ -1640,6 +1645,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             ppsh41_shot.stop()
             Audio.playSound(ppsh41_shot)
             ppsh41_ammo -= 1
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 10))
             return ppsh41_f_texture
         else:
@@ -3005,12 +3011,12 @@ while main_running:
         finished = unit.update(screen, scroll)
         if finished:
             Explosions.remove(unit)
-
     #Valojen käsittely
     if dark:
         black_tint.fill(darknes)
         for light in Lights:
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
+            #black_tint.blit(blue_light_sphere1, (20, 20))
         black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
