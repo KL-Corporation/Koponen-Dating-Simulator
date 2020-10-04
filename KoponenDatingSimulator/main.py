@@ -952,7 +952,7 @@ class WorldData():
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
-        if os.is_file(os.path.join(PersistentMapPath, "levelprop.json")):
+        if os.path.isfile(os.path.join(PersistentMapPath, "levelprop.json")):
             with open(os.path.join(PersistentMapPath, "levelprop.json"), "r") as map_prop_file:
                 map_props = map_prop_file.read()
                 map_props = json.loads(map_props)
