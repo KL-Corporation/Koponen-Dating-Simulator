@@ -1101,7 +1101,7 @@ class Inventory:
             return serialNumber
 
     def useItem(self, Surface: pygame.Surface, *args):
-        if self.storage[self.SIndex] != Inventory.emptySlot:
+        if self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
             dumpValues = Ufunctions[self.storage[self.SIndex]](args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
@@ -1571,7 +1571,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     def pistol_u(*args):
         global pistol_bullets, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White), (10, 360))      
-        if args[0][0] and KDS.World.pistol_C.counter > 50 and pistol_bullets > 0:
+        if args[0][0] and KDS.World.pistol_C.counter > 30 and pistol_bullets > 0:
             Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
@@ -1629,8 +1629,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             shotgun_shells -= 1
             shotgun_shots()
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            for _ in range(7):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
+            for x in range(7):
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1646,7 +1646,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(ppsh41_shot)
             ppsh41_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 10))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
@@ -2996,7 +2996,7 @@ while main_running:
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, enemies, player_rect, player_health)
+        result = Projectile.update(screen, scroll, enemies, player_rect, player_health, DebugMode)
         if result:
             v = result[0]
             enemies = result[1]

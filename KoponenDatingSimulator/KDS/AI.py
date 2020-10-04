@@ -64,6 +64,8 @@ imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
 imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.wav")
 zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav")
 zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav")
+shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
+impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
 imp_sight_sound.set_volume(0.4)
 imp_death_sound.set_volume(0.5)
 zombie_sight_sound.set_volume(0.4)
@@ -285,7 +287,7 @@ class HostileEnemy:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
                         print(sl2)
-                        enemyProjectiles = self.attack((sl2*-1)*3, tiles)
+                        enemyProjectiles = self.attack((sl2*-1)*3, tiles, targetRect)
                     self.attakF = False
                     self.attackRunning = False
                     self.a_anim.reset()
@@ -329,7 +331,15 @@ class Imp(HostileEnemy):
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8])
         self.corpse = self.d_anim.images[-1]
     
-    def attack(self, slope, env_obstacles):
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200-dist
+        dist /= 1200
+        print(dist)
+        impAtack.set_volume(dist)
+        impAtack.play()
         print(slope)
         return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope)
 
@@ -341,10 +351,32 @@ class SergeantZombie(HostileEnemy):
         a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 16, KDS.Colors.GetPrimary.White, 1)
         d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 63)
+
+        #region Handling the i_anim:
+        aim_im = a_anim.images[0]
+        shoot_im = a_anim.images[1]
+        a_anim.images.clear()
+        #for _ in range(25):
+            #a_anim.images.append(aim_im)
+        for _ in range(20):
+            a_anim.images.append(shoot_im)
+        a_anim.ticks = 19
+        del aim_im, shoot_im
+
+        #endregion
+
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8])
         self.corpse = self.d_anim.images[-1]
 
-    def attack(self, slope, env_obstacles):
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200-dist
+        dist /= 1200
+        print(dist)
+        shotgunShot.set_volume(dist)
+        shotgunShot.play()
         return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 60), slope=slope)
 
 class Projectile:
