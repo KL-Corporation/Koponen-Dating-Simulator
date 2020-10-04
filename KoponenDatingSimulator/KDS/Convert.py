@@ -1,6 +1,13 @@
 import pygame
 import KDS.Logging
 from inspect import currentframe
+    
+def ToString(value, fallbackValue: str = "none"):
+    try:
+        return value
+    except Exception:
+        KDS.Logging.AutoError(f"Cannot convert {value} to string. With error: {e}", currentframe())
+        return fallbackValue
 
 def ToInt(value, fallbackValue: int = 0, roundFloat: bool = False, boolRange = (0, 1)) -> int:
     """Converts a value to int with these rules:
@@ -104,13 +111,6 @@ def ToBool(value, fallbackValue: bool = False) -> bool:
         return value
     else:
         KDS.Logging.AutoError(f"Value {value} is not a valid type.", currentframe())
-        return fallbackValue
-    
-def ToString(value, fallbackValue: str = "none"):
-    try:
-        return value
-    except Exception:
-        KDS.Logging.AutoError(f"Cannot convert {value} to string. With error: {e}", currentframe())
         return fallbackValue
 
 def ToType(value, convertTo: str, fallbackValue = None, roundFloat: bool = False, boolRange = (0, 1)):
