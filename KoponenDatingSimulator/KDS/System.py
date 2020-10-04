@@ -1,5 +1,5 @@
 from inspect import currentframe
-from subprocess import call
+import subprocess
 import os
 import shutil
 import KDS.Logging
@@ -10,7 +10,7 @@ def hide(path: str):
     Args:
         path (str): The path to the file or directory to be hidden.
     """
-    call(["attrib", "+H", path])
+    subprocess.call(["attrib", "+H", path])
     
 def unhide(path: str):
     """Unhides the file or directory specified by path. [WINDOWS ONLY]
@@ -18,7 +18,7 @@ def unhide(path: str):
     Args:
         path (str): The path to the file or directory to be unhidden.
     """
-    call(["attrib", "-H", path])
+    subprocess.call(["attrib", "-H", path])
     
 def emptdir(dirpath: str):
     """Removes all children from the specified directory.

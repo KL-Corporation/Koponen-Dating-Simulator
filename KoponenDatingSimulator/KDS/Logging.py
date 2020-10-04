@@ -105,7 +105,7 @@ def Profiler(enabled):
         log_stream.write("\n{}\n\n".format("=" * 80))
         log_stream.close()
         
-def Quit():
+def quit():
     global running
     running = False
     logging.shutdown()

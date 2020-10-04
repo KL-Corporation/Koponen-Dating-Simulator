@@ -2,13 +2,77 @@ import pygame
 import KDS.Logging
 from inspect import currentframe
 
-def ToBool(value, fallbackValue: bool = False):
+def ToInt(value, fallbackValue: int = 0, roundFloat: bool = False, boolRange = (0, 1)) -> int:
+    """Converts a value to int with these rules:
+        1. String: [value = (int)value] [value = (int)value]
+        2. Int: [value = value] [value = value]
+        3. Float: [value = (int)value] [value = (int)value] (Optional rounding)
+        4. Bool: [True = 1] [False = 0] (Can be modified with boolRange=(int, int))
+        Will return fallbackValue if requirements are not met.
+        
+    Args:
+        value: The value you want to convert.
+
+    Returns:
+        int: The converted int.
+    """
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except Exception as e:
+            KDS.Logging.AutoError(f"Cannot convert {value} to int. With error: {e}", currentframe())
+            return fallbackValue
+    elif isinstance(value, int):
+        return value
+    elif isinstance(value, float):
+        if roundFloat:
+            value = round(value)
+        return int(value)
+    elif isinstance(value, bool):
+        if not value:
+            return int(boolRange[0])
+        else:
+            return int(boolRange[1])
+        
+def ToFloat(value, fallbackValue: int = 0, roundFloat: bool = False, boolRange = (0.0, 1.0)) -> float:
+    """Converts a value to float with these rules:
+        1. String: [value = (float)value] [value = (float)value]
+        2. Int: [value = (float)value] [value = (float)value]
+        3. Float: [value = value] [value = value] (Optional rounding)
+        4. Bool: [True = 1.0] [False = 0.0] (Can be modified with boolRange=(int[from], int[to]))
+        Will return fallbackValue if requirements are not met.
+        
+    Args:
+        value: The value you want to convert.
+
+    Returns:
+        float: The converted float.
+    """
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except Exception as e:
+            KDS.Logging.AutoError(f"Cannot convert {value} to float. With error: {e}", currentframe())
+            return fallbackValue
+    elif isinstance(value, int):
+        return float(value)
+    elif isinstance(value, float):
+        if roundFloat:
+            value = round(value)
+        return float(value)
+    elif isinstance(value, bool):
+        if not value:
+            return float(boolRange[0])
+        else:
+            return float(boolRange[1])
+
+def ToBool(value, fallbackValue: bool = False) -> bool:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
-        2. Int: [1 = True] [0 = False]
-        3. Float: [1.0 = True] [0.0 = False] (Will be rounded)
+        2. Int: [0 > True] [0 <= False]
+        3. Float: [0.0 > True] [0.0 <= False]
         4. Bool: [True = True] [False = False]
-        Will return None if requirements are not met.
+        Will return fallbackValue if requirements are not met.
         
     Args:
         value: The value you want to convert.
@@ -26,26 +90,40 @@ def ToBool(value, fallbackValue: bool = False):
             KDS.Logging.AutoError(f"Cannot convert {value} to bool.", currentframe())
             return fallbackValue
     elif isinstance(value, int):
-        if value == 1:
+        if value > 0:
             return True
-        elif value == 0:
-            return False
         else:
-            KDS.Logging.AutoError(f"Cannot convert {value} to bool.", currentframe())
-            return fallbackValue
+            return False
     elif isinstance(value, float):
         value = float(round(value))
-        if value == 1.0:
+        if value > 0.0:
             return True
-        elif value == 0.0:
-            return False
         else:
-            KDS.Logging.AutoError(f"Cannot convert {value} to bool.", currentframe())
-            return fallbackValue
+            return False
     elif isinstance(value, bool):
         return value
     else:
         KDS.Logging.AutoError(f"Value {value} is not a valid type.", currentframe())
+        return fallbackValue
+    
+def ToString(value, fallbackValue: str = "none"):
+    try:
+        return value
+    except Exception:
+        KDS.Logging.AutoError(f"Cannot convert {value} to string. With error: {e}", currentframe())
+        return fallbackValue
+
+def ToType(value, convertTo: str, fallbackValue = None, roundFloat: bool = False, boolRange = (0, 1)):
+    if convertTo == "str" or convertTo == "string":
+        return str(value)
+    elif convertTo == "int":
+        return ToInt(value, fallbackValue=fallbackValue, roundFloat=roundFloat, boolRange=boolRange)
+    elif convertTo == "float":
+        return ToFloat(value, fallbackValue=fallbackValue, roundFloat=roundFloat, boolRange=boolRange)
+    elif convertTo == "bool":
+        return ToBool(value, fallbackValue=fallbackValue)
+    else:
+        KDS.Logging.AutoError(f"Type {convertTo} is not a valid type.", currentframe())
         return fallbackValue
 
 def ToAlpha(image: pygame.Surface, alpha: int or float):

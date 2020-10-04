@@ -617,7 +617,7 @@ Lights = []
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
-darknes = (255, 255, 255)
+darkness = (255, 255, 255)
 
 player_light_sphere_radius = 300
 decor_head_light_sphere_radius = 150
@@ -687,7 +687,10 @@ def LoadSave(save_index: int):
     player_inventory.storage[4] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory4", player_inventory.storage[4])
     farting = KDS.Convert.ToBool(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Farting", "f"))
     """
-def SaveData():
+    if save_index != -1:
+        pass
+    
+def SaveData(save_index: int):
     """
     global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, farting
     #region Player
@@ -721,6 +724,8 @@ def SaveData():
     
     #endregion
     """
+    if save_index != -1:
+        pass
 #endregion
 #region Quit Handling
 def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
@@ -947,17 +952,23 @@ class WorldData():
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
-        with open(os.path.join(PersistentMapPath, "levelprop.json"), "r") as map_prop_file:
-            map_props = map_prop_file.read()
-            map_props = json.loads(map_props)
+        if os.is_file(os.path.join(PersistentMapPath, "levelprop.json")):
+            with open(os.path.join(PersistentMapPath, "levelprop.json"), "r") as map_prop_file:
+                map_props = map_prop_file.read()
+                map_props = json.loads(map_props)
 
-            global dark, darknes
-            dark = map_props["dark"]
-            dval = map_props["darknes"]
-            pPs = map_props["startPosition"]
-            Px = int(pPs.split(",")[0])
-            Py = int(pPs.split(",")[1])
-            darknes = (dval, dval, dval)
+                global dark, darkness
+                dark = map_props["dark"]
+                dval = map_props["darkness"]
+                pPs = map_props["startPosition"]
+                Px = int(pPs.split(",")[0])
+                Py = int(pPs.split(",")[1])
+                darkness = (dval, dval, dval)
+        else:
+            dark = False
+            darkness = (0, 0, 0)
+            Px = 100
+            Py = 100
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -1576,7 +1587,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+30*KDS.Math.Jd(direction),player_rect.centery-19,2,2),direction, -1, tiles, 55))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery-19,2,2),direction, -1, tiles, 55))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -1611,7 +1622,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(rk62_shot)
             rk_62_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+50*KDS.Math.Jd(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -1630,7 +1641,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             shotgun_shots()
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             for _ in range(7):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)),player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=random.randint(-4,4)))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1646,7 +1657,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(ppsh41_shot)
             ppsh41_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx+60*KDS.Math.Jd(direction),player_rect.centery-19,2,2), direction, -1, tiles, 10))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery-19,2,2), direction, -1, tiles, 10))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
@@ -2361,7 +2372,7 @@ def koponen_talk():
     pygame.mouse.set_visible(False)
 #endregion
 #region Game Start
-def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll):
+def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     for inventory_slot in player_inventory.storage:
@@ -3013,7 +3024,7 @@ while main_running:
             Explosions.remove(unit)
     #Valojen käsittely
     if dark:
-        black_tint.fill(darknes)
+        black_tint.fill(darkness)
         for light in Lights:
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
@@ -3367,7 +3378,7 @@ while main_running:
 #region Application Quitting
 pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.ogg")
 KDS.System.emptdir(PersistentPaths.CachePath)
-KDS.Logging.Quit()
+KDS.Logging.quit()
 pygame.mixer.quit()
 pygame.display.quit()
 pygame.quit()

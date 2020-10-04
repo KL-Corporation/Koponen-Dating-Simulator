@@ -62,3 +62,22 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     with open(FilePath, "w+") as cfg_file:
         config.write(cfg_file)
         cfg_file.close()
+        
+class Save:
+    @staticmethod
+    def init():
+        #decodes and loads a save file to cache
+        pass
+        
+    @staticmethod
+    def SetSave(SaveIndex: int, SafeName: str, SaveItem: str or list):
+        pass
+
+    @staticmethod
+    def GetSave(SaveIndex: int, SafeName: str, DefaultValue: str or list):
+        pass
+    
+    @staticmethod
+    def quit():
+        #encodes and stores a save file to storage
+        pass

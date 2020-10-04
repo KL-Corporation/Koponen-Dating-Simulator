@@ -23,7 +23,7 @@ def A_map(x, in_min, in_max, out_min, out_max):
         rtn = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
         return rtn
     except Exception as e:
-        KDS.Logging.AutoError(e, currentframe())
+        KDS.Logging.AutoError(str(e), currentframe())
         return 0
 
 def toPositive(value):
@@ -66,10 +66,6 @@ def getAngle(p1: tuple, p2: tuple):
     except Exception as e:
         KDS.Logging.AutoError(e, currentframe())
         return 0
-
-def Jd(var: bool):
-    #Converts boolean to -1 or 1
-    return -1 if var else 1
 
 def Lerp(a: float, b: float, t: float):
     """Linearly interpolates between a and b by t.

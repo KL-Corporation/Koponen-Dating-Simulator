@@ -15,7 +15,7 @@ class Testiclass:
     def __init__(self, arg1, arg2):
         self.arg1 = arg1
         self.arg2 = arg2
-        self.arg3 = arg1*arg2
+        self.arg3 = arg1 * arg2
 
 listOfClassInstances = [Testiclass(a, b) for a, b in zip([x for x in range(0,5)], [x for x in range(5,10)])]
 print(listOfClassInstances)
