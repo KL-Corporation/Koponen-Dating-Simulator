@@ -1587,7 +1587,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery-19,2,2),direction, -1, tiles, 55))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2),direction, -1, tiles, 55))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -1622,7 +1622,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(rk62_shot)
             rk_62_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -1641,7 +1641,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             shotgun_shots()
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             for x in range(7):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1657,7 +1657,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             Audio.playSound(ppsh41_shot)
             ppsh41_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1)), player_rect.centery-19,2,2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
             if not args[0][0]:

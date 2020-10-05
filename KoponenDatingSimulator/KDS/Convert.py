@@ -167,3 +167,6 @@ def AspectScale(image: pygame.Surface, size: tuple, horizontalOnly: bool = False
     else:
         scaling = size[1] / image.get_height()
     return pygame.transform.scale(image, (int(image.get_width() * scaling), int(image.get_height() * scaling)))
+
+def ToMultiplier(boolean: bool):
+    return -1 if boolean else 1

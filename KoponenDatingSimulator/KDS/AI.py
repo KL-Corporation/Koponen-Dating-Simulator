@@ -341,7 +341,7 @@ class Imp(HostileEnemy):
         impAtack.set_volume(dist)
         impAtack.play()
         print(slope)
-        return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope)
+        return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope)
 
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
@@ -372,12 +372,12 @@ class SergeantZombie(HostileEnemy):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
         dist = min(1200, dist)
         dist = max(0, dist)
-        dist = 1200-dist
+        dist = 1200 - dist
         dist /= 1200
         print(dist)
         shotgunShot.set_volume(dist)
         shotgunShot.play()
-        return KDS.World.Bullet(pygame.Rect(self.rect.x+30*KDS.Math.Jd(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 60), slope=slope)
+        return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 60), slope=slope)
 
 class Projectile:
     pass
