@@ -1008,11 +1008,19 @@ class WorldData():
                 else:
                     x += 1
             y += 1
-        
-        Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
+
+        for row in tiles:
+            for tile in row:
+                if tile.serialNumber == 22:
+                    tile.initHeight(tiles)
+
+        for f in os.listdir(PersistentMapPath):
+            if ".ogg" in f:
+                musicfile = f
+
+        Audio.MusicMixer.load(os.path.join(PersistentMapPath, musicfile))
         Audio.MusicMixer.play(-1)
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
-
         return Px, Py
 #endregion
 #region Data
@@ -1323,11 +1331,26 @@ class Lamp(Tile):
         self.texture = lamp0
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
         self.checkCollision = True
+        self.coneheight = 90
+
+    def initHeight(self, tiles):
+        y = 0
+        r = True
+        while r:
+            y += 33
+            for row in tiles:
+                for tile in row:
+                    if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y+self.rect.height+y)) and tile.serialNumber != 22:
+                        y = y - (self.rect.y+self.rect.height+y - tile.rect.y) + 8
+                        r = False
+            if y > 154:
+                r = False
+        self.coneheight = y
 
     def update(self):
         if random.randint(0, 10) != 10:
-            btmidth = 80
-            Lights.append(KDS.World.Lighting.Light((self.rect.x-btmidth/2+5, self.rect.y+13), KDS.World.Lighting.lamp_cone(10, btmidth, 90, (200, 200, 200))))
+            btmidth = int(self.coneheight*80/90)
+            Lights.append(KDS.World.Lighting.Light((self.rect.x-btmidth/2+7, self.rect.y+16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
         return self.texture
 
 class DecorativeHead(Tile):
@@ -2684,6 +2707,15 @@ def main_menu():
         450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White))
     main_menu_quit_button = KDS.UI.New.Button(pygame.Rect(
         450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White))
+    #Frame 2
+    Frame2 = pygame.Surface(display_size)
+    Frame2.blit(main_menu_background_2, (0,0))
+    #Frame 3
+    Frame3 = pygame.Surface(display_size)
+    Frame3.blit(main_menu_background_3, (0, 0))
+    #Frame 4
+    Frame4 = pygame.Surface(display_size)
+    Frame4.blit(main_menu_background_4, (0, 0))
     #endregion
     #region Mode Selection Menu
     mode_selection_modes = []
@@ -2753,15 +2785,6 @@ def main_menu():
                 menu_toilet_animation.update(), False, False), (823, 507))
             Frame1.blit(pygame.transform.flip(
                 menu_trashcan_animation.update(), False, False), (283, 585))
-            #Frame 2
-            Frame2 = pygame.Surface(display_size)
-            Frame2.blit(main_menu_background_2, (0,0))
-            #Frame 3
-            Frame3 = pygame.Surface(display_size)
-            Frame3.blit(main_menu_background_3, (0, 0))
-            #Frame 4
-            Frame4 = pygame.Surface(display_size)
-            Frame4.blit(main_menu_background_4, (0, 0))
 
             frames = [Frame1, Frame2, Frame3, Frame4]
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
@@ -2774,7 +2797,7 @@ def main_menu():
 
             display.blit(main_menu_title, (391, 43))
             framecounter += 1
-            if framecounter > 1000:
+            if framecounter > 550:
                 current_frame += 1
                 framecounter = 0
                 if current_frame > len(frames)-1:
@@ -3006,10 +3029,10 @@ while main_running:
     Tile.renderUpdate(tiles, screen, scroll, player_rect.center)
 
     for enemy in enemies:
-        if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1400:
+        if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
             result = enemy.update(screen, scroll, tiles, player_rect)
             if result[0]:
-                Projectiles.append(result)
+                Projectiles.append(result[0])
             if result[1]:
                 for serialNumber in result[1]:
                     if serialNumber:

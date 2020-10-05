@@ -229,14 +229,24 @@ def consoleHandler(inputString: str):
         if commandlist[1] == "brush":
             if len(commandlist[2]) == 4 and commandlist[2].isnumeric():
                 brush = commandlist[2]
-    elif commandlist[0] == "append":
+    elif commandlist[0] == "add":
         if commandlist[1] == "rows":
             for _ in range(int(commandlist[2])):
                 grid.append([tileInfo((x*scalesize, len(grid)*scalesize)) for x in range(len(grid[0]))])
-        elif commandlist[1] == "columns":
+        elif commandlist[1] == "cols":
             for _ in range(int(commandlist[2])):
-                for index, row in enumerate(grid):
-                    row.append(tileInfo((len(grid[0])*scalesize, index*scalesize)))
+                y = 0
+                for row in grid:
+                    row.append(tileInfo((len(row)*scalesize, y*scalesize)))
+                    y += 1
+    elif commandlist[0] == "gremv":
+        if commandlist[1] == "rows":
+            for _ in range(int(commandlist[2])):
+                grid = grid[:-1]
+        elif commandlist[1] == "cols":
+            for _ in range(int(commandlist[2])):
+                for row in grid:
+                    row = row[:-1]
 
 def materialMenu(previousMaterial):
     r = True
