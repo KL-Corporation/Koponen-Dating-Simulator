@@ -64,6 +64,7 @@ light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
 brush = "0000"
 currentSaveName = ''
+grid = [[]]
 
 keys_pressed = {
     "RETURN": False,
@@ -222,13 +223,21 @@ def openMap(): #Returns a 2d array
         return None
 
 def consoleHandler(inputString: str):
-    global brush
+    global brush, grid
     commandlist = inputString.strip().split()
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
             if len(commandlist[2]) == 4 and commandlist[2].isnumeric():
                 brush = commandlist[2]
-            
+    elif commandlist[0] == "append":
+        if commandlist[1] == "rows":
+            for _ in range(int(commandlist[2])):
+                grid.append([tileInfo((x*scalesize, len(grid)*scalesize)) for x in range(len(grid[0]))])
+        elif commandlist[1] == "columns":
+            for _ in range(int(commandlist[2])):
+                for index, row in enumerate(grid):
+                    row.append(tileInfo((len(grid[0])*scalesize, index*scalesize)))
+
 def materialMenu(previousMaterial):
     r = True
     rscroll = 0
@@ -280,7 +289,7 @@ def materialMenu(previousMaterial):
         pygame.display.update()
 
 def main():
-    global currentSaveName, brush
+    global currentSaveName, brush, grid
     g = inputConsole("Grid size: (int,int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
     gridSize = (int(g[0]), int(g[1]))
     grid = loadGrid(gridSize)
@@ -361,7 +370,6 @@ def main():
         grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
         pygame.display.update()
         clock.tick(60)
-
 if __name__ == "__main__":
     main()
 else:
