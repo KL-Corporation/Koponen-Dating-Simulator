@@ -20,3 +20,5 @@
 019,ss_bonuscard.png
 020,turboneedle.png
 021,ppsh41.png
+022,55s55_without_missile.png
+023,55s55_missile.png

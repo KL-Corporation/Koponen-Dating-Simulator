@@ -1292,7 +1292,13 @@ class Landmine(Tile):
         self.checkCollision = False
 
     def update(self):
-        if self.rect.colliderect(player_rect):
+        if self.rect.colliderect(player_rect) or True in map(lambda r: r.rect.colliderect(self.rect), enemies):
+            if KDS.Math.getDistance(player_rect.center, self.rect.center) < 100:
+                global player_health
+                player_health -= 100-KDS.Math.getDistance(player_rect.center, self.rect.center)
+            for enemy in enemies:
+                if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100:
+                    enemy.health -= 120-KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
             Audio.playSound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (self.rect.x-60, self.rect.y-60)))           
@@ -1587,7 +1593,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2),direction, -1, tiles, 55))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2),direction, -1, tiles, 100))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -1640,8 +1646,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
             shotgun_shells -= 1
             shotgun_shots()
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            for x in range(7):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x))
+            for x in range(10):
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x/1.5))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -2998,10 +3004,27 @@ while main_running:
     items, player_inventory = Item.checkCollisions(
         items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, player_rect.center)
+
     for enemy in enemies:
-        result = enemy.update(screen, scroll, tiles, player_rect)
-        if result:
-            Projectiles.append(result)
+        if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1400:
+            result = enemy.update(screen, scroll, tiles, player_rect)
+            if result[0]:
+                Projectiles.append(result)
+            if result[1]:
+                for serialNumber in result[1]:
+                    if serialNumber:
+                        tempItem = Item((enemy.rect.center), serialNumber=serialNumber)
+                        counter = 0
+                        while True:
+                            tempItem.rect.y += tempItem.rect.height
+                            for collision in collision_test(tempItem.rect, tiles):
+                                tempItem.rect.bottom = collision.top
+                                counter = 250
+                            counter += 1
+                            if counter > 250:
+                                break
+                        items = numpy.append(items, tempItem)
+                        del tempItem
 
     Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
@@ -3017,11 +3040,16 @@ while main_running:
         
         if v == "wall" or v == "air":
             Projectiles.remove(Projectile)
-    
+
+    #R채j채hdykset
     for unit in Explosions:
-        finished = unit.update(screen, scroll)
+        finished, etick = unit.update(screen, scroll)
         if finished:
             Explosions.remove(unit)
+        else:
+            if etick < 10:
+                Lights.append(KDS.World.Lighting.Light((unit.xpos-80, unit.ypos-80), light_sphere2))
+
     #Valojen k채sittely
     if dark:
         black_tint.fill(darkness)
@@ -3030,6 +3058,7 @@ while main_running:
             #black_tint.blit(blue_light_sphere1, (20, 20))
         black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
+    
     #UI
     if renderUI:
         score = score_font.render(

@@ -267,8 +267,14 @@ class HostileEnemy:
         self.movement = mv
         self.clearlagcounter = 0
 
+    def onDeath(self):
+        pass
+    def attack(self):
+        pass
+
     def update(self, Surface: pygame.Surface, scroll:[int, int], tiles, targetRect):
         enemyProjectiles = None
+        dropItems = []
         if self.health:
             s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)[0]
         else:
@@ -306,6 +312,10 @@ class HostileEnemy:
         elif self.health < 1:
             if self.playDeathSound:
                 Audio.playSound(self.death_sound)
+                items = self.onDeath()
+                for item in items:
+                    if item:
+                        dropItems.append(item)
                 self.playDeathSound = False
             self.rect, c = move(self.rect, [0,8], tiles)
             Surface.blit(pygame.transform.flip(self.d_anim.update()[0], self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
@@ -313,7 +323,7 @@ class HostileEnemy:
             if self.clearlagcounter > 3600:
                 self.clearlagcounter = 3600
 
-        return enemyProjectiles
+        return enemyProjectiles, dropItems
 
     def dmg(self, dmgAmount):
         self.health -= dmgAmount
@@ -342,6 +352,9 @@ class Imp(HostileEnemy):
         impAtack.play()
         print(slope)
         return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope)
+
+    def onDeath(self):
+        return [0]
 
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
@@ -379,6 +392,11 @@ class SergeantZombie(HostileEnemy):
         shotgunShot.play()
         return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 60), slope=slope)
 
+    def onDeath(self):
+        items = []
+        if random.randint(0, 2) == 0:
+            items.append(17)
+        return items
 class Projectile:
     pass
 
