@@ -1,6 +1,6 @@
 import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
-import KDS.Animator, KDS.Math, KDS.Colors, KDS.Logging, KDS.World
+import KDS.Animator, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
 pygame.mixer.init()
 pygame.init()
 
@@ -98,7 +98,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
     elif angle < 0:
         angle = -90 - angle
     slope = KDS.Math.getSlope2(angle)
-    dirVar = KDS.Convert.ToInt(direction, fallbackValue=1, boolRange=(-1, 1))
+    dirVar = KDS.Convert.ToMultiplier(direction)
     searchPointers = [(searchRect.centerx + x * 30 *dirVar, searchRect.centery + x * 30 * dirVar*slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
         
