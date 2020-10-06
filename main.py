@@ -3120,7 +3120,7 @@ while main_running:
             if DebugMode:
                 lightSize = light.surf.get_size()
                 rectSurf = pygame.Surface((lightSize[0], lightSize[1]))
-                rectSurf.fill((230,230,0))
+                rectSurf.fill(KDS.Colors.GetPrimary.Yellow)
                 rectSurf.set_alpha(140)
                 screen.blit(rectSurf, (light.position[0]-scroll[0], light.position[1]-scroll[1]))
             #black_tint.blit(blue_light_sphere1, (20, 20))
