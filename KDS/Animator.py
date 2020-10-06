@@ -131,6 +131,7 @@ class Float:
         self.onAnimationEnd = _OnAnimationEnd
         self.type = Type
         self.PingPong = False
+        self.value = From
 
     def get_value(self) -> float:
         """Returns the current value.
@@ -161,10 +162,10 @@ class Float:
             return 0
     
     def update(self, reverse=False):
-        """Updates the lerp animation
+        """Updates the float animation
 
         Args:
-            reverse (bool, optional): Determines the lertp direction. Defaults to False.
+            reverse (bool, optional): Determines the animation direction. Defaults to False.
 
         Returns:
             float: The lerped float value.
@@ -189,4 +190,27 @@ class Float:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
-        return self.get_value()
+        
+        if self.type == Float.AnimationType.Linear:
+            t = self.tick / self.ticks
+            self.value = KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == Float.AnimationType.EaseIn:
+            t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
+            self.value = KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == Float.AnimationType.EaseOut:
+            t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
+            self.value = KDS.Math.Lerp(self.From, self.To, t)
+        elif self.type == Float.AnimationType.Exponential:
+            t = self.tick / self.ticks
+            self.value = KDS.Math.Lerp(self.From, self.To, t * t)
+        elif self.type == Float.AnimationType.SmoothStep:
+            t = self.tick / self.ticks
+            self.value = KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
+        elif self.type == Float.AnimationType.SmootherStep:
+            t = self.tick / self.ticks
+            self.value = KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
+        else:
+            KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
+            self.value = 0
+        
+        return self.value

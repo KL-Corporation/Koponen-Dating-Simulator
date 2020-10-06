@@ -571,9 +571,9 @@ pistol_cooldown = 0
 dark = True
 
 gamemode_bc_1_alpha = KDS.Animator.Float(
-    0.0, 1.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+    0.0, 255.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 gamemode_bc_2_alpha = KDS.Animator.Float(
-    0.0, 1.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+    0.0, 255.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
@@ -2812,9 +2812,11 @@ def main_menu():
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(mouse_pos):
                     if y == 0:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(True) * 255.0)), (story_mode_button.x, story_mode_button.y))
+                        gamemode_bc_1_2.set_alpha(int(gamemode_bc_1_alpha.update(True)))
+                        display.blit(gamemode_bc_1_2, (story_mode_button.x, story_mode_button.y))
                     elif y == 1:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(True) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
+                        gamemode_bc_2_2.set_alpha(int(gamemode_bc_2_alpha.update(True)))
+                        display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
                     if c:
                         if mode_selection_modes[y] == KDS.Gamemode.Modes.Story:
                             MenuMode = Mode.StoryMenu
@@ -2826,9 +2828,11 @@ def main_menu():
                                 mode_selection_modes[y]), currentframe())
                 else:
                     if y == 0:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_1_2, int(gamemode_bc_1_alpha.update(False) * 255.0)), (story_mode_button.x, story_mode_button.y))
+                        gamemode_bc_1_2.set_alpha(int(gamemode_bc_1_alpha.update(False)))
+                        display.blit(gamemode_bc_1_2, (story_mode_button.x, story_mode_button.y))
                     elif y == 1:
-                        display.blit(KDS.Convert.ToAlpha(gamemode_bc_2_2, int(gamemode_bc_2_alpha.update(False) * 255.0)), (campaign_mode_button.x, campaign_mode_button.y))
+                        gamemode_bc_2_2.set_alpha(int(gamemode_bc_2_alpha.update(False)))
+                        display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
             pygame.draw.rect(
