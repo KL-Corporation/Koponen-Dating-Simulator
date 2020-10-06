@@ -3112,6 +3112,8 @@ while main_running:
         for light in Lights:
             lightsUpdating += 1
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
+            if DebugMode:
+                #Add a yellow colored rect for every rendered light
             #black_tint.blit(blue_light_sphere1, (20, 20))
         black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)

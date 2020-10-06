@@ -7,7 +7,7 @@ pygame.init()
 Audio = None
 
 def init(AudioClass):
-    global Audio, debugMode
+    global Audio
     Audio = AudioClass
 
 def __collision_test(rect, Tile_list):
@@ -116,7 +116,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         for row in obstacles[y:end_y]:
             for tile in row[x:end_x]:
                 if KDS.Logging.profiler_running:
-                    pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Yellow, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                    pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Magenta, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
                 if not tile.air:
                     return False, 0
                 if tile.rect.colliderect(targetRect):
