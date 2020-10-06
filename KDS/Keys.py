@@ -1,4 +1,5 @@
 from inspect import currentframe
+import sys
 from pygame.locals import *
 import KDS.Logging
 
@@ -14,6 +15,7 @@ functionKey = "functionKey"
 killKey = "killKey"
 inventoryKeys = [K_1, K_2, K_3, K_4, K_5]
 mainKey = "mainKey"
+
 KeyStates = {
 #   name: [isPressed, isHeld, isClicked, [Automatic] ticksHeld] 
     moveUp: [False, False, False],
@@ -53,11 +55,26 @@ def GetHeld(key_indentifier):
     else:
         KDS.Logging.AutoError(f"Key {key_indentifier} does not exist in database!", currentframe())
         
+def GetHeldCustom(key_indentifier, _holdTicks):
+    if key_indentifier in KeyStates:
+        if KeyStates[key_indentifier][3] > _holdTicks:
+            return True
+        else:
+            return False
+    else:
+        KDS.Logging.AutoError(f"Key {key_indentifier} does not exist in database!", currentframe())
+
+def GetTicksHeld(key_indentifier):
+    if key_indentifier in KeyStates:
+        return KeyStates[key_indentifier][3]
+    else:
+        KDS.Logging.AutoError(f"Key {key_indentifier} does not exist in database!", currentframe())
+        
 def GetClicked(key_identifier):
     if key_identifier in KeyStates:
         return KeyStates[key_identifier][2]
     else:
-        KDS.Logging.AutoError(f"Key {key_indentifier} does not exist in database!", currentframe())
+        KDS.Logging.AutoError(f"Key {key_identifier} does not exist in database!", currentframe())
         
 def Update():
     for keyName in KeyStates:
@@ -67,5 +84,6 @@ def Update():
             keyData[3] += 1
             if keyData[3] > holdTicks:
                 keyData[1] = True
-                keyData[3] = holdTicks + 1
+                if keyData[3] == sys.maxsize:
+                    keyData[3] -= 1
         

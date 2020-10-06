@@ -244,7 +244,7 @@ class Archvile:
                     f = hit_scan(self)
 
                     if f != "wall" and player_rect.y-40 < archvile.rect.y:
-                        player_health -= int(random.uniform(30, 80))
+                        player_health -= random.randint(30, 80)
                         Audio.playSound(landmine_explosion)
                     del f
 
@@ -523,6 +523,9 @@ archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
 archvile_death = pygame.mixer.Sound("Assets/Audio/Effects/dsvildth.wav")
 fart = pygame.mixer.Sound("Assets/Audio/Effects/fart_attack.wav")
 soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsgetpow.wav")
+pray_sound = pygame.mixer.Sound("Assets/Audio/Effects/prayer.ogg")
+decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/DecorativeHead_wakeup.ogg")
+decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
@@ -532,9 +535,12 @@ player_shotgun_shot.set_volume(0.8)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
 #endregion
+#################### Vähän Ghetto, mutta en halua turhia variableja. ####################
 jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
 jukebox_tip.blit(tip_font.render("Use Jukebox [Press: E]", True, KDS.Colors.GetPrimary.White), (0, 0))
 jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetPrimary.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
+#################### Vähän Ghetto, mutta en halua turhia variableja. ####################
+decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.GetPrimary.White)
 
 restart = False
 reset_data = False
@@ -587,7 +593,7 @@ animation_counter = 0
 animation_duration = 0
 animation_image = 0
 air_timer = 0
-player_health = 100.00
+player_health = 100
 last_player_health = 100
 player_death_event = False
 animation_has_played = False
@@ -1237,7 +1243,7 @@ class Jukebox(Tile):
     def update(self):
         global jukeboxMusicPlaying
         if self.rect.colliderect(player_rect):
-            screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1]-30))
+            screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1] - 30))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
                 Audio.MusicMixer.pause()
@@ -1303,7 +1309,7 @@ class Landmine(Tile):
         if self.rect.colliderect(player_rect) or True in map(lambda r: r.rect.colliderect(self.rect), enemies):
             if KDS.Math.getDistance(player_rect.center, self.rect.center) < 100:
                 global player_health
-                player_health -= 100-KDS.Math.getDistance(player_rect.center, self.rect.center)
+                player_health -= 100 - KDS.Math.getDistance(player_rect.center, self.rect.center)
             for enemy in enemies:
                 if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100:
                     enemy.health -= 120-KDS.Math.getDistance(enemy.rect.center, self.rect.center)
@@ -1359,12 +1365,35 @@ class DecorativeHead(Tile):
         self.texture = t_textures[43]
         self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
         self.checkCollision = False
+        self.praying = False
+        self.prayed = False
 
     def update(self):
         global player_health
-        if self.rect.colliderect(player_rect) and player_health <100:
-            player_health += 0.01
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx-decor_head_light_sphere_radius/2, self.rect.centery-decor_head_light_sphere_radius/2), orange_light_sphere1))
+        
+        if self.rect.colliderect(player_rect):
+            if not self.prayed:
+                screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - int(decorative_head_tip.get_width() / 2), self.rect.top - scroll[1] - 20))
+                if KDS.Keys.GetPressed(KDS.Keys.functionKey):
+                    if not self.praying and not self.prayed:
+                        Audio.playSound(pray_sound)
+                        self.praying = True
+                else:
+                    pray_sound.stop()
+                    self.praying = False
+                if KDS.Keys.GetHeld(KDS.Keys.functionKey):
+                    self.prayed = True
+                    self.justPrayed = True
+                    Audio.playSound(decorative_head_wakeup_sound)
+            elif not KDS.Keys.GetPressed(KDS.Keys.functionKey):
+                pray_sound.stop()
+                self.praying = False
+                player_health = min(player_health + 0.01, 100)
+        else:
+            pray_sound.stop()
+            self.praying = False
+        if self.prayed:
+            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius / 2, self.rect.centery - decor_head_light_sphere_radius/2), orange_light_sphere1))
         return self.texture
 
 specialTilesD = {
@@ -1507,9 +1536,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def medkit_p():
         global player_health
         Audio.playSound(item_pickup)
-        player_health += 25
-        if player_health > 100:
-            player_health = 100
+        player_health = min(player_health + 25, 100)
 
         return True
 
@@ -1540,9 +1567,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def soulsphere_p():
         global player_health
-        player_health += 100
-        if player_health > 200:
-            player_health = 200
+        player_health = min(player_health + 100, 200)
 
         return True
 
@@ -2403,6 +2428,8 @@ def koponen_talk():
 #region Game Start
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
+    Audio.MusicMixer.stop()
+    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     for inventory_slot in player_inventory.storage:
         inventory_slot = Inventory.emptySlot
@@ -2443,7 +2470,6 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
         LoadSave(selectedSave)
     else:
         LoadSave(-1)
-
 
 def load_campaign(reset_scroll):
     global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
@@ -3013,16 +3039,17 @@ while main_running:
     onLadder = False
 #endregion
 #region Player Death
-    if player_health < 1 and not animation_has_played:
-        player_death_event = True
-        Audio.MusicMixer.stop()
-        pygame.mixer.Sound.play(player_death_sound)
-        player_death_sound.set_volume(0.5)
-        animation_has_played = True
-    elif player_health < 1:
-        death_wait += 1
-        if death_wait > 240:
-            play_function(KDS.Gamemode.gamemode, False)
+    if player_health <= 0:
+        if not animation_has_played:
+            player_death_event = True
+            Audio.MusicMixer.stop()
+            pygame.mixer.Sound.play(player_death_sound)
+            player_death_sound.set_volume(0.5)
+            animation_has_played = True
+        else:
+            death_wait += 1
+            if death_wait > 240:
+                play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
 
@@ -3090,8 +3117,7 @@ while main_running:
         score = score_font.render(
             ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
 
-        if player_health < 0:
-            player_health = 0
+        player_health = max(player_health, 0)
 
         health = score_font.render(
             "HEALTH: " + str(int(player_health)), True, KDS.Colors.GetPrimary.White)
@@ -3226,9 +3252,8 @@ while main_running:
         koponen_movingx = -koponen_movingx
 
 #endregion
-
 #region Pelaajan elämätilanteen käsittely
-    if player_health < last_player_health and player_health != 0:
+    if player_health < last_player_health and player_health <= 0:
         hurted = True
     else:
         hurted = False
@@ -3248,19 +3273,18 @@ while main_running:
         vertical_momentum = 0
 #endregion
 #region Player Data
-    if player_health:
-        if player_movement[0] > 0:
-            direction = False
-            running = True
-        if player_movement[0] < 0:
-            direction = True
-            running = True
-        if player_movement[0] == 0:
-            running = False
+    if player_movement[0] > 0:
+        direction = False
+        walking = True
+    elif player_movement[0] < 0:
+        direction = True
+        walking = True
+    else:
+        walking = False
 
     animation = []
     if player_health > 0:
-        if running:
+        if walking:
             if player_rect.height == stand_size[1]:
                 animation = run_animation.copy()
             else:
@@ -3335,7 +3359,7 @@ while main_running:
     screen.blit(koponen_animation[koponen_animation_stats[0]], (
         koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
-    if player_health or player_death_event:
+    if player_health > 0 or player_death_event:
         if DebugMode:
             pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x -
                                                                      scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
@@ -3431,7 +3455,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
-pygame.mixer.music.load("Assets/Audio/Music/lobbymusic.ogg")
+Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.quit()
 pygame.mixer.quit()
