@@ -1069,6 +1069,9 @@ class Inventory:
         self.size = size
         self.SIndex = 0
 
+    def empty(self):
+        self.storage = [Inventory.emptySlot for _ in range(self.size)]
+
     def render(self, Surface: pygame.Surface):
         pygame.draw.rect(Surface, (192, 192, 192),
                          (10, 75, self.size*34, 34), 3)
@@ -2430,7 +2433,7 @@ def koponen_talk():
 #endregion
 #region Game Start
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
-    global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave
+    global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave, player_inventory
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -3065,7 +3068,8 @@ while main_running:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
             result = enemy.update(screen, scroll, tiles, player_rect)
             if result[0]:
-                Projectiles.append(result[0])
+                for r in result[0]:
+                    Projectiles.append(r)
             if result[1]:
                 for serialNumber in result[1]:
                     if serialNumber:

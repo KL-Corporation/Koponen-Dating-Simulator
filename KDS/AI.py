@@ -355,7 +355,7 @@ class Imp(HostileEnemy):
             d = 1.43
         else:
             d = 1
-        return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope*-1*KDS.Convert.ToMultiplier(self.direction)*d)
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope*-1*KDS.Convert.ToMultiplier(self.direction)*d)]
 
     def onDeath(self):
         return [0]
@@ -394,7 +394,7 @@ class SergeantZombie(HostileEnemy):
         print(dist)
         shotgunShot.set_volume(dist)
         shotgunShot.play()
-        return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 60), slope=slope*4.5)
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=slope*4.5+(3-x)/3) for x in range(5)]
 
     def onDeath(self):
         items = []
