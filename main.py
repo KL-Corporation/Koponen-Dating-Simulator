@@ -3118,11 +3118,10 @@ while main_running:
             lightsUpdating += 1
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             if DebugMode:
-                lightSize = light.surf.get_size()
-                rectSurf = pygame.Surface((lightSize[0], lightSize[1]))
+                rectSurf = pygame.Surface((light.surf.get_width(), light.surf.get_height()))
                 rectSurf.fill(KDS.Colors.GetPrimary.Yellow)
                 rectSurf.set_alpha(140)
-                screen.blit(rectSurf, (light.position[0]-scroll[0], light.position[1]-scroll[1]))
+                screen.blit(rectSurf, (light.position[0] - scroll[0], light.position[1] - scroll[1]))
             #black_tint.blit(blue_light_sphere1, (20, 20))
         black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
