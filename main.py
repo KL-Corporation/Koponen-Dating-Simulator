@@ -1386,9 +1386,10 @@ class DecorativeHead(Tile):
                     self.prayed = True
                     self.justPrayed = True
                     Audio.playSound(decorative_head_wakeup_sound)
-            elif not KDS.Keys.GetPressed(KDS.Keys.functionKey):
-                pray_sound.stop()
-                self.praying = False
+            else:
+                if not KDS.Keys.GetPressed(KDS.Keys.functionKey):
+                    pray_sound.stop()
+                    self.praying = False
                 player_health = min(player_health + 0.01, 100)
         else:
             pray_sound.stop()
