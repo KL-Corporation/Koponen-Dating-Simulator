@@ -618,6 +618,7 @@ LightScroll = [0, 0]
 onLadder = False
 renderUI = True
 darkness = (255, 255, 255)
+lightsUpdating = 0
 
 player_light_sphere_radius = 300
 decor_head_light_sphere_radius = 150
@@ -3077,14 +3078,15 @@ while main_running:
                 Lights.append(KDS.World.Lighting.Light((unit.xpos-80, unit.ypos-80), light_sphere2))
 
     #Valojen käsittely
+    lightsUpdating = 0
     if dark:
         black_tint.fill(darkness)
         for light in Lights:
+            lightsUpdating += 1
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
         black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
-    
     #UI
     if renderUI:
         score = score_font.render(
@@ -3360,6 +3362,7 @@ while main_running:
                                       "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
         screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) +
                                       "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
+        screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
 #endregion
 #region UI Rendering
     if renderUI:
