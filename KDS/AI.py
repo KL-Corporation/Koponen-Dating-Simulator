@@ -351,7 +351,11 @@ class Imp(HostileEnemy):
         impAtack.set_volume(dist)
         impAtack.play()
         print(slope)
-        return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope*-1)
+        if not self.direction:
+            d = 1.43
+        else:
+            d = 1
+        return KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope*-1*KDS.Convert.ToMultiplier(self.direction)*d)
 
     def onDeath(self):
         return [0]
