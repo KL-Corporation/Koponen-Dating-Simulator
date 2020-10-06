@@ -2457,7 +2457,6 @@ def esc_menu_f():
     esc_surface = pygame.Surface(display_size)
     
     esc_menu_background_proc = esc_menu_background.copy()
-    esc_menu_background_proc.blit(black_tint, (0, 0))
     blurred = Image.frombytes("RGB", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGB")).filter(ImageFilter.GaussianBlur(radius=6))
     esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGB"), screen_size, "RGB")
 
