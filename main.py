@@ -1062,6 +1062,12 @@ inventory_items = []
 for element in data:
     inventory_items.append(int(element))
 
+with open ("Assets/Textures/build.json", "r") as f:
+    data = f.read()
+
+buildData = json.loads(data)
+
+
 class Inventory:
     emptySlot = "none"
 
