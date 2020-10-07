@@ -54,7 +54,7 @@ monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
-game_icon = pygame.image.load("Assets/Textures/Game_Icon.png")
+game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 window_size = (int(KDS.ConfigManager.GetSetting("Settings", "WindowSizeX", str(
@@ -494,7 +494,7 @@ ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": ipuhelin_texture, "coffeemug": coffeemug}
 
-text_icon = pygame.image.load("Assets/Textures/Text_Icon.png").convert()
+text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
 text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_clip.wav")
