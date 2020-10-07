@@ -97,12 +97,11 @@ def Profiler(enabled):
         profiler_running = False
         profile.disable()
         log_stream = open(logFileName, "a+")
-        log_stream.write("\n{}".format("=" * 80))
-        log_stream.write("\nEXPORTED PROFILER DATA\n\n")
+        log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
         ps = pstats.Stats(profile, stream=log_stream)
         ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
         ps.print_stats()
-        log_stream.write("\n{}\n\n".format("=" * 80))
+        log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
         log_stream.close()
         
 def quit():
