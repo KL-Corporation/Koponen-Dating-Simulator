@@ -292,7 +292,6 @@ class HostileEnemy:
                 if dResult:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
-                        print(sl2)
                         enemyProjectiles = self.attack((sl2*-1)*3, tiles, targetRect)
                     self.attakF = False
                     self.attackRunning = False
@@ -347,15 +346,13 @@ class Imp(HostileEnemy):
         dist = max(0, dist)
         dist = 1200-dist
         dist /= 1200
-        print(dist)
         impAtack.set_volume(dist)
         impAtack.play()
-        print(slope)
         if not self.direction:
             d = 1.43
         else:
             d = 1
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=slope*-1*KDS.Convert.ToMultiplier(self.direction)*d)]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*6*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
         return [0]
@@ -391,10 +388,10 @@ class SergeantZombie(HostileEnemy):
         dist = max(0, dist)
         dist = 1200 - dist
         dist /= 1200
-        print(dist)
         shotgunShot.set_volume(dist)
         shotgunShot.play()
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=slope*4.5+(3-x)/3) for x in range(5)]
+        print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
         items = []
