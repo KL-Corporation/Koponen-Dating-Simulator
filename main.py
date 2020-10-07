@@ -1400,7 +1400,12 @@ class DecorativeHead(Tile):
             pray_sound.stop()
             self.praying = False
         if self.prayed:
-            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius / 2, self.rect.centery - decor_head_light_sphere_radius/2), orange_light_sphere1))
+            if dark:
+                Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius / 2, self.rect.centery - decor_head_light_sphere_radius/2), orange_light_sphere1))
+            else:
+                day_light = orange_light_sphere1.copy()
+                day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
+                screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
         return self.texture
 
 specialTilesD = {
