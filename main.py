@@ -3351,6 +3351,7 @@ while main_running:
         if knifeInUse:
             koponen_alive = False
         if KDS.Keys.GetPressed(KDS.Keys.functionKey):
+            KDS.Keys.SetPressed(KDS.Keys.functionKey, False)
             koponen_talk()
     else:
         koponen_movement[0] = koponen_movingx
