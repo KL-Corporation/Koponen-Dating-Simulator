@@ -1382,9 +1382,11 @@ class DecorativeHead(Tile):
                 if KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     if not self.praying and not self.prayed:
                         Audio.playSound(pray_sound)
+                        Audio.MusicMixer.pause()
                         self.praying = True
                 else:
                     pray_sound.stop()
+                    Audio.MusicMixer.unpause()
                     self.praying = False
                 if KDS.Keys.GetHeld(KDS.Keys.functionKey):
                     self.prayed = True
@@ -1393,10 +1395,12 @@ class DecorativeHead(Tile):
             else:
                 if not KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     pray_sound.stop()
+                    Audio.MusicMixer.unpause()
                     self.praying = False
                 player_health = min(player_health + 0.01, 100)
         else:
             pray_sound.stop()
+            Audio.MusicMixer.unpause()
             self.praying = False
         if self.prayed:
             Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius / 2, self.rect.centery - decor_head_light_sphere_radius/2), orange_light_sphere1))
@@ -2598,10 +2602,10 @@ def settings_menu():
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
         "Return", True, KDS.Colors.GetPrimary.White))
     music_volume_slider = KDS.UI.New.Slider(
-        "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1)
+        "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_dir="Settings")
     effect_volume_slider = KDS.UI.New.Slider(
-        "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1)
-    clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50))
+        "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_dir="Settings")
+    clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50), custom_dir="Settings")
     reset_window_button = KDS.UI.New.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.GetPrimary.White))
     reset_settings_button = KDS.UI.New.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.GetPrimary.White))
     reset_data_button = KDS.UI.New.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.GetPrimary.White))
@@ -2644,8 +2648,8 @@ def settings_menu():
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
         display.blit(clear_lag_text, (50, 240))
-        MusicVolume = music_volume_slider.update(display, mouse_pos)
-        Audio.MusicMixer.set_volume(MusicVolume)
+        Audio.MusicVolume = music_volume_slider.update(display, mouse_pos)
+        Audio.MusicMixer.set_volume(Audio.MusicVolume)
         Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
 
         return_button.update(display, mouse_pos, c)
