@@ -23,7 +23,7 @@
         "021":"landmine.png",
         "022":"lamp0.png",
         "023":"door_closed.png",
-        "024":"red_door_closed.pn",
+        "024":"red_door_closed.png",
         "025":"blue_door_closed.png",
         "026":"green_door_closed.png",
         "027":"wood.png",
@@ -84,12 +84,14 @@
         "022":"55s55_without_missile.png",
         "023":"55s55_missile.png"
     },
+
     "item_doubles":[
         12,
         15,
         16,
         21
     ],
+    
     "inventory_items":[
         3,
         4,

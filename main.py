@@ -641,13 +641,6 @@ enemies = numpy.array([])
 decoration = numpy.array([])
 specialTiles = numpy.array([])
 
-inventoryDobulesSerialNumbers = []
-with open("Assets/Textures/item_doubles.txt", "r") as file:
-    data = file.read().split("\n")
-    for d in data:
-        inventoryDobulesSerialNumbers.append(int(d))
-    file.close()
-
 player_score = 0
 
 true_scroll = [0, 0]
@@ -1033,40 +1026,27 @@ class WorldData():
 #endregion
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
-with open("Assets/Textures/tile_textures.txt", "r") as f:
-    data = f.read().split("\n")
-    f.close()
-t_textures = {}
-for element in data:
-    num = int(element.split(",")[0])
-    res = element.split(",")[1]
-    t_textures[num] = pygame.image.load(
-        "Assets/Textures/Map/" + res).convert()
-    t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
-
-with open("Assets/Textures/item_textures.txt", "r") as f:
-    data = f.read().split("\n")
-    f.close()
-i_textures = {}
-for element in data:
-    num = int(element.split(",")[0])
-    res = element.split(",")[1]
-    i_textures[num] = pygame.image.load(
-        "Assets/Textures/Items/" + res).convert()
-    i_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
-
-with open("Assets/Textures/inventory_items.txt", "r") as f:
-    data = f.read().split("\n")
-    f.close()
-inventory_items = []
-for element in data:
-    inventory_items.append(int(element))
 
 with open ("Assets/Textures/build.json", "r") as f:
     data = f.read()
 
 buildData = json.loads(data)
 
+t_textures = {}
+for t in buildData["tile_textures"]:
+    t_textures[int(t)] = pygame.image.load("Assets/Textures/Map/" + buildData["tile_textures"][t]).convert()
+    t_textures[int(t)].set_colorkey(KDS.Colors.GetPrimary.White)
+
+i_textures = {}
+for i in buildData["item_textures"]:
+    i_textures[int(i)] = pygame.image.load("Assets/Textures/Items/" + buildData["item_textures"][i]).convert()
+    i_textures[int(i)].set_colorkey(KDS.Colors.GetPrimary.White)
+
+inventory_items = buildData["inventory_items"]
+
+specialTilesSerialNumbers = buildData["special_tiles"]
+
+inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
 class Inventory:
     emptySlot = "none"
@@ -1152,9 +1132,6 @@ class Inventory:
 
 player_inventory = Inventory(5)
 
-with open("Assets/Textures/special_tiles.txt", 'r') as f:
-    specialTilesSerialNumbers = [int(number) for number in f.read().split("\n")]
-    f.close()
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
@@ -2268,9 +2245,9 @@ def koponen_talk():
     koponenTalking = True
     pygame.mouse.set_visible(True)
 
-    KDS.Keys.SetProgress(KDS.Keys.moveLeft, False)
-    KDS.Keys.SetProgress(KDS.Keys.moveRight, False)
-    KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
+    #KDS.Keys.SetProgress(KDS.Keys.moveLeft, False)
+    #KDS.Keys.SetProgress(KDS.Keys.moveRight, False)
+    #KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
 
     c = False
 
