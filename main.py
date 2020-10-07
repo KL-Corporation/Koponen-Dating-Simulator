@@ -1382,11 +1382,9 @@ class DecorativeHead(Tile):
                 if KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     if not self.praying and not self.prayed:
                         Audio.playSound(pray_sound)
-                        Audio.MusicMixer.pause()
                         self.praying = True
                 else:
                     pray_sound.stop()
-                    Audio.MusicMixer.unpause()
                     self.praying = False
                 if KDS.Keys.GetHeld(KDS.Keys.functionKey):
                     self.prayed = True
@@ -1395,12 +1393,10 @@ class DecorativeHead(Tile):
             else:
                 if not KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     pray_sound.stop()
-                    Audio.MusicMixer.unpause()
                     self.praying = False
                 player_health = min(player_health + 0.01, 100)
         else:
             pray_sound.stop()
-            Audio.MusicMixer.unpause()
             self.praying = False
         if self.prayed:
             Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius / 2, self.rect.centery - decor_head_light_sphere_radius/2), orange_light_sphere1))
