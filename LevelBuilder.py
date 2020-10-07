@@ -74,7 +74,6 @@ keys_pressed = {
     "K_o": False,
     "K_SHIFT": False,
     "K_CTRL": False,
-    "M_MIDDLE": False
 }
 ##################################################
 
@@ -118,7 +117,7 @@ class tileInfo:
                     except:
                         pass
                 if unit.rect.collidepoint(mpos[0]+scroll[0]*scalesize, mpos[1]+scroll[1]*scalesize):
-                    if pygame.mouse.get_pressed()[1]:
+                    if pygame.mouse.get_pressed()[1] and not keys_pressed["K_SHIFT"]:
                         brushtemp = unit.getSerialNumber(0)
                     pygame.draw.rect(Surface,(20,20,20),(blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
@@ -169,17 +168,23 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
     r = True
     rstring = ''
     while r:
-        inputValid = True
+        inputError = False
+        inputWarning = False
         if gridSizeExtras and len(rstring) > 0:
             gridSizeStringParced = rstring.strip().replace(" ", "").split(",")
-            valuesInt = True
-            try:
-                int(gridSizeStringParced[0])
-                int(gridSizeStringParced[1])
-            except:
-                valuesInt = False
-            if len(gridSizeStringParced) != 2 or not valuesInt:
-                inputValid = False
+            if len(gridSizeStringParced) != 2:
+                inputError = True
+            if not inputError:
+                try:
+                    int(gridSizeStringParced[0])
+                    int(gridSizeStringParced[1])
+                except:
+                    inputError = True
+                if not inputError:
+                    if len(gridSizeStringParced[0]) >= len(str(sys.maxsize)) or len(gridSizeStringParced[1]) >= len(str(sys.maxsize)):
+                        inputError = True
+                    elif int(gridSizeStringParced[0]) > 1000 or int(gridSizeStringParced[1]) > 1000:
+                        inputWarning = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 r = False
@@ -191,7 +196,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
                         r = False
                         return None
                 elif event.key == K_RETURN:
-                    if inputValid:
+                    if not inputError:
                         return rstring.strip()
                     elif allowEscape:
                         return None
@@ -203,12 +208,22 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
         main_display.blit(KDS.Convert.AspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
         consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
         main_display.blit(consoleText, (10, 10))
-        if not inputValid:
+        if inputError:
+            warningText = "[invalid value]"
+            warningColor = KDS.Colors.GetPrimary.Red
+        elif inputWarning:
+            warningText = "[performance warning]"
+            warningColor = KDS.Colors.GetPrimary.Yellow
+        else:
+            #Pylance ei tykkää, jos tän poistaa
+            warningText = ""
+            warningColor = (0, 0, 0)
+        if inputWarning or inputError:
             notValidSurf = pygame.Surface(harbinger_font.size(rstring))
-            notValidSurf.fill(KDS.Colors.GetPrimary.Red)
+            notValidSurf.fill(warningColor)
             notValidSurf.set_alpha(128)
             main_display.blit(notValidSurf, (harbinger_font.size(daInput)[0] + 10, 10))
-            main_display.blit(harbinger_font_small.render("[invalid value]", True, KDS.Colors.GetPrimary.White), (consoleText.get_width() + 20, 15))
+            main_display.blit(harbinger_font_small.render(warningText, True, KDS.Colors.GetPrimary.White), (consoleText.get_width() + 20, 15))
         pygame.display.update()
     pygame.key.set_repeat(0, 0)
 
@@ -358,14 +373,11 @@ def main():
                     else:
                         scroll[0] += 1
                 elif event.button == 2:
-                    keys_pressed["M_MIDDLE"] = True
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     updateTiles = True
-                elif event.button == 2:
-                    keys_pressed["M_MIDDLE"] = False
             elif event.type == KEYDOWN:
                 if event.key == K_LCTRL:
                     keys_pressed["K_CTRL"] = True
@@ -398,7 +410,7 @@ def main():
                 elif event.key == K_LSHIFT:
                     keys_pressed["K_SHIFT"] = False
         
-        if keys_pressed["M_MIDDLE"]:
+        if pygame.mouse.get_pressed()[1] and keys_pressed["K_SHIFT"]:
             mid_scroll_x = int(round((mouse_pos_beforeMove[0] - mouse_pos[0]) / scalesize))
             mid_scroll_y = int(round((mouse_pos_beforeMove[1] - mouse_pos[1]) / scalesize))
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
