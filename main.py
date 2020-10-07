@@ -1392,9 +1392,20 @@ class DecorativeHead(Tile):
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
         return self.texture
 
+class Tree(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0], position[1]-50, 47, 84)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
+    17: Tree,
     18: Ladder,
     19: Jukebox,
     21: Landmine,
