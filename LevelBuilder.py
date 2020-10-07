@@ -1,6 +1,6 @@
 import os
 import sys
-from numpy.core.fromnumeric import size
+from numpy.core.fromnumeric import resize, size
 import pygame
 from pygame.locals import *
 import threading
@@ -135,9 +135,32 @@ def loadGrid(size):
     for y in range(size[1]):
         row = []
         for x in range(size[0]):
-            row.append(tileInfo((x * scalesize,y * scalesize)))
+            row.append(tileInfo((x * scalesize, y * scalesize)))
         rlist.append(row)
     return rlist
+
+def resizeGrid(size, grid: list):
+    grid_size = (len(grid[0]), len(grid))
+    size_difference = (size[0] - grid_size[0], size[1] - grid_size[1])
+    if size_difference[1] > 0:
+        for y in range(grid_size[1], size[1]):
+            row = []
+            for x in range(grid_size[0]):
+                row.append(tileInfo((x * scalesize, y * scalesize)))
+            grid.append(row)
+    else:
+        for y in range(abs(size_difference[1])):
+            grid.pop()
+    if size_difference[0] > 0:
+        for y in range(len(grid)):
+            row = grid[y]
+            while len(row) < size[0]:
+                row.append(tileInfo(((len(row)) * scalesize, y * scalesize)))
+    else:
+        for row in grid:
+            while len(row) > size[0]:
+                row.pop()
+    return grid
 
 def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False):
     pygame.key.set_repeat(500, 31)
@@ -183,7 +206,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
             notValidSurf.fill(KDS.Colors.GetPrimary.Red)
             notValidSurf.set_alpha(128)
             main_display.blit(notValidSurf, (harbinger_font.size(daInput)[0] + 10, 10))
-            main_display.blit(harbinger_font_small.render("[value not valid]", True, KDS.Colors.GetPrimary.White), (consoleText.get_width() + 20, 15))
+            main_display.blit(harbinger_font_small.render("[invalid value]", True, KDS.Colors.GetPrimary.White), (consoleText.get_width() + 20, 15))
         pygame.display.update()
     pygame.key.set_repeat(0, 0)
 
@@ -195,6 +218,13 @@ def saveMap(grd, name: str):
         outputString += "\n"
     with open(name, 'w') as f:
         f.write(outputString)
+        
+def saveMapName():
+    global currentSaveName, grid
+    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("KDS Data file", "*.dat"), ("All files", "*.*")))
+    if len(savePath) > 0:
+        saveMap(grid, savePath)
+        currentSaveName = savePath
 
 def openMap(): #Returns a 2d array
     global currentSaveName
@@ -247,7 +277,6 @@ def consoleHandler(inputString: str):
             for _ in range(int(commandlist[2])):
                 for row in grid:
                     row = row[:-1]
-
 def materialMenu(previousMaterial):
     r = True
     rscroll = 0
@@ -300,12 +329,13 @@ def materialMenu(previousMaterial):
 
 def main():
     global currentSaveName, brush, grid
-    g = inputConsole("Grid size: (int,int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
+    g = inputConsole("Grid size: (int, int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
     gridSize = (int(g[0]), int(g[1]))
     grid = loadGrid(gridSize)
 
     inputConsole_output = None
     updateTiles = True
+
 
     while True:
         for event in pygame.event.get(): #Event loop
@@ -331,6 +361,10 @@ def main():
                     keys_pressed["K_CTRL"] = True
                 elif event.key == K_t:
                     inputConsole_output = inputConsole()
+                elif event.key == K_r:
+                    resize_output = inputConsole("New grid size: (int, int) >>>  ", True, True).replace(" ", "").split(",")
+                    if resize_output != None:
+                        grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_s:
                     keys_pressed["K_s"] = True
                 elif event.key == K_e:
@@ -352,18 +386,14 @@ def main():
                     keys_pressed["K_o"] = False 
                 elif event.key == K_LSHIFT:
                     keys_pressed["K_SHIFT"] = False
-
+        
         if keys_pressed["K_s"] and keys_pressed["K_CTRL"]:
             if not currentSaveName:
-                savePath = filedialog.asksaveasfilename()
-                saveMap(grid, savePath)
-                currentSaveName = savePath
+                saveMapName()
             else:
                 saveMap(grid, currentSaveName)
         if keys_pressed["K_s"] and keys_pressed["K_CTRL"] and keys_pressed["K_SHIFT"]:
-                savePath = filedialog.asksaveasfilename()
-                saveMap(grid, savePath)
-                currentSaveName = savePath
+            saveMapName()
 
         if keys_pressed["K_o"] and keys_pressed["K_CTRL"]:
             tempGr = openMap()
@@ -372,7 +402,7 @@ def main():
             else:
                 print("saveMap returned None")
 
-        if inputConsole_output:
+        if inputConsole_output != None:
             consoleHandler(inputConsole_output)
             inputConsole_output = None
 
