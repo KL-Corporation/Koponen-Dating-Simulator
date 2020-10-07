@@ -66,6 +66,7 @@ zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav"
 zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav")
 shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
 impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 imp_sight_sound.set_volume(0.4)
 imp_death_sound.set_volume(0.5)
 zombie_sight_sound.set_volume(0.4)
@@ -398,6 +399,52 @@ class SergeantZombie(HostileEnemy):
         if random.randint(0, 2) == 0:
             items.append(17)
         return items
+
+class DrugDealer(HostileEnemy):
+    def __init__(self, pos):
+        health = 100
+        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 11, KDS.Colors.GetPrimary.White, -1)
+        i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.GetPrimary.White, -1)
+        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.GetPrimary.White, 1)
+        d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
+        rect = pygame.Rect(pos[0], pos[1]-36, 35, 70)
+
+        print(len(a_anim.images), a_anim.ticks)
+        #region Handling the i_anim:
+        af = a_anim.images.copy()
+        a_anim.images.clear()
+        for _ in range(30):
+            a_anim.images.append(af[0])
+        for __ in range(4):
+            a_anim.images.append(af[16])
+        for __ in range(4):
+            a_anim.images.append(af[32])
+        for __ in range(4):
+            a_anim.images.append(af[63])
+
+        a_anim.ticks = len(a_anim.images)-1
+        print(len(a_anim.images), a_anim.ticks)
+        
+
+        #endregion
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8])
+        self.corpse = self.d_anim.images[-1]
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        pistol_shot.set_volume(dist)
+        pistol_shot.play()
+        print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+
+    def onDeath(self):
+        return []
+
 class Projectile:
     pass
 
