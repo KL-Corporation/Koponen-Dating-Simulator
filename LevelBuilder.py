@@ -72,7 +72,8 @@ keys_pressed = {
     "K_s": False,
     "K_o": False,
     "K_SHIFT": False,
-    "K_CTRL": False
+    "K_CTRL": False,
+    "M_MIDDLE": False
 }
 ##################################################
 
@@ -336,8 +337,10 @@ def main():
     inputConsole_output = None
     updateTiles = True
 
-
+    mouse_pos_beforeMove = pygame.mouse.get_pos()
+    scroll_beforeMove = scroll
     while True:
+        mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -353,17 +356,24 @@ def main():
                         scroll[1] += 1
                     else:
                         scroll[0] += 1
+                elif event.button == 2:
+                    keys_pressed["M_MIDDLE"] = True
+                    mouse_pos_beforeMove = mouse_pos
+                    scroll_beforeMove = scroll.copy()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     updateTiles = True
+                elif event.button == 2:
+                    keys_pressed["M_MIDDLE"] = False
             elif event.type == KEYDOWN:
                 if event.key == K_LCTRL:
                     keys_pressed["K_CTRL"] = True
                 elif event.key == K_t:
                     inputConsole_output = inputConsole()
                 elif event.key == K_r:
-                    resize_output = inputConsole("New grid size: (int, int) >>>  ", True, True).replace(" ", "").split(",")
+                    resize_output = inputConsole("New grid size: (int, int) >>>  ", True, True)
                     if resize_output != None:
+                        resize_output = resize_output.replace(" ", "").split(",")
                         grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_s:
                     keys_pressed["K_s"] = True
@@ -386,6 +396,13 @@ def main():
                     keys_pressed["K_o"] = False 
                 elif event.key == K_LSHIFT:
                     keys_pressed["K_SHIFT"] = False
+        
+        if keys_pressed["M_MIDDLE"]:
+            mid_scroll_x = int(round((mouse_pos_beforeMove[0] - mouse_pos[0]) / scalesize))
+            mid_scroll_y = int(round((mouse_pos_beforeMove[1] - mouse_pos[1]) / scalesize))
+            if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
+                scroll[0] = scroll_beforeMove[0] + mid_scroll_x
+                scroll[1] = scroll_beforeMove[1] + mid_scroll_y
         
         if keys_pressed["K_s"] and keys_pressed["K_CTRL"]:
             if not currentSaveName:
