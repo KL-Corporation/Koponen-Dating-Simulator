@@ -2246,10 +2246,6 @@ def koponen_talk():
     koponenTalking = True
     pygame.mouse.set_visible(True)
 
-    #KDS.Keys.SetProgress(KDS.Keys.moveLeft, False)
-    #KDS.Keys.SetProgress(KDS.Keys.moveRight, False)
-    #KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
-
     c = False
 
     for i in range(len(koponen_talking_foreground_indexes), 0):
@@ -3352,7 +3348,7 @@ while main_running:
         if knifeInUse:
             koponen_alive = False
         if KDS.Keys.GetPressed(KDS.Keys.functionKey):
-            KDS.Keys.SetPressed(KDS.Keys.functionKey, False)
+            KDS.Keys.Reset()
             koponen_talk()
     else:
         koponen_movement[0] = koponen_movingx

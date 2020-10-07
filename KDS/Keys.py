@@ -87,3 +87,6 @@ def Update():
                 if keyData[3] == sys.maxsize:
                     keyData[3] -= 1
         
+def Reset():
+    for keyName in KeyStates:
+        SetPressed(keyName, False)
