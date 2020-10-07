@@ -67,6 +67,13 @@ def getAngle(p1: tuple, p2: tuple):
         KDS.Logging.AutoError(e, currentframe())
         return 0
 
+def getAngle2(p1, p2):
+    dx = p1[0] - p2[0]
+    dy = p1[1] - p2[1]
+
+
+    return math.degrees(math.atan2(dy,dx))
+
 def Lerp(a: float, b: float, t: float):
     """Linearly interpolates between a and b by t.
 
