@@ -67,6 +67,8 @@ zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav"
 shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
 impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
+drug_dealer_sight = pygame.mixer.Sound("Assets/Audio/entities/dshight.ogg")
+drug_dealer_death_sound = pygame.mixer.Sound("Assets/Audio/entities/ddth.ogg")
 imp_sight_sound.set_volume(0.4)
 imp_death_sound.set_volume(0.5)
 zombie_sight_sound.set_volume(0.4)
@@ -243,7 +245,7 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
-    def __init__(self, rect : pygame.Rect, w, a, d, i, sight_sound, death_sound, health, mv, sleep = True, direction = False):
+    def __init__(self, rect : pygame.Rect, w, a, d, i, sight_sound, death_sound, health, mv, attackPropability, sleep = True, direction = False):
         global initCompleted
         if not initCompleted:
             raise Exception("KDS.Error: AI textures are not initialized")
@@ -257,6 +259,7 @@ class HostileEnemy:
         self.d_anim = d
         self.i_anim = i
 
+        self.a_propability = attackPropability
         self.sight_sound = sight_sound
         self.death_sound = death_sound
 
@@ -285,7 +288,7 @@ class HostileEnemy:
         if self.health > 0 and not self.sleep:
             if s:
                 if not self.attackRunning:
-                    if random.randint(1, 80) == 25:
+                    if not random.randint(0, self.a_propability):
                         self.attackRunning = True
             if self.attackRunning:
                 animation, dResult = self.a_anim.update()
@@ -338,23 +341,25 @@ class Imp(HostileEnemy):
         a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.GetPrimary.White, 1)
         d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8])
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
         self.corpse = self.d_anim.images[-1]
     
     def attack(self, slope, env_obstacles, target, *args):
-        dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
-        dist = 1200-dist
-        dist /= 1200
-        impAtack.set_volume(dist)
-        impAtack.play()
-        if not self.direction:
-            d = 1.43
+        if random.randint(0, 80) == 10:
+            dist = KDS.Math.getDistance(self.rect.center, target.center)
+            dist = min(1200, dist)
+            dist = max(0, dist)
+            dist = 1200-dist
+            dist /= 1200
+            impAtack.set_volume(dist)
+            impAtack.play()
+            if not self.direction:
+                d = 1.43
+            else:
+                d = 1
+            return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
         else:
-            d = 1
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
-
+            return None
     def onDeath(self):
         return [0]
 
@@ -380,19 +385,22 @@ class SergeantZombie(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8])
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=40)
         self.corpse = self.d_anim.images[-1]
 
     def attack(self, slope, env_obstacles, target, *args):
-        dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
-        dist = 1200 - dist
-        dist /= 1200
-        shotgunShot.set_volume(dist)
-        shotgunShot.play()
-        print(KDS.Math.getSlope(self.rect.center, target.center))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+        if random.randint(0, 80) == 10:
+            dist = KDS.Math.getDistance(self.rect.center, target.center)
+            dist = min(1200, dist)
+            dist = max(0, dist)
+            dist = 1200 - dist
+            dist /= 1200
+            shotgunShot.set_volume(dist)
+            shotgunShot.play()
+            print(KDS.Math.getSlope(self.rect.center, target.center))
+            return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+        else:
+            return None
 
     def onDeath(self):
         items = []
@@ -403,10 +411,10 @@ class SergeantZombie(HostileEnemy):
 class DrugDealer(HostileEnemy):
     def __init__(self, pos):
         health = 100
-        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 11, KDS.Colors.GetPrimary.White, -1)
+        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.GetPrimary.White, -1)
         i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.GetPrimary.White, -1)
         a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.GetPrimary.White, 1)
-        d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
+        d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 35, 70)
 
         print(len(a_anim.images), a_anim.ticks)
@@ -428,7 +436,7 @@ class DrugDealer(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8])
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
         self.corpse = self.d_anim.images[-1]
 
     def attack(self, slope, env_obstacles, target, *args):
@@ -440,9 +448,14 @@ class DrugDealer(HostileEnemy):
         pistol_shot.set_volume(dist)
         pistol_shot.play()
         print(KDS.Math.getSlope(self.rect.center, target.center))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
+        items = []
+        if random.randint(0, 15) == 10:
+            items.append(20)
+        if random.randint(0, 4) == 4:
+            items.append(11)
         return []
 
 class Projectile:
