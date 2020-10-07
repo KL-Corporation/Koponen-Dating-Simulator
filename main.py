@@ -28,7 +28,8 @@ import json
 import zipfile
 import math
 from pygame.locals import *
-from PIL import Image, ImageFilter
+from PIL import Image as PiL_Image
+from PIL import ImageFilter as PIL_ImageFilter
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -2489,7 +2490,7 @@ def esc_menu_f():
     esc_surface = pygame.Surface(display_size)
     
     esc_menu_background_proc = esc_menu_background.copy()
-    blurred = Image.frombytes("RGB", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGB")).filter(ImageFilter.GaussianBlur(radius=6))
+    blurred = PiL_Image.frombytes("RGB", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGB")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
     esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGB"), screen_size, "RGB")
 
     def resume():
