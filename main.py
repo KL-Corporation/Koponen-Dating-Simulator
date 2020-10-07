@@ -980,7 +980,8 @@ class WorldData():
 
         enemySerialNumbers = {
             1: KDS.AI.Imp,
-            2: KDS.AI.SergeantZombie
+            2: KDS.AI.SergeantZombie,
+            3: KDS.AI.DrugDealer
         }
 
         y = 0
