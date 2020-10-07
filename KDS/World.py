@@ -81,7 +81,7 @@ class Bullet:
                 self.rect.x += self.speed
                 self.movedDistance += self.speed
             
-            self.slopeBuffer += self.slope
+            self.slopeBuffer += self.slope*self.speed
             self.rect.y = self.slopeBuffer
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
