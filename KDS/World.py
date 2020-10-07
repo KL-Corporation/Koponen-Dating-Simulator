@@ -23,7 +23,7 @@ def collision_test(rect: pygame.Rect, Tile_list):
 
     for row in Tile_list[y:end_y]:
         for tile in row[x:end_x]:
-            if rect.colliderect(tile.rect) and not tile.air:
+            if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
                 hit_list.append(tile.rect)
     return hit_list
 
