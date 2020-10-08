@@ -435,6 +435,7 @@ ipuhelin_texture = pygame.image.load(
 rk62_bullet_t = pygame.image.load("Assets/Textures/Animations/rk62_bullet.png").convert()
 ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
 ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
+awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
@@ -490,6 +491,7 @@ imp_fireball_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+awm_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": ipuhelin_texture, "coffeemug": coffeemug}
@@ -617,6 +619,7 @@ pistol_bullets = 8
 rk_62_ammo = 30
 shotgun_shells = 8
 ppsh41_ammo = 72
+awm_ammo = 5
 
 Projectiles = []
 Explosions = []
@@ -1493,10 +1496,9 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
     @staticmethod
     def rk62_p():
-        global player_score, rk_62_ammo
+        global player_score
         Audio.playSound(weapon_pickup)
         player_score += 20
-        rk_62_ammo += 30
 
         return False
 
@@ -1594,6 +1596,21 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         Audio.playSound(weapon_pickup)
 
         return False
+
+    @staticmethod
+    def awm_p():
+        global player_score
+        player_score += 40
+        Audio.playSound(weapon_pickup)
+
+        return False
+
+    @staticmethod
+    def awm_mag_p():
+        global player_score, awm_ammo 
+        player_score += 20
+        awm_ammo += 5
+        Audio.playSound(item_pickup)
 
     @staticmethod
     def empyOperation():
@@ -1728,6 +1745,24 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.World.ppsh41_C.counter += 1
             return ppsh41_texture
 
+    @staticmethod 
+    def awm_u(*args):
+        global tiles, awm_ammo
+        args[1].blit(harbinger_font.render("Ammo: " + str(awm_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        if args[0][0] and KDS.World.awm_C.counter > 100 and awm_ammo > 0:
+            KDS.World.awm_C.counter = 0
+            ppsh41_shot.stop()
+            Audio.playSound(ppsh41_shot)
+            awm_ammo -= 1
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, random.randint(300, 590), slope=0))
+            return awm_f_texture
+        else:
+            if not args[0][0]:
+                ppsh41_shot.stop() 
+            KDS.World.awm_C.counter += 1
+            return i_textures[24]      
+
     @staticmethod
     def ss_bonuscard_u(*args):
         
@@ -1761,7 +1796,9 @@ Pfunctions = {
     18: pickupFunctions.soulsphere_p,
     19: pickupFunctions.ss_bonuscard_p,
     20: pickupFunctions.turboneedle_p,
-    21: pickupFunctions.ppsh41_p
+    21: pickupFunctions.ppsh41_p,
+    24: pickupFunctions.awm_p,
+    25: pickupFunctions.awm_mag_p
 }
 
 Ufunctions = {
@@ -1776,7 +1813,8 @@ Ufunctions = {
     15: itemFunctions.rk62_u,
     16: itemFunctions.shotgun_u,
     19: itemFunctions.ss_bonuscard_u,
-    21: itemFunctions.ppsh41_u
+    21: itemFunctions.ppsh41_u,
+    24: itemFunctions.awm_u
 
 }
 
