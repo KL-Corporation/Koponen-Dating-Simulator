@@ -41,7 +41,12 @@
         "040":"roadconcrete.png",
         "041":"spruce_leaves.png",
         "042":"woodlog0.png",
-        "043":"decorative_head.png"
+        "043":"decorative_head.png",
+        "044":"grass.png",
+        "045":"greenplant.png",
+        "046":"tall_greenplant.png",
+        "047":"decor_rock.png",
+        "048":"decor_rock_mossy.png"
     },
 
     "special_tiles": [
@@ -60,7 +65,12 @@
     ],
 
     "checkCollisionFalse": [
-        10
+        10,
+        44,
+        45,
+        46,
+        47,
+        48
     ],
 
     "item_textures":{
