@@ -1613,6 +1613,8 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         awm_ammo += 5
         Audio.playSound(item_pickup)
 
+        return True
+
     @staticmethod
     def empyOperation():
         return True
