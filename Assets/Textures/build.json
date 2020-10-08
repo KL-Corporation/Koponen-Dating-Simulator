@@ -59,6 +59,10 @@
         43
     ],
 
+    "checkCollisionFalse": [
+        10
+    ],
+
     "item_textures":{
         "000":"empty.png",
         "001":"blue_key.png",

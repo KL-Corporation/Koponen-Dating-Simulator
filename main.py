@@ -1049,6 +1049,8 @@ specialTilesSerialNumbers = buildData["special_tiles"]
 
 inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
+sref = buildData["checkCollisionFalse"]
+
 class Inventory:
     emptySlot = "none"
 
@@ -1147,7 +1149,7 @@ class Tile:
             self.air = True
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = True
-        if self.serialNumber == 10:
+        if self.serialNumber in sref:
             self.checkCollision = False
 
     @staticmethod
@@ -1667,7 +1669,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             else:
                 temp = -80
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-temp/1.4, player_rect.centery-30), blue_light_sphere1))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
