@@ -54,7 +54,7 @@ monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
-game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
+game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon2.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 window_size = (int(KDS.ConfigManager.GetSetting("Settings", "WindowSizeX", str(

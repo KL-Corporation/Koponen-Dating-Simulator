@@ -19,7 +19,7 @@ scalesize = 55
 
 main_display = pygame.display.set_mode(display_size)
 pygame.display.set_caption("KDS Level Builder")
-pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
+pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon2.png"))
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
