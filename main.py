@@ -528,6 +528,7 @@ fart = pygame.mixer.Sound("Assets/Audio/Effects/fart_attack.wav")
 soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsgetpow.wav")
 pray_sound = pygame.mixer.Sound("Assets/Audio/Effects/prayer.ogg")
 decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/DecorativeHead_wakeup.ogg")
+awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -1749,17 +1750,15 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     def awm_u(*args):
         global tiles, awm_ammo
         args[1].blit(harbinger_font.render("Ammo: " + str(awm_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
-        if args[0][0] and KDS.World.awm_C.counter > 100 and awm_ammo > 0:
+        if args[0][0] and KDS.World.awm_C.counter > 130 and awm_ammo > 0:
             KDS.World.awm_C.counter = 0
             ppsh41_shot.stop()
-            Audio.playSound(ppsh41_shot)
+            Audio.playSound(awm_shot)
             awm_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
         else:
-            if not args[0][0]:
-                ppsh41_shot.stop() 
             KDS.World.awm_C.counter += 1
             return i_textures[24]      
 

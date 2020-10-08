@@ -9,6 +9,7 @@ import KDS.Convert
 import numpy
 import tkinter 
 import re
+import json
 from tkinter import filedialog
 
 root = tkinter.Tk()
@@ -27,26 +28,22 @@ harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0
 
 consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 
-with open("Assets/Textures/tile_textures.txt", "r") as f:
-    data = f.read().split("\n")
-    f.close()
-t_textures = {}
-for element in data:
-    num = num = f"0{element.split(',')[0]}"
-    res = element.split(",")[1]
-    t_textures[num] = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Map/" + res).convert(), (scalesize, scalesize), horizontalOnly=True)
-    t_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
+with open("Assets/Textures/build.json") as f:
+    d = f.read()
+data = json.loads(d)
 
-with open("Assets/Textures/item_textures.txt", "r") as f:
-    data = f.read().split("\n")
-    f.close()
+t_textures = {}
+for element in data["tile_textures"]:
+    srl = f"0{element}"
+
+    t_textures[srl] = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Map/" + data["tile_textures"][element]).convert(), (scalesize, scalesize), horizontalOnly=True)
+    t_textures[srl].set_colorkey(KDS.Colors.GetPrimary.White)
+
 i_textures = {}
-for element in data:
-    num = f"1{element.split(',')[0]}"
-    res = element.split(",")[1]
-    i_textures[num] = pygame.image.load(
-        "Assets/Textures/Items/" + res).convert()
-    i_textures[num].set_colorkey(KDS.Colors.GetPrimary.White)
+for element in data["item_textures"]:
+    srl = f"1{element}"
+    i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + data["item_textures"][element]).convert()
+    i_textures[srl].set_colorkey(KDS.Colors.GetPrimary.White)
 
 e_textures = {
     "2001": pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert(),
