@@ -3222,23 +3222,22 @@ while main_running:
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:
-        score = score_font.render(
-            ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
-
         player_health = max(player_health, 0)
 
+        score = score_font.render(
+            ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
         health = score_font.render(
-            "HEALTH: " + str(int(player_health)), True, KDS.Colors.GetPrimary.White)
+            "HEALTH: " + str(round(player_health)), True, KDS.Colors.GetPrimary.White)
         stamina = score_font.render(
-            "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
+            "STAMINA: " + str(round(playerStamina)), True, KDS.Colors.GetPrimary.White)
+        happiness = score_font.render(
+            "KOPONEN HAPPINESS: " + str(koponen_happiness), True, KDS.Colors.GetPrimary.White)
 
-
-
+        screen.blit(score, (10, 45))
+        screen.blit(happiness, (10, 55))
         screen.blit(health, (10, 120))
         screen.blit(stamina, (10, 130))
-        screen.blit(score, (10, 55))
 
-        missions_background_width = KDS.Missions.GetMaxWidth()
         Mission_Render_Data = KDS.Missions.RenderMission(screen)
 
         for i in range(KDS.Missions.GetRenderCount()):
@@ -3496,18 +3495,6 @@ while main_running:
         screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) +
                                       "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
-#endregion
-#region UI Rendering
-    if renderUI:
-        screen.blit(health, (10, 120))
-        screen.blit(stamina, (10, 130))
-        screen.blit(score, (10, 55))
-
-        missions_background_width = KDS.Missions.GetMaxWidth()
-        Mission_Render_Data = KDS.Missions.RenderMission(screen)
-
-        for i in range(KDS.Missions.GetRenderCount()):
-            KDS.Missions.RenderTask(screen, i)
 #endregion
 #region Screen Rendering
 
