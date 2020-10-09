@@ -657,7 +657,6 @@ moveUp_released = True
 check_crouch = False
 player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
-koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
 koponen_movement = [1, 6]
 koponen_movingx = 0
 koponen_happiness = 40
@@ -2532,8 +2531,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-    for inventory_slot in player_inventory.storage:
-        inventory_slot = Inventory.emptySlot
+    for i in range(len(player_inventory.storage)):
+        player_inventory.storage[i] = Inventory.emptySlot
     
     global items, enemies, decoration, specialTiles
     items = numpy.array([])
@@ -3280,8 +3279,6 @@ while main_running:
         elif KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina <= 0:
             KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
 
-    koponen_recog_rec.center = koponen_rect.center
-
     if KDS.Keys.GetPressed(KDS.Keys.moveRight):
         if not KDS.Keys.GetPressed(KDS.Keys.moveDown):
             player_movement[0] += 4
@@ -3451,9 +3448,9 @@ while main_running:
         screen.blit(blue_key, (38, 20))
 #endregion
 #region Koponen Tip
-    if player_rect.colliderect(koponen_recog_rec):
+    if player_rect.colliderect(koponen_rect):
         screen.blit(
-            koponen_talk_tip, (koponen_recog_rec.topleft[0] - scroll[0], koponen_recog_rec.topleft[1] - scroll[1]-10))
+            koponen_talk_tip, (koponen_rect.centerx - scroll[0] - (koponen_talk_tip.get_width() / 2), koponen_rect.top - scroll[1] - 20))
         koponen_movement[0] = 0
         if knifeInUse:
             koponen_alive = False
