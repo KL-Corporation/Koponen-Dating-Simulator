@@ -35,12 +35,7 @@ from PIL import ImageFilter as PIL_ImageFilter
 class PersistentPaths:
     AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
     CachePath = os.path.join(AppDataPath, "cache")
-if not os.path.isdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc")):
-    os.mkdir(os.path.join(os.getenv('APPDATA'), "Koponen Development Inc"))
-if not os.path.isdir(PersistentPaths.AppDataPath):
-    os.mkdir(PersistentPaths.AppDataPath)
-if not os.path.isdir(PersistentPaths.CachePath):
-    os.mkdir(PersistentPaths.CachePath)
+os.makedirs(PersistentPaths.CachePath, exist_ok=True)
 KDS.System.hide(PersistentPaths.CachePath)
 
 pygame.mixer.init()
@@ -643,8 +638,6 @@ blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scal
 
 items = numpy.array([])
 enemies = numpy.array([])
-decoration = numpy.array([])
-specialTiles = numpy.array([])
 
 player_score = 0
 
@@ -931,7 +924,7 @@ class WorldData():
 
     @staticmethod
     def LoadMap():
-        global tiles, items, enemies, decoration, specialTiles, Projectiles
+        global items, enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
         if os.path.isdir(PersistentMapPath):
@@ -2552,15 +2545,16 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     for i in range(len(player_inventory.storage)):
         player_inventory.storage[i] = Inventory.emptySlot
     
-    global items, enemies, decoration, specialTiles
-    items = numpy.array([])
-    enemies = numpy.array([])
-    decoration = numpy.array([])
-    specialTiles = numpy.array([])
+    global items, enemies
+    if gamemode == KDS.Gamemode.Modes.Campaign:
+        items = numpy.array([])
+        enemies = numpy.array([])
     
     if int(current_map) < 2:
         player_inventory.storage[0] = "iPuhelin"
     Px, Py = WorldData.LoadMap()
+    if gamemode == KDS.Gamemode.Modes.Story:
+        pass
     pygame.mouse.set_visible(False)
     main_menu_running = False
     player_hand_item = "none"

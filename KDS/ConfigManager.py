@@ -1,4 +1,8 @@
 #region Importing
+import json
+import pickle
+import shutil
+import numpy
 import KDS.Logging
 import configparser
 import os
@@ -6,14 +10,13 @@ from inspect import currentframe, getframeinfo
 #endregion
 
 AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-saveDirPath = os.path.join(AppDataPath, "saves")
-saveCachePath = CachePath = os.path.join(AppDataPath, "cache", "save")
+CachePath = os.path.join(AppDataPath, "cache")
+SaveDirPath = os.path.join(AppDataPath, "saves")
+SaveCachePath = os.path.join(CachePath, "save")
 
 def init():
-    if not os.path.isdir(saveDirPath):
-        os.mkdir(saveDirPath)
-    if not os.path.isdir(saveCachePath):
-        os.mkdir(saveCachePath)
+    if not os.path.isdir(SaveDirPath):
+        os.makedirs(SaveDirPath, exist_ok=True)
 
 def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
     """
@@ -64,20 +67,52 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
         cfg_file.close()
         
 class Save:
-    @staticmethod
-    def init():
-        #decodes and loads a save file to cache
-        pass
+    WorldDirCache = os.path.join(SaveCachePath, "WorldData")
+    PlayerDirCache = os.path.join(SaveCachePath, "PlayerData")
+    PlayerFileCache = os.path.join(PlayerDirCache, "data.kdf")
+    """
+    Save File Structure:
+        ↳ save_0.kds (.zip)
+            ↳ WorldData
+                ↳ items.kbf (binary)
+                ↳ enemies.kbf (binary)
+                ↳ explosions.kbf (binary)
+                ↳ ballistic_objects.kbf (binary)
+            ↳ PlayerData
+                ↳ data.kdf (json)
+    """
+    class DataType:
+        World = "world"
+        Player = "player"
         
     @staticmethod
-    def SetSave(SaveIndex: int, SafeName: str, SaveItem: str or list):
-        pass
-
+    def init():
+        if os.path.isdir(SaveCachePath):
+            shutil.rmtree(SaveCachePath)
+        os.makedirs(SaveCachePath)
+        os.mkdir(Save.WorldDirCache)
+        os.mkdir(Save.PlayerDirCache)
+        #decodes and loads a save file to cache
+        
     @staticmethod
-    def GetSave(SaveIndex: int, SafeName: str, DefaultValue: str or list):
+    def Set(SaveIndex: int, SafeName: str, _DataType, SaveItem):
+        if _DataType == Save.DataType.World:
+            with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
+                f.write(pickle.dumps(SaveItem))
+        else:
+            data = {}
+            if os.path.isfile(Save.PlayerFileCache):
+                with open(Save.PlayerFileCache) as f:
+                    data = json.loads(f.read())
+            data[SafeName] = SaveItem
+            with open(Save.PlayerFileCache) as f:
+                json.dumps(data, sort_keys=True)
+    
+    @staticmethod
+    def Get(SaveIndex: int, SafeName: str, DefaultValue: str or list):
         pass
     
     @staticmethod
     def quit():
         #encodes and stores a save file to storage
-        pass
+        shutil.rmtree(SaveCachePath)
