@@ -1408,6 +1408,16 @@ class Tree(Tile):
     def update(self):
         return self.texture
 
+class Rock0(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0], position[1]+19, 32, 15)
+        self.checkCollision = True
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1420,7 +1430,9 @@ specialTilesD = {
     24: Door,
     25: Door,
     26: Door,
-    43: DecorativeHead
+    43: DecorativeHead,
+    47: Rock0,
+    48: Rock0
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
