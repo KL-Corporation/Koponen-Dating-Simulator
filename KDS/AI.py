@@ -398,7 +398,7 @@ class SergeantZombie(HostileEnemy):
             dist /= 1200
             shotgunShot.set_volume(dist)
             shotgunShot.play()
-            print(KDS.Math.getSlope(self.rect.center, target.center))
+            #print(KDS.Math.getSlope(self.rect.center, target.center))
             return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
         else:
             return None
@@ -418,7 +418,6 @@ class DrugDealer(HostileEnemy):
         d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 35, 70)
 
-        print(len(a_anim.images), a_anim.ticks)
         #region Handling the i_anim:
         af = a_anim.images.copy()
         a_anim.images.clear()
@@ -432,7 +431,6 @@ class DrugDealer(HostileEnemy):
             a_anim.images.append(af[63])
 
         a_anim.ticks = len(a_anim.images)-1
-        print(len(a_anim.images), a_anim.ticks)
         
 
         #endregion
@@ -448,7 +446,7 @@ class DrugDealer(HostileEnemy):
         dist /= 1200
         pistol_shot.set_volume(dist)
         pistol_shot.play()
-        print(KDS.Math.getSlope(self.rect.center, target.center))
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
