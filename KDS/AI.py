@@ -119,7 +119,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         for row in obstacles[y:end_y]:
             for tile in row[x:end_x]:
                 if KDS.Logging.profiler_running:
-                    pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Magenta, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                    pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
                 if not tile.air:
                     if tile.checkCollision:
                         return False, 0

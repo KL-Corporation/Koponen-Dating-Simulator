@@ -293,7 +293,7 @@ current_map = KDS.ConfigManager.GetSetting("Settings", "CurrentMap", "01")
 max_map = int(KDS.ConfigManager.GetSetting("Settings", "MaxMap", "99"))
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
                 f"""Settings Loading Complete.
-I===== Settings Loaded =====I
+I=====[ Settings Loaded ]=====I
    - Terms Accepted: {tcagr}
    - Music Volume: {Audio.MusicVolume}
    - Sound Effect Volume: {Audio.EffectVolume}
@@ -301,7 +301,7 @@ I===== Settings Loaded =====I
    - Clear Lag: {clearLag}
    - Current Map: {current_map}
    - Max Map: {max_map}
-I===== Settings Loaded =====I""", False)
+I=====[ Settings Loaded ]=====I""", False)
 #region Downloads
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
 main_menu_background = pygame.image.load(
@@ -3462,7 +3462,8 @@ while main_running:
     h = 0
 #endregion
 #region Interactable Objects
-
+    if DebugMode:
+        pygame.draw.rect(screen, KDS.Colors.GetPrimary.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
     screen.blit(koponen_animation[koponen_animation_stats[0]], (
         koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
