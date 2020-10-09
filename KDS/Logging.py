@@ -72,7 +72,7 @@ def Log(Log_Type: LogType or int, Message: str, Console_Visible=False):
     else:
         print("Log not successful! Logger has been shut down already.")
 
-def AutoError(Message: str, _currentframe):
+def AutoError(Message, _currentframe):
     """Generates an automatic error message.
 
     Args:

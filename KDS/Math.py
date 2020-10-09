@@ -38,7 +38,7 @@ def getSlope(p1: tuple, p2: tuple):
     """
     Calculates slope of straight going trough two points
     """
-    return (p2[1] - p1[1])/(p2[0]- p1[0])
+    return (p2[1] - p1[1]) / (p2[0]- p1[0])
 
 def getSlope2(angle): #Angle in degrees
     """
@@ -47,8 +47,14 @@ def getSlope2(angle): #Angle in degrees
     return math.tan(math.radians(angle)) 
 
 def getAngle(p1: tuple, p2: tuple):
-    """
-    Calculates the angle between two vectors.
+    """Calculates the angle between two vectors.
+
+    Args:
+        p1 (tuple): First vector
+        p2 (tuple): Secod vector
+
+    Returns:
+        float: The angle between the vectors
     """
     try:
         q = p1[0] - p2[0]
@@ -68,6 +74,15 @@ def getAngle(p1: tuple, p2: tuple):
         return 0
 
 def getAngle2(p1, p2):
+    """Calculates the angle between two vectors faster, but without error handling.
+
+    Args:
+        p1 (tuple): First vector
+        p2 (tuple): Second vector
+
+    Returns:
+        float: The angle between the vectors
+    """
     dx = p1[0] - p2[0]
     dy = p1[1] - p2[1]
 
