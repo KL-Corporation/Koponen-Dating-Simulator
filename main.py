@@ -1628,6 +1628,30 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
         return True
 
     @staticmethod
+    def empty_flask_p():
+        global player_score
+        player_score += 2
+        Audio.playSound(coffeemug_sound)
+
+        return False
+
+    @staticmethod
+    def flask_meth_p():
+        global player_score
+        player_score += 8
+        Audio.playSound(coffeemug_sound)
+
+        return False
+
+    @staticmethod
+    def flask_blood_p():
+        global player_score
+        player_score += 8
+        Audio.playSound(coffeemug_sound)
+
+        return False
+
+    @staticmethod
     def empyOperation():
         return True
 
@@ -1782,6 +1806,21 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
         return ss_bonuscard
 
     @staticmethod
+    def empty_flask_u(*args):
+
+        return i_textures[26]
+
+    @staticmethod
+    def flask_meth_u(*args):
+
+        return i_textures[27]
+
+    @staticmethod
+    def flask_blood_u(*args):
+
+        return i_textures[28]
+
+    @staticmethod
     def empyOperation(*args):
 
         return i_textures[0]
@@ -1811,7 +1850,10 @@ Pfunctions = {
     20: pickupFunctions.turboneedle_p,
     21: pickupFunctions.ppsh41_p,
     24: pickupFunctions.awm_p,
-    25: pickupFunctions.awm_mag_p
+    25: pickupFunctions.awm_mag_p,
+    26: pickupFunctions.empty_flask_p,
+    27: pickupFunctions.flask_meth_p,
+    28: pickupFunctions.flask_blood_p
 }
 
 Ufunctions = {
@@ -1827,7 +1869,10 @@ Ufunctions = {
     16: itemFunctions.shotgun_u,
     19: itemFunctions.ss_bonuscard_u,
     21: itemFunctions.ppsh41_u,
-    24: itemFunctions.awm_u
+    24: itemFunctions.awm_u,
+    26: itemFunctions.empty_flask_u,
+    27: itemFunctions.flask_meth_u,
+    28: itemFunctions.flask_blood_u
 
 }
 

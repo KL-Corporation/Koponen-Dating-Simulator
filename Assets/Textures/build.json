@@ -99,7 +99,10 @@
         "022":"55s55_without_missile.png",
         "023":"55s55_missile.png",
         "024":"awm.png",
-        "025":"awm_mag.png"
+        "025":"awm_mag.png",
+        "026":"empty_flask.png",
+        "027":"flask_meth.png",
+        "028":"flask_blood.png"
     },
 
     "item_doubles":[
