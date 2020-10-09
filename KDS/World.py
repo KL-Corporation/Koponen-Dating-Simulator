@@ -100,6 +100,18 @@ class Bullet:
             if self.movedDistance > self.maxDistance:
                 return "air", targets, plr_htlt
 
+class BallisticProjectile:
+    def __init__(self, position, width, height, slope, force, flight_time = 240, texture=None):
+        self.rect = pygame.Rect(position[0], position[1])
+        self.sl = slope
+        self.force = force
+        self.texture = texture
+        self.flight_time = flight_time
+        self.counter = 0
+
+    def update(self, tiles, Surface, scroll):
+        return self.texture
+        
 class Lighting:
 
     @staticmethod
