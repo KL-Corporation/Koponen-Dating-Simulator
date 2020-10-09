@@ -660,7 +660,7 @@ koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_recog_rec = pygame.Rect(0, 0, 72, 64)
 koponen_movement = [1, 6]
 koponen_movingx = 0
-koponen_happines = 40
+koponen_happiness = 40
 
 koponen_talk_tip = tip_font.render(
     "Puhu Koposelle [E]", True, KDS.Colors.GetPrimary.White)
@@ -2198,7 +2198,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 def console():
-    global player_keys, player_health, koponen_happines
+    global player_keys, player_health, koponen_happiness
     wasFullscreen = False
     if isFullscreen:
         Fullscreen.Set()
@@ -2247,11 +2247,11 @@ def console():
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Not a valid remove command.", True)
     elif command_list[0] == "playboy":
-        koponen_happines = 1000
+        koponen_happiness = 1000
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You are now a playboy", True)
         KDS.Logging.Log(KDS.Logging.LogType.info,
-                        f"Koponen happines: {koponen_happiness}", True)
+                        f"Koponen happines: {koponen_happinesss}", True)
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
@@ -2400,42 +2400,42 @@ def koponen_talk():
             currently_on_mission = True
 
     def date_function():
-        global koponen_happines
+        global koponen_happiness
 
         conversations.append(
             f"{player_name}: Tulisitko kanssani treffeille?")
 
-        if koponen_happines > 90:
+        if koponen_happiness > 90:
             conversations.append("Koponen: Tulisin mielelläni kanssasi")
-        elif 91 > koponen_happines > 70:
+        elif 91 > koponen_happiness > 70:
             if int(random.uniform(0, 3)):
                 conversations.append("Koponen: Kyllä ehdottomasti")
             else:
                 conversations.append("Koponen: En tällä kertaa")
-                koponen_happines -= 3
-        elif 71 > koponen_happines > 50:
+                koponen_happiness -= 3
+        elif 71 > koponen_happiness > 50:
             if int(random.uniform(0, 2)):
                 conversations.append("Koponen: Tulen kanssasi")
             else:
                 conversations.append("Koponen: Ei kiitos")
-                koponen_happines -= 3
-        elif 51 > koponen_happines > 30:
+                koponen_happiness -= 3
+        elif 51 > koponen_happiness > 30:
             if int(random.uniform(0, 3)) == 3:
                 conversations.append("Koponen: Tulen")
             else:
                 conversations.append("Koponen: En tule")
-                koponen_happines -= 7
-        elif 31 > koponen_happines > 10:
+                koponen_happiness -= 7
+        elif 31 > koponen_happiness > 10:
             if int(random.uniform(0, 5)) == 5:
                 conversations.append("Koponen: Kyllä")
             else:
                 conversations.append("Koponen: Ei.")
-                koponen_happines -= 10
+                koponen_happiness -= 10
         else:
             conversations.append("Koponen: Ei ei ei")
 
     def end_mission():
-        global current_mission, currently_on_mission, player_score, koponen_happines
+        global current_mission, currently_on_mission, player_score, koponen_happiness
 
         try:
             taskTaivutettu
@@ -2460,7 +2460,7 @@ def koponen_talk():
                 conversations.append("Koponen: Loistavaa työtä")
                 conversations.append("Game: Player score +60")
                 player_score += 60
-                koponen_happines += 10
+                koponen_happiness += 10
                 currently_on_mission = False
                 current_mission = "none"
             else:
@@ -3231,6 +3231,8 @@ while main_running:
             "HEALTH: " + str(int(player_health)), True, KDS.Colors.GetPrimary.White)
         stamina = score_font.render(
             "STAMINA: " + str(round(int(playerStamina))), True, KDS.Colors.GetPrimary.White)
+
+
 
         screen.blit(health, (10, 120))
         screen.blit(stamina, (10, 130))
