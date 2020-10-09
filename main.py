@@ -2329,7 +2329,7 @@ def agr(tcagr):
                 if event.key == K_F11:
                     Fullscreen.Set()
                 elif event.key == K_F4:
-                    if pygame.key.get_pressed(K_LALT):
+                    if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -2630,7 +2630,7 @@ def esc_menu_f():
                 elif event.key == K_ESCAPE:
                     esc_menu = False
                 elif event.key == K_F4:
-                    if pygame.key.get_pressed(K_LALT):
+                    if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -2719,7 +2719,7 @@ def settings_menu():
                 if event.key == K_F11:
                     Fullscreen.Set()
                 elif event.key == K_F4:
-                    if pygame.key.get_pressed(K_LALT):
+                    if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
                 elif event.key == K_ESCAPE:
                     settings_running = False
@@ -2886,7 +2886,7 @@ def main_menu():
                 if event.key == K_F11:
                     Fullscreen.Set()
                 elif event.key == K_F4:
-                    if pygame.key.get_pressed(K_LALT):
+                    if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
@@ -3074,7 +3074,7 @@ while main_running:
             elif event.key == K_F3:
                 DebugMode = not DebugMode
             elif event.key == K_F4:
-                if pygame.key.get_pressed() == K_LALT:
+                if pygame.key.get_pressed()[K_LALT]:
                     KDS_Quit()
                 else:
                     player_health = 0
@@ -3576,5 +3576,5 @@ pygame.quit()
 if reset_data:
     shutil.rmtree(PersistentPaths.AppDataPath)
 if restart:
-    os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+    os.execl(sys.executable, os.path.abspath(__file__))
 #endregion
