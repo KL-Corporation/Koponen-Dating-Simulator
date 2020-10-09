@@ -15,31 +15,32 @@ functionKey = "functionKey"
 killKey = "killKey"
 inventoryKeys = [K_1, K_2, K_3, K_4, K_5]
 mainKey = "mainKey"
-arrowUp ="a_up"
-arrowDown = "a_down"
-arrowLeft = "a_left"
-arrowRight = "a_right"
+altUp ="altUp"
+altDown = "altDown"
+altLeft = "altLeft"
+altRight = "altRight"
 
 KeyStates = {
-#   name: [isPressed, isHeld, isClicked, [Automatic] ticksHeld] 
-    moveUp: [False, False, False],
-    moveDown: [False, False, False],
-    moveRight: [False, False, False],
-    moveLeft: [False, False, False],
-    moveRun: [False, False, False],
-    functionKey: [False, False, False],
-    killKey: [False, False, False],
-    mainKey: [False, False, False],
-    arrowUp: [False, False, False],
-    arrowDown: [False, False, False],
-    arrowLeft: [False, False, False],
-    arrowRight: [False, False, False]
-
+#   name: [isPressed, isHeld, isClicked, ticksHeld] 
+    moveUp: [],
+    moveDown: [],
+    moveRight: [],
+    moveLeft: [],
+    moveRun: [],
+    functionKey: [],
+    killKey: [],
+    mainKey: [],
+    altUp: [],
+    altDown: [],
+    altLeft: [],
+    altRight: []
 }
 
 for keyName in KeyStates:
-    if len(KeyStates[keyName]) < 4:
-        KeyStates[keyName].append(0)
+    KeyStates[keyName].append(False)
+    KeyStates[keyName].append(False)
+    KeyStates[keyName].append(False)
+    KeyStates[keyName].append(0)
 
 def SetPressed(key_indentifier, pressed: bool):
     if key_indentifier in KeyStates:

@@ -3085,13 +3085,13 @@ while main_running:
                     Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_DOWN:
-                KDS.Keys.SetPressed(KDS.Keys.arrowDown, True)
+                KDS.Keys.SetPressed(KDS.Keys.altDown, True)
             elif event.key == K_UP:
-                KDS.Keys.SetPressed(KDS.Keys.arrowUp, True)
+                KDS.Keys.SetPressed(KDS.Keys.altUp, True)
             elif event.key == K_LEFT:
-                KDS.Keys.SetPressed(KDS.Keys.arrowLeft, True)
+                KDS.Keys.SetPressed(KDS.Keys.altLeft, True)
             elif event.key == K_RIGHT:
-                KDS.Keys.SetPressed(KDS.Keys.arrowRight, True)
+                KDS.Keys.SetPressed(KDS.Keys.altRight, True)
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
@@ -3132,13 +3132,13 @@ while main_running:
                     gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
             elif event.key == K_DOWN:
-                KDS.Keys.SetPressed(KDS.Keys.arrowDown, False)
+                KDS.Keys.SetPressed(KDS.Keys.altDown, False)
             elif event.key == K_UP:
-                KDS.Keys.SetPressed(KDS.Keys.arrowUp, False)
+                KDS.Keys.SetPressed(KDS.Keys.altDown, False)
             elif event.key == K_LEFT:
-                KDS.Keys.SetPressed(KDS.Keys.arrowLeft, False)
+                KDS.Keys.SetPressed(KDS.Keys.altLeft, False)
             elif event.key == K_RIGHT:
-                KDS.Keys.SetPressed(KDS.Keys.arrowRight, False)
+                KDS.Keys.SetPressed(KDS.Keys.altRight, False)
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
