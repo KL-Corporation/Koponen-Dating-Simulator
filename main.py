@@ -624,6 +624,7 @@ awm_ammo = 5
 
 Projectiles = []
 Explosions = []
+BallisticObjects = []
 Lights = []
 LightScroll = [0, 0]
 onLadder = False
@@ -1651,6 +1652,14 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         return False
 
     @staticmethod
+    def grenade_p():
+        global player_score
+        player_score += 19
+        Audio.playSound(weapon_pickup)
+
+        return False
+
+    @staticmethod
     def empyOperation():
         return True
 
@@ -1820,6 +1829,13 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         return i_textures[28]
 
     @staticmethod
+    def grenade_u(*args):
+        if args[0][0]:
+            player_inventory.storage[player_inventory.SIndex] = "none"
+            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, 0.5, 9, direction, gravitational_factor=0.4, flight_time=240, texture = i_textures[29]))
+        return i_textures[29]
+
+    @staticmethod
     def empyOperation(*args):
 
         return i_textures[0]
@@ -1852,7 +1868,8 @@ Pfunctions = {
     25: pickupFunctions.awm_mag_p,
     26: pickupFunctions.empty_flask_p,
     27: pickupFunctions.flask_meth_p,
-    28: pickupFunctions.flask_blood_p
+    28: pickupFunctions.flask_blood_p,
+    29: pickupFunctions.grenade_p
 }
 
 Ufunctions = {
@@ -1871,7 +1888,8 @@ Ufunctions = {
     24: itemFunctions.awm_u,
     26: itemFunctions.empty_flask_u,
     27: itemFunctions.flask_meth_u,
-    28: itemFunctions.flask_blood_u
+    28: itemFunctions.flask_blood_u,
+    29: itemFunctions.grenade_u
 
 }
 
@@ -3066,6 +3084,14 @@ while main_running:
                     farting = True
                     Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
+            elif event.key == K_DOWN:
+                KDS.Keys.SetPressed(KDS.Keys.arrowDown, True)
+            elif event.key == K_UP:
+                KDS.Keys.SetPressed(KDS.Keys.arrowUp, True)
+            elif event.key == K_LEFT:
+                KDS.Keys.SetPressed(KDS.Keys.arrowLeft, True)
+            elif event.key == K_RIGHT:
+                KDS.Keys.SetPressed(KDS.Keys.arrowRight, True)
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
@@ -3105,6 +3131,14 @@ while main_running:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
+            elif event.key == K_DOWN:
+                KDS.Keys.SetPressed(KDS.Keys.arrowDown, False)
+            elif event.key == K_UP:
+                KDS.Keys.SetPressed(KDS.Keys.arrowUp, False)
+            elif event.key == K_LEFT:
+                KDS.Keys.SetPressed(KDS.Keys.arrowLeft, False)
+            elif event.key == K_RIGHT:
+                KDS.Keys.SetPressed(KDS.Keys.arrowRight, False)
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
@@ -3194,6 +3228,20 @@ while main_running:
         
         if v == "wall" or v == "air":
             Projectiles.remove(Projectile)
+
+    for B_Object in BallisticObjects:
+        r2 = B_Object.update(tiles, screen, scroll)
+        if r2:
+            if KDS.Math.getDistance(player_rect.center, B_Object.rect.center) < 100:
+                player_health -= 100 - KDS.Math.getDistance(player_rect.center, B_Object.rect.center)
+            for enemy in enemies:
+                if KDS.Math.getDistance(enemy.rect.center, B_Object.rect.center) < 120:
+                    enemy.health -= 170-KDS.Math.getDistance(enemy.rect.center, B_Object.rect.center)
+
+            Audio.playSound(landmine_explosion)
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (B_Object.rect.x-60, B_Object.rect.y-55)))
+             
+            BallisticObjects.remove(B_Object)
 
     #Räjähdykset
     for unit in Explosions:

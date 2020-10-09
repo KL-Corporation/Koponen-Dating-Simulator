@@ -15,6 +15,10 @@ functionKey = "functionKey"
 killKey = "killKey"
 inventoryKeys = [K_1, K_2, K_3, K_4, K_5]
 mainKey = "mainKey"
+arrowUp ="a_up"
+arrowDown = "a_down"
+arrowLeft = "a_left"
+arrowRight = "a_right"
 
 KeyStates = {
 #   name: [isPressed, isHeld, isClicked, [Automatic] ticksHeld] 
@@ -25,7 +29,12 @@ KeyStates = {
     moveRun: [False, False, False],
     functionKey: [False, False, False],
     killKey: [False, False, False],
-    mainKey: [False, False, False]
+    mainKey: [False, False, False],
+    arrowUp: [False, False, False],
+    arrowDown: [False, False, False],
+    arrowLeft: [False, False, False],
+    arrowRight: [False, False, False]
+
 }
 
 for keyName in KeyStates:

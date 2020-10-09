@@ -102,7 +102,8 @@
         "025":"awm_mag.png",
         "026":"empty_flask.png",
         "027":"flask_meth.png",
-        "028":"flask_blood.png"
+        "028":"flask_blood.png",
+        "029":"grenade.png"
     },
 
     "item_doubles":[
@@ -124,7 +125,11 @@
         15,
         16,
         21,
-        24
+        24,
+        26,
+        27,
+        28,
+        29
     ]
 
 }

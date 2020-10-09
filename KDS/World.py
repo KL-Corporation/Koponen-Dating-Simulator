@@ -1,19 +1,20 @@
 import pygame, numpy, math, random
+import KDS.Convert, KDS.Math
 
 pygame.init()
 
 def collision_test(rect: pygame.Rect, Tile_list):
     hit_list = []
-    x = int((rect.x/34)-3)
-    y = int((rect.y/34)-3)
+    x = int((rect.x/34)-2)
+    y = int((rect.y/34)-2)
     if x < 0:
         x = 0
     if y < 0:
         y = 0
     max_x = len(Tile_list[0])-1
     max_y = len(Tile_list)-1
-    end_x = x+6
-    end_y = y+6
+    end_x = x+4
+    end_y = y+4
 
     if end_x > max_x:
         end_x = max_x
@@ -101,17 +102,69 @@ class Bullet:
                 return "air", targets, plr_htlt
 
 class BallisticProjectile:
-    def __init__(self, position, width, height, slope, force, flight_time = 240, texture=None):
-        self.rect = pygame.Rect(position[0], position[1])
+    def __init__(self, position, width, height, slope, force, direction, gravitational_factor = 0.1, flight_time = 240, texture=None):
+        self.rect = pygame.Rect(position[0], position[1], width, height)
         self.sl = slope
-        self.force = force
+        self.force = force*KDS.Convert.ToMultiplier(direction)
+        print(self.force)
+        self.upforce = -int(force*slope)
         self.texture = texture
         self.flight_time = flight_time
         self.counter = 0
+        self.direction = direction
+        self.gravitational_factor = gravitational_factor
 
     def update(self, tiles, Surface, scroll):
-        return self.texture
-        
+        self.rect.x += self.force
+
+        c = collision_test(self.rect, tiles)
+        c_types = {
+            "right":False,
+            "left":False,
+            "bottom":False,
+            "top":False
+        }
+        for c1 in c:
+            if self.force > 0:
+                self.rect.right = c1.left
+                c_types['left'] = True
+            elif self.force < 0:
+                self.rect.left = c1.right
+                c_types['right'] = True
+
+        self.rect.y += self.upforce
+        self.upforce += self.gravitational_factor
+        if self.upforce > 6:
+            self.upforce = 6
+        c = collision_test(self.rect, tiles)
+
+        for c1 in c:
+            if self.upforce > 0:
+                self.rect.bottom = c1.top
+                c_types['bottom'] = True
+            elif self.upforce < 0:
+                self.rect.top = c1.bottom
+                c_types['top'] = True
+
+
+        #print(c_types)
+        if c_types["top"] or c_types["bottom"]:
+            self.upforce *= 0.6
+            self.force *= 0.7
+            s = self.upforce
+            self.upforce = -self.upforce
+            if s:
+                self.upforce *= 0.4
+                
+        if c_types["right"] or c_types["left"]:
+            self.force *= 0.72
+            self.force = -self.force
+
+        self.counter += 1
+        if self.texture:
+            Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
+        return self.counter > self.flight_time
+
 class Lighting:
 
     @staticmethod
