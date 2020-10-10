@@ -272,6 +272,19 @@ class HostileEnemy:
         self.movement = mv
         self.clearlagcounter = 0
 
+    # ESIMERKKI
+    def toString(self):
+        #Converts all textures to strings
+        
+        self.w_anim.toString() ###Toisin sanoen... Noissa animaatioissa on jo valmiiks .toString, mutta se pitää callaa tän scriptin kautta kaikille animaatioille.
+    
+    
+    # ESIMERKKI
+    def fromString(self):
+        #Converts all strings back to textures
+        
+        self.w_anim.fromString() ###Animaatioiden funktion pitää olla classin sisällä eikä missään muualla subclassissa tai sellatteessa.
+
     def onDeath(self):
         pass
     def attack(self):
@@ -434,19 +447,8 @@ class DrugDealer(HostileEnemy):
         
         #endregion
 
-        """ ESIMERKKI
-        def toString():
-            """#Converts all textures to strings
-            """
-            w_anim.toString() ###Toisin sanoen... Noissa animaatioissa on jo valmiiks .toString, mutta se pitää callaa tän scriptin kautta kaikille animaatioille.
-        """
+
         
-        """ ESIMERKKI
-        def fromString():
-            """#Converts all strings back to textures
-            """
-            w_anim.fromString() ###Animaatioiden funktion pitää olla classin sisällä eikä missään muualla subclassissa tai sellatteessa.
-        """
 
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
         self.corpse = self.d_anim.images[-1]
