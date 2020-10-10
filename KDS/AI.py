@@ -272,21 +272,18 @@ class HostileEnemy:
         self.movement = mv
         self.clearlagcounter = 0
 
-    # ESIMERKKI
     def toString(self):
-        #Converts all textures to strings
-        
-        self.w_anim.toString() ###Toisin sanoen... Noissa animaatioissa on jo valmiiks .toString, mutta se pitää callaa tän scriptin kautta kaikille animaatioille.
+        """Converts all textures to strings
+        """
+        self.w_anim.toString()
         self.a_anim.toString()
         self.d_anim.toString()
         self.i_anim.toString()
     
-    
-    # ESIMERKKI
     def fromString(self):
-        #Converts all strings back to textures
-        
-        self.w_anim.fromString() ###Animaatioiden funktion pitää olla classin sisällä eikä missään muualla subclassissa tai sellatteessa.
+        """Converts all strings back to textures
+        """
+        self.w_anim.fromString()
         self.a_anim.fromString()
         self.d_anim.fromString()
         self.i_anim.fromString()
