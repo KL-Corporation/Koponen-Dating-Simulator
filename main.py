@@ -1825,12 +1825,12 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     @staticmethod
     def grenade_u(*args):
 
-        if KDS.Keys.GetHeld(KDS.Keys.altUp):
-            KDS.World.Grenade_O.Slope += 0.01
-        elif KDS.Keys.GetHeld(KDS.Keys.altDown):
-            KDS.World.Grenade_O.Slope -= 0.01
+        if KDS.Keys.GetPressed(KDS.Keys.altUp):
+            KDS.World.Grenade_O.Slope += 0.03
+        elif KDS.Keys.GetPressed(KDS.Keys.altDown):
+            KDS.World.Grenade_O.Slope -= 0.03
 
-        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force+15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force+15)*-1 - scroll[1]) )
+        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force+15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force+15)*-1 - scroll[1]) )
         if args[0][0]:
             player_inventory.storage[player_inventory.SIndex] = "none"
             BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
@@ -3135,7 +3135,7 @@ while main_running:
             elif event.key == K_DOWN:
                 KDS.Keys.SetPressed(KDS.Keys.altDown, False)
             elif event.key == K_UP:
-                KDS.Keys.SetPressed(KDS.Keys.altDown, False)
+                KDS.Keys.SetPressed(KDS.Keys.altUp, False)
             elif event.key == K_LEFT:
                 KDS.Keys.SetPressed(KDS.Keys.altLeft, False)
             elif event.key == K_RIGHT:
