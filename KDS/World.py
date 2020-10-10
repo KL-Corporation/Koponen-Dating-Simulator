@@ -115,7 +115,8 @@ class BallisticProjectile:
         self.gravitational_factor = gravitational_factor
 
     def update(self, tiles, Surface, scroll):
-        self.rect.x += self.force
+
+        self.rect.x += round(self.force)
 
         c = collision_test(self.rect, tiles)
         c_types = {
@@ -154,10 +155,10 @@ class BallisticProjectile:
             s = self.upforce
             self.upforce = -self.upforce
             if s:
-                self.upforce *= 0.4
+                self.upforce *= 0.1
                 
         if c_types["right"] or c_types["left"]:
-            self.force *= 0.72
+            self.force *= 0.60
             self.force = -self.force
 
         self.counter += 1

@@ -621,6 +621,7 @@ Projectiles = []
 Explosions = []
 BallisticObjects = []
 Lights = []
+tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
@@ -924,7 +925,7 @@ class WorldData():
 
     @staticmethod
     def LoadMap():
-        global items, enemies, Projectiles
+        global items, tiles, enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
         if os.path.isdir(PersistentMapPath):
@@ -1825,7 +1826,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     def grenade_u(*args):
         if args[0][0]:
             player_inventory.storage[player_inventory.SIndex] = "none"
-            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, 0.5, 9, direction, gravitational_factor=0.4, flight_time=240, texture = i_textures[29]))
+            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, 0.5, 9, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
 
     @staticmethod
