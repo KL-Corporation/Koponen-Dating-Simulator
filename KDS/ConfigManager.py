@@ -115,20 +115,27 @@ class Save:
     def SetWorld(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             for item in SaveItem:
-                _toString = getattr(item, "toString", None)
-                if callable(_toString):
-                    _toString()
+                toStringF = getattr(item, "toString2", None)
+                if isinstance(item, KDS.AI.DrugDealer):
+                    print(item.a_anim.images[0])
+                print(toStringF)
+                if callable(toStringF):
+                    toStringF()
                 print("="*80)
                 jutskia = dir(item)
                 for jutska in jutskia:
-                    print(jutska, getattr(item, jutska))
+                    #print(jutska, getattr(item, jutska))
+                    pass
                 print("="*80)
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
-                f.write(pickle.dumps(SaveItem))
+                print(SaveItem)
+                temp = pickle.dumps(SaveItem)
+                f.write(temp)
+
             for item in SaveItem:
-                _fromString = getattr(item, "fromString", None)
-                if callable(_fromString):
-                    _fromString()
+                fromStringF = getattr(item, "fromString", None)
+                if callable(fromStringF):
+                    fromStringF()
     
     @staticmethod            
     def SetPlayer(SafeName: str, SaveItem):

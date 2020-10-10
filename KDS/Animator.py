@@ -85,9 +85,14 @@ class Animation:
     def toString(self):
         """Converts all textures to strings
         """
+        tlist = []
         for image in self.images:
             if isinstance(image, pygame.Surface):
-                image = (pygame.image.tostring(image, "RGBA"), image.get_size(), "RGBA")
+                Fimage = pygame.image.tostring(image, "RGBA")
+                tlist.append(Fimage)
+        
+        self.images.clear()
+        self.iamges = tlist.copy()
             
     def fromString(self):
         """Converts all strings back to textures

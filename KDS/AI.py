@@ -272,7 +272,7 @@ class HostileEnemy:
         self.movement = mv
         self.clearlagcounter = 0
 
-    def toString(self):
+    def toString2(self):
         """Converts all textures to strings
         """
         self.w_anim.toString()
@@ -310,6 +310,7 @@ class HostileEnemy:
             if self.attackRunning:
                 animation, dResult = self.a_anim.update()
                 Surface.blit(pygame.transform.flip(animation, self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                del animation
                 if dResult:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
@@ -445,7 +446,7 @@ class DrugDealer(HostileEnemy):
             a_anim.images.append(af[63])
 
         a_anim.ticks = len(a_anim.images)-1
-        
+        del af
         #endregion
         
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)

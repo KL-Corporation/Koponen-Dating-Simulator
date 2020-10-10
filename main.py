@@ -1595,7 +1595,6 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.World.shotgun_C.counter = 0
             Audio.playSound(player_shotgun_shot)
             shotgun_shells -= 1
-            shotgun_shots()
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             for x in range(10):
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x/1.5))
@@ -1791,7 +1790,7 @@ class Item:
 
         return Item_list, inventory
 
-    def toString(self):
+    def toString2(self):
         """Converts all textures to strings
         """
         if isinstance(self.texture, pygame.Surface):
@@ -2340,8 +2339,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     KDS.ConfigManager.Save.init(1)
     
     global Items, Enemies, Explosions, BallisticObjects
-    Items = KDS.ConfigManager.Save.GetWorld("items", numpy.array([]))
-    Enemies = KDS.ConfigManager.Save.GetWorld("enemies", numpy.array([]))
+    Items = KDS.ConfigManager.Save.GetWorld("items", [])
+    Enemies = KDS.ConfigManager.Save.GetWorld("enemies", [])
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
