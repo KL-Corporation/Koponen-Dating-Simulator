@@ -98,17 +98,19 @@ class Save:
 
     @staticmethod
     def init(_SaveIndex: int):
-        Save.quit()
+        if os.path.isfile(Save.PlayerFileCache):
+            Save.quit()
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             Save.SaveIndex = _SaveIndex
             if os.path.isdir(SaveCachePath):
                 shutil.rmtree(SaveCachePath)
-            os.makedirs(SaveCachePath)
-            os.mkdir(Save.WorldDirCache)
-            os.mkdir(Save.PlayerDirCache)
+            os.makedirs(SaveCachePath, exist_ok=True)
             _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
             if os.path.isfile(_path):
-                zipfile.ZipFile(_path, "r").extractall(Save.PlayerDirCache)
+                zipfile.ZipFile(_path, "r").extractall(SaveCachePath)
+            os.makedirs(Save.WorldDirCache, exist_ok=True)
+            os.makedirs(Save.PlayerDirCache, exist_ok=True)
+            
         #decodes and loads a save file to cache
         
     @staticmethod
