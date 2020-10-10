@@ -106,7 +106,6 @@ class BallisticProjectile:
         self.rect = pygame.Rect(position[0], position[1], width, height)
         self.sl = slope
         self.force = force*KDS.Convert.ToMultiplier(direction)
-        print(self.force)
         self.upforce = -int(force*slope)
         self.texture = texture
         self.flight_time = flight_time
@@ -162,6 +161,7 @@ class BallisticProjectile:
             self.force = -self.force
 
         self.counter += 1
+
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
         return self.counter > self.flight_time
