@@ -637,8 +637,8 @@ light_sphere2 = pygame.transform.scale(light_sphere2, (player_light_sphere_radiu
 orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
 blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scale, blue_light_scale))
 
-items = numpy.array([])
-enemies = numpy.array([])
+Items = numpy.array([])
+Enemies = numpy.array([])
 
 player_score = 0
 
@@ -668,63 +668,6 @@ MenuMode = 0
 esc_menu_background = pygame.Surface(display_size)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
-#endregion
-#region Save System
-def LoadSave(save_index: int):
-    """
-    global Saving, player_rect, player_name, player_health, last_player_health, playerStamina, farting
-    player_rect.x = int(KDS.ConfigManager.LoadSave(save_index, "PlayerPosition", "X", str(player_rect.x)))
-    player_rect.y = int(KDS.ConfigManager.LoadSave(save_index, "PlayerPosition", "Y", str(player_rect.y)))
-    player_health = int(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Health", str(player_health)))
-    last_player_health = player_health
-    player_name = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Name", player_name)
-    playerStamina = float(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Stamina", str(playerStamina)))
-    player_inventory.storage[0] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory0", player_inventory.storage[0])
-    player_inventory.storage[1] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory1", player_inventory.storage[1])
-    player_inventory.storage[2] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory2", player_inventory.storage[2])
-    player_inventory.storage[3] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory3", player_inventory.storage[3])
-    player_inventory.storage[4] = KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Inventory4", player_inventory.storage[4])
-    farting = KDS.Convert.ToBool(KDS.ConfigManager.LoadSave(save_index, "PlayerData", "Farting", "f"))
-    """
-    if save_index != -1:
-        pass
-    
-def SaveData(save_index: int):
-    """
-    global Saving, player_rect, selectedSave, player_name, player_health, last_player_health, farting
-    #region Player
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerPosition", "X", str(player_rect.x))
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerPosition", "Y", str(player_rect.y))
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Health", str(player_health))
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Name", str(player_name))
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Stamina", str(playerStamina))
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory0", player_inventory.storage[0])
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory1", player_inventory.storage[1])
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory2", player_inventory.storage[2])
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory3", player_inventory.storage[3])
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Inventory4", player_inventory.storage[4])
-    KDS.ConfigManager.SetSave(
-        selectedSave, "PlayerData", "Farting", str(farting))
-    #endregion
-    #region Map
-    
-    #endregion
-    #region Enemies
-    
-    #endregion
-    """
-    if save_index != -1:
-        pass
 #endregion
 #region Quit Handling
 def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
@@ -925,7 +868,7 @@ class WorldData():
 
     @staticmethod
     def LoadMap():
-        global items, tiles, enemies, Projectiles
+        global Items, tiles, Enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
         if os.path.isdir(PersistentMapPath):
@@ -999,10 +942,10 @@ class WorldData():
                                 tiles[y][x] = specialTilesD[serialNumber](
                                     (x * 34, y * 34), serialNumber=serialNumber)
                         elif data[0] == "1":
-                            items = numpy.append(items, Item(
+                            Items = numpy.append(Items, Item(
                                 (x * 34, y * 34), serialNumber=serialNumber))
                         elif data[0] == "2":
-                            enemies = numpy.append(enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
+                            Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif data[0] == "3":
                             pass
                 else:
@@ -1296,11 +1239,11 @@ class Landmine(Tile):
         self.checkCollision = False
 
     def update(self):
-        if self.rect.colliderect(player_rect) or True in map(lambda r: r.rect.colliderect(self.rect), enemies):
+        if self.rect.colliderect(player_rect) or True in map(lambda r: r.rect.colliderect(self.rect), Enemies):
             if KDS.Math.getDistance(player_rect.center, self.rect.center) < 100:
                 global player_health
                 player_health -= 100 - KDS.Math.getDistance(player_rect.center, self.rect.center)
-            for enemy in enemies:
+            for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100:
                     enemy.health -= 120-KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
@@ -2544,56 +2487,54 @@ def koponen_talk():
         window.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 #endregion
-#region Game Start
+#region Game Start and Stop
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave, player_inventory
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
-    for i in range(len(player_inventory.storage)):
-        player_inventory.storage[i] = Inventory.emptySlot
     
-    global items, enemies
-    if gamemode == KDS.Gamemode.Modes.Campaign:
-        items = numpy.array([])
-        enemies = numpy.array([])
+    KDS.ConfigManager.Save.init(1)
     
+    global Items, Enemies, Explosions, BallisticObjects
+    Items = KDS.ConfigManager.Save.GetWorld("items", numpy.array([]))
+    Enemies = KDS.ConfigManager.Save.GetWorld("enemies", numpy.array([]))
+    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", numpy.array([]))
+    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", numpy.array([]))
+    
+    ########## iPuhelin ##########
     if int(current_map) < 2:
         player_inventory.storage[0] = "iPuhelin"
-    Px, Py = WorldData.LoadMap()
-    if gamemode == KDS.Gamemode.Modes.Story:
-        pass
-    pygame.mouse.set_visible(False)
-    main_menu_running = False
-    player_hand_item = "none"
+    player_def_pos = WorldData.LoadMap()
 
     player_death_event = False
     animation_has_played = False
     death_wait = 0
+    
+    player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
+    player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
+    player_hand_item = KDS.ConfigManager.Save.GetPlayer("hand_item", "none")
+    farting = KDS.ConfigManager.Save.GetPlayer("farting", False)
+    player_keys = KDS.ConfigManager.Save.GetPlayer("keys", {"red": False, "green": False, "blue": False})
+    player_inventory.storage = KDS.ConfigManager.Save.GetPlayer("inventory", [Inventory.emptySlot for _ in range(player_inventory.size)])
 
-    player_rect.x = Px
-    player_rect.y = Py
+    pygame.mouse.set_visible(False)
+    main_menu_running = False
     if reset_scroll:
         true_scroll = [-200, -190]
-    player_health = 100
-
-    farting = False
-
-    for key in player_keys:
-        player_keys[key] = False
     KDS.Logging.Log(KDS.Logging.LogType.info,
                     "Press F4 to commit suicide", False)
     KDS.Logging.Log(KDS.Logging.LogType.info,
                     "Press Alt + F4 to get depression", False)
-    
-    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-        LoadSave(selectedSave)
-    else:
-        LoadSave(-1)
-
-def load_campaign(reset_scroll):
-    global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll
-    KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Campaign, int(current_map))
+def save_function():
+    global player_health, player_rect, player_hand_item, farting, player_keys
+    KDS.ConfigManager.Save.SetPlayer("health", player_health)
+    KDS.ConfigManager.Save.SetPlayer("position", player_rect.topleft)
+    KDS.ConfigManager.Save.SetPlayer("hand_item", player_hand_item)
+    KDS.ConfigManager.Save.SetPlayer("farting", farting)
+    KDS.ConfigManager.Save.SetPlayer("keys", player_keys)
+    KDS.ConfigManager.Save.SetPlayer("inventory", player_inventory.storage)
+    KDS.ConfigManager.Save.quit()
 #endregion
 #region Menus
 def esc_menu_f():
@@ -2610,9 +2551,6 @@ def esc_menu_f():
         global esc_menu
         esc_menu = False
 
-    def save():
-        SaveData()
-
     def settings():
         settings_menu()
 
@@ -2627,7 +2565,7 @@ def esc_menu_f():
     save_button_enabled = True
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         save_button_enabled = False
-    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save, button_font.render(
+    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
         "Save", True, KDS.Colors.GetPrimary.White), enabled=save_button_enabled)
     settings_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.GetPrimary.White))
@@ -2979,7 +2917,6 @@ def main_menu():
                         gamemode_bc_2_2.set_alpha(int(gamemode_bc_2_alpha.update(False)))
                         display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
         elif MenuMode == Mode.StoryMenu:
-            #Test saving
             pygame.draw.rect(
                 display, KDS.Colors.GetPrimary.DarkGray, story_save_button_0_rect, 10)
             pygame.draw.rect(
@@ -3078,7 +3015,7 @@ while main_running:
                         if counter > 250:
                             break
                         
-                    items = numpy.append(items, tempItem)
+                    Items = numpy.append(Items, tempItem)
             elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000
@@ -3189,11 +3126,11 @@ while main_running:
 #region Rendering
 
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    items, player_inventory = Item.checkCollisions(
-        items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
+    Items, player_inventory = Item.checkCollisions(
+        Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, player_rect.center)
 
-    for enemy in enemies:
+    for enemy in Enemies:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
             result = enemy.update(screen, scroll, tiles, player_rect)
             if result[0]:
@@ -3212,17 +3149,17 @@ while main_running:
                             counter += 1
                             if counter > 250:
                                 break
-                        items = numpy.append(items, tempItem)
+                        Items = numpy.append(Items, tempItem)
                         del tempItem
 
-    Item.render(items, screen, scroll, (player_rect.x, player_rect.y))
+    Item.render(Items, screen, scroll, (player_rect.x, player_rect.y))
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, enemies, player_rect, player_health, DebugMode)
+        result = Projectile.update(screen, scroll, Enemies, player_rect, player_health, DebugMode)
         if result:
             v = result[0]
-            enemies = result[1]
+            Enemies = result[1]
             player_health = result[2]
         else:
             v = None
@@ -3235,7 +3172,7 @@ while main_running:
         if r2:
             if KDS.Math.getDistance(player_rect.center, B_Object.rect.center) < 100:
                 player_health -= 100 - KDS.Math.getDistance(player_rect.center, B_Object.rect.center)
-            for enemy in enemies:
+            for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.center, B_Object.rect.center) < 120:
                     enemy.health -= 170-KDS.Math.getDistance(enemy.rect.center, B_Object.rect.center)
 
@@ -3485,7 +3422,7 @@ while main_running:
         if fart_counter > 250:
             farting = False
             fart_counter = 0
-            for enemy in enemies:
+            for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.topleft, player_rect.topleft) < 1500:
                     enemy.dmg(random.randint(500, 1000))
 
@@ -3601,6 +3538,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+KDS.ConfigManager.Save.quit()
 Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.quit()

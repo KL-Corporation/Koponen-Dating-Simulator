@@ -4,6 +4,7 @@ from os import rename
 import pickle
 import shutil
 import numpy
+import KDS.Gamemode
 import KDS.Logging
 import configparser
 import os
@@ -34,7 +35,7 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
             return config.get(SaveDirectory, SaveName)
         else:
             config.set(SaveDirectory, SaveName, DefaultValue)
-            with open(FilePath, "w+") as cfg_file:
+            with open(FilePath, "w") as cfg_file:
                 config.write(cfg_file)
                 cfg_file.close()
             return DefaultValue
@@ -43,7 +44,7 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
         if config.has_option(SaveDirectory, SaveName):
             return config.get(SaveDirectory, SaveName)
         else:
-            with open(FilePath, "w+") as cfg_file:
+            with open(FilePath, "w") as cfg_file:
                 config.write(cfg_file)
                 cfg_file.close()
             config.set(SaveDirectory, SaveName, DefaultValue)
@@ -64,7 +65,7 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     else:
         config.add_section(SaveDirectory)
         config.set(SaveDirectory, SaveName, SaveValue)
-    with open(FilePath, "w+") as cfg_file:
+    with open(FilePath, "w") as cfg_file:
         config.write(cfg_file)
         cfg_file.close()
         
@@ -90,58 +91,66 @@ class Save:
         
     @staticmethod
     def quit():
-        shutil.make_archive(os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds"), 'zip', SaveCachePath)
+        if os.path.isdir(SaveCachePath):
+            shutil.make_archive(os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds"), 'zip', SaveCachePath)
+            shutil.rmtree(SaveCachePath)
         #encodes and stores a save file to storage
-        shutil.rmtree(SaveCachePath)
 
     @staticmethod
     def init(_SaveIndex: int):
         Save.quit()
-        Save.SaveIndex = _SaveIndex
-        if os.path.isdir(SaveCachePath):
-            shutil.rmtree(SaveCachePath)
-        os.makedirs(SaveCachePath)
-        os.mkdir(Save.WorldDirCache)
-        os.mkdir(Save.PlayerDirCache)
-        _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
-        if os.path.isfile(_path):
-            zipfile.ZipFile(_path, "r").extractall(Save.PlayerDirCache)
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            Save.SaveIndex = _SaveIndex
+            if os.path.isdir(SaveCachePath):
+                shutil.rmtree(SaveCachePath)
+            os.makedirs(SaveCachePath)
+            os.mkdir(Save.WorldDirCache)
+            os.mkdir(Save.PlayerDirCache)
+            _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
+            if os.path.isfile(_path):
+                zipfile.ZipFile(_path, "r").extractall(Save.PlayerDirCache)
         #decodes and loads a save file to cache
         
     @staticmethod
     def SetWorld(SafeName: str, SaveItem):
-        with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
-            f.write(pickle.dumps(SaveItem))
-                
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
+                f.write(pickle.dumps(SaveItem))
+    
+    @staticmethod            
     def SetPlayer(SafeName: str, SaveItem):
-        data = {}
-        if os.path.isfile(Save.PlayerFileCache):
-            with open(Save.PlayerFileCache) as f:
-                data = json.loads(f.read())
-        data[SafeName] = SaveItem
-        with open(Save.PlayerFileCache) as f:
-            json.dumps(data, sort_keys=True)
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            data = {}
+            if os.path.isfile(Save.PlayerFileCache):
+                with open(Save.PlayerFileCache, "r") as f:
+                    data = json.loads(f.read())
+            data[SafeName] = SaveItem
+            with open(Save.PlayerFileCache, "w") as f:
+                f.write(json.dumps(data, sort_keys=True, indent=4))
     
     @staticmethod
     def GetWorld(SafeName: str, DefaultValue):
-        _path = os.path.join(Save.WorldDirCache, SafeName + ".kbf")
-        if os.path.isfile(_path):
-            with open(_path) as f:
-                data = json.loads(f.read())
-            if SafeName in data:
-                return data[SafeName]
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            _path = os.path.join(Save.WorldDirCache, SafeName + ".kbf")
+            if os.path.isfile(_path):
+                with open(_path, "rb") as f:
+                    data = pickle.loads(f.read())
+                return data
             else:
                 return DefaultValue
         else:
             return DefaultValue
         
     @staticmethod
-    def GetPlayer(SaveIndex: int, SafeName: str, DefaultValue):
-        if os.path.isfile(Save.PlayerFileCache):
-            with open(Save.PlayerFileCache) as f:
-                data = json.loads(f.read())
-            if SafeName in data:
-                return data[SafeName]
+    def GetPlayer(SafeName: str, DefaultValue):
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            if os.path.isfile(Save.PlayerFileCache):
+                with open(Save.PlayerFileCache, "r") as f:
+                    data = json.loads(f.read())
+                if SafeName in data:
+                    return data[SafeName]
+                else:
+                    return DefaultValue
             else:
                 return DefaultValue
         else:
