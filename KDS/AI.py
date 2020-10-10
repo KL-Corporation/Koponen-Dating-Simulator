@@ -438,7 +438,7 @@ class DrugDealer(HostileEnemy):
         def toString():
             """#Converts all textures to strings
             """
-            w_anim.toString()
+            w_anim.toString() ###Toisin sanoen... Noissa animaatioissa on jo valmiiks .toString, mutta se pitää callaa tän scriptin kautta kaikille animaatioille.
         """
         
         """ ESIMERKKI
