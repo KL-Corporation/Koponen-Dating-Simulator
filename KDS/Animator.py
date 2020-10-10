@@ -92,7 +92,7 @@ class Animation:
                 tlist.append(Fimage)
         
         self.images.clear()
-        self.iamges = tlist.copy()
+        self.images = tlist.copy()
             
     def fromString(self):
         """Converts all strings back to textures
