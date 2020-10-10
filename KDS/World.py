@@ -1,5 +1,5 @@
 import pygame, numpy, math, random
-import KDS.Convert, KDS.Math
+import KDS.Convert, KDS.Math, KDS.Animator
 
 pygame.init()
 
@@ -165,6 +165,19 @@ class BallisticProjectile:
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
         return self.counter > self.flight_time
+    
+    def toString(self):
+        """Converts all textures to strings
+        """
+        if isinstance(self.texture, pygame.Surface):
+            self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
+        
+    def fromString(self):
+        """Converts all strings back to textures
+        """
+        if isinstance(self.texture, pygame.Surface):
+            self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+        
 
 class Lighting:
 
@@ -214,7 +227,7 @@ class itemTools:
             self.force = force
 
 class Explosion:
-    def __init__(self, animation, pos: (int, int)):
+    def __init__(self, animation: KDS.Animator.Animation, pos: (int, int)):
         self.animation = animation
         self.xpos = pos[0]
         self.ypos = pos[1]
@@ -223,6 +236,16 @@ class Explosion:
         txtre, finished = self.animation.update()
         Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
         return finished, self.animation.tick
+    
+    def toString(self):
+        """Converts all textures to strings
+        """
+        self.animation.toString()
+        
+    def fromString(self):
+        """Converts all strings back to textures
+        """
+        self.animation.fromString()
     
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)
