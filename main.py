@@ -162,113 +162,6 @@ class Audio:
 #region Animations
 monstersLeft = 0
 
-class Archvile:
-    global monstersLeft
-
-    def __init__(self, position, health, speed):
-        self.position = position
-        self.health = health
-        self.speed = speed
-        self.rect = pygame.Rect(position[0], position[1], 65, 85)
-
-        self.direction = True
-        self.movement = [speed, 8]
-        self.hits = {}
-        self.playDeathAnimation = True
-        self.attacking = "null"
-        self.counter = 0
-        self.attack_anim = False
-        self.playDeathSound = True
-
-    def update(self, a_run):
-        global player_health, monstersLeft
-        if not self.attack_anim:
-            self.counter += 1
-
-        def hit_scan(self):
-            q = True
-            counter = 0
-            scan_position = [self.rect.centerx, self.rect.centery]
-            while q:
-                if self.direction:
-                    scan_position[0] += 27
-                else:
-                    scan_position[0] -= 27
-
-                for tile in WorldData.Legacy.tile_rects:
-                    if tile.collidepoint(scan_position):
-                        return "wall"
-
-                if player_rect.collidepoint(scan_position):
-                    return "player"
-
-                counter += 1
-                if counter > 40:
-                    q = False
-
-            return "null"
-
-        if self.health > 0:
-            if self.counter > 100:
-                self.attacking = hit_scan(self)
-                if self.attacking == "player":
-                    if not self.attack_anim:
-                        Audio.playSound(archvile_attack)
-                    self.attack_anim = True
-                self.counter = 0
-            else:
-                self.attacking = "null"
-
-            if not self.attack_anim:
-                self.rect, self.hits = move_entity(
-                    self.rect, self.movement, WorldData.Legacy.tile_rects)
-                if self.hits["right"] or self.hits["left"]:
-                    self.movement[0] = -self.movement[0]
-
-                if self.movement[0] > 0:
-                    self.direction = True
-                elif self.movement[0] < 0:
-                    self.direction = False
-
-                screen.blit(pygame.transform.flip(a_run, not self.direction,
-                                                  False), (self.rect.x - scroll[0],
-                                                           self.rect.y - scroll[1]))
-
-            else:
-                i, u = arhcvile_attack_animation.update()
-                if u:
-                    f = hit_scan(self)
-
-                    if f != "wall" and player_rect.y-40 < archvile.rect.y:
-                        player_health -= random.randint(30, 80)
-                        Audio.playSound(landmine_explosion)
-                    del f
-
-                    arhcvile_attack_animation.reset()
-                    self.attack_anim = False
-                screen.blit(pygame.transform.flip(
-                    i, not self.direction, False), (self.rect.x - scroll[0],
-                                                    self.rect.y - scroll[1]))
-
-        elif self.playDeathAnimation:
-            self.attacking = "null"
-            self.attack_anim = False
-            if self.playDeathSound:
-                self.playDeathSound = False
-                Audio.playSound(archvile_death)
-            l, p = archvile_death_animation.update()
-            if not p:
-                screen.blit(pygame.transform.flip(l, not self.direction, False),
-                            (self.rect.x - scroll[0], self.rect.y - scroll[1] + 15))
-
-            if p:
-                self.playDeathAnimation = False
-                monstersLeft -= 1
-
-        else:
-            screen.blit(pygame.transform.flip(archvile_corpse, not self.direction,
-                                              False), (self.rect.x - scroll[0],
-                                                       self.rect.y - scroll[1]+25))
 #endregion
 #region Initialisation
 KDS.AI.init(Audio)
@@ -1899,17 +1792,6 @@ class Item:
         return Item_list, inventory
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
-def load_items(path):
-    with open(path, 'r') as f:
-        data = f.read()
-        f.close()
-    data = data.split('\n')
-    item_map = []
-    for row in data:
-        item_map.append(list(row))
-    return item_map
-
-
 def load_jukebox_music():
     musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
     musics = []
@@ -1950,58 +1832,6 @@ koponen_talking_background = pygame.image.load(
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 #endregion
 #region Collisions
-
-def shotgun_shots():
-    shots = []
-    global direction
-    shots_direction = not direction
-    for _ in range(7):
-        shots.append([player_rect.centerx, player_rect.centery-20])
-
-    q = True
-    counter = 0
-    dir_counter = 0
-    while q:
-
-        for tile in WorldData.Legacy.tile_rects:
-            for shot in shots:
-                if tile.collidepoint(shot):
-                    shots.remove(shot)
-
-        for zombie1 in WorldData.Legacy.zombies:
-            for shot in shots:
-                if zombie1.rect.collidepoint(shot):
-                    shots.remove(shot)
-                    zombie1.health -= 35
-
-        for sergeant in WorldData.Legacy.sergeants:
-            for shot in shots:
-                if sergeant.rect.collidepoint(shot):
-                    shots.remove(shot)
-                    sergeant.health -= 35
-
-        for archvile in WorldData.Legacy.archviles:
-            for shot in shots:
-                if archvile.rect.collidepoint(shot):
-                    shots.remove(shot)
-                    archvile.health -= 35
-
-        for x in range(len(shots)):
-            if shots_direction:
-                shots[x][0] += 26
-                if dir_counter > 4:
-                    shots[x][1] += int((x - 2)*3)
-            else:
-                shots[x][0] -= 26
-                shots[x][1] += int((x - 2)*3)
-
-        counter += 1
-        dir_counter += 1
-        if dir_counter > 5:
-            dir_counter = 0
-        if counter > 80:
-            q = False
-
 
 def damage(health, min_damage: int, max_damage: int):
     health -= int(random.uniform(min_damage, max_damage))
