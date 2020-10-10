@@ -86,7 +86,7 @@ class Save:
         Player = "player"
         
     @staticmethod
-    def init():
+    def init(SaveIndex: int):
         if os.path.isdir(SaveCachePath):
             shutil.rmtree(SaveCachePath)
         os.makedirs(SaveCachePath)
@@ -95,24 +95,45 @@ class Save:
         #decodes and loads a save file to cache
         
     @staticmethod
-    def Set(SaveIndex: int, SafeName: str, _DataType, SaveItem):
-        if _DataType == Save.DataType.World:
-            with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
-                f.write(pickle.dumps(SaveItem))
-        else:
-            data = {}
-            if os.path.isfile(Save.PlayerFileCache):
-                with open(Save.PlayerFileCache) as f:
-                    data = json.loads(f.read())
-            data[SafeName] = SaveItem
+    def SetWorld(SafeName: str, SaveItem):
+        with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
+            f.write(pickle.dumps(SaveItem))
+                
+    def SetPlayer(SafeName: str, SaveItem):
+        data = {}
+        if os.path.isfile(Save.PlayerFileCache):
             with open(Save.PlayerFileCache) as f:
-                json.dumps(data, sort_keys=True)
+                data = json.loads(f.read())
+        data[SafeName] = SaveItem
+        with open(Save.PlayerFileCache) as f:
+            json.dumps(data, sort_keys=True)
     
     @staticmethod
-    def Get(SaveIndex: int, SafeName: str, DefaultValue: str or list):
-        pass
-    
+    def GetWorld(SafeName: str, DefaultValue):
+        _path = os.path.join(Save.WorldDirCache, SafeName + ".kbf")
+        if os.path.isfile(_path):
+            with open(_path) as f:
+                data = json.loads(f.read())
+            if SafeName in data:
+                return data[SafeName]
+            else:
+                return DefaultValue
+        else:
+            return DefaultValue
+        
     @staticmethod
-    def quit():
+    def GetPlayer(SaveIndex: int, SafeName: str, DefaultValue):
+        if os.path.isfile(Save.PlayerFileCache):
+            with open(Save.PlayerFileCache) as f:
+                data = json.loads(f.read())
+            if SafeName in data:
+                return data[SafeName]
+            else:
+                return DefaultValue
+        else:
+            return DefaultValue
+            
+    @staticmethod
+    def quit(SaveIndex: int):
         #encodes and stores a save file to storage
         shutil.rmtree(SaveCachePath)
