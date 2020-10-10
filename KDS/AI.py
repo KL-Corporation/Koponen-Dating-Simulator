@@ -445,7 +445,7 @@ class DrugDealer(HostileEnemy):
         def fromString():
             """#Converts all strings back to textures
             """
-            w_anim.fromString()
+            w_anim.fromString() ###Animaatioiden funktion pitää olla classin sisällä eikä missään muualla subclassissa tai sellatteessa.
         """
 
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
