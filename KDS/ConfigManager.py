@@ -114,6 +114,10 @@ class Save:
     @staticmethod
     def SetWorld(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            for item in SaveItem:
+                _toString = getattr(item, "toString", None)
+                if callable(_toString):
+                    _toString()
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
                 f.write(pickle.dumps(SaveItem))
     
@@ -135,6 +139,10 @@ class Save:
             if os.path.isfile(_path):
                 with open(_path, "rb") as f:
                     data = pickle.loads(f.read())
+                for item in data:
+                    _fromString = getattr(item, "toString", None)
+                    if callable(_fromString):
+                        _fromString()
                 return data
             else:
                 return DefaultValue

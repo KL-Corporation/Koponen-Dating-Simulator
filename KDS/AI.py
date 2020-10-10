@@ -432,8 +432,21 @@ class DrugDealer(HostileEnemy):
 
         a_anim.ticks = len(a_anim.images)-1
         
-
         #endregion
+
+        """ ESIMERKKI
+        def toString():
+            """#Converts all textures to strings
+            """
+            w_anim.toString()
+        """
+        
+        """ ESIMERKKI
+        def fromString():
+            """#Converts all textures to strings
+            """
+            w_anim.fromString()
+        """
 
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
         self.corpse = self.d_anim.images[-1]

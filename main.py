@@ -28,7 +28,7 @@ import json
 import zipfile
 import math
 from pygame.locals import *
-from PIL import Image as PiL_Image
+from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
 #endregion
 #region Priority Initialisation
@@ -1897,6 +1897,17 @@ class Item:
             Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
 
         return Item_list, inventory
+
+    def toString(self):
+        """Converts all textures to strings
+        """
+        self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
+            
+    def fromString(self):
+        """Converts all strings back to textures
+        """
+        self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+        
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
 def load_items(path):
@@ -2499,8 +2510,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     global Items, Enemies, Explosions, BallisticObjects
     Items = KDS.ConfigManager.Save.GetWorld("items", numpy.array([]))
     Enemies = KDS.ConfigManager.Save.GetWorld("enemies", numpy.array([]))
-    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", numpy.array([]))
-    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", numpy.array([]))
+    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
+    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
     ########## iPuhelin ##########
     if int(current_map) < 2:
@@ -2527,6 +2538,11 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     KDS.Logging.Log(KDS.Logging.LogType.info,
                     "Press Alt + F4 to get depression", False)
 def save_function():
+    global Items, Enemies, Explosions, BallisticObjects
+    KDS.ConfigManager.Save.SetWorld("items", Items)
+    KDS.ConfigManager.Save.SetWorld("enemies", Enemies)
+    KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
+    KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
     global player_health, player_rect, player_hand_item, farting, player_keys
     KDS.ConfigManager.Save.SetPlayer("health", player_health)
     KDS.ConfigManager.Save.SetPlayer("position", player_rect.topleft)
@@ -2544,8 +2560,8 @@ def esc_menu_f():
     esc_surface = pygame.Surface(display_size)
     
     esc_menu_background_proc = esc_menu_background.copy()
-    blurred = PiL_Image.frombytes("RGB", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGB")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
-    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGB"), screen_size, "RGB")
+    blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
+    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA")
 
     def resume():
         global esc_menu
