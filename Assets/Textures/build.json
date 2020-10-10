@@ -47,7 +47,10 @@
         "045":"greenplant.png",
         "046":"tall_greenplant.png",
         "047":"decor_rock.png",
-        "048":"decor_rock_mossy.png"
+        "048":"decor_rock_mossy.png",
+        "049":"holepanel.png",
+        "050":"old_plates.png",
+        "051":"cyan_wtwall.png"
     },
 
     "special_tiles": [
