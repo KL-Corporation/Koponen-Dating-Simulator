@@ -277,6 +277,9 @@ class HostileEnemy:
         #Converts all textures to strings
         
         self.w_anim.toString() ###Toisin sanoen... Noissa animaatioissa on jo valmiiks .toString, mutta se pitää callaa tän scriptin kautta kaikille animaatioille.
+        self.a_anim.toString()
+        self.d_anim.toString()
+        self.i_anim.toString()
     
     
     # ESIMERKKI
@@ -284,6 +287,9 @@ class HostileEnemy:
         #Converts all strings back to textures
         
         self.w_anim.fromString() ###Animaatioiden funktion pitää olla classin sisällä eikä missään muualla subclassissa tai sellatteessa.
+        self.a_anim.fromString()
+        self.d_anim.fromString()
+        self.i_anim.fromString()
 
     def onDeath(self):
         pass
