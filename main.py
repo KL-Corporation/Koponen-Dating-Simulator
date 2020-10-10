@@ -2970,8 +2970,8 @@ def main_menu():
                     elif y == 1:
                         gamemode_bc_2_2.set_alpha(int(gamemode_bc_2_alpha.update(False)))
                         display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
-
         elif MenuMode == Mode.StoryMenu:
+            #Test saving
             pygame.draw.rect(
                 display, KDS.Colors.GetPrimary.DarkGray, story_save_button_0_rect, 10)
             pygame.draw.rect(
@@ -2984,7 +2984,6 @@ def main_menu():
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
             story_save_button_2.update(
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
-
         elif MenuMode == Mode.CampaignMenu:
             pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
 

@@ -1,11 +1,13 @@
 #region Importing
 import json
+from os import rename
 import pickle
 import shutil
 import numpy
 import KDS.Logging
 import configparser
 import os
+import zipfile
 from inspect import currentframe, getframeinfo
 #endregion
 
@@ -70,6 +72,7 @@ class Save:
     WorldDirCache = os.path.join(SaveCachePath, "WorldData")
     PlayerDirCache = os.path.join(SaveCachePath, "PlayerData")
     PlayerFileCache = os.path.join(PlayerDirCache, "data.kdf")
+    SaveIndex = -1
     """
     Save File Structure:
         ↳ save_0.kds (.zip)
@@ -86,12 +89,23 @@ class Save:
         Player = "player"
         
     @staticmethod
-    def init(SaveIndex: int):
+    def quit():
+        shutil.make_archive(os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds"), 'zip', SaveCachePath)
+        #encodes and stores a save file to storage
+        shutil.rmtree(SaveCachePath)
+
+    @staticmethod
+    def init(_SaveIndex: int):
+        Save.quit()
+        Save.SaveIndex = _SaveIndex
         if os.path.isdir(SaveCachePath):
             shutil.rmtree(SaveCachePath)
         os.makedirs(SaveCachePath)
         os.mkdir(Save.WorldDirCache)
         os.mkdir(Save.PlayerDirCache)
+        _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
+        if os.path.isfile(_path):
+            zipfile.ZipFile(_path, "r").extractall(Save.PlayerDirCache)
         #decodes and loads a save file to cache
         
     @staticmethod
@@ -132,8 +146,3 @@ class Save:
                 return DefaultValue
         else:
             return DefaultValue
-            
-    @staticmethod
-    def quit(SaveIndex: int):
-        #encodes and stores a save file to storage
-        shutil.rmtree(SaveCachePath)
