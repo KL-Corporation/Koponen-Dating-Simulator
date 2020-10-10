@@ -88,18 +88,23 @@ class Animation:
         tlist = []
         for image in self.images:
             if isinstance(image, pygame.Surface):
-                Fimage = pygame.image.tostring(image, "RGBA")
-                tlist.append(Fimage)
+                tlist.append([pygame.image.tostring(image, "RGBA"), image.get_size(), "RGBA"])
         
         self.images.clear()
         self.images = tlist.copy()
+        del tlist
             
     def fromString(self):
         """Converts all strings back to textures
         """
+        tlist = []
         for image in self.images:
             if not isinstance(image, pygame.Surface):
-                image = pygame.image.fromstring(image[0], image[1], image[2])
+                tlist.append(pygame.image.fromstring(image[0], image[1], image[2]).convert())
+                
+        self.images.clear()
+        self.images = tlist.copy()
+        del tlist
 
 class Legacy:
     """The legacy animator

@@ -2392,7 +2392,7 @@ def esc_menu_f():
     
     esc_menu_background_proc = esc_menu_background.copy()
     blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
-    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA")
+    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA").convert()
 
     def resume():
         global esc_menu

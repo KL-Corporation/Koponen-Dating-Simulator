@@ -116,22 +116,17 @@ class Save:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             for item in SaveItem:
                 toStringF = getattr(item, "toString2", None)
-                if isinstance(item, KDS.AI.DrugDealer):
-                    print(item.a_anim.images[0])
-                print(toStringF)
+                if toStringF == None:
+                    toStringF = getattr(item, "toString", None)
                 if callable(toStringF):
                     toStringF()
-                print("="*80)
                 jutskia = dir(item)
                 for jutska in jutskia:
                     #print(jutska, getattr(item, jutska))
                     pass
-                print("="*80)
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
-                print(SaveItem)
                 temp = pickle.dumps(SaveItem)
                 f.write(temp)
-
             for item in SaveItem:
                 fromStringF = getattr(item, "fromString", None)
                 if callable(fromStringF):
@@ -156,9 +151,9 @@ class Save:
                 with open(_path, "rb") as f:
                     data = pickle.loads(f.read())
                 for item in data:
-                    _fromString = getattr(item, "fromString", None)
-                    if callable(_fromString):
-                        _fromString()
+                    fromStringF = getattr(item, "fromString", None)
+                    if callable(fromStringF):
+                        fromStringF()
                 return data
             else:
                 return DefaultValue
