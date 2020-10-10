@@ -443,7 +443,7 @@ class DrugDealer(HostileEnemy):
         
         """ ESIMERKKI
         def fromString():
-            """#Converts all textures to strings
+            """#Converts all strings back to textures
             """
             w_anim.fromString()
         """

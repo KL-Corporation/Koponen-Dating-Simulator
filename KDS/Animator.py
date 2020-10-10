@@ -90,7 +90,9 @@ class Animation:
             
     def fromString(self):
         """Converts all strings back to textures
+        """
         for image in self.images:
+            image = pygame.image.fromstring(image[0], image[1], image[2])
 
 class Legacy:
     """The legacy animator
