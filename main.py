@@ -1824,9 +1824,16 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def grenade_u(*args):
+
+        if KDS.Keys.GetHeld(KDS.Keys.altUp):
+            KDS.World.Grenade_O.Slope += 0.01
+        elif KDS.Keys.GetHeld(KDS.Keys.altDown):
+            KDS.World.Grenade_O.Slope -= 0.01
+
+        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force+15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force+15)*-1 - scroll[1]) )
         if args[0][0]:
             player_inventory.storage[player_inventory.SIndex] = "none"
-            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, 0.5, 9, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
+            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
 
     @staticmethod

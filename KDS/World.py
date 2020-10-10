@@ -208,6 +208,11 @@ class itemTools:
         def __init__(self, arg = 0):
             self.counter = arg
 
+    class Grenade:
+        def __init__(self, slope, force):
+            self.Slope = slope
+            self.force = force
+
 class Explosion:
     def __init__(self, animation, pos: (int, int)):
         self.animation = animation
@@ -225,3 +230,5 @@ pistol_C = itemTools.pistol(100)
 shotgun_C = itemTools.shotgun(100)
 ppsh41_C = itemTools.ppsh41(100)
 awm_C = itemTools.awm(100)
+
+Grenade_O = itemTools.Grenade(0.7, 9)
