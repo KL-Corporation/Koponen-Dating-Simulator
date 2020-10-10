@@ -118,8 +118,13 @@ class Save:
                 _toString = getattr(item, "toString", None)
                 if callable(_toString):
                     _toString()
+                print(item.texture)
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
                 f.write(pickle.dumps(SaveItem))
+            for item in SaveItem:
+                _fromString = getattr(item, "fromString", None)
+                if callable(_fromString):
+                    _fromString()
     
     @staticmethod            
     def SetPlayer(SafeName: str, SaveItem):
@@ -140,7 +145,7 @@ class Save:
                 with open(_path, "rb") as f:
                     data = pickle.loads(f.read())
                 for item in data:
-                    _fromString = getattr(item, "toString", None)
+                    _fromString = getattr(item, "fromString", None)
                     if callable(_fromString):
                         _fromString()
                 return data

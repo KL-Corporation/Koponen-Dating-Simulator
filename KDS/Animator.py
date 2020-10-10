@@ -86,13 +86,15 @@ class Animation:
         """Converts all textures to strings
         """
         for image in self.images:
-            image = (pygame.image.tostring(image, "RGBA"), image.get_size(), "RGBA")
+            if isinstance(image, pygame.Surface):
+                image = (pygame.image.tostring(image, "RGBA"), image.get_size(), "RGBA")
             
     def fromString(self):
         """Converts all strings back to textures
         """
         for image in self.images:
-            image = pygame.image.fromstring(image[0], image[1], image[2])
+            if not isinstance(image, pygame.Surface):
+                image = pygame.image.fromstring(image[0], image[1], image[2])
 
 class Legacy:
     """The legacy animator

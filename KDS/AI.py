@@ -252,7 +252,7 @@ class HostileEnemy:
             raise Exception("KDS.Error: AI textures are not initialized")
 
         self.rect = rect
-        self.health = 175
+        self.health = health
         self.sleep = sleep
         self.direction = direction
         self.w_anim = w
@@ -293,7 +293,7 @@ class HostileEnemy:
     def attack(self):
         pass
 
-    def update(self, Surface: pygame.Surface, scroll:[int, int], tiles, targetRect):
+    def update(self, Surface: pygame.Surface, scroll: list, tiles, targetRect):
         enemyProjectiles = None
         dropItems = []
         if self.health:
@@ -359,7 +359,6 @@ class Imp(HostileEnemy):
         d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
-        self.corpse = self.d_anim.images[-1]
     
     def attack(self, slope, env_obstacles, target, *args):
         if random.randint(0, 80) == 10:
@@ -403,7 +402,6 @@ class SergeantZombie(HostileEnemy):
         #endregion
 
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=40)
-        self.corpse = self.d_anim.images[-1]
 
     def attack(self, slope, env_obstacles, target, *args):
         if random.randint(0, 80) == 10:
@@ -449,12 +447,8 @@ class DrugDealer(HostileEnemy):
         a_anim.ticks = len(a_anim.images)-1
         
         #endregion
-
-
         
-
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
-        self.corpse = self.d_anim.images[-1]
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)

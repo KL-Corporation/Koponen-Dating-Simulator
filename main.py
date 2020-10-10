@@ -1794,12 +1794,14 @@ class Item:
     def toString(self):
         """Converts all textures to strings
         """
-        self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
+        if isinstance(self.texture, pygame.Surface):
+            self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
             
     def fromString(self):
         """Converts all strings back to textures
         """
-        self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+        if not isinstance(self.texture, pygame.Surface):
+            self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
         
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
