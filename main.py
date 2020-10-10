@@ -3284,7 +3284,7 @@ while main_running:
 #region Koponen Tip
     if player_rect.colliderect(koponen_rect):
         screen.blit(
-            koponen_talk_tip, (koponen_rect.centerx - scroll[0] - (koponen_talk_tip.get_width() / 2), koponen_rect.top - scroll[1] - 20))
+            koponen_talk_tip, (koponen_rect.centerx - scroll[0] - int(koponen_talk_tip.get_width() / 2), koponen_rect.top - scroll[1] - 20))
         koponen_movement[0] = 0
         if knifeInUse:
             koponen_alive = False

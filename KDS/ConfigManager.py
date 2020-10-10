@@ -118,6 +118,11 @@ class Save:
                 _toString = getattr(item, "toString", None)
                 if callable(_toString):
                     _toString()
+                print("="*80)
+                jutskia = dir(item)
+                for jutska in jutskia:
+                    print(jutska, getattr(item, jutska))
+                print("="*80)
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
                 f.write(pickle.dumps(SaveItem))
             for item in SaveItem:
