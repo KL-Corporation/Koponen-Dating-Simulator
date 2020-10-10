@@ -118,7 +118,6 @@ class Save:
                 _toString = getattr(item, "toString", None)
                 if callable(_toString):
                     _toString()
-                print(item.texture)
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
                 f.write(pickle.dumps(SaveItem))
             for item in SaveItem:
