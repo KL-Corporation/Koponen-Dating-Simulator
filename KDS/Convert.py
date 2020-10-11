@@ -64,3 +64,11 @@ def AspectScale(image: pygame.Surface, size: tuple, horizontalOnly: bool = False
 
 def ToMultiplier(boolean: bool):
     return -1 if boolean else 1
+
+def ToMultiplier2(integer: int):
+    if integer > 0:
+        return 1
+    elif integer < 0:
+        return -1
+    else:
+        return 0

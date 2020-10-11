@@ -29,7 +29,7 @@ def collision_test(rect: pygame.Rect, Tile_list):
     return hit_list
 
 class Bullet:
-    def __init__(self, rect, direction: int, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect, direction: bool, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
@@ -42,7 +42,7 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self,Surface:pygame.Surface, scroll: list, targets, plr_rct, plr_htlt, debugMode = False):
+    def update(self,Surface:pygame.Surface, scroll: list, targets, HitTargets, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
@@ -59,21 +59,27 @@ class Bullet:
                 self.rect.y = self.slopeBuffer
 
                 collision_list = collision_test(self.rect, self.environment_obstacles)
+
+                for hTarget in HitTargets:
+                    if HitTargets[hTarget].rect.colliderect(self.rect):
+                        HitTargets[hTarget].hitted = True
+                        return "wall", targets, plr_htlt, HitTargets
+
                 for target in targets:
                     if self.rect.colliderect(target.rect) and target.health > 0:
                         target.dmg(self.damage)
                         target.sleep = False
-                        return "wall", targets, plr_htlt
+                        return "wall", targets, plr_htlt, HitTargets
                 
                 if plr_rct.colliderect(self.rect):
                     plr_htlt -= self.damage
                     if plr_htlt < 0:
                         plr_htlt = 0
-                    return "wall", targets, plr_htlt
+                    return "wall", targets, plr_htlt, HitTargets
                 if collision_list:
-                    return "wall", targets, plr_htlt
+                    return "wall", targets, plr_htlt, HitTargets
 
-            return "air", targets, plr_htlt
+            return "air", targets, plr_htlt, HitTargets
         else:
             if self.direction:
                 self.rect.x -= self.speed
@@ -86,20 +92,33 @@ class Bullet:
             self.rect.y = self.slopeBuffer
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
+
+            for hTarget in HitTargets:
+                if HitTargets[hTarget].rect.colliderect(self.rect):
+                    HitTargets[hTarget].hitted = True
+                    return "wall", targets, plr_htlt, HitTargets
+
             for target in targets:
                 if target.rect.colliderect(self.rect) and target.health > 0:
                     target.sleep = False
                     target.dmg(self.damage)
-                    return "wall", targets, plr_htlt
+                    return "wall", targets, plr_htlt, HitTargets
+
             if plr_rct.colliderect(self.rect):
                 plr_htlt -= self.damage
                 if plr_htlt < 0:
                     plr_htlt = 0
-                return "wall", targets, plr_htlt
+
+                return "wall", targets, plr_htlt, HitTargets
             if collision_list:
-                return "wall", targets, plr_htlt
+                return "wall", targets, plr_htlt, HitTargets
             if self.movedDistance > self.maxDistance:
-                return "air", targets, plr_htlt
+                return "air", targets, plr_htlt, HitTargets
+
+class HitTarget:
+    def __init__(self, rect: pygame.Rect):
+        self.rect = rect
+        self.hitted = False
 
 class BallisticProjectile:
     def __init__(self, position, width, height, slope, force, direction, gravitational_factor = 0.1, flight_time = 240, texture=None):

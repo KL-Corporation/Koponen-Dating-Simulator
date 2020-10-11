@@ -324,6 +324,7 @@ rk62_bullet_t = pygame.image.load("Assets/Textures/Animations/rk62_bullet.png").
 ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
 ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
 awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
+blh = pygame.image.load("Assets/Textures/Map/bloody_h.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
@@ -381,6 +382,7 @@ main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 awm_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+blh.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 Items = {"iPuhelin": ipuhelin_texture, "coffeemug": coffeemug}
@@ -518,6 +520,7 @@ Explosions = []
 BallisticObjects = []
 Lights = []
 Particles = []
+HitTargets = {}
 tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
@@ -1295,6 +1298,22 @@ class Torch(Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.x - decor_head_light_sphere_radius/2, self.rect.y - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
         return self.texture.update()
 
+class GoryHead(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0], position[1] - 28, 34, 62)
+        self.checkCollision = False
+        self.gibbed = False
+        HitTargets[self] = KDS.World.HitTarget(self.rect)
+
+    def update(self):
+        if not self.gibbed and HitTargets[self].hitted:
+            self.gibbed = True
+            self.texture = blh
+            HitTargets.pop(self)
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1310,7 +1329,8 @@ specialTilesD = {
     43: DecorativeHead,
     47: Rock0,
     48: Rock0,
-    52: Torch
+    52: Torch,
+    53: GoryHead
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -3076,11 +3096,12 @@ while main_running:
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, Enemies, player_rect, player_health, DebugMode)
+        result = Projectile.update(screen, scroll, Enemies, HitTargets, player_rect, player_health, DebugMode)
         if result:
             v = result[0]
             Enemies = result[1]
             player_health = result[2]
+            HitTargets = result[3]
         else:
             v = None
         
@@ -3090,11 +3111,14 @@ while main_running:
     for B_Object in BallisticObjects:
         r2 = B_Object.update(tiles, screen, scroll)
         if r2:
-            if KDS.Math.getDistance(player_rect.center, B_Object.rect.center) < 100:
-                player_health -= 100 - KDS.Math.getDistance(player_rect.center, B_Object.rect.center)
-            for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.center, B_Object.rect.center) < 120:
-                    enemy.health -= 170-KDS.Math.getDistance(enemy.rect.center, B_Object.rect.center)
+            for x in range(8):
+                x = -x
+                x /= 8
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 1, -1, tiles, 25, maxDistance=82, slope=x, texture=soulsphere))
+            for x in range(8):
+                x = -x
+                x /= 8
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x, texture=soulsphere))
 
             Audio.playSound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (B_Object.rect.x-60, B_Object.rect.y-55)))
