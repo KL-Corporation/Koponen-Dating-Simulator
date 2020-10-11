@@ -50,7 +50,8 @@
         "048":"decor_rock_mossy.png",
         "049":"holepanel.png",
         "050":"old_plates.png",
-        "051":"cyan_wtwall.png"
+        "051":"cyan_wtwall.png",
+        "052":"tall_torch.png"
     },
 
     "special_tiles": [
@@ -67,7 +68,8 @@
         26,
         43,
         47,
-        48
+        48,
+        52
     ],
 
     "checkCollisionFalse": [

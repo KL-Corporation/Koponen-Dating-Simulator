@@ -200,6 +200,31 @@ class Lighting:
             self.surf = surf
             self.position = position
 
+    class Fireparticle:
+        def __init__(self, position, size, lifetime):
+            self.rect = pygame.Rect(position[0], position[1], size, size)
+            self.size = size
+            self.lifetime = lifetime
+            self.bsurf = Lighting.circle_surface(size, (220, 220, 4))
+            self.tsurf = Lighting.circle_surface(size*2, (220, 220, 4))
+        
+        @staticmethod
+        def update(particle, Surface: pygame.Surface, scroll: list):
+            particle.rect.y -= 2
+            particle.rect.x += random.randint(-1, 1)
+            particle.size -= 0.3
+
+            if particle.size < 0:
+                return None
+            
+            particle.bsurf = pygame.transform.scale(particle.bsurf, (round(particle.size), round(particle.size)))
+            Surface.blit(particle.bsurf, (particle.rect.x-scroll[0], particle.rect.y-scroll[1]))
+
+            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size*2), round(particle.size*2)))
+
+            return particle.tsurf
+
+
 class itemTools:
     class rk62:
         def __init__(self, arg = 0):

@@ -515,6 +515,7 @@ Projectiles = []
 Explosions = []
 BallisticObjects = []
 Lights = []
+Particles = []
 tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
@@ -1268,6 +1269,26 @@ class Rock0(Tile):
     def update(self):
         return self.texture
 
+class Torch(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.GetPrimary.White, -1)
+        self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
+        self.checkCollision = False
+        self.light_scale = 150
+
+    def update(self):
+        if 130 < self.light_scale < 170:
+            self.light_scale += random.randint(-3, 6)
+        elif self.light_scale > 160:
+            self.light_scale -= 4
+        else:
+            self.light_scale += 4
+        if random.randint(0, 4) == 0:
+            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y+8), 5, 3))
+        Lights.append(KDS.World.Lighting.Light((self.rect.x - decor_head_light_sphere_radius/2, self.rect.y - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+        return self.texture.update()
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1282,7 +1303,8 @@ specialTilesD = {
     26: Door,
     43: DecorativeHead,
     47: Rock0,
-    48: Rock0
+    48: Rock0,
+    52: Torch
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -3073,6 +3095,16 @@ while main_running:
         else:
             if etick < 10:
                 Lights.append(KDS.World.Lighting.Light((unit.xpos-80, unit.ypos-80), light_sphere2))
+
+    #Partikkelit
+    while len(Particles) > 20:
+        Particles.pop(0)
+    for particle in Particles:
+        result = KDS.World.Lighting.Fireparticle.update(particle, screen, scroll)
+        if result:
+            Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
+        else:
+            Particles.remove(particle)
 
     #Valojen käsittely
     lightsUpdating = 0
