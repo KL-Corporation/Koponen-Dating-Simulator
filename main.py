@@ -448,6 +448,7 @@ jukeboxMusicPlaying = -1
 lastJukeboxSong = [0, 0, 0, 0, 0]
 playerStamina = 100.0
 gasburnerBurning = False
+fireExtinguisherBurning = False
 plasmabullets = []
 tick = 0
 knifeInUse = False
@@ -1558,7 +1559,7 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
         return False
 
     @staticmethod
-    def empyOperation():
+    def emptyOperation():
         return True
 
 
@@ -1579,8 +1580,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
             gasburner_fire.stop()
             gasburnerBurning = False
             return gasburner_off
-
-            
+   
     @staticmethod
     def coffeemug_u(*args):
 
@@ -1746,15 +1746,20 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
             player_inventory.storage[player_inventory.SIndex] = "none"
             BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
+   
+    @staticmethod
+    def fire_extinguisher_u(*args):
+        global fireExtinguisherBurning
+        if args[0][0] == True:
+            fireExtinguisherBurning = True
 
     @staticmethod
-    def empyOperation(*args):
+    def emptyOperation(*args):
 
         return i_textures[0]
 
-
 Pfunctions = {
-    0: pickupFunctions.empyOperation,
+    0: pickupFunctions.emptyOperation,
     1: pickupFunctions.blue_key_p,
     2: pickupFunctions.cell_p,
     3: pickupFunctions.coffeemug_p,
@@ -1785,7 +1790,7 @@ Pfunctions = {
 }
 
 Ufunctions = {
-    0: itemFunctions.empyOperation,
+    0: itemFunctions.emptyOperation,
     3: itemFunctions.coffeemug_u,
     4: itemFunctions.gasburner_u,
     6: itemFunctions.iPuhelin_u,
@@ -1801,7 +1806,7 @@ Ufunctions = {
     26: itemFunctions.empty_flask_u,
     27: itemFunctions.flask_meth_u,
     28: itemFunctions.flask_blood_u,
-    29: itemFunctions.grenade_u
+    29: itemFunctions.grenade_u,
 
 }
 
