@@ -989,14 +989,14 @@ class Tile:
     @staticmethod
     # Tile_list is a 2d numpy array
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: (int, int), *args):
-        x = int(round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2))) - 4
-        y = int(round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2))) - 4
+        x = int(round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2))) - 2
+        y = int(round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2))) - 2
         x = max(x, 0)
         y = max(y, 0)
         max_x = len(Tile_list[0])
         max_y = len(Tile_list)
-        end_x = int(round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2))) + 4
-        end_y = int(round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2))) + 4
+        end_x = int(round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2))) + 1
+        end_y = int(round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2))) + 1
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
         for row in Tile_list[y:end_y]:
@@ -1741,8 +1741,7 @@ class Item:
 
     @staticmethod
     # Item_list is a 2d numpy array
-    def render(Item_list, Surface: pygame.Surface, scroll: list, position: (int, int)):
-
+    def render(Item_list, Surface: pygame.Surface, scroll: list):
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(screen, KDS.Colors.GetPrimary.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
@@ -2981,7 +2980,7 @@ while main_running:
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     Items, player_inventory = Item.checkCollisions(
         Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
-    Tile.renderUpdate(tiles, screen, scroll, player_rect.center)
+    Tile.renderUpdate(tiles, screen, scroll, (player_rect.centerx - (player_rect.x - scroll[0] - 301), player_rect.centery - (player_rect.y - scroll[1] - 221)))
 
     for enemy in Enemies:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
@@ -3005,7 +3004,7 @@ while main_running:
                         Items = numpy.append(Items, tempItem)
                         del tempItem
 
-    Item.render(Items, screen, scroll, (player_rect.x, player_rect.y))
+    Item.render(Items, screen, scroll)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
 
     for Projectile in Projectiles:
