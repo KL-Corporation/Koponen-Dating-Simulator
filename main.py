@@ -1806,7 +1806,7 @@ Ufunctions = {
     26: itemFunctions.empty_flask_u,
     27: itemFunctions.flask_meth_u,
     28: itemFunctions.flask_blood_u,
-    29: itemFunctions.grenade_u,
+    29: itemFunctions.grenade_u
 
 }
 
