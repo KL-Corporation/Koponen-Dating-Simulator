@@ -2054,7 +2054,7 @@ def console():
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You are now a playboy", True)
         KDS.Logging.Log(KDS.Logging.LogType.info,
-                        f"Koponen happines: {koponen_happinesss}", True)
+                        f"Koponen happines: {koponen_happiness}", True)
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
@@ -2092,6 +2092,17 @@ def console():
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for woof", True)
+    elif command_list[0] == "help":
+        KDS.Logging.Log(KDS.Logging.LogType.info, """
+Console Help:
+    - give [item: str] => Adds the specified item to your inventory. Allows to add items not available in-game.
+    - playboy => Sets Koponen's happiness to unseen levels.
+    - kill / stop => Stops the game.
+    - killme => Kills the player.
+    - terms [state: bool] => Sets Terms and Conditions accepted to specified value.
+    - woof [state: bool] => Sets all bulldogs anger to specified value.
+    - help => Shows a list of commands.
+""", True)
     else:
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "This command does not exist.", True)
@@ -3356,6 +3367,7 @@ while main_running:
 #region Conditional Events
     if player_rect.y > len(tiles) * 34 + 340:
         player_health = 0
+        player_rect.y = len(tiles) * 34 + 340
     if esc_menu:
         Audio.MusicMixer.pause()
         Audio.pauseAllSounds()
