@@ -3257,11 +3257,11 @@ while main_running:
     if animation_counter > animation_duration:
         animation_counter = 0
         animation_image += 1
-        if animation_image > (len(animation)-1):
-            animation_image = 0
-            if player_death_event:
-                player_death_event = False
-                animation_has_played = True
+    if animation_image > (len(animation) - 1):
+        animation_image = 0
+        if player_death_event:
+            player_death_event = False
+            animation_has_played = True
 
     if koponen_animation_stats[2] > koponen_animation_stats[1]:
         koponen_animation_stats[0] += 1
