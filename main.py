@@ -3155,7 +3155,7 @@ while main_running:
                 rectSurf = pygame.Surface((light.surf.get_width(), light.surf.get_height()))
                 rectSurf.fill(KDS.Colors.GetPrimary.Yellow)
                 rectSurf.set_alpha(128)
-                screen.blit(rectSurf, (light.position[0] - scroll[0], light.position[1] - scroll[1]))
+                screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
         black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
@@ -3415,12 +3415,14 @@ while main_running:
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
     if DebugMode:
-        screen.blit(score_font.render(
-            "FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (5, 5))
-        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) +
-                                      "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
-        screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) +
-                                      "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
+        debugSurf = pygame.Surface((200, 50))
+        debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+        debugSurf.set_alpha(128)
+        screen.blit(debugSurf, (0, 0))
+        
+        screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (5, 5))
+        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
+        screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
 #endregion
 #region Screen Rendering
