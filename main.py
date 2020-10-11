@@ -418,6 +418,7 @@ soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsgetpow.wav")
 pray_sound = pygame.mixer.Sound("Assets/Audio/Effects/prayer.ogg")
 decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/DecorativeHead_wakeup.ogg")
 awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
+smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -1038,6 +1039,8 @@ class Toilet(Tile):
                 self.light_scale -= 4
             else:
                 self.light_scale += 4
+            if random.randint(0, 2) == 0:
+                Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x+7, self.rect.x+self.rect.width-13), self.rect.y+8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
             Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
             return self.animation.update()
         else:
@@ -1660,15 +1663,15 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
             KDS.World.ppsh41_C.counter = 0
-            ppsh41_shot.stop()
-            Audio.playSound(ppsh41_shot)
+            smg_shot.stop()
+            Audio.playSound(smg_shot)
             ppsh41_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
-                ppsh41_shot.stop() 
+                smg_shot.stop() 
             KDS.World.ppsh41_C.counter += 1
             return ppsh41_texture
 
