@@ -318,7 +318,6 @@ class HostileEnemy:
             if self.attackRunning:
                 animation, dResult = self.a_anim.update()
                 Surface.blit(pygame.transform.flip(animation, self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
-                del animation
                 if dResult:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
@@ -370,21 +369,14 @@ class Imp(HostileEnemy):
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
     
     def attack(self, slope, env_obstacles, target, *args):
-        if random.randint(0, 80) == 10:
-            dist = KDS.Math.getDistance(self.rect.center, target.center)
-            dist = min(1200, dist)
-            dist = max(0, dist)
-            dist = 1200-dist
-            dist /= 1200
-            impAtack.set_volume(dist)
-            impAtack.play()
-            if not self.direction:
-                d = 1.43
-            else:
-                d = 1
-            return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
-        else:
-            return None
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200-dist
+        dist /= 1200
+        impAtack.set_volume(dist)
+        impAtack.play()
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
     def onDeath(self):
         return [0]
 
@@ -413,18 +405,16 @@ class SergeantZombie(HostileEnemy):
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=40)
 
     def attack(self, slope, env_obstacles, target, *args):
-        if random.randint(0, 80) == 10:
-            dist = KDS.Math.getDistance(self.rect.center, target.center)
-            dist = min(1200, dist)
-            dist = max(0, dist)
-            dist = 1200 - dist
-            dist /= 1200
-            shotgunShot.set_volume(dist)
-            shotgunShot.play()
-            #print(KDS.Math.getSlope(self.rect.center, target.center))
-            return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
-        else:
-            return None
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        shotgunShot.set_volume(dist)
+        shotgunShot.play()
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+
 
     def onDeath(self):
         items = []

@@ -989,6 +989,7 @@ class Tile:
     @staticmethod
     # Tile_list is a 2d numpy array
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: (int, int), *args):
+        tilesUpdating = 0
         x = int(round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2))) - 2
         y = int(round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2))) - 2
         x = max(x, 0)
@@ -1002,6 +1003,7 @@ class Tile:
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 if not renderable.air:
+                    tilesUpdating += 1
                     if not renderable.specialTileFlag:
                         Surface.blit(renderable.texture, (renderable.rect.x -
                                                         scroll[0], renderable.rect.y - scroll[1]))
