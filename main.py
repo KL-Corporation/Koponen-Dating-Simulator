@@ -1065,6 +1065,8 @@ class Trashcan(Tile):
                 self.light_scale -= 4
             else:
                 self.light_scale += 4
+            if random.randint(0, 2) == 0:
+                Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x, self.rect.x+self.rect.width-16), self.rect.y+8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
             Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
             return self.animation.update()
         else:
@@ -1285,7 +1287,7 @@ class Torch(Tile):
         else:
             self.light_scale += 4
         if random.randint(0, 4) == 0:
-            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y+8), 5, 3))
+            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y+8), random.randint(3, 6), 30, 1))
         Lights.append(KDS.World.Lighting.Light((self.rect.x - decor_head_light_sphere_radius/2, self.rect.y - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
         return self.texture.update()
 
@@ -1568,8 +1570,15 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     @staticmethod
     def knife_u(*args):
         if args[0][0]:
+            if KDS.World.knife_C.counter > 40:
+                KDS.World.knife_C.counter = 0
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 13 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,1,1),direction, -1, tiles, 25, maxDistance=40))
+            KDS.World.knife_C.counter  += 1
             return knife_animation_object.update()
         else:
+            KDS.World.knife_C.counter  += 1
+            if KDS.World.knife_C.counter > 100:
+                KDS.World.knife_C.counter = 100
             return knife
 
     @staticmethod

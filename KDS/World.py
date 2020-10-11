@@ -201,18 +201,20 @@ class Lighting:
             self.position = position
 
     class Fireparticle:
-        def __init__(self, position, size, lifetime):
+        def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
             self.rect = pygame.Rect(position[0], position[1], size, size)
             self.size = size
+            self.speed = speed
             self.lifetime = lifetime
-            self.bsurf = Lighting.circle_surface(size, (220, 220, 4))
-            self.tsurf = Lighting.circle_surface(size*2, (220, 220, 4))
+            self.dying_speed = size/lifetime
+            self.bsurf = Lighting.circle_surface(size, color)
+            self.tsurf = Lighting.circle_surface(size*2, color)
         
         @staticmethod
         def update(particle, Surface: pygame.Surface, scroll: list):
-            particle.rect.y -= 2
+            particle.rect.y -= particle.speed
             particle.rect.x += random.randint(-1, 1)
-            particle.size -= 0.3
+            particle.size -= particle.dying_speed
 
             if particle.size < 0:
                 return None
@@ -251,6 +253,10 @@ class itemTools:
             self.Slope = slope
             self.force = force
 
+    class Knife:
+        def __init__(self, arg = 0):
+            self.counter = arg
+
 class Explosion:
     def __init__(self, animation: KDS.Animator.Animation, pos: (int, int)):
         self.animation = animation
@@ -279,4 +285,5 @@ shotgun_C = itemTools.shotgun(100)
 ppsh41_C = itemTools.ppsh41(100)
 awm_C = itemTools.awm(100)
 
+knife_C = itemTools.Knife(100)
 Grenade_O = itemTools.Grenade(0.7, 9)
