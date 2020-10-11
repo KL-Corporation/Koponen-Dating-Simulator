@@ -3354,7 +3354,7 @@ while main_running:
 
 #endregion
 #region Conditional Events
-    if player_rect.y > len(tiles)*34+400:
+    if player_rect.y > len(tiles) * 34 + 340:
         player_health = 0
     if esc_menu:
         Audio.MusicMixer.pause()
