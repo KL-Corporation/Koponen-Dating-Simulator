@@ -2549,14 +2549,17 @@ def esc_menu_f():
         main_menu_button.update(esc_surface, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
-        if DebugMode:
-            fps_text = "FPS: " + str(int(round(clock.get_fps())))
-            fps_text = score_font.render(
-                fps_text, True, KDS.Colors.GetPrimary.White)
-            display.blit(pygame.transform.scale(fps_text, (int(
-                fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(esc_surface, (0, 0))
+        if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+        
+            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
+            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
@@ -2647,6 +2650,11 @@ def settings_menu():
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+            
             fps_text = "FPS: " + str(int(round(clock.get_fps())))
             fps_text = score_font.render(
                 fps_text, True, KDS.Colors.GetPrimary.White)
@@ -2889,6 +2897,11 @@ def main_menu():
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+            
             fps_text = "FPS: " + str(int(round(clock.get_fps())))
             fps_text = score_font.render(
                 fps_text, True, KDS.Colors.GetPrimary.White)
