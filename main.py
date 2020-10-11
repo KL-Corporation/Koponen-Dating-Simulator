@@ -343,6 +343,7 @@ main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.pn
 light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
 light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").convert_alpha()
 orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
+orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
 blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -528,6 +529,7 @@ blue_light_scale = 40
 light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
 light_sphere2 = pygame.transform.scale(light_sphere2, (player_light_sphere_radius, player_light_sphere_radius))
 orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
+orange_light_sphere2 = pygame.transform.scale(orange_light_sphere2, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
 blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scale, blue_light_scale))
 
 Items = numpy.array([])
@@ -1020,6 +1022,7 @@ class Toilet(Tile):
         self.texture = toilet0
         self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), -1)
         self.checkCollision = True
+        self.light_scale = 150
 
     def update(self):
         
@@ -1028,6 +1031,13 @@ class Toilet(Tile):
             global player_score
             player_score += 30
         if self.burning:
+            if 130 < self.light_scale < 170:
+                self.light_scale += random.randint(-3, 6)
+            elif self.light_scale > 160:
+                self.light_scale -= 4
+            else:
+                self.light_scale += 4
+            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
             return self.animation.update()
         else:
             return self.texture
@@ -1039,6 +1049,7 @@ class Trashcan(Tile):
         self.texture = trashcan
         self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
         self.checkCollision = True
+        self.light_scale = 150
 
     def update(self):
         
@@ -1047,6 +1058,13 @@ class Trashcan(Tile):
             global player_score
             player_score += 20
         if self.burning:
+            if 130 < self.light_scale < 170:
+                self.light_scale += random.randint(-3, 6)
+            elif self.light_scale > 160:
+                self.light_scale -= 4
+            else:
+                self.light_scale += 4
+            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
             return self.animation.update()
         else:
             return self.texture
@@ -2965,7 +2983,6 @@ while main_running:
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
 
     scroll = true_scroll.copy()
-    lscroll = LightScroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
     if farting:
@@ -2989,7 +3006,9 @@ while main_running:
                 play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
-
+    #######################################################################################################################
+    #######################################################################################################################
+    #######################################################################################################################
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     Items, player_inventory = Item.checkCollisions(
         Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
@@ -3094,9 +3113,9 @@ while main_running:
             KDS.Missions.RenderTask(screen, i)
 
         player_inventory.render(screen)
-    ###########################################
-    ###########################################
-    ###########################################
+    ##################################################################################################################################################################
+    ##################################################################################################################################################################
+    ##################################################################################################################################################################
 #endregion
 #region PlayerMovement
     fall_speed = 0.4
@@ -3186,17 +3205,6 @@ while main_running:
 #region AI
     koponen_rect, k_collisions = move_entity(
         koponen_rect, koponen_movement, tiles)
-
-
-
-    # //////////////////////////////////////////////////////////////
-    #*****    New enemies handling & enemies thread handling ******#
-    arch_run = archvile_run_animation.update()
-    for archvile in WorldData.Legacy.archviles:
-        if DebugMode:
-            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Red), (archvile.rect.x -
-                                                                   scroll[0], archvile.rect.y-scroll[1], archvile.rect.width, archvile.rect.height))
-        archvile.update(arch_run)
 
     with concurrent.futures.ThreadPoolExecutor() as e:
         I_thread_results = [e.submit(imp._move) for imp in imps]
@@ -3357,8 +3365,6 @@ while main_running:
     animation_counter += 1
     weapon_fire = False
     koponen_animation_stats[2] += 1
-    for sergeant in WorldData.Legacy.sergeants:
-        sergeant.hitscanner_cooldown += 1
     if KDS.Missions.GetFinished() == True:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
