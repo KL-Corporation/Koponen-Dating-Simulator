@@ -419,6 +419,7 @@ pray_sound = pygame.mixer.Sound("Assets/Audio/Effects/prayer.ogg")
 decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/DecorativeHead_wakeup.ogg")
 awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
 smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
+grenade_throw = pygame.mixer.Sound("Assets/Audio/Effects/grenade_throw.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -1721,6 +1722,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
         pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force+15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force+15)*-1 - scroll[1]) )
         if args[0][0]:
+            Audio.playSound(grenade_throw)
             player_inventory.storage[player_inventory.SIndex] = "none"
             BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
