@@ -760,7 +760,7 @@ class WorldData():
             WorldData.Legacy.door_rects, WorldData.Legacy.doors_open, WorldData.Legacy.color_keys = load_doors()
 
     @staticmethod
-    def LoadMap():
+    def LoadMap(loadEntities: bool = True):
         global Items, tiles, Enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
@@ -829,16 +829,16 @@ class WorldData():
                         serialNumber = int(data[1] + data[2] + data[3])
                         if data[0] == "0":
                             if serialNumber not in specialTilesSerialNumbers:
-                                tiles[y][x] = Tile(
-                                    (x * 34, y * 34), serialNumber=serialNumber)
+                                tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
                             else:
                                 tiles[y][x] = specialTilesD[serialNumber](
                                     (x * 34, y * 34), serialNumber=serialNumber)
                         elif data[0] == "1":
-                            Items = numpy.append(Items, Item(
-                                (x * 34, y * 34), serialNumber=serialNumber))
+                            if loadEntities:
+                                Items = numpy.append(Items, Item((x * 34, y * 34), serialNumber=serialNumber))
                         elif data[0] == "2":
-                            Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
+                            if loadEntities:
+                                Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif data[0] == "3":
                             pass
                 else:
@@ -1801,6 +1801,7 @@ class Item:
         """
         if not isinstance(self.texture, pygame.Surface):
             self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+            self.texture.set_colorkey(KDS.Colors.GetPrimary.White)
         
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
@@ -2339,15 +2340,19 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     KDS.ConfigManager.Save.init(1)
     
     global Items, Enemies, Explosions, BallisticObjects
-    Items = KDS.ConfigManager.Save.GetWorld("items", [])
-    Enemies = KDS.ConfigManager.Save.GetWorld("enemies", [])
+    Items = KDS.ConfigManager.Save.GetWorld("items", numpy.array([]))
+    Enemies = KDS.ConfigManager.Save.GetWorld("enemies", numpy.array([]))
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
     ########## iPuhelin ##########
     if int(current_map) < 2:
         player_inventory.storage[0] = "iPuhelin"
-    player_def_pos = WorldData.LoadMap()
+    if len(Items) < 1 and len(Enemies) < 1:
+        loadEntities = True
+    else:
+        loadEntities = False
+    player_def_pos = WorldData.LoadMap(loadEntities)
 
     player_death_event = False
     animation_has_played = False
@@ -2363,7 +2368,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     pygame.mouse.set_visible(False)
     main_menu_running = False
     if reset_scroll:
-        true_scroll = [-200, -190]
+        true_scroll = KDS.ConfigManager.Save.GetPlayer("scroll", [-200, -190])
     KDS.Logging.Log(KDS.Logging.LogType.info,
                     "Press F4 to commit suicide", False)
     KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -2374,13 +2379,14 @@ def save_function():
     KDS.ConfigManager.Save.SetWorld("enemies", Enemies)
     KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
     KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
-    global player_health, player_rect, player_hand_item, farting, player_keys
+    global player_health, player_rect, player_hand_item, farting, player_keys, true_scroll
     KDS.ConfigManager.Save.SetPlayer("health", player_health)
     KDS.ConfigManager.Save.SetPlayer("position", player_rect.topleft)
     KDS.ConfigManager.Save.SetPlayer("hand_item", player_hand_item)
     KDS.ConfigManager.Save.SetPlayer("farting", farting)
     KDS.ConfigManager.Save.SetPlayer("keys", player_keys)
     KDS.ConfigManager.Save.SetPlayer("inventory", player_inventory.storage)
+    KDS.ConfigManager.Save.SetPlayer("scroll", scroll)
     KDS.ConfigManager.Save.quit()
 #endregion
 #region Menus

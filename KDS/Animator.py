@@ -101,10 +101,12 @@ class Animation:
         for image in self.images:
             if not isinstance(image, pygame.Surface):
                 tlist.append(pygame.image.fromstring(image[0], image[1], image[2]).convert())
-                
+        
         self.images.clear()
         self.images = tlist.copy()
         del tlist
+        for image in self.images:
+            image.set_colorkey(KDS.Colors.GetPrimary.White)
 
 class Legacy:
     """The legacy animator

@@ -1,6 +1,7 @@
 #region Importing
 import json
 from os import rename
+from os import path
 import pickle
 import shutil
 import numpy
@@ -92,16 +93,19 @@ class Save:
     @staticmethod
     def quit():
         if os.path.isdir(SaveCachePath):
-            shutil.make_archive(os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds"), 'zip', SaveCachePath)
+            if os.path.isfile(Save.PlayerFileCache):
+                _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
+                shutil.make_archive(_path, 'zip', SaveCachePath)
+                shutil.move(f"{_path}.zip", _path)
             shutil.rmtree(SaveCachePath)
         #encodes and stores a save file to storage
 
     @staticmethod
     def init(_SaveIndex: int):
-        if os.path.isfile(Save.PlayerFileCache):
-            Save.quit()
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            Save.SaveIndex = _SaveIndex
+        Save.SaveIndex = _SaveIndex
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and Save.SaveIndex >= 0:
+            if os.path.isfile(Save.PlayerFileCache):
+                Save.quit()
             if os.path.isdir(SaveCachePath):
                 shutil.rmtree(SaveCachePath)
             os.makedirs(SaveCachePath, exist_ok=True)
