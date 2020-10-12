@@ -52,7 +52,7 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
-window_size = KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800))
+window_size = tuple(KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800)))
 window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_resize_size = window_size
 display_size = (1200, 800)
@@ -2187,7 +2187,7 @@ Console Help:
         Fullscreen.Set()
 #endregion
 #region Terms and Conditions
-def agr(tcagr):
+def agr(tcagr: bool):
     global tcagr_running
     if tcagr == False:
         tcagr_running = True
@@ -2924,6 +2924,8 @@ agr(tcagr)
 tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
 if tcagr:
     main_menu()
+else:
+    agr(tcagr)
 #endregion
 #region Main Running
 while main_running:

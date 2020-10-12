@@ -33,18 +33,16 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
         with open(FilePath, "r") as f:
             try:
                 config = json.loads(f.read())
-                print("GET", SaveName, config)
             except json.decoder.JSONDecodeError:
                 config = {}
     else:
         config = {}
-    if not SaveDirectory in config:
+    if SaveDirectory not in config:
         config[SaveDirectory] = {}
-        print("LET IT RESET")
-    if not SaveName in config[SaveDirectory]:
+    if SaveName not in config[SaveDirectory]:
         config[SaveDirectory][SaveName] = DefaultValue
-    with open(FilePath, "w") as f:
-        f.write(json.dumps(config, sort_keys=True, indent=4))
+        with open(FilePath, "w") as f:
+            f.write(json.dumps(config, sort_keys=True, indent=4))
     return config[SaveDirectory][SaveName]
     
     """
@@ -81,14 +79,14 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     """
     FilePath = os.path.join(AppDataPath, "settings.cfg")
     if os.path.isfile(FilePath):
-        with open(FilePath, "w+") as f:
+        with open(FilePath, "r") as f:
             try:
                 config = json.loads(f.read())
             except json.decoder.JSONDecodeError:
                 config = {}
     else:
         config = {}
-    if not SaveDirectory in config:
+    if SaveDirectory not in config:
         config[SaveDirectory] = {}
     config[SaveDirectory][SaveName] = SaveValue
     with open(FilePath, "w") as f:
@@ -164,10 +162,6 @@ class Save:
                     toStringF = getattr(item, "toString", None)
                 if callable(toStringF):
                     toStringF()
-                jutskia = dir(item)
-                for jutska in jutskia:
-                    #print(jutska, getattr(item, jutska))
-                    pass
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
                 temp = pickle.dumps(SaveItem)
                 f.write(temp)
