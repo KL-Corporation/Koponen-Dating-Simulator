@@ -102,8 +102,9 @@ def ResizeWindow(set_size: tuple):
     global window_resize_size
     if not isFullscreen:
         window_resize_size = set_size
-        KDS.ConfigManager.SetSetting("Settings", "WindowSize", set_size)
-    Fullscreen.Set(True)
+        del set_size
+        KDS.ConfigManager.SetSetting("Settings", "WindowSize", window_resize_size)
+        Fullscreen.Set(True)
 #endregion
 #region Audio
 pygame.mixer.set_num_channels(32)
