@@ -452,7 +452,6 @@ currently_on_mission = False
 current_mission = "none"
 player_name = "Sinä"
 weapon_fire = False
-isFullscreen = False
 shoot = False
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
@@ -2088,7 +2087,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 def console():
-    global player_keys, player_health, koponen_happiness
+    global player_keys, player_health, koponen_happiness, isFullscreen
     wasFullscreen = False
     if isFullscreen:
         Fullscreen.Set()
