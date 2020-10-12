@@ -88,9 +88,9 @@ class New:
             pygame.draw.rect(surface, self.slider_fill_color, pygame.Rect(self.slider_rect.x, self.slider_rect.y, self.handle_rect.centerx - self.slider_rect.x, self.slider_rect.height))
             pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
             value = (self.handle_rect.centerx - self.slider_rect.midleft[0]) / (self.slider_rect.midright[0] - self.slider_rect.midleft[0] - self.handle_move_area_padding[0])
-            KDS.ConfigManager.SetSetting("Sliders", self.safe_name, str(value))
+            KDS.ConfigManager.SetSetting("Sliders", self.safe_name, value)
             if self.custom_path != None:
-                KDS.ConfigManager.SetSetting(self.custom_path[0], self.custom_path[1], str(value))
+                KDS.ConfigManager.SetSetting(self.custom_path[0], self.custom_path[1], value)
             return value
     
     class Button:
@@ -213,7 +213,7 @@ class New:
             switch_color = (KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move), KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move), KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move))
             pygame.draw.rect(surface, switch_color, self.switch_rect)
             pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
-            KDS.ConfigManager.SetSetting("Switches", self.safe_name, str(self.state))
+            KDS.ConfigManager.SetSetting("Switches", self.safe_name, self.state)
             if self.custom_path != None:
-                KDS.ConfigManager.SetSetting(self.custom_path[0], self.custom_path[1], str(self.state))
+                KDS.ConfigManager.SetSetting(self.custom_path[0], self.custom_path[1], self.state)
             return self.state

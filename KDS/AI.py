@@ -246,7 +246,7 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
-    def __init__(self, rect : pygame.Rect, w, a, d, i, sight_sound, death_sound, health, mv, attackPropability, sleep = True, direction = False):
+    def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
         global initCompleted
         if not initCompleted:
             raise Exception("KDS.Error: AI textures are not initialized")
@@ -316,15 +316,15 @@ class HostileEnemy:
                     if not random.randint(0, self.a_propability):
                         self.attackRunning = True
             if self.attackRunning:
-                animation, dResult = self.a_anim.update()
+                animation = self.a_anim.update()
                 Surface.blit(pygame.transform.flip(animation, self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
-                if dResult:
+                if self.a_anim.done:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
                         enemyProjectiles = self.attack((sl2*-1)*3, tiles, targetRect)
                     self.attakF = False
                     self.attackRunning = False
-                    self.a_anim.reset()
+                    self.a_anim.tick = 0
             else:
                 if self.playSightSound:
                     Audio.playSound(self.sight_sound)
@@ -361,10 +361,10 @@ class HostileEnemy:
 class Imp(HostileEnemy):
     def __init__(self, pos):
         health = 200
-        w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.GetPrimary.White, -1)
-        i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.GetPrimary.White, -1)
-        a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.GetPrimary.White, 1)
-        d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
+        w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
     
@@ -372,7 +372,7 @@ class Imp(HostileEnemy):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
         dist = min(1200, dist)
         dist = max(0, dist)
-        dist = 1200-dist
+        dist = 1200 - dist
         dist /= 1200
         impAtack.set_volume(dist)
         impAtack.play()
@@ -383,10 +383,10 @@ class Imp(HostileEnemy):
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
         health = 125
-        w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.GetPrimary.White, -1)
-        i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.GetPrimary.White, -1)
-        a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 16, KDS.Colors.GetPrimary.White, 1)
-        d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
+        w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 63)
 
         #region Handling the i_anim:
@@ -425,10 +425,10 @@ class SergeantZombie(HostileEnemy):
 class DrugDealer(HostileEnemy):
     def __init__(self, pos):
         health = 100
-        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.GetPrimary.White, -1)
-        i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.GetPrimary.White, -1)
-        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.GetPrimary.White, 1)
-        d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.GetPrimary.White, 1)
+        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 35, 70)
 
         #region Handling the i_anim:

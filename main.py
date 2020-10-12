@@ -194,16 +194,17 @@ settings_background = pygame.image.load(
 agr_background = pygame.image.load(
     "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 
+#region Fonts
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+#endregion
 
 player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
-player_corpse = pygame.image.load(
-    "Assets/Textures/Player/corpse.png").convert()
+player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
 player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
@@ -971,6 +972,13 @@ class Inventory:
     def getHandItem(self):
         return self.storage[self.SIndex]
 
+    def getCount(self):
+        count = 0
+        for i in range(self.size):
+            if self.storage[i] != Inventory.emptySlot:
+                count += 1
+        return count
+
 player_inventory = Inventory(5)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
@@ -1022,7 +1030,7 @@ class Toilet(Tile):
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = toilet0
-        self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), -1)
+        self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
 
@@ -1051,7 +1059,7 @@ class Trashcan(Tile):
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = trashcan
-        self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
+        self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
 
@@ -1277,7 +1285,7 @@ class Rock0(Tile):
 class Torch(Tile):
     def __init__(self, position:(int, int), serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.GetPrimary.White, -1)
+        self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
         self.checkCollision = False
         self.light_scale = 150
@@ -2004,6 +2012,8 @@ def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, ski
             collision_types['top'] = True
     return rect, collision_types
 
+player_animations = KDS.Animator.MultiAnimation()
+
 stand_animation = KDS.Animator.Legacy.load_animation("stand", 2)
 run_animation = KDS.Animator.Legacy.load_animation("run", 2)
 short_stand_animation = KDS.Animator.Legacy.load_animation(
@@ -2013,49 +2023,49 @@ koponen_stand = KDS.Animator.Legacy.load_animation("koponen_standing", 2)
 koponen_run = KDS.Animator.Legacy.load_animation("koponen_running", 2)
 death_animation = KDS.Animator.Legacy.load_animation("death", 5)
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, -1)
+    "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 gasburner_animation_object = KDS.Animator.Animation(
-    "gasburner_on", 2, 5, KDS.Colors.GetPrimary.White, -1)
+    "gasburner_on", 2, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_toilet_animation = KDS.Animator.Animation(
-    "menu_toilet_anim", 3, 6, KDS.Colors.GetPrimary.White, -1)
+    "menu_toilet_anim", 3, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_trashcan_animation = KDS.Animator.Animation(
-    "menu_trashcan", 3, 6, KDS.Colors.GetPrimary.White, -1)
-burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), -1)
+    "menu_trashcan", 3, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
 explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, KDS.Colors.GetPrimary.White, 1)
+    "explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 plasmarifle_animation = KDS.Animator.Animation(
-    "plasmarifle_firing", 2, 3, KDS.Colors.GetPrimary.White, -1)
+    "plasmarifle_firing", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, KDS.Colors.GetPrimary.White, 1)
+    "z_death", 5, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, KDS.Colors.GetPrimary.White, -1)
+    "z_walk", 3, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, KDS.Colors.GetPrimary.White, -1)
+    "z_attack", 4, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, KDS.Colors.GetPrimary.White, -1)
+    "seargeant_walking", 4, 8, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, KDS.Colors.GetPrimary.White, 1)
+    "seargeant_shooting", 2, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 
 archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, KDS.Colors.GetPrimary.White, -1)
+    "archvile_run", 3, 9, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, KDS.Colors.GetPrimary.White, 1)
+    "archvile_attack", 6, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, 1)
+    "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 flames_animation = KDS.Animator.Animation(
-    "flames", 5, 3, KDS.Colors.GetPrimary.White, -1)
+    "flames", 5, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 bulldog_run_animation = KDS.Animator.Animation(
-    "bulldog", 5, 6, KDS.Colors.GetPrimary.White, - 1)
+    "bulldog", 5, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 
 imp_walking = KDS.Animator.Animation(
-    "imp_walking", 4, 19, KDS.Colors.GetPrimary.White, -1)
+    "imp_walking", 4, 19, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 imp_attacking = KDS.Animator.Animation(
-    "imp_attacking", 2, 16, KDS.Colors.GetPrimary.White, -1)
+    "imp_attacking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 imp_dying = KDS.Animator.Animation(
-    "imp_dying", 5, 16, KDS.Colors.GetPrimary.White, 1)
+    "imp_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 
 knife_animation_object = KDS.Animator.Animation(
-    "knife", 2, 20, KDS.Colors.GetPrimary.White, -1)
+    "knife", 2, 20, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 
 #region Sergeant fixing
 sergeant_shoot_animation.images = []
@@ -2072,7 +2082,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, f"Successfully Initialised {len(serge
 sergeant_shoot_animation.ticks = 43
 #endregion
 sergeant_death_animation = KDS.Animator.Animation(
-    "seargeant_dying", 5, 8, KDS.Colors.GetPrimary.White, 1)
+    "seargeant_dying", 5, 8, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
@@ -2431,9 +2441,6 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
-    ########## iPuhelin ##########
-    if int(current_map) < 2:
-        player_inventory.storage[0] = "iPuhelin"
     if len(Items) < 1 and len(Enemies) < 1:
         loadEntities = True
     else:
@@ -2444,12 +2451,17 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     animation_has_played = False
     death_wait = 0
     
+    is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
     player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
     player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
     player_hand_item = KDS.ConfigManager.Save.GetPlayer("hand_item", "none")
     farting = KDS.ConfigManager.Save.GetPlayer("farting", False)
     player_keys = KDS.ConfigManager.Save.GetPlayer("keys", {"red": False, "green": False, "blue": False})
     player_inventory.storage = KDS.ConfigManager.Save.GetPlayer("inventory", [Inventory.emptySlot for _ in range(player_inventory.size)])
+    
+    ########## iPuhelin ##########
+    if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and is_new_save):
+        player_inventory.storage[0] = 6
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
@@ -2763,9 +2775,11 @@ def main_menu():
     story_save_button_0_rect = pygame.Rect(14, 14, 378, 500)
     story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
     story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
+    story_save_buttons_rects = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)
     story_save_button_0 = KDS.UI.New.Button(story_save_button_0_rect, play_function)
     story_save_button_1 = KDS.UI.New.Button(story_save_button_1_rect, play_function)
     story_save_button_2 = KDS.UI.New.Button(story_save_button_2_rect, play_function)
+    story_new_save = button_font1.render("Start New Save", True, KDS.Colors.GetPrimary.White)
     #endregion 
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
@@ -2870,12 +2884,16 @@ def main_menu():
                 display, KDS.Colors.GetPrimary.DarkGray, story_save_button_1_rect, 10)
             pygame.draw.rect(
                 display, KDS.Colors.GetPrimary.DarkGray, story_save_button_2_rect, 10)
+            
             story_save_button_0.update(
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
             story_save_button_1.update(
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
             story_save_button_2.update(
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
+            
+            #Äh, teen joskus
+            
         elif MenuMode == Mode.CampaignMenu:
             pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
 
@@ -3135,7 +3153,7 @@ while main_running:
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x, texture=soulsphere))
 
             Audio.playSound(landmine_explosion)
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (B_Object.rect.x-60, B_Object.rect.y-55)))
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x-60, B_Object.rect.y-55)))
              
             BallisticObjects.remove(B_Object)
 

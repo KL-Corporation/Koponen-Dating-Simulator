@@ -11,7 +11,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, loops: int, filetype=".png"): #loops = -1, if infinite loops
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, _OnAnimationEnd: OnAnimationEnd or str, filetype=".png"):
         """Initialises an animation.
 
         Args:
@@ -19,17 +19,16 @@ class Animation:
             number_of_images (int): The frame count of your animation.
             duration (int): The duration of every frame in ticks.
             colorkey (tuple): The color that will be converted to alpha in every frame.
-            loops (int): The amount of times you want the animation to loop. (-1 = infinite)
+            _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
         self.colorkey = colorkey
-        self.loops = loops
-        if loops != -1:
-            self.loops_count = 0
-            self.done = False
+        self.onAnimationEnd = _OnAnimationEnd
+        self.PingPong = False
+        self.done = False
 
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising {} Animation Images...".format(number_of_images), False)
         for i in range(number_of_images):
@@ -46,28 +45,37 @@ class Animation:
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
 
-    def update(self):
+    def update(self, reverse: bool = False) -> pygame.Surface:
         """Updates the animation
 
         Returns:
-            Surface | Surface, bool: Returns the image to blit and an animation finished bool if loops is not infinite.
+            Surface: Returns the image to blit.
         """
-
-        self.tick += 1
-        if self.tick > self.ticks:
-            if self.loops == -1:
-                self.tick = 0
-            else:
-                self.tick = self.ticks - 1
-            if self.loops != -1:
-                self.loops_count += 1
-                if self.loops_count == self.loops:
+        self.done = False
+        if self.PingPong:
+            reverse = not reverse
+        if not reverse:
+            self.tick += 1
+            if self.tick > self.ticks:
+                if self.onAnimationEnd == OnAnimationEnd.Stop:
+                    self.tick = self.ticks - 1
                     self.done = True
-
-        if self.loops == -1:
-            return self.images[self.tick]
+                elif self.onAnimationEnd == OnAnimationEnd.Loop:
+                    self.tick = 0
+                elif self.onAnimationEnd == OnAnimationEnd.PingPong:
+                    self.PingPong = True
         else:
-            return self.images[self.tick], self.done
+            self.tick -= 1
+            if self.tick < 0:
+                if self.onAnimationEnd == OnAnimationEnd.Stop:
+                    self.tick = 0
+                    self.done = True
+                elif self.onAnimationEnd == OnAnimationEnd.Loop:
+                    self.tick = self.ticks
+                elif self.onAnimationEnd == OnAnimationEnd.PingPong:
+                    self.PingPong = False
+            
+        return self.images[self.tick]
 
     def get_frame(self) -> pygame.Surface:
         """Returns the currently active frame.
@@ -76,13 +84,8 @@ class Animation:
             pygame.Surface: Currently active frame.
         """
         return self.images[self.tick]
-
-    def reset(self):
-        self.tick = 0
-        self.loops_count = 0
-        self.done = False
         
-    def toString(self):
+    def toString(self) -> None:
         """Converts all textures to strings
         """
         tlist = []
@@ -94,7 +97,7 @@ class Animation:
         self.images = tlist.copy()
         del tlist
             
-    def fromString(self):
+    def fromString(self) -> None:
         """Converts all strings back to textures
         """
         tlist = []
@@ -108,6 +111,49 @@ class Animation:
         for image in self.images:
             image.set_colorkey(KDS.Colors.GetPrimary.White)
 
+class MultiAnimation:
+    def __init__(self, **animations: Animation):
+        self.animations = animations
+        self.active = None
+        for key in animations:
+            if self.active == None:
+                self.active = animations[key]
+            else:
+                break
+    
+    def trigger(self, animation_trigger):
+        if animation_trigger in self.animations:
+            self.active = self.animations[animation_trigger]
+        else:
+            KDS.Logging.AutoError("MultiAnimation trigger invalid.", currentframe())
+            
+    def update(self):
+        return self.active.update()
+    
+    def get_frame(self):
+        return self.active.reset()
+    
+    def reset(self, _global: bool = False):
+        if not _global:
+            self.active.reset()
+        else:
+            for anim in self.animations:
+                self.animations[anim].reset()
+    
+    def toString(self, _global: bool = False) -> None:
+        if not _global:
+            self.active.toString()
+        else:
+            for anim in self.animations:
+                self.animations[anim].toString()
+                
+    def fromString(self, _global: bool = False) -> None:
+        if not _global:
+            self.active.fromString()
+        else:
+            for anim in self.animations:
+                self.animations[anim].fromString()
+        
 class Legacy:
     """The legacy animator
     """
@@ -131,6 +177,7 @@ class Legacy:
         return animation_list
     
     #Float is not already a name of a variable, float is. Also it doesn't matter... It is still accessed by KDS.Animator.Float because it is not imported as from KDS.Animator so it will not conflict.
+    
 class Float:
     class AnimationType:
         Linear = "Linear"
@@ -187,7 +234,7 @@ class Float:
             KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
             return 0
     
-    def update(self, reverse=False):
+    def update(self, reverse: bool = False) -> float:
         """Updates the float animation
 
         Args:

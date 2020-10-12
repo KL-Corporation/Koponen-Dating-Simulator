@@ -213,8 +213,8 @@ def InitialiseMissions(LevelIndex):
             InitialiseMission("koponen_introduction", "Tutustu Koposeen")
             InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", ListenerTypes.KoponenTalk, 1.0)
         else:
-            InitialiseMission("mission_error", "ERROR! Mission loaded incorrectly.")
-            InitialiseTask("mission_error", "task_error", "ERROR! Task loaded incorrectly.")
+            InitialiseMission("null_mission", "NO MISSIONS AVAILABLE")
+            InitialiseTask("null_mission", "null_task", "NO TASKS AVAILABLE")
 #endregion
 #region Data
 def GetFinished():

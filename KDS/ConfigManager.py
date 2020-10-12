@@ -152,7 +152,11 @@ class Save:
             os.makedirs(Save.PlayerDirCache, exist_ok=True)
             
         #decodes and loads a save file to cache
-        
+     
+    @staticmethod
+    def GetExistence(index: int):
+        return True if os.path.isfile(os.path.join(SaveDirPath, f"save_{index}.kds")) else False
+     
     @staticmethod
     def SetWorld(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
@@ -173,12 +177,16 @@ class Save:
     @staticmethod            
     def SetPlayer(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            with open(Save.PlayerFileCache, "w+") as f:
-                try:
-                    data = json.loads(f.read())
-                except json.decoder.JSONDecodeError:
-                    data = {}
-                data[SafeName] = SaveItem
+            if os.path.isfile(Save.PlayerFileCache):
+                with open(Save.PlayerFileCache, "r") as f:
+                    try:
+                        data = json.loads(f.read())
+                    except json.decoder.JSONDecodeError:
+                        data = {}
+            else:
+                data = {}
+            data[SafeName] = SaveItem
+            with open(Save.PlayerFileCache, "w") as f:
                 f.write(json.dumps(data, sort_keys=True, indent=4))
     
     @staticmethod
@@ -197,7 +205,7 @@ class Save:
                 return DefaultValue
         else:
             return DefaultValue
-        
+     
     @staticmethod
     def GetPlayer(SafeName: str, DefaultValue):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
