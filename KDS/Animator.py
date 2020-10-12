@@ -21,6 +21,8 @@ class Animation:
             colorkey (tuple): The color that will be converted to alpha in every frame.
             _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
+        if number_of_images < 1 or duration < 1:
+            KDS.Logging.AutoError("Number of images or duration cannot be less than 1!", currentframe())
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
@@ -58,12 +60,14 @@ class Animation:
             self.tick += 1
             if self.tick > self.ticks:
                 if self.onAnimationEnd == OnAnimationEnd.Stop:
-                    self.tick = self.ticks - 1
+                    self.tick = self.ticks
                     self.done = True
                 elif self.onAnimationEnd == OnAnimationEnd.Loop:
                     self.tick = 0
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = True
+                else:
+                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
         else:
             self.tick -= 1
             if self.tick < 0:
@@ -74,7 +78,8 @@ class Animation:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
-            
+                else:
+                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
         return self.images[self.tick]
 
     def get_frame(self) -> pygame.Surface:
@@ -254,6 +259,8 @@ class Float:
                     self.tick = 0
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = True
+                else:
+                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
         else:
             self.tick -= 1
             if self.tick < 0:
@@ -263,6 +270,8 @@ class Float:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
+                else:
+                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
         
         if self.type == Float.AnimationType.Linear:
             t = self.tick / self.ticks
@@ -283,7 +292,7 @@ class Float:
             t = self.tick / self.ticks
             self.value = KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
         else:
-            KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
+            KDS.Logging.AutoError("Invalid Float Animation Type!", currentframe())
             self.value = 0
         
         return self.value

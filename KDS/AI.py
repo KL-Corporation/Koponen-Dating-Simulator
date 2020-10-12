@@ -129,7 +129,6 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 
 class Zombie:
 
-
     def __init__(self, position, health, speed):
         self.position = position
         self.health = health
@@ -272,7 +271,7 @@ class HostileEnemy:
         self.movement = mv
         self.clearlagcounter = 0
 
-    def toString2(self):
+    def toString(self):
         """Converts all textures and audios to strings
         """
         self.w_anim.toString()

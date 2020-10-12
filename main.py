@@ -1175,7 +1175,7 @@ class Landmine(Tile):
                     enemy.health -= 120-KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
             Audio.playSound(landmine_explosion)
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, 1), (self.rect.x-60, self.rect.y-60)))           
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x-60, self.rect.y-60)))           
         return self.texture
 
 class Ladder(Tile):
@@ -3162,9 +3162,8 @@ while main_running:
         finished, etick = unit.update(screen, scroll)
         if finished:
             Explosions.remove(unit)
-        else:
-            if etick < 10:
-                Lights.append(KDS.World.Lighting.Light((unit.xpos-80, unit.ypos-80), light_sphere2))
+        elif etick < 10:
+            Lights.append(KDS.World.Lighting.Light((unit.xpos - 80, unit.ypos - 80), light_sphere2))
 
     #Partikkelit
     while len(Particles) > 20:

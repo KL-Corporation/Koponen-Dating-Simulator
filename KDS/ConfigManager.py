@@ -161,9 +161,7 @@ class Save:
     def SetWorld(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             for item in SaveItem:
-                toStringF = getattr(item, "toString2", None)
-                if toStringF == None:
-                    toStringF = getattr(item, "toString", None)
+                toStringF = getattr(item, "toString", None)
                 if callable(toStringF):
                     toStringF()
             with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
