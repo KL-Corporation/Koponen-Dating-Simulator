@@ -22,13 +22,7 @@ def init():
     if not os.path.isdir(SaveDirPath):
         os.makedirs(SaveDirPath, exist_ok=True)
 
-def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
-    """
-    1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
-    2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
-    3. DefaultValue, The value that is going to be loaded if no value was found.
-    """
-    FilePath = os.path.join(AppDataPath, "settings.cfg")
+def GetJSON(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
     if os.path.isfile(FilePath):
         with open(FilePath, "r") as f:
             try:
@@ -44,40 +38,16 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
         with open(FilePath, "w") as f:
             f.write(json.dumps(config, sort_keys=True, indent=4))
     return config[SaveDirectory][SaveName]
-    
-    """
-    FilePath = os.path.join(AppDataPath, "settings.cfg")
-    config = configparser.ConfigParser()
-    config.read(FilePath)
-    if config.has_section(SaveDirectory):
-        if config.has_option(SaveDirectory, SaveName):
-            return config.get(SaveDirectory, SaveName)
-        else:
-            config.set(SaveDirectory, SaveName, DefaultValue)
-            with open(FilePath, "w") as cfg_file:
-                config.write(cfg_file)
-                cfg_file.close()
-            return DefaultValue
-    else:
-        config.add_section(SaveDirectory)
-        if config.has_option(SaveDirectory, SaveName):
-            return config.get(SaveDirectory, SaveName)
-        else:
-            with open(FilePath, "w") as cfg_file:
-                config.write(cfg_file)
-                cfg_file.close()
-            config.set(SaveDirectory, SaveName, DefaultValue)
-            return DefaultValue
-    """
 
-def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
+def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
     """
-    Automatically fills FilePath to SaveFunction
-    1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
-    2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
-    3. SaveValue, The value that is going to be saved.
+    1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
+    2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
+    3. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    FilePath = os.path.join(AppDataPath, "settings.cfg")
+    return GetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
+
+def SetJSON(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
     if os.path.isfile(FilePath):
         with open(FilePath, "r") as f:
             try:
@@ -91,21 +61,16 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     config[SaveDirectory][SaveName] = SaveValue
     with open(FilePath, "w") as f:
         f.write(json.dumps(config, sort_keys=True, indent=4))
-        
-    """    
-    FilePath = os.path.join(AppDataPath, "settings.cfg")
-    config = configparser.ConfigParser()
-    config.read(FilePath)
-    if config.has_section(SaveDirectory):
-        config.set(SaveDirectory, SaveName, SaveValue)
-    else:
-        config.add_section(SaveDirectory)
-        config.set(SaveDirectory, SaveName, SaveValue)
-    with open(FilePath, "w") as cfg_file:
-        config.write(cfg_file)
-        cfg_file.close()
+
+def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     """
-        
+    Automatically fills FilePath to SaveFunction
+    1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
+    2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
+    3. SaveValue, The value that is going to be saved.
+    """
+    SetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, SaveValue)
+
 class Save:
     WorldDirCache = os.path.join(SaveCachePath, "WorldData")
     PlayerDirCache = os.path.join(SaveCachePath, "PlayerData")

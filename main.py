@@ -158,6 +158,7 @@ class Audio:
 #region Initialisation
 KDS.AI.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
+ambient_tint = pygame.Surface(screen_size)
 black_tint = pygame.Surface(screen_size)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
@@ -465,7 +466,8 @@ onLadder = False
 shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
-dark = True
+dark = False
+darkness = (255, 255, 255)
 
 gamemode_bc_1_alpha = KDS.Animator.Float(
     0.0, 255.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
@@ -519,7 +521,8 @@ tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
-darkness = (255, 255, 255)
+ambient_light_tint = (255, 255, 255)
+ambient_light = False
 lightsUpdating = 0
 
 player_light_sphere_radius = 300
@@ -789,23 +792,16 @@ class WorldData():
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
-        if os.path.isfile(os.path.join(PersistentMapPath, "levelprop.json")):
-            with open(os.path.join(PersistentMapPath, "levelprop.json"), "r") as map_prop_file:
-                map_props = map_prop_file.read()
-                map_props = json.loads(map_props)
-
-                global dark, darkness
-                dark = map_props["dark"]
-                dval = map_props["darkness"]
-                pPs = map_props["startPosition"]
-                Px = int(pPs.split(",")[0])
-                Py = int(pPs.split(",")[1])
-                darkness = (dval, dval, dval)
-        else:
-            dark = False
-            darkness = (0, 0, 0)
-            Px = 100
-            Py = 100
+        FilePath = os.path.join(PersistentMapPath, "levelprop.kdf")
+        global dark, darkness, ambient_light, ambient_light_tint
+        dark = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "enabled", False)
+        dval = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "strength", 255)
+        darkness = (dval, dval, dval)
+        ambient_light = KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "enabled", False)
+        ambient_light_tint = tuple(KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "tint", (255, 255, 255)))
+        
+        p_start_pos = tuple(KDS.ConfigManager.GetJSON(FilePath, "StartPos", "player", (100, 100)))
+        k_start_pos = tuple(KDS.ConfigManager.GetJSON(FilePath, "StartPos", "koponen", (200, 200)))
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -859,7 +855,7 @@ class WorldData():
         Audio.MusicMixer.load(os.path.join(PersistentMapPath, musicfile))
         Audio.MusicMixer.play(-1)
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
-        return Px, Py
+        return p_start_pos, k_start_pos
 #endregion
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
@@ -2447,7 +2443,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
         loadEntities = True
     else:
         loadEntities = False
-    player_def_pos = WorldData.LoadMap(loadEntities)
+    player_def_pos, koponen_def_pos = WorldData.LoadMap(loadEntities)
 
     player_death_event = False
     animation_has_played = False
@@ -2456,6 +2452,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
     player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
     player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
+    koponen_rect.topleft = KDS.ConfigManager.Save.GetPlayer("koponen_position", koponen_def_pos)
     player_hand_item = KDS.ConfigManager.Save.GetPlayer("hand_item", "none")
     farting = KDS.ConfigManager.Save.GetPlayer("farting", False)
     player_keys = KDS.ConfigManager.Save.GetPlayer("keys", {"red": False, "green": False, "blue": False})
@@ -3181,6 +3178,9 @@ while main_running:
 
     #Valojen käsittely
     lightsUpdating = 0
+    if ambient_light:
+        ambient_tint.fill(ambient_light_tint)
+        screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
     if dark:
         black_tint.fill(darkness)
         for light in Lights:
