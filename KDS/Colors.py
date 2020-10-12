@@ -13,7 +13,9 @@ class GetPrimary:
     """Get a primary color.
     """
     Red = (255, 0, 0)
+    Orange = (255, 128, 0)
     Yellow = (255, 255, 0)
+    Lime = (128, 255, 0)
     Green = (0, 255, 0)
     Cyan = (0, 255, 255)
     Blue = (0, 0, 255)

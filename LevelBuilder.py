@@ -6,6 +6,7 @@ from pygame.locals import *
 import threading
 import KDS.Colors
 import KDS.Convert
+import KDS.System
 import numpy
 import tkinter 
 import re
@@ -64,6 +65,8 @@ scroll = [0, 0]
 brush = "0000"
 currentSaveName = ''
 grid = [[]]
+modifiedAfterSave = False
+timesModifiedAfterSave = 0
 
 keys_pressed = {
     "RETURN": False,
@@ -75,8 +78,6 @@ keys_pressed = {
 }
 ##################################################
 
-def blitText(Surface: pygame.Surface, txt: str, position: (int, int), color = KDS.Colors.GetPrimary.White):
-    Surface.blit(harbinger_font.render(txt, True, color), position)
 class tileInfo:
     def __init__(self, position: (int, int), serialNumber = "0000 0000 0000 0000 / "):
         self.rect = pygame.Rect(position[0], position[1], scalesize, scalesize)
@@ -92,7 +93,7 @@ class tileInfo:
     def getSerialNumber(self, index):
         if index > 0:
             index += 1
-        return self.serialNumber[index: index+4]
+        return self.serialNumber[index: index + 4]
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh = "0000", updttiles=True):
@@ -121,11 +122,14 @@ class tileInfo:
                     bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
                     if pygame.mouse.get_pressed()[0] and updttiles:
                         if brsh != "0000":
-                            unit.setNewSerialNumber(brsh)                     
+                            unit.setNewSerialNumber(brsh)
                         else:
                             unit.serialNumber = "0000 0000 0000 0000 / "
+                    if pygame.mouse.get_pressed()[2]:
+                        unit.serialNumber = "0000 0000 0000 0000 / "
         
-        blitText(main_display, f"({bpos[0]}, {bpos[1]})", (1430, 770), KDS.Colors.Get.AviatorRed)
+        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.Get.AviatorRed)
+        main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
                 #print(unit.rect.topleft)
         return renderList, brushtemp
 
@@ -183,6 +187,8 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
                         inputError = True
                     elif int(gridSizeStringParced[0]) > 1000 or int(gridSizeStringParced[1]) > 1000:
                         inputWarning = True
+                    elif int(gridSizeStringParced[0]) < 1 or int(gridSizeStringParced[1]) < 1:
+                        inputError = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 r = False
@@ -233,6 +239,9 @@ def saveMap(grd, name: str):
         outputString += "\n"
     with open(name, 'w') as f:
         f.write(outputString)
+    global modifiedAfterSave, timesModifiedAfterSave
+    modifiedAfterSave = False
+    timesModifiedAfterSave = 0
         
 def saveMapName():
     global currentSaveName, grid
@@ -343,7 +352,7 @@ def materialMenu(previousMaterial):
         pygame.display.update()
 
 def main():
-    global currentSaveName, brush, grid
+    global currentSaveName, brush, grid, modifiedAfterSave, timesModifiedAfterSave
     g = inputConsole("Grid size: (int, int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
     gridSize = (int(g[0]), int(g[1]))
     grid = loadGrid(gridSize)
@@ -357,8 +366,13 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                if modifiedAfterSave:
+                    if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == 6:
+                        pygame.quit()
+                        quit()
+                else:
+                    pygame.quit()
+                    quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
                     if keys_pressed["K_SHIFT"]:
@@ -435,6 +449,20 @@ def main():
             inputConsole_output = None
 
         main_display.fill((30,20,60))
+        
+        if modifiedAfterSave:
+            if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
+                timesModifiedAfterSave += 1
+            _color = KDS.Colors.GetPrimary.Yellow
+            if 200 > timesModifiedAfterSave > 100:
+                _color = KDS.Colors.GetPrimary.Orange
+            elif timesModifiedAfterSave > 200:
+                _color = KDS.Colors.GetPrimary.Red
+            pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
+        elif pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
+            modifiedAfterSave = True
+            timesModifiedAfterSave += 1
+        
         grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
         pygame.display.update()
         clock.tick(60)
