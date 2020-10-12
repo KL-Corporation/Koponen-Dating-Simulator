@@ -29,14 +29,18 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
     FilePath = os.path.join(AppDataPath, "settings.cfg")
-    with open(FilePath, "r") as f:
-        try:
-            config = json.loads(f.read())
-            print("GET", SaveName, config)
-        except json.decoder.JSONDecodeError:
-            config = {}
+    if os.path.isfile(FilePath):
+        with open(FilePath, "r") as f:
+            try:
+                config = json.loads(f.read())
+                print("GET", SaveName, config)
+            except json.decoder.JSONDecodeError:
+                config = {}
+    else:
+        config = {}
     if not SaveDirectory in config:
         config[SaveDirectory] = {}
+        print("LET IT RESET")
     if not SaveName in config[SaveDirectory]:
         config[SaveDirectory][SaveName] = DefaultValue
     with open(FilePath, "w") as f:
@@ -76,11 +80,14 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     3. SaveValue, The value that is going to be saved.
     """
     FilePath = os.path.join(AppDataPath, "settings.cfg")
-    with open(FilePath, "w+") as f:
-        try:
-            config = json.loads(f.read())
-        except json.decoder.JSONDecodeError:
-            config = {}
+    if os.path.isfile(FilePath):
+        with open(FilePath, "w+") as f:
+            try:
+                config = json.loads(f.read())
+            except json.decoder.JSONDecodeError:
+                config = {}
+    else:
+        config = {}
     if not SaveDirectory in config:
         config[SaveDirectory] = {}
     config[SaveDirectory][SaveName] = SaveValue
