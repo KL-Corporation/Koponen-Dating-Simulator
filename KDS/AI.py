@@ -245,6 +245,8 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
+
+
     def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
         global initCompleted
         if not initCompleted:
@@ -254,10 +256,10 @@ class HostileEnemy:
         self.health = health
         self.sleep = sleep
         self.direction = direction
-        self.w_anim = w
-        self.a_anim = a
-        self.d_anim = d
-        self.i_anim = i
+        
+        animations = {"walk" : w, "attack" : a, "death" : d, "idle": i}
+        
+        self.animation = KDS.Animator.MultiAnimation(walk = w, attack = a, death = d, idle = i)
 
         self.a_propability = attackPropability
         self.sight_sound = sight_sound
@@ -274,10 +276,7 @@ class HostileEnemy:
     def toString(self):
         """Converts all textures and audios to strings
         """
-        self.w_anim.toString()
-        self.a_anim.toString()
-        self.d_anim.toString()
-        self.i_anim.toString()
+        self.animation
         if isinstance(self.sight_sound, pygame.mixer.Sound):
             self.sight_sound = self.sight_sound.get_raw()
         if isinstance(self.death_sound, pygame.mixer.Sound):
@@ -286,10 +285,7 @@ class HostileEnemy:
     def fromString(self):
         """Converts all strings back to textures
         """
-        self.w_anim.fromString()
-        self.a_anim.fromString()
-        self.d_anim.fromString()
-        self.i_anim.fromString()
+        self.animation
         if not isinstance(self.sight_sound, pygame.mixer.Sound):
             self.sight_sound = pygame.mixer.Sound(self.sight_sound)
         if not isinstance(self.death_sound, pygame.mixer.Sound):
@@ -315,15 +311,15 @@ class HostileEnemy:
                     if not random.randint(0, self.a_propability):
                         self.attackRunning = True
             if self.attackRunning:
-                animation = self.a_anim.update()
-                Surface.blit(pygame.transform.flip(animation, self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
-                if self.a_anim.done:
+                self.animation.trigger("attack")
+                Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                if self.animation.active.done:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
                         enemyProjectiles = self.attack((sl2*-1)*3, tiles, targetRect)
                     self.attakF = False
                     self.attackRunning = False
-                    self.a_anim.tick = 0
+                    self.animation.active.tick = 0
             else:
                 if self.playSightSound:
                     Audio.playSound(self.sight_sound)
@@ -332,10 +328,12 @@ class HostileEnemy:
                 if c["right"] or c["left"]:
                     self.movement[0] = -self.movement[0]
                     self.direction = not self.direction
-                Surface.blit(pygame.transform.flip(self.w_anim.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+                self.animation.trigger("walk")
+                Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
         elif self.health > 0:
             self.rect, c = move(self.rect, [0,8], tiles)
-            Surface.blit(pygame.transform.flip(self.i_anim.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))          
+            self.animation.trigger("idle")
+            Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))          
         elif self.health < 1:
             if self.playDeathSound:
                 Audio.playSound(self.death_sound)
@@ -345,7 +343,8 @@ class HostileEnemy:
                         dropItems.append(item)
                 self.playDeathSound = False
             self.rect, c = move(self.rect, [0,8], tiles)
-            Surface.blit(pygame.transform.flip(self.d_anim.update()[0], self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+            self.animation.trigger("death")
+            Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
             self.clearlagcounter += 1
             if self.clearlagcounter > 3600:
                 self.clearlagcounter = 3600

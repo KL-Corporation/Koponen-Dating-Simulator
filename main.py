@@ -2973,8 +2973,10 @@ while main_running:
             elif event.key in KDS.Keys.inventoryKeys:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
-                if player_inventory.getHandItem() != "none":
+                if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
                     serialNumber = player_inventory.dropItem()
+                    if serialNumber == "doubleItemPlaceholder":
+                        continue
                     tempItem = Item((player_rect.x, player_rect.y), serialNumber=serialNumber)
                     counter = 0
                     while True:
