@@ -283,9 +283,9 @@ class Explosion:
         self.ypos = pos[1]
 
     def update(self, Surface: pygame.Surface, scroll: list):
-        txtre, finished = self.animation.update()
+        txtre = self.animation.update()
         Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
-        return finished, self.animation.tick
+        return self.animation.done, self.animation.tick
     
     def toString(self):
         """Converts all textures to strings
