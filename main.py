@@ -155,10 +155,6 @@ class Audio:
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].set_volume(volume)
 #endregion
-#region Animations
-monstersLeft = 0
-
-#endregion
 #region Initialisation
 KDS.AI.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
@@ -204,8 +200,8 @@ text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 #endregion
 
-player_img = pygame.image.load("Assets/Textures/Player/stand0.png").convert()
-player_corpse = pygame.image.load("Assets/Textures/Player/corpse.png").convert()
+player_img = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
+player_corpse = pygame.image.load("Assets/Textures/Player/death_5.png").convert()
 player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 player_img.set_colorkey(KDS.Colors.GetPrimary.White)
 
@@ -439,6 +435,8 @@ decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Color
 restart = False
 reset_data = False
 
+monstersLeft = 0
+
 main_running = True
 plasmarifle_fire = False
 jukeboxMusicPlaying = -1
@@ -458,7 +456,6 @@ shoot = False
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
 selectedSave = 0
 
-koponen_animation_stats = [0, 7, 0]
 explosion_positions = []
 player_hand_item = "none"
 player_keys = {"red": False, "green": False, "blue": False}
@@ -2014,14 +2011,19 @@ def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, ski
 
 player_animations = KDS.Animator.MultiAnimation()
 
-stand_animation = KDS.Animator.Legacy.load_animation("stand", 2)
-run_animation = KDS.Animator.Legacy.load_animation("run", 2)
-short_stand_animation = KDS.Animator.Legacy.load_animation(
-    "shortplayer_stand", 2)
-short_run_animation = KDS.Animator.Legacy.load_animation("shortplayer_run", 2)
-koponen_stand = KDS.Animator.Legacy.load_animation("koponen_standing", 2)
-koponen_run = KDS.Animator.Legacy.load_animation("koponen_running", 2)
-death_animation = KDS.Animator.Legacy.load_animation("death", 5)
+player_animations = KDS.Animator.MultiAnimation(
+        idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
+)
+koponen_animations = KDS.Animator.MultiAnimation(
+    idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+    walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
+)
 menu_gasburner_animation = KDS.Animator.Animation(
     "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 gasburner_animation_object = KDS.Animator.Animation(
@@ -3350,48 +3352,39 @@ while main_running:
     else:
         walking = False
 
-    animation = []
     if player_health > 0:
         if walking:
-            if player_rect.height == stand_size[1]:
-                animation = run_animation.copy()
+            if not KDS.Keys.GetPressed(KDS.Keys.moveRun):
+                if player_rect.height == stand_size[1]:
+                    player_animations.trigger("walk")
+                else:
+                    player_animations.trigger("walk_short")
             else:
-                animation = short_run_animation.copy()
-            animation_duration = 7
-            if KDS.Keys.GetPressed(KDS.Keys.moveRun):
-                animation_duration = 3
+                if player_rect.height == stand_size[1]:
+                    player_animations.trigger("run")
+                else:
+                    player_animations.trigger("run_short")
         else:
             if player_rect.height == stand_size[1]:
-                animation = stand_animation.copy()
+                player_animations.trigger("idle")
             else:
-                animation = short_stand_animation.copy()
-            animation_duration = 10
-    else:
-        if player_death_event:
-            animation = death_animation.copy()
-            animation_duration = 10
+                player_animations.trigger("idle_short")
+    elif player_death_event:
+            player_animations.trigger("death")
 #endregion
 #region Koponen Movement
     if koponen_movement[0] != 0:
-        koponen_animation = koponen_run.copy()
+        koponen_animations.trigger("walk")
     else:
-        koponen_animation = koponen_stand.copy()
+        koponen_animations.trigger("idle")
 #endregion
 #region Items
     if animation_counter > animation_duration:
         animation_counter = 0
         animation_image += 1
-    if animation_image > (len(animation) - 1):
-        animation_image = 0
-        if player_death_event:
+    if player_death_event and player_animations.tick >= player_animations.active.ticks:
             player_death_event = False
             animation_has_played = True
-
-    if koponen_animation_stats[2] > koponen_animation_stats[1]:
-        koponen_animation_stats[0] += 1
-        koponen_animation_stats[2] = 0
-        if koponen_animation_stats[0] > 1:
-            koponen_animation_stats[0] = 0
 
     if farting:
         fart_counter += 1
@@ -3426,15 +3419,15 @@ while main_running:
 #region Interactable Objects
     if DebugMode:
         pygame.draw.rect(screen, KDS.Colors.GetPrimary.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
-    screen.blit(koponen_animation[koponen_animation_stats[0]], (
+    screen.blit(koponen_animations.update(), (
         koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if player_health > 0 or player_death_event:
         if DebugMode:
             pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x -
                                                                      scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
-        screen.blit(pygame.transform.flip(animation[animation_image], direction, False), (
-            int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - animation[animation_image].get_width()) / 2)), int(player_rect.bottomleft[1] - scroll[1] - animation[animation_image].get_height())))
+        screen.blit(pygame.transform.flip(player_animations.update(), direction, False), (
+            int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - player_animations.active.size[0]) / 2)), int(player_rect.bottomleft[1] - scroll[1] - player_animations.active.size[1])))
     else:
         screen.blit(pygame.transform.flip(player_corpse, direction, False), (
             player_rect.x - scroll[0], player_rect.y - scroll[1]))
@@ -3459,7 +3452,6 @@ while main_running:
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
 #endregion
 #region Screen Rendering
-
     window.fill(KDS.Colors.GetPrimary.Black)
     window.blit(pygame.transform.scale(screen, Fullscreen.size),
                 (Fullscreen.offset[0], Fullscreen.offset[1]))
@@ -3469,7 +3461,6 @@ while main_running:
 #region Data Update
     animation_counter += 1
     weapon_fire = False
-    koponen_animation_stats[2] += 1
     if KDS.Missions.GetFinished() == True:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished_menu()
