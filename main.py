@@ -1206,7 +1206,7 @@ class Lamp(Tile):
             y += 33
             for row in tiles:
                 for tile in row:
-                    if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y+self.rect.height+y)) and tile.serialNumber != 22:
+                    if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y+self.rect.height+y)) and tile.serialNumber != 22 and tile.checkCollision:
                         y = y - (self.rect.y+self.rect.height+y - tile.rect.y) + 8
                         r = False
             if y > 154:
