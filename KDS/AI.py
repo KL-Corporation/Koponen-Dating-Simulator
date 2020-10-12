@@ -257,8 +257,6 @@ class HostileEnemy:
         self.sleep = sleep
         self.direction = direction
         
-        animations = {"walk" : w, "attack" : a, "death" : d, "idle": i}
-        
         self.animation = KDS.Animator.MultiAnimation(walk = w, attack = a, death = d, idle = i)
 
         self.a_propability = attackPropability
