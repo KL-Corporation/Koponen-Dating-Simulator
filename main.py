@@ -52,8 +52,7 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
-window_size = (int(KDS.ConfigManager.GetSetting("Settings", "WindowSizeX", str(
-    1200))), int(KDS.ConfigManager.GetSetting("Settings", "WindowSizeY", str(800))))
+window_size = KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800))
 window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_resize_size = window_size
 display_size = (1200, 800)
@@ -87,8 +86,7 @@ class Fullscreen:
             window = pygame.display.set_mode(
                 window_size, pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
             isFullscreen = True
-        KDS.ConfigManager.SetSetting(
-            "Settings", "Fullscreen", str(isFullscreen))
+        KDS.ConfigManager.SetSetting("Settings", "Fullscreen", isFullscreen)
         if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
             Fullscreen.size = (
                 int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
@@ -104,10 +102,7 @@ def ResizeWindow(set_size: tuple):
     global window_resize_size
     if not isFullscreen:
         window_resize_size = set_size
-        KDS.ConfigManager.SetSetting(
-            "Settings", "WindowSizeX", str(set_size[0]))
-        KDS.ConfigManager.SetSetting(
-            "Settings", "WindowSizeY", str(set_size[1]))
+        KDS.ConfigManager.SetSetting("Settings", "WindowSize", set_size)
     Fullscreen.Set(True)
 #endregion
 #region Audio
@@ -115,18 +110,18 @@ pygame.mixer.set_num_channels(32)
 
 class Audio:
     MusicMixer = pygame.mixer.music
-    MusicVolume = float(KDS.ConfigManager.GetSetting("Settings", "MusicVolume", str(1)))
-    EffectVolume = float(KDS.ConfigManager.GetSetting("Settings", "SoundEffectVolume", str(1)))
+    MusicVolume = KDS.ConfigManager.GetSetting("Settings", "MusicVolume", 1.0)
+    EffectVolume = KDS.ConfigManager.GetSetting("Settings", "SoundEffectVolume", 1.0)
     EffectChannels = []
     for c_i in range(pygame.mixer.get_num_channels()):
         EffectChannels.append(pygame.mixer.Channel(c_i))
 
     @staticmethod
-    def playSound(sound: pygame.mixer.Sound, volume: float = -1):
+    def playSound(sound: pygame.mixer.Sound, volume: float = -1, loops: int = 0):
         if volume == -1:
             volume = Audio.EffectVolume
         play_channel = pygame.mixer.find_channel(True)
-        play_channel.play(sound)
+        play_channel.play(sound, loops)
         play_channel.set_volume(volume)
         return play_channel
 
@@ -170,15 +165,15 @@ black_tint = pygame.Surface(screen_size)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-isFullscreen = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Settings", "Fullscreen", str(False)))
+isFullscreen = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
 Fullscreen.Set(True)
 window.fill(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert().get_at((0, 0)))
 window.blit(KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
 pygame.display.update()
-clearLag = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Settings", "ClearLag", str(False)))
-tcagr = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Data", "TermsAccepted", str(False)))
+clearLag = KDS.ConfigManager.GetSetting("Settings", "ClearLag", False)
+tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
 current_map = KDS.ConfigManager.GetSetting("Settings", "CurrentMap", "01")
-max_map = int(KDS.ConfigManager.GetSetting("Settings", "MaxMap", "99"))
+max_map = KDS.ConfigManager.GetSetting("Settings", "MaxMap", 99)
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
                 f"""Settings Loading Complete.
 I=====[ Settings Loaded ]=====I
@@ -1806,7 +1801,8 @@ Ufunctions = {
     26: itemFunctions.empty_flask_u,
     27: itemFunctions.flask_meth_u,
     28: itemFunctions.flask_blood_u,
-    29: itemFunctions.grenade_u
+    29: itemFunctions.grenade_u,
+    30: itemFunctions.fire_extinguisher_u
 
 }
 
@@ -2149,8 +2145,7 @@ def console():
         if len(command_list) > 1:
             setTerms = KDS.Convert.ToBool(command_list[1])
             if setTerms != None:
-                KDS.ConfigManager.SetSetting(
-                    "Data", "TermsAccepted", str(setTerms))
+                KDS.ConfigManager.SetSetting("Data", "TermsAccepted", setTerms)
                 KDS.Logging.Log(KDS.Logging.LogType.info,
                                 "Terms status set to: " + str(setTerms), True)
             else:
@@ -2203,15 +2198,15 @@ def agr(tcagr):
     c = False
 
     def tcagr_agree_function():
-        global tcagr_running
+        global tcagr_running, main_menu_running
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Terms and Conditions have been accepted.", False)
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You said you will not get offended... Dick!", False)
-        KDS.ConfigManager.SetSetting("Data", "TermsAccepted", "True")
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: " +
-                        KDS.ConfigManager.GetSetting("Data", "TermsAccepted", "False"), False)
+        KDS.ConfigManager.SetSetting("Data", "TermsAccepted", True)
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: {}".format(KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)), False)
         tcagr_running = False
+        
 
     agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render(
         "I Agree", True, KDS.Colors.GetPrimary.White))
@@ -2238,7 +2233,7 @@ def agr(tcagr):
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
         c = False
-    del agree_button
+    return True
 #endregion
 #region Koponen Talk
 def koponen_talk():
@@ -2926,9 +2921,8 @@ def level_finished_menu():
 #endregion
 #region Check Terms
 agr(tcagr)
-tcagr = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(
-    "Data", "TermsAccepted", str(False)))
-if tcagr != False:
+tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
+if tcagr:
     main_menu()
 #endregion
 #region Main Running

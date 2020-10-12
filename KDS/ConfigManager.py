@@ -22,11 +22,27 @@ def init():
     if not os.path.isdir(SaveDirPath):
         os.makedirs(SaveDirPath, exist_ok=True)
 
-def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
+def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
     """
     1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
+    """
+    FilePath = os.path.join(AppDataPath, "settings.cfg")
+    with open(FilePath, "r") as f:
+        try:
+            config = json.loads(f.read())
+            print("GET", SaveName, config)
+        except json.decoder.JSONDecodeError:
+            config = {}
+    if not SaveDirectory in config:
+        config[SaveDirectory] = {}
+    if not SaveName in config[SaveDirectory]:
+        config[SaveDirectory][SaveName] = DefaultValue
+    with open(FilePath, "w") as f:
+        f.write(json.dumps(config, sort_keys=True, indent=4))
+    return config[SaveDirectory][SaveName]
+    
     """
     FilePath = os.path.join(AppDataPath, "settings.cfg")
     config = configparser.ConfigParser()
@@ -50,14 +66,28 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue: str):
                 cfg_file.close()
             config.set(SaveDirectory, SaveName, DefaultValue)
             return DefaultValue
+    """
 
-def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
+def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     """
     Automatically fills FilePath to SaveFunction
     1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
+    FilePath = os.path.join(AppDataPath, "settings.cfg")
+    with open(FilePath, "w+") as f:
+        try:
+            config = json.loads(f.read())
+        except json.decoder.JSONDecodeError:
+            config = {}
+    if not SaveDirectory in config:
+        config[SaveDirectory] = {}
+    config[SaveDirectory][SaveName] = SaveValue
+    with open(FilePath, "w") as f:
+        f.write(json.dumps(config, sort_keys=True, indent=4))
+        
+    """    
     FilePath = os.path.join(AppDataPath, "settings.cfg")
     config = configparser.ConfigParser()
     config.read(FilePath)
@@ -69,6 +99,7 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue: str):
     with open(FilePath, "w") as cfg_file:
         config.write(cfg_file)
         cfg_file.close()
+    """
         
 class Save:
     WorldDirCache = os.path.join(SaveCachePath, "WorldData")
@@ -141,12 +172,12 @@ class Save:
     @staticmethod            
     def SetPlayer(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            data = {}
-            if os.path.isfile(Save.PlayerFileCache):
-                with open(Save.PlayerFileCache, "r") as f:
+            with open(Save.PlayerFileCache, "w+") as f:
+                try:
                     data = json.loads(f.read())
-            data[SafeName] = SaveItem
-            with open(Save.PlayerFileCache, "w") as f:
+                except json.decoder.JSONDecodeError:
+                    data = {}
+                data[SafeName] = SaveItem
                 f.write(json.dumps(data, sort_keys=True, indent=4))
     
     @staticmethod

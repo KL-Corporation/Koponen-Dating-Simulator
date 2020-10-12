@@ -45,7 +45,7 @@ for keyName in KeyStates:
 def SetPressed(key_indentifier, pressed: bool):
     if key_indentifier in KeyStates:
         if not pressed:
-            if KeyStates[key_indentifier][0] and not KeyStates[key_indentifier][1]:
+            if KeyStates[key_indentifier][0]:
                 KeyStates[key_indentifier][2] = True
             KeyStates[key_indentifier][1] = pressed
             KeyStates[key_indentifier][3] = 0
