@@ -158,6 +158,7 @@ class Audio:
 #endregion
 #region Initialisation
 KDS.AI.init(Audio)
+KDS.Missions.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 ambient_tint = pygame.Surface(screen_size)
 black_tint = pygame.Surface(screen_size)
@@ -471,9 +472,9 @@ dark = False
 darkness = (255, 255, 255)
 
 gamemode_bc_1_alpha = KDS.Animator.Float(
-    0.0, 255.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+    0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 gamemode_bc_2_alpha = KDS.Animator.Float(
-    0.0, 255.0, 8, KDS.Animator.Float.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+    0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 
@@ -1888,6 +1889,8 @@ class Item:
                             temp_var = Pfunctions[item.serialNumber]()
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item.serialNumber
+                                if item.serialNumber == 6:
+                                    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinPickup)
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
@@ -2566,7 +2569,7 @@ def esc_menu_f():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
@@ -2783,7 +2786,7 @@ def main_menu():
     #Main menu variables:
     framecounter = 0
     current_frame = 0
-    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.Float.AnimationType.SmoothStep, KDS.Animator.OnAnimationEnd.Stop)
+    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.AnimationType.SmoothStep, KDS.Animator.OnAnimationEnd.Stop)
     framechange_lerp.tick = framechange_lerp.ticks
 
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(
@@ -2999,7 +3002,7 @@ def level_finished_menu():
     blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
     esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA").convert()
 
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     def goto_main_menu():
         global lfmr, go_to_main_menu, level_finished
@@ -3093,7 +3096,7 @@ while main_running:
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
                     if player_inventory.getHandItem() == 6:
-                        KDS.Missions.SetProgress("tutorial", "trash", 1.0)
+                        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinDrop)
                     serialNumber = player_inventory.dropItem()
                     if serialNumber == "doubleItemPlaceholder":
                         continue
@@ -3332,10 +3335,7 @@ while main_running:
         screen.blit(health, (10, 120))
         screen.blit(stamina, (10, 130))
 
-        Mission_Render_Data = KDS.Missions.RenderMission(screen)
-
-        for i in range(KDS.Missions.GetRenderCount()):
-            KDS.Missions.RenderTask(screen, i)
+        KDS.Missions.Render(screen)
 
         player_inventory.render(screen)
     ##################################################################################################################################################################

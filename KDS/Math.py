@@ -2,6 +2,9 @@ import KDS.Logging
 import math
 from inspect import currentframe
 
+def Clamp(value: int or float, _min: int or float, _max: int or float):
+    return max(_min, min(value, _max))
+
 def getDistance(point1: tuple, point2: tuple):
     """
     Calculates the distance between two points.
@@ -105,6 +108,3 @@ def SmoothStep(a: float, b: float, t: float):
     t = Clamp(t, 0, 1)
     t = t * t * (3.0 - (2.0 * t))
     return Lerp(a, b, t)
-
-def Clamp(value, _min, _max):
-    return max(_min, min(value, _max))

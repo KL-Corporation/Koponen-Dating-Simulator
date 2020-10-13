@@ -1,5 +1,6 @@
 from inspect import currentframe
 from re import purge
+from typing import Tuple
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
@@ -12,7 +13,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations"):
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Tuple[int, int, int] = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
         """Initialises an animation.
 
         Args:
@@ -162,41 +163,17 @@ class MultiAnimation:
         else:
             for anim in self.animations:
                 self.animations[anim].fromString()
-        
-class Legacy:
-    """The legacy animator
-    """
-    @staticmethod
-    def load_animation(name: str, number_of_images: int):
-        """Loads an animation sequence using the legacy Animator.
 
-        Args:
-            name (str): The name of your frames inside Assets => Textures => Player. (A number will be appended to the end to load each frame)
-            number_of_images (int): The number of images ("frames") your animation has.
-
-        Returns:
-            list: A list of all of the images in the animation
-        """
-        animation_list = []
-        for i in range(number_of_images):
-            path = "Assets/Textures/Player/" + name + str(i) + ".png"
-            img = pygame.image.load(path).convert()
-            img.set_colorkey(KDS.Colors.GetPrimary.White)
-            animation_list.append(img)
-        return animation_list
-    
-    #Float is not already a name of a variable, float is. Also it doesn't matter... It is still accessed by KDS.Animator.Float because it is not imported as from KDS.Animator so it will not conflict.
+class AnimationType:
+    Linear = "Linear"
+    EaseIn = "EaseIn"
+    EaseOut = "EaseOut"
+    Exponential = "Exponential"
+    SmoothStep = "SmoothStep"
+    SmootherStep = "SmootherStep"
     
 class Float:
-    class AnimationType:
-        Linear = "Linear"
-        EaseIn = "EaseIn"
-        EaseOut = "EaseOut"
-        Exponential = "Exponential"
-        SmoothStep = "SmoothStep"
-        SmootherStep = "SmootherStep"
-        
-    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or str, _OnAnimationEnd: OnAnimationEnd or str):
+    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or str = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
         Args:
@@ -221,22 +198,22 @@ class Float:
         Returns:
             float: Current value.
         """
-        if self.type == Float.AnimationType.Linear:
+        if self.type == AnimationType.Linear:
             t = self.tick / self.ticks
             return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.EaseIn:
+        elif self.type == AnimationType.EaseIn:
             t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
             return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.EaseOut:
+        elif self.type == AnimationType.EaseOut:
             t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
             return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.Exponential:
+        elif self.type == AnimationType.Exponential:
             t = self.tick / self.ticks
             return KDS.Math.Lerp(self.From, self.To, t * t)
-        elif self.type == Float.AnimationType.SmoothStep:
+        elif self.type == AnimationType.SmoothStep:
             t = self.tick / self.ticks
             return KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
-        elif self.type == Float.AnimationType.SmootherStep:
+        elif self.type == AnimationType.SmootherStep:
             t = self.tick / self.ticks
             return KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
         else:
@@ -277,22 +254,22 @@ class Float:
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
         
-        if self.type == Float.AnimationType.Linear:
+        if self.type == AnimationType.Linear:
             t = self.tick / self.ticks
             self.value = KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.EaseIn:
+        elif self.type == AnimationType.EaseIn:
             t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
             self.value = KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.EaseOut:
+        elif self.type == AnimationType.EaseOut:
             t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
             self.value = KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == Float.AnimationType.Exponential:
+        elif self.type == AnimationType.Exponential:
             t = self.tick / self.ticks
             self.value = KDS.Math.Lerp(self.From, self.To, t * t)
-        elif self.type == Float.AnimationType.SmoothStep:
+        elif self.type == AnimationType.SmoothStep:
             t = self.tick / self.ticks
             self.value = KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
-        elif self.type == Float.AnimationType.SmootherStep:
+        elif self.type == AnimationType.SmootherStep:
             t = self.tick / self.ticks
             self.value = KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
         else:
@@ -300,3 +277,15 @@ class Float:
             self.value = 0
         
         return self.value
+
+class Color:
+    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, Type: AnimationType or str = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
+        self.int0 = Float(From[0], To[0], Duration, Type, _OnAnimationEnd)
+        self.int1 = Float(From[1], To[1], Duration, Type, _OnAnimationEnd)
+        self.int2 = Float(From[2], To[2], Duration, Type, _OnAnimationEnd)
+        
+    def get_value(self) -> Tuple[int, int, int]:
+        return (round(self.int0.get_value()), round(self.int1.get_value()), round(self.int2.get_value()))
+    
+    def update(self, reverse: bool = False) -> Tuple[int, int, int]:
+        return (round(self.int0.update(reverse)), round(self.int1.update(reverse)), round(self.int2.update(reverse)))
