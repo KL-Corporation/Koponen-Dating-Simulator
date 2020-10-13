@@ -2982,6 +2982,8 @@ while main_running:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
+                    if player_inventory.getHandItem() == 6:
+                        KDS.Missions.SetProgress("tutorial", "trash", 1.0)
                     serialNumber = player_inventory.dropItem()
                     if serialNumber == "doubleItemPlaceholder":
                         continue
