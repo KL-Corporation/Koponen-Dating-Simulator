@@ -795,7 +795,7 @@ class WorldData():
         FilePath = os.path.join(PersistentMapPath, "levelprop.kdf")
         global dark, darkness, ambient_light, ambient_light_tint
         dark = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "enabled", False)
-        dval = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "strength", 255)
+        dval = 255 - KDS.ConfigManager.GetJSON(FilePath, "Darkness", "strength", 0)
         darkness = (dval, dval, dval)
         ambient_light = KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "enabled", False)
         ambient_light_tint = tuple(KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "tint", (255, 255, 255)))

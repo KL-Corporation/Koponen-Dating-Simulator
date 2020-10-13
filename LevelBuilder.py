@@ -1,12 +1,17 @@
+from inspect import currentframe
 import os
 import sys
+from turtle import st
 from numpy.core.fromnumeric import resize, size
 import pygame
 from pygame.locals import *
 import threading
 import KDS.Colors
 import KDS.Convert
+import KDS.ConfigManager
 import KDS.System
+import KDS.Math
+import KDS.UI
 import numpy
 import tkinter 
 import re
@@ -102,7 +107,7 @@ class tileInfo:
             scroll[0] = 0
         if scroll[1] < 0:
             scroll[1] = 0
-        bpos = [0,0]
+        bpos = [0, 0]
         for row in renderList[scroll[1]:scroll[1]+int((display_size[1]/scalesize)+2)]:
             for unit in row[scroll[0]:scroll[0]+int((display_size[0]/scalesize)+2)]:
                 blitPos = (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize)
@@ -165,10 +170,10 @@ def resizeGrid(size, grid: list):
                 row.pop()
     return grid
 
-def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False):
+def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = "") -> str:
     pygame.key.set_repeat(500, 31)
     r = True
-    rstring = ''
+    rstring = defVal
     while r:
         inputError = False
         inputWarning = False
@@ -245,14 +250,14 @@ def saveMap(grd, name: str):
         
 def saveMapName():
     global currentSaveName, grid
-    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("KDS Data file", "*.dat"), ("All files", "*.*")))
+    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
     if len(savePath) > 0:
         saveMap(grid, savePath)
         currentSaveName = savePath
 
 def openMap(): #Returns a 2d array
     global currentSaveName
-    fileName = filedialog.askopenfilename(filetypes = (("KDS Data file", "*.dat"), ("All files", "*.*")))
+    fileName = filedialog.askopenfilename(filetypes = (("Data file", "*.dat"), ("All files", "*.*")))
     if fileName:
         with open(fileName, 'r') as f:
             contents = f.read().split("\n")
@@ -351,11 +356,85 @@ def materialMenu(previousMaterial):
                     return selection.serialNumber
         pygame.display.update()
 
+def generateLevelProp():
+    """
+    Generate a levelProp.kdf using this tool.
+    """
+    runmenu = True
+    ic = KDS.Convert.ToBool(inputConsole("Darkness Enabled: (bool) >>> ", False))
+    dark = ic
+    if dark:
+        ic = int(inputConsole("Darkness Strength: (int[0, 255]) >>> ", False))
+    else:
+        ic = 0
+    darkness = KDS.Math.Clamp(ic, 0, 255)
+    ic = KDS.Convert.ToBool(inputConsole("Ambient Light Enabled: (bool) >>> ", False))
+    ambient_light = ic
+    if ambient_light:
+        ic = inputConsole("Ambient Light Strength: (int, int, int) >>> ", False).replace(" ", "").split(",")
+    else:
+        ic = (0, 0, 0)
+    ambient_light_tint = (int(ic[0]), int(ic[1]), int(ic[2]))
+    ic = inputConsole("Player Start Position: (int, int) >>> ", False, defVal="100, 100").replace(" ", "").split(",")
+    p_start_pos = (int(ic[0]), int(ic[1]))
+    ic = inputConsole("Koponen Start Position: (int, int) >>> ", False, defVal="200, 200").replace(" ", "").split(",")
+    k_start_pos = (int(ic[0]), int(ic[1]))
+    savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
+    if len(savePath) > 0:
+        KDS.ConfigManager.SetJSON(savePath, "Darkness", "enabled", dark)
+        KDS.ConfigManager.SetJSON(savePath, "Darkness", "strength", darkness)
+        KDS.ConfigManager.SetJSON(savePath, "AmbientLight", "enabled", ambient_light)
+        KDS.ConfigManager.SetJSON(savePath, "AmbientLight", "tint", ambient_light_tint)
+        KDS.ConfigManager.SetJSON(savePath, "StartPos", "player", p_start_pos)
+        KDS.ConfigManager.SetJSON(savePath, "StartPos", "koponen", k_start_pos)
+
 def main():
-    global currentSaveName, brush, grid, modifiedAfterSave, timesModifiedAfterSave
-    g = inputConsole("Grid size: (int, int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
-    gridSize = (int(g[0]), int(g[1]))
-    grid = loadGrid(gridSize)
+    global currentSaveName, brush, grid, modifiedAfterSave, timesModifiedAfterSave, btn_menu
+    btn_menu = True
+    grid = None
+    def button_handler(_openMap: bool = False, _generateLevelProp: bool = False, _quit: bool = False):
+        global btn_menu, grid
+        if _generateLevelProp:
+            generateLevelProp()
+        elif _quit:
+            pygame.quit()
+            quit()
+        elif _openMap:
+            o_m = openMap()
+            if o_m != None: 
+                grid = o_m
+                btn_menu = False
+            else: 
+                btn_menu = True
+        else: btn_menu = False
+    newMap_btn = KDS.UI.New.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    openMap_btn = KDS.UI.New.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    genProp_btn = KDS.UI.New.Button(pygame.Rect(650, 450, 300, 100), button_handler, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.New.Button(pygame.Rect(650, 600, 300, 100), button_handler, harbinger_font.render("Quit", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    while btn_menu:
+        clicked = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    clicked = True
+        main_display.fill(KDS.Colors.GetPrimary.Gray)
+        mouse_pos = pygame.mouse.get_pos()
+        newMap_btn.update(main_display, mouse_pos, clicked)
+        openMap_btn.update(main_display, mouse_pos, clicked, True)
+        genProp_btn.update(main_display, mouse_pos, clicked, False, True)
+        quit_btn.update(main_display, mouse_pos, clicked, False, False, True)
+        pygame.display.update()
+    
+    main_display.fill(KDS.Colors.GetPrimary.Black)
+    
+    if grid == None:
+        g = inputConsole("Grid size: (int, int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
+            
+        gridSize = (int(g[0]), int(g[1]))
+        grid = loadGrid(gridSize)
 
     inputConsole_output = None
     updateTiles = True
@@ -469,6 +548,4 @@ def main():
 if __name__ == "__main__":
     main()
 else:
-    print("This program cannot be imported!")
-
-        
+    print("Level Builder cannot be imported!")

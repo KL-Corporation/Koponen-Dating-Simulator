@@ -137,7 +137,7 @@ class New:
             pygame.draw.rect(surface, draw_color, self.rect)
 
             if self.text != None:
-                surface.blit(pygame.transform.scale(self.text, (int(self.text.get_width()), int(self.text.get_height()))), (int(self.rect.center[0] - (self.text.get_width() / 2)), int(self.rect.center[1] - (self.text.get_height() / 2))))
+                surface.blit(self.text, (int(self.rect.center[0] - (self.text.get_width() / 2)), int(self.rect.center[1] - (self.text.get_height() / 2))))
 
     class Switch:
         """
