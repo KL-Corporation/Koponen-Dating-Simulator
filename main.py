@@ -515,6 +515,7 @@ Projectiles = []
 Explosions = []
 BallisticObjects = []
 Lights = []
+level_finished = False
 Particles = []
 HitTargets = {}
 tiles = numpy.array([])
@@ -2447,6 +2448,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
 
     player_death_event = False
     animation_has_played = False
+    level_finished = False
     death_wait = 0
     
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
@@ -2934,13 +2936,54 @@ def main_menu():
         clock.tick(60)
 
 def level_finished_menu():
-    r = True
-    while r:
+    lfmr = True
+    lfm_surface = pygame.Surface(display_size)
+
+    esc_menu_background_proc = esc_menu_background.copy()
+    blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
+    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA").convert()
+
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+
+    def goto_main_menu():
+        global go_to_main_menu
+        pygame.mixer.unpause()
+        lfmr = False
+        go_to_main_menu = True
+
+    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
+        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
+
+    while lfmr:
+
+        display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                r = False
+                lfmr = False
                 KDS_Quit()
+            elif event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    KDS.Keys.SetPressed(KDS.Keys.mainKey, True)
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
+        mouse_pos = pygame.mouse.get_pos()
+        
+        lfm_surface.blit(pygame.transform.scale(
+            esc_menu_background_blur, display_size), (0, 0))
+        pygame.draw.rect(lfm_surface, (123, 134, 111), (int(
+            (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
+        lfm_surface.blit(pygame.transform.scale(
+            text_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
+        main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
+
+        anim_x = anim_lerp_x.update(False)
+        lfm_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
+        display.blit(lfm_surface, (0, 0))
+        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
+            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
 
     
@@ -2978,6 +3021,8 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.functionKey, True)
             elif event.key == K_ESCAPE:
                 esc_menu = True
+            elif event.key == K_F6:
+                level_finished = True
             elif event.key in KDS.Keys.inventoryKeys:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
@@ -3111,7 +3156,6 @@ while main_running:
     Items, player_inventory = Item.checkCollisions(
         Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.centerx - (player_rect.x - scroll[0] - 301), player_rect.centery - (player_rect.y - scroll[1] - 221)))
-
     for enemy in Enemies:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
             result = enemy.update(screen, scroll, tiles, player_rect)
@@ -3493,6 +3537,12 @@ while main_running:
         pygame.mouse.set_visible(False)
         Audio.MusicMixer.unpause()
         Audio.unpauseAllSounds()
+    if level_finished:
+        Audio.stopAllSounds()
+        Audio.MusicMixer.stop()
+        pygame.mouse.set_visible(True)
+        esc_menu_background = screen.copy()
+        level_finished_menu()
     if go_to_main_menu:
         Audio.stopAllSounds()
         Audio.MusicMixer.stop()
