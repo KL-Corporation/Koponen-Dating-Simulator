@@ -12,7 +12,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, _OnAnimationEnd: OnAnimationEnd or str, filetype: str = ".png", animation_dir: str = "Animations"):
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations"):
         """Initialises an animation.
 
         Args:
