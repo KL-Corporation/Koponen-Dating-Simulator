@@ -1556,6 +1556,17 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
         return False
 
     @staticmethod
+    def fire_extinguisher_p():
+
+        return False
+
+    @staticmethod
+    def level_ender_p():
+        Audio.playSound(weapon_pickup)
+
+        return False
+
+    @staticmethod
     def emptyOperation():
         return True
 
@@ -1750,6 +1761,16 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
         if args[0][0] == True:
             fireExtinguisherBurning = True
 
+        return i_textures[0]
+
+    @staticmethod
+    def level_ender_u(*args):
+        global level_finished
+        if args[0][0]:
+            level_finished = True
+
+        return i_textures[31]
+
     @staticmethod
     def emptyOperation(*args):
 
@@ -1783,7 +1804,9 @@ Pfunctions = {
     26: pickupFunctions.empty_flask_p,
     27: pickupFunctions.flask_meth_p,
     28: pickupFunctions.flask_blood_p,
-    29: pickupFunctions.grenade_p
+    29: pickupFunctions.grenade_p,
+    30: pickupFunctions.fire_extinguisher_p,
+    31: pickupFunctions.level_ender_p
 }
 
 Ufunctions = {
@@ -1804,7 +1827,8 @@ Ufunctions = {
     27: itemFunctions.flask_meth_u,
     28: itemFunctions.flask_blood_u,
     29: itemFunctions.grenade_u,
-    30: itemFunctions.fire_extinguisher_u
+    30: itemFunctions.fire_extinguisher_u,
+    31: itemFunctions.level_ender_u
 
 }
 
@@ -2938,9 +2962,13 @@ def main_menu():
 
 lfmr = False
 def level_finished_menu():
-    global lfmr
+    global lfmr, current_map, max_map
     lfmr = True
     lfm_surface = pygame.Surface(display_size)
+    next_level_index = "01"
+    next_level_bool = True
+
+    pygame.mouse.set_visible(True)
 
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
@@ -2956,16 +2984,25 @@ def level_finished_menu():
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     def goto_main_menu():
-        global lfmr, go_to_main_menu
+        global lfmr, go_to_main_menu, level_finished
         lfmr = False
         pygame.mixer.unpause()
+        level_finished = False
         go_to_main_menu = True
 
     def next_level():
-        pass
+        global lfmr, level_finished, current_map
+        lfmr = False
+        level_finished = False
+        next_level_index = f"{int(current_map)+1:02}"
+        current_map = next_level_index
+        play_function(KDS.Gamemode.Modes.Campaign, True)
+
+    if int(current_map) > max_map:
+        next_level_bool = False
 
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), 540, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.GetPrimary.White))
-    next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), 540, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White))
+    next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), 540, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White), enabled=next_level_bool)
 
     while lfmr:
         print(lfmr)
@@ -3529,7 +3566,7 @@ while main_running:
     weapon_fire = False
     if KDS.Missions.GetFinished() == True:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
-            level_finished_menu()
+            level_finished = True
 
     #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
 
