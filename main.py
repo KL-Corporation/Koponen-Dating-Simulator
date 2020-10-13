@@ -2946,10 +2946,11 @@ def level_finished_menu():
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     def goto_main_menu():
-        global go_to_main_menu
+        #global go_to_main_menu
         pygame.mixer.unpause()
         lfmr = False
-        go_to_main_menu = True
+        print("FFFF")
+        #go_to_main_menu = True
 
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
@@ -2968,8 +2969,8 @@ def level_finished_menu():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
-        mouse_pos = pygame.mouse.get_pos()
-        
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+
         lfm_surface.blit(pygame.transform.scale(
             esc_menu_background_blur, display_size), (0, 0))
         pygame.draw.rect(lfm_surface, (123, 134, 111), (int(
@@ -2977,6 +2978,8 @@ def level_finished_menu():
         lfm_surface.blit(pygame.transform.scale(
             text_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
+        print(KDS.Keys.GetClicked(KDS.Keys.mainKey))
+        
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
 
         anim_x = anim_lerp_x.update(False)
@@ -3545,6 +3548,7 @@ while main_running:
         pygame.mouse.set_visible(True)
         esc_menu_background = screen.copy()
         level_finished_menu()
+        level_finished = False
     if go_to_main_menu:
         Audio.stopAllSounds()
         Audio.MusicMixer.stop()
