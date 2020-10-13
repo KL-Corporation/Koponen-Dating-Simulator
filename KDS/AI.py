@@ -411,10 +411,9 @@ class SergeantZombie(HostileEnemy):
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
-
     def onDeath(self):
         items = []
-        if random.randint(0, 2) == 0:
+        if random.choice([True, False]):
             items.append(17)
         return items
 
@@ -458,11 +457,11 @@ class DrugDealer(HostileEnemy):
 
     def onDeath(self):
         items = []
-        if random.randint(0, 15) == 10:
+        if random.randint(0, 15) == 0:
             items.append(20)
-        if random.randint(0, 4) == 4:
+        if random.randint(0, 4) == 0:
             items.append(11)
-        return []
+        return items
 
 class Projectile:
     pass

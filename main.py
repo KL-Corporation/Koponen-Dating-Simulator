@@ -3005,7 +3005,6 @@ def level_finished_menu():
     next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), 540, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White), enabled=next_level_bool)
 
     while lfmr:
-        print(lfmr)
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
         KDS.Keys.Update()
         for event in pygame.event.get():
