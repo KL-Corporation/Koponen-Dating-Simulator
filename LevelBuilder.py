@@ -74,12 +74,12 @@ modifiedAfterSave = False
 timesModifiedAfterSave = 0
 
 keys_pressed = {
-    "RETURN": False,
-    "K_e": False,
-    "K_s": False,
-    "K_o": False,
-    "K_SHIFT": False,
-    "K_CTRL": False,
+    K_RETURN: False,
+    K_e: False,
+    K_s: False,
+    K_o: False,
+    K_LSHIFT: False,
+    K_LCTRL: False,
 }
 ##################################################
 
@@ -121,7 +121,7 @@ class tileInfo:
                     except:
                         pass
                 if unit.rect.collidepoint(mpos[0]+scroll[0]*scalesize, mpos[1]+scroll[1]*scalesize):
-                    if pygame.mouse.get_pressed()[1] and not keys_pressed["K_SHIFT"]:
+                    if pygame.mouse.get_pressed()[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerialNumber(0)
                     pygame.draw.rect(Surface,(20,20,20),(blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
@@ -454,12 +454,12 @@ def main():
                     quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
-                    if keys_pressed["K_SHIFT"]:
+                    if keys_pressed[K_LSHIFT]:
                         scroll[1] -= 1
                     else:
                         scroll[0] -= 1
                 elif event.button == 5:
-                    if keys_pressed["K_SHIFT"]:
+                    if keys_pressed[K_LSHIFT]:
                         scroll[1] += 1
                     else:
                         scroll[0] += 1
@@ -471,7 +471,7 @@ def main():
                     updateTiles = True
             elif event.type == KEYDOWN:
                 if event.key == K_LCTRL:
-                    keys_pressed["K_CTRL"] = True
+                    keys_pressed[K_LCTRL] = True
                 elif event.key == K_t:
                     inputConsole_output = inputConsole()
                 elif event.key == K_r:
@@ -480,43 +480,43 @@ def main():
                         resize_output = resize_output.replace(" ", "").split(",")
                         grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_s:
-                    keys_pressed["K_s"] = True
+                    keys_pressed[K_s] = True
                 elif event.key == K_e:
                     brush = materialMenu(brush)
                     updateTiles = False
-                    keys_pressed["K_e"] = True
+                    keys_pressed[K_e] = True
                 elif event.key == K_o:
-                    keys_pressed["K_o"] = True
+                    keys_pressed[K_o] = True
                 elif event.key == K_LSHIFT:
-                    keys_pressed["K_SHIFT"] = True
+                    keys_pressed[K_LSHIFT] = True
             elif event.type == KEYUP:
                 if event.key == K_LCTRL:
-                    keys_pressed["K_CTRL"] = False
+                    keys_pressed[K_LCTRL] = False
                 elif event.key == K_e:
-                    keys_pressed["K_e"] = False
+                    keys_pressed[K_e] = False
                 elif event.key == K_s:
-                    keys_pressed["K_s"] = False
+                    keys_pressed[K_s] = False
                 elif event.key == K_o:
-                    keys_pressed["K_o"] = False 
+                    keys_pressed[K_o] = False 
                 elif event.key == K_LSHIFT:
-                    keys_pressed["K_SHIFT"] = False
+                    keys_pressed[K_LSHIFT] = False
         
-        if pygame.mouse.get_pressed()[1] and keys_pressed["K_SHIFT"]:
+        if pygame.mouse.get_pressed()[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = int(round((mouse_pos_beforeMove[0] - mouse_pos[0]) / scalesize))
             mid_scroll_y = int(round((mouse_pos_beforeMove[1] - mouse_pos[1]) / scalesize))
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
                 scroll[0] = scroll_beforeMove[0] + mid_scroll_x
                 scroll[1] = scroll_beforeMove[1] + mid_scroll_y
         
-        if keys_pressed["K_s"] and keys_pressed["K_CTRL"]:
+        if keys_pressed[K_s] and keys_pressed[K_LCTRL]:
             if not currentSaveName:
                 saveMapName()
             else:
                 saveMap(grid, currentSaveName)
-        if keys_pressed["K_s"] and keys_pressed["K_CTRL"] and keys_pressed["K_SHIFT"]:
+        if keys_pressed[K_s] and keys_pressed[K_LCTRL] and keys_pressed[K_LSHIFT]:
             saveMapName()
 
-        if keys_pressed["K_o"] and keys_pressed["K_CTRL"]:
+        if keys_pressed[K_o] and keys_pressed[K_LCTRL]:
             tempGr = openMap()
             if tempGr:
                 grid = tempGr
