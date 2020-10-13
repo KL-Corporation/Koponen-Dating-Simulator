@@ -321,6 +321,7 @@ ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").conve
 ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
 awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
 blh = pygame.image.load("Assets/Textures/Map/bloody_h.png").convert()
+tp_shitting = pygame.image.load("Assets/Textures/Map/player_shitting_toilet.png").convert()
 
 gamemode_bc_1_1 = pygame.image.load(
     os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
@@ -379,6 +380,7 @@ ppsh41_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 awm_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 blh.set_colorkey(KDS.Colors.GetPrimary.White)
+tp_shitting.set_colorkey(KDS.Colors.GetPrimary.White)
 
 Items_list = ["iPuhelin", "coffeemug"]
 
@@ -498,6 +500,8 @@ fart_counter = 0
 monsterAmount = 0
 monstersLeft = 0
 farting = False
+
+renderPlayer = True
 
 with open("Assets/Maps/map_names.txt", "r") as file:
     cntnts = file.read()
@@ -1031,11 +1035,13 @@ class Toilet(Tile):
         self.light_scale = 150
 
     def update(self):
-        
+        global renderPlayer
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
             self.burning = True
+            self.rect = self.rect1
             global player_score
             player_score += 30
+            renderPlayer = True
         if self.burning:
             if 130 < self.light_scale < 170:
                 self.light_scale += random.randint(-3, 6)
@@ -3443,7 +3449,7 @@ while main_running:
 
 #endregion
 #region Pelaajan elämätilanteen käsittely
-    if player_health < last_player_health and player_health <= 0:
+    if player_health < last_player_health:
         hurted = True
     else:
         hurted = False
@@ -3546,6 +3552,7 @@ while main_running:
         if DebugMode:
             pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x -
                                                                      scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
+
         screen.blit(pygame.transform.flip(player_animations.update(), direction, False), (
             int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - player_animations.active.size[0]) / 2)), int(player_rect.bottomleft[1] - scroll[1] - player_animations.active.size[1])))
     else:
