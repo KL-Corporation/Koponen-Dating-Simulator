@@ -39,7 +39,7 @@ class Animation:
             path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
-            KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: {}".format(converted_animation_name), False)
+            KDS.Logging.Log(KDS.Logging.LogType.debug, f"Initialised Animation Image: {animation_dir}/{converted_animation_name}", False)
 
             for _ in range(duration):
                 self.images.append(image)
