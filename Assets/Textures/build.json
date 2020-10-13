@@ -52,7 +52,8 @@
         "050":"old_plates.png",
         "051":"cyan_wtwall.png",
         "052":"tall_torch.png",
-        "053":"impaled_head.png"
+        "053":"impaled_head.png",
+        "054":"level_ender.png"
     },
 
     "special_tiles": [
@@ -71,7 +72,8 @@
         47,
         48,
         52,
-        53
+        53,
+        54
     ],
 
     "checkCollisionFalse": [
