@@ -428,6 +428,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
 #endregion
 #################### Vähän Ghetto, mutta en halua turhia variableja. ####################
 jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
+level_ender_tip = tip_font.render("Finish level [Press: E]", True, KDS.Colors.GetPrimary.White)
 jukebox_tip.blit(tip_font.render("Use Jukebox [Press: E]", True, KDS.Colors.GetPrimary.White), (0, 0))
 jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetPrimary.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
 #################### Vähän Ghetto, mutta en halua turhia variableja. ####################
@@ -1312,6 +1313,22 @@ class GoryHead(Tile):
             HitTargets.pop(self)
         return self.texture
 
+class LevelEnder(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0], position[1] - 16, 34, 50)
+        self.checkCollision = False
+
+    def update(self):
+        global level_finished
+        Lights.append(KDS.World.Lighting.Light( (self.rect.x, self.rect.y), blue_light_sphere1))
+        if player_rect.colliderect(self.rect):
+            screen.blit(level_ender_tip, (self.rect.x-level_ender_tip.get_width() / 2 - scroll[0], self.rect.y - 40 - scroll[1]))
+            if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+                level_finished = True
+        return t_textures[self.serialNumber]
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1328,7 +1345,8 @@ specialTilesD = {
     47: Rock0,
     48: Rock0,
     52: Torch,
-    53: GoryHead
+    53: GoryHead,
+    54: LevelEnder
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
