@@ -1,4 +1,5 @@
 from inspect import currentframe
+from re import purge
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
@@ -11,7 +12,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, _OnAnimationEnd: OnAnimationEnd or str, filetype=".png"):
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple, _OnAnimationEnd: OnAnimationEnd or str, filetype: str = ".png", animation_dir: str = "Animations"):
         """Initialises an animation.
 
         Args:
@@ -35,13 +36,15 @@ class Animation:
         KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising {} Animation Images...".format(number_of_images), False)
         for i in range(number_of_images):
             converted_animation_name = animation_name + "_" + str(i) + filetype
-            path = "Assets/Textures/Animations/" + converted_animation_name #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
+            path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
             KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialised Animation Image: {}".format(converted_animation_name), False)
 
             for _ in range(duration):
                 self.images.append(image)
+        
+        self.size = self.images[0].get_size()
 
                 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
@@ -120,6 +123,7 @@ class MultiAnimation:
     def __init__(self, **animations: Animation):
         self.animations = animations
         self.active = None
+        self.tick = 0
         for key in animations:
             if self.active == None:
                 self.active = animations[key]
@@ -132,8 +136,8 @@ class MultiAnimation:
         else:
             KDS.Logging.AutoError("MultiAnimation trigger invalid.", currentframe())
             
-    def update(self):
-        return self.active.update()
+    def update(self, reverse: bool = False):
+        return self.active.update(reverse)
     
     def get_frame(self):
         return self.active.reset()
