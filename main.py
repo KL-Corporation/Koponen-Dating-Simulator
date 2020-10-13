@@ -2934,7 +2934,16 @@ def main_menu():
         clock.tick(60)
 
 def level_finished_menu():
-    print("Level finishing not added yet...")
+    r = True
+    while r:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                KDS_Quit()
+
+        pygame.display.update()
+
+    
 #endregion
 #region Check Terms
 agr(tcagr)
