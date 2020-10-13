@@ -2942,6 +2942,10 @@ def level_finished_menu():
     lfmr = True
     lfm_surface = pygame.Surface(display_size)
 
+    Audio.MusicMixer.stop()
+    Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
+    Audio.MusicMixer.play(-1)
+
     Title = pygame.image.load("Assets/Textures/Branding/LevelCleared.png").convert()
     Title.set_colorkey(KDS.Colors.GetPrimary.White)
 
@@ -2957,7 +2961,11 @@ def level_finished_menu():
         pygame.mixer.unpause()
         go_to_main_menu = True
 
-    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), 540, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
+    def next_level():
+        pass
+
+    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), 540, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.GetPrimary.White))
+    next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), 540, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White))
 
     while lfmr:
         print(lfmr)
@@ -2980,6 +2988,7 @@ def level_finished_menu():
         lfm_surface.blit(pygame.transform.scale(Title, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
+        next_level_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
 
         anim_x = anim_lerp_x.update(False)
         lfm_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
