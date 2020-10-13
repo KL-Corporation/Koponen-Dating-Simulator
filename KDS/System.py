@@ -5,8 +5,6 @@ import shutil
 import KDS.Logging
 import ctypes
 
-print(os.getpid())
-
 def hide(path: str):
     """Hides the file or directory specified by path. [WINDOWS ONLY]
 
