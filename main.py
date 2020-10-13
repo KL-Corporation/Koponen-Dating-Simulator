@@ -2935,9 +2935,15 @@ def main_menu():
         c = False
         clock.tick(60)
 
+
+lfmr = False
 def level_finished_menu():
+    global lfmr
     lfmr = True
     lfm_surface = pygame.Surface(display_size)
+
+    Title = pygame.image.load("Assets/Textures/Branding/LevelCleared.png").convert()
+    Title.set_colorkey(KDS.Colors.GetPrimary.White)
 
     esc_menu_background_proc = esc_menu_background.copy()
     blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
@@ -2946,19 +2952,17 @@ def level_finished_menu():
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.Float.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     def goto_main_menu():
-        #global go_to_main_menu
-        pygame.mixer.unpause()
+        global lfmr, go_to_main_menu
         lfmr = False
-        print("FFFF")
-        #go_to_main_menu = True
+        pygame.mixer.unpause()
+        go_to_main_menu = True
 
-    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
+    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), 540, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
 
     while lfmr:
-
+        print(lfmr)
         display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
-
+        KDS.Keys.Update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 lfmr = False
@@ -2971,23 +2975,18 @@ def level_finished_menu():
                     KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
-        lfm_surface.blit(pygame.transform.scale(
-            esc_menu_background_blur, display_size), (0, 0))
-        pygame.draw.rect(lfm_surface, (123, 134, 111), (int(
-            (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
-        lfm_surface.blit(pygame.transform.scale(
-            text_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
+        lfm_surface.blit(pygame.transform.scale(esc_menu_background_blur, display_size), (0, 0))
+        pygame.draw.rect(lfm_surface, (123, 134, 111), (int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
+        lfm_surface.blit(pygame.transform.scale(Title, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
-        print(KDS.Keys.GetClicked(KDS.Keys.mainKey))
-        
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
 
         anim_x = anim_lerp_x.update(False)
         lfm_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(lfm_surface, (0, 0))
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
+        clock.tick(60)
 
     
 #endregion
@@ -3205,11 +3204,11 @@ while main_running:
             for x in range(8):
                 x = -x
                 x /= 8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 1, -1, tiles, 25, maxDistance=82, slope=x, texture=soulsphere))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 1, -1, tiles, 25, maxDistance=82, slope=x))
             for x in range(8):
                 x = -x
                 x /= 8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x, texture=soulsphere))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x))
 
             Audio.playSound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x-60, B_Object.rect.y-55)))
