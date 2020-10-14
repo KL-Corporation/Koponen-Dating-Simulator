@@ -2006,7 +2006,6 @@ def item_collision_test(rect, items):
 
 #endregion
 #region Player
-
 def collision_test(rect, Tile_list):
     hit_list = []
     x = int((rect.x/34)-3)
@@ -2032,7 +2031,6 @@ def collision_test(rect, Tile_list):
             if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
                 hit_list.append(tile.rect)
     return hit_list
-
 
 def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
     collision_types = {'top': False, 'bottom': False,
