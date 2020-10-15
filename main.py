@@ -950,10 +950,9 @@ class Inventory:
         if self.storage[self.SIndex] != Inventory.emptySlot:
             if self.SIndex < self.size - 1:
                 if self.storage[self.SIndex + 1] == "doubleItemPlaceholder":
-                    serialNumber = self.storage[self.SIndex]
-                    self.storage[self.SIndex] = Inventory.emptySlot
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
-                    return serialNumber
+                elif self.storage[self.SIndex] == 6:
+                    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinDrop)
             serialNumber = self.storage[self.SIndex]
             self.storage[self.SIndex] = Inventory.emptySlot
             return serialNumber
@@ -1408,6 +1407,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         global player_score
         Audio.playSound(item_pickup)
         player_score -= 10
+        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinPickup)
 
         return False
 
@@ -2475,7 +2475,7 @@ def koponen_talk():
 #endregion
 #region Game Start and Stop
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
-    global main_menu_running, current_map, Audio, player_health, player_keys, player_hand_item, player_death_event, player_rect, animation_has_played, death_wait, true_scroll, farting, selectedSave, player_inventory
+    global main_menu_running, current_map, Audio, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -2498,8 +2498,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     animation_has_played = False
     level_finished = False
     death_wait = 0
-    
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
+    global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina
     player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
     player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
     koponen_rect.topleft = KDS.ConfigManager.Save.GetPlayer("koponen_position", koponen_def_pos)
@@ -2507,6 +2507,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     farting = KDS.ConfigManager.Save.GetPlayer("farting", False)
     player_keys = KDS.ConfigManager.Save.GetPlayer("keys", {"red": False, "green": False, "blue": False})
     player_inventory.storage = KDS.ConfigManager.Save.GetPlayer("inventory", [Inventory.emptySlot for _ in range(player_inventory.size)])
+    playerStamina = KDS.ConfigManager.Save.GetPlayer("stamina", 100)
     
     ########## iPuhelin ##########
     if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and is_new_save):
@@ -3098,8 +3099,6 @@ while main_running:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
-                    if player_inventory.getHandItem() == 6:
-                        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinDrop)
                     serialNumber = player_inventory.dropItem()
                     if serialNumber == "doubleItemPlaceholder":
                         continue
@@ -3338,7 +3337,7 @@ while main_running:
         screen.blit(health, (10, 120))
         screen.blit(stamina, (10, 130))
 
-        #KDS.Missions.Render(screen)
+        KDS.Missions.Render(screen)
 
         player_inventory.render(screen)
     ##################################################################################################################################################################
