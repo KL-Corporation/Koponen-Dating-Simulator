@@ -3586,9 +3586,11 @@ while main_running:
 #region Data Update
     animation_counter += 1
     weapon_fire = False
-    if KDS.Missions.GetFinished() == True:
+    if KDS.Missions.GetFinished():
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
             level_finished = True
+        else:
+            pass
 
     #print("Player position: " + str(player_rect.topleft) + " Angle: " + str(KDS.Math.getAngle((player_rect.x,player_rect.y),imps[0].rect.topleft)))
 
