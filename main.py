@@ -1038,7 +1038,6 @@ class Toilet(Tile):
         global renderPlayer
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
             self.burning = True
-            self.rect = self.rect1
             global player_score
             player_score += 30
             renderPlayer = True
@@ -3339,7 +3338,7 @@ while main_running:
         screen.blit(health, (10, 120))
         screen.blit(stamina, (10, 130))
 
-        KDS.Missions.Render(screen)
+        #KDS.Missions.Render(screen)
 
         player_inventory.render(screen)
     ##################################################################################################################################################################
