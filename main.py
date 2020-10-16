@@ -3119,7 +3119,10 @@ while main_running:
                     playerStamina = -1000
                     farting = True
                     Audio.playSound(fart)
-                    KDS.Missions.SetProgress("tutorial", "fart", 1.0)
+                    try:
+                        KDS.Missions.SetProgress("tutorial", "fart", 1.0)
+                    except:
+                        pass
             elif event.key == K_DOWN:
                 KDS.Keys.SetPressed(KDS.Keys.altDown, True)
             elif event.key == K_UP:
