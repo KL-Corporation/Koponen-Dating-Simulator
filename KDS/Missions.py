@@ -1,4 +1,5 @@
 #region Importing
+import math
 from typing import Tuple
 import pygame
 import KDS.Animator
@@ -13,8 +14,10 @@ from inspect import currentframe
 #region Settings
 MissionColor = (128, 128, 128)
 MissionFinishedColor = (0, 128, 0)
+MissionUnFinishedColor = (128, 0, 0)
 TaskColor = (70, 70, 70)
 TaskFinishedColor = (0, 70, 0)
+TaskUnFinishedColor = (70, 0, 0)
 TaskAnimationDuration = 30
 MissionAnimationDuration = 60
 MissionWaitTicks = 120
@@ -46,13 +49,20 @@ class Listener:
         for listnr in self.listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
 
-Listeners = { "InventorySlotSwitching": Listener(), "Movement": Listener(), "KoponenTalk": Listener(), "iPuhelinPickup": Listener(), "iPuhelinDrop": Listener() }
+Listeners = { "InventorySlotSwitching": Listener(), 
+             "Movement": Listener(), 
+             "KoponenTalk": Listener(), 
+             "iPuhelinPickup": Listener(), 
+             "iPuhelinDrop": Listener(),
+             "LevelEnder": Listener()
+            }
 class ListenerTypes:
     InventorySlotSwitching = "InventorySlotSwitching"
     Movement = "Movement"
     KoponenTalk = "KoponenTalk"
     iPuhelinPickup = "iPuhelinPickup"
     iPuhelinDrop = "iPuhelinDrop"
+    LevelEnder = "LevelEnder"
 #endregion
 #region Classes
 class MissionHolder:
@@ -63,7 +73,8 @@ class MissionHolder:
         self.finished = False
         
     def GetMission(self, safeName: str):
-        return self.missions[safeName]
+        if safeName in self.missions: return self.missions[safeName]
+        else: return None
     
     def GetMissionList(self):
         return self.mission_values
@@ -104,6 +115,7 @@ class Mission:
         self.finishedTicks = 0
         self.trueFinished = False
         self.color = KDS.Animator.Color(MissionColor, MissionFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
+        self.playSound = True
         Missions.AddMission(self.safeName, self)
         
     def AddTask(self, safeName: str, task):
@@ -114,7 +126,8 @@ class Mission:
         else: KDS.Logging.AutoError("SafeName is already occupied!", currentframe())
         
     def GetTask(self, safeName: str):
-        return self.tasks[safeName]
+        if safeName in self.tasks: return self.tasks[safeName]
+        else: return None
     
     def GetTaskList(self):
         return self.task_values
@@ -124,32 +137,49 @@ class Mission:
     
     def GetTaskByValue(self, value):
         return self.tasks[self.task_keys[self.task_values.index(value)]]
-        
-    def Update(self, Width: int, Height: int):
+    
+    def Update(self):
+        self.finished = True
+        self.playSound = False
+        notFinished = 0
+        for task in self.task_values:
+            if not task.finished:
+                self.finished = False
+                notFinished += 1
+            if notFinished > 1:
+                self.playSound = True
+                del notFinished
+                break
+
+        if self.finished:
+            if self.color.getValues()[1] != MissionFinishedColor:
+                self.color.changeValues(MissionColor, MissionFinishedColor)
+                for task in self.task_values:
+                    task.color.changeValues(TaskColor, TaskFinishedColor)
+            self.finishedTicks += 1
+        else: self.finishedTicks = 0
+        if self.finishedTicks == 1:
+            Audio.playSound(MissionFinishSound)
+        elif self.finishedTicks > MissionWaitTicks:
+            self.trueFinished = True
+            self.finishedTicks = MissionWaitTicks
+        elif self.finishedTicks == 0 and self.trueFinished:
+            self.trueFinished = False
+            self.color.changeValues(MissionColor, MissionUnFinishedColor)
+            Audio.playSound(MissionUnFinishSound)
+            for task in self.task_values:
+                if not task.finished:
+                    task.color.changeValues(TaskColor, TaskUnFinishedColor)
+    
+    def Render(self, Width: int, Height: int):
         surface = pygame.Surface((Width, Height))
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, ((Width / 2) - (self.textSize[0] / 2), (HeaderHeight / 2) - (self.textSize[1] / 2)))
-        self.finished = True
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
-        taskFinishedCount = 0
-        for task in self.task_values:
-            if task.finished:
-                taskFinishedCount += 1
-            else:
-                self.finished = False
-        playSound = True
-        if taskFinishedCount >= len(self.task_values) - 1: playSound = False
         i = 0
         for task in self.task_values:
-            surface.blit(task.Update(Width, _taskHeight, playSound), (0, HeaderHeight + (i * _taskHeight)))
+            surface.blit(task.Update(Width, _taskHeight, self.playSound), (0, HeaderHeight + (i * _taskHeight)))
             i += 1
-        if self.finished: self.finishedTicks += 1
-        if self.finishedTicks == 1:
-            if self.finished: Audio.playSound(MissionFinishSound)
-            else: Audio.playSound(MissionUnFinishSound)
-        elif self.finishedTicks >= MissionWaitTicks:
-            self.trueFinished = True
-            self.finishedTicks = MissionWaitTicks
         return surface
 
 class Task:
@@ -172,8 +202,10 @@ class Task:
         if self.progress >= 1.0:
             self.finished = True
             self.progress = 1.0
-        else: self.finished = False
-        self.progressScaled = round(self.progress * 100)
+        else: 
+            self.finished = False
+            if self.progress < 0.0: self.progress = 0.0
+        self.progressScaled = math.floor(self.progress * 100)
         
     def Update(self, Width: int, Height: int, PlaySound: bool = True):
         surface = pygame.Surface((Width, Height))
@@ -230,13 +262,14 @@ def Render(surface: pygame.Surface):
     maxWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
     Active_Mission = None
     for mission in Missions.GetMissionList():
+        mission.Update()
         if not mission.trueFinished:
             Active_Mission = mission.safeName
             break
     if Active_Mission == None: Missions.finished = True
     else: Missions.finished = False
     if not Missions.finished:
-        surface.blit(Missions.GetMission(Active_Mission).Update(maxWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(Missions.GetMission(Active_Mission).GetTaskList()))), (surface.get_width() - maxWidth, 0))
+        surface.blit(Missions.GetMission(Active_Mission).Render(maxWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(Missions.GetMission(Active_Mission).GetTaskList()))), (surface.get_width() - maxWidth, 0))
 
 def SetProgress(MissionName: str, TaskName: str, SetValue: float):
     """Sets a specified amount of progress to a task.
@@ -246,7 +279,10 @@ def SetProgress(MissionName: str, TaskName: str, SetValue: float):
         Task_Name (str): The Safe_Name of the task.
         Set_Value (float): The value that will be set to your task's progress.
     """
-    Missions.GetMission(MissionName).GetTask(TaskName).Progress(SetValue)
+    var = Missions.GetMission(MissionName)
+    if var != None: 
+        var = var.GetTask(TaskName)
+        if var != None: var.Progress(SetValue)
     
 def AddProgress(MissionName: str, TaskName: str, AddValue: float):
     """Adds a specified amount of progress to a task.
@@ -256,15 +292,27 @@ def AddProgress(MissionName: str, TaskName: str, AddValue: float):
         Task_Name (str): The Safe_Name of the task.
         Add_Value (float): The value that will be added to your task's progress.
     """
-    Missions.GetMission(MissionName).GetTask(TaskName).Progress(AddValue, True)
+    var = Missions.GetMission(MissionName)
+    if var != None: 
+        var = var.GetTask(TaskName)
+        if var != None: var.Progress(AddValue, True)
 #endregion
 #region MissionHolder Functions
 def GetFinished():
     return Missions.finished
+def SetFinished(MissionName: str):
+    global Missions
+    for task in Missions.GetMission(MissionName).GetTaskList():
+        task.Progress(100)
 def Clear():
     global Missions
     del Missions
     Missions = MissionHolder()
+def Finish():
+    global Missions
+    for _mission in Missions.GetMissionList():
+        for _task in _mission.GetTaskList():
+            _task.Progress(100)
 #endregion
 #region Missions
 def InitialiseMissions(LevelIndex):

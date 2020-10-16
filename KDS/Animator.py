@@ -289,3 +289,14 @@ class Color:
     
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
         return (round(self.int0.update(reverse)), round(self.int1.update(reverse)), round(self.int2.update(reverse)))
+    
+    def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
+        self.int0.From = From[0]
+        self.int0.To = To[0]
+        self.int1.From = From[1]
+        self.int1.To = To[1]
+        self.int2.From = From[2]
+        self.int2.To = To[2]
+        
+    def getValues(self):
+        return ((self.int0.From, self.int1.From, self.int2.From), (self.int0.From, self.int1.From, self.int2.From))

@@ -1330,9 +1330,9 @@ class LevelEnder(Tile):
         global level_finished
         Lights.append(KDS.World.Lighting.Light( (self.rect.x, self.rect.y), blue_light_sphere1))
         if player_rect.colliderect(self.rect):
-            screen.blit(level_ender_tip, (self.rect.x-level_ender_tip.get_width() / 2 - scroll[0], self.rect.y - 40 - scroll[1]))
+            screen.blit(level_ender_tip, (self.rect.x - level_ender_tip.get_width() / 2 - scroll[0], self.rect.y - 40 - scroll[1]))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
-                level_finished = True
+                KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
         return t_textures[self.serialNumber]
 
 specialTilesD = {
@@ -1406,7 +1406,6 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
     @staticmethod
     def iPuhelin_p():
         global player_score
-        Audio.playSound(item_pickup)
         player_score -= 10
         KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinPickup)
 
@@ -1792,7 +1791,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     def level_ender_u(*args):
         global level_finished
         if args[0][0]:
-            level_finished = True
+            KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
 
         return i_textures[31]
 
@@ -2136,7 +2135,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 def console():
-    global player_keys, player_health, koponen_happiness, isFullscreen
+    global player_keys, player_health, koponen_happiness, isFullscreen, level_finished
     wasFullscreen = False
     if isFullscreen:
         Fullscreen.Set()
@@ -2226,6 +2225,15 @@ def console():
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for woof", True)
+    elif command_list[0] == "finish":
+        if len(command_list) > 1 and command_list[1] == "missions":
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Mission finish issued through console.", True)
+            KDS.Missions.Finish()
+        elif len(command_list) <= 1:
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Level finish issued through console.", True)
+            level_finished = True
+        else:
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Please provide a proper finish type.", True)
     elif command_list[0] == "help":
         KDS.Logging.Log(KDS.Logging.LogType.info, """
 Console Help:
@@ -3098,8 +3106,6 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.functionKey, True)
             elif event.key == K_ESCAPE:
                 esc_menu = True
-            elif event.key == K_F6:
-                level_finished = True
             elif event.key in KDS.Keys.inventoryKeys:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
@@ -3124,10 +3130,7 @@ while main_running:
                     playerStamina = -1000
                     farting = True
                     Audio.playSound(fart)
-                    try:
-                        KDS.Missions.SetProgress("tutorial", "fart", 1.0)
-                    except:
-                        pass
+                    KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_DOWN:
                 KDS.Keys.SetPressed(KDS.Keys.altDown, True)
             elif event.key == K_UP:
