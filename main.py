@@ -201,6 +201,7 @@ button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+ArialSysFont = pygame.font.SysFont("Arial", 20, bold=0, italic=0)
 #endregion
 
 player_img = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
@@ -2499,7 +2500,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     level_finished = False
     death_wait = 0
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
-    global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina
+    global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina, player_score
+    player_score = 0
     player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
     player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
     koponen_rect.topleft = KDS.ConfigManager.Save.GetPlayer("koponen_position", koponen_def_pos)
@@ -2987,7 +2989,7 @@ def main_menu():
 
 lfmr = False
 def level_finished_menu():
-    global lfmr, current_map, max_map
+    global lfmr, current_map, max_map, player_score
     lfmr = True
     lfm_surface = pygame.Surface(display_size)
     next_level_index = "01"
@@ -3047,6 +3049,9 @@ def level_finished_menu():
         lfm_surface.blit(pygame.transform.scale(esc_menu_background_blur, display_size), (0, 0))
         pygame.draw.rect(lfm_surface, (123, 134, 111), (int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
         lfm_surface.blit(pygame.transform.scale(Title, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
+
+        print(mouse_pos)
+        lfm_surface.blit(ArialSysFont.render("Score: " + str(player_score), True, KDS.Colors.GetPrimary.LightGray), (384, 344))
 
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
         next_level_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
