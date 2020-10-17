@@ -526,6 +526,7 @@ Lights = []
 level_finished = False
 Particles = []
 HitTargets = {}
+GameCounter = KDS.Scores.GameTime()
 tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
@@ -2526,6 +2527,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
+    GameCounter.start()
     if reset_scroll:
         true_scroll = KDS.ConfigManager.Save.GetPlayer("scroll", [-200, -190])
     KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -3004,6 +3006,9 @@ def level_finished_menu(score, k_happiness):
     next_level_index = "01"
     next_level_bool = True
 
+    levelTime = GameCounter.getTime()
+    print(levelTime)
+
     ScoreCounter = KDS.Scores.ScoreCounter(score, k_happiness)
 
     score_color = KDS.Colors.GetPrimary.Cyan
@@ -3074,7 +3079,8 @@ def level_finished_menu(score, k_happiness):
             lfm_surface.blit(ArialSysFont.render(scr, True, score_color), (430, 344+index*20))
 
         if ScoreCounter.allFinished:
-            lfm_surface.blit(ArialSysFont.render("Total:                          " + str(totalScore), True, score_color), (430, 464))
+            lfm_surface.blit(ArialSysFont.render("Total:                          " + str(totalScore), True, score_color), (430, 444))
+            lfm_surface.blit(ArialSysFont.render("Total time: " + f"{round(levelTime[0])}m {round(levelTime[1])}s", True, score_color), (430, 468))
 
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
         next_level_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
@@ -3627,6 +3633,7 @@ while main_running:
         player_health = 0
         player_rect.y = len(tiles) * 34 + 340
     if esc_menu:
+        GameCounter.pause()
         Audio.MusicMixer.pause()
         Audio.pauseAllSounds()
         window.fill(KDS.Colors.GetPrimary.Black)
@@ -3638,6 +3645,7 @@ while main_running:
         pygame.mouse.set_visible(False)
         Audio.MusicMixer.unpause()
         Audio.unpauseAllSounds()
+        GameCounter.resume()
     if level_finished:
         Audio.stopAllSounds()
         Audio.MusicMixer.stop()

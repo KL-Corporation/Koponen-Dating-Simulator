@@ -1,3 +1,5 @@
+import time
+
 class ScoreCounter:
     def __init__(self, score, koponen_happiness):
         self.mainScore = score
@@ -32,3 +34,33 @@ class ScoreCounter:
     def fastForward(self):
         self.mainScore_counter = self.mainScore
         self.khP_counter = self.koponen_happiness
+
+class GameTime:
+    def __init__(self):
+        self.start_time = 0.0
+        self.paused = False
+        self.pause_started = 0.0
+        self.pause_ended = 0.0
+
+    def start(self):
+        self.start_time = time.perf_counter()
+
+    def pause(self):
+        if not self.paused:
+            self.paused = True
+            self.pause_started = time.perf_counter()
+    
+    def resume(self):
+        if self.paused:
+            self.paused = False
+            self.pause_ended = time.perf_counter()
+            self.start_time += (self.pause_ended - self.pause_started)
+
+    def getTime(self, formatted = True):
+        if formatted:
+            pTime = time.perf_counter() - self.start_time
+            minutes = pTime // 60
+            seconds = pTime % 60
+            return minutes, seconds
+        else:
+            return time.perf_counter() - self.start_time
