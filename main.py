@@ -2,7 +2,7 @@
 import os
 from inspect import currentframe
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
 import KDS.AI
 import KDS.Animator
