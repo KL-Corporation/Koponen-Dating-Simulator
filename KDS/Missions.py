@@ -11,6 +11,7 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 from inspect import currentframe
+
 #endregion
 #region Settings
 MissionColor = (128, 128, 128)

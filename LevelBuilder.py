@@ -5,6 +5,7 @@ from turtle import st
 from numpy.core.fromnumeric import resize, size
 import pygame
 from pygame.locals import *
+pygame.init()
 import threading
 import KDS.Colors
 import KDS.Convert

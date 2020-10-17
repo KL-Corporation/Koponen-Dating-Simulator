@@ -1346,16 +1346,11 @@ class Candle(Tile):
         self.light_scale = 40
 
     def update(self):
-        if 20 < self.light_scale < 60:
-            self.light_scale += random.randint(-3, 6)
-        elif self.light_scale > 60:
-            self.light_scale -= 4
-        else:
-            self.light_scale += 4
-
-        if random.randint(0, 10) == 0:
-            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx, self.rect.y), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light((self.rect.x, self.rect.y), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+        if random.randint(0, 5) == 5:
+            self.light_scale = random.randint(20, 60)
+        if random.randint(0, 50) == 0:
+            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y), random.randint(3, 6), 20, 0.01))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx-self.light_scale/2, self.rect.y-self.light_scale/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
         return self.texture.update()
 
 specialTilesD = {
