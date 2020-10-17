@@ -96,9 +96,15 @@ class Task:
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
         surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.GetPrimary.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
-        if self.finished != self.lastFinished and PlaySound:
-            if self.finished: Audio.playSound(TaskFinishSound)
-            else: Audio.playSound(TaskUnFinishSound)
+        if self.finished != self.lastFinished:
+            if self.finished:
+                if PlaySound:
+                    Audio.playSound(TaskFinishSound)
+                self.color.changeValues(TaskColor, TaskFinishedColor)
+            else:
+                if PlaySound:
+                    Audio.playSound(TaskUnFinishSound)
+                self.color.changeValues(TaskColor, TaskUnFinishedColor)
         self.lastFinished = self.finished
         return surface
 
@@ -113,6 +119,7 @@ class Mission:
         self.task_keys: list[str] = []
         self.task_values: list[Task] = []
         self.finished = False
+        self.lastFinished = False
         self.finishedTicks = 0
         self.trueFinished = False
         self.color = KDS.Animator.Color(MissionColor, MissionFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
@@ -147,30 +154,30 @@ class Mission:
             if not task.finished:
                 self.finished = False
                 notFinished += 1
+                
             if notFinished > 1:
                 self.playSound = True
                 del notFinished
                 break
 
         if self.finished:
-            if self.color.getValues()[1] != MissionFinishedColor:
-                self.color.changeValues(MissionColor, MissionFinishedColor)
-                for task in self.task_values:
-                    task.color.changeValues(TaskColor, TaskFinishedColor)
             self.finishedTicks += 1
-        else: self.finishedTicks = 0
-        if self.finishedTicks == 1:
-            Audio.playSound(MissionFinishSound)
-        elif self.finishedTicks > MissionWaitTicks:
+        else:
+            self.trueFinished = False
+            self.finishedTicks = 0
+            
+        if self.finishedTicks > MissionWaitTicks:
             self.trueFinished = True
             self.finishedTicks = MissionWaitTicks
-        elif self.finishedTicks == 0 and self.trueFinished:
-            self.trueFinished = False
-            self.color.changeValues(MissionColor, MissionUnFinishedColor)
-            Audio.playSound(MissionUnFinishSound)
-            for task in self.task_values:
-                if not task.finished:
-                    task.color.changeValues(TaskColor, TaskUnFinishedColor)
+        
+        if self.lastFinished != self.finished:
+            if self.finished:
+                Audio.playSound(MissionFinishSound)
+                self.color.changeValues(MissionColor, MissionFinishedColor)
+            else:
+                Audio.playSound(MissionUnFinishSound)
+                self.color.changeValues(MissionColor, MissionUnFinishedColor)
+        self.lastFinished = self.finished
     
     def Render(self, Width: int, Height: int):
         surface = pygame.Surface((Width, Height))

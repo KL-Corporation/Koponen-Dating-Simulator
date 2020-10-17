@@ -2,6 +2,7 @@
 import os
 from inspect import currentframe
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import KDS.AI
 import KDS.Animator
@@ -30,8 +31,6 @@ import zipfile
 import math
 import time
 from pygame.locals import *
-from PIL import Image as PIL_Image
-from PIL import ImageFilter as PIL_ImageFilter
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -573,7 +572,7 @@ taskTaivutettu = ""
 DebugMode = False
 
 MenuMode = 0
-esc_menu_background = pygame.Surface(display_size)
+game_pause_background = screen.copy()
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
@@ -2586,9 +2585,7 @@ def esc_menu_f():
 
     esc_surface = pygame.Surface(display_size)
     
-    esc_menu_background_proc = esc_menu_background.copy()
-    blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
-    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA").convert()
+    blurred_background = KDS.Convert.ToBlur(game_pause_background.copy(), 6)
 
     def resume():
         global esc_menu
@@ -2618,7 +2615,7 @@ def esc_menu_f():
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
-        display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
+        display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
         anim_x = anim_lerp_x.update(False)
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
             (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
@@ -2641,7 +2638,7 @@ def esc_menu_f():
                 ResizeWindow(event.size)
 
         esc_surface.blit(pygame.transform.scale(
-            esc_menu_background_blur, display_size), (0, 0))
+            blurred_background, display_size), (0, 0))
         pygame.draw.rect(esc_surface, (123, 134, 111), (int(
             (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
         esc_surface.blit(pygame.transform.scale(
@@ -3055,9 +3052,7 @@ def level_finished_menu(score, k_happiness):
     Title = pygame.image.load("Assets/Textures/Branding/LevelCleared.png").convert()
     Title.set_colorkey(KDS.Colors.GetPrimary.White)
 
-    esc_menu_background_proc = esc_menu_background.copy()
-    blurred = PIL_Image.frombytes("RGBA", screen_size, pygame.image.tostring(esc_menu_background_proc, "RGBA")).filter(PIL_ImageFilter.GaussianBlur(radius=6))
-    esc_menu_background_blur = pygame.image.fromstring(blurred.tobytes("raw", "RGBA"), screen_size, "RGBA").convert()
+    blurred_background = KDS.Convert.ToBlur(game_pause_background.copy(), 6)
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -3083,7 +3078,7 @@ def level_finished_menu(score, k_happiness):
     next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), 540, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White), enabled=next_level_bool)
 
     while lfmr:
-        display.blit(pygame.transform.scale(esc_menu_background, display_size), (0, 0))
+        display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
         KDS.Keys.Update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -3100,7 +3095,7 @@ def level_finished_menu(score, k_happiness):
                     ScoreCounter.fastForward()
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
-        lfm_surface.blit(pygame.transform.scale(esc_menu_background_blur, display_size), (0, 0))
+        lfm_surface.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
         pygame.draw.rect(lfm_surface, (123, 134, 111), (int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
         lfm_surface.blit(pygame.transform.scale(Title, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
@@ -3669,7 +3664,7 @@ while main_running:
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
                     (Fullscreen.offset[0], Fullscreen.offset[1]))
-        esc_menu_background = screen.copy()
+        game_pause_background = screen.copy()
         pygame.mouse.set_visible(True)
         esc_menu_f()
         pygame.mouse.set_visible(False)
@@ -3680,7 +3675,7 @@ while main_running:
         Audio.stopAllSounds()
         Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
-        esc_menu_background = screen.copy()
+        game_pause_background = screen.copy()
         level_finished_menu(player_score, koponen_happiness)
         level_finished = False
     if go_to_main_menu:

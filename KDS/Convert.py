@@ -1,6 +1,8 @@
 import pygame
 import KDS.Logging
 from inspect import currentframe
+from PIL import Image as PIL_Image
+from PIL import ImageFilter as PIL_ImageFilter
 
 def ToBool(value, fallbackValue: bool = False) -> bool:
     """Converts a value to bool with these rules:
@@ -54,6 +56,13 @@ def ToGrayscale(image: pygame.Surface):
     arr = pygame.surfarray.pixels3d(image)
     arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
     return pygame.surfarray.make_surface(arr)
+
+def ToBlur(image: pygame.Surface, strength: int):
+    toBlur = pygame.image.tostring(image, "RGBA")
+    blurredImage = PIL_Image.frombytes("RGBA", image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
+    blurredString = blurredImage.tobytes("raw", "RGBA")
+    blurredSurface = pygame.image.fromstring(blurredString, image.get_size(), "RGBA").convert()
+    return blurredSurface
 
 def AspectScale(image: pygame.Surface, size: tuple[int, int], horizontalOnly: bool = False, verticalOnly: bool = False):
     if (image.get_width() / image.get_height() > size[0] / size[1] or horizontalOnly) and not verticalOnly:
