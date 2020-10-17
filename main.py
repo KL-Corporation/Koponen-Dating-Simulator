@@ -3203,8 +3203,6 @@ while main_running:
                     KDS_Quit()
                 else:
                     player_health = 0
-            elif event.key == K_F6:
-                KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
             elif event.key == K_F11:
                 Fullscreen.Set()
         elif event.type == MOUSEBUTTONDOWN:
