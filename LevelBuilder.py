@@ -59,10 +59,15 @@ e_textures = {
     "2004": pygame.image.load("Assets/Textures/Animations/turbo_shotgunner_walking_0.png").convert()
 }
 
+teleports = {
+    "3001" : pygame.image.load("Assets/Textures/Items/empty.png").convert()
+}
+
 Atextures = {
     "0": t_textures,
     "1": i_textures,
-    "2": e_textures
+    "2": e_textures,
+    "3": teleports
 }
 """ GLOBAL VARIABLES """
 
@@ -70,6 +75,7 @@ dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
 brush = "0000"
+teleportTemp = "001"
 currentSaveName = ''
 grid = [[]]
 modifiedAfterSave = False
@@ -80,6 +86,7 @@ keys_pressed = {
     K_e: False,
     K_s: False,
     K_o: False,
+    K_p: False,
     K_LSHIFT: False,
     K_LCTRL: False,
 }
@@ -134,6 +141,9 @@ class tileInfo:
                             unit.serialNumber = "0000 0000 0000 0000 / "
                     if pygame.mouse.get_pressed()[2]:
                         unit.serialNumber = "0000 0000 0000 0000 / "
+
+                    if keys_pressed[K_p] and unit.getSerialNumber(0)[0] == "3":
+                        pygame.draw.rect(Surface, (120,120,120), (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize, 100, 30))
         
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.Get.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
@@ -491,6 +501,8 @@ def main():
                     keys_pressed[K_o] = True
                 elif event.key == K_LSHIFT:
                     keys_pressed[K_LSHIFT] = True
+                elif event.key == K_p:
+                    keys_pressed[K_p] = True
             elif event.type == KEYUP:
                 if event.key == K_LCTRL:
                     keys_pressed[K_LCTRL] = False
@@ -500,6 +512,8 @@ def main():
                     keys_pressed[K_s] = False
                 elif event.key == K_o:
                     keys_pressed[K_o] = False 
+                elif event.key == K_p:
+                    keys_pressed[K_p] = False
                 elif event.key == K_LSHIFT:
                     keys_pressed[K_LSHIFT] = False
         

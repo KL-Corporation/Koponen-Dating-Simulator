@@ -849,7 +849,7 @@ class WorldData():
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif data[0] == "3":
-                            pass
+                            tiles[y][x] = Teleport((x*34, y*34), serialNumber=serialNumber)
                 else:
                     x += 1
             y += 1
@@ -1353,6 +1353,17 @@ class Candle(Tile):
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y), random.randint(3, 6), 20, 0.01))
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx-self.light_scale/2, self.rect.y-self.light_scale/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
         return self.texture.update()
+
+class Teleport(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, 1)
+        self.texture = soulsphere
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = False
+        self.serialNumber = serialNumber
+    
+    def update(self):
+        return self.texture
 
 specialTilesD = {
     15: Toilet,
