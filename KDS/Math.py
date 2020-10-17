@@ -5,7 +5,7 @@ from inspect import currentframe
 def Clamp(value: int or float, _min: int or float, _max: int or float):
     return max(_min, min(value, _max))
 
-def getDistance(point1: tuple, point2: tuple):
+def getDistance(point1: tuple[int, int], point2: tuple[int, int]):
     """
     Calculates the distance between two points.
     """
@@ -37,7 +37,7 @@ def toPositive(value):
     else:
         return 0
 
-def getSlope(p1: tuple, p2: tuple):
+def getSlope(p1: tuple[int, int], p2: tuple[int, int]):
     """
     Calculates slope of straight going trough two points
     """
@@ -49,7 +49,7 @@ def getSlope2(angle): #Angle in degrees
     """
     return math.tan(math.radians(angle)) 
 
-def getAngle(p1: tuple, p2: tuple):
+def getAngle(p1: tuple[int, int], p2: tuple[int, int]):
     """Calculates the angle between two vectors.
 
     Args:

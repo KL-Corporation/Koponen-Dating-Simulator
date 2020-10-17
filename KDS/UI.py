@@ -107,7 +107,7 @@ class New:
             self.button_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
             self.enabled = enabled
             
-        def update(self, surface, mouse_pos: tuple, clicked, *args):
+        def update(self, surface, mouse_pos: tuple[int, int], clicked, *args):
             """
             1. surface: The surface this button is going to be rendered.
             2. mouse_pos: The SCALED position of the mouse.

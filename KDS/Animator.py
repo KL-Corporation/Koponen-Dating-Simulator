@@ -1,6 +1,5 @@
 from inspect import currentframe
 from re import purge
-from typing import Tuple
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
@@ -13,7 +12,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Tuple[int, int, int] = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: tuple[int, int, int] = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
         """Initialises an animation.
 
         Args:
@@ -279,18 +278,18 @@ class Float:
         return self.value
 
 class Color:
-    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, Type: AnimationType or str = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: tuple[int, int, int], To: tuple[int, int, int], Duration: int, Type: AnimationType or str = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
         self.int0 = Float(From[0], To[0], Duration, Type, _OnAnimationEnd)
         self.int1 = Float(From[1], To[1], Duration, Type, _OnAnimationEnd)
         self.int2 = Float(From[2], To[2], Duration, Type, _OnAnimationEnd)
         
-    def get_value(self) -> Tuple[int, int, int]:
+    def get_value(self) -> tuple[int, int, int]:
         return (round(self.int0.get_value()), round(self.int1.get_value()), round(self.int2.get_value()))
     
-    def update(self, reverse: bool = False) -> Tuple[int, int, int]:
+    def update(self, reverse: bool = False) -> tuple[int, int, int]:
         return (round(self.int0.update(reverse)), round(self.int1.update(reverse)), round(self.int2.update(reverse)))
     
-    def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
+    def changeValues(self, From: tuple[int, int, int], To: tuple[int, int, int]):
         self.int0.From = From[0]
         self.int0.To = To[0]
         self.int1.From = From[1]

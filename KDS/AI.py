@@ -153,7 +153,7 @@ class Bulldog:
 
     a = False
 
-    def __init__(self, position: tuple, health: int, speed: int, animation):
+    def __init__(self, position: tuple[int, int], health: int, speed: int, animation):
         self.position = position
         self.health = health
         self.speed = speed
@@ -295,7 +295,7 @@ class HostileEnemy:
     def attack(self):
         pass
 
-    def update(self, Surface: pygame.Surface, scroll: list, tiles, targetRect):
+    def update(self, Surface: pygame.Surface, scroll: list[int, int], tiles, targetRect):
         enemyProjectiles = None
         dropItems = []
         if self.health:
