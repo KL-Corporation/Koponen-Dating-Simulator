@@ -1,5 +1,6 @@
 #region Importing
 import math
+import os
 from typing import Tuple
 import pygame
 import KDS.Animator

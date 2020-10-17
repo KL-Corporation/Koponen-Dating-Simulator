@@ -1337,6 +1337,27 @@ class LevelEnder(Tile):
                 KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
         return t_textures[self.serialNumber]
 
+class Candle(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.rect = pygame.Rect(position[0], position[1]+14, 20, 20)
+        self.checkCollision = False
+        self.light_scale = 40
+
+    def update(self):
+        if 20 < self.light_scale < 60:
+            self.light_scale += random.randint(-3, 6)
+        elif self.light_scale > 60:
+            self.light_scale -= 4
+        else:
+            self.light_scale += 4
+
+        if random.randint(0, 10) == 0:
+            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx, self.rect.y), random.randint(3, 6), 30, 1))
+        Lights.append(KDS.World.Lighting.Light((self.rect.x, self.rect.y), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+        return self.texture.update()
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1354,7 +1375,8 @@ specialTilesD = {
     48: Rock0,
     52: Torch,
     53: GoryHead,
-    54: LevelEnder
+    54: LevelEnder,
+    55: Candle
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")

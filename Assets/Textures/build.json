@@ -53,7 +53,8 @@
         "051":"cyan_wtwall.png",
         "052":"tall_torch.png",
         "053":"impaled_head.png",
-        "054":"level_ender.png"
+        "054":"level_ender.png",
+        "055":"candle.png"
     },
 
     "special_tiles": [
@@ -73,7 +74,8 @@
         48,
         52,
         53,
-        54
+        54,
+        55
     ],
 
     "checkCollisionFalse": [
