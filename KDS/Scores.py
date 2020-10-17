@@ -1,13 +1,16 @@
 import time
 
 class ScoreCounter:
-    def __init__(self, score, koponen_happiness):
+    def __init__(self, score, koponen_happiness, time_bonus):
         self.mainScore = score
         self.mainScore_counter = 0
         self.mainScore_finished = False
         self.koponen_happiness = koponen_happiness
         self.khP_counter = 0
         self.khP_finished = False
+        self.time_bonus = time_bonus
+        self.t_counter = 0
+        self.t_counter_finished = False
         self.allFinished = False
 
     def update(self):
@@ -23,11 +26,18 @@ class ScoreCounter:
             if self.khP_counter > self.koponen_happiness:
                 self.khP_counter = self.koponen_happiness
                 self.khP_finished = True
+        elif not self.t_counter_finished:
+            self.t_counter += 3
+            if self.t_counter > self.time_bonus:
+                self.t_counter = self.time_bonus
+                self.t_counter_finished = True
 
         if self.mainScore_finished:
             result.append("Koponen happiness:  " + str(self.khP_counter))
-            if self.khP_finished:
-                self.allFinished = True
+        if self.khP_finished:
+            result.append("Time Bonus:               " + str(self.t_counter))
+        if self.t_counter_finished:
+            self.allFinished = True
 
         return result
 

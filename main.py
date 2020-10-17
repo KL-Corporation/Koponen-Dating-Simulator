@@ -3007,13 +3007,15 @@ def level_finished_menu(score, k_happiness):
     next_level_bool = True
 
     levelTime = GameCounter.getTime()
-    print(levelTime)
-
-    ScoreCounter = KDS.Scores.ScoreCounter(score, k_happiness)
+    rawLevelTime = GameCounter.getTime(formatted=False)
+    areaOfMap = len(tiles) * len(tiles[1])
+    timeBonus = round((areaOfMap/rawLevelTime)/9)
 
     score_color = KDS.Colors.GetPrimary.Cyan
 
-    totalScore = score + k_happiness
+    totalScore = score + k_happiness + timeBonus
+
+    ScoreCounter = KDS.Scores.ScoreCounter(score, k_happiness, timeBonus)
 
     pygame.mouse.set_visible(True)
 
