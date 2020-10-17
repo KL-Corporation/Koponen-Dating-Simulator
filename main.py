@@ -201,7 +201,7 @@ button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
-ArialSysFont = pygame.font.SysFont("Arial", 20, bold=0, italic=0)
+ArialSysFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
 #endregion
 
 player_img = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
@@ -2996,12 +2996,14 @@ def main_menu():
 
 
 lfmr = False
-def level_finished_menu():
+def level_finished_menu(score, k_happiness):
     global lfmr, current_map, max_map, player_score
     lfmr = True
     lfm_surface = pygame.Surface(display_size)
     next_level_index = "01"
     next_level_bool = True
+
+    totalScore = score + k_happiness
 
     pygame.mouse.set_visible(True)
 
@@ -3059,7 +3061,10 @@ def level_finished_menu():
         lfm_surface.blit(pygame.transform.scale(Title, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
         print(mouse_pos)
-        lfm_surface.blit(ArialSysFont.render("Score: " + str(player_score), True, KDS.Colors.GetPrimary.LightGray), (384, 344))
+        lfm_surface.blit(ArialSysFont.render("Score:                        " + str(player_score), True, KDS.Colors.GetPrimary.LightGray), (430, 344))
+        lfm_surface.blit(ArialSysFont.render("Koponen happiness:  " + str(k_happiness), True, KDS.Colors.GetPrimary.LightGray), (430, 364))
+
+        lfm_surface.blit(ArialSysFont.render("Total:                          " + str(totalScore), True, KDS.Colors.GetPrimary.LightGray), (430, 464))
 
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
         next_level_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
@@ -3150,6 +3155,8 @@ while main_running:
                     KDS_Quit()
                 else:
                     player_health = 0
+            elif event.key == K_F6:
+                level_finished = True
             elif event.key == K_F11:
                 Fullscreen.Set()
         elif event.type == MOUSEBUTTONDOWN:
@@ -3625,7 +3632,7 @@ while main_running:
         Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
         esc_menu_background = screen.copy()
-        level_finished_menu()
+        level_finished_menu(player_score, koponen_happiness)
         level_finished = False
     if go_to_main_menu:
         Audio.stopAllSounds()
