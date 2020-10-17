@@ -17,6 +17,7 @@ import KDS.Missions
 import KDS.System
 import KDS.UI
 import KDS.World
+import KDS.Scores
 import numpy
 import random
 import threading
@@ -3003,6 +3004,10 @@ def level_finished_menu(score, k_happiness):
     next_level_index = "01"
     next_level_bool = True
 
+    ScoreCounter = KDS.Scores.ScoreCounter(score, k_happiness)
+
+    score_color = KDS.Colors.GetPrimary.Cyan
+
     totalScore = score + k_happiness
 
     pygame.mouse.set_visible(True)
@@ -3060,14 +3065,17 @@ def level_finished_menu(score, k_happiness):
         pygame.draw.rect(lfm_surface, (123, 134, 111), (int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
         lfm_surface.blit(pygame.transform.scale(Title, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
 
-        print(mouse_pos)
-        lfm_surface.blit(ArialSysFont.render("Score:                        " + str(player_score), True, KDS.Colors.GetPrimary.LightGray), (430, 344))
-        lfm_surface.blit(ArialSysFont.render("Koponen happiness:  " + str(k_happiness), True, KDS.Colors.GetPrimary.LightGray), (430, 364))
+        scores = ScoreCounter.update()
 
-        lfm_surface.blit(ArialSysFont.render("Total:                          " + str(totalScore), True, KDS.Colors.GetPrimary.LightGray), (430, 464))
+        for index, scr in enumerate(scores):
+            lfm_surface.blit(ArialSysFont.render(scr, True, score_color), (430, 344+index*20))
+
+        if ScoreCounter.allFinished:
+            lfm_surface.blit(ArialSysFont.render("Total:                          " + str(totalScore), True, score_color), (430, 464))
 
         main_menu_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
         next_level_button.update(lfm_surface, mouse_pos, KDS.Keys.GetClicked(KDS.Keys.mainKey))
+
 
         anim_x = anim_lerp_x.update(False)
         lfm_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
