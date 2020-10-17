@@ -351,8 +351,8 @@ def InitialiseMissions(LevelIndex):
             InitialiseMission("koponen_introduction", "Tutustu Koposeen")
             InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
         else:
-            InitialiseMission("null_mission", "NO MISSIONS AVAILABLE")
-            InitialiseTask("null_mission", "null_task", "NO TASKS AVAILABLE")
+            InitialiseMission("reach_level_exit", "Exit")
+            InitialiseTask("reach_level_exit", "exit", "Reach Level Exit", (ListenerTypes.LevelEnder, 1.0))
 #endregion
 #region Listeners
 def TriggerListener(Type: ListenerTypes or str):
