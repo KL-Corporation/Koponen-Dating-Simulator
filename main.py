@@ -823,7 +823,8 @@ class WorldData():
         enemySerialNumbers = {
             1: KDS.AI.Imp,
             2: KDS.AI.SergeantZombie,
-            3: KDS.AI.DrugDealer
+            3: KDS.AI.DrugDealer,
+            4: KDS.AI.TurboShotgunner
         }
 
         y = 0
@@ -3286,6 +3287,7 @@ while main_running:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
             result = enemy.update(screen, scroll, tiles, player_rect)
             if result[0]:
+                print(len(result[0]))
                 for r in result[0]:
                     Projectiles.append(r)
             if result[1]:

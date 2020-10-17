@@ -66,6 +66,7 @@ zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav"
 zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav")
 shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
 impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
+double_barrel_fire = pygame.mixer.Sound("Assets/Audio/effects/double_barrel_fire.ogg")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 drug_dealer_sight = pygame.mixer.Sound("Assets/Audio/entities/dshight.ogg")
 drug_dealer_death_sound = pygame.mixer.Sound("Assets/Audio/entities/ddth.ogg")
@@ -381,7 +382,7 @@ class SergeantZombie(HostileEnemy):
         health = 125
         w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
         d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 63)
 
@@ -389,16 +390,16 @@ class SergeantZombie(HostileEnemy):
         aim_im = a_anim.images[0]
         shoot_im = a_anim.images[1]
         a_anim.images.clear()
-        #for _ in range(25):
-            #a_anim.images.append(aim_im)
-        for _ in range(20):
+        for _ in range(40):
+            a_anim.images.append(aim_im)
+        for _ in range(2):
             a_anim.images.append(shoot_im)
-        a_anim.ticks = 19
+        a_anim.ticks = 41
         del aim_im, shoot_im
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=40)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=60)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -406,10 +407,10 @@ class SergeantZombie(HostileEnemy):
         dist = max(0, dist)
         dist = 1200 - dist
         dist /= 1200
-        shotgunShot.set_volume(dist)
-        shotgunShot.play()
+        double_barrel_fire.set_volume(dist)
+        double_barrel_fire.play()
         #print(KDS.Math.getSlope(self.rect.center, target.center))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 35), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
         items = []
@@ -461,6 +462,47 @@ class DrugDealer(HostileEnemy):
             items.append(20)
         if random.randint(0, 4) == 0:
             items.append(11)
+        return items
+
+class TurboShotgunner(HostileEnemy):
+    def __init__(self, pos):
+        health = 220
+        w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("turbo_shotgunner_dying", 6, 13, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0], pos[1]-24, 40, 58)
+
+        #region Handling the i_anim:
+        aim_im = a_anim.images[0]
+        shoot_im = a_anim.images[1]
+        a_anim.images.clear()
+        for _ in range(50):
+            a_anim.images.append(aim_im)
+        for _ in range(2):
+            a_anim.images.append(shoot_im)
+        a_anim.ticks = 51
+        del aim_im, shoot_im
+
+        #endregion
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=80)
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        double_barrel_fire.set_volume(dist)
+        double_barrel_fire.play()
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction)+(3-fd)*1.5 ) for fd in range(6)]
+
+    def onDeath(self):
+        items = []
+        if random.choice([True, False]):
+            items.append(17)
         return items
 
 class Projectile:
