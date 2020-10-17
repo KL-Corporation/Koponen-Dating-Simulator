@@ -3210,6 +3210,10 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, True)
                 rk62_sound_cooldown = 11
                 weapon_fire = True
+            elif event.button == 4:
+                player_inventory.moveLeft()
+            elif event.button == 5:
+                player_inventory.moveRight()
         elif event.type == KEYUP:
             if event.key == K_d:
                 KDS.Keys.SetPressed(KDS.Keys.moveRight, False)
@@ -3242,10 +3246,6 @@ while main_running:
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
-            elif event.button == 4:
-                player_inventory.moveLeft()
-            elif event.button == 5:
-                player_inventory.moveRight()
         elif event.type == pygame.QUIT:
             KDS_Quit()
         elif event.type == pygame.VIDEORESIZE:
