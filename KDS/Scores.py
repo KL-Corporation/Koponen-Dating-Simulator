@@ -28,3 +28,7 @@ class ScoreCounter:
                 self.allFinished = True
 
         return result
+
+    def fastForward(self):
+        self.mainScore_counter = self.mainScore
+        self.khP_counter = self.koponen_happiness

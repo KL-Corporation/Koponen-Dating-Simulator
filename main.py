@@ -3059,6 +3059,9 @@ def level_finished_menu(score, k_happiness):
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
+            elif event.type == KEYDOWN:
+                if event.key == K_SPACE:
+                    ScoreCounter.fastForward()
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
         lfm_surface.blit(pygame.transform.scale(esc_menu_background_blur, display_size), (0, 0))
