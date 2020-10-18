@@ -44,7 +44,7 @@ class Bullet:
 
     def update(self,Surface:pygame.Surface, scroll: list[int], targets, HitTargets, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
-            Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+            Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if self.speed == -1:
             for _ in range(int(self.maxDistance/18)):
