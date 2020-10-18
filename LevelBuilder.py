@@ -372,25 +372,38 @@ def generateLevelProp():
     """
     Generate a levelProp.kdf using this tool.
     """
-    runmenu = True
     ic = KDS.Convert.ToBool(inputConsole("Darkness Enabled: (bool) >>> ", False))
-    dark = ic
+    if isinstance(ic, bool):
+        dark = ic
+    else:
+        dark = False
     if dark:
         ic = int(inputConsole("Darkness Strength: (int[0, 255]) >>> ", False))
     else:
         ic = 0
     darkness = KDS.Math.Clamp(ic, 0, 255)
+    
     ic = KDS.Convert.ToBool(inputConsole("Ambient Light Enabled: (bool) >>> ", False))
-    ambient_light = ic
+    if isinstance(ic, bool):
+        ambient_light = ic
+    else:
+        ambient_light = False
     if ambient_light:
         ic = inputConsole("Ambient Light Strength: (int, int, int) >>> ", False).replace(" ", "").split(",")
     else:
         ic = (0, 0, 0)
     ambient_light_tint = (int(ic[0]), int(ic[1]), int(ic[2]))
+    
     ic = inputConsole("Player Start Position: (int, int) >>> ", False, defVal="100, 100").replace(" ", "").split(",")
     p_start_pos = (int(ic[0]), int(ic[1]))
+    
     ic = inputConsole("Koponen Start Position: (int, int) >>> ", False, defVal="200, 200").replace(" ", "").split(",")
     k_start_pos = (int(ic[0]), int(ic[1]))
+    
+    ic = inputConsole("Time Bonus Range in seconds: (full points: int, no points: int)").replace(" ", "").split(",")
+    tb_start = ic[0]
+    tb_end = ic[1]
+    
     savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
     if len(savePath) > 0:
         KDS.ConfigManager.SetJSON(savePath, "Darkness", "enabled", dark)
@@ -399,6 +412,8 @@ def generateLevelProp():
         KDS.ConfigManager.SetJSON(savePath, "AmbientLight", "tint", ambient_light_tint)
         KDS.ConfigManager.SetJSON(savePath, "StartPos", "player", p_start_pos)
         KDS.ConfigManager.SetJSON(savePath, "StartPos", "koponen", k_start_pos)
+        KDS.ConfigManager.SetJSON(savePath, "TimeBonus", "start", tb_start)
+        KDS.ConfigManager.SetJSON(savePath, "TimeBonus", "end", tb_end)
 
 def main():
     global currentSaveName, brush, grid, modifiedAfterSave, timesModifiedAfterSave, btn_menu
