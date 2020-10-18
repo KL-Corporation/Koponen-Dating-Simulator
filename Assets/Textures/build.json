@@ -57,7 +57,8 @@
         "055":"candle.png",
         "056":"lamp_pole_base.png",
         "057":"lamp_pole_pole.png",
-        "058":"lamp_pole_lamp.png"
+        "058":"lamp_pole_lamp.png",
+        "059":"chair.png"
     },
 
     "special_tiles": [
@@ -79,7 +80,8 @@
         53,
         54,
         55,
-        58
+        58,
+        59
     ],
 
     "checkCollisionFalse": [

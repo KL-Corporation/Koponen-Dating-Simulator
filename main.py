@@ -1198,6 +1198,16 @@ class LampPoleLamp(Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx-player_light_sphere_radius/2, self.rect.centery-player_light_sphere_radius/2), light_sphere2))
         return self.texture
 
+class Chair(Tile):
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[59]
+        self.rect = pygame.Rect(position[0]-6, position[1]-8, 40, 42)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1217,7 +1227,8 @@ specialTilesD = {
     53: GoryHead,
     54: LevelEnder,
     55: Candle,
-    58: LampPoleLamp
+    58: LampPoleLamp,
+    59: Chair
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -2008,6 +2019,37 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
+
+consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
+
+def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = "") -> str:
+    pygame.key.set_repeat(500, 31)
+    r = True
+    rstring = defVal
+    while r:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == K_ESCAPE:
+                    if allowEscape:
+                        r = False
+                        return None
+                elif event.key == K_RETURN:
+                        return rstring.strip()
+                elif event.key == K_BACKSPACE:
+                    rstring = rstring[:-1]
+                elif event.unicode:
+                    rstring += event.unicode
+        window.fill(consoleBackground.get_at((0, 0)))
+        window.blit(KDS.Convert.AspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
+        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
+        window.blit(consoleText, (10, 10))
+        pygame.display.update()
+    pygame.key.set_repeat(0, 0)
+
 def console():
     global player_keys, player_health, koponen_happiness, isFullscreen, level_finished
     wasFullscreen = False
@@ -2015,7 +2057,8 @@ def console():
         Fullscreen.Set()
         wasFullscreen = True
 
-    command_input = input("command: ")
+    #command_input = input("command: ")
+    command_input = inputConsole()
     command_input = command_input.lower()
     command_list = command_input.split()
 
