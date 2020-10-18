@@ -2533,8 +2533,16 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
         loadEntities = False
     player_def_pos, koponen_def_pos = WorldData.LoadMap(loadEntities)
 
+    global rk_62_ammo, plasma_ammo, ppsh41_ammo, shotgun_shells, pistol_bullets
+    rk_62_ammo = 32
+    plasma_ammo = 50
+    ppsh41_ammo = 72
+    shotgun_shells = 8
+    pistol_bullets = 7
+
     player_death_event = False
     animation_has_played = False
+    global level_finished
     level_finished = False
     death_wait = 0
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)

@@ -470,7 +470,8 @@ class TurboShotgunner(HostileEnemy):
         w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("turbo_shotgunner_dying", 6, 13, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim0 = KDS.Animator.Animation("turbo_shotgunner_dying", 6, 13, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim1 = KDS.Animator.Animation("turbo_shotgunner_dying1", 5, 13, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-24, 40, 58)
 
         #region Handling the i_anim:
@@ -486,7 +487,7 @@ class TurboShotgunner(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=80)
+        super().__init__(rect, w=w_anim, a=a_anim, d=random.choice([d_anim0, d_anim1]), i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=80)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
