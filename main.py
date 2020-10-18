@@ -518,6 +518,7 @@ Lights = []
 level_finished = False
 Particles = []
 HitTargets = {}
+enemy_difficulty = 1
 GameCounter = KDS.Scores.GameTime()
 tiles = numpy.array([])
 LightScroll = [0, 0]
@@ -648,7 +649,8 @@ class WorldData():
             2: KDS.AI.SergeantZombie,
             3: KDS.AI.DrugDealer,
             4: KDS.AI.TurboShotgunner,
-            5: KDS.AI.MafiaMan
+            5: KDS.AI.MafiaMan,
+            6: KDS.AI.MethMaker
         }
 
         y = 0
