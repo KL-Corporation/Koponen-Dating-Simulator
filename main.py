@@ -524,6 +524,7 @@ tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
+godmode = False
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
 lightsUpdating = 0
@@ -2064,7 +2065,7 @@ def console():
 
     if command_list[0] == "give":
         if command_list[1] != "key":
-            player_inventory.storage[player_inventory.SIndex] = command_list[1]
+            player_inventory.storage[player_inventory.SIndex] = int(command_list[1])
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Item was given: " + str(command_list[1]), True)
         else:
@@ -2139,6 +2140,19 @@ def console():
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for woof", True)
+    elif command_list[0] == "invl":
+        if len(command_list) > 1:
+            invlState = KDS.Convert.ToBool(command_list[1])
+            if invlState != None:
+                global godmode
+                godmode = invlState
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Invulnerability state has been set to: " + str(godmode))
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Please provide a proper state for invl", True)
+        else:
+            KDS.Logging.Log(KDS.Logging.LogType.info,
+                            "Please provide a proper state for invl", True)
     elif command_list[0] == "finish":
         if len(command_list) > 1 and command_list[1] == "missions":
             KDS.Logging.Log(KDS.Logging.LogType.info, "Mission finish issued through console.", True)
@@ -2157,6 +2171,8 @@ Console Help:
     - killme => Kills the player.
     - terms [state: bool] => Sets Terms and Conditions accepted to specified value.
     - woof [state: bool] => Sets all bulldogs anger to specified value.
+    - finish => Finishes level or missions.
+    - invl => Sets invulnerability mode on/off
     - help => Shows a list of commands.
 """, True)
     else:
@@ -3289,6 +3305,10 @@ while main_running:
     ##################################################################################################################################################################
 #endregion
 #region PlayerMovement
+
+    if godmode:
+        player_health = 100
+
     fall_speed_copy = fall_speed
 
     player_movement = [0, 0]
