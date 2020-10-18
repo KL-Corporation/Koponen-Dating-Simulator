@@ -3467,7 +3467,7 @@ while main_running:
             farting = False
             fart_counter = 0
             for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.topleft, player_rect.topleft) < 1500:
+                if KDS.Math.getDistance(enemy.rect.topleft, player_rect.topleft) < 800:
                     enemy.dmg(random.randint(500, 1000))
 
     if player_keys["red"]:
