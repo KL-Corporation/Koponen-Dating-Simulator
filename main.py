@@ -2881,6 +2881,9 @@ def main_menu():
     campaign_return_button = KDS.UI.New.Button(campaign_return_button_rect, menu_mode_selector, campaign_return_text)
     campaign_left_button = KDS.UI.New.Button(campaign_left_button_rect, level_pick.left)
     campaign_right_button = KDS.UI.New.Button(campaign_right_button_rect, level_pick.right)
+
+    Frame1 = pygame.Surface(display_size)
+    frames = [Frame1, Frame2, Frame3, Frame4]
     #endregion
     while main_menu_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -2908,9 +2911,6 @@ def main_menu():
                 ResizeWindow(event.size)
 
         if MenuMode == Mode.MainMenu:
-            
-            #Frame 1
-            Frame1 = pygame.Surface(display_size)
             Frame1.blit(main_menu_background, (0, 0))
             Frame1.blit(pygame.transform.flip(
                 menu_gasburner_animation.update(), False, False), (625, 445))
@@ -2918,18 +2918,19 @@ def main_menu():
                 menu_toilet_animation.update(), False, False), (823, 507))
             Frame1.blit(pygame.transform.flip(
                 menu_trashcan_animation.update(), False, False), (283, 585))
-
-            frames = [Frame1, Frame2, Frame3, Frame4]
+            
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
             display.blit(frames[current_frame-1], (0, 0))
             display.blit(frames[current_frame], (0,0))
+
             main_menu_play_button.update(display, mouse_pos, c, Mode.ModeSelectionMenu)
             main_menu_settings_button.update(display, mouse_pos, c)
             main_menu_quit_button.update(display, mouse_pos, c)
 
             display.blit(main_menu_title, (391, 43))
             framecounter += 1
+
             if framecounter > 550:
                 current_frame += 1
                 framecounter = 0
@@ -2938,6 +2939,7 @@ def main_menu():
                 framechange_lerp.tick = 0
                 frames[current_frame].set_alpha(0)
                 frames[current_frame-1].set_alpha(255)
+
         elif MenuMode == Mode.ModeSelectionMenu:
 
             display.blit(gamemode_bc_1_1, (0, 0))
