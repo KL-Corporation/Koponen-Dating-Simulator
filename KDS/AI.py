@@ -509,7 +509,7 @@ class TurboShotgunner(HostileEnemy):
 
 class MafiaMan(HostileEnemy):
     def __init__(self, pos):
-        health = 150
+        health = 125
         w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -550,7 +550,7 @@ class MafiaMan(HostileEnemy):
 
 class MethMaker(HostileEnemy):
     def __init__(self, pos):
-        health = 150
+        health = 250
         w_anim = KDS.Animator.Animation("methmaker_walking", 4, 11, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("methmaker_idle", 2, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("methmaker_shooting", 2, 1, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
