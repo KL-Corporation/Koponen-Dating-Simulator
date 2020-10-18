@@ -647,7 +647,8 @@ class WorldData():
             1: KDS.AI.Imp,
             2: KDS.AI.SergeantZombie,
             3: KDS.AI.DrugDealer,
-            4: KDS.AI.TurboShotgunner
+            4: KDS.AI.TurboShotgunner,
+            5: KDS.AI.MafiaMan
         }
 
         y = 0

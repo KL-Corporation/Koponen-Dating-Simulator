@@ -506,6 +506,47 @@ class TurboShotgunner(HostileEnemy):
             items.append(17)
         return items
 
+class MafiaMan(HostileEnemy):
+    def __init__(self, pos):
+        health = 150
+        w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("mafiaman_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0], pos[1]-19, 40, 53)
+
+        #region Handling the i_anim:
+        aim_im = a_anim.images[0]
+        shoot_im = a_anim.images[1]
+        a_anim.images.clear()
+        for _ in range(20):
+            a_anim.images.append(aim_im)
+        for _ in range(2):
+            a_anim.images.append(shoot_im)
+        a_anim.ticks = 21
+        del aim_im, shoot_im
+
+        #endregion
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=40)
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        double_barrel_fire.set_volume(dist)
+        double_barrel_fire.play()
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+
+    def onDeath(self):
+        items = []
+        if random.choice([True, False, False, False, False, False, False]):
+            items.append(32)
+        return items
+
 class Projectile:
     pass
 
