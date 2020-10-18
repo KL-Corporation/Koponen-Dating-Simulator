@@ -42,7 +42,7 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self,Surface:pygame.Surface, scroll: list[int, int], targets, HitTargets, plr_rct, plr_htlt, debugMode = False):
+    def update(self,Surface:pygame.Surface, scroll: list[int], targets, HitTargets, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
@@ -230,7 +230,7 @@ class Lighting:
             self.tsurf = Lighting.circle_surface(size*2, color)
         
         @staticmethod
-        def update(particle, Surface: pygame.Surface, scroll: list[int, int]):
+        def update(particle, Surface: pygame.Surface, scroll: list[int]):
             particle.rect.y -= particle.speed
             particle.rect.x += random.randint(-1, 1)
             particle.size -= particle.dying_speed
@@ -282,7 +282,7 @@ class Explosion:
         self.xpos = pos[0]
         self.ypos = pos[1]
 
-    def update(self, Surface: pygame.Surface, scroll: list[int, int]):
+    def update(self, Surface: pygame.Surface, scroll: list[int]):
         txtre = self.animation.update()
         Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
         return self.animation.done, self.animation.tick
