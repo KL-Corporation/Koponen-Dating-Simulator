@@ -1354,7 +1354,7 @@ class Candle(Tile):
         return self.texture.update()
 
 class Teleport(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: (int, int), serialNumber: int):        
         super().__init__(position, 1)
         self.texture = soulsphere
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -1362,6 +1362,17 @@ class Teleport(Tile):
         self.serialNumber = serialNumber
     
     def update(self):
+        return self.texture
+
+class LampPoleLamp(Tile):
+    def __init__(self, position:(int, int), serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[58]
+        self.rect = pygame.Rect(position[0]-6, position[1]-6, 40, 40)
+        self.checkCollision = False
+    
+    def update(self):
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx-player_light_sphere_radius/2, self.rect.centery-player_light_sphere_radius/2), light_sphere2))
         return self.texture
 
 specialTilesD = {
@@ -1382,7 +1393,8 @@ specialTilesD = {
     52: Torch,
     53: GoryHead,
     54: LevelEnder,
-    55: Candle
+    55: Candle,
+    58: LampPoleLamp
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -1619,6 +1631,14 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         Audio.playSound(weapon_pickup)
 
         return False
+
+    @staticmethod
+    def ppsh41_mag_p():
+        Audio.playSound(item_pickup)
+        global ppsh41_ammo
+        ppsh41_ammo += 72
+
+        return True
 
     @staticmethod
     def emptyOperation():
@@ -1860,7 +1880,8 @@ Pfunctions = {
     28: pickupFunctions.flask_blood_p,
     29: pickupFunctions.grenade_p,
     30: pickupFunctions.fire_extinguisher_p,
-    31: pickupFunctions.level_ender_p
+    31: pickupFunctions.level_ender_p,
+    32: pickupFunctions.ppsh41_mag_p
 }
 
 Ufunctions = {

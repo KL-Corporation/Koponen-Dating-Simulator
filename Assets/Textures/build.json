@@ -54,7 +54,10 @@
         "052":"tall_torch.png",
         "053":"impaled_head.png",
         "054":"level_ender.png",
-        "055":"candle.png"
+        "055":"candle.png",
+        "056":"lamp_pole_base.png",
+        "057":"lamp_pole_pole.png",
+        "058":"lamp_pole_lamp.png"
     },
 
     "special_tiles": [
@@ -75,14 +78,17 @@
         52,
         53,
         54,
-        55
+        55,
+        58
     ],
 
     "checkCollisionFalse": [
         10,
         44,
         45,
-        46
+        46,
+        56,
+        57
     ],
 
     "item_textures":{
@@ -117,7 +123,8 @@
         "028":"flask_blood.png",
         "029":"grenade.png",
         "030":"fire_extinguisher.png",
-        "031":"level_ender.png"
+        "031":"level_ender.png",
+        "032":"ppsh41_mag.png"
     },
 
     "item_doubles":[
