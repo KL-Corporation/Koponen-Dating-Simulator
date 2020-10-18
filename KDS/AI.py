@@ -235,7 +235,7 @@ class Bulldog:
                 self.direction = False
         return self.rect, self.animation.get_frame(), self.direction, self.damage
 
-    def AI_Update(self, surface: pygame.Surface, scroll: (int, int), render_rect: pygame.Rect):
+    def AI_Update(self, surface: pygame.Surface, scroll: tuple[int, int], render_rect: pygame.Rect):
         if not self.a:
             if self.movement[0] < 0:
                 self.direction = True

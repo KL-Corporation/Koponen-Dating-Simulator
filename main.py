@@ -987,7 +987,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
 
-    def __init__(self, position: (int, int), serialNumber: int):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.serialNumber = serialNumber
         if serialNumber:
@@ -1002,7 +1002,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a 2d numpy array
-    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: (int, int), *args):
+    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: tuple[int, int], *args):
         tilesUpdating = 0
         x = int(round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2))) - 2
         y = int(round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2))) - 2
@@ -1028,7 +1028,7 @@ class Tile:
 #region Erikois-tilet >>>>>>>>>>>>>>
 
 class Toilet(Tile):
-    def __init__(self, position:(int, int), serialNumber: int, _burning=False):        
+    def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = toilet0
@@ -1058,7 +1058,7 @@ class Toilet(Tile):
             return self.texture
 
 class Trashcan(Tile):
-    def __init__(self, position:(int, int), serialNumber: int, _burning=False):        
+    def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = trashcan
@@ -1087,7 +1087,7 @@ class Trashcan(Tile):
             return self.texture
 
 class Jukebox(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         positionC = (position[0], position[1] - 26)
         super().__init__(positionC, serialNumber)
         self.texture = jukebox_texture
@@ -1127,7 +1127,7 @@ class Jukebox(Tile):
 
 class Door(Tile):
 
-    def __init__(self, position:(int, int), serialNumber: int, closingCounter = 600):        
+    def __init__(self, position: tuple[int, int], serialNumber: int, closingCounter = 600):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
@@ -1162,7 +1162,7 @@ class Door(Tile):
             return self.opentexture
 
 class Landmine(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = landmine_texture
         self.rect = pygame.Rect(position[0], position[1]+26, 22, 11)
@@ -1182,7 +1182,7 @@ class Landmine(Tile):
         return self.texture
 
 class Ladder(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = ladder_texture
         self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
@@ -1195,7 +1195,7 @@ class Ladder(Tile):
         return self.texture
 
 class Lamp(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = lamp0
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
@@ -1223,7 +1223,7 @@ class Lamp(Tile):
         return self.texture
 
 class DecorativeHead(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[43]
         self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
@@ -1266,7 +1266,7 @@ class DecorativeHead(Tile):
         return self.texture
 
 class Tree(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]-50, 47, 84)
@@ -1276,7 +1276,7 @@ class Tree(Tile):
         return self.texture
 
 class Rock0(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]+19, 32, 15)
@@ -1286,7 +1286,7 @@ class Rock0(Tile):
         return self.texture
 
 class Torch(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
@@ -1306,7 +1306,7 @@ class Torch(Tile):
         return self.texture.update()
 
 class GoryHead(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 28, 34, 62)
@@ -1322,7 +1322,7 @@ class GoryHead(Tile):
         return self.texture
 
 class LevelEnder(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 16, 34, 50)
@@ -1338,7 +1338,7 @@ class LevelEnder(Tile):
         return t_textures[self.serialNumber]
 
 class Candle(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1]+14, 20, 20)
@@ -1354,7 +1354,7 @@ class Candle(Tile):
         return self.texture.update()
 
 class Teleport(Tile):
-    def __init__(self, position: (int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
         self.texture = soulsphere
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -1365,7 +1365,7 @@ class Teleport(Tile):
         return self.texture
 
 class LampPoleLamp(Tile):
-    def __init__(self, position:(int, int), serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[58]
         self.rect = pygame.Rect(position[0]-6, position[1]-6, 40, 40)
@@ -1910,7 +1910,7 @@ Ufunctions = {
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Items...")
 class Item:
 
-    def __init__(self, position: (int, int), serialNumber: int):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
         if serialNumber:
             self.texture = i_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[

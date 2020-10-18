@@ -277,7 +277,7 @@ class itemTools:
             self.counter = arg
 
 class Explosion:
-    def __init__(self, animation: KDS.Animator.Animation, pos: (int, int)):
+    def __init__(self, animation: KDS.Animator.Animation, pos: tuple[int, int]):
         self.animation = animation
         self.xpos = pos[0]
         self.ypos = pos[1]
