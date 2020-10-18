@@ -1,6 +1,5 @@
 #region Importing
 import os
-from inspect import currentframe
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -31,6 +30,7 @@ import zipfile
 import math
 import time
 from pygame.locals import *
+from inspect import currentframe
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -2086,10 +2086,7 @@ def console():
         if len(command_list) > 1:
             woofState = KDS.Convert.ToBool(command_list[1])
             if woofState != None:
-                for dog in WorldData.Legacy.bulldogs:
-                    KDS.Logging.Log(KDS.Logging.LogType.info, str(
-                        dog) + " woof status has been set to: " + str(woofState), True)
-                    KDS.AI.Bulldog.SetAngry(dog, woofState)
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Woof state assignment has not been implemented for the new AI system yet.")
             else:
                 KDS.Logging.Log(KDS.Logging.LogType.info,
                                 "Please provide a proper state for woof", True)
@@ -2205,9 +2202,6 @@ def koponen_talk():
             conversations.append("         tehtävä kesken")
             conversations.append("Koponen: Tehtäväsi oli tuoda minulle")
             conversations.append(f"         {task}.")
-        elif WorldData.Legacy.task_items:
-            current_mission = WorldData.Legacy.task_items[0]
-            WorldData.Legacy.task_items.remove(WorldData.Legacy.task_items[0])
         if current_mission == "coffeemug":
             task = "kahvikuppi"
             taskTaivutettu = "kahvikupin"

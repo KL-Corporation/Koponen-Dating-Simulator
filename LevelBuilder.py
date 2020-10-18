@@ -1,5 +1,7 @@
-from inspect import currentframe
 import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
+from inspect import currentframe
 import sys
 from turtle import st
 from numpy.core.fromnumeric import resize, size
@@ -400,9 +402,9 @@ def generateLevelProp():
     ic = inputConsole("Koponen Start Position: (int, int) >>> ", False, defVal="200, 200").replace(" ", "").split(",")
     k_start_pos = (int(ic[0]), int(ic[1]))
     
-    ic = inputConsole("Time Bonus Range in seconds: (full points: int, no points: int)").replace(" ", "").split(",")
-    tb_start = ic[0]
-    tb_end = ic[1]
+    ic = inputConsole("Time Bonus Range in seconds: (full points: int, no points: int) >>> ", False).replace(" ", "").split(",")
+    tb_start = int(ic[0])
+    tb_end = int(ic[1])
     
     savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
     if len(savePath) > 0:
