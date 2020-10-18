@@ -67,6 +67,7 @@ zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav"
 shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
 impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
 double_barrel_fire = pygame.mixer.Sound("Assets/Audio/effects/double_barrel_fire.ogg")
+basicGunshot = pygame.mixer.Sound("Assets/Audio/effects/gunshot_basic1.ogg")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 drug_dealer_sight = pygame.mixer.Sound("Assets/Audio/entities/dshight.ogg")
 drug_dealer_death_sound = pygame.mixer.Sound("Assets/Audio/entities/ddth.ogg")
@@ -536,10 +537,10 @@ class MafiaMan(HostileEnemy):
         dist = max(0, dist)
         dist = 1200 - dist
         dist /= 1200
-        double_barrel_fire.set_volume(dist)
-        double_barrel_fire.play()
+        basicGunshot.set_volume(dist)
+        basicGunshot.play()
         #print(KDS.Math.getSlope(self.rect.center, target.center))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
