@@ -3314,7 +3314,7 @@ while main_running:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
             result = enemy.update(screen, scroll, tiles, player_rect)
             if result[0]:
-                print(len(result[0]))
+                #print(len(result[0]))
                 for r in result[0]:
                     Projectiles.append(r)
             if result[1]:
