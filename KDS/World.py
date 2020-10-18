@@ -49,7 +49,7 @@ class Bullet:
         if self.speed == -1:
             for _ in range(int(self.maxDistance/18)):
                 if debugMode:
-                    pygame.draw.rect(Surface, (255,255,255), (self.rect.x-scroll[0], self.rect.y-scroll[1], self.rect.width, self.rect.height))
+                    pygame.draw.rect(Surface, (255, 255, 255), (self.rect.x-scroll[0], self.rect.y-scroll[1], self.rect.width, self.rect.height))
                 if self.direction:
                     self.rect.x -= 18                  
                 else:
