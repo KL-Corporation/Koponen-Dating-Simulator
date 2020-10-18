@@ -511,13 +511,6 @@ with open("Assets/Maps/map_names.txt", "r") as file:
 
 map_names = tuple(cntnts)
 
-ammunition_plasma = 50
-pistol_bullets = 8
-rk_62_ammo = 30
-shotgun_shells = 8
-ppsh41_ammo = 72
-awm_ammo = 5
-
 Projectiles = []
 Explosions = []
 BallisticObjects = []
@@ -554,8 +547,6 @@ true_scroll = [0, 0]
 stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
-fall_multiplier = 2.5
-moveUp_released = True
 check_crouch = False
 player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
@@ -575,6 +566,18 @@ MenuMode = 0
 game_pause_background = screen.copy()
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
+#endregion
+#region Game Settings
+def LoadGameSettings():
+    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, shotgun_shells, pistol_bullets
+    fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
+    fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
+    rk_62_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "rk_62")
+    ammunition_plasma = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "plasmarifle")
+    ppsh41_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "ppsh41")
+    shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "shotgun")
+    pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "pistol")
+LoadGameSettings()
 #endregion
 #region Quit Handling
 def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
@@ -858,11 +861,7 @@ class WorldData():
                 if tile.serialNumber == 22:
                     tile.initHeight(tiles)
 
-        for f in os.listdir(PersistentMapPath):
-            if ".ogg" in f:
-                musicfile = f
-
-        Audio.MusicMixer.load(os.path.join(PersistentMapPath, musicfile))
+        Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
         Audio.MusicMixer.play(-1)
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
         return p_start_pos, k_start_pos
@@ -2554,13 +2553,6 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
         loadEntities = False
     player_def_pos, koponen_def_pos = WorldData.LoadMap(loadEntities)
 
-    global rk_62_ammo, plasma_ammo, ppsh41_ammo, shotgun_shells, pistol_bullets
-    rk_62_ammo = 32
-    plasma_ammo = 50
-    ppsh41_ammo = 72
-    shotgun_shells = 8
-    pistol_bullets = 7
-
     player_death_event = False
     animation_has_played = False
     global level_finished
@@ -3436,7 +3428,7 @@ while main_running:
     ##################################################################################################################################################################
 #endregion
 #region PlayerMovement
-    fall_speed = 0.4
+    fall_speed_copy = fall_speed
 
     player_movement = [0, 0]
 
@@ -3450,14 +3442,12 @@ while main_running:
         else:
             player_movement[1] = 0
 
-    if KDS.Keys.GetPressed(KDS.Keys.moveUp) and not KDS.Keys.GetPressed(KDS.Keys.moveDown) and air_timer < 6 and moveUp_released and not onLadder:
-        moveUp_released = False
+    if KDS.Keys.GetPressed(KDS.Keys.moveUp) and KDS.Keys.GetTicksHeld(KDS.Keys.moveUp) == 0 and not KDS.Keys.GetPressed(KDS.Keys.moveDown) and air_timer < 6 and not onLadder:
         vertical_momentum = -10
     elif vertical_momentum > 0:
-        fall_speed *= fall_multiplier
+        fall_speed_copy *= fall_multiplier
     elif not KDS.Keys.GetPressed(KDS.Keys.moveUp):
-        moveUp_released = True
-        fall_speed *= fall_multiplier
+        fall_speed_copy *= fall_multiplier
 
     if player_health > 0:
         if not KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina < 100.0:
@@ -3468,28 +3458,19 @@ while main_running:
             KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
 
     if KDS.Keys.GetPressed(KDS.Keys.moveRight):
-        if not KDS.Keys.GetPressed(KDS.Keys.moveDown):
-            player_movement[0] += 4
-        else:
-            player_movement[0] += 2
-        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
-        if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0:
-            player_movement[0] += 4
-            KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
+        if not KDS.Keys.GetPressed(KDS.Keys.moveDown): player_movement[0] += 4
+        else: player_movement[0] += 2
+        if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0: player_movement[0] += 4
 
     if KDS.Keys.GetPressed(KDS.Keys.moveLeft):
-        if not KDS.Keys.GetPressed(KDS.Keys.moveDown):
-            player_movement[0] -= 4
-        else:
-            player_movement[0] -= 2
+        if not KDS.Keys.GetPressed(KDS.Keys.moveDown): player_movement[0] -= 4
+        else: player_movement[0] -= 2
+        if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0: player_movement[0] -= 4
+    for i in range(round(abs(player_movement[0]))):
         KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
-        if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0:
-            player_movement[0] -= 4
-            KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
     player_movement[1] += vertical_momentum
-    vertical_momentum += fall_speed
-    if vertical_momentum > 8:
-        vertical_momentum = 8
+    vertical_momentum += fall_speed_copy
+    if vertical_momentum > 8: vertical_momentum = 8
 
     if check_crouch == True:
         crouch_collisions = move_entity(pygame.Rect(

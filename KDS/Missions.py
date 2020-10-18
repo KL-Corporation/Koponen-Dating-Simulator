@@ -323,42 +323,42 @@ def Finish():
             _task.Progress(100)
 #endregion
 #region Missions
-def InitialiseMissions(LevelIndex):
-    Clear()
-    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+class Presets:
+    @staticmethod
+    def Tutorial():
         InitialiseMission("tutorial", "Tutoriaali")
-        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (ListenerTypes.Movement, 0.005))
+        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (ListenerTypes.Movement, 0.0025))
         InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (ListenerTypes.InventorySlotSwitching, 0.2))
         InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
         InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (ListenerTypes.iPuhelinDrop, 1.0), (ListenerTypes.iPuhelinPickup, -1.0))
-
+        
+    @staticmethod
+    def KoponenIntroduction():
         InitialiseMission("koponen_introduction", "Tutustu Koposeen")
         InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
+
+    @staticmethod
+    def LevelExit():
+        InitialiseMission("reach_level_exit", "Exit")
+        InitialiseTask("reach_level_exit", "exit", "Reach Level Exit", (ListenerTypes.LevelEnder, 1.0))
+
+def InitialiseMissions(LevelIndex):
+    Clear()
+    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+        Presets.Tutorial()
+        Presets.KoponenIntroduction()
     else:
         if LevelIndex < 2:
-            InitialiseMission("tutorial", "Tutoriaali")
-            InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (ListenerTypes.Movement, 0.005))
-            InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (ListenerTypes.InventorySlotSwitching, 0.2))
-            InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-            InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (ListenerTypes.iPuhelinDrop, 1.0), (ListenerTypes.iPuhelinPickup, -1.0))
-
-            InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-            InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
+            Presets.Tutorial()
+            Presets.KoponenIntroduction()
         elif LevelIndex == 2:
             InitialiseMission("koponen_talk", "Puhu Koposelle")
             InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
         elif LevelIndex == 6:
-            InitialiseMission("tutorial", "Tutoriaali")
-            InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (ListenerTypes.Movement, 0.005))
-            InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (ListenerTypes.InventorySlotSwitching, 0.2))
-            InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-            InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (ListenerTypes.iPuhelinDrop, 1.0), (ListenerTypes.iPuhelinPickup, -1.0))
-
-            InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-            InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
+            Presets.Tutorial()
+            Presets.KoponenIntroduction()
         else:
-            InitialiseMission("reach_level_exit", "Exit")
-            InitialiseTask("reach_level_exit", "exit", "Reach Level Exit", (ListenerTypes.LevelEnder, 1.0))
+            Presets.LevelExit()
 #endregion
 #region Listeners
 def TriggerListener(Type: ListenerTypes or str):
