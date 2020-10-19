@@ -1657,14 +1657,19 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         if args[0][0]:
             global player_health, player_score
             player_score += 1
-            player_health += random.choice([random.randint(10, 30), random.randint(0, 20), random.randint(-30, 30)])
+            player_health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
             player_inventory.storage[player_inventory.SIndex] = 26
             Audio.playSound(glug_sound)
         return i_textures[27]
 
     @staticmethod
     def flask_blood_u(*args):
-
+        if args[0][0]:
+            global player_health, player_score
+            player_score += 1
+            player_health += random.randint(0, 10)
+            player_inventory.storage[player_inventory.SIndex] = 26
+            Audio.playSound(glug_sound)
         return i_textures[28]
 
     @staticmethod
@@ -1811,9 +1816,12 @@ class Item:
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
-                            Pfunctions[item.serialNumber]()
-                            Item_list = numpy.delete(Item_list, index)
-                            showItemTip = False
+                            try:
+                                Pfunctions[item.serialNumber]()
+                                Item_list = numpy.delete(Item_list, index)
+                                showItemTip = False
+                            except IndexError as e:
+                                KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
                     else:
                         if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == Inventory.emptySlot:
                             if inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
