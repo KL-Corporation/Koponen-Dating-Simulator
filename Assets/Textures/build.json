@@ -131,7 +131,8 @@
         "029":"grenade.png",
         "030":"fire_extinguisher.png",
         "031":"level_ender.png",
-        "032":"ppsh41_mag.png"
+        "032":"ppsh41_mag.png",
+        "033":"lantern.png"
     },
 
     "item_doubles":[
@@ -159,7 +160,8 @@
         28,
         29,
         30,
-        31
+        31,
+        33
     ]
 
 }

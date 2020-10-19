@@ -344,6 +344,7 @@ light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").con
 orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
 orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
 blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
+warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Misc/warm_white_lightSphere0.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -420,6 +421,7 @@ decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/Decorati
 awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
 smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Effects/grenade_throw.ogg")
+lantern_pickup = pygame.mixer.Sound("Assets/Audio/Effects/lantern_pickup.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -1476,9 +1478,17 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         return True
 
     @staticmethod
+    def lantern_p():
+        Audio.playSound(lantern_pickup)
+
+        return False
+
+    @staticmethod
     def emptyOperation():
         return True
 
+
+lantern_animation = KDS.Animator.Animation("lantern_burning", 2, 4, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 
 class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
     #rk62_C = KDS.World.itemTools.rk62()
@@ -1681,6 +1691,12 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         return i_textures[31]
 
     @staticmethod
+    def lantern_u(*args):
+        scale = random.randint(180, 220)
+        Lights.append( KDS.World.Lighting.Light( (player_rect.centerx - scale/2, player_rect.centery - scale/2) , pygame.transform.scale(warm_white_lightSphere0, (scale, scale)) ))
+        return lantern_animation.update()
+
+    @staticmethod
     def emptyOperation(*args):
 
         return i_textures[0]
@@ -1716,7 +1732,8 @@ Pfunctions = {
     29: pickupFunctions.grenade_p,
     30: pickupFunctions.fire_extinguisher_p,
     31: pickupFunctions.level_ender_p,
-    32: pickupFunctions.ppsh41_mag_p
+    32: pickupFunctions.ppsh41_mag_p,
+    33: pickupFunctions.lantern_p
 }
 
 Ufunctions = {
@@ -1738,7 +1755,8 @@ Ufunctions = {
     28: itemFunctions.flask_blood_u,
     29: itemFunctions.grenade_u,
     30: itemFunctions.fire_extinguisher_u,
-    31: itemFunctions.level_ender_u
+    31: itemFunctions.level_ender_u,
+    33: itemFunctions.lantern_u
 
 }
 
@@ -3302,9 +3320,11 @@ while main_running:
         KDS.Missions.Render(screen)
 
         player_inventory.render(screen)
+
     ##################################################################################################################################################################
     ##################################################################################################################################################################
     ##################################################################################################################################################################
+
 #endregion
 #region PlayerMovement
 
