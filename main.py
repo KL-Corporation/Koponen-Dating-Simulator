@@ -2424,6 +2424,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
+    LoadGameSettings()
+
     if len(Items) < 1 and len(Enemies) < 1:
         loadEntities = True
     else:
