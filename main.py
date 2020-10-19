@@ -410,6 +410,7 @@ plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/dsfirxpl.wav")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 rk62_shot = pygame.mixer.Sound("Assets/Audio/Effects/rk62_shot.wav")
 shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun.wav")
+glug_sound = pygame.mixer.Sound("Assets/Audio/Effects/glug.ogg")
 player_shotgun_shot = pygame.mixer.Sound(
     "Assets/Audio/Effects/player_shotgun.wav")
 archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
@@ -573,7 +574,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, shotgun_shells, pistol_bullets
+    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, shotgun_shells, pistol_bullets, awm_ammo
     fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
     rk_62_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "rk_62")
@@ -581,6 +582,7 @@ def LoadGameSettings():
     ppsh41_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "ppsh41")
     shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "shotgun")
     pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "pistol")
+    awm_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "awm")
 LoadGameSettings()
 #endregion
 #region Quit Handling
@@ -653,7 +655,8 @@ class WorldData():
             3: KDS.AI.DrugDealer,
             4: KDS.AI.TurboShotgunner,
             5: KDS.AI.MafiaMan,
-            6: KDS.AI.MethMaker
+            6: KDS.AI.MethMaker,
+            7: KDS.AI.CaveMonster
         }
 
         y = 0
@@ -1651,7 +1654,12 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def flask_meth_u(*args):
-
+        if args[0][0]:
+            global player_health, player_score
+            player_score += 1
+            player_health += random.choice([random.randint(10, 30), random.randint(0, 20), random.randint(-30, 30)])
+            player_inventory.storage[player_inventory.SIndex] = 26
+            Audio.playSound(glug_sound)
         return i_textures[27]
 
     @staticmethod
