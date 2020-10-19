@@ -494,6 +494,7 @@ animation_counter = 0
 animation_duration = 0
 animation_image = 0
 air_timer = 0
+player_light = True
 player_health = 100
 last_player_health = 100
 player_death_event = False
@@ -632,11 +633,12 @@ class WorldData():
             map_data = map_file.read().split("\n")
 
         FilePath = os.path.join(PersistentMapPath, "levelprop.kdf")
-        global dark, darkness, ambient_light, ambient_light_tint
+        global dark, darkness, ambient_light, ambient_light_tint, player_light
         dark = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "enabled", False)
         dval = 255 - KDS.ConfigManager.GetJSON(FilePath, "Darkness", "strength", 0)
         darkness = (dval, dval, dval)
         ambient_light = KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "enabled", False)
+        player_light = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "player_light", True)
         ambient_light_tint = tuple(KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "tint", (255, 255, 255)))
         
         p_start_pos = tuple(KDS.ConfigManager.GetJSON(FilePath, "StartPos", "player", (100, 100)))
@@ -1214,6 +1216,16 @@ class Chair(Tile):
     def update(self):
         return self.texture
 
+class SkullTile(Tile):
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[66]
+        self.rect = pygame.Rect(position[0]+7, position[1]+7, 27, 27)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1234,7 +1246,8 @@ specialTilesD = {
     54: LevelEnder,
     55: Candle,
     58: LampPoleLamp,
-    59: Chair
+    59: Chair,
+    66: SkullTile
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -2094,6 +2107,8 @@ def console():
 
     #command_input = input("command: ")
     command_input = inputConsole()
+    if not command_input:
+        return None
     command_input = command_input.lower()
     command_list = command_input.split()
 
@@ -3313,7 +3328,8 @@ while main_running:
                 rectSurf.set_alpha(128)
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
-        black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
+        if player_light:
+            black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:

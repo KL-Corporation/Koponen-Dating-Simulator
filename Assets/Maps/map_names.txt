@@ -1,10 +1,11 @@
 [Placeholder]
 Beginnings...
 Shooting ran... School
-Doorway to Street
+Pathway to Street
 The Streets
 Area 69
 Meth Lab
+Darkness
 Powerplant
 New test map
 LevelBuilder Test

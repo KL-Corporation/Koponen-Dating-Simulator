@@ -63,7 +63,9 @@
         "061":"red_wall.png",
         "062":"road_tiles.png",
         "063":"road_tiles_dark.png",
-        "064":"dark_wall.png"
+        "064":"dark_wall.png",
+        "065":"gray_stone.png",
+        "066":"skull.png"
     },
 
     "special_tiles": [
@@ -86,7 +88,8 @@
         54,
         55,
         58,
-        59
+        59,
+        66
     ],
 
     "checkCollisionFalse": [

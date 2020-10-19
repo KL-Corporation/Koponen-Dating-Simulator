@@ -8,8 +8,8 @@
         ]
     },
     "Darkness": {
-        "enabled": false,
-        "strength": 0
+        "enabled": true,
+        "strength": 195
     },
     "StartPos": {
         "koponen": [
