@@ -802,6 +802,17 @@ class Inventory:
             Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
         return None
 
+    @staticmethod
+    def useSpecificItem(index: int, Surface: pygame.Surface, *args):
+        dumpValues = Ufunctions[index](args, Surface)
+        if direction:
+            renderOffset = -dumpValues.get_size()[0]
+        else:
+            renderOffset = player_rect.width + 2
+
+        Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
+        return None
+
     def getHandItem(self):
         return self.storage[self.SIndex]
 
@@ -3231,9 +3242,6 @@ while main_running:
                 play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
-    #######################################################################################################################
-    #######################################################################################################################
-    #######################################################################################################################
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     Items, player_inventory = Item.checkCollisions(
         Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
@@ -3263,6 +3271,8 @@ while main_running:
 
     Item.render(Items, screen, scroll)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
+    if 33 in player_inventory.storage:
+        Inventory.useSpecificItem(33, screen)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, Enemies, HitTargets, player_rect, player_health, DebugMode)
