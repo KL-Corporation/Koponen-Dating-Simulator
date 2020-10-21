@@ -13,11 +13,12 @@ import KDS.Keys
 import KDS.LevelLoader
 import KDS.Logging
 import KDS.Math
+import KDS.Menus
 import KDS.Missions
+import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
-import KDS.Scores
 import numpy
 import random
 import threading
@@ -569,14 +570,15 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, shotgun_shells, pistol_bullets
+    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, shotgun_shells, pistol_bullets, fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
-    rk_62_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "rk_62")
-    ammunition_plasma = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "plasmarifle")
-    ppsh41_ammo = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "ppsh41")
-    shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "shotgun")
-    pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "WeaponAmmo", "pistol")
+    fall_max_velocity = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMaxVelocity")
+    rk_62_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "rk_62")
+    ammunition_plasma = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "plasmarifle")
+    ppsh41_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "ppsh41")
+    shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "shotgun")
+    pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "pistol")
 LoadGameSettings()
 #endregion
 #region Quit Handling
@@ -595,7 +597,6 @@ def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
 imps = []
 iron_bars = []
 class WorldData():
-
     MapSize = (0, 0)
     @staticmethod
     def LoadMap(loadEntities: bool = True):
@@ -2171,6 +2172,7 @@ def agr(tcagr: bool):
     return True
 #endregion
 #region Koponen Talk
+"""
 def koponen_talk():
     global main_running, currently_on_mission, player_score, ad_images, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
     conversations = []
@@ -2185,7 +2187,7 @@ def koponen_talk():
     for i in range(len(koponen_talking_foreground_indexes), 0):
         koponen_talking_foreground_indexes[i] = koponen_talking_foreground_indexes[i - 1]
     random_foreground = int(random.uniform(0, len(ad_images)))
-    while random_foreground == koponen_talking_foreground_indexes[0] or random_foreground == koponen_talking_foreground_indexes[1] or random_foreground == koponen_talking_foreground_indexes[2] or random_foreground == koponen_talking_foreground_indexes[3] or random_foreground == koponen_talking_foreground_indexes[4]:
+    while random_foreground in koponen_talking_foreground_indexes
         random_foreground = int(random.uniform(0, len(ad_images)))
     koponen_talking_foreground_indexes[4] = random_foreground
     koponen_talk_foreground = ad_images[random_foreground].copy()
@@ -2255,98 +2257,7 @@ def koponen_talk():
                 koponen_happiness -= 10
         else:
             conversations.append("Koponen: Ei ei ei")
-
-    def end_mission():
-        global current_mission, currently_on_mission, player_score, koponen_happiness
-
-        try:
-            taskTaivutettu
-        except NameError:
-            KDS.Logging.Log(KDS.Logging.LogType.warning,
-                            "Task not defined. Defining task...", False)
-            task = ""
-            taskTaivutettu = ""
-
-        if not currently_on_mission:
-            conversations.append("Koponen: Sinulla ei ole palautettavaa")
-            conversations.append("         tehtävää")
-        else:
-            if current_mission in player_inventory.storage:
-                missionRemoveRange = range(len(player_inventory.storage))
-                itemFound = False
-                for i in missionRemoveRange:
-                    if itemFound == False:
-                        if player_inventory.storage[i] == current_mission:
-                            player_inventory.storage[i] = Inventory.emptySlot
-                            itemFound = True
-                conversations.append("Koponen: Loistavaa työtä")
-                conversations.append("Game: Player score +60")
-                player_score += 60
-                koponen_happiness += 10
-                currently_on_mission = False
-                current_mission = "none"
-            else:
-                conversations.append("Koponen: Housuistasi ei löydy")
-                conversations.append("         pyytämääni esinettä.")
-                conversations.append("Koponen: Tehtäväsi oli tuoda minulle.")
-                conversations.append(f"         {task}")
-
-    c = False
-
-    conversations.append("Koponen: Hyvää päivää")
-
-    exit_button = KDS.UI.New.Button(pygame.Rect(940, 700, 230, 80), exit_function1, button_font1.render(
-        "EXIT", True, KDS.Colors.GetPrimary.White))
-    mission_button = KDS.UI.New.Button(pygame.Rect(50, 700, 450, 80), mission_function, button_font1.render(
-        "REQUEST MISSION", True, KDS.Colors.GetPrimary.White))
-    date_button = KDS.UI.New.Button(pygame.Rect(50, 610, 450, 80), date_function, button_font1.render(
-        "ASK FOR A DATE", True, KDS.Colors.GetPrimary.White))
-    r_mission_button = KDS.UI.New.Button(pygame.Rect(510, 700, 420, 80), end_mission, button_font1.render(
-        "RETURN MISSION", True, KDS.Colors.GetPrimary.White))
-
-    while koponenTalking:
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
-            (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    koponenTalking = False
-                elif event.key == K_F11:
-                    Fullscreen.Set()
-            elif event.type == MOUSEBUTTONUP:
-                if event.button == 1:
-                    c = True
-            elif event.type == pygame.QUIT:
-                KDS_Quit()
-            elif event.type == pygame.VIDEORESIZE:
-                ResizeWindow(event.size)
-        display.blit(pygame.transform.scale(koponen_talking_background, (int(
-            koponen_talking_background.get_width()), int(koponen_talking_background.get_height()))), (0, 0))
-        display.blit(pygame.transform.scale(koponen_talk_foreground, (int(
-            koponen_talk_foreground.get_width()), int(koponen_talk_foreground.get_height()))), (40, 474))
-        pygame.draw.rect(display, (230, 230, 230),
-                         pygame.Rect(40, 40, 700, 400))
-        pygame.draw.rect(display, (30, 30, 30),
-                         pygame.Rect(40, 40, 700, 400), 3)
-
-        exit_button.update(display, mouse_pos, c)
-        mission_button.update(display, mouse_pos, c)
-        date_button.update(display, mouse_pos, c)
-        r_mission_button.update(display, mouse_pos, c)
-
-        while len(conversations) > 13:
-            del conversations[0]
-        for i in range(len(conversations)):
-            row_text = text_font.render(conversations[i], True, (7, 8, 10))
-            row_text_size = text_font.size(conversations[i])
-            display.blit(pygame.transform.scale(row_text, (int(
-                row_text_size[0]), int(row_text_size[1]))), (50, int(50 + (i * 30))))
-        c = False
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
-        pygame.display.update()
-        window.fill((0, 0, 0))
-    pygame.mouse.set_visible(False)
+"""
 #endregion
 #region Game Start and Stop
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
@@ -2862,8 +2773,8 @@ def main_menu():
         c = False
         clock.tick(60)
 
-
 lfmr = False
+"""
 def level_finished_menu(score, k_happiness):
     global lfmr, current_map, max_map, player_score
     lfmr = True
@@ -2957,8 +2868,7 @@ def level_finished_menu(score, k_happiness):
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
         clock.tick(60)
-
-    
+"""
 #endregion
 #region Check Terms
 agr(tcagr)
@@ -3286,7 +3196,7 @@ while main_running:
         KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
     player_movement[1] += vertical_momentum
     vertical_momentum += fall_speed_copy
-    if vertical_momentum > 8: vertical_momentum = 8
+    if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
 
     if check_crouch == True:
         crouch_collisions = move_entity(pygame.Rect(

@@ -1,0 +1,23 @@
+{
+    "Physics": {
+        "Player": {
+            "fallSpeed": 0.4,
+            "fallMultiplier": 2.5,
+            "fallMaxVelocity": 8
+        }
+    },
+    "GameData": {
+        "Default": {
+            "Ammo": {
+                "rk_62": 32,
+                "plasmarifle": 50,
+                "ppsh41": 72,
+                "shotgun": 8,
+                "pistol": 7
+            },
+            "Score": {
+                "timeBonus": 500
+            }
+        }
+    }
+}

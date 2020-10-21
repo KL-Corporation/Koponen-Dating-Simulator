@@ -48,7 +48,7 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
     return GetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
 
 def GetGameSetting(*path: str):
-    with open("Assets/GameSettings.json") as f:
+    with open("Assets/GameSettings.kdf") as f:
         data: dict = json.loads(f.read())
     value = data
     for p in path:

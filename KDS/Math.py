@@ -100,6 +100,13 @@ def Lerp(a: float, b: float, t: float):
     t = Clamp(t, 0.0, 1.0)
     return a + ((b - a) * t)
 
+def Lerp2(a: float, b: float, t: float):
+    """Linearly interpolates between a and b by t.
+
+    The parameter t is not clamped.
+    """
+    return a + ((b - a) * t)
+
 def SmoothStep(a: float, b: float, t: float):
     """Smoothly interpolates between a and b by t.
     
