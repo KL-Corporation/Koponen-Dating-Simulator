@@ -66,6 +66,9 @@ KDS.AI.initTextures()
 
 clock = pygame.time.Clock()
 profiler_enabled = False
+
+text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
+text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 #endregion
 #region Window
 class Fullscreen:
@@ -157,7 +160,7 @@ class Audio:
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].set_volume(volume)
 #endregion
-#region Initialisation
+#region System Initialisation
 KDS.AI.init(Audio)
 KDS.Missions.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
@@ -186,16 +189,11 @@ I=====[ Settings Loaded ]=====I
    - Current Map: {current_map}
    - Max Map: {max_map}
 I=====[ Settings Loaded ]=====I""", False)
-#region Downloads
+#endregion
+#region Loading
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
-main_menu_background = pygame.image.load(
-    "Assets/Textures/UI/Menus/main_menu_bc.png").convert()
-settings_background = pygame.image.load(
-    "Assets/Textures/UI/Menus/settings_bc.png").convert()
-agr_background = pygame.image.load(
-    "Assets/Textures/UI/Menus/tcagr_bc.png").convert()
-
 #region Fonts
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
@@ -203,19 +201,17 @@ button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 ArialSysFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Font Loading Complete.")
 #endregion
-
-player_img = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
-player_corpse = pygame.image.load("Assets/Textures/Player/death_5.png").convert()
-player_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
-player_img.set_colorkey(KDS.Colors.GetPrimary.White)
-
+#region Building Textures
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Building Textures...")
 floor0 = pygame.image.load("Assets/Textures/Map/floor0v2.png").convert()
 concrete0 = pygame.image.load(
     "Assets/Textures/Map/concrete0.png").convert()
 wall0 = pygame.image.load("Assets/Textures/Map/wall0.png").convert()
 table0 = pygame.image.load("Assets/Textures/Map/table0.png").convert()
 toilet0 = pygame.image.load("Assets/Textures/Map/toilet0.png").convert()
+tp_shitting = pygame.image.load("Assets/Textures/Map/player_shitting_toilet.png").convert()
 lamp0 = pygame.image.load("Assets/Textures/Map/lamp0.png").convert()
 trashcan = pygame.image.load("Assets/Textures/Map/trashcan.png").convert()
 ground1 = pygame.image.load("Assets/Textures/Map/ground0.png").convert()
@@ -246,6 +242,7 @@ light_bricks = pygame.image.load(
 iron_bar = pygame.image.load(
     "Assets/Textures/Map/iron_bars_texture.png").convert()
 soil = pygame.image.load("Assets/Textures/Map/soil.png").convert()
+blh = pygame.image.load("Assets/Textures/Map/bloody_h.png").convert()
 mossy_bricks = pygame.image.load(
     "Assets/Textures/Map/mossy_bricks.png").convert()
 stone = pygame.image.load("Assets/Textures/Map/stone.png").convert()
@@ -264,88 +261,41 @@ jukebox_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 landmine_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ladder_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 iron_bar.set_colorkey(KDS.Colors.GetPrimary.White)
-tree.set_colorkey((0, 0, 0))
-
-gasburner_off = pygame.image.load(
-    "Assets/Textures/Items/gasburner_off.png").convert()
-#gasburner_on = pygame.image.load("Assets/Textures/Items/gasburner_on.png").convert()
+tree.set_colorkey(KDS.Colors.GetPrimary.Black)
+blh.set_colorkey(KDS.Colors.GetPrimary.White)
+tp_shitting.set_colorkey(KDS.Colors.GetPrimary.White)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Building Texture Loading Complete.")
+#endregion
+#region Item Textures
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Item Textures...")
+gasburner_off = pygame.image.load("Assets/Textures/Items/gasburner_off.png").convert()
 knife = pygame.image.load("Assets/Textures/Items/knife.png").convert()
 knife_blood = pygame.image.load("Assets/Textures/Items/knife.png").convert()
 red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
 green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
 blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
 coffeemug = pygame.image.load("Assets/Textures/Items/coffeemug.png").convert()
-ss_bonuscard = pygame.image.load(
-    "Assets/Textures/Items/ss_bonuscard.png").convert()
-lappi_sytytyspalat = pygame.image.load(
-    "Assets/Textures/Items/lappi_sytytyspalat.png").convert()
-plasmarifle = pygame.image.load(
-    "Assets/Textures/Items/plasmarifle.png").convert()
-plasma_ammo = pygame.image.load(
-    "Assets/Textures/Items/plasma_ammo.png").convert()
+ss_bonuscard = pygame.image.load("Assets/Textures/Items/ss_bonuscard.png").convert()
+lappi_sytytyspalat = pygame.image.load("Assets/Textures/Items/lappi_sytytyspalat.png").convert()
+plasmarifle = pygame.image.load("Assets/Textures/Items/plasmarifle.png").convert()
+plasma_ammo = pygame.image.load("Assets/Textures/Items/plasma_ammo.png").convert()
 cell = pygame.image.load("Assets/Textures/Items/cell.png")
-zombie_corpse = pygame.image.load(
-    "Assets/Textures/Animations/z_death_4.png").convert()
-pistol_texture = pygame.image.load(
-    "Assets/Textures/Items/pistol.png").convert()
-pistol_f_texture = pygame.image.load(
-    "Assets/Textures/Items/pistol_firing.png").convert()
-soulsphere = pygame.image.load(
-    "Assets/Textures/Items/soulsphere.png").convert()
-turboneedle = pygame.image.load(
-    "Assets/Textures/Items/turboneedle.png").convert()
-pistol_mag = pygame.image.load(
-    "Assets/Textures/Items/pistol_mag.png").convert()
+pistol_texture = pygame.image.load("Assets/Textures/Items/pistol.png").convert()
+pistol_f_texture = pygame.image.load("Assets/Textures/Items/pistol_firing.png").convert()
+soulsphere = pygame.image.load("Assets/Textures/Items/soulsphere.png").convert()
+turboneedle = pygame.image.load("Assets/Textures/Items/turboneedle.png").convert()
+pistol_mag = pygame.image.load("Assets/Textures/Items/pistol_mag.png").convert()
 rk62_texture = pygame.image.load("Assets/Textures/Items/rk62.png").convert()
-rk62_f_texture = pygame.image.load(
-    "Assets/Textures/Items/rk62_firing.png").convert()
+rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
 rk62_mag = pygame.image.load("Assets/Textures/Items/rk_mag.png").convert()
-sergeant_corpse = pygame.image.load(
-    "Assets/Textures/Animations/seargeant_dying_4.png").convert()
-sergeant_aiming = pygame.image.load(
-    "Assets/Textures/Animations/seargeant_shooting_0.png").convert()
-sergeant_firing = pygame.image.load(
-    "Assets/Textures/Animations/seargeant_shooting_1.png").convert()
-imp_fireball_texture = pygame.image.load(
-    "Assets/Textures/Animations/imp_fireball.png").convert()
 medkit = pygame.image.load("Assets/Textures/Items/medkit.png").convert()
 shotgun = pygame.image.load("Assets/Textures/Items/shotgun.png").convert()
-shotgun_f = pygame.image.load(
-    "Assets/Textures/Items/shotgun_firing.png").convert()
-shotgun_shells_t = pygame.image.load(
-    "Assets/Textures/Items/shotgun_shells.png").convert()
-archvile_corpse = pygame.image.load(
-    "Assets/Textures/Animations/archvile_death_6.png").convert()
-ipuhelin_texture = pygame.image.load(
-    "Assets/Textures/Items/iPuhelin.png").convert()
-rk62_bullet_t = pygame.image.load("Assets/Textures/Animations/rk62_bullet.png").convert()
+shotgun_f = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
+shotgun_shells_t = pygame.image.load("Assets/Textures/Items/shotgun_shells.png").convert()
+ipuhelin_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
 ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
 awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
-blh = pygame.image.load("Assets/Textures/Map/bloody_h.png").convert()
-tp_shitting = pygame.image.load("Assets/Textures/Map/player_shitting_toilet.png").convert()
-
-gamemode_bc_1_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_1.png")).convert()
-gamemode_bc_1_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_1_2.png")).convert()
-gamemode_bc_2_1 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_1.png")).convert()
-gamemode_bc_2_2 = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Menus", "Gamemode_bc_2_2.png")).convert()
-arrow_button = pygame.image.load(
-    os.path.join("Assets", "Textures", "UI", "Buttons", "Arrow.png"))
-main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc2.png").convert()
-main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc3.png").convert()
-main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
-main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
-
-light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
-light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").convert_alpha()
-orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
-orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
-blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
-warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Misc/warm_white_lightSphere0.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -354,42 +304,58 @@ red_key.set_colorkey(KDS.Colors.GetPrimary.White)
 green_key.set_colorkey(KDS.Colors.GetPrimary.White)
 blue_key.set_colorkey(KDS.Colors.GetPrimary.White)
 coffeemug.set_colorkey(KDS.Colors.GetPrimary.White)
-ss_bonuscard.set_colorkey((255, 0, 0))
 lappi_sytytyspalat.set_colorkey(KDS.Colors.GetPrimary.White)
 plasmarifle.set_colorkey(KDS.Colors.GetPrimary.White)
 plasma_ammo.set_colorkey(KDS.Colors.GetPrimary.White)
 cell.set_colorkey(KDS.Colors.GetPrimary.White)
-zombie_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 pistol_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 pistol_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
+turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
 pistol_mag.set_colorkey(KDS.Colors.GetPrimary.White)
 rk62_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 rk62_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 rk62_mag.set_colorkey(KDS.Colors.GetPrimary.White)
-sergeant_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
-sergeant_aiming.set_colorkey(KDS.Colors.GetPrimary.White)
-sergeant_firing.set_colorkey(KDS.Colors.GetPrimary.White)
 medkit.set_colorkey(KDS.Colors.GetPrimary.White)
 shotgun.set_colorkey(KDS.Colors.GetPrimary.White)
 shotgun_f.set_colorkey(KDS.Colors.GetPrimary.White)
 shotgun_shells_t.set_colorkey(KDS.Colors.GetPrimary.White)
-archvile_corpse.set_colorkey(KDS.Colors.GetPrimary.White)
 ipuhelin_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
-turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
-imp_fireball_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
 awm_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-blh.set_colorkey(KDS.Colors.GetPrimary.White)
-tp_shitting.set_colorkey(KDS.Colors.GetPrimary.White)
 
-Items_list = ["iPuhelin", "coffeemug"]
-
-text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
-text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
-
+ss_bonuscard.set_colorkey(KDS.Colors.GetPrimary.Red)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Texture Loading Complete.")
+#endregion
+#region Menu Textures
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Menu Textures...")
+gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_1.png").convert()
+gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_2.png").convert()
+gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_1.png").convert()
+gamemode_bc_2_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_2.png").convert()
+arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert()
+main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc2.png").convert()
+main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc3.png").convert()
+main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
+main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
+main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc.png").convert()
+settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
+agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
+#endregion
+#region Light Textures
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Light Textures...")
+light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
+light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").convert_alpha()
+orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
+orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
+blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
+warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Misc/warm_white_lightSphere0.png").convert_alpha()
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Light Texture Loading Complete.")
+#endregion
+#region Audio
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Audio Files...")
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_clip.wav")
 gasburner_fire = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_fire.wav")
 door_opening = pygame.mixer.Sound("Assets/Audio/Effects/door.wav")
@@ -399,8 +365,7 @@ coffeemug_sound = pygame.mixer.Sound("Assets/Audio/Effects/coffeemug.wav")
 knife_pickup = pygame.mixer.Sound("Assets/Audio/Effects/knife.wav")
 key_pickup = pygame.mixer.Sound("Assets/Audio/Effects/pickup_key.wav")
 ss_sound = pygame.mixer.Sound("Assets/Audio/Effects/ss.wav")
-lappi_sytytyspalat_sound = pygame.mixer.Sound(
-    "Assets/Audio/Effects/sytytyspalat.wav")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/Effects/sytytyspalat.wav")
 ppsh41_shot = pygame.mixer.Sound("Assets/Audio/Effects/sgunshot.wav")
 landmine_explosion = pygame.mixer.Sound("Assets/Audio/Effects/landmine.wav")
 hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplpain.wav")
@@ -412,8 +377,7 @@ pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 rk62_shot = pygame.mixer.Sound("Assets/Audio/Effects/rk62_shot.wav")
 shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun.wav")
 glug_sound = pygame.mixer.Sound("Assets/Audio/Effects/glug.ogg")
-player_shotgun_shot = pygame.mixer.Sound(
-    "Assets/Audio/Effects/player_shotgun.wav")
+player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/player_shotgun.wav")
 archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
 archvile_death = pygame.mixer.Sound("Assets/Audio/Effects/dsvildth.wav")
 fart = pygame.mixer.Sound("Assets/Audio/Effects/fart_attack.wav")
@@ -431,9 +395,11 @@ plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
-
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
+#endregion
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
 #endregion
+#region Variable Initialisation
 #################### Vähän Ghetto, mutta en halua turhia variableja. ####################
 jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
 level_ender_tip = tip_font.render("Finish level [Press: E]", True, KDS.Colors.GetPrimary.White)
@@ -1916,7 +1882,6 @@ koponen_talking_background = pygame.image.load(
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 #endregion
 #region Collisions
-
 def damage(health, min_damage: int, max_damage: int):
     health -= int(random.uniform(min_damage, max_damage))
     if health < 0:
@@ -1997,8 +1962,6 @@ def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, ski
             collision_types['top'] = True
     return rect, collision_types
 
-player_animations = KDS.Animator.MultiAnimation()
-
 player_animations = KDS.Animator.MultiAnimation(
         idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
         walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
@@ -2057,29 +2020,11 @@ imp_dying = KDS.Animator.Animation(
 knife_animation_object = KDS.Animator.Animation(
     "knife", 2, 20, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 
-#region Sergeant fixing
-sergeant_shoot_animation.images = []
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Sergeant Shoot Animation Images...")
-for _ in range(5):
-    for _ in range(6):
-        sergeant_shoot_animation.images.append(sergeant_aiming)
-for _ in range(2):
-    sergeant_shoot_animation.images.append(sergeant_firing)
-for _ in range(2):
-    for _ in range(6):
-        sergeant_shoot_animation.images.append(sergeant_aiming)
-KDS.Logging.Log(KDS.Logging.LogType.debug, f"Successfully Initialised {len(sergeant_shoot_animation.images)} Sergeant Shoot Animation Images...", False)
-sergeant_shoot_animation.ticks = 43
-#endregion
-sergeant_death_animation = KDS.Animator.Animation(
-    "seargeant_dying", 5, 8, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
-
 consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
-
 def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = "") -> str:
     pygame.key.set_repeat(500, 31)
     r = True
@@ -3469,16 +3414,14 @@ while main_running:
     screen.blit(koponen_animations.update(), (
         koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
-    if player_health > 0 or player_death_event:
-        if DebugMode:
-            pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x -
-                                                                     scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
+    if DebugMode:
+        pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x - 
+                                                                 scroll[0], player_rect.y - scroll[1], 
+                                                                 player_rect.width, player_rect.height))
 
-        screen.blit(pygame.transform.flip(player_animations.update(), direction, False), (
-            int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - player_animations.active.size[0]) / 2)), int(player_rect.bottomleft[1] - scroll[1] - player_animations.active.size[1])))
-    else:
-        screen.blit(pygame.transform.flip(player_corpse, direction, False), (
-            player_rect.x - scroll[0], player_rect.y - scroll[1]))
+    screen.blit(pygame.transform.flip(player_animations.update(), direction, False), (
+        int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - player_animations.active.size[0]) / 2)), 
+        int(player_rect.bottomleft[1] - scroll[1] - player_animations.active.size[1])))
 
 #endregion
 #region Debug Mode
