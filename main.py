@@ -160,7 +160,7 @@ class Audio:
         for i in range(len(Audio.EffectChannels)):
             Audio.EffectChannels[i].set_volume(volume)
 #endregion
-#region System Initialisation
+#region Initialisation
 KDS.AI.init(Audio)
 KDS.Missions.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
