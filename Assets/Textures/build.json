@@ -65,7 +65,8 @@
         "063":"road_tiles_dark.png",
         "064":"dark_wall.png",
         "065":"gray_stone.png",
-        "066":"skull.png"
+        "066":"skull.png",
+        "067":"kaakeliseina.png"
     },
 
     "special_tiles": [
