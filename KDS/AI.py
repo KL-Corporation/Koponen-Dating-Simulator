@@ -65,12 +65,18 @@ imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.wav")
 zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav")
 zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav")
 shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
+cavemonster_gun = pygame.mixer.Sound("Assets/Audio/effects/cavemonster_fire.ogg")
 impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
 double_barrel_fire = pygame.mixer.Sound("Assets/Audio/effects/double_barrel_fire.ogg")
 basicGunshot = pygame.mixer.Sound("Assets/Audio/effects/gunshot_basic1.ogg")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 drug_dealer_sight = pygame.mixer.Sound("Assets/Audio/entities/dshight.ogg")
 drug_dealer_death_sound = pygame.mixer.Sound("Assets/Audio/entities/ddth.ogg")
+mafiaman_sight = pygame.mixer.Sound("Assets/Audio/entities/mafiaman_sight.ogg")
+mafiaman_death = pygame.mixer.Sound("Assets/Audio/entities/mafiaman_death.ogg")
+cavemonster_sight = pygame.mixer.Sound("Assets/Audio/entities/cavemonster_sight.ogg")
+cavemonster_death = pygame.mixer.Sound("Assets/Audio/entities/cavemonster_death.ogg")
+methmaker_death = pygame.mixer.Sound("Assets/Audio/entities/methmaker_death.ogg")
 imp_sight_sound.set_volume(0.4)
 imp_death_sound.set_volume(0.5)
 zombie_sight_sound.set_volume(0.4)
@@ -395,7 +401,9 @@ class SergeantZombie(HostileEnemy):
             a_anim.images.append(aim_im)
         for _ in range(2):
             a_anim.images.append(shoot_im)
-        a_anim.ticks = 41
+        for _ in range(10):
+            a_anim.images.append(aim_im)
+        a_anim.ticks = 51
         del aim_im, shoot_im
 
         #endregion
@@ -483,7 +491,9 @@ class TurboShotgunner(HostileEnemy):
             a_anim.images.append(aim_im)
         for _ in range(2):
             a_anim.images.append(shoot_im)
-        a_anim.ticks = 51
+        for _ in range(10):
+            a_anim.images.append(aim_im)
+        a_anim.ticks = 61
         del aim_im, shoot_im
 
         #endregion
@@ -509,7 +519,7 @@ class TurboShotgunner(HostileEnemy):
 
 class MafiaMan(HostileEnemy):
     def __init__(self, pos):
-        health = 150
+        health = 125
         w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -524,12 +534,14 @@ class MafiaMan(HostileEnemy):
             a_anim.images.append(aim_im)
         for _ in range(2):
             a_anim.images.append(shoot_im)
-        a_anim.ticks = 21
+        for _ in range(5):
+            a_anim.images.append(aim_im)
+        a_anim.ticks = 26
         del aim_im, shoot_im
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=40)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=mafiaman_sight, death_sound=mafiaman_death, health=health, mv=[1, 8], attackPropability=40)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -546,6 +558,92 @@ class MafiaMan(HostileEnemy):
         items = []
         if random.choice([True, False, False, False, False, False, False]):
             items.append(32)
+        return items
+
+class MethMaker(HostileEnemy):
+    def __init__(self, pos):
+        health = 250
+        w_anim = KDS.Animator.Animation("methmaker_walking", 4, 11, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("methmaker_idle", 2, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("methmaker_shooting", 2, 1, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("methmaker_dying", 5, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0], pos[1]-19, 40, 53)
+
+        #region Handling the i_anim:
+        aim_im = a_anim.images[0]
+        shoot_im = a_anim.images[1]
+        a_anim.images.clear()
+        for _ in range(35):
+            a_anim.images.append(aim_im)
+        for _ in range(2):
+            a_anim.images.append(shoot_im)
+        for _ in range(8):
+            a_anim.images.append(aim_im)
+        a_anim.ticks = 44
+        del aim_im, shoot_im
+
+        #endregion
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=methmaker_death, health=health, mv=[2, 8], attackPropability=50)
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        basicGunshot.set_volume(dist)
+        basicGunshot.play()
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+
+    def onDeath(self):
+        items = []
+        if random.choice([True, False, False, False, False]):
+            items.append(11)
+        elif random.choice([True, False, False]):
+            items.append(27)
+        return items
+
+class CaveMonster(HostileEnemy):
+    def __init__(self, pos):
+        health = 200
+        w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("undead_monster_dying", 5, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0]-20, pos[1]-23, 54, 57)
+
+        #region Handling the i_anim:
+        aim_im = a_anim.images[0]
+        shoot_im = a_anim.images[1]
+        a_anim.images.clear()
+        for _ in range(40):
+            a_anim.images.append(aim_im)
+        for _ in range(2):
+            a_anim.images.append(shoot_im)
+        for _ in range(10):
+            a_anim.images.append(aim_im)
+        a_anim.ticks = 51
+        del aim_im, shoot_im
+
+        #endregion
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[2, 8], attackPropability=50)
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        cavemonster_gun.set_volume(dist)
+        cavemonster_gun.play()
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+
+    def onDeath(self):
+        items = []
         return items
 
 class Projectile:

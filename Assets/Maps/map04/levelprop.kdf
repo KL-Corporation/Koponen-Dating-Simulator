@@ -1,0 +1,28 @@
+{
+    "AmbientLight": {
+        "enabled": false,
+        "tint": [
+            0,
+            0,
+            0
+        ]
+    },
+    "Darkness": {
+        "enabled": true,
+        "strength": 200
+    },
+    "StartPos": {
+        "koponen": [
+            200,
+            200
+        ],
+        "player": [
+            8332,
+            175
+        ]
+    },
+    "TimeBonus": {
+        "end": 100,
+        "start": 200
+    }
+}

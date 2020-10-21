@@ -57,7 +57,15 @@
         "055":"candle.png",
         "056":"lamp_pole_base.png",
         "057":"lamp_pole_pole.png",
-        "058":"lamp_pole_lamp.png"
+        "058":"lamp_pole_lamp.png",
+        "059":"chair.png",
+        "060":"green_wall.png",
+        "061":"red_wall.png",
+        "062":"road_tiles.png",
+        "063":"road_tiles_dark.png",
+        "064":"dark_wall.png",
+        "065":"gray_stone.png",
+        "066":"skull.png"
     },
 
     "special_tiles": [
@@ -79,7 +87,9 @@
         53,
         54,
         55,
-        58
+        58,
+        59,
+        66
     ],
 
     "checkCollisionFalse": [
@@ -124,7 +134,8 @@
         "029":"grenade.png",
         "030":"fire_extinguisher.png",
         "031":"level_ender.png",
-        "032":"ppsh41_mag.png"
+        "032":"ppsh41_mag.png",
+        "033":"lantern.png"
     },
 
     "item_doubles":[
@@ -152,7 +163,8 @@
         28,
         29,
         30,
-        31
+        31,
+        33
     ]
 
 }

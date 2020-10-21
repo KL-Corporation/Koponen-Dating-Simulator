@@ -9,7 +9,8 @@
     },
     "Darkness": {
         "enabled": true,
-        "strength": 200
+        "strength": 249,
+        "player_light": false
     },
     "StartPos": {
         "koponen": [
@@ -17,8 +18,12 @@
             200
         ],
         "player": [
-            200,
-            100
+            330,
+            4459
         ]
+    },
+    "TimeBonus": {
+        "end": 220,
+        "start": 100
     }
 }

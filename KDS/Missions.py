@@ -354,7 +354,7 @@ def InitialiseMissions(LevelIndex):
         elif LevelIndex == 2:
             InitialiseMission("koponen_talk", "Puhu Koposelle")
             InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
-        elif LevelIndex == 6:
+        elif LevelIndex == 8:
             Presets.Tutorial()
             Presets.KoponenIntroduction()
         else:

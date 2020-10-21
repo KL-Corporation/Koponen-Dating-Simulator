@@ -345,6 +345,7 @@ light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").con
 orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
 orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
 blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
+warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Misc/warm_white_lightSphere0.png").convert_alpha()
 
 gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
 knife.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -410,6 +411,7 @@ plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/dsfirxpl.wav")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
 rk62_shot = pygame.mixer.Sound("Assets/Audio/Effects/rk62_shot.wav")
 shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun.wav")
+glug_sound = pygame.mixer.Sound("Assets/Audio/Effects/glug.ogg")
 player_shotgun_shot = pygame.mixer.Sound(
     "Assets/Audio/Effects/player_shotgun.wav")
 archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
@@ -421,6 +423,7 @@ decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/Decorati
 awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
 smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Effects/grenade_throw.ogg")
+lantern_pickup = pygame.mixer.Sound("Assets/Audio/Effects/lantern_pickup.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -492,6 +495,7 @@ animation_counter = 0
 animation_duration = 0
 animation_image = 0
 air_timer = 0
+player_light = True
 player_health = 100
 last_player_health = 100
 player_death_event = False
@@ -519,11 +523,13 @@ Lights = []
 level_finished = False
 Particles = []
 HitTargets = {}
+enemy_difficulty = 1
 GameCounter = KDS.Scores.GameTime()
 tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
 renderUI = True
+godmode = False
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
 lightsUpdating = 0
@@ -627,11 +633,12 @@ class WorldData():
             map_data = map_file.read().split("\n")
 
         FilePath = os.path.join(PersistentMapPath, "levelprop.kdf")
-        global dark, darkness, ambient_light, ambient_light_tint
+        global dark, darkness, ambient_light, ambient_light_tint, player_light
         dark = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "enabled", False)
         dval = 255 - KDS.ConfigManager.GetJSON(FilePath, "Darkness", "strength", 0)
         darkness = (dval, dval, dval)
         ambient_light = KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "enabled", False)
+        player_light = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "player_light", True)
         ambient_light_tint = tuple(KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "tint", (255, 255, 255)))
         
         p_start_pos = tuple(KDS.ConfigManager.GetJSON(FilePath, "StartPos", "player", (100, 100)))
@@ -649,7 +656,9 @@ class WorldData():
             2: KDS.AI.SergeantZombie,
             3: KDS.AI.DrugDealer,
             4: KDS.AI.TurboShotgunner,
-            5: KDS.AI.MafiaMan
+            5: KDS.AI.MafiaMan,
+            6: KDS.AI.MethMaker,
+            7: KDS.AI.CaveMonster
         }
 
         y = 0
@@ -791,6 +800,17 @@ class Inventory:
                 renderOffset = player_rect.width + 2
 
             Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
+        return None
+
+    @staticmethod
+    def useSpecificItem(index: int, Surface: pygame.Surface, *args):
+        dumpValues = Ufunctions[index](args, Surface)
+        if direction:
+            renderOffset = -dumpValues.get_size()[0]
+        else:
+            renderOffset = player_rect.width + 2
+
+        Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
         return None
 
     def getHandItem(self):
@@ -1197,6 +1217,26 @@ class LampPoleLamp(Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx-player_light_sphere_radius/2, self.rect.centery-player_light_sphere_radius/2), light_sphere2))
         return self.texture
 
+class Chair(Tile):
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[59]
+        self.rect = pygame.Rect(position[0]-6, position[1]-8, 40, 42)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
+class SkullTile(Tile):
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[66]
+        self.rect = pygame.Rect(position[0]+7, position[1]+7, 27, 27)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1216,7 +1256,9 @@ specialTilesD = {
     53: GoryHead,
     54: LevelEnder,
     55: Candle,
-    58: LampPoleLamp
+    58: LampPoleLamp,
+    59: Chair,
+    66: SkullTile
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -1463,9 +1505,17 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         return True
 
     @staticmethod
+    def lantern_p():
+        Audio.playSound(lantern_pickup)
+
+        return False
+
+    @staticmethod
     def emptyOperation():
         return True
 
+
+lantern_animation = KDS.Animator.Animation("lantern_burning", 2, 4, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
 
 class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetään funktio, joka kutsutaan itemiä käytettäessä
     #rk62_C = KDS.World.itemTools.rk62()
@@ -1628,12 +1678,22 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
     @staticmethod
     def flask_meth_u(*args):
-
+        if args[0][0]:
+            global player_health, player_score
+            player_score += 1
+            player_health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
+            player_inventory.storage[player_inventory.SIndex] = 26
+            Audio.playSound(glug_sound)
         return i_textures[27]
 
     @staticmethod
     def flask_blood_u(*args):
-
+        if args[0][0]:
+            global player_health, player_score
+            player_score += 1
+            player_health += random.randint(0, 10)
+            player_inventory.storage[player_inventory.SIndex] = 26
+            Audio.playSound(glug_sound)
         return i_textures[28]
 
     @staticmethod
@@ -1666,6 +1726,12 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
 
         return i_textures[31]
+
+    @staticmethod
+    def lantern_u(*args):
+        scale = random.randint(180, 220)
+        Lights.append( KDS.World.Lighting.Light( (player_rect.centerx - scale/2, player_rect.centery - scale/2) , pygame.transform.scale(warm_white_lightSphere0, (scale, scale)) ))
+        return lantern_animation.update()
 
     @staticmethod
     def emptyOperation(*args):
@@ -1703,7 +1769,8 @@ Pfunctions = {
     29: pickupFunctions.grenade_p,
     30: pickupFunctions.fire_extinguisher_p,
     31: pickupFunctions.level_ender_p,
-    32: pickupFunctions.ppsh41_mag_p
+    32: pickupFunctions.ppsh41_mag_p,
+    33: pickupFunctions.lantern_p
 }
 
 Ufunctions = {
@@ -1725,7 +1792,8 @@ Ufunctions = {
     28: itemFunctions.flask_blood_u,
     29: itemFunctions.grenade_u,
     30: itemFunctions.fire_extinguisher_u,
-    31: itemFunctions.level_ender_u
+    31: itemFunctions.level_ender_u,
+    33: itemFunctions.lantern_u
 
 }
 
@@ -1772,9 +1840,12 @@ class Item:
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
-                            Pfunctions[item.serialNumber]()
-                            Item_list = numpy.delete(Item_list, index)
-                            showItemTip = False
+                            try:
+                                Pfunctions[item.serialNumber]()
+                                Item_list = numpy.delete(Item_list, index)
+                                showItemTip = False
+                            except IndexError as e:
+                                KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
                     else:
                         if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == Inventory.emptySlot:
                             if inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
@@ -2007,6 +2078,37 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
+
+consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
+
+def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = "") -> str:
+    pygame.key.set_repeat(500, 31)
+    r = True
+    rstring = defVal
+    while r:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == K_ESCAPE:
+                    if allowEscape:
+                        r = False
+                        return None
+                elif event.key == K_RETURN:
+                        return rstring.strip()
+                elif event.key == K_BACKSPACE:
+                    rstring = rstring[:-1]
+                elif event.unicode:
+                    rstring += event.unicode
+        window.fill(consoleBackground.get_at((0, 0)))
+        window.blit(KDS.Convert.AspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
+        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
+        window.blit(consoleText, (10, 10))
+        pygame.display.update()
+    pygame.key.set_repeat(0, 0)
+
 def console():
     global player_keys, player_health, koponen_happiness, isFullscreen, level_finished
     wasFullscreen = False
@@ -2014,13 +2116,16 @@ def console():
         Fullscreen.Set()
         wasFullscreen = True
 
-    command_input = input("command: ")
+    #command_input = input("command: ")
+    command_input = inputConsole()
+    if not command_input:
+        return None
     command_input = command_input.lower()
     command_list = command_input.split()
 
     if command_list[0] == "give":
         if command_list[1] != "key":
-            player_inventory.storage[player_inventory.SIndex] = command_list[1]
+            player_inventory.storage[player_inventory.SIndex] = int(command_list[1])
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Item was given: " + str(command_list[1]), True)
         else:
@@ -2095,6 +2200,19 @@ def console():
         else:
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Please provide a proper state for woof", True)
+    elif command_list[0] == "invl":
+        if len(command_list) > 1:
+            invlState = KDS.Convert.ToBool(command_list[1])
+            if invlState != None:
+                global godmode
+                godmode = invlState
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Invulnerability state has been set to: " + str(godmode))
+            else:
+                KDS.Logging.Log(KDS.Logging.LogType.info,
+                                "Please provide a proper state for invl", True)
+        else:
+            KDS.Logging.Log(KDS.Logging.LogType.info,
+                            "Please provide a proper state for invl", True)
     elif command_list[0] == "finish":
         if len(command_list) > 1 and command_list[1] == "missions":
             KDS.Logging.Log(KDS.Logging.LogType.info, "Mission finish issued through console.", True)
@@ -2113,6 +2231,8 @@ Console Help:
     - killme => Kills the player.
     - terms [state: bool] => Sets Terms and Conditions accepted to specified value.
     - woof [state: bool] => Sets all bulldogs anger to specified value.
+    - finish => Finishes level or missions.
+    - invl => Sets invulnerability mode on/off
     - help => Shows a list of commands.
 """, True)
     else:
@@ -2274,6 +2394,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
+    LoadGameSettings()
+
     if len(Items) < 1 and len(Enemies) < 1:
         loadEntities = True
     else:
@@ -3029,9 +3151,6 @@ while main_running:
                 play_function(KDS.Gamemode.gamemode, False)
 #endregion
 #region Rendering
-    #######################################################################################################################
-    #######################################################################################################################
-    #######################################################################################################################
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     Items, player_inventory = Item.checkCollisions(
         Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
@@ -3061,6 +3180,8 @@ while main_running:
 
     Item.render(Items, screen, scroll)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
+    if 33 in player_inventory.storage:
+        Inventory.useSpecificItem(33, screen)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, Enemies, HitTargets, player_rect, player_health, DebugMode)
@@ -3126,7 +3247,8 @@ while main_running:
                 rectSurf.set_alpha(128)
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
-        black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
+        if player_light:
+            black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:
@@ -3149,11 +3271,17 @@ while main_running:
         KDS.Missions.Render(screen)
 
         player_inventory.render(screen)
+
     ##################################################################################################################################################################
     ##################################################################################################################################################################
     ##################################################################################################################################################################
+
 #endregion
 #region PlayerMovement
+
+    if godmode:
+        player_health = 100
+
     fall_speed_copy = fall_speed
 
     player_movement = [0, 0]
@@ -3312,7 +3440,7 @@ while main_running:
             farting = False
             fart_counter = 0
             for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.topleft, player_rect.topleft) < 1500:
+                if KDS.Math.getDistance(enemy.rect.topleft, player_rect.topleft) < 800:
                     enemy.dmg(random.randint(500, 1000))
 
     if player_keys["red"]:
