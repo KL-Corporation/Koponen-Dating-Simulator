@@ -524,7 +524,6 @@ level_finished = False
 Particles = []
 HitTargets = {}
 enemy_difficulty = 1
-GameCounter = KDS.Scores.GameTime()
 tiles = numpy.array([])
 LightScroll = [0, 0]
 onLadder = False
@@ -2425,7 +2424,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
-    GameCounter.start()
+    KDS.Scores.GameTime.start()
     if reset_scroll:
         true_scroll = KDS.ConfigManager.Save.GetPlayer("scroll", [-200, -190])
     KDS.Logging.Log(KDS.Logging.LogType.info,
@@ -2904,8 +2903,8 @@ def level_finished_menu(score, k_happiness):
     next_level_index = "01"
     next_level_bool = True
 
-    levelTime = GameCounter.getTime()
-    rawLevelTime = GameCounter.getTime(formatted=False)
+    levelTime = KDS.Scores.GameTime.getTime()
+    rawLevelTime = KDS.Scores.GameTime.getTime(formatted=False)
     areaOfMap = len(tiles) * len(tiles[1])
     timeBonus = round((areaOfMap/rawLevelTime)/9)
 
@@ -3519,7 +3518,7 @@ while main_running:
         player_health = 0
         player_rect.y = len(tiles) * 34 + 340
     if esc_menu:
-        GameCounter.pause()
+        KDS.Scores.GameTime.pause()
         Audio.MusicMixer.pause()
         Audio.pauseAllSounds()
         window.fill(KDS.Colors.GetPrimary.Black)
@@ -3531,7 +3530,7 @@ while main_running:
         pygame.mouse.set_visible(False)
         Audio.MusicMixer.unpause()
         Audio.unpauseAllSounds()
-        GameCounter.resume()
+        KDS.Scores.GameTime.unpause()
     if level_finished:
         Audio.stopAllSounds()
         Audio.MusicMixer.stop()
