@@ -2357,7 +2357,8 @@ def koponen_talk():
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     global main_menu_running, current_map, Audio, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
-    window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[0] / 2 - scaled_loadingScreen.get_width() / 2))
+    window.fill(scaled_loadingScreen.get_at((0, 0)))
+    window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
     pygame.display.update()
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
