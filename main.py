@@ -70,6 +70,8 @@ profiler_enabled = False
 
 text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
 text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
+
+locked_fps = 60
 #endregion
 #region Window
 class Fullscreen:
@@ -2511,7 +2513,7 @@ def esc_menu_f():
         window.fill(KDS.Colors.GetPrimary.Black)
         display.fill(KDS.Colors.GetPrimary.Black)
         c = False
-        clock.tick(60)
+        clock.tick(locked_fps)
 
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, DebugMode, clearLag
@@ -2548,8 +2550,7 @@ def settings_menu():
         "Music Volume", True, KDS.Colors.GetPrimary.White)
     effect_volume_text = button_font.render(
         "Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
-    clear_lag_text = button_font.render(
-        "Clear Lag", True, KDS.Colors.GetPrimary.White)
+    clear_lag_text = button_font.render("Clear Lag", True, KDS.Colors.GetPrimary.White)
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -2592,7 +2593,6 @@ def settings_menu():
         reset_settings_button.update(display, mouse_pos, c)
         reset_data_button.update(display, mouse_pos, c)
         clearLag = clearLag_switch.update(display, mouse_pos, c)
-
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
@@ -2611,7 +2611,7 @@ def settings_menu():
         pygame.display.update()
         window.fill((0, 0, 0))
         c = False
-        clock.tick(60)
+        clock.tick(locked_fps)
 
 def main_menu():
     global current_map, MenuMode, DebugMode
@@ -2867,7 +2867,7 @@ def main_menu():
         pygame.display.update()
         window.fill(KDS.Colors.GetPrimary.Black)
         c = False
-        clock.tick(60)
+        clock.tick(locked_fps)
 
 lfmr = False
 """
@@ -2963,7 +2963,7 @@ def level_finished_menu(score, k_happiness):
         display.blit(lfm_surface, (0, 0))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        clock.tick(60)
+        clock.tick(locked_fps)
 """
 #endregion
 #region Check Terms
@@ -3529,7 +3529,7 @@ while main_running:
     tick += 1
     if tick > 60:
         tick = 0
-    clock.tick(60)
+    clock.tick(locked_fps)
 #endregion
 #endregion
 #region Application Quitting
