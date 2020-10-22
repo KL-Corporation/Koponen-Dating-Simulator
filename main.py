@@ -56,6 +56,7 @@ pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 window_size = tuple(KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800)))
 window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
+window_info = pygame.display.Info()
 window_resize_size = window_size
 display_size = (1200, 800)
 display = pygame.Surface(display_size)
@@ -72,26 +73,27 @@ text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 #endregion
 #region Window
 class Fullscreen:
+    enabled = False
     size = display_size
     offset = (0, 0)
     scaling = 0
 
     @staticmethod
-    def Set(reverseFullscreen=False):
-        global isFullscreen, window, window_size, window_resize_size
+    def Set(reverseFullscreen: bool = False):
+        global window, window_size, window_resize_size, window_info
         if reverseFullscreen:
-            isFullscreen = not isFullscreen
-        if isFullscreen:
+            Fullscreen.enabled = not Fullscreen.enabled
+        if Fullscreen.enabled:
             window_size = window_resize_size
             window = pygame.display.set_mode(
                 window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
-            isFullscreen = False
+            Fullscreen.enabled = False
         else:
             window_size = monitor_size
             window = pygame.display.set_mode(
                 window_size, pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
-            isFullscreen = True
-        KDS.ConfigManager.SetSetting("Settings", "Fullscreen", isFullscreen)
+            Fullscreen.enabled = True
+        KDS.ConfigManager.SetSetting("Settings", "Fullscreen", Fullscreen.enabled)
         if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
             Fullscreen.size = (
                 int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
@@ -102,10 +104,11 @@ class Fullscreen:
             Fullscreen.scaling = window_size[0] / display_size[0]
         Fullscreen.offset = (int((window_size[0] / 2) - (Fullscreen.size[0] / 2)), int(
             (window_size[1] / 2) - (Fullscreen.size[1] / 2)))
+        window_info = pygame.display.Info()
 
 def ResizeWindow(set_size: tuple):
     global window_resize_size
-    if not isFullscreen:
+    if not Fullscreen.enabled:
         window_resize_size = set_size
         del set_size
         KDS.ConfigManager.SetSetting("Settings", "WindowSize", window_resize_size)
@@ -161,6 +164,34 @@ class Audio:
             Audio.EffectChannels[i].set_volume(volume)
 #endregion
 #region Initialisation
+Fullscreen.enabled = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
+Fullscreen.Set(True)
+KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
+I=====[ Render Info ]=====I
+   [Window Info]
+   - Window Size: {(window_info.current_w, window_info.current_h)}
+   
+   [Driver Info]
+   - SDL Video Driver: {pygame.display.get_driver()}
+   - Hardware Acceleration: {KDS.Convert.ToBool(window_info.hw)}
+   - Window Allowed: {KDS.Convert.ToBool(window_info.wm)}
+   - Video Memory: {window_info.video_mem if window_info.video_mem != 0 else "unknown"}
+   
+   [Pixel Info]
+   - Bit Size: {window_info.bitsize}
+   - Byte Size: {window_info.bytesize}
+   - Masks: {window_info.masks}
+   - Shifts: {window_info.shifts}
+   - Losses: {window_info.losses}
+   
+   [Hardware Acceleration]
+   - Hardware Blitting: {KDS.Convert.ToBool(window_info.blit_hw)}
+   - Hardware Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_hw_CC)}
+   - Hardware Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_hw_A)}
+   - Software Blitting: {KDS.Convert.ToBool(window_info.blit_sw)}
+   - Software Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_sw_CC)}
+   - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_sw_A)}
+I=====[ Render Info ]=====I""")
 KDS.AI.init(Audio)
 KDS.Missions.init(Audio)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
@@ -169,8 +200,6 @@ black_tint = pygame.Surface(screen_size)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-isFullscreen = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
-Fullscreen.Set(True)
 window.fill(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert().get_at((0, 0)))
 window.blit(KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
 pygame.display.update()
@@ -184,7 +213,7 @@ I=====[ Settings Loaded ]=====I
    - Terms Accepted: {tcagr}
    - Music Volume: {Audio.MusicVolume}
    - Sound Effect Volume: {Audio.EffectVolume}
-   - Fullscreen: {isFullscreen}
+   - Fullscreen: {Fullscreen.enabled}
    - Clear Lag: {clearLag}
    - Current Map: {current_map}
    - Max Map: {max_map}
@@ -334,14 +363,15 @@ gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_1.pn
 gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_2.png").convert()
 gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_1.png").convert()
 gamemode_bc_2_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_2.png").convert()
-arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert()
 main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc2.png").convert()
 main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc3.png").convert()
 main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
-main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc.png").convert()
 settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
+arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
+main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
+main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
 #endregion
 #region Light Textures
@@ -2054,9 +2084,9 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
     pygame.key.set_repeat(0, 0)
 
 def console():
-    global player_keys, player_health, koponen_happiness, isFullscreen, level_finished
+    global player_keys, player_health, koponen_happiness, level_finished
     wasFullscreen = False
-    if isFullscreen:
+    if Fullscreen.enabled:
         Fullscreen.Set()
         wasFullscreen = True
 
