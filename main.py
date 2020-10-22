@@ -447,8 +447,6 @@ monstersLeft = 0
 
 main_running = True
 plasmarifle_fire = False
-jukeboxMusicPlaying = -1
-lastJukeboxSong = [0, 0, 0, 0, 0]
 playerStamina = 100.0
 gasburnerBurning = False
 fireExtinguisherBurning = False
@@ -932,35 +930,35 @@ class Jukebox(Tile):
         self.texture = jukebox_texture
         self.rect = pygame.Rect(position[0], position[1] - 27, 40, 60)
         self.checkCollision = False
+        self.playing = -1
+        self.lastPlayed = [0 for _ in range(5)]
 
     def stopPlayingTrack(self):
-        global jukeboxMusicPlaying
         for music in jukebox_music:
             music.stop()
-        jukeboxMusicPlaying = -1
+        self.playing = -1
         Audio.MusicMixer.unpause()
         Audio.MusicMixer.set_volume(Audio.MusicVolume)
 
     def update(self):
-        global jukeboxMusicPlaying
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1] - 30))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
                 Audio.MusicMixer.pause()
                 loopStopper = 0
-                while (jukeboxMusicPlaying in lastJukeboxSong or jukeboxMusicPlaying == -1) and loopStopper < 10:
-                    jukeboxMusicPlaying = int(random.uniform(0, len(jukebox_music)))
+                while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
+                    self.playing = int(random.uniform(0, len(jukebox_music)))
                     loopStopper += 1
-                lastJukeboxSong.pop(0)
-                lastJukeboxSong.append(jukeboxMusicPlaying)
-                Audio.playSound(jukebox_music[jukeboxMusicPlaying], Audio.MusicVolume)
+                self.lastPlayed.pop(0)
+                self.lastPlayed.append(self.playing)
+                Audio.playSound(jukebox_music[self.playing], Audio.MusicVolume)
             elif KDS.Keys.GetHeld(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
-        if jukeboxMusicPlaying != -1:
+        if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance((self.rect.centerx,self.rect.centery), (player_rect.centerx,player_rect.centery)) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
-            jukebox_music[jukeboxMusicPlaying].set_volume(jukebox_volume)
+            jukebox_music[self.playing].set_volume(jukebox_volume)
 
         return self.texture
 
