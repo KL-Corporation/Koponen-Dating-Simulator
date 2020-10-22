@@ -1,5 +1,6 @@
 import pygame
 import KDS.Logging
+import KDS.Colors
 from inspect import currentframe
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
@@ -65,11 +66,10 @@ def ToBlur(image: pygame.Surface, strength: int):
     return blurredSurface
 
 def AspectScale(image: pygame.Surface, size: tuple[int, int], horizontalOnly: bool = False, verticalOnly: bool = False):
-    if (image.get_width() / image.get_height() > size[0] / size[1] or horizontalOnly) and not verticalOnly:
-        scaling = size[0] / image.get_width()
-    else:
-        scaling = size[1] / image.get_height()
+    if (image.get_width() / image.get_height() > size[0] / size[1] or horizontalOnly) and not verticalOnly: scaling = size[0] / image.get_width()
+    else: scaling = size[1] / image.get_height()
     return pygame.transform.scale(image, (int(image.get_width() * scaling), int(image.get_height() * scaling)))
+        
 
 def ToMultiplier(boolean: bool):
     return -1 if boolean else 1

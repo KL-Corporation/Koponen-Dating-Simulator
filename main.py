@@ -202,8 +202,9 @@ black_tint = pygame.Surface(screen_size)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-window.fill(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert().get_at((0, 0)))
-window.blit(KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert(), window_size), Fullscreen.offset)
+loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
+window.fill(loadingScreen.get_at((0, 0)))
+window.blit(KDS.Convert.AspectScale(loadingScreen, window_size), Fullscreen.offset)
 pygame.display.update()
 clearLag = KDS.ConfigManager.GetSetting("Settings", "ClearLag", False)
 tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
@@ -953,8 +954,7 @@ class Jukebox(Tile):
                 self.lastPlayed.pop(0)
                 self.lastPlayed.append(self.playing)
                 Audio.playSound(jukebox_music[self.playing], Audio.MusicVolume)
-            elif KDS.Keys.GetHeld(KDS.Keys.functionKey):
-                self.stopPlayingTrack()
+            elif KDS.Keys.GetHeld(KDS.Keys.functionKey): self.stopPlayingTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance((self.rect.centerx,self.rect.centery), (player_rect.centerx,player_rect.centery)) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
@@ -2077,7 +2077,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
                 elif event.unicode:
                     rstring += event.unicode
         window.fill(consoleBackground.get_at((0, 0)))
-        window.blit(KDS.Convert.AspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
+        window.blit(KDS.Convert.AspectScale(consoleBackground, display_size), ((display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2) - consoleBackground.get_size()[1] / 2 ))
         consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
         window.blit(consoleText, (10, 10))
         pygame.display.update()
@@ -2356,6 +2356,9 @@ def koponen_talk():
 #region Game Start and Stop
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     global main_menu_running, current_map, Audio, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
+    scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
+    window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[0] / 2 - scaled_loadingScreen.get_width() / 2))
+    pygame.display.update()
     Audio.MusicMixer.stop()
     Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -2402,10 +2405,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     KDS.Scores.GameTime.start()
     if reset_scroll:
         true_scroll = KDS.ConfigManager.Save.GetPlayer("scroll", [-200, -190])
-    KDS.Logging.Log(KDS.Logging.LogType.info,
-                    "Press F4 to commit suicide", False)
-    KDS.Logging.Log(KDS.Logging.LogType.info,
-                    "Press Alt + F4 to get depression", False)
+    pygame.event.clear()
 def save_function():
     global Items, Enemies, Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetWorld("items", Items)
