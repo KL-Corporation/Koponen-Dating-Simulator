@@ -55,6 +55,9 @@ def GetGameSetting(*path: str):
         value = value[p]
     return value
 
+def GetLevelProp(SaveDirectory: str, SaveName: str, DefaultValue):
+    return GetJSON(os.path.join(CachePath, "map", "levelprop.kdf"), SaveDirectory, SaveName, DefaultValue)
+
 def SetJSON(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
     if os.path.isfile(FilePath):
         with open(FilePath, "r") as f:

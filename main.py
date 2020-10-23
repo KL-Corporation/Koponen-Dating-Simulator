@@ -628,17 +628,16 @@ class WorldData():
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
-        FilePath = os.path.join(PersistentMapPath, "levelprop.kdf")
         global dark, darkness, ambient_light, ambient_light_tint, player_light
-        dark = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "enabled", False)
-        dval = 255 - KDS.ConfigManager.GetJSON(FilePath, "Darkness", "strength", 0)
+        dark = KDS.ConfigManager.GetLevelProp("Darkness", "enabled", False)
+        dval = 255 - KDS.ConfigManager.GetLevelProp("Darkness", "strength", 0)
         darkness = (dval, dval, dval)
-        ambient_light = KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "enabled", False)
-        player_light = KDS.ConfigManager.GetJSON(FilePath, "Darkness", "player_light", True)
-        ambient_light_tint = tuple(KDS.ConfigManager.GetJSON(FilePath, "AmbientLight", "tint", (255, 255, 255)))
+        ambient_light = KDS.ConfigManager.GetLevelProp("AmbientLight", "enabled", False)
+        player_light = KDS.ConfigManager.GetLevelProp("Darkness", "player_light", True)
+        ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("AmbientLight", "tint", (255, 255, 255)))
         
-        p_start_pos = tuple(KDS.ConfigManager.GetJSON(FilePath, "StartPos", "player", (100, 100)))
-        k_start_pos = tuple(KDS.ConfigManager.GetJSON(FilePath, "StartPos", "koponen", (200, 200)))
+        p_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos", "player", (100, 100)))
+        k_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos", "koponen", (200, 200)))
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))

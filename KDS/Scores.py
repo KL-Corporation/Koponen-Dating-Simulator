@@ -1,7 +1,9 @@
 import time
+import sys
 import KDS.Math
+import KDS.ConfigManager
 
-print()
+maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Score", "timeBonus"))
 
 class GameTime:
     gameTime = -1
@@ -47,4 +49,10 @@ class ScoreCounter:
         
     @staticmethod
     def calculateScores():
-        pass
+        tb_start = KDS.ConfigManager.GetLevelProp("TimeBonus", "start", None)
+        tb_end = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
+        gameTime = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
+        timeBonusIndex = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
+        timeBonus = KDS.Math.Lerp(0, maxTimeBonus, timeBonusIndex)
+
+        
