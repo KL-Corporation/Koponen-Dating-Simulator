@@ -18,7 +18,7 @@ def getDistance(point1: tuple[int, int], point2: tuple[int, int]):
         KDS.Logging.AutoError(e, currentframe())
         return (0, 0)
         
-def A_map(x, in_min, in_max, out_min, out_max):
+def Remap(x, in_min, in_max, out_min, out_max):
     """
     Converts a value to another value within the given arguments.
     """
