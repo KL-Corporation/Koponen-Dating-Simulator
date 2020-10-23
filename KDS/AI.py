@@ -102,7 +102,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
             return False, 0
             
     angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), targetRect.topleft)
-    if KDS.Math.toPositive(angle) < maxAngle:
+    if abs(angle) < maxAngle:
         return False, 0
     if angle > 0:
         angle = 90-angle

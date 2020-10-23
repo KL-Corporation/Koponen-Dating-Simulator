@@ -18,24 +18,11 @@ def getDistance(point1: tuple[int, int], point2: tuple[int, int]):
         KDS.Logging.AutoError(e, currentframe())
         return (0, 0)
         
-def Remap(x, in_min, in_max, out_min, out_max):
+def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: float):
     """
     Converts a value to another value within the given arguments.
     """
-    try:
-        rtn = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-        return rtn
-    except Exception as e:
-        KDS.Logging.AutoError(str(e), currentframe())
-        return 0
-
-def toPositive(value):
-    if value > 0:
-        return value
-    elif value < 0:
-        return -value
-    else:
-        return 0
+    return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 def getSlope(p1: tuple[int, int], p2: tuple[int, int]):
     """
