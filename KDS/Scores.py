@@ -48,11 +48,13 @@ class ScoreCounter:
         GameTime.stop()
         
     @staticmethod
-    def calculateScores():
+    def calculateScores(score, koponen_happiness):
         tb_start = KDS.ConfigManager.GetLevelProp("TimeBonus", "start", None)
         tb_end = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
         gameTime = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
         timeBonusIndex = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
         timeBonus = KDS.Math.Lerp(0, maxTimeBonus, timeBonusIndex)
-
         
+        totalScore = score + koponen_happiness + timeBonus
+        
+        return score, koponen_happiness, timeBonus, totalScore
