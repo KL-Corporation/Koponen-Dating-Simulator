@@ -11,8 +11,8 @@ maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Scor
 
 class GameTime:
     class FormattedGameTime:
-        minutes: str = None
-        seconds: str = None
+        minutes: str = "null"
+        seconds: str = "null"
     gameTime = -1
     startTime = -1
     pauseStartTime = -1

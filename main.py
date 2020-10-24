@@ -389,11 +389,11 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
 #region Variable Initialisation
 #################### Vähän Ghetto, mutta en halua turhia variableja. ####################
 jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
-level_ender_tip = tip_font.render("Finish level [Press: E]", True, KDS.Colors.GetPrimary.White)
-jukebox_tip.blit(tip_font.render("Use Jukebox [Press: E]", True, KDS.Colors.GetPrimary.White), (0, 0))
 jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetPrimary.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
 #################### Vähän Ghetto, mutta en halua turhia variableja. ####################
 decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.GetPrimary.White)
+level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.GetPrimary.White)
+jukebox_tip.blit(tip_font.render("Use Jukebox [E]", True, KDS.Colors.GetPrimary.White), (0, 0))
 
 restart = False
 reset_data = False
@@ -1214,7 +1214,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 #endregion
 
 itemTip = tip_font.render(
-    "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
+    "Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
 player_score = 0
 
 class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kutsutaan, kun item poimitaan maasta
@@ -1864,37 +1864,6 @@ ad_images = load_ads()
 koponen_talking_background = pygame.image.load(
     "Assets/Textures/KoponenTalk/background.png").convert()
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
-#endregion
-#region Collisions
-def damage(health, min_damage: int, max_damage: int):
-    health -= int(random.uniform(min_damage, max_damage))
-    if health < 0:
-        health = 0
-
-    return health
-
-def item_collision_test(rect, items):
-    """Tests for item collisions.
-
-    Args:
-        rect (pygame.Rect): The rect to be tested.
-        items (list): A list of item rects to be tested on.
-
-    Returns:
-        list: A list of all collided rects.
-    """
-    hit_list = []
-    x = 0
-    global player_hand_item, player_score, player_keys, ammunition_plasma, pistol_bullets, rk_62_ammo, player_health, shotgun_shells, playerStamina
-
-    itemTip = tip_font.render(
-        "Nosta Esine Painamalla [E]", True, KDS.Colors.GetPrimary.White)
-
-    def s(score):
-        global player_score
-
-        player_score += score
-
 #endregion
 #region Player
 def collision_test(rect, Tile_list):
@@ -3522,6 +3491,7 @@ while main_running:
         KDS.Audio.unpauseAllSounds()
         KDS.Scores.ScoreCounter.unpause()
     if level_finished:
+        KDS.Scores.ScoreCounter.stop()
         KDS.Audio.stopAllSounds()
         KDS.Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
