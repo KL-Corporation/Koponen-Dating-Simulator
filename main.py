@@ -19,6 +19,7 @@ import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
+import KDS.Items
 import numpy
 import random
 import threading
@@ -675,6 +676,8 @@ specialTilesSerialNumbers = buildData["special_tiles"]
 inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
 sref = buildData["checkCollisionFalse"]
+
+Items.init(inventoryDobulesSerialNumbers, inventory_items)
 
 class Inventory:
     emptySlot = "none"

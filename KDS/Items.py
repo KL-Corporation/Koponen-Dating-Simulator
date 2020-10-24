@@ -11,7 +11,13 @@ pygame.init()
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
 
-from main import inventoryDobulesSerialNumbers, inventory_items, DebugMode
+inventoryDobulesSerialNumbers = []
+inventory_items = []
+
+def init(IDSN: list, II: list):
+    global inventoryDobulesSerialNumbers, inventory_items
+    inventoryDobulesSerialNumbers = IDSN
+    inventory_items = II
 
 class Item:
 
@@ -24,8 +30,7 @@ class Item:
 
     @staticmethod
     # Item_list is a 2d numpy array
-    def render(Item_list, Surface: pygame.Surface, scroll: list):
-        from main import DebugMode
+    def render(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
