@@ -1,6 +1,8 @@
 from inspect import currentframe
 import time
+import pygame
 import KDS.Animator
+import KDS.Audio
 import KDS.Math
 import KDS.ConfigManager
 import KDS.Logging
@@ -10,6 +12,10 @@ maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimatio
 animationDivider = 2 #The value the default animation length will be divided
 
 maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Score", "timeBonus"))
+
+def init():
+    global pointSound
+    pointSound = pygame.mixer.Sound("Assets/Audio/Effects/pointCount.ogg")
 
 class GameTime:
     formattedGameTime = "null"
@@ -105,6 +111,7 @@ class ScoreAnimation:
                     ScoreAnimation.waitTime = 0
                     if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                         ScoreAnimation.finished = True
+            else: KDS.Audio.playSound(pointSound)
                         
         return tuple([round(anim.get_value()) for anim in ScoreAnimation.animationList])
     

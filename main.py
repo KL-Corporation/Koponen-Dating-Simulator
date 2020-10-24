@@ -150,6 +150,7 @@ I=====[ Render Info ]=====I
 I=====[ Render Info ]=====I""")
 KDS.AI.init()
 KDS.Missions.init()
+KDS.Scores.init()
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 ambient_tint = pygame.Surface(screen_size)
 black_tint = pygame.Surface(screen_size)
@@ -676,7 +677,9 @@ inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
 sref = buildData["checkCollisionFalse"]
 
+""" CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
 Items.init(inventoryDobulesSerialNumbers, inventory_items)
+"""
 
 class Inventory:
     emptySlot = "none"
