@@ -19,6 +19,7 @@ import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
+import KDS.Items
 import numpy
 import random
 import threading
@@ -29,6 +30,7 @@ import shutil
 import json
 import zipfile
 import math
+#import Items1
 import time
 from pygame.locals import *
 from inspect import currentframe
@@ -602,7 +604,6 @@ class WorldData():
         # Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
         tiles = numpy.array([[Tile((x * 34, y * 34), 0) for x in range(
             WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
-
         enemySerialNumbers = {
             1: KDS.AI.Imp,
             2: KDS.AI.SergeantZombie,
@@ -675,6 +676,8 @@ specialTilesSerialNumbers = buildData["special_tiles"]
 inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
 sref = buildData["checkCollisionFalse"]
+
+Items.init(inventoryDobulesSerialNumbers, inventory_items)
 
 class Inventory:
     emptySlot = "none"
