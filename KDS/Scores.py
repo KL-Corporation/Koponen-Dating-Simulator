@@ -1,9 +1,9 @@
-from os import stat
+from inspect import currentframe
 import time
-import sys
 import KDS.Animator
 import KDS.Math
 import KDS.ConfigManager
+import KDS.Logging
 
 waitTicks = 30 #The amount of ticks ScoreAnimation will wait before updating the next animation
 
@@ -60,6 +60,8 @@ class ScoreCounter:
     def calculateScores(score: int, koponen_happiness: int):
         tb_start = KDS.ConfigManager.GetLevelProp("TimeBonus", "start", None)
         tb_end = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
+        if tb_start == None or tb_end == None:
+            KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})", currentframe())
         gameTime = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
         timeBonusIndex = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
         timeBonus = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
