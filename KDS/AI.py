@@ -1,14 +1,8 @@
 import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
-import KDS.Animator, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
+import KDS.Animator, KDS.Audio, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
 pygame.mixer.init()
 pygame.init()
-
-Audio = None
-
-def init(AudioClass):
-    global Audio
-    Audio = AudioClass
 
 def __collision_test(rect, Tile_list):
     hit_list = []
@@ -21,8 +15,8 @@ def __collision_test(rect, Tile_list):
 
     max_x = len(Tile_list[0])-1
     max_y = len(Tile_list)-1
-    end_x = x+6
-    end_y = y+6
+    end_x = x + 6
+    end_y = y + 6
 
     if end_x > max_x:
         end_x = max_x
@@ -85,7 +79,7 @@ zombie_death_sound.set_volume(0.5)
 initCompleted = False
 
 imp_fireball = None
-def initTextures():
+def init():
     global initCompleted, imp_fireball
 
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
@@ -328,7 +322,7 @@ class HostileEnemy:
                     self.animation.active.tick = 0
             else:
                 if self.playSightSound:
-                    Audio.playSound(self.sight_sound)
+                    KDS.Audio.playSound(self.sight_sound)
                     self.playSightSound = False
                 self.rect, c = move(self.rect, self.movement, tiles)
                 if c["right"] or c["left"]:
@@ -342,7 +336,7 @@ class HostileEnemy:
             Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))          
         elif self.health < 1:
             if self.playDeathSound:
-                Audio.playSound(self.death_sound)
+                KDS.Audio.playSound(self.death_sound)
                 items = self.onDeath()
                 for item in items:
                     if item:

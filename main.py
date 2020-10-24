@@ -5,6 +5,7 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
 import KDS.AI
 import KDS.Animator
+import KDS.Audio
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
@@ -63,7 +64,7 @@ display = pygame.Surface(display_size)
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
-KDS.AI.initTextures()
+KDS.Audio.init(pygame.mixer)
 
 clock = pygame.time.Clock()
 profiler_enabled = False
@@ -116,55 +117,6 @@ def ResizeWindow(set_size: tuple):
         KDS.ConfigManager.SetSetting("Settings", "WindowSize", window_resize_size)
         Fullscreen.Set(True)
 #endregion
-#region Audio
-pygame.mixer.set_num_channels(32)
-
-class Audio:
-    MusicMixer = pygame.mixer.music
-    MusicVolume = KDS.ConfigManager.GetSetting("Settings", "MusicVolume", 1.0)
-    EffectVolume = KDS.ConfigManager.GetSetting("Settings", "SoundEffectVolume", 1.0)
-    EffectChannels = []
-    for c_i in range(pygame.mixer.get_num_channels()):
-        EffectChannels.append(pygame.mixer.Channel(c_i))
-
-    @staticmethod
-    def playSound(sound: pygame.mixer.Sound, volume: float = -1, loops: int = 0):
-        if volume == -1:
-            volume = Audio.EffectVolume
-        play_channel = pygame.mixer.find_channel(True)
-        play_channel.play(sound, loops)
-        play_channel.set_volume(volume)
-        return play_channel
-
-    @staticmethod
-    def stopAllSounds():
-        for i in range(len(Audio.EffectChannels)):
-            Audio.EffectChannels[i].stop()
-
-    @staticmethod
-    def pauseAllSounds():
-        for i in range(len(Audio.EffectChannels)):
-            Audio.EffectChannels[i].pause()
-
-    @staticmethod
-    def unpauseAllSounds():
-        for i in range(len(Audio.EffectChannels)):
-            Audio.EffectChannels[i].unpause()
-
-    @staticmethod
-    def getBusyChannels():
-        busyChannels = []
-        for i in range(len(Audio.EffectChannels)):
-            if Audio.EffectChannels[i].get_busy():
-                busyChannels.append(Audio.EffectChannels[i])
-        return busyChannels
-
-    @staticmethod
-    def setVolume(volume: float):
-        Audio.EffectVolume = volume
-        for i in range(len(Audio.EffectChannels)):
-            Audio.EffectChannels[i].set_volume(volume)
-#endregion
 #region Initialisation
 Fullscreen.enabled = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
 Fullscreen.Set(True)
@@ -194,8 +146,8 @@ I=====[ Render Info ]=====I
    - Software Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_sw_CC)}
    - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_sw_A)}
 I=====[ Render Info ]=====I""")
-KDS.AI.init(Audio)
-KDS.Missions.init(Audio)
+KDS.AI.init()
+KDS.Missions.init()
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 ambient_tint = pygame.Surface(screen_size)
 black_tint = pygame.Surface(screen_size)
@@ -214,8 +166,8 @@ KDS.Logging.Log(KDS.Logging.LogType.debug,
                 f"""Settings Loading Complete.
 I=====[ Settings Loaded ]=====I
    - Terms Accepted: {tcagr}
-   - Music Volume: {Audio.MusicVolume}
-   - Sound Effect Volume: {Audio.EffectVolume}
+   - Music Volume: {KDS.Audio.MusicVolume}
+   - Sound Effect Volume: {KDS.Audio.EffectVolume}
    - Fullscreen: {Fullscreen.enabled}
    - Clear Lag: {clearLag}
    - Current Map: {current_map}
@@ -688,9 +640,9 @@ class WorldData():
                 if tile.serialNumber == 22:
                     tile.initHeight(tiles)
 
-        Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
-        Audio.MusicMixer.play(-1)
-        Audio.MusicMixer.set_volume(Audio.MusicVolume)
+        KDS.Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
+        KDS.Audio.MusicMixer.play(-1)
+        KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
         return p_start_pos, k_start_pos
 #endregion
 #region Data
@@ -937,22 +889,22 @@ class Jukebox(Tile):
         for music in jukebox_music:
             music.stop()
         self.playing = -1
-        Audio.MusicMixer.unpause()
-        Audio.MusicMixer.set_volume(Audio.MusicVolume)
+        KDS.Audio.MusicMixer.unpause()
+        KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
 
     def update(self):
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1] - 30))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
-                Audio.MusicMixer.pause()
+                KDS.Audio.MusicMixer.pause()
                 loopStopper = 0
                 while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
                     self.playing = int(random.uniform(0, len(jukebox_music)))
                     loopStopper += 1
                 self.lastPlayed.pop(0)
                 self.lastPlayed.append(self.playing)
-                Audio.playSound(jukebox_music[self.playing], Audio.MusicVolume)
+                KDS.Audio.playSound(jukebox_music[self.playing], KDS.Audio.MusicVolume)
             elif KDS.Keys.GetHeld(KDS.Keys.functionKey): self.stopPlayingTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance((self.rect.centerx,self.rect.centery), (player_rect.centerx,player_rect.centery)) / 350
@@ -983,13 +935,13 @@ class Door(Tile):
         if self.open:
             self.closingCounter += 1
             if self.closingCounter > self.maxclosingCounter:
-                Audio.playSound(door_opening)
+                KDS.Audio.playSound(door_opening)
                 self.open = False
                 self.checkCollision = True
                 self.closingCounter = 0
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery), (self.rect.centerx,self.rect.centery)) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
             if self.serialNumber == 23 or player_keys[keys[self.serialNumber]]:
-                Audio.playSound(door_opening)
+                KDS.Audio.playSound(door_opening)
                 self.open = not self.open
                 self.checkCollision = not self.checkCollision
         if not self.open:
@@ -1013,7 +965,7 @@ class Landmine(Tile):
                 if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100:
                     enemy.health -= 120-KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
-            Audio.playSound(landmine_explosion)
+            KDS.Audio.playSound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x-60, self.rect.y-60)))           
         return self.texture
 
@@ -1075,7 +1027,7 @@ class DecorativeHead(Tile):
                 screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - int(decorative_head_tip.get_width() / 2), self.rect.top - scroll[1] - 20))
                 if KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     if not self.praying and not self.prayed:
-                        Audio.playSound(pray_sound)
+                        KDS.Audio.playSound(pray_sound)
                         self.praying = True
                 else:
                     pray_sound.stop()
@@ -1083,7 +1035,7 @@ class DecorativeHead(Tile):
                 if KDS.Keys.GetHeld(KDS.Keys.functionKey):
                     self.prayed = True
                     self.justPrayed = True
-                    Audio.playSound(decorative_head_wakeup_sound)
+                    KDS.Audio.playSound(decorative_head_wakeup_sound)
             else:
                 if not KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     pray_sound.stop()
@@ -1266,7 +1218,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def gasburner_p():
         global player_score
-        Audio.playSound(gasburner_clip)
+        KDS.Audio.playSound(gasburner_clip)
         player_score += 10
 
         return False
@@ -1274,7 +1226,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def coffeemug_p():
         global player_score
-        Audio.playSound(coffeemug_sound)
+        KDS.Audio.playSound(coffeemug_sound)
         player_score += 6
 
         return False
@@ -1282,7 +1234,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def knife_p():
         global player_score
-        Audio.playSound(knife_pickup)
+        KDS.Audio.playSound(knife_pickup)
         player_score += 10
 
         return False
@@ -1290,7 +1242,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def ss_bonuscard_p():
         global player_score
-        Audio.playSound(ss_sound)
+        KDS.Audio.playSound(ss_sound)
         player_score += 10
 
         return False
@@ -1298,7 +1250,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def lappi_sytytyspalat_p():
         global player_score
-        Audio.playSound(lappi_sytytyspalat_sound)
+        KDS.Audio.playSound(lappi_sytytyspalat_sound)
         player_score += 10
 
         return False
@@ -1314,7 +1266,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def plasmarifle_p():
         global player_score
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
         player_score += 20
 
         return False
@@ -1322,7 +1274,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def pistol_p():
         global player_score
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
         player_score += 20
 
         return False
@@ -1330,7 +1282,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def rk62_p():
         global player_score
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
         player_score += 20
 
         return False
@@ -1338,7 +1290,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def shotgun_p():
         global player_score
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
         player_score += 20
 
         return False
@@ -1346,7 +1298,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def cell_p():
         global player_score, ammunition_plasma
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
         player_score += 1
 
         ammunition_plasma += 30
@@ -1355,7 +1307,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def red_key_p():
         global player_keys
-        Audio.playSound(key_pickup)
+        KDS.Audio.playSound(key_pickup)
         player_keys["red"] = True
 
         return True
@@ -1363,7 +1315,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def green_key_p():
         global player_keys
-        Audio.playSound(key_pickup)
+        KDS.Audio.playSound(key_pickup)
         player_keys["green"] = True
 
         return True
@@ -1371,7 +1323,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def blue_key_p():
         global player_keys
-        Audio.playSound(key_pickup)
+        KDS.Audio.playSound(key_pickup)
         player_keys["blue"] = True
 
         return True
@@ -1379,7 +1331,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def medkit_p():
         global player_health
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
         player_health = min(player_health + 25, 100)
 
         return True
@@ -1387,7 +1339,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     @staticmethod
     def pistol_mag_p():
         global pistol_bullets
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
         pistol_bullets += 7
 
         return True
@@ -1396,7 +1348,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def rk_mag_p():
         global rk_62_ammo
         rk_62_ammo += 30
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
 
         return True
 
@@ -1404,7 +1356,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def shotgun_shells_p():
         global shotgun_shells
         shotgun_shells += 4
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
 
         return True
 
@@ -1426,7 +1378,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def ppsh41_p():
         global player_score
         player_score += 20
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
 
         return False
 
@@ -1434,7 +1386,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def awm_p():
         global player_score
         player_score += 40
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
 
         return False
 
@@ -1443,7 +1395,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
         global player_score, awm_ammo 
         player_score += 20
         awm_ammo += 5
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
 
         return True
 
@@ -1451,7 +1403,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def empty_flask_p():
         global player_score
         player_score += 2
-        Audio.playSound(coffeemug_sound)
+        KDS.Audio.playSound(coffeemug_sound)
 
         return False
 
@@ -1459,7 +1411,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def flask_meth_p():
         global player_score
         player_score += 8
-        Audio.playSound(coffeemug_sound)
+        KDS.Audio.playSound(coffeemug_sound)
 
         return False
 
@@ -1467,7 +1419,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def flask_blood_p():
         global player_score
         player_score += 8
-        Audio.playSound(coffeemug_sound)
+        KDS.Audio.playSound(coffeemug_sound)
 
         return False
 
@@ -1475,7 +1427,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
     def grenade_p():
         global player_score
         player_score += 19
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
 
         return False
 
@@ -1486,13 +1438,13 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
     @staticmethod
     def level_ender_p():
-        Audio.playSound(weapon_pickup)
+        KDS.Audio.playSound(weapon_pickup)
 
         return False
 
     @staticmethod
     def ppsh41_mag_p():
-        Audio.playSound(item_pickup)
+        KDS.Audio.playSound(item_pickup)
         global ppsh41_ammo
         ppsh41_ammo += 72
 
@@ -1500,7 +1452,7 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
     @staticmethod
     def lantern_p():
-        Audio.playSound(lantern_pickup)
+        KDS.Audio.playSound(lantern_pickup)
 
         return False
 
@@ -1522,7 +1474,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         if args[0][0] == True:
             gasburnerBurning = True
             gasburner_fire.stop()
-            Audio.playSound(gasburner_fire)
+            KDS.Audio.playSound(gasburner_fire)
             return gasburner_animation_object.update()
         else:
             gasburner_fire.stop()
@@ -1563,7 +1515,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         global pistol_bullets, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White), (10, 360))      
         if args[0][0] and KDS.World.pistol_C.counter > 30 and pistol_bullets > 0:
-            Audio.playSound(pistol_shot)
+            KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
@@ -1579,7 +1531,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         args[1].blit(harbinger_font.render("Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White), (10, 360))                    
         if args[0][0] and ammunition_plasma > 0 and KDS.World.plasmarifle_C.counter > 3:
             KDS.World.plasmarifle_C.counter = 0
-            Audio.playSound(plasmarifle_f_sound)
+            KDS.Audio.playSound(plasmarifle_f_sound)
             ammunition_plasma -= 1
             if direction:
                 temp = 100
@@ -1599,7 +1551,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
-            Audio.playSound(rk62_shot)
+            KDS.Audio.playSound(rk62_shot)
             rk_62_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
@@ -1616,7 +1568,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White), (10, 360))
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
             KDS.World.shotgun_C.counter = 0
-            Audio.playSound(player_shotgun_shot)
+            KDS.Audio.playSound(player_shotgun_shot)
             shotgun_shells -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             for x in range(10):
@@ -1633,7 +1585,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
             KDS.World.ppsh41_C.counter = 0
             smg_shot.stop()
-            Audio.playSound(smg_shot)
+            KDS.Audio.playSound(smg_shot)
             ppsh41_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
@@ -1651,7 +1603,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         if args[0][0] and KDS.World.awm_C.counter > 130 and awm_ammo > 0:
             KDS.World.awm_C.counter = 0
             ppsh41_shot.stop()
-            Audio.playSound(awm_shot)
+            KDS.Audio.playSound(awm_shot)
             awm_ammo -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, random.randint(300, 590), slope=0))
@@ -1677,7 +1629,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             player_score += 1
             player_health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
             player_inventory.storage[player_inventory.SIndex] = 26
-            Audio.playSound(glug_sound)
+            KDS.Audio.playSound(glug_sound)
         return i_textures[27]
 
     @staticmethod
@@ -1687,7 +1639,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             player_score += 1
             player_health += random.randint(0, 10)
             player_inventory.storage[player_inventory.SIndex] = 26
-            Audio.playSound(glug_sound)
+            KDS.Audio.playSound(glug_sound)
         return i_textures[28]
 
     @staticmethod
@@ -1700,7 +1652,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
 
         pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force+15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force+15)*-1 - scroll[1]) )
         if args[0][0]:
-            Audio.playSound(grenade_throw)
+            KDS.Audio.playSound(grenade_throw)
             player_inventory.storage[player_inventory.SIndex] = "none"
             BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
@@ -2354,13 +2306,13 @@ def koponen_talk():
 #endregion
 #region Game Start and Stop
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
-    global main_menu_running, current_map, Audio, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
+    global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
     window.fill(scaled_loadingScreen.get_at((0, 0)))
     window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
     pygame.display.update()
-    Audio.MusicMixer.stop()
-    Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
+    KDS.Audio.MusicMixer.stop()
+    KDS.Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     
     KDS.ConfigManager.Save.init(1)
@@ -2582,9 +2534,9 @@ def settings_menu():
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
         display.blit(clear_lag_text, (50, 240))
-        Audio.MusicVolume = music_volume_slider.update(display, mouse_pos)
-        Audio.MusicMixer.set_volume(Audio.MusicVolume)
-        Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
+        KDS.Audio.MusicVolume = music_volume_slider.update(display, mouse_pos)
+        KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
+        KDS.Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
 
         return_button.update(display, mouse_pos, c)
         reset_window_button.update(display, mouse_pos, c)
@@ -2630,9 +2582,9 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    Audio.MusicMixer.load("Assets/Audio/music/lobbymusic.ogg")
-    Audio.MusicMixer.play(-1)
-    Audio.MusicMixer.set_volume(Audio.MusicVolume)
+    KDS.Audio.MusicMixer.load("Assets/Audio/music/lobbymusic.ogg")
+    KDS.Audio.MusicMixer.play(-1)
+    KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
 
     def settings_function():
         settings_menu()
@@ -2889,9 +2841,9 @@ def level_finished_menu(score, k_happiness):
 
     pygame.mouse.set_visible(True)
 
-    Audio.MusicMixer.stop()
-    Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
-    Audio.MusicMixer.play(-1)
+    KDS.Audio.MusicMixer.stop()
+    KDS.Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
+    KDS.Audio.MusicMixer.play(-1)
 
     Title = pygame.image.load("Assets/Textures/Branding/LevelCleared.png").convert()
     Title.set_colorkey(KDS.Colors.GetPrimary.White)
@@ -3020,7 +2972,7 @@ while main_running:
                 if playerStamina == 100:
                     playerStamina = -1000
                     farting = True
-                    Audio.playSound(fart)
+                    KDS.Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_DOWN:
                 KDS.Keys.SetPressed(KDS.Keys.altDown, True)
@@ -3113,7 +3065,7 @@ while main_running:
     if player_health <= 0:
         if not animation_has_played:
             player_death_event = True
-            Audio.MusicMixer.stop()
+            KDS.Audio.MusicMixer.stop()
             pygame.mixer.Sound.play(player_death_sound)
             player_death_sound.set_volume(0.5)
             animation_has_played = True
@@ -3180,7 +3132,7 @@ while main_running:
                 x /= 8
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x))
 
-            Audio.playSound(landmine_explosion)
+            KDS.Audio.playSound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x-60, B_Object.rect.y-55)))
              
             BallisticObjects.remove(B_Object)
@@ -3351,7 +3303,7 @@ while main_running:
     last_player_health = player_health
 
     if hurted:
-        Audio.playSound(hurt_sound)
+        KDS.Audio.playSound(hurt_sound)
 #endregion
 #region More Collisions
     if collisions['bottom'] == True:
@@ -3462,7 +3414,7 @@ while main_running:
         
         screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (5, 5))
         screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
-        screen.blit(score_font.render("Sounds Playing: " + str(len(Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
+        screen.blit(score_font.render("Sounds Playing: " + str(len(KDS.Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
 #endregion
 #region Screen Rendering
@@ -3490,8 +3442,8 @@ while main_running:
         player_rect.y = len(tiles) * 34 + 340
     if esc_menu:
         KDS.Scores.ScoreCounter.pause()
-        Audio.MusicMixer.pause()
-        Audio.pauseAllSounds()
+        KDS.Audio.MusicMixer.pause()
+        KDS.Audio.pauseAllSounds()
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
                     (Fullscreen.offset[0], Fullscreen.offset[1]))
@@ -3499,19 +3451,19 @@ while main_running:
         pygame.mouse.set_visible(True)
         esc_menu_f()
         pygame.mouse.set_visible(False)
-        Audio.MusicMixer.unpause()
-        Audio.unpauseAllSounds()
+        KDS.Audio.MusicMixer.unpause()
+        KDS.Audio.unpauseAllSounds()
         KDS.Scores.ScoreCounter.unpause()
     if level_finished:
-        Audio.stopAllSounds()
-        Audio.MusicMixer.stop()
+        KDS.Audio.stopAllSounds()
+        KDS.Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
         game_pause_background = screen.copy()
         level_finished_menu(player_score, koponen_happiness)
         level_finished = False
     if go_to_main_menu:
-        Audio.stopAllSounds()
-        Audio.MusicMixer.stop()
+        KDS.Audio.stopAllSounds()
+        KDS.Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
         main_menu()
 #endregion
@@ -3532,7 +3484,7 @@ while main_running:
 #endregion
 #region Application Quitting
 KDS.ConfigManager.Save.quit()
-Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
+KDS.Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.quit()
 pygame.mixer.quit()

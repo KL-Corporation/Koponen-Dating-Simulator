@@ -19,5 +19,10 @@
                 "timeBonus": 500
             }
         }
+    },
+    "Mixer": {
+        "Music": {
+            "channelCount": 32
+        }
     }
 }

@@ -3,6 +3,7 @@ import math
 import os
 import pygame
 import KDS.Animator
+import KDS.Audio
 import KDS.ConfigManager
 import KDS.Colors
 import KDS.Convert
@@ -31,12 +32,6 @@ class Padding:
     top = 5
     right = 10
     bottom = 5
-MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
-TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
-TaskFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_finish.ogg")
-TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_unfinish.ogg")
-MissionFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_finish.ogg")
-MissionUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_unfinish.ogg")
 #endregion
 #region Listeners
 class Listener:
@@ -99,11 +94,11 @@ class Task:
         if self.finished != self.lastFinished:
             if self.finished:
                 if PlaySound:
-                    Audio.playSound(TaskFinishSound)
+                    KDS.Audio.playSound(TaskFinishSound)
                 self.color.changeValues(TaskColor, TaskFinishedColor)
             else:
                 if PlaySound:
-                    Audio.playSound(TaskUnFinishSound)
+                    KDS.Audio.playSound(TaskUnFinishSound)
                 self.color.changeValues(TaskColor, TaskUnFinishedColor)
         self.lastFinished = self.finished
         return surface
@@ -172,10 +167,10 @@ class Mission:
         
         if self.lastFinished != self.finished:
             if self.finished:
-                Audio.playSound(MissionFinishSound)
+                KDS.Audio.playSound(MissionFinishSound)
                 self.color.changeValues(MissionColor, MissionFinishedColor)
             else:
-                Audio.playSound(MissionUnFinishSound)
+                KDS.Audio.playSound(MissionUnFinishSound)
                 self.color.changeValues(MissionColor, MissionUnFinishedColor)
         self.lastFinished = self.finished
     
@@ -227,17 +222,19 @@ class MissionHolder:
 Missions = MissionHolder()     
 #endregion
 #region init
-Audio = None
-pygame.init()
-def init(AudioClass):
-    global Audio
-    Audio = AudioClass
-
-Active_Mission = None
-Last_Active_Mission = 0
-text_height = 0
-TextOffset = int(TaskFont.size(" ")[0] * TextOffset)
-hundredSize = TaskFont.size("100%")
+def init():
+    global MissionFont, TaskFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
+    MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
+    TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
+    TaskFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_finish.ogg")
+    TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_unfinish.ogg")
+    MissionFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_finish.ogg")
+    MissionUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_unfinish.ogg")
+    Active_Mission = None
+    Last_Active_Mission = 0
+    text_height = 0
+    TextOffset = int(TaskFont.size(" ")[0] * TextOffset)
+    hundredSize = TaskFont.size("100%")
 #endregion
 #region Initialize
 def InitialiseMission(SafeName: str, Text: str):
