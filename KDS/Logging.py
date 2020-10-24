@@ -38,15 +38,6 @@ class LogType():
     warning = 30
     info = 20
     debug = 10
-    
-loggingTypeSwitch = {
-    LogType.exception: logging.exception,
-    LogType.critical: logging.critical,
-    LogType.error: logging.error,
-    LogType.warning: logging.warning,
-    LogType.info: logging.info,
-    LogType.debug: logging.debug,
-}
 
 def Log(Log_Type: LogType or int, Message: str, Console_Visible=False):
     """Log a log.
@@ -57,7 +48,7 @@ def Log(Log_Type: LogType or int, Message: str, Console_Visible=False):
         Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
     """
     if running:
-        loggingTypeSwitch[Log_Type](Message)
+        logging.log(Log_Type, Message)
         if Console_Visible: print(Message)
     else: print("Log not successful! Logger has been shut down already.")
 
