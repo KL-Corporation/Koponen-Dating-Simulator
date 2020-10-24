@@ -394,6 +394,9 @@ jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetP
 decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.GetPrimary.White)
 level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.GetPrimary.White)
 jukebox_tip.blit(tip_font.render("Use Jukebox [E]", True, KDS.Colors.GetPrimary.White), (0, 0))
+itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
+
+player_score = 0
 
 restart = False
 reset_data = False
@@ -1213,10 +1216,6 @@ specialTilesD = {
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 #endregion
 
-itemTip = tip_font.render(
-    "Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
-player_score = 0
-
 class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kutsutaan, kun item poimitaan maasta
     @staticmethod
     def gasburner_p():
@@ -1978,7 +1977,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
-def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = "") -> str:
+def inputConsole(daInput = ">>>  ", allowEscape: bool = True, defVal: str = ""):
     pygame.key.set_repeat(500, 31)
     r = True
     rstring = defVal
@@ -2008,13 +2007,9 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
 
 def console():
     global player_keys, player_health, koponen_happiness, level_finished
-    wasFullscreen = False
-    if Fullscreen.enabled:
-        Fullscreen.Set()
-        wasFullscreen = True
 
     #command_input = input("command: ")
-    command_input = inputConsole()
+    command_input = inputConsole("Command >>> ")
     if not command_input:
         return None
     command_input = command_input.lower()
@@ -2135,9 +2130,6 @@ Console Help:
     else:
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "This command does not exist.", True)
-
-    if wasFullscreen:
-        Fullscreen.Set()
 #endregion
 #region Terms and Conditions
 def agr(tcagr: bool):
@@ -2290,8 +2282,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     KDS.ConfigManager.Save.init(1)
     
     global Items, Enemies, Explosions, BallisticObjects
-    Items = KDS.ConfigManager.Save.GetWorld("items", numpy.array([]))
-    Enemies = KDS.ConfigManager.Save.GetWorld("enemies", numpy.array([]))
+    Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
+    Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
     
@@ -2332,8 +2324,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     pygame.event.clear()
 def save_function():
     global Items, Enemies, Explosions, BallisticObjects
-    KDS.ConfigManager.Save.SetWorld("items", Items)
-    KDS.ConfigManager.Save.SetWorld("enemies", Enemies)
+    KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
+    KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
     KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
     KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
     global player_health, player_rect, player_hand_item, farting, player_keys, true_scroll
