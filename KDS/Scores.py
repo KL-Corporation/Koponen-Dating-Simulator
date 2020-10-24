@@ -6,20 +6,21 @@ import KDS.ConfigManager
 import KDS.Logging
 
 waitTicks = 30 #The amount of ticks ScoreAnimation will wait before updating the next animation
+maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
+animationDivider = 2 #The value the default animation length will be divided
 
 maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Score", "timeBonus"))
 
 class GameTime:
-    class FormattedGameTime:
-        minutes: str = "null"
-        seconds: str = "null"
+    formattedGameTime = "null"
     gameTime = -1
     startTime = -1
     pauseStartTime = -1
-    cumulativePauseTime = -1
+    cumulativePauseTime = 0
     @staticmethod
     def start():
         GameTime.gameTime = -1
+        GameTime.cumulativePauseTime = 0
         GameTime.startTime = time.perf_counter()
     
     @staticmethod
@@ -29,15 +30,14 @@ class GameTime:
         
     @staticmethod
     def unpause():
-        GameTime.cumulativePauseTime += GameTime.startTime - time.perf_counter()
+        GameTime.cumulativePauseTime += time.perf_counter() + GameTime.startTime
         GameTime.pauseStartTime = -1
     
     @staticmethod
     def stop():
-        GameTime.gameTime = GameTime.startTime - GameTime.cumulativePauseTime
-        GameTime.FormattedGameTime.minutes = f"{round(divmod(GameTime.gameTime, 60)[0]):02d}"
-        GameTime.FormattedGameTime.seconds = f"{round(divmod(GameTime.gameTime, 60)[1]):02d}"
-        return GameTime.gameTime
+        GameTime.gameTime = time.perf_counter() - GameTime.startTime - GameTime.cumulativePauseTime
+        divTime = divmod(GameTime.gameTime, 60)
+        GameTime.formattedGameTime = f"{round(divTime[0]):02d}m {round(divTime[1]):02d}s"
 
 class ScoreCounter:
     @staticmethod
@@ -58,15 +58,15 @@ class ScoreCounter:
 
     @staticmethod
     def calculateScores(score: int, koponen_happiness: int):
-        tb_start = KDS.ConfigManager.GetLevelProp("TimeBonus", "start", None)
-        tb_end = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
+        tb_start: int = KDS.ConfigManager.GetLevelProp("TimeBonus", "start", None)
+        tb_end: int = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
         if tb_start == None or tb_end == None:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})", currentframe())
-        gameTime = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
-        timeBonusIndex = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
-        timeBonus = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
+        gameTime: float = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
+        timeBonusIndex: float = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
+        timeBonus: int = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
         
-        totalScore = score + koponen_happiness + timeBonus
+        totalScore: int = score + koponen_happiness + timeBonus
         
         return score, koponen_happiness, timeBonus, totalScore
     
@@ -81,28 +81,32 @@ class ScoreAnimation:
     def init(score: int, koponen_happiness: int):
         score, koponen_happiness, timeBonus, totalScore = ScoreCounter.calculateScores(score, koponen_happiness)
         
-        score_animation = KDS.Animator.Float(0, score, min(score, 2000), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        koponen_happiness_animation = KDS.Animator.Float(0, koponen_happiness, min(koponen_happiness, 2000), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        timeBonus_animation = KDS.Animator.Float(0, timeBonus, min(timeBonus, 2000), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        totalScore_animation = KDS.Animator.Float(0, totalScore, min(totalScore, 2000), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        ScoreAnimation.animationIndex = 0
+        ScoreAnimation.waitTime = 0
+        ScoreAnimation.finished = False
+        
+        score_animation = KDS.Animator.Float(0, score, min(round(score / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        koponen_happiness_animation = KDS.Animator.Float(0, koponen_happiness, min(round(koponen_happiness / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        timeBonus_animation = KDS.Animator.Float(0, timeBonus, min(round(timeBonus / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        totalScore_animation = KDS.Animator.Float(0, totalScore, min(round(totalScore / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
         
         ScoreAnimation.animationList = (score_animation, koponen_happiness_animation, timeBonus_animation, totalScore_animation)
         ScoreAnimation.valueList = (score, koponen_happiness, timeBonus, totalScore)
     
     @staticmethod 
-    def update():
-        if not ScoreAnimation.finished:
+    def update(fadeFinished: bool = True):
+        if not ScoreAnimation.finished and fadeFinished:
             animation = ScoreAnimation.animationList[ScoreAnimation.animationIndex]
-            value = animation.update()
-            if value >= animation.ticks:
+            animation.update()
+            if animation.tick >= animation.ticks:
                 ScoreAnimation.waitTime += 1
                 if ScoreAnimation.waitTime > waitTicks:
                     ScoreAnimation.animationIndex += 1
+                    ScoreAnimation.waitTime = 0
                     if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                         ScoreAnimation.finished = True
-                        ScoreAnimation.waitTime = 0
                         
-        return tuple([anim.get_value() for anim in ScoreAnimation.animationList])
+        return tuple([round(anim.get_value()) for anim in ScoreAnimation.animationList])
     
     @staticmethod
     def skip():

@@ -1,4 +1,5 @@
 from inspect import currentframe
+from typing import Callable
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
@@ -162,16 +163,36 @@ class MultiAnimation:
             for anim in self.animations:
                 self.animations[anim].fromString()
 
+class CalcT:
+    @staticmethod
+    def Linear(t: float) -> float:
+        return t
+    @staticmethod
+    def EaseIn(t: float) -> float:
+        return 1.0 - math.cos(t * math.pi * 0.5)
+    @staticmethod
+    def EaseOut(t: float) -> float:
+        return math.sin(t * math.pi * 0.5)
+    @staticmethod
+    def Exponential(t: float) -> float:
+        return t * t
+    @staticmethod
+    def SmoothStep(t: float) -> float:
+        return t * t * (3.0 - (2.0 * t))
+    @staticmethod
+    def SmootherStep(t: float) -> float:
+        return t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)
+
 class AnimationType:
-    Linear = "Linear"
-    EaseIn = "EaseIn"
-    EaseOut = "EaseOut"
-    Exponential = "Exponential"
-    SmoothStep = "SmoothStep"
-    SmootherStep = "SmootherStep"
+    Linear = CalcT.Linear
+    EaseIn = CalcT.EaseIn
+    EaseOut = CalcT.EaseOut
+    Exponential = CalcT.Exponential
+    SmoothStep = CalcT.SmoothStep
+    SmootherStep = CalcT.SmootherStep
 
 class Float:
-    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or str = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
         Args:
@@ -196,56 +217,8 @@ class Float:
         Returns:
             float: Current value.
         """
-        if self.type == AnimationType.Linear:
-            t = self.tick / self.ticks
-            return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == AnimationType.EaseIn:
-            t = 1.0 - math.cos((self.tick / self.ticks) * math.pi * 0.5)
-            return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == AnimationType.EaseOut:
-            t = math.sin((self.tick / self.ticks) * math.pi * 0.5)
-            return KDS.Math.Lerp(self.From, self.To, t)
-        elif self.type == AnimationType.Exponential:
-            t = self.tick / self.ticks
-            return KDS.Math.Lerp(self.From, self.To, t * t)
-        elif self.type == AnimationType.SmoothStep:
-            t = self.tick / self.ticks
-            return KDS.Math.SmoothStep(self.From, self.To, t * t * (3.0 - (2.0 * t)))
-        elif self.type == AnimationType.SmootherStep:
-            t = self.tick / self.ticks
-            return KDS.Math.Lerp(self.From, self.To, t * t * t * (t * ((6.0 * t) - 15.0) + 10.0))
-        else:
-            KDS.Logging.AutoError("Incorrect Float Animation Type!", currentframe())
-            return 0
-    
-    class CalcT:
-        @staticmethod
-        def Linear(t):
-            return t
-        @staticmethod
-        def EaseIn(t):
-            return 1.0 - math.cos(t * math.pi * 0.5)
-        @staticmethod
-        def EaseOut(t):
-            return math.sin(t * math.pi * 0.5)
-        @staticmethod
-        def Exponential(t):
-            return t * t
-        @staticmethod
-        def SmoothStep(t):
-            return t * t * (3.0 - (2.0 * t))
-        @staticmethod
-        def SmootherStep(t):
-            return t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)
-        
-    TFunc = {
-        AnimationType.Linear: CalcT.Linear,
-        AnimationType.EaseIn: CalcT.EaseIn,
-        AnimationType.EaseOut: CalcT.EaseOut,
-        AnimationType.Exponential: CalcT.Exponential,
-        AnimationType.SmoothStep: CalcT.SmoothStep,
-        AnimationType.SmootherStep: CalcT.SmootherStep
-    }
+        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
+        else: return self.To
     
     def update(self, reverse: bool = False) -> float:
         """Updates the float animation
@@ -281,14 +254,11 @@ class Float:
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
         
-        if self.type in Float.TFunc:
-            return KDS.Math.Lerp(self.From, self.To, Float.TFunc[self.type](self.tick / self.ticks))
-        else:
-            KDS.Logging.AutoError("Invalid Float Animation Type!", currentframe())
-            return 0
+        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
+        else: return self.To
 
 class Color:
-    def __init__(self, From: tuple[int, int, int], To: tuple[int, int, int], Duration: int, Type: AnimationType or str = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: tuple[int, int, int], To: tuple[int, int, int], Duration: int, Type: AnimationType or Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
         self.int0 = Float(From[0], To[0], Duration, Type, _OnAnimationEnd)
         self.int1 = Float(From[1], To[1], Duration, Type, _OnAnimationEnd)
         self.int2 = Float(From[2], To[2], Duration, Type, _OnAnimationEnd)
