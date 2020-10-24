@@ -30,7 +30,6 @@ import shutil
 import json
 import zipfile
 import math
-#import Items1
 import time
 from pygame.locals import *
 from inspect import currentframe
