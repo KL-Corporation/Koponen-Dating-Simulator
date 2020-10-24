@@ -14,7 +14,6 @@ import KDS.Keys
 import KDS.LevelLoader
 import KDS.Logging
 import KDS.Math
-import KDS.Menus
 import KDS.Missions
 import KDS.Scores
 import KDS.System
@@ -2281,26 +2280,34 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     
     KDS.ConfigManager.Save.init(1)
     
+    #region Load World Data
     global Items, Enemies, Explosions, BallisticObjects
     Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
     Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
     Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
+    #endregion
     
     LoadGameSettings()
 
+    #region Load Entities
     if len(Items) < 1 and len(Enemies) < 1:
         loadEntities = True
     else:
         loadEntities = False
     player_def_pos, koponen_def_pos = WorldData.LoadMap(loadEntities)
+    #endregion
 
+    #region Set Game Data
+    global player_death_event, animation_has_played, level_finished
     player_death_event = False
     animation_has_played = False
-    global level_finished
     level_finished = False
     death_wait = 0
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
+    #endregion
+    
+    #region Load Save
     global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina, player_score
     player_score = 0
     player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
@@ -2311,6 +2318,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool):
     player_keys = KDS.ConfigManager.Save.GetPlayer("keys", {"red": False, "green": False, "blue": False})
     player_inventory.storage = KDS.ConfigManager.Save.GetPlayer("inventory", [Inventory.emptySlot for _ in range(player_inventory.size)])
     playerStamina = KDS.ConfigManager.Save.GetPlayer("stamina", 100)
+    #endregion
     
     ########## iPuhelin ##########
     if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and is_new_save):
@@ -2783,7 +2791,7 @@ def main_menu():
         clock.tick(locked_fps)
 
 def level_finished_menu():
-    global player_score, koponen_happiness, game_pause_background, DebugMode
+    global player_score, koponen_happiness, game_pause_background, DebugMode, level_finished_running
     
     score_color = KDS.Colors.GetPrimary.Cyan
     
@@ -2796,6 +2804,7 @@ def level_finished_menu():
     level_f_surf = pygame.Surface(display_size)
     blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
     
+    level_finished_running = True
     while level_finished_running:
         display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
         anim_x = anim_lerp_x.update(False)

@@ -14,11 +14,15 @@
     "StartPos": {
         "koponen": [
             200,
-            200
+            234
         ],
         "player": [
             200,
             100
         ]
+    },
+    "TimeBonus": {
+        "end": 600,
+        "start": 300
     }
 }
