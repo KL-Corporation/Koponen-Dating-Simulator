@@ -71,6 +71,8 @@ profiler_enabled = False
 
 text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
 text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
+level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
+level_cleared_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 
 locked_fps = 60
 #endregion
@@ -435,6 +437,7 @@ gamemode_bc_2_alpha = KDS.Animator.Float(
 go_to_main_menu = False
 
 main_menu_running = False
+level_finished_running = False
 tcagr_running = False
 koponenTalking = False
 mode_selection_running = False
@@ -546,10 +549,10 @@ def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
     settings_running = False
     restart = _restart
     reset_data = _reset_data
+    level_finished_running = False
 #endregion
 #region World Data
 imps = []
-iron_bars = []
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
@@ -793,14 +796,14 @@ class Tile:
     # Tile_list is a 2d numpy array
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: tuple[int, int], *args):
         tilesUpdating = 0
-        x = int(round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2))) - 2
-        y = int(round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2))) - 2
+        x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 2
+        y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 2
         x = max(x, 0)
         y = max(y, 0)
         max_x = len(Tile_list[0])
         max_y = len(Tile_list)
-        end_x = int(round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2))) + 1
-        end_y = int(round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2))) + 1
+        end_x = round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2)) + 1
+        end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + 1
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
         for row in Tile_list[y:end_y]:
@@ -2381,7 +2384,7 @@ def esc_menu_f():
 
     esc_surface = pygame.Surface(display_size)
     
-    blurred_background = KDS.Convert.ToBlur(game_pause_background.copy(), 6)
+    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
 
     def resume():
         global esc_menu
@@ -2413,8 +2416,7 @@ def esc_menu_f():
     while esc_menu:
         display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
         anim_x = anim_lerp_x.update(False)
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
-            (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
 
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -2454,7 +2456,7 @@ def esc_menu_f():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
         
-            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
@@ -2550,7 +2552,7 @@ def settings_menu():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
             
-            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(
                 fps_text, True, KDS.Colors.GetPrimary.White)
             display.blit(pygame.transform.scale(fps_text, (int(
@@ -2805,7 +2807,7 @@ def main_menu():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
             
-            fps_text = "FPS: " + str(int(round(clock.get_fps())))
+            fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(
                 fps_text, True, KDS.Colors.GetPrimary.White)
             display.blit(pygame.transform.scale(fps_text, (int(
@@ -2819,8 +2821,73 @@ def main_menu():
         c = False
         clock.tick(locked_fps)
 
-lfmr = False
+def level_finished_menu():
+    global player_score, koponen_happiness, game_pause_background, DebugMode
+    
+    score_color = KDS.Colors.GetPrimary.Cyan
+    
+    KDS.Audio.MusicMixer.stop()
+    KDS.Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
+    KDS.Audio.MusicMixer.play(-1)
+    
+    KDS.Scores.ScoreAnimation.init(player_score, koponen_happiness)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    level_f_surf = pygame.Surface(display_size)
+    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
+    
+    while level_finished_running:
+        display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
+        anim_x = anim_lerp_x.update(False)
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_F11:
+                    Fullscreen.Set()
+                elif event.key == K_F4:
+                    if pygame.key.get_pressed()[K_LALT]:
+                        KDS_Quit()
+            elif event.type == KEYUP:
+                if event.key in (K_SPACE, K_RETURN, K_ESCAPE):
+                    KDS.Scores.ScoreAnimation.skip()
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    KDS.Scores.ScoreAnimation.skip()
+                    c = True
+            elif event.type == pygame.QUIT:
+                KDS_Quit()
+            elif event.type == pygame.VIDEORESIZE:
+                ResizeWindow(event.size)
+
+        level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
+        pygame.draw.rect(level_f_surf, (123, 134, 111), (int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
+        level_f_surf.blit(pygame.transform.scale(level_cleared_icon, (250, 139)), (int(display_size[0] / 2 - level_cleared_icon.get_width() / 2), int(display_size[1] / 2 - 175)))
+        
+        values = KDS.Scores.ScoreAnimation.update()
+        for i in range(KDS.Scores.ScoreAnimation.animationIndex):
+            level_f_surf.blit(ArialSysFont.render(values[i], True, score_color), (level_f_surf.get_width() - 10, 344 + i * 40))
+
+        KDS.Logging.Profiler(DebugMode)
+        level_f_surf.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
+        display.blit(level_f_surf, (0, 0))
+        if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+        
+            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
+            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
+            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        pygame.display.update()
+        window.fill(KDS.Colors.GetPrimary.Black)
+        display.fill(KDS.Colors.GetPrimary.Black)
+        c = False
+        clock.tick(locked_fps)
 """
+lfmr = False
 def level_finished_menu(score, k_happiness):
     global lfmr, current_map, max_map, player_score
     lfmr = True
@@ -2848,7 +2915,7 @@ def level_finished_menu(score, k_happiness):
     Title = pygame.image.load("Assets/Textures/Branding/LevelCleared.png").convert()
     Title.set_colorkey(KDS.Colors.GetPrimary.White)
 
-    blurred_background = KDS.Convert.ToBlur(game_pause_background.copy(), 6)
+    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -3412,7 +3479,7 @@ while main_running:
         debugSurf.set_alpha(128)
         screen.blit(debugSurf, (0, 0))
         
-        screen.blit(score_font.render("FPS: " + str(int(round(clock.get_fps()))), True, KDS.Colors.GetPrimary.White), (5, 5))
+        screen.blit(score_font.render("FPS: " + str(round(clock.get_fps())), True, KDS.Colors.GetPrimary.White), (5, 5))
         screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
         screen.blit(score_font.render("Sounds Playing: " + str(len(KDS.Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
@@ -3459,7 +3526,7 @@ while main_running:
         KDS.Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
         game_pause_background = screen.copy()
-        level_finished_menu(player_score, koponen_happiness)
+        level_finished_menu()
         level_finished = False
     if go_to_main_menu:
         KDS.Audio.stopAllSounds()

@@ -32,14 +32,21 @@ def init():
 class LogType():
     """The list of LogTypes you can log.
     """
-    exception = 70
-    log = 60
+    exception = 60
     critical = 50
     error = 40
     warning = 30
     info = 20
     debug = 10
-    notset = 0
+    
+loggingTypeSwitch = {
+    LogType.exception: logging.exception,
+    LogType.critical: logging.critical,
+    LogType.error: logging.error,
+    LogType.warning: logging.warning,
+    LogType.info: logging.info,
+    LogType.debug: logging.debug,
+}
 
 def Log(Log_Type: LogType or int, Message: str, Console_Visible=False):
     """Log a log.
@@ -50,27 +57,9 @@ def Log(Log_Type: LogType or int, Message: str, Console_Visible=False):
         Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
     """
     if running:
-        if Log_Type == LogType.exception:
-            logging.exception(Message)
-        elif Log_Type == LogType.log:
-            logging.log(Message)
-        elif Log_Type == LogType.critical:
-            logging.critical(Message)
-        elif Log_Type == LogType.error:
-            logging.error(Message)
-        elif Log_Type == LogType.warning:
-            logging.warning(Message)
-        elif Log_Type == LogType.info:
-            logging.info(Message)
-        elif Log_Type == LogType.debug:
-            logging.debug(Message)
-        elif Log_Type == LogType.notset:
-            logging.NOTSET(Message)
-            
-        if Console_Visible:
-            print(Message)
-    else:
-        print("Log not successful! Logger has been shut down already.")
+        loggingTypeSwitch[Log_Type](Message)
+        if Console_Visible: print(Message)
+    else: print("Log not successful! Logger has been shut down already.")
 
 def AutoError(Message, _currentframe):
     """Generates an automatic error message.
