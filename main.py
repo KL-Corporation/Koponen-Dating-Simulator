@@ -711,7 +711,7 @@ class Inventory:
             index += 1
 
     def moveRight(self):
-        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
+        KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex += 1
         if self.SIndex < self.size:
             if self.storage[self.SIndex] == "doubleItemPlaceholder":
@@ -721,7 +721,7 @@ class Inventory:
             self.SIndex = 0
 
     def moveLeft(self):
-        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
+        KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex -= 1
         if self.SIndex >= 0:
             if self.storage[self.SIndex] == "doubleItemPlaceholder":
@@ -730,7 +730,7 @@ class Inventory:
             self.SIndex = self.size - 1
 
     def pickSlot(self, index):
-        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.InventorySlotSwitching)
+        KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         if 0 <= index <= len(self.storage)-1:
             if self.storage[index] == "doubleItemPlaceholder":
                 self.SIndex = index-1
@@ -743,7 +743,7 @@ class Inventory:
                 if self.storage[self.SIndex + 1] == "doubleItemPlaceholder":
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
                 elif self.storage[self.SIndex] == 6:
-                    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinDrop)
+                    KDS.Missions.Listeners.iPuhelinDrop.Trigger()
             serialNumber = self.storage[self.SIndex]
             self.storage[self.SIndex] = Inventory.emptySlot
             return serialNumber
@@ -1132,7 +1132,7 @@ class LevelEnder(Tile):
         if player_rect.colliderect(self.rect):
             screen.blit(level_ender_tip, (self.rect.x - level_ender_tip.get_width() / 2 - scroll[0], self.rect.y - 40 - scroll[1]))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
-                KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
+                KDS.Missions.Listeners.LevelEnder.Trigger()
         return t_textures[self.serialNumber]
 
 class Candle(Tile):
@@ -1265,7 +1265,7 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
     def iPuhelin_p():
         global player_score
         player_score -= 10
-        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinPickup)
+        KDS.Missions.Listeners.iPuhelinPickup.Trigger()
 
         return False
 
@@ -1675,7 +1675,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     def level_ender_u(*args):
         global level_finished
         if args[0][0]:
-            KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.LevelEnder)
+            KDS.Missions.Listeners.LevelEnder.Trigger()
 
         return i_textures[31]
 
@@ -1788,7 +1788,7 @@ class Item:
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item.serialNumber
                                 if item.serialNumber == 6:
-                                    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinPickup)
+                                    KDS.Missions.Listeners.iPuhelinPickup
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
@@ -2190,7 +2190,7 @@ def koponen_talk():
     global main_running, currently_on_mission, player_score, ad_images, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
     conversations = []
 
-    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.KoponenTalk)
+    KDS.Missions.KoponenTalk.Trigger()
 
     koponenTalking = True
     pygame.mouse.set_visible(True)
@@ -3239,7 +3239,7 @@ while main_running:
         else: player_movement[0] -= 2
         if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0: player_movement[0] -= 4
     for i in range(round(abs(player_movement[0]))):
-        KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.Movement)
+        KDS.Missions.Listeners.Movement.Trigger()
     player_movement[1] += vertical_momentum
     vertical_momentum += fall_speed_copy
     if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity

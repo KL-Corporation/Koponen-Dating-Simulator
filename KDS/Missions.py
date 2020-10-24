@@ -11,7 +11,6 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 from inspect import currentframe
-
 #endregion
 #region Settings
 MissionColor = (128, 128, 128)
@@ -44,25 +43,21 @@ class Listener:
     def Trigger(self):
         for listnr in self.listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
-
-Listeners = { "InventorySlotSwitching": Listener(), 
-             "Movement": Listener(), 
-             "KoponenTalk": Listener(), 
-             "iPuhelinPickup": Listener(), 
-             "iPuhelinDrop": Listener(),
-             "LevelEnder": Listener()
-            }
-class ListenerTypes:
-    InventorySlotSwitching = "InventorySlotSwitching"
-    Movement = "Movement"
-    KoponenTalk = "KoponenTalk"
-    iPuhelinPickup = "iPuhelinPickup"
-    iPuhelinDrop = "iPuhelinDrop"
-    LevelEnder = "LevelEnder"
+            
+class Listeners:
+    InventorySlotSwitching = Listener()
+    Movement = Listener()
+    KoponenTalk = Listener()
+    KoponenRequestMission = Listener()
+    KoponenReturnMission = Listener()
+    KoponenAskDate = Listener()
+    iPuhelinPickup = Listener()
+    iPuhelinDrop = Listener()
+    LevelEnder = Listener()
 #endregion
 #region Classes
 class Task:
-    def __init__(self, missionName: str, safeName: str, text: str, *ListenerData: tuple[ListenerTypes or str, float]) -> None:
+    def __init__(self, missionName: str, safeName: str, text: str) -> None:
         global Missions
         self.safeName = safeName
         self.text = text
@@ -237,6 +232,19 @@ def init():
     hundredSize = TaskFont.size("100%")
 #endregion
 #region Initialize
+
+def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: tuple[Listeners and Listener, float]):
+    """Initialises a task.
+
+    Args:
+        MissionName (str): The Safe_Name of the mission you want to add this task to.
+        SafeName (str): A name that does not conflict with any other names.
+        Text (str): The name that will be displayed as the task header.
+    """
+    Task(MissionName, SafeName, Text)
+    for data in ListenerData:
+        data[0].Add(MissionName, SafeName, data[1])
+        
 def InitialiseMission(SafeName: str, Text: str):
     """Initialises a mission.
 
@@ -245,20 +253,6 @@ def InitialiseMission(SafeName: str, Text: str):
         Visible_Name (str): The name that will be displayed as the task header.
     """
     Mission(SafeName, Text)
-        
-def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: tuple[ListenerTypes or str, float]):
-    """Initialises a task.
-
-    Args:
-        Mission_Name (str): The Safe_Name of the mission you want to add this task to.
-        Safe_Name (str): A name that does not conflict with any other names.
-        Visible_Name (str): The name that will be displayed as the task header.
-        Listener (ListenerTypes, optional): A custom listener that will add a certain amount of progress when triggered. Defaults to None.
-        ListenerAddProgress (float, optional): The amount of progress that will be added when the listener is triggered. Defaults to 0.0.
-    """
-    Task(MissionName, SafeName, Text)
-    for data in ListenerData:
-        Listeners[data[0]].Add(MissionName, SafeName, data[1])
 #endregion
 #region Progress
 def Render(surface: pygame.Surface):
@@ -324,43 +318,42 @@ class Presets:
     @staticmethod
     def Tutorial():
         InitialiseMission("tutorial", "Tutoriaali")
-        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (ListenerTypes.Movement, 0.0025))
-        InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (ListenerTypes.InventorySlotSwitching, 0.2))
+        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (Listeners.Movement, 0.0025))
+        InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (Listeners.InventorySlotSwitching, 0.2))
         InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-        InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (ListenerTypes.iPuhelinDrop, 1.0), (ListenerTypes.iPuhelinPickup, -1.0))
+        InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (Listeners.iPuhelinDrop, 1.0), (Listeners.iPuhelinPickup, -1.0))
         
     @staticmethod
     def KoponenIntroduction():
         InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-        InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
+        InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (Listeners.KoponenTalk, 1.0))
+        InitialiseTask("koponen_introduction", "mission", "Pyydä Tehtävää Koposelta", (Listeners.KoponenRequestMission, 1.0))
 
     @staticmethod
     def LevelExit():
         InitialiseMission("reach_level_exit", "Exit")
-        InitialiseTask("reach_level_exit", "exit", "Reach Level Exit", (ListenerTypes.LevelEnder, 1.0))
-
+        InitialiseTask("reach_level_exit", "exit", "Reach Level Exit", (Listeners.LevelEnder, 1.0))
+        
 def InitialiseMissions(LevelIndex):
     Clear()
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         Presets.Tutorial()
         Presets.KoponenIntroduction()
+        
+        InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
+        InitialiseTask("first_mission", "find_mug", "Etsi Koposen Kahvikuppi")
+        InitialiseTask("first_mission", "return_mug", "Palauta Koposen Kahvikuppi", (Listeners.KoponenReturnMission, 1.0))
+        
+        InitialiseMission("sauna_and_exit", "Suuret Haaveet")
+        InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi saunavessa koulupolkusi jatkamiseksi.", (Listeners.LevelEnder, 1.0))
+        
     else:
         if LevelIndex < 2:
             Presets.Tutorial()
             Presets.KoponenIntroduction()
         elif LevelIndex == 2:
             InitialiseMission("koponen_talk", "Puhu Koposelle")
-            InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", (ListenerTypes.KoponenTalk, 1.0))
-        elif LevelIndex == 8:
-            Presets.Tutorial()
-            Presets.KoponenIntroduction()
+            InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", (Listeners.KoponenTalk, 1.0))
         else:
             Presets.LevelExit()
-#endregion
-#region Listeners
-def TriggerListener(Type: ListenerTypes or str):
-    global Listeners
-    if Type in Listeners:
-        Listeners[Type].Trigger()
-    else: KDS.Logging.AutoError("Listener Type not valid!", currentframe())
 #endregion

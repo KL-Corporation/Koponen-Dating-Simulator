@@ -5,6 +5,8 @@ import numpy
 
 import KDS.Math
 import KDS.Animator
+import KDS.Missions
+import KDS.Logging
 
 pygame.init()
 
@@ -57,7 +59,7 @@ class Item:
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item.serialNumber
                                 if item.serialNumber == 6:
-                                    KDS.Missions.TriggerListener(KDS.Missions.ListenerTypes.iPuhelinPickup)
+                                    KDS.Missions.Listeners.iPuhelinPickup.Trigger()
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
