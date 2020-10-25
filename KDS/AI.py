@@ -83,7 +83,7 @@ def init():
     global initCompleted, imp_fireball
 
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
-    imp_fireball.set_colorkey((255,255,255))
+    imp_fireball.set_colorkey((255, 255, 255))
 
     initCompleted = True
 

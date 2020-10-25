@@ -204,6 +204,7 @@ class Float:
         """
         self.From = From
         self.To = To
+        self.Finished = False
         self.ticks = Duration
         self.tick = 0
         self.onAnimationEnd = _OnAnimationEnd
@@ -229,6 +230,7 @@ class Float:
         Returns:
             float: The lerped float value.
         """
+        self.Finished = False
         if self.PingPong:
             reverse = not reverse
         if not reverse:
@@ -236,6 +238,7 @@ class Float:
             if self.tick > self.ticks:
                 if self.onAnimationEnd == OnAnimationEnd.Stop:
                     self.tick = self.ticks
+                    self.Finished = True
                 elif self.onAnimationEnd == OnAnimationEnd.Loop:
                     self.tick = 0
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
@@ -247,6 +250,7 @@ class Float:
             if self.tick < 0:
                 if self.onAnimationEnd == OnAnimationEnd.Stop:
                     self.tick = 0
+                    self.Finished = True
                 elif self.onAnimationEnd == OnAnimationEnd.Loop:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
@@ -276,6 +280,9 @@ class Color:
         self.int1.To = To[1]
         self.int2.From = From[2]
         self.int2.To = To[2]
-        
+    
     def getValues(self):
         return ((self.int0.From, self.int1.From, self.int2.From), (self.int0.From, self.int1.From, self.int2.From))
+    
+    def getFinished(self):
+        return True if self.int0.Finished and self.int1.Finished and self.int2.Finished else False  

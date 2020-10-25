@@ -77,6 +77,19 @@ level_cleared_icon.set_colorkey(KDS.Colors.GetPrimary.White)
 
 locked_fps = 60
 #endregion
+#region Quit Handling
+def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
+    global main_running, main_menu_running, tcagr_running, esc_menu, settings_running, selectedSave, tick, restart, reset_data, level_finished_running
+    main_menu_running = False
+    main_running = False
+    tcagr_running = False
+    esc_menu = False
+    KDS.Koponen.Talk.running = False
+    settings_running = False
+    restart = _restart
+    reset_data = _reset_data
+    level_finished_running = False
+#endregion
 #region Window
 class Fullscreen:
     enabled = False
@@ -111,7 +124,7 @@ class Fullscreen:
         Fullscreen.offset = (int((window_size[0] / 2) - (Fullscreen.size[0] / 2)), int(
             (window_size[1] / 2) - (Fullscreen.size[1] / 2)))
         window_info = pygame.display.Info()
-
+    
 def ResizeWindow(set_size: tuple):
     global window_resize_size
     if not Fullscreen.enabled:
@@ -121,6 +134,7 @@ def ResizeWindow(set_size: tuple):
         Fullscreen.Set(True)
 #endregion
 #region Initialisation
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 Fullscreen.enabled = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
@@ -149,14 +163,17 @@ I=====[ Render Info ]=====I
    - Software Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_sw_CC)}
    - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_sw_A)}
 I=====[ Render Info ]=====I""")
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising KDS modules...")
 KDS.AI.init()
 KDS.Missions.init()
 KDS.Scores.init()
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
-ambient_tint = pygame.Surface(screen_size)
-black_tint = pygame.Surface(screen_size)
-black_tint.fill((20, 20, 20))
-black_tint.set_alpha(170)
+KDS.Koponen.init()
+KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
+
+#KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+#endregion
+#region Loading
+#region Settings
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
 loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 window.fill(loadingScreen.get_at((0, 0)))
@@ -178,7 +195,6 @@ I=====[ Settings Loaded ]=====I
    - Max Map: {max_map}
 I=====[ Settings Loaded ]=====I""", False)
 #endregion
-#region Loading
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
 #region Fonts
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Fonts...")
@@ -186,7 +202,6 @@ score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
-text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 ArialSysFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Font Loading Complete.")
@@ -389,6 +404,11 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
 #endregion
 #region Variable Initialisation
+ambient_tint = pygame.Surface(screen_size)
+black_tint = pygame.Surface(screen_size)
+black_tint.fill((20, 20, 20))
+black_tint.set_alpha(170)
+
 #################### Vähän Ghetto, mutta en halua turhia variableja. ####################
 jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
 jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetPrimary.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
@@ -541,19 +561,6 @@ def LoadGameSettings():
     shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "shotgun")
     pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "pistol")
 LoadGameSettings()
-#endregion
-#region Quit Handling
-def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
-    global main_running, main_menu_running, tcagr_running, esc_menu, settings_running, selectedSave, tick, restart, reset_data, level_finished_running
-    main_menu_running = False
-    main_running = False
-    tcagr_running = False
-    esc_menu = False
-    KDS.Koponen.talk_running = False
-    settings_running = False
-    restart = _restart
-    reset_data = _reset_data
-    level_finished_running = False
 #endregion
 #region World Data
 imps = []
@@ -1987,11 +1994,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, defVal: str = ""):
     rstring = defVal
     while r:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                r = False
-                pygame.quit()
-                quit()
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == K_ESCAPE:
                     if allowEscape:
                         r = False
@@ -2002,6 +2005,10 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, defVal: str = ""):
                     rstring = rstring[:-1]
                 elif event.unicode:
                     rstring += event.unicode
+            elif event.type == pygame.QUIT:
+                r = False
+                pygame.quit()
+                quit()
         window.fill(consoleBackground.get_at((0, 0)))
         window.blit(KDS.Convert.AspectScale(consoleBackground, display_size), ((display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2) - consoleBackground.get_size()[1] / 2 ))
         consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
@@ -2161,8 +2168,7 @@ def agr(tcagr: bool):
         "I Agree", True, KDS.Colors.GetPrimary.White))
 
     while tcagr_running:
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
-            (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
@@ -2699,12 +2705,11 @@ def main_menu():
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        c = False
+        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         display.fill(KDS.Colors.GetPrimary.Black)
         pygame.display.update()
         window.fill(KDS.Colors.GetPrimary.Black)
-        c = False
         clock.tick(locked_fps)
 
 def level_finished_menu():
