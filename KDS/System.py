@@ -47,5 +47,5 @@ class MessageBox:
         Cancel_TryAgain_Continue = 6
     
     @staticmethod
-    def Show(title: str, text: str, style: Styles or int):
+    def Show(title: str, text: str, style: Styles and int):
         return ctypes.windll.user32.MessageBoxW(0, text, title, style)

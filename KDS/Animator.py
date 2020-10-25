@@ -192,7 +192,7 @@ class AnimationType:
     SmootherStep = CalcT.SmootherStep
 
 class Float:
-    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType or Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
         Args:
