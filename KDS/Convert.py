@@ -75,6 +75,20 @@ def ToMultiplier(boolean: bool):
     return -1 if boolean else 1
 
 def ToLines(font: pygame.font.Font, text: str, max_width: int or float):
-    if font.size(text) > max_width:
-        
+    if font.size(text)[0] > max_width:
+        text_split = [wrd + " " for wrd in text.split(" ") if wrd]
+        text_split[len(text_split) - 1] = text_split[len(text_split) - 1].strip()
+        new_split = [text_split]
+        while font.size("".join(new_split[-1]))[0] > max_width:
+            toTest = new_split[-1]
+            i = 0
+            while font.size("".join(toTest[:i]))[0] <= max_width:
+                i += 1
+                if i >= len(toTest):
+                    break
+                    
+            new_split.append(toTest[i:])
+            new_split[-2] = toTest[:i]
+        if len(new_split[-1]) < 1: del(new_split[-1])
+        return new_split
     else: return text

@@ -4,6 +4,7 @@ import pygame
 from pygame.draw import lines
 from pygame.locals import *
 import KDS.Colors
+import KDS.Convert
 import KDS.Animator
 import KDS.Audio
 import KDS.UI
@@ -253,6 +254,7 @@ class Talk:
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool):
+        print(KDS.Convert.ToLines(text_font, "Tämä on testi teksti testaavalle ihmiselle.", 20))
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_foreground, (40, 474))
         surface.blit(Talk.Conversation.render(), conversation_rect.topleft)
