@@ -90,5 +90,22 @@ def koponen_talk():
             conversations.append("Koponen: Ei ei ei")
 """
 
-def koponen_talk():
+class Talk:
     
+    @staticmethod
+    def start(surface: pygame.Surface):
+        pass
+
+    @staticmethod
+    def renderMenu(surface: pygame.Surface):
+        pass
+        
+    class Conversation:
+        
+        @staticmethod
+        def schedule():
+            pass
+        
+        @staticmethod
+        def render():
+            pass
