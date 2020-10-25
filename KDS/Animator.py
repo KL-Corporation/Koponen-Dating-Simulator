@@ -12,7 +12,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
         """Initialises an animation.
 
         Args:
@@ -258,7 +258,7 @@ class Float:
         else: return self.To
 
 class Color:
-    def __init__(self, From: tuple[int, int, int], To: tuple[int, int, int], Duration: int, Type: AnimationType or Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd or str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: tuple[int, int, int], To: tuple[int, int, int], Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:
         self.int0 = Float(From[0], To[0], Duration, Type, _OnAnimationEnd)
         self.int1 = Float(From[1], To[1], Duration, Type, _OnAnimationEnd)
         self.int2 = Float(From[2], To[2], Duration, Type, _OnAnimationEnd)
