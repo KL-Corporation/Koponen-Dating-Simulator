@@ -2191,17 +2191,20 @@ def agr(tcagr: bool):
     return True
 #endregion
 #region Game Start and Stop
-def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool):
+def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_loading: bool = True):
     global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
-    scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
-    window.fill(scaled_loadingScreen.get_at((0, 0)))
-    window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
-    pygame.display.update()
+    if show_loading:
+        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
+        window.fill(scaled_loadingScreen.get_at((0, 0)))
+        window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
+        pygame.display.update()
     KDS.Audio.MusicMixer.stop()
     KDS.Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     
     KDS.ConfigManager.Save.init(1)
+    
+    player_animations.reset()
     
     #region Load World Data
     global Items, Enemies, Explosions, BallisticObjects
@@ -2983,7 +2986,7 @@ while main_running:
         else:
             death_wait += 1
             if death_wait > 240:
-                play_function(KDS.Gamemode.gamemode, False)
+                play_function(KDS.Gamemode.gamemode, False, False)
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######

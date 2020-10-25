@@ -142,12 +142,9 @@ class MultiAnimation:
     def get_frame(self):
         return self.active.reset()
     
-    def reset(self, _global: bool = False):
-        if not _global:
-            self.active.reset()
-        else:
-            for anim in self.animations:
-                self.animations[anim].reset()
+    def reset(self):
+        for anim in self.animations:
+            self.animations[anim].tick = 0
     
     def toString(self, _global: bool = False) -> None:
         if not _global:
