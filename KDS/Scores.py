@@ -7,7 +7,7 @@ import KDS.Math
 import KDS.ConfigManager
 import KDS.Logging
 
-waitTicks = 30 #The amount of ticks ScoreAnimation will wait before updating the next animation
+waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait before updating the next animation
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
 animationDivider = 2 #The value the default animation length will be divided
 
@@ -104,13 +104,12 @@ class ScoreAnimation:
         if not ScoreAnimation.finished and fadeFinished:
             animation = ScoreAnimation.animationList[ScoreAnimation.animationIndex]
             animation.update()
-            if animation.tick >= animation.ticks:
-                ScoreAnimation.waitTime += 1
-                if ScoreAnimation.waitTime > waitTicks:
-                    ScoreAnimation.animationIndex += 1
-                    ScoreAnimation.waitTime = 0
-                    if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
-                        ScoreAnimation.finished = True
+            if animation.Finished:
+                pygame.time.delay(waitMilliseconds)
+                ScoreAnimation.animationIndex += 1
+                ScoreAnimation.waitTime = 0
+                if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
+                    ScoreAnimation.finished = True
             else: KDS.Audio.playSound(pointSound)
                         
         return tuple([round(anim.get_value()) for anim in ScoreAnimation.animationList])

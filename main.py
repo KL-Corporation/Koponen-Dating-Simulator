@@ -545,7 +545,7 @@ taskTaivutettu = ""
 DebugMode = False
 
 MenuMode = 0
-game_pause_background = screen.copy()
+game_pause_background = pygame.transform.scale(screen.copy(), display_size)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
@@ -2758,9 +2758,11 @@ def level_finished_menu():
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.GetPrimary.White))
     next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White), enabled=next_level_bool)
     
+    pre_rendered_scores = {}
+    
     level_finished_running = True
     while level_finished_running:
-        display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
+        display.blit(game_pause_background, (0, 0))
         anim_x = anim_lerp_x.update(False)
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
         
@@ -2772,6 +2774,8 @@ def level_finished_menu():
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
+                elif event.key == K_F3:
+                    DebugMode = not DebugMode
             elif event.type == KEYUP:
                 if event.key in (K_SPACE, K_RETURN, K_ESCAPE):
                     KDS.Scores.ScoreAnimation.skip()
@@ -2787,21 +2791,24 @@ def level_finished_menu():
         level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
         pygame.draw.rect(level_f_surf, (123, 134, 111), menu_rect)
         level_f_surf.blit(pygame.transform.scale(level_cleared_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 275)))
-        
+            
         values = KDS.Scores.ScoreAnimation.update(True if anim_lerp_x.tick >= anim_lerp_x.ticks else False)
+        comparisonValue = KDS.Math.Clamp(KDS.Scores.ScoreAnimation.animationIndex + 1, 0, len(values))
+        lineY = textStartVertOffset + (len(values) - 1) * textVertOffset + round(totalVertOffset / 2)
+        pygame.draw.line(level_f_surf, KDS.Colors.GetPrimary.Cyan, (menu_rect.left + padding, lineY), (menu_rect.right - padding, lineY), 3)
         for i in range(len(scoreTexts)):
             totalOffset = True if i == len(values) - 1 else False
             textY = textStartVertOffset + i * textVertOffset + (0 if not totalOffset else totalVertOffset)
+            if i < comparisonValue:
+                value = str(values[i])
+                if value not in pre_rendered_scores:
+                    rend_txt = ArialSysFont.render(value, True, score_color)
+                    if KDS.Scores.ScoreAnimation.animationList[i].Finished:
+                        pre_rendered_scores[value] = rend_txt
+                else:
+                    rend_txt = pre_rendered_scores[value]
+                level_f_surf.blit(rend_txt, (menu_rect.right - rend_txt.get_width() - padding, textY))
             level_f_surf.blit(scoreTexts[i], (menu_rect.left + padding, textY))
-            
-        lineY = textStartVertOffset + (len(values) - 1) * textVertOffset + round(totalVertOffset / 2)
-        pygame.draw.line(level_f_surf, KDS.Colors.GetPrimary.Cyan, (menu_rect.left + padding, lineY), (menu_rect.right - padding, lineY), 3)
-        
-        for i in range(KDS.Math.Clamp(KDS.Scores.ScoreAnimation.animationIndex + 1, 0, len(values))):
-            rend_txt = ArialSysFont.render(str(values[i]), True, score_color)
-            totalOffset = True if i == len(values) - 1 else False
-            textY = textStartVertOffset + i * textVertOffset + (0 if not totalOffset else totalVertOffset)
-            level_f_surf.blit(rend_txt, (menu_rect.right - rend_txt.get_width() - padding, textY))
             
         if KDS.Scores.ScoreAnimation.finished:
             timeTakenText = ArialSysFont.render(f"Time Taken: {KDS.Scores.GameTime.formattedGameTime}", True, score_color)
@@ -2812,7 +2819,7 @@ def level_finished_menu():
             next_level_button.update(level_f_surf, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
-        level_f_surf.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
+        level_f_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(level_f_surf, (0, 0))
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
@@ -3361,7 +3368,7 @@ while main_running:
         window.fill(KDS.Colors.GetPrimary.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
                     (Fullscreen.offset[0], Fullscreen.offset[1]))
-        game_pause_background = screen.copy()
+        game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         pygame.mouse.set_visible(True)
         esc_menu_f()
         pygame.mouse.set_visible(False)
@@ -3373,7 +3380,7 @@ while main_running:
         KDS.Audio.stopAllSounds()
         KDS.Audio.MusicMixer.stop()
         pygame.mouse.set_visible(True)
-        game_pause_background = screen.copy()
+        game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         level_finished_menu()
         level_finished = False
     if go_to_main_menu:

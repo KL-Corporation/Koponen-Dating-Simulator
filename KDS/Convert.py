@@ -59,11 +59,16 @@ def ToGrayscale(image: pygame.Surface):
     arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
     return pygame.surfarray.make_surface(arr)
 
-def ToBlur(image: pygame.Surface, strength: int):
-    toBlur = pygame.image.tostring(image, "RGBA")
-    blurredImage = PIL_Image.frombytes("RGBA", image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
-    blurredString = blurredImage.tobytes("raw", "RGBA")
-    blurredSurface = pygame.image.fromstring(blurredString, image.get_size(), "RGBA").convert()
+def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False):
+    mode = "RGB"
+    if alpha:
+        mode = "RGBA"
+    toBlur = pygame.image.tostring(image, mode)
+    blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
+    blurredString = blurredImage.tobytes("raw", mode)
+    blurredSurface = pygame.image.fromstring(blurredString, image.get_size(), mode)
+    if alpha: blurredSurface.convert_alpha()
+    else: blurredSurface.convert()
     return blurredSurface
 
 def AspectScale(image: pygame.Surface, size: tuple[int, int], horizontalOnly: bool = False, verticalOnly: bool = False):
