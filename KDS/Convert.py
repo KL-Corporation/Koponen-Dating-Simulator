@@ -1,6 +1,7 @@
 import pygame
 import KDS.Logging
 import KDS.Colors
+import KDS.Math
 from inspect import currentframe
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
@@ -73,10 +74,7 @@ def AspectScale(image: pygame.Surface, size: tuple[int, int], horizontalOnly: bo
 def ToMultiplier(boolean: bool):
     return -1 if boolean else 1
 
-def ToMultiplier2(integer: int):
-    if integer > 0:
-        return 1
-    elif integer < 0:
-        return -1
-    else:
-        return 0
+def ToLines(font: pygame.font.Font, text: str, max_width: int or float):
+    if font.size(text) > max_width:
+        
+    else: return text

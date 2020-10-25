@@ -1,6 +1,7 @@
 import os
 import random
 import pygame
+from pygame.draw import lines
 from pygame.locals import *
 import KDS.Colors
 import KDS.Animator
@@ -16,6 +17,7 @@ conversation_rect = pygame.Rect(40, 40, 700, 400)
 conversation_outline_width = 3
 conversation_border_radius = 10
 line_reveal_duration = 30 #ticks
+min_time_before_scroll = 120 #ticks
 #endregion
 
 pygame.init()
@@ -217,18 +219,28 @@ class Talk:
     running = False
     class Conversation:
         surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA)
-        
-        lines = []
+        surface_size = surface.get_size()
         
         class ConversationLine:
             def __init__(self, text) -> None:
                 self.text = text_font.render(text, True, text_color)
-                self.animationProgress = KDS.Animator.Float(0, 1, line_reveal_duration, KDS.Animator.AnimationType.EaseIn, KDS.Animator.OnAnimationEnd.Stop)
+                self.text_size = self.text.get_size()
+                self.animationProgress = KDS.Animator.Float(0, Talk.Conversation.surface_size[0], line_reveal_duration, KDS.Animator.AnimationType.EaseIn, KDS.Animator.OnAnimationEnd.Stop)
+                self.animationFinished = False
+                self.waitBeforeScroll = 0
                 self.finished = False
+                
+            def update(self):
+                self.animationProgress.update()
+                
+            def render(self, surface: pygame.Surface):
+                surface.blit(self.text, (0, 0))
+        
+        lines: list[ConversationLine] = []
         
         @staticmethod
-        def schedule():
-            pass
+        def schedule(text):
+            lines.append(Talk.Conversation.ConversationLine(text))
         
         @staticmethod
         def render():
