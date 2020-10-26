@@ -741,7 +741,7 @@ class Inventory:
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         if 0 <= index <= len(self.storage)-1:
             if self.storage[index] == "doubleItemPlaceholder":
-                self.SIndex = index-1
+                self.SIndex = index - 1
             else:
                 self.SIndex = index
 
@@ -858,7 +858,7 @@ class Toilet(Tile):
             else:
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
-                Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x+7, self.rect.x+self.rect.width-13), self.rect.y+8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
+                Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x + 7, self.rect.x + self.rect.width - 13), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
             Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
             return self.animation.update()
         else:
@@ -887,7 +887,7 @@ class Trashcan(Tile):
             else:
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
-                Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x, self.rect.x+self.rect.width-16), self.rect.y+8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
+                Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x, self.rect.x + self.rect.width - 16), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
             Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
             return self.animation.update()
         else:
@@ -981,10 +981,10 @@ class Landmine(Tile):
                 player_health -= 100 - KDS.Math.getDistance(player_rect.center, self.rect.center)
             for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100:
-                    enemy.health -= 120-KDS.Math.getDistance(enemy.rect.center, self.rect.center)
+                    enemy.health -= 120 - KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
             KDS.Audio.playSound(landmine_explosion)
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x-60, self.rect.y-60)))           
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))           
         return self.texture
 
 class Ladder(Tile):
@@ -1015,8 +1015,8 @@ class Lamp(Tile):
             y += 33
             for row in tiles:
                 for tile in row:
-                    if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y+self.rect.height+y)) and tile.serialNumber != 22 and tile.checkCollision:
-                        y = y - (self.rect.y+self.rect.height+y - tile.rect.y) + 8
+                    if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
+                        y = y - (self.rect.y + self.rect.height + y - tile.rect.y) + 8
                         r = False
             if y > 154:
                 r = False
@@ -1025,7 +1025,7 @@ class Lamp(Tile):
     def update(self):
         if random.randint(0, 10) != 10:
             btmidth = int(self.coneheight*80/90)
-            Lights.append(KDS.World.Lighting.Light((self.rect.x-btmidth/2+7, self.rect.y+16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
+            Lights.append(KDS.World.Lighting.Light((self.rect.x - btmidth/2 + 7, self.rect.y + 16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
         return self.texture
 
 class DecorativeHead(Tile):
@@ -1107,7 +1107,7 @@ class Torch(Tile):
         else:
             self.light_scale += 4
         if random.randint(0, 4) == 0:
-            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y+8), random.randint(3, 6), 30, 1))
+            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
         Lights.append(KDS.World.Lighting.Light((self.rect.x - decor_head_light_sphere_radius/2, self.rect.y - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
         return self.texture.update()
 
@@ -1155,8 +1155,8 @@ class Candle(Tile):
         if random.randint(0, 5) == 5:
             self.light_scale = random.randint(20, 60)
         if random.randint(0, 50) == 0:
-            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx-3, self.rect.y), random.randint(3, 6), 20, 0.01))
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx-self.light_scale/2, self.rect.y-self.light_scale/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+            Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
         return self.texture.update()
 
 class Teleport(Tile):
@@ -1178,7 +1178,7 @@ class LampPoleLamp(Tile):
         self.checkCollision = False
     
     def update(self):
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx-player_light_sphere_radius/2, self.rect.centery-player_light_sphere_radius/2), light_sphere2))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - player_light_sphere_radius / 2, self.rect.centery - player_light_sphere_radius/2), light_sphere2))
         return self.texture
 
 class Chair(Tile):
@@ -1510,7 +1510,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         if args[0][0]:
             if KDS.World.knife_C.counter > 40:
                 KDS.World.knife_C.counter = 0
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 13 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,1,1),direction, -1, tiles, 25, maxDistance=40))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 13 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 1, 1),direction, -1, tiles, 25, maxDistance=40))
             KDS.World.knife_C.counter  += 1
             return knife_animation_object.update()
         else:
@@ -1532,8 +1532,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
             pistol_bullets -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2),direction, -1, tiles, 100))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2),direction, -1, tiles, 100))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -1551,8 +1551,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
                 temp = 100
             else:
                 temp = -80
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-temp/1.4, player_rect.centery-30), blue_light_sphere1))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx-temp,player_rect.centery-19,2,2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - temp / 1.4, player_rect.centery - 30), blue_light_sphere1))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx - temp,player_rect.centery - 19, 2, 2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -1567,7 +1567,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             rk62_shot.stop()
             KDS.Audio.playSound(rk62_shot)
             rk_62_ammo -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
             return rk62_f_texture
         else:
@@ -1584,9 +1584,9 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.playSound(player_shotgun_shot)
             shotgun_shells -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius/2), light_sphere2))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 25, maxDistance=1400, slope=3-x/1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1601,8 +1601,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             smg_shot.stop()
             KDS.Audio.playSound(smg_shot)
             ppsh41_ammo -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
@@ -1619,8 +1619,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
             ppsh41_shot.stop()
             KDS.Audio.playSound(awm_shot)
             awm_ammo -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx-player_light_sphere_radius/2, player_rect.centery-player_light_sphere_radius/2), light_sphere2))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery-19,2,2), direction, -1, tiles, random.randint(300, 590), slope=0))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
         else:
             KDS.World.awm_C.counter += 1
@@ -1664,11 +1664,11 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
         elif KDS.Keys.GetPressed(KDS.Keys.altDown):
             KDS.World.Grenade_O.Slope -= 0.03
 
-        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force+15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force+15)*-1 - scroll[1]) )
+        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
         if args[0][0]:
             KDS.Audio.playSound(grenade_throw)
             player_inventory.storage[player_inventory.SIndex] = "none"
-            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery-25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
+            BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery - 25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
    
     @staticmethod
@@ -1763,7 +1763,7 @@ class Item:
     def __init__(self, position: tuple[int, int], serialNumber: int):
         if serialNumber:
             self.texture = i_textures[serialNumber]
-        self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[
+        self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture.get_size()[
                                 1]), self.texture.get_size()[0], self.texture.get_size()[1])
         self.serialNumber = serialNumber
 
@@ -1773,7 +1773,7 @@ class Item:
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(screen, KDS.Colors.GetPrimary.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
+            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
     @staticmethod
     def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
@@ -1807,7 +1807,7 @@ class Item:
                             except IndexError as e:
                                 KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
                     else:
-                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == Inventory.emptySlot:
+                        if inventory.SIndex < inventory.size - 1 and inventory.storage[inventory.SIndex] == Inventory.emptySlot:
                             if inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
                                 Pfunctions[item.serialNumber]()
                                 inventory.storage[inventory.SIndex] = item.serialNumber
@@ -1888,8 +1888,8 @@ def collision_test(rect, Tile_list):
 
     max_x = len(Tile_list[0])-1
     max_y = len(Tile_list)-1
-    end_x = x+6
-    end_y = y+6
+    end_x = x + 6
+    end_y = y + 6
 
     if end_x > max_x:
         end_x = max_x
@@ -2613,7 +2613,7 @@ def main_menu():
             
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
-            display.blit(frames[current_frame-1], (0, 0))
+            display.blit(frames[current_frame - 1], (0, 0))
             display.blit(frames[current_frame], (0,0))
 
             main_menu_play_button.update(display, mouse_pos, c, Mode.ModeSelectionMenu)
@@ -2630,7 +2630,7 @@ def main_menu():
                     current_frame = 0
                 framechange_lerp.tick = 0
                 frames[current_frame].set_alpha(0)
-                frames[current_frame-1].set_alpha(255)
+                frames[current_frame - 1].set_alpha(255)
 
         elif MenuMode == Mode.ModeSelectionMenu:
 
@@ -3052,7 +3052,7 @@ while main_running:
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x))
 
             KDS.Audio.playSound(landmine_explosion)
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x-60, B_Object.rect.y-55)))
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x - 60, B_Object.rect.y - 55)))
              
             BallisticObjects.remove(B_Object)
 
@@ -3091,7 +3091,7 @@ while main_running:
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
         if player_light:
-            black_tint.blit(light_sphere, (int(player_rect.centerx-scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery-scroll[1] - player_light_sphere_radius / 2)))
+            black_tint.blit(light_sphere, (int(player_rect.centerx - scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery - scroll[1] - player_light_sphere_radius / 2)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:
