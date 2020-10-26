@@ -331,8 +331,8 @@ class Presets:
 
     @staticmethod
     def LevelExit():
-        InitialiseMission("reach_level_exit", "Exit")
-        InitialiseTask("reach_level_exit", "exit", "Reach Level Exit", (Listeners.LevelEnder, 1.0))
+        InitialiseMission("reach_level_exit", "Uloskäynti")
+        InitialiseTask("reach_level_exit", "exit", "Löydä Uloskäynti", (Listeners.LevelEnder, 1.0))
         
 def InitialiseMissions(LevelIndex):
     Clear()
