@@ -1,9 +1,8 @@
-import json
 
-d = json.dumps({"dark": False}, indent=2)
-print(d)
+def add(v):
+    v[0] += 1
 
-with open("ah.txt", "w") as f:
-    f.write("KKKKKKKKKKKKKK")
-
-print("done")
+new = [0]
+print(new)
+add(new)
+print(new)

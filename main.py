@@ -752,13 +752,13 @@ class Inventory:
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
                 elif self.storage[self.SIndex] == 6:
                     KDS.Missions.Listeners.iPuhelinDrop.Trigger()
-            serialNumber = self.storage[self.SIndex]
+            temp = self.storage[self.SIndex]
             self.storage[self.SIndex] = Inventory.emptySlot
-            return serialNumber
+            return temp
 
     def useItem(self, Surface: pygame.Surface, *args):
         if self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
-            dumpValues = self.storage[self.SIndex].use(args, Surface)
+            dumpValues = self.storage[self.SIndex].use(args, Surface, Projectiles)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
             else:
@@ -2875,21 +2875,19 @@ while main_running:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
                 if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
-                    serialNumber = player_inventory.dropItem()
-                    if serialNumber == "doubleItemPlaceholder":
-                        continue
-                    tempItem = Item((player_rect.x, player_rect.y), serialNumber=serialNumber)
+                    temp = player_inventory.dropItem()
+                    temp.rect.x = player_rect.centerx
                     counter = 0
                     while True:
-                        tempItem.rect.y += tempItem.rect.height
-                        for collision in collision_test(tempItem.rect, tiles):
-                            tempItem.rect.bottom = collision.top
+                        temp.rect.y += temp.rect.height
+                        for collision in collision_test(temp.rect, tiles):
+                            temp.rect.bottom = collision.top
                             counter = 250
                         counter += 1
                         if counter > 250:
                             break
                         
-                    Items = numpy.append(Items, tempItem)
+                    Items = numpy.append(Items, temp)
             elif event.key == K_f:
                 if playerStamina == 100:
                     playerStamina = -1000

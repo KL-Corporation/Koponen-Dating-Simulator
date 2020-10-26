@@ -7,6 +7,7 @@ import KDS.Math
 import KDS.Animator
 import KDS.Missions
 import KDS.Logging
+import KDS.World
 
 pygame.init()
 
@@ -115,12 +116,18 @@ class BlueKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class Cell(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return True
@@ -129,12 +136,18 @@ class Coffeemug(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class Gasburner(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -143,12 +156,18 @@ class GreenKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class iPuhelin(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -157,12 +176,18 @@ class Knife(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class LappiSytytyspalat(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return True
@@ -171,12 +196,18 @@ class Medkit(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class Pistol(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -185,12 +216,18 @@ class PistolMag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class rk62(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -199,12 +236,18 @@ class Shotgun(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class rk62Mag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return True
@@ -213,12 +256,18 @@ class ShotgunShells(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class Plasmarifle(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -227,12 +276,18 @@ class Soulsphere(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class RedKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return True
@@ -241,12 +296,18 @@ class SSBonuscard(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class Turboneedle(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return True
@@ -255,12 +316,22 @@ class Ppsh41(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        if KDS.World.ppsh41_C.counter > 3:
+            KDS.World.ppsh41_C.counter = 0
+            args[1].append()
+        KDS.World.ppsh41_C.counter += 1
+        return self.texture
+
     def pickup(self):
         return False
 
 class Awm(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -269,12 +340,18 @@ class AwmMag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return True
 
 class EmptyFlask(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -283,12 +360,18 @@ class MethFlask(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class BloodFlask(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -297,12 +380,18 @@ class Grenade(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class FireExtinguisher(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
@@ -311,12 +400,18 @@ class LevelEnder1(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def use(self, *args):
+        return self.texture
+
     def pickup(self):
         return False
 
 class Ppsh41Mag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
     
     def pickup(self):
         return True
@@ -324,6 +419,9 @@ class Ppsh41Mag(Item):
 class Lantern(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
 
     def pickup(self):
         return False
