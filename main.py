@@ -639,7 +639,7 @@ class WorldData():
                                     (x * 34, y * 34), serialNumber=serialNumber)
                         elif data[0] == "1":
                             if loadEntities:
-                                Items = numpy.append(Items, Item((x * 34, y * 34), serialNumber=serialNumber))
+                                Items = numpy.append(Items, KDS.Items.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber, texture=i_textures[serialNumber]))
                         elif data[0] == "2":
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
@@ -758,7 +758,7 @@ class Inventory:
 
     def useItem(self, Surface: pygame.Surface, *args):
         if self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
-            dumpValues = Ufunctions[self.storage[self.SIndex]](args, Surface)
+            dumpValues = self.storage[self.SIndex].use(args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
             else:
@@ -2998,8 +2998,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Items, player_inventory = Item.checkCollisions(
-        Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
+    Items, player_inventory = KDS.Items.Item.checkCollisions(Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.centerx - (player_rect.x - scroll[0] - 301), player_rect.centery - (player_rect.y - scroll[1] - 221)))
     for enemy in Enemies:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
@@ -3024,7 +3023,7 @@ while main_running:
                         Items = numpy.append(Items, tempItem)
                         del tempItem
 
-    Item.render(Items, screen, scroll)
+    KDS.Items.Item.render(Items, screen, scroll, DebugMode)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
     if 33 in player_inventory.storage:
         Inventory.useSpecificItem(33, screen)

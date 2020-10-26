@@ -57,7 +57,7 @@ class Item:
                         if inventory.storage[inventory.SIndex] == "none":
                             temp_var = item.pickup()
                             if not temp_var:
-                                inventory.storage[inventory.SIndex] = item.serialNumber
+                                inventory.storage[inventory.SIndex] = item
                                 if item.serialNumber == 6:
                                     KDS.Missions.Listeners.iPuhelinPickup.Trigger()
                             Item_list = numpy.delete(Item_list, index)
@@ -65,6 +65,7 @@ class Item:
                         elif item.serialNumber not in inventory_items:
                             try:
                                 item.pickup()
+                                inventory.storage[inventory.SIndex] = item
                                 Item_list = numpy.delete(Item_list, index)
                                 showItemTip = False
                             except IndexError as e:
@@ -73,7 +74,7 @@ class Item:
                         if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
                             if inventory.storage[inventory.SIndex + 1] == "none":
                                 item.pickup()
-                                inventory.storage[inventory.SIndex] = item.serialNumber
+                                inventory.storage[inventory.SIndex] = item
                                 inventory.storage[inventory.SIndex +
                                                   1] = "doubleItemPlaceholder"
                                 Item_list = numpy.delete(Item_list, index)
@@ -100,10 +101,13 @@ class Item:
 
     def pickup(self):
         pass
-    def use(self):
-        pass
+
+    def use(self, *args):
+        return self.texture
+
     def drop(self):
         pass
+
     def init(self):
         pass
 
@@ -111,126 +115,218 @@ class BlueKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class Cell(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return True
 
 class Coffeemug(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class Gasburner(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class GreenKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class iPuhelin(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class Knife(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class LappiSytytyspalat(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return True
 
 class Medkit(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class Pistol(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class PistolMag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class rk62(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class Shotgun(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class rk62Mag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return True
 
 class ShotgunShells(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class Plasmarifle(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class Soulsphere(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class RedKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return True
 
 class SSBonuscard(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class Turboneedle(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return True
 
 class Ppsh41(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class Awm(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class AwmMag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return True
+
 class EmptyFlask(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class MethFlask(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class BloodFlask(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class Grenade(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class FireExtinguisher(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        return False
 
 class LevelEnder1(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
+
 class Ppsh41Mag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+    
+    def pickup(self):
+        return True
 
 class Lantern(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
+    def pickup(self):
+        return False
 serialNumbers = {
     1: BlueKey,
     2: Cell,
