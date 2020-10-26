@@ -13,7 +13,8 @@
                 "plasmarifle": 50,
                 "ppsh41": 72,
                 "shotgun": 8,
-                "pistol": 7
+                "pistol": 7,
+                "awm": 5
             },
             "Score": {
                 "timeBonus": 500

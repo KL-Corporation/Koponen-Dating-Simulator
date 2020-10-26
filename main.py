@@ -551,7 +551,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, shotgun_shells, pistol_bullets, fall_max_velocity
+    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, awm_ammo, shotgun_shells, pistol_bullets, fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMaxVelocity")
@@ -560,6 +560,7 @@ def LoadGameSettings():
     ppsh41_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "ppsh41")
     shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "shotgun")
     pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "pistol")
+    awm_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "awm")
 LoadGameSettings()
 #endregion
 #region World Data
