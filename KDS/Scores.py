@@ -80,7 +80,6 @@ class ScoreAnimation:
     animationIndex = 0
     animationList = ()
     valueList = ()
-    waitTime = 0
     finished = False
     
     @staticmethod
@@ -88,7 +87,6 @@ class ScoreAnimation:
         score, koponen_happiness, timeBonus, totalScore = ScoreCounter.calculateScores(score, koponen_happiness)
         
         ScoreAnimation.animationIndex = 0
-        ScoreAnimation.waitTime = 0
         ScoreAnimation.finished = False
         
         score_animation = KDS.Animator.Float(0, score, min(round(score / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
@@ -107,7 +105,6 @@ class ScoreAnimation:
             if animation.Finished:
                 pygame.time.delay(waitMilliseconds)
                 ScoreAnimation.animationIndex += 1
-                ScoreAnimation.waitTime = 0
                 if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                     ScoreAnimation.finished = True
             else: KDS.Audio.playSound(pointSound)
