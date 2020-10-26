@@ -14,8 +14,9 @@ animationDivider = 2 #The value the default animation length will be divided
 maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Score", "timeBonus"))
 
 def init():
-    global pointSound
+    global pointSound, pointSound1
     pointSound = pygame.mixer.Sound("Assets/Audio/Effects/pointCount.ogg")
+    pointSound1 = pygame.mixer.Sound("Assets/Audio/Effects/pointCount1.ogg")
 
 class GameTime:
     formattedGameTime = "null"
@@ -80,6 +81,7 @@ class ScoreAnimation:
     animationIndex = 0
     animationList = ()
     valueList = ()
+    soundCooldown = 5
     finished = False
     
     @staticmethod
@@ -107,7 +109,10 @@ class ScoreAnimation:
                 ScoreAnimation.animationIndex += 1
                 if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                     ScoreAnimation.finished = True
-            else: KDS.Audio.playSound(pointSound)
+            elif ScoreAnimation.soundCooldown > 2: 
+                KDS.Audio.playSound(pointSound1)
+                ScoreAnimation.soundCooldown = 0
+            ScoreAnimation.soundCooldown += 1
                         
         return tuple([round(anim.get_value()) for anim in ScoreAnimation.animationList])
     
