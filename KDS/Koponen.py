@@ -17,8 +17,14 @@ background_outline_color = KDS.Colors.Get.MidnightBlue
 conversation_rect = pygame.Rect(40, 40, 700, 400)
 conversation_outline_width = 3
 conversation_border_radius = 10
-line_reveal_duration = 30 #ticks
+line_reveal_speed = 5
+line_scroll_speed = 1
 min_time_before_scroll = 120 #ticks
+class text_padding:
+    left = 0
+    top = 5
+    right = 0
+    bottom = 5
 #endregion
 
 pygame.init()
@@ -208,53 +214,77 @@ talk_background = pygame.Surface((1, 1))
 talk_foregrounds = [pygame.Surface((1, 1))]
 talk_foreground = pygame.Surface((1, 1))
 
-def init():
-    global talk_background, talk_foregrounds, talk_foreground
+class Prefixes:
+    player = None
+    koponen = None
+
+def init(playerName: str):
+    global talk_background, talk_foregrounds, talk_foreground, name_prefix, koponen_prefix
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"):
         talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_foregrounds)
     talk_foreground = talk_foregrounds[0]
+    Prefixes.player = text_font.render(f"{playerName}: ")
+    Prefixes.koponen = text_font.render("Koponen: ")
 
 class Talk:
     running = False
     class Conversation:
-        surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA)
+        mask = pygame.mask.Mask(conversation_rect.size, True)
+        surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
         surface_size = surface.get_size()
+        scroll_y = text_padding.top
+        max_y = text_padding.top
         
         class ConversationLine:
-            def __init__(self, text) -> None:
+            def __init__(self, text, prefix: Prefixes and pygame.Surface) -> None:
                 self.text = text_font.render(text, True, text_color)
                 self.text_size = self.text.get_size()
-                self.animationProgress = KDS.Animator.Float(0, Talk.Conversation.surface_size[0], line_reveal_duration, KDS.Animator.AnimationType.EaseIn, KDS.Animator.OnAnimationEnd.Stop)
+                self.prefix = prefix
+                self.prefix_size = self.prefix.get_size()
+                self.animationProgress = self.prefix_size[0] + text_padding.left
                 self.animationFinished = False
                 self.waitBeforeScroll = 0
                 self.finished = False
+                self.cur_y = 0
                 
             def update(self):
-                self.animationProgress.update()
+                tot_width = text_padding.left + self.prefix_size[0] + self.text_size[0]
+                self.animationProgress += min(line_reveal_speed, self.animationProgress - (tot_width))
+                if self.animationProgress >= tot_width:
+                    self.animationProgress = tot_width
+                    self.waitBeforeScroll += 1
+                    if self.waitBeforeScroll > min_time_before_scroll: return True
                 
-            def render(self, surface: pygame.Surface):
-                surface.blit(self.text, (0, 0))
+            def render(self, surface: pygame.Surface, y: int):
+                surface.blit(self.text, (0, y))
+                pygame.draw.rect(surface, background_color, pygame.Rect(text_padding.left + self.prefix_size[0], y, self.text_size[0], self.text_size[1]))
+                self.cur_y = y
         
         lines: list[ConversationLine] = []
         
         @staticmethod
-        def schedule(text):
-            lines.append(Talk.Conversation.ConversationLine(text))
+        def schedule(text, prefix: Prefixes and pygame.Surface):
+            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.Conversation.surface_size[0] - text_padding.left - text_padding.right)
+            lines.append(Talk.Conversation.ConversationLine(_text, prefix) for _text in lineSplit)
         
         @staticmethod
         def render():
             surface = Talk.Conversation.surface
+            surface_size = Talk.Conversation.surface_size
+            lines = Talk.Conversation.lines
             surface.fill((0, 0, 0, 0))
-            surface_size = surface.get_size()
             pygame.draw.rect(surface, background_color, pygame.Rect(0, 0, surface_size[0], surface_size[1]), 0, conversation_border_radius)
+            
+            
+            
             pygame.draw.rect(surface, background_outline_color, pygame.Rect(0, 0, surface_size[0], surface_size[1]), conversation_outline_width, conversation_border_radius)
+            
             return surface
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool):
-        print(KDS.Convert.ToLines("Tero söi kolme leipää ja joi vähän viinaa.", text_font, 500))
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_foreground, (40, 474))
         surface.blit(Talk.Conversation.render(), conversation_rect.topleft)

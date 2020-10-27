@@ -164,10 +164,10 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising KDS modules...")
 KDS.AI.init()
 KDS.Missions.init()
 KDS.Scores.init()
-KDS.Koponen.init()
+KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 
-#KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
 #endregion
 #region Loading
 #region Settings
