@@ -13,6 +13,8 @@ animationDivider = 2 #The value the default animation length will be divided
 
 maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Score", "timeBonus"))
 
+score = 0
+
 def init():
     global pointSound, pointSound1
     pointSound = pygame.mixer.Sound("Assets/Audio/Effects/pointCount.ogg")
@@ -50,6 +52,8 @@ class ScoreCounter:
     @staticmethod
     def start():
         GameTime.start()
+        global score
+        score = 0
 
     @staticmethod
     def pause():
@@ -69,6 +73,8 @@ class ScoreCounter:
         tb_end: int = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
         if tb_start == None or tb_end == None:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})", currentframe())
+            tb_start = 1
+            tb_end = 2
         gameTime: float = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
         timeBonusIndex: float = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
         timeBonus: int = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
@@ -76,7 +82,7 @@ class ScoreCounter:
         totalScore: int = score + koponen_happiness + timeBonus
         
         return score, koponen_happiness, timeBonus, totalScore
-    
+
 class ScoreAnimation:
     animationIndex = 0
     animationList = ()

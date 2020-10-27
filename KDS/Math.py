@@ -5,7 +5,7 @@ from inspect import currentframe
 def Clamp(value: int or float, _min: int or float, _max: int or float):
     return max(_min, min(value, _max))
 
-def getDistance(point1: tuple[int, int], point2: tuple[int, int]):
+def getDistance(point1: tuple[int, int], point2: tuple[int, int]) -> float:
     """
     Calculates the distance between two points.
     """
@@ -16,7 +16,7 @@ def getDistance(point1: tuple[int, int], point2: tuple[int, int]):
         return math.sqrt(abs(r))
     except Exception as e:
         KDS.Logging.AutoError(e, currentframe())
-        return (0, 0)
+        return 0
         
 def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: float):
     """

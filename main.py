@@ -418,8 +418,6 @@ level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.GetPrimar
 jukebox_tip.blit(tip_font.render("Use Jukebox [E]", True, KDS.Colors.GetPrimary.White), (0, 0))
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
 
-player_score = 0
-
 restart = False
 reset_data = False
 
@@ -521,8 +519,6 @@ blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scal
 
 Items = numpy.array([])
 Enemies = numpy.array([])
-
-player_score = 0
 
 true_scroll = [0, 0]
 
@@ -847,8 +843,7 @@ class Toilet(Tile):
         global renderPlayer
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
             self.burning = True
-            global player_score
-            player_score += 30
+            KDS.Scores.score += 30
             renderPlayer = True
         if self.burning:
             if 130 < self.light_scale < 170:
@@ -877,8 +872,7 @@ class Trashcan(Tile):
         
         if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 48 and gasburnerBurning and not self.burning:
             self.burning = True
-            global player_score
-            player_score += 20
+            KDS.Scores.score += 20
         if self.burning:
             if 130 < self.light_scale < 170:
                 self.light_scale += random.randint(-3, 6)
@@ -1231,89 +1225,79 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kutsutaan, kun item poimitaan maasta
     @staticmethod
     def gasburner_p():
-        global player_score
         KDS.Audio.playSound(gasburner_clip)
-        player_score += 10
+        KDS.Scores.score += 10
 
         return False
 
     @staticmethod
     def coffeemug_p():
-        global player_score
         KDS.Audio.playSound(coffeemug_sound)
-        player_score += 6
+        KDS.Scores.score += 6
 
         return False
 
     @staticmethod
     def knife_p():
-        global player_score
         KDS.Audio.playSound(knife_pickup)
-        player_score += 10
+        KDS.Scores.score += 10
 
         return False
 
     @staticmethod
     def ss_bonuscard_p():
-        global player_score
         KDS.Audio.playSound(ss_sound)
-        player_score += 10
+        KDS.Scores.score += 10
 
         return False
 
     @staticmethod
     def lappi_sytytyspalat_p():
-        global player_score
         KDS.Audio.playSound(lappi_sytytyspalat_sound)
-        player_score += 10
+        KDS.Scores.score += 10
 
         return False
 
     @staticmethod
     def iPuhelin_p():
-        global player_score
-        player_score -= 10
+        KDS.Scores.score -= 10
         KDS.Missions.Listeners.iPuhelinPickup.Trigger()
 
         return False
 
     @staticmethod
     def plasmarifle_p():
-        global player_score
         KDS.Audio.playSound(weapon_pickup)
-        player_score += 20
+        KDS.Scores.score += 20
 
         return False
 
     @staticmethod
     def pistol_p():
-        global player_score
         KDS.Audio.playSound(weapon_pickup)
-        player_score += 20
+        KDS.Scores.score += 20
 
         return False
 
     @staticmethod
     def rk62_p():
-        global player_score
         KDS.Audio.playSound(weapon_pickup)
-        player_score += 20
+        KDS.Scores.score += 20
 
         return False
 
     @staticmethod
     def shotgun_p():
-        global player_score
         KDS.Audio.playSound(weapon_pickup)
-        player_score += 20
+        KDS.Scores.score += 20
 
         return False
 
     @staticmethod
     def cell_p():
-        global player_score, ammunition_plasma
+        global ammunition_plasma
         KDS.Audio.playSound(item_pickup)
-        player_score += 1
+        KDS.Scores.score += 1
 
         ammunition_plasma += 30
         return True
@@ -1390,24 +1374,22 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
     @staticmethod
     def ppsh41_p():
-        global player_score
-        player_score += 20
+        KDS.Scores.score += 20
         KDS.Audio.playSound(weapon_pickup)
 
         return False
 
     @staticmethod
     def awm_p():
-        global player_score
-        player_score += 40
+        KDS.Scores.score += 40
         KDS.Audio.playSound(weapon_pickup)
 
         return False
 
     @staticmethod
     def awm_mag_p():
-        global player_score, awm_ammo 
-        player_score += 20
+        global awm_ammo 
+        KDS.Scores.score += 20
         awm_ammo += 5
         KDS.Audio.playSound(item_pickup)
 
@@ -1415,32 +1397,28 @@ class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kuts
 
     @staticmethod
     def empty_flask_p():
-        global player_score
-        player_score += 2
+        KDS.Scores.score += 2
         KDS.Audio.playSound(coffeemug_sound)
 
         return False
 
     @staticmethod
     def flask_meth_p():
-        global player_score
-        player_score += 8
+        KDS.Scores.score += 8
         KDS.Audio.playSound(coffeemug_sound)
 
         return False
 
     @staticmethod
     def flask_blood_p():
-        global player_score
-        player_score += 8
+        KDS.Scores.score += 8
         KDS.Audio.playSound(coffeemug_sound)
 
         return False
 
     @staticmethod
     def grenade_p():
-        global player_score
-        player_score += 19
+        KDS.Scores.score += 19
         KDS.Audio.playSound(weapon_pickup)
 
         return False
@@ -1639,8 +1617,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     @staticmethod
     def flask_meth_u(*args):
         if args[0][0]:
-            global player_health, player_score
-            player_score += 1
+            global player_health
+            KDS.Scores.score += 1
             player_health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
             player_inventory.storage[player_inventory.SIndex] = 26
             KDS.Audio.playSound(glug_sound)
@@ -1649,8 +1627,8 @@ class itemFunctions:  # Jokaiselle inventoryyn menevälle itemille määritetä�
     @staticmethod
     def flask_blood_u(*args):
         if args[0][0]:
-            global player_health, player_score
-            player_score += 1
+            global player_health
+            KDS.Scores.score += 1
             player_health += random.randint(0, 10)
             player_inventory.storage[player_inventory.SIndex] = 26
             KDS.Audio.playSound(glug_sound)
@@ -2235,8 +2213,7 @@ def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_
     #endregion
     
     #region Load Save
-    global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina, player_score
-    player_score = 0
+    global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina
     player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
     player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
     koponen_rect.topleft = KDS.ConfigManager.Save.GetPlayer("koponen_position", koponen_def_pos)
@@ -2717,7 +2694,7 @@ def main_menu():
         clock.tick(locked_fps)
 
 def level_finished_menu():
-    global player_score, koponen_happiness, game_pause_background, DebugMode, level_finished_running
+    global koponen_happiness, game_pause_background, DebugMode, level_finished_running
     
     score_color = KDS.Colors.GetPrimary.Cyan
     padding = 50
@@ -2736,7 +2713,7 @@ def level_finished_menu():
     KDS.Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
     KDS.Audio.MusicMixer.play(-1)
     
-    KDS.Scores.ScoreAnimation.init(player_score, koponen_happiness)
+    KDS.Scores.ScoreAnimation.init(KDS.Scores.score, koponen_happiness)
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
     level_f_surf = pygame.Surface(display_size)
     blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
@@ -3097,14 +3074,10 @@ while main_running:
     if renderUI:
         player_health = max(player_health, 0)
 
-        score = score_font.render(
-            ("SCORE: " + str(player_score)), True, KDS.Colors.GetPrimary.White)
-        health = score_font.render(
-            "HEALTH: " + str(round(player_health)), True, KDS.Colors.GetPrimary.White)
-        stamina = score_font.render(
-            "STAMINA: " + str(round(playerStamina)), True, KDS.Colors.GetPrimary.White)
-        happiness = score_font.render(
-            "KOPONEN HAPPINESS: " + str(koponen_happiness), True, KDS.Colors.GetPrimary.White)
+        score = score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.GetPrimary.White)
+        health = score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.GetPrimary.White)
+        stamina = score_font.render(f"STAMINA: {playerStamina}", True, KDS.Colors.GetPrimary.White)
+        happiness = score_font.render(f"KOPONEN HAPPINESS: {koponen_happiness}", True, KDS.Colors.GetPrimary.White)
 
         screen.blit(score, (10, 45))
         screen.blit(happiness, (10, 55))
