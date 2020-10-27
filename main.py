@@ -530,7 +530,6 @@ player_rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_movement = [1, 6]
 koponen_movingx = 0
-koponen_happiness = 40
 
 koponen_talk_tip = tip_font.render(
     "Puhu Koposelle [E]", True, KDS.Colors.GetPrimary.White)
@@ -1996,7 +1995,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, defVal: str = ""):
     pygame.key.set_repeat(0, 0)
 
 def console():
-    global player_keys, player_health, koponen_happiness, level_finished
+    global player_keys, player_health, level_finished
 
     #command_input = input("command: ")
     command_input = inputConsole("Command >>> ")
@@ -2044,11 +2043,11 @@ def console():
             KDS.Logging.Log(KDS.Logging.LogType.info,
                             "Not a valid remove command.", True)
     elif command_list[0] == "playboy":
-        koponen_happiness = 1000
+        KDS.Scores.koponen_happiness = 1000
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You are now a playboy", True)
         KDS.Logging.Log(KDS.Logging.LogType.info,
-                        f"Koponen happines: {koponen_happiness}", True)
+                        f"Koponen happines: {KDS.Scores.koponen_happiness}", True)
     elif command_list[0] == "kill" or command_list[0] == "stop":
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "Stop command issued through console.", True)
@@ -2694,7 +2693,7 @@ def main_menu():
         clock.tick(locked_fps)
 
 def level_finished_menu():
-    global koponen_happiness, game_pause_background, DebugMode, level_finished_running
+    global game_pause_background, DebugMode, level_finished_running
     
     score_color = KDS.Colors.GetPrimary.Cyan
     padding = 50
@@ -2713,7 +2712,7 @@ def level_finished_menu():
     KDS.Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
     KDS.Audio.MusicMixer.play(-1)
     
-    KDS.Scores.ScoreAnimation.init(KDS.Scores.score, koponen_happiness)
+    KDS.Scores.ScoreAnimation.init(KDS.Scores.koponen_happiness)
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
     level_f_surf = pygame.Surface(display_size)
     blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
@@ -3077,7 +3076,7 @@ while main_running:
         score = score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.GetPrimary.White)
         health = score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.GetPrimary.White)
         stamina = score_font.render(f"STAMINA: {playerStamina}", True, KDS.Colors.GetPrimary.White)
-        happiness = score_font.render(f"KOPONEN HAPPINESS: {koponen_happiness}", True, KDS.Colors.GetPrimary.White)
+        happiness = score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.GetPrimary.White)
 
         screen.blit(score, (10, 45))
         screen.blit(happiness, (10, 55))

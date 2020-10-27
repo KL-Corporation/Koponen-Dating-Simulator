@@ -14,6 +14,7 @@ animationDivider = 2 #The value the default animation length will be divided
 maxTimeBonus = int(KDS.ConfigManager.GetGameSetting("GameData", "Default", "Score", "timeBonus"))
 
 score = 0
+koponen_happiness = 40
 
 def init():
     global pointSound, pointSound1
@@ -51,9 +52,10 @@ class GameTime:
 class ScoreCounter:
     @staticmethod
     def start():
-        GameTime.start()
-        global score
+        global score, koponen_happiness
         score = 0
+        koponen_happiness = 40
+        GameTime.start()
 
     @staticmethod
     def pause():
@@ -68,7 +70,8 @@ class ScoreCounter:
         GameTime.stop()
 
     @staticmethod
-    def calculateScores(score: int, koponen_happiness: int):
+    def calculateScores():
+        global score, koponen_happiness
         tb_start: int = KDS.ConfigManager.GetLevelProp("TimeBonus", "start", None)
         tb_end: int = KDS.ConfigManager.GetLevelProp("TimeBonus", "end", None)
         if tb_start == None or tb_end == None:
@@ -91,8 +94,8 @@ class ScoreAnimation:
     finished = False
     
     @staticmethod
-    def init(score: int, koponen_happiness: int):
-        score, koponen_happiness, timeBonus, totalScore = ScoreCounter.calculateScores(score, koponen_happiness)
+    def init():
+        score, koponen_happiness, timeBonus, totalScore = ScoreCounter.calculateScores()
         
         ScoreAnimation.animationIndex = 0
         ScoreAnimation.finished = False
