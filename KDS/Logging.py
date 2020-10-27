@@ -3,7 +3,6 @@ import logging
 import os
 import cProfile
 import pstats
-import io
 from pstats import SortKey
 from datetime import datetime
 
@@ -13,21 +12,13 @@ logPath = os.path.join(AppDataPath, "logs")
 profiler_running = False
 profile = None
 
-def init():
-    global logFileName
-    if os.path.exists(logPath) and os.path.isdir(logPath):
-        logFiles = os.listdir(logPath)
-    else:
-        os.mkdir(logPath)
-        logFiles = os.listdir(logPath)
+os.makedirs(logPath, exist_ok=True)
+while len(os.listdir(logPath)) >= 5:
+    os.remove(os.path.join(logPath, os.listdir(logPath)[0]))
 
-    while len(logFiles) >= 5:
-        os.remove(os.path.join(logPath, logFiles[0]))
-        logFiles = os.listdir(logPath)
-
-    logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
-    logging.basicConfig(filename=logFileName, level=logging.NOTSET, datefmt="%H:%M:%S")
-    logging.debug("Created log file: " + logFileName)
+logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
+logging.basicConfig(filename=logFileName, level=logging.NOTSET, datefmt="%H:%M:%S")
+logging.debug("Created log file: " + logFileName)
 
 class LogType():
     """The list of LogTypes you can log.

@@ -18,9 +18,7 @@ CachePath = os.path.join(AppDataPath, "cache")
 SaveDirPath = os.path.join(AppDataPath, "saves")
 SaveCachePath = os.path.join(CachePath, "save")
 
-def init():
-    if not os.path.isdir(SaveDirPath):
-        os.makedirs(SaveDirPath, exist_ok=True)
+os.makedirs(SaveDirPath, exist_ok=True)
 
 def GetJSON(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
     if os.path.isfile(FilePath):

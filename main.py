@@ -44,9 +44,6 @@ KDS.System.hide(PersistentPaths.CachePath)
 
 pygame.mixer.init()
 pygame.init()
-KDS.Logging.init()
-
-KDS.ConfigManager.init()
 
 monitor_info = pygame.display.Info()
 monitor_size = (monitor_info.current_w, monitor_info.current_h)
@@ -2170,6 +2167,7 @@ def agr(tcagr: bool):
 #endregion
 #region Game Start and Stop
 def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_loading: bool = True):
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
     global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
@@ -2220,7 +2218,7 @@ def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_
     farting = KDS.ConfigManager.Save.GetPlayer("farting", False)
     player_keys = KDS.ConfigManager.Save.GetPlayer("keys", {"red": False, "green": False, "blue": False})
     player_inventory.storage = KDS.ConfigManager.Save.GetPlayer("inventory", [Inventory.emptySlot for _ in range(player_inventory.size)])
-    playerStamina = KDS.ConfigManager.Save.GetPlayer("stamina", 100)
+    playerStamina = KDS.ConfigManager.Save.GetPlayer("stamina", 100.0)
     #endregion
     
     ########## iPuhelin ##########
@@ -2233,7 +2231,9 @@ def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_
     if reset_scroll:
         true_scroll = KDS.ConfigManager.Save.GetPlayer("scroll", [-200, -190])
     pygame.event.clear()
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
 def save_function():
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
     global Items, Enemies, Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
     KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
@@ -2248,6 +2248,7 @@ def save_function():
     KDS.ConfigManager.Save.SetPlayer("inventory", player_inventory.storage)
     KDS.ConfigManager.Save.SetPlayer("scroll", scroll)
     KDS.ConfigManager.Save.quit()
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
 #endregion
 #region Menus
 def esc_menu_f():
@@ -2712,7 +2713,7 @@ def level_finished_menu():
     KDS.Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
     KDS.Audio.MusicMixer.play(-1)
     
-    KDS.Scores.ScoreAnimation.init(KDS.Scores.koponen_happiness)
+    KDS.Scores.ScoreAnimation.init()
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
     level_f_surf = pygame.Surface(display_size)
     blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
@@ -2866,7 +2867,7 @@ while main_running:
                     Items = numpy.append(Items, temp)
             elif event.key == K_f:
                 if playerStamina == 100:
-                    playerStamina = -1000
+                    playerStamina = -1000.0
                     farting = True
                     KDS.Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
@@ -3075,7 +3076,7 @@ while main_running:
 
         score = score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.GetPrimary.White)
         health = score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.GetPrimary.White)
-        stamina = score_font.render(f"STAMINA: {playerStamina}", True, KDS.Colors.GetPrimary.White)
+        stamina = score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.GetPrimary.White)
         happiness = score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.GetPrimary.White)
 
         screen.blit(score, (10, 45))

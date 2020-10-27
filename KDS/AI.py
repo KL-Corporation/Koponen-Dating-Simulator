@@ -76,16 +76,11 @@ imp_death_sound.set_volume(0.5)
 zombie_sight_sound.set_volume(0.4)
 zombie_death_sound.set_volume(0.5)
 
-initCompleted = False
-
-imp_fireball = None
 def init():
-    global initCompleted, imp_fireball
+    global imp_fireball
 
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
     imp_fireball.set_colorkey((255, 255, 255))
-
-    initCompleted = True
 
 def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacles,  maxAngle=40, maxSearchUnits=24):
     if direction:
@@ -250,10 +245,6 @@ class HostileEnemy:
 
 
     def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
-        global initCompleted
-        if not initCompleted:
-            raise Exception("KDS.Error: AI textures are not initialized")
-
         self.rect = rect
         self.health = health
         self.sleep = sleep
