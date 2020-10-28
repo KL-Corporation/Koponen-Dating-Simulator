@@ -3,6 +3,7 @@ import random
 import pygame
 from pygame.draw import lines
 from pygame.locals import *
+import math
 import KDS.Colors
 import KDS.Convert
 import KDS.Animator
@@ -21,9 +22,9 @@ line_reveal_speed = 5
 line_scroll_speed = 1
 min_time_before_scroll = 120 #ticks
 class text_padding:
-    left = 0
+    left = 5
     top = 5
-    right = 0
+    right = 5
     bottom = 5
 #endregion
 
@@ -215,8 +216,8 @@ talk_foregrounds = [pygame.Surface((1, 1))]
 talk_foreground = pygame.Surface((1, 1))
 
 class Prefixes:
-    player = None
-    koponen = None
+    player = text_font.render(f"ERROR: ", True, text_color)
+    koponen = text_font.render("Koponen: ", True, text_color)
 
 def init(playerName: str):
     global talk_background, talk_foregrounds, talk_foreground, name_prefix, koponen_prefix
@@ -226,62 +227,66 @@ def init(playerName: str):
     random.shuffle(talk_foregrounds)
     talk_foreground = talk_foregrounds[0]
     Prefixes.player = text_font.render(f"{playerName}: ", True, KDS.Colors.White)
-    Prefixes.koponen = text_font.render("Koponen: ", True, KDS.Colors.White)
 
 class Talk:
     running = False
-    class Conversation:
-        mask = pygame.mask.Mask(conversation_rect.size, True)
-        surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
-        surface_size = surface.get_size()
-        scroll_y = text_padding.top
-        max_y = text_padding.top
+    mask = pygame.mask.Mask(conversation_rect.size, True)
+    surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
+    surface_size = surface.get_size()
+    lineCount = math.floor(surface.get_height() - text_padding.top - text_padding.bottom - text_font.size(" ")[1])
+    
+    class Line:
         
-        class ConversationLine:
-            def __init__(self, text, prefix: Prefixes and pygame.Surface) -> None:
-                self.text = text_font.render(text, True, text_color)
-                self.text_size = self.text.get_size()
-                self.prefix = prefix
-                self.prefix_size = self.prefix.get_size()
-                self.animationProgress = self.prefix_size[0] + text_padding.left
-                self.animationFinished = False
-                self.waitBeforeScroll = 0
-                self.finished = False
-                self.cur_y = 0
-                
-            def update(self):
-                tot_width = text_padding.left + self.prefix_size[0] + self.text_size[0]
-                self.animationProgress += min(line_reveal_speed, self.animationProgress - (tot_width))
-                if self.animationProgress >= tot_width:
-                    self.animationProgress = tot_width
-                    self.waitBeforeScroll += 1
-                    if self.waitBeforeScroll > min_time_before_scroll: return True
-                
-            def render(self, surface: pygame.Surface, y: int):
-                surface.blit(self.text, (0, y))
-                pygame.draw.rect(surface, background_color, pygame.Rect(text_padding.left + self.prefix_size[0], y, self.text_size[0], self.text_size[1]))
-                self.cur_y = y
+        def __init__(self, text, prefix: Prefixes and pygame.Surface, prefix_visible: bool = True) -> None:
+            self.text = text_font.render(text, True, text_color)
+            self.text_size = self.text.get_size()
+            self.prefix = prefix
+            self.prefix_visible = prefix_visible
+            self.prefix_size = self.prefix.get_size()
+            self.animationProgress = self.prefix_size[0] + text_padding.left
+            self.animationFinished = False
+            self.waitBeforeScroll = 0
+            self.finished = False
         
-        lines: list[ConversationLine] = []
+        def update(self):
+            tot_width = text_padding.left + self.prefix_size[0] + self.text_size[0]
+            self.animationProgress += line_reveal_speed
+            if self.animationProgress >= tot_width:
+                self.animationProgress = tot_width
+                self.animationFinished = True
+                self.waitBeforeScroll += 1
+                if self.waitBeforeScroll > min_time_before_scroll: self.finished = True
+        
+    class Lines:
+        scheduled = []
+        updating = []
         
         @staticmethod
+        def update():
+            if (len(Talk.Lines.updating) < 1 or Talk.Lines.updating[-1].animationFinished) and len(Talk.Lines.scheduled) > 0 and len(Talk.Lines.updating) < Talk.lineCount:
+                Talk.Lines.updating.append(Talk.Lines.scheduled.pop(0))
+            if len(Talk.Lines.updating) >= Talk.lineCount and Talk.Lines.updating[0].finished:
+                del Talk.Lines.updating[0]
+            
+    class Conversation:
+            
+        @staticmethod
         def schedule(text, prefix: Prefixes and pygame.Surface):
-            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.Conversation.surface_size[0] - text_padding.left - text_padding.right)
-            lines.append(Talk.Conversation.ConversationLine(_text, prefix) for _text in lineSplit)
+            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.surface_size[0] - text_padding.left - text_padding.right)
+            for _text in lineSplit: Talk.Lines.scheduled.append(Talk.Line(_text, prefix))
         
         @staticmethod
         def render():
-            surface = Talk.Conversation.surface
-            surface_size = Talk.Conversation.surface_size
-            lines = Talk.Conversation.lines
-            surface.fill((0, 0, 0, 0))
-            pygame.draw.rect(surface, background_color, pygame.Rect(0, 0, surface_size[0], surface_size[1]), 0, conversation_border_radius)
+            Talk.surface.fill((0, 0, 0, 0))
+            pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
+            Talk.Lines.update()
+            for line in Talk.Lines.updating:
+                line.update()
             
+            pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
             
-            pygame.draw.rect(surface, background_outline_color, pygame.Rect(0, 0, surface_size[0], surface_size[1]), conversation_outline_width, conversation_border_radius)
-            
-            return surface
+            return Talk.surface
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool):
@@ -315,8 +320,18 @@ class Talk:
                     ResizeWindow(event.size)
                 
                 
-            Talk.renderMenu(surface, (0, 0), False)
+            Talk.renderMenu(surface, mouse_pos, False)
             window.blit(pygame.transform.scale(surface, (int(surface_size[0] * Fullscreen.scaling), int(surface_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
             pygame.display.update()
             window.fill(KDS.Colors.Black)
             clock.tick(fps)
+    
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
