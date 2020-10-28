@@ -12,7 +12,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey = KDS.Colors.GetPrimary.White, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
         """Initialises an animation.
 
         Args:
@@ -117,7 +117,7 @@ class Animation:
         self.images = tlist.copy()
         del tlist
         for image in self.images:
-            image.set_colorkey(KDS.Colors.GetPrimary.White)
+            image.set_colorkey(KDS.Colors.White)
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):

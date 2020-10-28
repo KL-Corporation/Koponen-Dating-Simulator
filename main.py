@@ -68,9 +68,9 @@ clock = pygame.time.Clock()
 profiler_enabled = False
 
 text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
-text_icon.set_colorkey(KDS.Colors.GetPrimary.White)
+text_icon.set_colorkey(KDS.Colors.White)
 level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
-level_cleared_icon.set_colorkey(KDS.Colors.GetPrimary.White)
+level_cleared_icon.set_colorkey(KDS.Colors.White)
 
 locked_fps = 60
 #endregion
@@ -167,7 +167,7 @@ KDS.Scores.init()
 KDS.Koponen.init("Sin채")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 
-#KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
 #endregion
 #region Loading
 #region Settings
@@ -249,21 +249,21 @@ stone = pygame.image.load("Assets/Textures/Map/stone.png").convert()
 hay = pygame.image.load("Assets/Textures/Map/hay.png").convert()
 soil1 = pygame.image.load("Assets/Textures/Map/soil_2.png").convert()
 wood = pygame.image.load("Assets/Textures/Map/wood.png").convert()
-table0.set_colorkey(KDS.Colors.GetPrimary.White)
-toilet0.set_colorkey(KDS.Colors.GetPrimary.White)
-lamp0.set_colorkey(KDS.Colors.GetPrimary.White)
-trashcan.set_colorkey(KDS.Colors.GetPrimary.White)
-door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
-red_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
-green_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
-blue_door_closed.set_colorkey(KDS.Colors.GetPrimary.White)
-jukebox_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-landmine_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-ladder_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-iron_bar.set_colorkey(KDS.Colors.GetPrimary.White)
-tree.set_colorkey(KDS.Colors.GetPrimary.Black)
-blh.set_colorkey(KDS.Colors.GetPrimary.White)
-tp_shitting.set_colorkey(KDS.Colors.GetPrimary.White)
+table0.set_colorkey(KDS.Colors.White)
+toilet0.set_colorkey(KDS.Colors.White)
+lamp0.set_colorkey(KDS.Colors.White)
+trashcan.set_colorkey(KDS.Colors.White)
+door_closed.set_colorkey(KDS.Colors.White)
+red_door_closed.set_colorkey(KDS.Colors.White)
+green_door_closed.set_colorkey(KDS.Colors.White)
+blue_door_closed.set_colorkey(KDS.Colors.White)
+jukebox_texture.set_colorkey(KDS.Colors.White)
+landmine_texture.set_colorkey(KDS.Colors.White)
+ladder_texture.set_colorkey(KDS.Colors.White)
+iron_bar.set_colorkey(KDS.Colors.White)
+tree.set_colorkey(KDS.Colors.Black)
+blh.set_colorkey(KDS.Colors.White)
+tp_shitting.set_colorkey(KDS.Colors.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Building Texture Loading Complete.")
 #endregion
 #region Item Textures
@@ -297,35 +297,35 @@ ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").conve
 ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
 awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
 
-gasburner_off.set_colorkey(KDS.Colors.GetPrimary.White)
-knife.set_colorkey(KDS.Colors.GetPrimary.White)
-knife_blood.set_colorkey(KDS.Colors.GetPrimary.White)
-red_key.set_colorkey(KDS.Colors.GetPrimary.White)
-green_key.set_colorkey(KDS.Colors.GetPrimary.White)
-blue_key.set_colorkey(KDS.Colors.GetPrimary.White)
-coffeemug.set_colorkey(KDS.Colors.GetPrimary.White)
-lappi_sytytyspalat.set_colorkey(KDS.Colors.GetPrimary.White)
-plasmarifle.set_colorkey(KDS.Colors.GetPrimary.White)
-plasma_ammo.set_colorkey(KDS.Colors.GetPrimary.White)
-cell.set_colorkey(KDS.Colors.GetPrimary.White)
-pistol_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-pistol_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-soulsphere.set_colorkey(KDS.Colors.GetPrimary.White)
-turboneedle.set_colorkey(KDS.Colors.GetPrimary.White)
-pistol_mag.set_colorkey(KDS.Colors.GetPrimary.White)
-rk62_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-rk62_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-rk62_mag.set_colorkey(KDS.Colors.GetPrimary.White)
-medkit.set_colorkey(KDS.Colors.GetPrimary.White)
-shotgun.set_colorkey(KDS.Colors.GetPrimary.White)
-shotgun_f.set_colorkey(KDS.Colors.GetPrimary.White)
-shotgun_shells_t.set_colorkey(KDS.Colors.GetPrimary.White)
-ipuhelin_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-ppsh41_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-ppsh41_texture.set_colorkey(KDS.Colors.GetPrimary.White)
-awm_f_texture.set_colorkey(KDS.Colors.GetPrimary.White)
+gasburner_off.set_colorkey(KDS.Colors.White)
+knife.set_colorkey(KDS.Colors.White)
+knife_blood.set_colorkey(KDS.Colors.White)
+red_key.set_colorkey(KDS.Colors.White)
+green_key.set_colorkey(KDS.Colors.White)
+blue_key.set_colorkey(KDS.Colors.White)
+coffeemug.set_colorkey(KDS.Colors.White)
+lappi_sytytyspalat.set_colorkey(KDS.Colors.White)
+plasmarifle.set_colorkey(KDS.Colors.White)
+plasma_ammo.set_colorkey(KDS.Colors.White)
+cell.set_colorkey(KDS.Colors.White)
+pistol_texture.set_colorkey(KDS.Colors.White)
+pistol_f_texture.set_colorkey(KDS.Colors.White)
+soulsphere.set_colorkey(KDS.Colors.White)
+turboneedle.set_colorkey(KDS.Colors.White)
+pistol_mag.set_colorkey(KDS.Colors.White)
+rk62_texture.set_colorkey(KDS.Colors.White)
+rk62_f_texture.set_colorkey(KDS.Colors.White)
+rk62_mag.set_colorkey(KDS.Colors.White)
+medkit.set_colorkey(KDS.Colors.White)
+shotgun.set_colorkey(KDS.Colors.White)
+shotgun_f.set_colorkey(KDS.Colors.White)
+shotgun_shells_t.set_colorkey(KDS.Colors.White)
+ipuhelin_texture.set_colorkey(KDS.Colors.White)
+ppsh41_f_texture.set_colorkey(KDS.Colors.White)
+ppsh41_texture.set_colorkey(KDS.Colors.White)
+awm_f_texture.set_colorkey(KDS.Colors.White)
 
-ss_bonuscard.set_colorkey(KDS.Colors.GetPrimary.Red)
+ss_bonuscard.set_colorkey(KDS.Colors.Red)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Texture Loading Complete.")
 #endregion
 #region Menu Textures
@@ -342,7 +342,7 @@ settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.pn
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
-main_menu_title.set_colorkey(KDS.Colors.GetPrimary.White)
+main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
 #endregion
 #region Light Textures
@@ -408,12 +408,12 @@ black_tint.set_alpha(170)
 
 #################### V채h채n Ghetto, mutta en halua turhia variableja. ####################
 jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
-jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.GetPrimary.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
+jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
 #################### V채h채n Ghetto, mutta en halua turhia variableja. ####################
-decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.GetPrimary.White)
-level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.GetPrimary.White)
-jukebox_tip.blit(tip_font.render("Use Jukebox [E]", True, KDS.Colors.GetPrimary.White), (0, 0))
-itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
+decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.White)
+level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.White)
+jukebox_tip.blit(tip_font.render("Use Jukebox [E]", True, KDS.Colors.White), (0, 0))
+itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
 restart = False
 reset_data = False
@@ -529,7 +529,7 @@ koponen_movement = [1, 6]
 koponen_movingx = 0
 
 koponen_talk_tip = tip_font.render(
-    "Puhu Koposelle [E]", True, KDS.Colors.GetPrimary.White)
+    "Puhu Koposelle [E]", True, KDS.Colors.White)
 
 task = ""
 taskTaivutettu = ""
@@ -662,12 +662,12 @@ buildData = json.loads(data)
 t_textures = {}
 for t in buildData["tile_textures"]:
     t_textures[int(t)] = pygame.image.load("Assets/Textures/Map/" + buildData["tile_textures"][t]).convert()
-    t_textures[int(t)].set_colorkey(KDS.Colors.GetPrimary.White)
+    t_textures[int(t)].set_colorkey(KDS.Colors.White)
 
 i_textures = {}
 for i in buildData["item_textures"]:
     i_textures[int(i)] = pygame.image.load("Assets/Textures/Items/" + buildData["item_textures"][i]).convert()
-    i_textures[int(i)].set_colorkey(KDS.Colors.GetPrimary.White)
+    i_textures[int(i)].set_colorkey(KDS.Colors.White)
 
 inventory_items = buildData["inventory_items"]
 
@@ -831,7 +831,7 @@ class Toilet(Tile):
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = toilet0
-        self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.GetPrimary.White), KDS.Animator.OnAnimationEnd.Loop)
+        self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.White), KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
 
@@ -860,7 +860,7 @@ class Trashcan(Tile):
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = trashcan
-        self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
 
@@ -974,7 +974,7 @@ class Landmine(Tile):
                     enemy.health -= 120 - KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
             KDS.Audio.playSound(landmine_explosion)
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))           
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))           
         return self.texture
 
 class Ladder(Tile):
@@ -1084,7 +1084,7 @@ class Rock0(Tile):
 class Torch(Tile):
     def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
         self.checkCollision = False
         self.light_scale = 150
@@ -1136,7 +1136,7 @@ class LevelEnder(Tile):
 class Candle(Tile):
     def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1]+14, 20, 20)
         self.checkCollision = False
         self.light_scale = 40
@@ -1449,7 +1449,7 @@ class pickupFunctions:  # Jokaiselle itemille m채채ritet채채n funktio, joka kuts
         return True
 
 
-lantern_animation = KDS.Animator.Animation("lantern_burning", 2, 4, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+lantern_animation = KDS.Animator.Animation("lantern_burning", 2, 4, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
 class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채채n funktio, joka kutsutaan itemi채 k채ytett채ess채
     #rk62_C = KDS.World.itemTools.rk62()
@@ -1501,7 +1501,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     @staticmethod
     def pistol_u(*args):
         global pistol_bullets, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.GetPrimary.White), (10, 360))      
+        args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.White), (10, 360))      
         if args[0][0] and KDS.World.pistol_C.counter > 30 and pistol_bullets > 0:
             KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
@@ -1516,7 +1516,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     @staticmethod
     def plasmarifle_u(*args):
         global ammunition_plasma
-        args[1].blit(harbinger_font.render("Ammo: " + str(ammunition_plasma), True, KDS.Colors.GetPrimary.White), (10, 360))                    
+        args[1].blit(harbinger_font.render("Ammo: " + str(ammunition_plasma), True, KDS.Colors.White), (10, 360))                    
         if args[0][0] and ammunition_plasma > 0 and KDS.World.plasmarifle_C.counter > 3:
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.playSound(plasmarifle_f_sound)
@@ -1535,7 +1535,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     @staticmethod
     def rk62_u(*args):
         global rk_62_ammo, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.White), (10, 360))
         if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
@@ -1553,7 +1553,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     @staticmethod
     def shotgun_u(*args):
         global shotgun_shells, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.GetPrimary.White), (10, 360))
+        args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.White), (10, 360))
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.playSound(player_shotgun_shot)
@@ -1569,7 +1569,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     @staticmethod
     def ppsh41_u(*args):
         global tiles, ppsh41_ammo
-        args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.White), (10, 360))
         if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
             KDS.World.ppsh41_C.counter = 0
             smg_shot.stop()
@@ -1587,7 +1587,7 @@ class itemFunctions:  # Jokaiselle inventoryyn menev채lle itemille m채채ritet채�
     @staticmethod 
     def awm_u(*args):
         global tiles, awm_ammo
-        args[1].blit(harbinger_font.render("Ammo: " + str(awm_ammo), True, KDS.Colors.GetPrimary.White), (10, 360))
+        args[1].blit(harbinger_font.render("Ammo: " + str(awm_ammo), True, KDS.Colors.White), (10, 360))
         if args[0][0] and KDS.World.awm_C.counter > 130 and awm_ammo > 0:
             KDS.World.awm_C.counter = 0
             ppsh41_shot.stop()
@@ -1746,7 +1746,7 @@ class Item:
     def render(Item_list, Surface: pygame.Surface, scroll: list):
         for renderable in Item_list:
             if DebugMode:
-                pygame.draw.rect(screen, KDS.Colors.GetPrimary.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+                pygame.draw.rect(screen, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
     @staticmethod
@@ -1807,7 +1807,7 @@ class Item:
         """
         if not isinstance(self.texture, pygame.Surface):
             self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
-            self.texture.set_colorkey(KDS.Colors.GetPrimary.White)
+            self.texture.set_colorkey(KDS.Colors.White)
         
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
@@ -1837,7 +1837,7 @@ def load_ads():
     for ad in ad_files:
         path = str("Assets/Textures/KoponenTalk/ads/" + ad)
         image = pygame.image.load(path).convert()
-        image.set_colorkey(KDS.Colors.GetPrimary.Red)
+        image.set_colorkey(KDS.Colors.Red)
         ad_images.append(image)
         KDS.Logging.Log(KDS.Logging.LogType.debug,
                         f"Initialised Ad File: {ad}", False)
@@ -1901,62 +1901,62 @@ def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, ski
     return rect, collision_types
 
 player_animations = KDS.Animator.MultiAnimation(
-        idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
+        idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+        death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
 )
 koponen_animations = KDS.Animator.MultiAnimation(
-    idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-    walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
+    idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+    walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
 )
 menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "main_menu_bc_gasburner", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 gasburner_animation_object = KDS.Animator.Animation(
-    "gasburner_on", 2, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "gasburner_on", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_toilet_animation = KDS.Animator.Animation(
-    "menu_toilet_anim", 3, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "menu_toilet_anim", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_trashcan_animation = KDS.Animator.Animation(
-    "menu_trashcan", 3, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "menu_trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
 explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+    "explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 plasmarifle_animation = KDS.Animator.Animation(
-    "plasmarifle_firing", 2, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "plasmarifle_firing", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+    "z_death", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "seargeant_walking", 4, 8, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+    "seargeant_shooting", 2, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 
 archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "archvile_run", 3, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+    "archvile_attack", 6, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+    "archvile_death", 7, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 flames_animation = KDS.Animator.Animation(
-    "flames", 5, 3, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "flames", 5, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 bulldog_run_animation = KDS.Animator.Animation(
-    "bulldog", 5, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "bulldog", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
 imp_walking = KDS.Animator.Animation(
-    "imp_walking", 4, 19, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "imp_walking", 4, 19, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 imp_attacking = KDS.Animator.Animation(
-    "imp_attacking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "imp_attacking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 imp_dying = KDS.Animator.Animation(
-    "imp_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+    "imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 
 knife_animation_object = KDS.Animator.Animation(
-    "knife", 2, 20, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
+    "knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
@@ -1986,7 +1986,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, defVal: str = ""):
                 quit()
         window.fill(consoleBackground.get_at((0, 0)))
         window.blit(KDS.Convert.AspectScale(consoleBackground, display_size), ((display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2) - consoleBackground.get_size()[1] / 2 ))
-        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
+        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.White)
         window.blit(consoleText, (10, 10))
         pygame.display.update()
     pygame.key.set_repeat(0, 0)
@@ -2140,7 +2140,7 @@ def agr(tcagr: bool):
         
 
     agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render(
-        "I Agree", True, KDS.Colors.GetPrimary.White))
+        "I Agree", True, KDS.Colors.White))
 
     while tcagr_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
@@ -2273,16 +2273,16 @@ def esc_menu_f():
         go_to_main_menu = True
 
     resume_button = KDS.UI.New.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("Resume", True, KDS.Colors.GetPrimary.White))
+        display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("Resume", True, KDS.Colors.White))
     save_button_enabled = True
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         save_button_enabled = False
     save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
-        "Save", True, KDS.Colors.GetPrimary.White), enabled=save_button_enabled)
+        "Save", True, KDS.Colors.White), enabled=save_button_enabled)
     settings_button = KDS.UI.New.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.GetPrimary.White))
+        display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.White))
     main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.GetPrimary.White))
+        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -2325,18 +2325,18 @@ def esc_menu_f():
         display.blit(esc_surface, (0, 0))
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
         
             fps_text = "FPS: " + str(round(clock.get_fps()))
-            fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
+            fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        window.fill(KDS.Colors.GetPrimary.Black)
-        display.fill(KDS.Colors.GetPrimary.Black)
+        window.fill(KDS.Colors.Black)
+        display.fill(KDS.Colors.Black)
         c = False
         clock.tick(locked_fps)
 
@@ -2362,20 +2362,20 @@ def settings_menu():
         KDS_Quit(True, True)
     
     return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
-        "Return", True, KDS.Colors.GetPrimary.White))
+        "Return", True, KDS.Colors.White))
     music_volume_slider = KDS.UI.New.Slider(
         "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_dir="Settings")
     effect_volume_slider = KDS.UI.New.Slider(
         "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_dir="Settings")
     clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50), custom_dir="Settings")
-    reset_window_button = KDS.UI.New.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.GetPrimary.White))
-    reset_settings_button = KDS.UI.New.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.GetPrimary.White))
-    reset_data_button = KDS.UI.New.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.GetPrimary.White))
+    reset_window_button = KDS.UI.New.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.White))
+    reset_settings_button = KDS.UI.New.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
+    reset_data_button = KDS.UI.New.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
     music_volume_text = button_font.render(
-        "Music Volume", True, KDS.Colors.GetPrimary.White)
+        "Music Volume", True, KDS.Colors.White)
     effect_volume_text = button_font.render(
-        "Sound Effect Volume", True, KDS.Colors.GetPrimary.White)
-    clear_lag_text = button_font.render("Clear Lag", True, KDS.Colors.GetPrimary.White)
+        "Sound Effect Volume", True, KDS.Colors.White)
+    clear_lag_text = button_font.render("Clear Lag", True, KDS.Colors.White)
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -2421,13 +2421,13 @@ def settings_menu():
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
             
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(
-                fps_text, True, KDS.Colors.GetPrimary.White)
+                fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
@@ -2502,11 +2502,11 @@ def main_menu():
     framechange_lerp.tick = framechange_lerp.ticks
 
     main_menu_play_button = KDS.UI.New.Button(pygame.Rect(
-        450, 180, 300, 60), menu_mode_selector, button_font1.render("PLAY", True, KDS.Colors.GetPrimary.White))
+        450, 180, 300, 60), menu_mode_selector, button_font1.render("PLAY", True, KDS.Colors.White))
     main_menu_settings_button = KDS.UI.New.Button(pygame.Rect(
-        450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.GetPrimary.White))
+        450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.White))
     main_menu_quit_button = KDS.UI.New.Button(pygame.Rect(
-        450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.GetPrimary.White))
+        450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.White))
     #Frame 2
     Frame2 = pygame.Surface(display_size)
     Frame2.blit(main_menu_background_2, (0,0))
@@ -2537,15 +2537,15 @@ def main_menu():
     story_save_button_0 = KDS.UI.New.Button(story_save_button_0_rect, play_function)
     story_save_button_1 = KDS.UI.New.Button(story_save_button_1_rect, play_function)
     story_save_button_2 = KDS.UI.New.Button(story_save_button_2_rect, play_function)
-    story_new_save = button_font1.render("Start New Save", True, KDS.Colors.GetPrimary.White)
+    story_new_save = button_font1.render("Start New Save", True, KDS.Colors.White)
     #endregion 
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
     campaign_play_button_rect = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 300, 300, 100)
     campaign_return_button_rect = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 150, 300, 100)
-    campaign_play_text = button_font1.render("START", True, (KDS.Colors.Get.EmeraldGreen))
-    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.Get.AviatorRed))
+    campaign_play_text = button_font1.render("START", True, (KDS.Colors.EmeraldGreen))
+    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
     campaign_play_button = KDS.UI.New.Button(campaign_play_button_rect, play_function, campaign_play_text)
     campaign_return_button = KDS.UI.New.Button(campaign_return_button_rect, menu_mode_selector, campaign_return_text)
     campaign_left_button = KDS.UI.New.Button(campaign_left_button_rect, level_pick.left)
@@ -2639,11 +2639,11 @@ def main_menu():
                         display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
         elif MenuMode == Mode.StoryMenu:
             pygame.draw.rect(
-                display, KDS.Colors.GetPrimary.DarkGray, story_save_button_0_rect, 10)
+                display, KDS.Colors.DarkGray, story_save_button_0_rect, 10)
             pygame.draw.rect(
-                display, KDS.Colors.GetPrimary.DarkGray, story_save_button_1_rect, 10)
+                display, KDS.Colors.DarkGray, story_save_button_1_rect, 10)
             pygame.draw.rect(
-                display, KDS.Colors.GetPrimary.DarkGray, story_save_button_2_rect, 10)
+                display, KDS.Colors.DarkGray, story_save_button_2_rect, 10)
             
             story_save_button_0.update(
                 display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
@@ -2676,27 +2676,27 @@ def main_menu():
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
             
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(
-                fps_text, True, KDS.Colors.GetPrimary.White)
+                fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
-        display.fill(KDS.Colors.GetPrimary.Black)
+        display.fill(KDS.Colors.Black)
         pygame.display.update()
-        window.fill(KDS.Colors.GetPrimary.Black)
+        window.fill(KDS.Colors.Black)
         clock.tick(locked_fps)
 
 def level_finished_menu():
     global game_pause_background, DebugMode, level_finished_running
     
-    score_color = KDS.Colors.GetPrimary.Cyan
+    score_color = KDS.Colors.Cyan
     padding = 50
     textVertOffset = 40
     textStartVertOffset = 300
@@ -2733,8 +2733,8 @@ def level_finished_menu():
 
     next_level_bool = True if int(current_map) < max_map else False
     
-    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.GetPrimary.White))
-    next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.GetPrimary.White), enabled=next_level_bool)
+    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
+    next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
     
     pre_rendered_scores = {}
     
@@ -2773,7 +2773,7 @@ def level_finished_menu():
         values = KDS.Scores.ScoreAnimation.update(True if anim_lerp_x.tick >= anim_lerp_x.ticks else False)
         comparisonValue = KDS.Math.Clamp(KDS.Scores.ScoreAnimation.animationIndex + 1, 0, len(values))
         lineY = textStartVertOffset + (len(values) - 1) * textVertOffset + round(totalVertOffset / 2)
-        pygame.draw.line(level_f_surf, KDS.Colors.GetPrimary.Cyan, (menu_rect.left + padding, lineY), (menu_rect.right - padding, lineY), 3)
+        pygame.draw.line(level_f_surf, KDS.Colors.Cyan, (menu_rect.left + padding, lineY), (menu_rect.right - padding, lineY), 3)
         for i in range(len(scoreTexts)):
             totalOffset = True if i == len(values) - 1 else False
             textY = textStartVertOffset + i * textVertOffset + (0 if not totalOffset else totalVertOffset)
@@ -2801,18 +2801,18 @@ def level_finished_menu():
         display.blit(level_f_surf, (0, 0))
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+            debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
         
             fps_text = "FPS: " + str(round(clock.get_fps()))
-            fps_text = score_font.render(fps_text, True, KDS.Colors.GetPrimary.White)
+            fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        window.fill(KDS.Colors.GetPrimary.Black)
-        display.fill(KDS.Colors.GetPrimary.Black)
+        window.fill(KDS.Colors.Black)
+        display.fill(KDS.Colors.Black)
         clock.tick(locked_fps)
 #endregion
 #region Check Terms
@@ -3029,7 +3029,7 @@ while main_running:
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x))
 
             KDS.Audio.playSound(landmine_explosion)
-            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x - 60, B_Object.rect.y - 55)))
+            Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x - 60, B_Object.rect.y - 55)))
              
             BallisticObjects.remove(B_Object)
 
@@ -3063,7 +3063,7 @@ while main_running:
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             if DebugMode:
                 rectSurf = pygame.Surface((light.surf.get_width(), light.surf.get_height()))
-                rectSurf.fill(KDS.Colors.GetPrimary.Yellow)
+                rectSurf.fill(KDS.Colors.Yellow)
                 rectSurf.set_alpha(128)
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(blue_light_sphere1, (20, 20))
@@ -3074,10 +3074,10 @@ while main_running:
     if renderUI:
         player_health = max(player_health, 0)
 
-        score = score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.GetPrimary.White)
-        health = score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.GetPrimary.White)
-        stamina = score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.GetPrimary.White)
-        happiness = score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.GetPrimary.White)
+        score = score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White)
+        health = score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.White)
+        stamina = score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White)
+        happiness = score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White)
 
         screen.blit(score, (10, 45))
         screen.blit(happiness, (10, 55))
@@ -3282,12 +3282,12 @@ while main_running:
 #endregion
 #region Interactable Objects
     if DebugMode:
-        pygame.draw.rect(screen, KDS.Colors.GetPrimary.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
+        pygame.draw.rect(screen, KDS.Colors.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
     screen.blit(koponen_animations.update(), (
         koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if DebugMode:
-        pygame.draw.rect(screen, (KDS.Colors.GetPrimary.Green), (player_rect.x - 
+        pygame.draw.rect(screen, (KDS.Colors.Green), (player_rect.x - 
                                                                  scroll[0], player_rect.y - scroll[1], 
                                                                  player_rect.width, player_rect.height))
 
@@ -3300,17 +3300,17 @@ while main_running:
     KDS.Logging.Profiler(DebugMode)
     if DebugMode:
         debugSurf = pygame.Surface((200, 50))
-        debugSurf.fill(KDS.Colors.GetPrimary.DarkGray)
+        debugSurf.fill(KDS.Colors.DarkGray)
         debugSurf.set_alpha(128)
         screen.blit(debugSurf, (0, 0))
         
-        screen.blit(score_font.render("FPS: " + str(round(clock.get_fps())), True, KDS.Colors.GetPrimary.White), (5, 5))
-        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.GetPrimary.White), (5, 15))
-        screen.blit(score_font.render("Sounds Playing: " + str(len(KDS.Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.GetPrimary.White), (5, 25))
-        screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.GetPrimary.White), (5, 35))
+        screen.blit(score_font.render("FPS: " + str(round(clock.get_fps())), True, KDS.Colors.White), (5, 5))
+        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.White), (5, 15))
+        screen.blit(score_font.render("Sounds Playing: " + str(len(KDS.Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.White), (5, 25))
+        screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.White), (5, 35))
 #endregion
 #region Screen Rendering
-    window.fill(KDS.Colors.GetPrimary.Black)
+    window.fill(KDS.Colors.Black)
     window.blit(pygame.transform.scale(screen, Fullscreen.size),
                 (Fullscreen.offset[0], Fullscreen.offset[1]))
     #Updating display object
@@ -3336,7 +3336,7 @@ while main_running:
         KDS.Scores.ScoreCounter.pause()
         KDS.Audio.MusicMixer.pause()
         KDS.Audio.pauseAllSounds()
-        window.fill(KDS.Colors.GetPrimary.Black)
+        window.fill(KDS.Colors.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
                     (Fullscreen.offset[0], Fullscreen.offset[1]))
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)

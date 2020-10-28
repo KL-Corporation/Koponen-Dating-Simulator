@@ -61,7 +61,7 @@ class Task:
         global Missions
         self.safeName = safeName
         self.text = text
-        self.renderedText = TaskFont.render(self.text, True, KDS.Colors.GetPrimary.White)
+        self.renderedText = TaskFont.render(self.text, True, KDS.Colors.White)
         self.renderedTextSize = self.renderedText.get_size()
         self.progress = 0.0
         self.progressScaled = 0
@@ -85,7 +85,7 @@ class Task:
         surface = pygame.Surface((Width, Height))
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
-        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.GetPrimary.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
+        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
         if self.finished != self.lastFinished:
             if self.finished:
                 if PlaySound:
@@ -103,7 +103,7 @@ class Mission:
         global Missions
         self.safeName = safeName
         self.text = text
-        self.renderedText = MissionFont.render(self.text, True, KDS.Colors.GetPrimary.White)
+        self.renderedText = MissionFont.render(self.text, True, KDS.Colors.White)
         self.textSize = self.renderedText.get_size()
         self.tasks: dict[str, Task] = {}
         self.task_keys: list[str] = []

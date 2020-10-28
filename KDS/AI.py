@@ -116,7 +116,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         for row in obstacles[y:end_y]:
             for tile in row[x:end_x]:
                 if KDS.Logging.profiler_running:
-                    pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                    pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
                 if not tile.air:
                     if tile.checkCollision:
                         return False, 0
@@ -350,10 +350,10 @@ class HostileEnemy:
 class Imp(HostileEnemy):
     def __init__(self, pos):
         health = 200
-        w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
     
@@ -372,10 +372,10 @@ class Imp(HostileEnemy):
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
         health = 125
-        w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 63)
 
         #region Handling the i_anim:
@@ -415,10 +415,10 @@ class SergeantZombie(HostileEnemy):
 class DrugDealer(HostileEnemy):
     def __init__(self, pos):
         health = 100
-        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 35, 70)
 
         #region Handling the i_anim:
@@ -461,11 +461,11 @@ class DrugDealer(HostileEnemy):
 class TurboShotgunner(HostileEnemy):
     def __init__(self, pos):
         health = 220
-        w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim0 = KDS.Animator.Animation("turbo_shotgunner_dying", 6, 13, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim1 = KDS.Animator.Animation("turbo_shotgunner_dying1", 5, 13, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim0 = KDS.Animator.Animation("turbo_shotgunner_dying", 6, 13, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim1 = KDS.Animator.Animation("turbo_shotgunner_dying1", 5, 13, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-24, 40, 58)
 
         #region Handling the i_anim:
@@ -505,10 +505,10 @@ class TurboShotgunner(HostileEnemy):
 class MafiaMan(HostileEnemy):
     def __init__(self, pos):
         health = 125
-        w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("mafiaman_dying", 5, 16, KDS.Colors.GetPrimary.White, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("mafiaman_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-19, 40, 53)
 
         #region Handling the i_anim:
@@ -548,10 +548,10 @@ class MafiaMan(HostileEnemy):
 class MethMaker(HostileEnemy):
     def __init__(self, pos):
         health = 250
-        w_anim = KDS.Animator.Animation("methmaker_walking", 4, 11, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("methmaker_idle", 2, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("methmaker_shooting", 2, 1, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("methmaker_dying", 5, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("methmaker_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("methmaker_idle", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("methmaker_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("methmaker_dying", 5, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-19, 40, 53)
 
         #region Handling the i_anim:
@@ -593,10 +593,10 @@ class MethMaker(HostileEnemy):
 class CaveMonster(HostileEnemy):
     def __init__(self, pos):
         health = 200
-        w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("undead_monster_dying", 5, 16, KDS.Colors.GetPrimary.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("undead_monster_dying", 5, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0]-20, pos[1]-23, 54, 57)
 
         #region Handling the i_anim:

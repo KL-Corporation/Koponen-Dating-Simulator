@@ -12,7 +12,7 @@ import KDS.World
 pygame.init()
 
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
-itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.GetPrimary.White)
+itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
 inventoryDobulesSerialNumbers = []
 inventory_items = []
@@ -36,7 +36,7 @@ class Item:
     def render(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
-                pygame.draw.rect(Surface, KDS.Colors.GetPrimary.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+                pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
@@ -98,7 +98,7 @@ class Item:
         """
         if not isinstance(self.texture, pygame.Surface):
             self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
-            self.texture.set_colorkey(KDS.Colors.GetPrimary.White)
+            self.texture.set_colorkey(KDS.Colors.White)
 
     def pickup(self):
         pass

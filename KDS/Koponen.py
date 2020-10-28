@@ -11,9 +11,9 @@ import KDS.UI
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
-text_color = KDS.Colors.Get.MidnightBlue
-background_color = KDS.Colors.Get.CloudWhite
-background_outline_color = KDS.Colors.Get.MidnightBlue
+text_color = KDS.Colors.MidnightBlue
+background_color = KDS.Colors.CloudWhite
+background_outline_color = KDS.Colors.MidnightBlue
 conversation_rect = pygame.Rect(40, 40, 700, 400)
 conversation_outline_width = 3
 conversation_border_radius = 10
@@ -158,13 +158,13 @@ def koponen_talk():
     conversations.append("Koponen: Hyvää päivää")
 
     exit_button = KDS.UI.New.Button(pygame.Rect(940, 700, 230, 80), exit_function1, button_font1.render(
-        "EXIT", True, KDS.Colors.GetPrimary.White))
+        "EXIT", True, KDS.Colors.White))
     mission_button = KDS.UI.New.Button(pygame.Rect(50, 700, 450, 80), mission_function, button_font1.render(
-        "REQUEST MISSION", True, KDS.Colors.GetPrimary.White))
+        "REQUEST MISSION", True, KDS.Colors.White))
     date_button = KDS.UI.New.Button(pygame.Rect(50, 610, 450, 80), date_function, button_font1.render(
-        "ASK FOR A DATE", True, KDS.Colors.GetPrimary.White))
+        "ASK FOR A DATE", True, KDS.Colors.White))
     r_mission_button = KDS.UI.New.Button(pygame.Rect(510, 700, 420, 80), end_mission, button_font1.render(
-        "RETURN MISSION", True, KDS.Colors.GetPrimary.White))
+        "RETURN MISSION", True, KDS.Colors.White))
 
     while koponenTalking:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -225,8 +225,8 @@ def init(playerName: str):
         talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_foregrounds)
     talk_foreground = talk_foregrounds[0]
-    Prefixes.player = text_font.render(f"{playerName}: ")
-    Prefixes.koponen = text_font.render("Koponen: ")
+    Prefixes.player = text_font.render(f"{playerName}: ", True, KDS.Colors.White)
+    Prefixes.koponen = text_font.render("Koponen: ", True, KDS.Colors.White)
 
 class Talk:
     running = False
@@ -318,5 +318,5 @@ class Talk:
             Talk.renderMenu(surface, (0, 0), False)
             window.blit(pygame.transform.scale(surface, (int(surface_size[0] * Fullscreen.scaling), int(surface_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
             pygame.display.update()
-            window.fill(KDS.Colors.GetPrimary.Black)
+            window.fill(KDS.Colors.Black)
             clock.tick(fps)
