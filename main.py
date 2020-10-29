@@ -135,7 +135,11 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 Fullscreen.enabled = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
-I=====[ Render Info ]=====I
+I=====[ System Info ]=====I
+   [Version Info]
+   - PyGame Version: {pygame.version.ver}
+   - SDL Version: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+   
    [Window Info]
    - Window Size: {(window_info.current_w, window_info.current_h)}
    
@@ -159,7 +163,7 @@ I=====[ Render Info ]=====I
    - Software Blitting: {KDS.Convert.ToBool(window_info.blit_sw)}
    - Software Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_sw_CC)}
    - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_sw_A)}
-I=====[ Render Info ]=====I""")
+I=====[ System Info ]=====I""")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising KDS modules...")
 KDS.AI.init()
 KDS.Missions.init()

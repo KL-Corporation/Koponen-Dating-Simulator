@@ -220,7 +220,7 @@ class Prefixes:
     koponen = text_font.render("Koponen: ", True, text_color)
 
 def init(playerName: str):
-    global talk_background, talk_foregrounds, talk_foreground, name_prefix, koponen_prefix
+    global talk_background, talk_foregrounds, talk_foreground
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"):
         talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
@@ -243,7 +243,7 @@ class Talk:
             self.prefix = prefix
             self.prefix_visible = prefix_visible
             self.prefix_size = self.prefix.get_size()
-            self.animationProgress = self.prefix_size[0] + text_padding.left
+            self.animationProgress = text_padding.left + self.prefix_size[0]
             self.animationFinished = False
             self.waitBeforeScroll = 0
             self.finished = False
@@ -256,6 +256,11 @@ class Talk:
                 self.animationFinished = True
                 self.waitBeforeScroll += 1
                 if self.waitBeforeScroll > min_time_before_scroll: self.finished = True
+                
+        def render(self, surface: pygame.Surface, y):
+            surface.blit(self.prefix, (text_padding.left, y))
+            surface.blit(self.text, (text_padding.left + self.prefix_size[0], 0))
+            pygame.draw.rect(surface, KDS.Colors.Red, pygame.Rect(self.animationProgress, y, self.text_size[0] - self.animationProgress, self.text_size[1]))
         
     class Lines:
         scheduled = []
@@ -267,6 +272,14 @@ class Talk:
                 Talk.Lines.updating.append(Talk.Lines.scheduled.pop(0))
             if len(Talk.Lines.updating) >= Talk.lineCount and Talk.Lines.updating[0].finished:
                 del Talk.Lines.updating[0]
+                
+        @staticmethod
+        def render(surface: pygame.Surface):
+            for i in range(len(Talk.Lines.updating)):
+                line = Talk.Lines.updating[i]
+                line.update()
+                line.render()
+                
             
     class Conversation:
             
