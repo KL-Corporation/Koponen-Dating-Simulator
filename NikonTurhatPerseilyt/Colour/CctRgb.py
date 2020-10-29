@@ -107,23 +107,19 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> tuple[int, int, int]:
 #endregion
 
 if __name__ == "__main__":
-    print("Preview requires matplotlib")
     from matplotlib import pyplot as plt
     from time import sleep
+    step_size = 100
 
     fig, axs = plt.subplots(2)
     fig.suptitle('My conversion vs. Stolen conversion')
 
-    step_size = 100
-    for i in range(0, 15000, step_size):
-        color = list(map(lambda div: div / 255.0, convert_K_to_RGB(i))) + [1]
-        print(color)
-        axs[0].plot((i, i), (0, 1), linewidth=step_size/2.0, linestyle="-", color=color)
-    
-    step_size = 100
     for i in range(0, 15000, step_size):
         color = list(map(lambda div: div / 255.0, CorrelatedColorTemperatureToRGB(i))) + [1]
-        print(color)
         axs[1].plot((i, i), (0, 1), linewidth=step_size/2.0, linestyle="-", color=color)
         
+    for i in range(0, 15000, step_size):
+        color = list(map(lambda div: div / 255.0, convert_K_to_RGB(i))) + [1]
+        axs[0].plot((i, i), (0, 1), linewidth=step_size/2.0, linestyle="-", color=color)
+    
     plt.show()
