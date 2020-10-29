@@ -1,0 +1,1 @@
+#Make a console with the new text input in pygame.

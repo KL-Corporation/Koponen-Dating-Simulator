@@ -3,6 +3,7 @@ import random
 import pygame
 from pygame.locals import *
 import math
+import sys
 import KDS.Colors
 import KDS.Convert
 import KDS.Animator
@@ -279,11 +280,13 @@ class Talk:
         def fromEnd(index: int, count: int = -1):
             count = count if count >= 0 else Talk.lineCount
             _from = KDS.Math.Clamp(index, 0, len(Talk.Lines.active) - 1)
+            _from = len(Talk.Lines.active) - 1 - _from
             _to = KDS.Math.Clamp(_from + count, _from, len(Talk.Lines.active) - 1)
-            Talk.Lines.active[_from:_to]
+            return Talk.Lines.active[len(Talk.Lines.active) - 1 - _from:_to]
         
     class Conversation:
-            
+        scroll = 0
+        
         @staticmethod
         def schedule(text, prefix: Prefixes and pygame.Surface):
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.Lines.surface_rect.width - prefix.get_width())
@@ -296,6 +299,12 @@ class Talk:
             pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
             Talk.Lines.update()
+            lines = Talk.Lines.fromEnd(Talk.Conversation.scroll)
+            print(lines)
+            #fromEnd is shite
+            for i in range(len(lines)):
+                lines[i].update()
+                lines[i].render(Talk.surface, i * line_spacing)
             
             pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
             
@@ -326,9 +335,9 @@ class Talk:
                             KDS_Quit()
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4:
-                        pass #Up
+                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, sys.maxsize - line_scroll_speed)
                     elif event.button == 5:
-                        pass #Down
+                        Talk.Conversation.scroll -= min(line_scroll_speed, Talk.Conversation.scroll)
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True
