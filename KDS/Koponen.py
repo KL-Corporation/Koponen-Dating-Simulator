@@ -8,6 +8,7 @@ import KDS.Convert
 import KDS.Animator
 import KDS.Audio
 import KDS.UI
+import KDS.Math
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
@@ -17,6 +18,7 @@ background_outline_color = KDS.Colors.MidnightBlue
 conversation_rect = pygame.Rect(40, 40, 700, 400)
 conversation_outline_width = 3
 conversation_border_radius = 10
+line_spacing = 25
 line_reveal_speed = 5
 line_scroll_speed = 1
 min_time_before_scroll = 120 #ticks
@@ -259,38 +261,27 @@ class Talk:
         def render(self, surface: pygame.Surface, y):
             surface.blit(self.prefix, (text_padding.left, y))
             surface.blit(self.text, (text_padding.left + self.prefix_size[0], y))
-            pygame.draw.rect(surface, KDS.Colors.Red, pygame.Rect(self.animationProgress, y, self.text_size[0] - self.animationProgress, self.text_size[1]))
+            pygame.draw.rect(surface, KDS.Colors.Red, pygame.Rect(self.animationProgress, y, self.text_size[0] - self.animationProgress, line_spacing))
         
     class Lines():
         scheduled = []
-        updating = []
+        active = []
         surface = pygame.Surface((conversation_rect.width - text_padding.left - text_padding.right, conversation_rect.height - text_padding.top - text_padding.bottom))
         surface_rect = pygame.Rect(conversation_rect.width - text_padding.left, text_padding.top, surface.get_width(), surface.get_height())
         
         @staticmethod
         def update():
-            if (len(Talk.Lines.updating) < 1 or Talk.Lines.updating[-1].animationFinished) and len(Talk.Lines.scheduled) > 0 and len(Talk.Lines.updating) < Talk.lineCount:
-                Talk.Lines.updating.append(Talk.Lines.scheduled.pop(0))
-            if len(Talk.Lines.updating) >= Talk.lineCount and Talk.Lines.updating[0].finished:
-                del Talk.Lines.updating[0]
-                return True
+            if (len(Talk.Lines.active) < 1 or Talk.Lines.active[-1].animationFinished) and len(Talk.Lines.scheduled) > 0 and len(Talk.Lines.active) < Talk.lineCount:
+                Talk.Lines.active.append(Talk.Lines.scheduled.pop(0))
             return False
-                
+        
         @staticmethod
-        def render(newLine: bool):
-            if not newLine:
-                Talk.Lines.surface_rect.y = text_padding.top
-                Talk.Lines.surface.fill(background_color)
-                for i in range(len(Talk.Lines.updating)):
-                    line = Talk.Lines.updating[i]
-                    line.update()
-                    line.render(Talk.Lines.surface, text_padding.top + (i * line.text_size[1]))
-            else:
-                Talk.Lines.surface_rect.y += line_scroll_speed
-            Talk.surface.blit(Talk.Lines.surface, (text_padding.left, text_padding.top))
-                
-                
-            
+        def fromEnd(index: int, count: int = -1):
+            count = count if count >= 0 else Talk.lineCount
+            _from = KDS.Math.Clamp(index, 0, len(Talk.Lines.active) - 1)
+            _to = KDS.Math.Clamp(_from + count, _from, len(Talk.Lines.active) - 1)
+            Talk.Lines.active[_from:_to]
+        
     class Conversation:
             
         @staticmethod
@@ -304,8 +295,7 @@ class Talk:
             Talk.surface.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
-            result = Talk.Lines.update()
-            Talk.Lines.render(result)
+            Talk.Lines.update()
             
             pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
             
@@ -334,6 +324,11 @@ class Talk:
                     elif event.key == K_F4:
                         if pygame.key.get_pressed()[K_LALT]:
                             KDS_Quit()
+                elif event.type == MOUSEBUTTONDOWN:
+                    if event.button == 4:
+                        pass #Up
+                    elif event.button == 5:
+                        pass #Down
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True

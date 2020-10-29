@@ -292,7 +292,7 @@ def AddProgress(MissionName: str, TaskName: str, AddValue: float):
         Add_Value (float): The value that will be added to your task's progress.
     """
     var = Missions.GetMission(MissionName)
-    if var != None: 
+    if var != None:
         var = var.GetTask(TaskName)
         if var != None: var.Progress(AddValue, True)
 #endregion
