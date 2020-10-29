@@ -1,7 +1,6 @@
 import os
 import random
 import pygame
-from pygame.draw import lines
 from pygame.locals import *
 import math
 import KDS.Colors
@@ -259,12 +258,14 @@ class Talk:
                 
         def render(self, surface: pygame.Surface, y):
             surface.blit(self.prefix, (text_padding.left, y))
-            surface.blit(self.text, (text_padding.left + self.prefix_size[0], 0))
+            surface.blit(self.text, (text_padding.left + self.prefix_size[0], y))
             pygame.draw.rect(surface, KDS.Colors.Red, pygame.Rect(self.animationProgress, y, self.text_size[0] - self.animationProgress, self.text_size[1]))
         
-    class Lines:
+    class Lines():
         scheduled = []
         updating = []
+        surface = pygame.Surface((conversation_rect.width - text_padding.left - text_padding.right, conversation_rect.height - text_padding.top - text_padding.bottom))
+        surface_rect = pygame.Rect(conversation_rect.width - text_padding.left, text_padding.top, surface.get_width(), surface.get_height())
         
         @staticmethod
         def update():
@@ -272,30 +273,39 @@ class Talk:
                 Talk.Lines.updating.append(Talk.Lines.scheduled.pop(0))
             if len(Talk.Lines.updating) >= Talk.lineCount and Talk.Lines.updating[0].finished:
                 del Talk.Lines.updating[0]
+                return True
+            return False
                 
         @staticmethod
-        def render(surface: pygame.Surface):
-            for i in range(len(Talk.Lines.updating)):
-                line = Talk.Lines.updating[i]
-                line.update()
-                line.render()
+        def render(newLine: bool):
+            if not newLine:
+                Talk.Lines.surface_rect.y = text_padding.top
+                Talk.Lines.surface.fill(background_color)
+                for i in range(len(Talk.Lines.updating)):
+                    line = Talk.Lines.updating[i]
+                    line.update()
+                    line.render(Talk.Lines.surface, text_padding.top + (i * line.text_size[1]))
+            else:
+                Talk.Lines.surface_rect.y += line_scroll_speed
+            Talk.surface.blit(Talk.Lines.surface, (text_padding.left, text_padding.top))
+                
                 
             
     class Conversation:
             
         @staticmethod
         def schedule(text, prefix: Prefixes and pygame.Surface):
-            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.surface_size[0] - text_padding.left - text_padding.right)
-            for _text in lineSplit: Talk.Lines.scheduled.append(Talk.Line(_text, prefix))
+            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.Lines.surface_rect.width - prefix.get_width())
+            for _text in lineSplit: 
+                Talk.Lines.scheduled.append(Talk.Line(_text, prefix))
         
         @staticmethod
         def render():
             Talk.surface.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
-            Talk.Lines.update()
-            for line in Talk.Lines.updating:
-                line.update()
+            result = Talk.Lines.update()
+            Talk.Lines.render(result)
             
             pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
             

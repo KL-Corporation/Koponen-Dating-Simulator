@@ -91,6 +91,7 @@ def ToLines(text: str, font: pygame.font.Font, max_width: int or float):
                 i += 1
                 if i >= len(toTest):
                     break
+            i -= 1
                     
             new_split.append(toTest[i:])
             new_split[-2] = toTest[:i]
