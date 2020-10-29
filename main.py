@@ -20,7 +20,6 @@ import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
-import KDS.Items
 import numpy
 import random
 import threading
@@ -631,7 +630,7 @@ class WorldData():
                                     (x * 34, y * 34), serialNumber=serialNumber)
                         elif data[0] == "1":
                             if loadEntities:
-                                Items = numpy.append(Items, KDS.Items.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber, texture=i_textures[serialNumber]))
+                                Items = numpy.append(Items, Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber, texture=i_textures[serialNumber]))
                         elif data[0] == "2":
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
@@ -750,7 +749,7 @@ class Inventory:
 
     def useItem(self, Surface: pygame.Surface, *args):
         if self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
-            dumpValues = self.storage[self.SIndex].use(args, Surface, Projectiles)
+            dumpValues = self.storage[self.SIndex].use(args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
             else:
@@ -1732,6 +1731,7 @@ Ufunctions = {
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Items...")
+"""
 class Item:
 
     def __init__(self, position: tuple[int, int], serialNumber: int):
@@ -1797,6 +1797,87 @@ class Item:
         return Item_list, inventory
 
     def toString2(self):
+        Converts all textures to strings
+        
+        if isinstance(self.texture, pygame.Surface):
+            self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
+            
+    def fromString(self):
+        Converts all strings back to textures
+        
+        if not isinstance(self.texture, pygame.Surface):
+            self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+            self.texture.set_colorkey(KDS.Colors.White)
+"""   
+
+class Item:
+
+    serialNumbers = {}
+
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        if serialNumber:
+            self.texture = texture
+        self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[
+                                1]), self.texture.get_size()[0], self.texture.get_size()[1])
+        self.serialNumber = serialNumber
+
+    @staticmethod
+    # Item_list is a 2d numpy array
+    def render(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
+        for renderable in Item_list:
+            if DebugMode:
+                pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
+
+    @staticmethod
+    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory):
+        index = 0
+        showItemTip = True
+        collision = False
+        shortest_index = 0
+        shortest_distance = sys.maxsize
+        for item in Item_list:
+            if collidingRect.colliderect(item.rect):
+                collision = True
+                distance = KDS.Math.getDistance(item.rect.midbottom, collidingRect.midbottom)
+                if distance < shortest_distance:
+                    shortest_index = index
+                    shortest_distance = distance
+                if functionKey:
+                    if item.serialNumber not in inventoryDobulesSerialNumbers:
+                        if inventory.storage[inventory.SIndex] == "none":
+                            temp_var = item.pickup()
+                            if not temp_var:
+                                inventory.storage[inventory.SIndex] = item
+                                if item.serialNumber == 6:
+                                    KDS.Missions.Listeners.iPuhelinPickup.Trigger()
+                            Item_list = numpy.delete(Item_list, index)
+                            showItemTip = False
+                        elif item.serialNumber not in inventory_items:
+                            try:
+                                item.pickup()
+                                inventory.storage[inventory.SIndex] = item
+                                Item_list = numpy.delete(Item_list, index)
+                                showItemTip = False
+                            except IndexError as e:
+                                KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
+                    else:
+                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
+                            if inventory.storage[inventory.SIndex + 1] == "none":
+                                item.pickup()
+                                inventory.storage[inventory.SIndex] = item
+                                inventory.storage[inventory.SIndex +
+                                                  1] = "doubleItemPlaceholder"
+                                Item_list = numpy.delete(Item_list, index)
+                                showItemTip = False
+            index += 1
+        
+        if collision and showItemTip:
+            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
+
+        return Item_list, inventory
+
+    def toString2(self):
         """Converts all textures to strings
         """
         if isinstance(self.texture, pygame.Surface):
@@ -1808,7 +1889,399 @@ class Item:
         if not isinstance(self.texture, pygame.Surface):
             self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
             self.texture.set_colorkey(KDS.Colors.White)
+
+    def pickup(self):
+        pass
+
+    def use(self, *args):
+        return self.texture
+
+    def drop(self):
+        pass
+
+    def init(self):
+        pass
+
+class BlueKey(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class Cell(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class Coffeemug(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Gasburner(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        global gasburnerBurning
         
+        if args[0][0] == True:
+            gasburnerBurning = True
+            gasburner_fire.stop()
+            KDS.Audio.playSound(gasburner_fire)
+            return gasburner_animation_object.update()
+        else:
+            gasburner_fire.stop()
+            gasburnerBurning = False
+            return gasburner_off
+
+    def pickup(self):
+        return False
+
+class GreenKey(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class iPuhelin(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Knife(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        if args[0][0]:
+            if KDS.World.knife_C.counter > 40:
+                KDS.World.knife_C.counter = 0
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 13 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 1, 1),direction, -1, tiles, 25, maxDistance=40))
+            KDS.World.knife_C.counter  += 1
+            return knife_animation_object.update()
+        else:
+            KDS.World.knife_C.counter  += 1
+            if KDS.World.knife_C.counter > 100:
+                KDS.World.knife_C.counter = 100
+            return knife
+
+    def pickup(self):
+        return False
+
+class LappiSytytyspalat(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class Medkit(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class Pistol(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class PistolMag(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class rk62(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Shotgun(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class rk62Mag(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class ShotgunShells(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class Plasmarifle(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Soulsphere(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class RedKey(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class SSBonuscard(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Turboneedle(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class Ppsh41(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        global tiles, ppsh41_ammo
+        args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.White), (10, 360))
+        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
+            KDS.World.ppsh41_C.counter = 0
+            smg_shot.stop()
+            KDS.Audio.playSound(smg_shot)
+            ppsh41_ammo -= 1
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            return ppsh41_f_texture
+        else:
+            if not args[0][0]:
+                smg_shot.stop() 
+            KDS.World.ppsh41_C.counter += 1
+            return ppsh41_texture
+
+    def pickup(self):
+        return False
+
+class Awm(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class AwmMag(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return True
+
+class EmptyFlask(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class MethFlask(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class BloodFlask(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Grenade(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class FireExtinguisher(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class LevelEnder1(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+class Ppsh41Mag(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+    
+    def pickup(self):
+        return True
+
+class Lantern(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        return self.texture
+
+    def pickup(self):
+        return False
+
+Item.serialNumbers = {
+    1: BlueKey,
+    2: Cell,
+    3: Coffeemug,
+    4: Gasburner,
+    5: GreenKey,
+    6: iPuhelin,
+    7: Knife,
+    8: LappiSytytyspalat,
+    9: Medkit,
+    10:Pistol,
+    11:PistolMag,
+    12:Plasmarifle,
+    13:RedKey,
+    14:rk62Mag,
+    15:rk62,
+    16:Shotgun,
+    17:ShotgunShells,
+    18:Soulsphere,
+    19:SSBonuscard,
+    20:Turboneedle,
+    21:Ppsh41,
+    22:"",
+    23:"",
+    24:Awm,
+    25:AwmMag,
+    26:EmptyFlask,
+    27:MethFlask,
+    28:BloodFlask,
+    29:Grenade,
+    30:FireExtinguisher,
+    31:LevelEnder1,
+    32:Ppsh41Mag,
+    33:Lantern
+}
+
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 
 def load_jukebox_music():
@@ -2973,7 +3446,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Items, player_inventory = KDS.Items.Item.checkCollisions(Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
+    Items, player_inventory = Item.checkCollisions(Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.centerx - (player_rect.x - scroll[0] - 301), player_rect.centery - (player_rect.y - scroll[1] - 221)))
     for enemy in Enemies:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
@@ -2998,7 +3471,7 @@ while main_running:
                         Items = numpy.append(Items, tempItem)
                         del tempItem
 
-    KDS.Items.Item.render(Items, screen, scroll, DebugMode)
+    Item.render(Items, screen, scroll, DebugMode)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
     if 33 in player_inventory.storage:
         Inventory.useSpecificItem(33, screen)
