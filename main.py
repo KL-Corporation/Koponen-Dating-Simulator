@@ -2922,8 +2922,8 @@ def main_menu():
     campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
     campaign_play_button = KDS.UI.Button(campaign_play_button_rect, play_function, campaign_play_text)
     campaign_return_button = KDS.UI.Button(campaign_return_button_rect, menu_mode_selector, campaign_return_text)
-    campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left)
-    campaign_right_button = KDS.UI.Button(campaign_right_button_rect, level_pick.right)
+    campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left, pygame.transform.flip(arrow_button, True, False))
+    campaign_right_button = KDS.UI.Button(campaign_right_button_rect, level_pick.right, arrow_button)
 
     Frame1 = pygame.Surface(display_size)
     frames = [Frame1, Frame2, Frame3, Frame4]
@@ -3036,8 +3036,6 @@ def main_menu():
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
 
-            display.blit(pygame.transform.flip(arrow_button, True, False), (58, 208))
-            display.blit(arrow_button, (1092, 208))
             current_map_int = int(current_map)
 
             if current_map_int < len(map_names):

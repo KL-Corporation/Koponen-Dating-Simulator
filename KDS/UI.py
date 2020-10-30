@@ -1,5 +1,6 @@
 from shutil import move
 from turtle import position
+from typing import Callable
 import KDS.Animator
 import KDS.ConfigManager
 import KDS.Convert
@@ -93,24 +94,39 @@ class Slider:
 
 class Button:
 
-    def __init__(self, rect, function, text=None, button_default_color=(100, 100, 100), button_highlighted_color=(115, 115, 115), button_pressed_color=(90, 90, 90), button_disabled_color=(75, 75, 75), lerp_duration=3, enabled=True):
+    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface = None, button_default_color: tuple[int, int, int] = (100, 100, 100), button_highlighted_color: tuple[int, int, int] = (115, 115, 115), button_pressed_color: tuple[int, int, int] = (90, 90, 90), button_disabled_color: tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
+        """Instantiates a new Button
+
+        Args:
+            rect (Rect): The rect where the button will be drawn.
+            function (Callable): A function to be called when the button is pressed.
+            overlay (Surface, optional): Any surface you want to write on top of the button. Defaults to None.
+            button_default_color (tuple[int, int, int], optional): The color of the button by default. Defaults to (100, 100, 100).
+            button_highlighted_color (tuple[int, int, int], optional): The color of the button when highlighted. Defaults to (115, 115, 115).
+            button_pressed_color (tuple[int, int, int], optional): The color of the button when pressed. Defaults to (90, 90, 90).
+            button_disabled_color (tuple[int, int, int], optional): The color of the button when disabled. Defaults to (75, 75, 75).
+            lerp_duration (int, optional): The duration it takes to switch from one color to another. Defaults to 3.
+            enabled (bool, optional): Determines if the button is enabled or disabled from the start. Defaults to True.
+        """
         self.rect = rect
         self.function = function
-        self.text = text
+        self.overlay = overlay
         self.button_default_color = button_default_color
         self.button_highlighted_color = button_highlighted_color
         self.button_pressed_color = button_pressed_color
         self.button_disabled_color = button_disabled_color
-        self.button_old_color = button_default_color
+        self.button_old_color = button_default_color if enabled else button_disabled_color
         self.button_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
         self.enabled = enabled
         
-    def update(self, surface, mouse_pos: tuple[int, int], clicked, *args):
-        """
-        1. surface: The surface this button is going to be rendered.
-        2. mouse_pos: The SCALED position of the mouse.
-        3. clicked: A bool to determine if button's function should be executed.
-        4. args: Any arguments for the button's function.
+    def update(self, surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool, *args):
+        """Updates and draws the button onto a surface.
+
+        Args:
+            surface (Surface): The surface the button will be drawn onto.
+            mouse_pos (tuple[int, int]): The SCALED position of the mouse.
+            clicked (bool): Determines if the button's function should be executed.
+            args (any): Any arguments for the button's function.
         """
 
         button_color = self.button_disabled_color
@@ -134,8 +150,8 @@ class Button:
             draw_color = button_color
         pygame.draw.rect(surface, draw_color, self.rect)
 
-        if self.text != None:
-            surface.blit(self.text, (int(self.rect.center[0] - (self.text.get_width() / 2)), int(self.rect.center[1] - (self.text.get_height() / 2))))
+        if self.overlay != None:
+            surface.blit(self.overlay, (int(self.rect.center[0] - (self.overlay.get_width() / 2)), int(self.rect.center[1] - (self.overlay.get_height() / 2))))
 
 class Switch:
     """

@@ -22,8 +22,14 @@ conversation_border_radius = 10
 line_spacing = 25
 line_reveal_speed = 5
 line_scroll_speed = 1
-auto_scroll_offset_index = 10
 min_time_before_scroll = 120 #ticks
+auto_scroll_offset_index = 10
+scroll_to_bottom_rect = pygame.Rect(665, 365, 25, 25)
+scroll_to_bottom_colors = {
+    "default": (KDS.Colors.DarkGray),
+    "highlighted": (KDS.Colors.Gray),
+    "pressed": (KDS.Colors.LightGray)
+}
 class text_padding:
     left = 5
     top = 5
@@ -226,8 +232,10 @@ class Prefixes:
         koponen = text_font.render("Koponen: ", True, text_color)
 
 def init(playerName: str):
-    global talk_background, talk_foregrounds, talk_foreground
+    global talk_background, talk_foregrounds, talk_foreground, scrollArrow, scrollToBottomButton
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
+    scrollArrow = pygame.transform.rotate(pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert(), 90)
+    scrollToBottomButton = KDS.UI.Button(scroll_to_bottom_rect, Talk.Conversation.scrollToBottom, scrollArrow, scroll_to_bottom_colors["default"], scroll_to_bottom_colors["highlighted"], scroll_to_bottom_colors["pressed"])
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"):
         talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_foregrounds)
@@ -244,8 +252,10 @@ class Talk:
     lines: list[str] = []
         
     class Conversation:
+        @staticmethod
+        def scrollToBottom():
+            Talk.Conversation.scroll = len(Talk.lines) - Talk.lineCount
         scroll = 0
-        scrollToBottomButton = KDS.UI.Button()
         
         @staticmethod
         def schedule(text, prefix: Prefixes and str):
@@ -258,7 +268,7 @@ class Talk:
                 del Talk.lines[0]
                 itemsDeleted += 1
             if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index:
-                Talk.Conversation.scroll = len(Talk.lines) - Talk.lineCount
+                Talk.Conversation.scrollToBottom()
         
         @staticmethod
         def render(mouse_pos: tuple[int, int], clicked: bool):
@@ -276,7 +286,7 @@ class Talk:
                     Talk.surface.blit(prefix, (text_padding.left, offsetY))
                 
                 if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index:
-                    
+                    scrollToBottomButton.update(Talk.surface, mouse_pos, clicked)
             
             pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
             
