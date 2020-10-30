@@ -1679,8 +1679,8 @@ class Cell(Item):
     def pickup(self):
         KDS.Scores.score += 4
         KDS.Audio.playSound(item_pickup)
-        global plasma_ammo
-        plasma_ammo += 30
+        global ammunition_plasma
+        ammunition_plasma += 30
         return True
 
 class Coffeemug(Item):
