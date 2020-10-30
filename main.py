@@ -1636,7 +1636,7 @@ class Item:
 
         return Item_list, inventory
 
-    def toString2(self):
+    def toString(self):
         """Converts all textures to strings
         """
         if isinstance(self.texture, pygame.Surface):
@@ -1729,16 +1729,24 @@ class GreenKey(Item):
         return True
 
 class iPuhelin(Item):
-    pickup_sound = pygame.mixer.Sound("Assets/Audio/Effects/apple_o_paskaa.ogg")
+    #pickup_sound = pygame.mixer.Sound("Assets/Audio/Effects/apple_o_paskaa.ogg")
+    realistic_texture = pygame.image.load("Assets/Textures/Items/iPuhelin_realistic.png").convert()
+    realistic_texture.set_colorkey(KDS.Colors.White)
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.useCount = 0
 
     def use(self, *args):
+        if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+            self.useCount += 1
+        if self.useCount > 7:
+            self.useCount = 7
+            self.texture = iPuhelin.realistic_texture
         return self.texture
 
     def pickup(self):
         KDS.Scores.score -= 6
-        KDS.Audio.playSound(iPuhelin.pickup_sound)
+        KDS.Audio.playSound(item_pickup)
         return False
 
 class Knife(Item):
