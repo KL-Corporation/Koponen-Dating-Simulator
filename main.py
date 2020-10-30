@@ -392,6 +392,7 @@ awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
 smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Effects/grenade_throw.ogg")
 lantern_pickup = pygame.mixer.Sound("Assets/Audio/Effects/lantern_pickup.ogg")
+lantern_pickup = pygame.mixer.Sound("Assets/Audio/Effects/lantern_pickup.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -709,8 +710,8 @@ class Inventory:
 
         index = 0
         for i in self.storage:
-            if i in i_textures:
-                Surface.blit(i_textures[i], (int(index * 34 + 10 + i_textures[i].get_size()[0] / 4), int(75 + i_textures[i].get_size()[1] / 4)))
+            if not isinstance(i, str) and i.serialNumber in i_textures:
+                Surface.blit(i.texture, (int(index * 34 + 10 + i.texture.get_size()[0] / 4), int(75 + i.texture.get_size()[1] / 4)))
             index += 1
 
     def moveRight(self):
@@ -1665,20 +1666,22 @@ class BlueKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        global player_keys
+        KDS.Audio.playSound(key_pickup)
+        player_keys["blue"] = True
+
         return True
 
 class Cell(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        KDS.Scores.score += 4
+        KDS.Audio.playSound(item_pickup)
+        global plasma_ammo
+        plasma_ammo += 30
         return True
 
 class Coffeemug(Item):
@@ -1689,6 +1692,8 @@ class Coffeemug(Item):
         return self.texture
 
     def pickup(self):
+        KDS.Scores.score += 6
+        KDS.Audio.playSound(coffeemug_sound)
         return False
 
 class Gasburner(Item):
@@ -1709,19 +1714,23 @@ class Gasburner(Item):
             return gasburner_off
 
     def pickup(self):
+        KDS.Scores.score += 12
+        KDS.Audio.playSound(gasburner_clip)
         return False
 
 class GreenKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        global player_keys
+        KDS.Audio.playSound(key_pickup)
+        player_keys["green"] = True
+
         return True
 
 class iPuhelin(Item):
+    pickup_sound = pygame.mixer.Sound("Assets/Audio/Effects/apple_o_paskaa.ogg")
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
@@ -1729,6 +1738,8 @@ class iPuhelin(Item):
         return self.texture
 
     def pickup(self):
+        KDS.Scores.score -= 6
+        KDS.Audio.playSound(iPuhelin.pickup_sound)
         return False
 
 class Knife(Item):
@@ -1749,6 +1760,8 @@ class Knife(Item):
             return knife
 
     def pickup(self):
+        KDS.Scores.score += 15
+        KDS.Audio.playSound(knife_pickup)
         return False
 
 class LappiSytytyspalat(Item):
@@ -1759,16 +1772,18 @@ class LappiSytytyspalat(Item):
         return self.texture
 
     def pickup(self):
+        KDS.Scores.score += 14
+        KDS.Audio.playSound(lappi_sytytyspalat_sound)
         return True
 
 class Medkit(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        global player_health
+        KDS.Audio.playSound(item_pickup)
+        player_health = min(player_health + 100, player_health)
         return True
 
 class Pistol(Item):
@@ -1790,16 +1805,17 @@ class Pistol(Item):
             return pistol_texture
 
     def pickup(self):
+        KDS.Scores.score += 18
+        KDS.Audio.playSound(weapon_pickup)
         return False
 
 class PistolMag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        KDS.Scores.score += 7
+        KDS.Audio.playSound(item_pickup)
         return True
 
 class rk62(Item):
@@ -1824,6 +1840,8 @@ class rk62(Item):
             return rk62_texture
 
     def pickup(self):
+        KDS.Scores.score += 29
+        KDS.Audio.playSound(weapon_pickup)
         return False
 
 class Shotgun(Item):
@@ -1846,26 +1864,30 @@ class Shotgun(Item):
             return shotgun
 
     def pickup(self):
+        KDS.Scores.score += 23
+        KDS.Audio.playSound(weapon_pickup)
         return False
 
 class rk62Mag(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        global rk_62_ammo
+        rk_62_ammo += 30
+        KDS.Scores.score += 8
+        KDS.Audio.playSound(item_pickup)
         return True
 
 class ShotgunShells(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        global shotgun_shells
+        shotgun_shells += 4
+        KDS.Scores.score += 5
+        KDS.Audio.playSound(item_pickup)
         return True
 
 class Plasmarifle(Item):
@@ -1891,26 +1913,29 @@ class Plasmarifle(Item):
             return plasmarifle
 
     def pickup(self):
+        KDS.Scores.score += 25
+        KDS.Audio.playSound(weapon_pickup)
         return False
 
 class Soulsphere(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        KDS.Scores.score += 20
+        player_health += 100
+        KDS.Audio.playSound(item_pickup)
         return True
 
 class RedKey(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        return self.texture
-
     def pickup(self):
+        global player_keys
+        KDS.Audio.playSound(key_pickup)
+        player_keys["red"] = True
+
         return True
 
 class SSBonuscard(Item):
@@ -1921,6 +1946,8 @@ class SSBonuscard(Item):
         return self.texture
 
     def pickup(self):
+        KDS.Scores.score += 30
+        KDS.Audio.playSound(ss_sound)
         return False
 
 class Turboneedle(Item):
@@ -1987,6 +2014,10 @@ class AwmMag(Item):
         return self.texture
 
     def pickup(self):
+        global awm_ammo
+        awm_ammo += 5
+        KDS.Audio.playSound(item_pickup)
+        
         return True
 
 class EmptyFlask(Item):
@@ -1997,6 +2028,8 @@ class EmptyFlask(Item):
         return self.texture
 
     def pickup(self):
+        KDS.Scores.score += 1
+        KDS.Audio.playSound(coffeemug_sound)
         return False
 
 class MethFlask(Item):
@@ -2013,6 +2046,8 @@ class MethFlask(Item):
         return i_textures[27]
 
     def pickup(self):
+        KDS.Scores.score += 10
+        KDS.Audio.playSound(coffeemug_sound)
         return False
 
 class BloodFlask(Item):
@@ -2029,6 +2064,8 @@ class BloodFlask(Item):
         return i_textures[28]
 
     def pickup(self):
+        KDS.Audio.playSound(coffeemug_sound)
+        KDS.Scores.score += 7
         return False
 
 class Grenade(Item):
@@ -2050,6 +2087,7 @@ class Grenade(Item):
         return i_textures[29]
 
     def pickup(self):
+        KDS.Scores.score += 7
         return False
 
 class FireExtinguisher(Item):
@@ -2074,6 +2112,7 @@ class LevelEnder1(Item):
         return i_textures[31]
 
     def pickup(self):
+        KDS.Audio.playSound(weapon_pickup)
         return False
 
 class Ppsh41Mag(Item):
@@ -2081,6 +2120,10 @@ class Ppsh41Mag(Item):
         super().__init__(position, serialNumber, texture)
     
     def pickup(self):
+        KDS.Audio.playSound(item_pickup)
+        global ppsh41_ammo
+        ppsh41_ammo += 72
+
         return True
 
 class Lantern(Item):
@@ -2093,6 +2136,8 @@ class Lantern(Item):
         return lantern_animation.update()
 
     def pickup(self):
+        KDS.Audio.playSound(lantern_pickup)
+
         return False
 
 Item.serialNumbers = {
