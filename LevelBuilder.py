@@ -439,10 +439,10 @@ def main():
             else: 
                 btn_menu = True
         else: btn_menu = False
-    newMap_btn = KDS.UI.New.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    openMap_btn = KDS.UI.New.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    genProp_btn = KDS.UI.New.Button(pygame.Rect(650, 450, 300, 100), button_handler, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.New.Button(pygame.Rect(650, 600, 300, 100), button_handler, harbinger_font.render("Quit", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), button_handler, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), button_handler, harbinger_font.render("Quit", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     while btn_menu:
         clicked = False
         for event in pygame.event.get():

@@ -22,6 +22,7 @@ conversation_border_radius = 10
 line_spacing = 25
 line_reveal_speed = 5
 line_scroll_speed = 1
+auto_scroll_offset_index = 10
 min_time_before_scroll = 120 #ticks
 class text_padding:
     left = 5
@@ -160,13 +161,13 @@ def koponen_talk():
 
     conversations.append("Koponen: Hyvää päivää")
 
-    exit_button = KDS.UI.New.Button(pygame.Rect(940, 700, 230, 80), exit_function1, button_font1.render(
+    exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), exit_function1, button_font1.render(
         "EXIT", True, KDS.Colors.White))
-    mission_button = KDS.UI.New.Button(pygame.Rect(50, 700, 450, 80), mission_function, button_font1.render(
+    mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), mission_function, button_font1.render(
         "REQUEST MISSION", True, KDS.Colors.White))
-    date_button = KDS.UI.New.Button(pygame.Rect(50, 610, 450, 80), date_function, button_font1.render(
+    date_button = KDS.UI.Button(pygame.Rect(50, 610, 450, 80), date_function, button_font1.render(
         "ASK FOR A DATE", True, KDS.Colors.White))
-    r_mission_button = KDS.UI.New.Button(pygame.Rect(510, 700, 420, 80), end_mission, button_font1.render(
+    r_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), end_mission, button_font1.render(
         "RETURN MISSION", True, KDS.Colors.White))
 
     while koponenTalking:
@@ -218,8 +219,11 @@ talk_foregrounds = [pygame.Surface((1, 1))]
 talk_foreground = pygame.Surface((1, 1))
 
 class Prefixes:
-    player = text_font.render(f"ERROR: ", True, text_color)
-    koponen = text_font.render("Koponen: ", True, text_color)
+    player = "p:"
+    koponen = "k:"
+    class Rendered:
+        player = text_font.render(f"ERROR: ", True, text_color)
+        koponen = text_font.render("Koponen: ", True, text_color)
 
 def init(playerName: str):
     global talk_background, talk_foregrounds, talk_foreground
@@ -235,76 +239,44 @@ class Talk:
     mask = pygame.mask.Mask(conversation_rect.size, True)
     surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
     surface_size = surface.get_size()
-    lineCount = math.floor(surface.get_height() - text_padding.top - text_padding.bottom - text_font.size(" ")[1])
+    lineCount = math.floor((surface.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     
-    class Line:
-        
-        def __init__(self, text, prefix: Prefixes and pygame.Surface, prefix_visible: bool = True) -> None:
-            self.text = text_font.render(text, True, text_color)
-            self.text_size = self.text.get_size()
-            self.prefix = prefix
-            self.prefix_visible = prefix_visible
-            self.prefix_size = self.prefix.get_size()
-            self.animationProgress = text_padding.left + self.prefix_size[0]
-            self.animationFinished = False
-            self.waitBeforeScroll = 0
-            self.finished = False
-        
-        def update(self):
-            tot_width = text_padding.left + self.prefix_size[0] + self.text_size[0]
-            self.animationProgress += line_reveal_speed
-            if self.animationProgress >= tot_width:
-                self.animationProgress = tot_width
-                self.animationFinished = True
-                self.waitBeforeScroll += 1
-                if self.waitBeforeScroll > min_time_before_scroll: self.finished = True
-                
-        def render(self, surface: pygame.Surface, y):
-            surface.blit(self.prefix, (text_padding.left, y))
-            surface.blit(self.text, (text_padding.left + self.prefix_size[0], y))
-            pygame.draw.rect(surface, KDS.Colors.Red, pygame.Rect(self.animationProgress, y, self.text_size[0] - self.animationProgress, line_spacing))
-        
-    class Lines():
-        scheduled = []
-        active = []
-        surface = pygame.Surface((conversation_rect.width - text_padding.left - text_padding.right, conversation_rect.height - text_padding.top - text_padding.bottom))
-        surface_rect = pygame.Rect(conversation_rect.width - text_padding.left, text_padding.top, surface.get_width(), surface.get_height())
-        
-        @staticmethod
-        def update():
-            if (len(Talk.Lines.active) < 1 or Talk.Lines.active[-1].animationFinished) and len(Talk.Lines.scheduled) > 0 and len(Talk.Lines.active) < Talk.lineCount:
-                Talk.Lines.active.append(Talk.Lines.scheduled.pop(0))
-            return False
-        
-        @staticmethod
-        def fromEnd(index: int, count: int = -1):
-            count = count if count >= 0 else Talk.lineCount
-            _from = KDS.Math.Clamp(index, 0, len(Talk.Lines.active) - 1)
-            _from = len(Talk.Lines.active) - 1 - _from
-            _to = KDS.Math.Clamp(_from + count, _from, len(Talk.Lines.active) - 1)
-            return Talk.Lines.active[len(Talk.Lines.active) - 1 - _from:_to]
+    lines: list[str] = []
         
     class Conversation:
         scroll = 0
+        scrollToBottomButton = KDS.UI.Button()
         
         @staticmethod
-        def schedule(text, prefix: Prefixes and pygame.Surface):
-            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.Lines.surface_rect.width - prefix.get_width())
-            for _text in lineSplit: 
-                Talk.Lines.scheduled.append(Talk.Line(_text, prefix))
+        def schedule(text, prefix: Prefixes and str):
+            prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
+            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.surface_size[0] - text_padding.left - text_padding.right - prefixWidth)
+            for _text in lineSplit:
+                Talk.lines.append(prefix + _text)
+            itemsDeleted = 0
+            while len(Talk.lines) > 1000:
+                del Talk.lines[0]
+                itemsDeleted += 1
+            if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index:
+                Talk.Conversation.scroll = len(Talk.lines) - Talk.lineCount
         
         @staticmethod
-        def render():
+        def render(mouse_pos: tuple[int, int], clicked: bool):
             Talk.surface.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
-            Talk.Lines.update()
-            lines = Talk.Lines.fromEnd(Talk.Conversation.scroll)
-            print(lines)
-            #fromEnd is shite
-            for i in range(len(lines)):
-                lines[i].update()
-                lines[i].render(Talk.surface, i * line_spacing)
+            for i in range(Talk.Conversation.scroll, min(Talk.Conversation.scroll + Talk.lineCount + 1, len(Talk.lines))):
+                text = Talk.lines[i]
+                if text[:2] == Prefixes.player: prefix = Prefixes.Rendered.player
+                else: prefix = Prefixes.Rendered.koponen
+                offsetX = text_padding.left + prefix.get_width()
+                offsetY = text_padding.top + (i - Talk.Conversation.scroll) * line_spacing
+                Talk.surface.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
+                if i - 1 < 0 or text[:2] != Talk.lines[i - 1][:2]:
+                    Talk.surface.blit(prefix, (text_padding.left, offsetY))
+                
+                if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index:
+                    
             
             pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
             
@@ -314,7 +286,7 @@ class Talk:
     def renderMenu(surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool):
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_foreground, (40, 474))
-        surface.blit(Talk.Conversation.render(), conversation_rect.topleft)
+        surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
         
             
     @staticmethod
@@ -335,9 +307,9 @@ class Talk:
                             KDS_Quit()
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4:
-                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, sys.maxsize - line_scroll_speed)
+                        Talk.Conversation.scroll = max(Talk.Conversation.scroll - line_scroll_speed, 0)
                     elif event.button == 5:
-                        Talk.Conversation.scroll -= min(line_scroll_speed, Talk.Conversation.scroll)
+                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, len(Talk.lines) - 1)
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True

@@ -2513,7 +2513,7 @@ def agr(tcagr: bool):
         tcagr_running = False
         
 
-    agree_button = KDS.UI.New.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render(
+    agree_button = KDS.UI.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render(
         "I Agree", True, KDS.Colors.White))
 
     while tcagr_running:
@@ -2646,16 +2646,16 @@ def esc_menu_f():
         esc_menu = False
         go_to_main_menu = True
 
-    resume_button = KDS.UI.New.Button(pygame.Rect(int(
+    resume_button = KDS.UI.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("Resume", True, KDS.Colors.White))
     save_button_enabled = True
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         save_button_enabled = False
-    save_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
+    save_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
         "Save", True, KDS.Colors.White), enabled=save_button_enabled)
-    settings_button = KDS.UI.New.Button(pygame.Rect(int(
+    settings_button = KDS.UI.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.White))
-    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(
+    main_menu_button = KDS.UI.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
@@ -2735,16 +2735,16 @@ def settings_menu():
     def reset_data():
         KDS_Quit(True, True)
     
-    return_button = KDS.UI.New.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
+    return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
         "Return", True, KDS.Colors.White))
-    music_volume_slider = KDS.UI.New.Slider(
+    music_volume_slider = KDS.UI.Slider(
         "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_dir="Settings")
-    effect_volume_slider = KDS.UI.New.Slider(
+    effect_volume_slider = KDS.UI.Slider(
         "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_dir="Settings")
-    clearLag_switch = KDS.UI.New.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50), custom_dir="Settings")
-    reset_window_button = KDS.UI.New.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.White))
-    reset_settings_button = KDS.UI.New.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
-    reset_data_button = KDS.UI.New.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
+    clearLag_switch = KDS.UI.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50), custom_dir="Settings")
+    reset_window_button = KDS.UI.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.White))
+    reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
+    reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
     music_volume_text = button_font.render(
         "Music Volume", True, KDS.Colors.White)
     effect_volume_text = button_font.render(
@@ -2875,11 +2875,11 @@ def main_menu():
     framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.AnimationType.SmoothStep, KDS.Animator.OnAnimationEnd.Stop)
     framechange_lerp.tick = framechange_lerp.ticks
 
-    main_menu_play_button = KDS.UI.New.Button(pygame.Rect(
+    main_menu_play_button = KDS.UI.Button(pygame.Rect(
         450, 180, 300, 60), menu_mode_selector, button_font1.render("PLAY", True, KDS.Colors.White))
-    main_menu_settings_button = KDS.UI.New.Button(pygame.Rect(
+    main_menu_settings_button = KDS.UI.Button(pygame.Rect(
         450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.White))
-    main_menu_quit_button = KDS.UI.New.Button(pygame.Rect(
+    main_menu_quit_button = KDS.UI.Button(pygame.Rect(
         450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.White))
     #Frame 2
     Frame2 = pygame.Surface(display_size)
@@ -2908,9 +2908,9 @@ def main_menu():
     story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
     story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
     story_save_buttons_rects = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)
-    story_save_button_0 = KDS.UI.New.Button(story_save_button_0_rect, play_function)
-    story_save_button_1 = KDS.UI.New.Button(story_save_button_1_rect, play_function)
-    story_save_button_2 = KDS.UI.New.Button(story_save_button_2_rect, play_function)
+    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, play_function)
+    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, play_function)
+    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, play_function)
     story_new_save = button_font1.render("Start New Save", True, KDS.Colors.White)
     #endregion 
     #region Campaign Menu
@@ -2920,10 +2920,10 @@ def main_menu():
     campaign_return_button_rect = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 150, 300, 100)
     campaign_play_text = button_font1.render("START", True, (KDS.Colors.EmeraldGreen))
     campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
-    campaign_play_button = KDS.UI.New.Button(campaign_play_button_rect, play_function, campaign_play_text)
-    campaign_return_button = KDS.UI.New.Button(campaign_return_button_rect, menu_mode_selector, campaign_return_text)
-    campaign_left_button = KDS.UI.New.Button(campaign_left_button_rect, level_pick.left)
-    campaign_right_button = KDS.UI.New.Button(campaign_right_button_rect, level_pick.right)
+    campaign_play_button = KDS.UI.Button(campaign_play_button_rect, play_function, campaign_play_text)
+    campaign_return_button = KDS.UI.Button(campaign_return_button_rect, menu_mode_selector, campaign_return_text)
+    campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left)
+    campaign_right_button = KDS.UI.Button(campaign_right_button_rect, level_pick.right)
 
     Frame1 = pygame.Surface(display_size)
     frames = [Frame1, Frame2, Frame3, Frame4]
@@ -3107,8 +3107,8 @@ def level_finished_menu():
 
     next_level_bool = True if int(current_map) < max_map else False
     
-    main_menu_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
-    next_level_button = KDS.UI.New.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
+    main_menu_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
+    next_level_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
     
     pre_rendered_scores = {}
     
