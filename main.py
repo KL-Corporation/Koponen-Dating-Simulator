@@ -944,6 +944,7 @@ class Door(Tile):
         self.closingCounter = 0
     
     def update(self):
+        global player_rect
         keys = {
             24: "red",
             25: "blue",
@@ -957,10 +958,14 @@ class Door(Tile):
                 self.open = False
                 self.checkCollision = True
                 self.closingCounter = 0
-        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery), (self.rect.centerx,self.rect.centery)) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
+        if KDS.Math.getDistance(player_rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
             if self.serialNumber == 23 or player_keys[keys[self.serialNumber]]:
                 KDS.Audio.playSound(door_opening)
+                self.closingCounter = 0
                 self.open = not self.open
+                if not self.open:
+                    if self.rect.centerx - player_rect.centerx > 0: player_rect.right = self.rect.left
+                    else: player_rect.left = self.rect.right
                 self.checkCollision = not self.checkCollision
         if not self.open:
             return self.texture
