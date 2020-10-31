@@ -2745,6 +2745,7 @@ def settings_menu():
     def reset_settings():
         return_def()
         os.remove(os.path.join(PersistentPaths.AppDataPath, "settings.cfg"))
+        KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
         KDS.ConfigManager.SetSetting("Data", "TermsAccepted", True)
         Fullscreen.Set(True)
     
