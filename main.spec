@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['.'],
+a = Analysis(['main.py'],
              pathex=['./KDS', './'],
              binaries=[],
              datas=[('./Assets', 'Assets')],
@@ -21,7 +21,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='main.py',
+          name='main',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -34,4 +34,4 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='main.py')
+               name='main')
