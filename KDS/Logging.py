@@ -8,19 +8,21 @@ from termcolor import colored
 from pstats import SortKey
 from datetime import datetime
 
-running = True
-AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-logPath = os.path.join(AppDataPath, "logs")
+running = False
 profiler_running = False
 profile = None
+def init(_AppDataPath: str, _LogPath: str):
+    global running, AppDataPath, LogPath, logFileName
+    running = True
+    AppDataPath = _AppDataPath
+    LogPath = _LogPath
 
-os.makedirs(logPath, exist_ok=True)
-while len(os.listdir(logPath)) >= 5:
-    os.remove(os.path.join(logPath, os.listdir(logPath)[0]))
+    while len(os.listdir(LogPath)) >= 5:
+        os.remove(os.path.join(LogPath, os.listdir(LogPath)[0]))
 
-logFileName = os.path.join(logPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
-logging.basicConfig(filename=logFileName, level=logging.NOTSET, datefmt="%H:%M:%S")
-logging.debug("Created log file: " + logFileName)
+    logFileName = os.path.join(LogPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
+    logging.basicConfig(filename=logFileName, level=logging.NOTSET, datefmt="%H:%M:%S")
+    logging.debug("Created log file: " + logFileName)
 
 class LogType():
     """The list of LogTypes you can log.

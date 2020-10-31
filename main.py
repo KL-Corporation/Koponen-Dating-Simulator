@@ -40,12 +40,15 @@ class PersistentPaths:
     AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
     CachePath = os.path.join(AppDataPath, "cache")
     SavePath = os.path.join(AppDataPath, "saves")
+    LogPath = os.path.join(AppDataPath, "logs")
     Screenshots = os.path.join(AppDataPath, "screenshots")
 os.makedirs(PersistentPaths.CachePath, exist_ok=True)
 os.makedirs(PersistentPaths.SavePath, exist_ok=True)
 os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
+os.makedirs(PersistentPaths.LogPath, exist_ok=True)
 KDS.System.hide(PersistentPaths.CachePath)
 
+KDS.Logging.init(PersistentPaths.AppDataPath, PersistentPaths.LogPath)
 KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
 
 pygame.mixer.init()
@@ -399,6 +402,7 @@ awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
 smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Effects/grenade_throw.ogg")
 lantern_pickup = pygame.mixer.Sound("Assets/Audio/Effects/lantern_pickup.ogg")
+camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -3278,6 +3282,7 @@ while main_running:
                 Fullscreen.Set()
             elif event.key == K_F12:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
+                KDS.Audio.playSound(camera_shutter, 1)
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, True)
