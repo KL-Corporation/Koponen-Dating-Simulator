@@ -1,24 +1,19 @@
 #region Importing
 import json
-from os import rename
-from os import path
 import pickle
 import shutil
-import numpy
 import KDS.Gamemode
 import KDS.Logging
-import configparser
 import os
 import zipfile
-from inspect import currentframe, getframeinfo
+from inspect import currentframe
 #endregion
-
-AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
-CachePath = os.path.join(AppDataPath, "cache")
-SaveDirPath = os.path.join(AppDataPath, "saves")
-SaveCachePath = os.path.join(CachePath, "save")
-
-os.makedirs(SaveDirPath, exist_ok=True)
+def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
+    global AppDataPath, CachePath, SaveDirPath, SaveCachePath
+    AppDataPath = _AppDataPath
+    CachePath = _CachePath
+    SaveDirPath = _SaveDirPath
+    SaveCachePath = os.path.join(CachePath, "save")
 
 def GetJSON(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
     if os.path.isfile(FilePath):
@@ -81,9 +76,9 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     SetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, SaveValue)
 
 class Save:
-    WorldDirCache = os.path.join(SaveCachePath, "WorldData")
-    PlayerDirCache = os.path.join(SaveCachePath, "PlayerData")
-    PlayerFileCache = os.path.join(PlayerDirCache, "data.kdf")
+    WorldDirCache = ""
+    PlayerDirCache = ""
+    PlayerFileCache = ""
     SaveIndex = -1
     """
     Save File Structure:
@@ -112,6 +107,9 @@ class Save:
 
     @staticmethod
     def init(_SaveIndex: int):
+        Save.WorldDirCache = os.path.join(SaveCachePath, "WorldData")
+        Save.PlayerDirCache = os.path.join(SaveCachePath, "PlayerData")
+        Save.PlayerFileCache = os.path.join(Save.PlayerDirCache, "data.kdf")
         Save.SaveIndex = _SaveIndex
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and Save.SaveIndex >= 0:
             if os.path.isfile(Save.PlayerFileCache):

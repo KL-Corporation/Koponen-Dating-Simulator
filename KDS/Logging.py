@@ -1,8 +1,10 @@
 from inspect import getframeinfo
 import logging
+from logging import warning
 import os
 import cProfile
 import pstats
+from termcolor import colored
 from pstats import SortKey
 from datetime import datetime
 
@@ -40,7 +42,12 @@ def Log(Log_Type: LogType and int, Message: str, Console_Visible=False):
     """
     if running:
         logging.log(Log_Type, Message)
-        if Console_Visible: print(Message)
+        if Console_Visible:
+            if Log_Type >= LogType.error: Message = colored(Message, "red")
+            elif Log_Type == LogType.warning: Message = colored(Message, "yellow")
+            elif Log_Type == LogType.debug: Message = colored(Message, "green")
+            else: Message = colored(Message, "cyan")
+            print(Message)
     else: print("Log not successful! Logger has been shut down already.")
 
 def AutoError(Message, _currentframe):

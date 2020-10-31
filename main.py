@@ -31,6 +31,7 @@ import json
 import zipfile
 import math
 import time
+import datetime
 from pygame.locals import *
 from inspect import currentframe
 #endregion
@@ -38,8 +39,14 @@ from inspect import currentframe
 class PersistentPaths:
     AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
     CachePath = os.path.join(AppDataPath, "cache")
+    SavePath = os.path.join(AppDataPath, "saves")
+    Screenshots = os.path.join(AppDataPath, "screenshots")
 os.makedirs(PersistentPaths.CachePath, exist_ok=True)
+os.makedirs(PersistentPaths.SavePath, exist_ok=True)
+os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
 KDS.System.hide(PersistentPaths.CachePath)
+
+KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
 
 pygame.mixer.init()
 pygame.init()
@@ -3264,6 +3271,8 @@ while main_running:
                     player_health = 0
             elif event.key == K_F11:
                 Fullscreen.Set()
+            elif event.key == K_F12:
+                pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 KDS.Keys.SetPressed(KDS.Keys.mainKey, True)
