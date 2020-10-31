@@ -1,0 +1,1 @@
+pyinstaller --windowed --icon "F:/PyGame/Koponen-Dating-Simulator/Assets/Textures/Branding/gameIcon.ico" --add-data "F:/PyGame/Koponen-Dating-Simulator/Assets;Assets/" --paths "F:/PyGame/Koponen-Dating-Simulator/KDS"  "F:/PyGame/Koponen-Dating-Simulator/main.py"
