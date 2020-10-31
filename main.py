@@ -37,7 +37,7 @@ from inspect import currentframe
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
-    AppDataPath = os.path.join(os.getenv('APPDATA'), "Koponen Development Inc", "Koponen Dating Simulator")
+    AppDataPath = os.path.join(os.getenv('APPDATA'), "KL Corporation", "Koponen Dating Simulator")
     CachePath = os.path.join(AppDataPath, "cache")
     SavePath = os.path.join(AppDataPath, "saves")
     LogPath = os.path.join(AppDataPath, "logs")
