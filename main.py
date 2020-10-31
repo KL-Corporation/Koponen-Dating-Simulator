@@ -561,12 +561,6 @@ def LoadGameSettings():
     fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMaxVelocity")
-    rk_62_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "rk_62")
-    ammunition_plasma = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "plasmarifle")
-    ppsh41_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "ppsh41")
-    shotgun_shells = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "shotgun")
-    pistol_bullets = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "pistol")
-    awm_ammo = KDS.ConfigManager.GetGameSetting("GameData", "Default", "Ammo", "awm")
 LoadGameSettings()
 #endregion
 #region World Data
@@ -773,9 +767,8 @@ class Inventory:
             Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
         return None
 
-    @staticmethod
-    def useSpecificItem(index: int, Surface: pygame.Surface, *args):
-        dumpValues = Ufunctions[index](args, Surface)
+    def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
+        dumpValues = self.storage[index].use(args, Surface)
         if direction:
             renderOffset = -dumpValues.get_size()[0]
         else:
@@ -1810,16 +1803,19 @@ class Medkit(Item):
         return True
 
 class Pistol(Item):
+    
+    ammunition = 8
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global pistol_bullets, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.White), (10, 360))      
-        if args[0][0] and KDS.World.pistol_C.counter > 30 and pistol_bullets > 0:
+        args[1].blit(harbinger_font.render("Ammo: " + str(Pistol.ammunition), True, KDS.Colors.White), (10, 360))      
+        if args[0][0] and KDS.World.pistol_C.counter > 30 and Pistol.ammunition > 0:
             KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
-            pistol_bullets -= 1
+            Pistol.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2),direction, -1, tiles, 100))
             return pistol_f_texture
@@ -1837,22 +1833,26 @@ class PistolMag(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        Pistol.ammunition += 7
         KDS.Scores.score += 7
         KDS.Audio.playSound(item_pickup)
         return True
 
 class rk62(Item):
+
+    ammunition = 30
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global rk_62_ammo, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.White), (10, 360))
-        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
+        args[1].blit(harbinger_font.render("Ammo: " + str(rk62.ammunition), True, KDS.Colors.White), (10, 360))
+        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk62.ammunition > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
             KDS.Audio.playSound(rk62_shot)
-            rk_62_ammo -= 1
+            rk62.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
             return rk62_f_texture
@@ -1868,16 +1868,19 @@ class rk62(Item):
         return False
 
 class Shotgun(Item):
+
+    ammunition = 8
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global shotgun_shells, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.White), (10, 360))
-        if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
+        args[1].blit(harbinger_font.render("Ammo: " + str(Shotgun.ammunition), True, KDS.Colors.White), (10, 360))
+        if args[0][1] and KDS.World.shotgun_C.counter > 50 and Shotgun.ammunition > 0:
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.playSound(player_shotgun_shot)
-            shotgun_shells -= 1
+            Shotgun.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius/2), light_sphere2))
             for x in range(10):
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
@@ -1896,8 +1899,7 @@ class rk62Mag(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global rk_62_ammo
-        rk_62_ammo += 30
+        rk62.ammunition += 30
         KDS.Scores.score += 8
         KDS.Audio.playSound(item_pickup)
         return True
@@ -1907,23 +1909,25 @@ class ShotgunShells(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global shotgun_shells
-        shotgun_shells += 4
+        Shotgun.ammunition += 4
         KDS.Scores.score += 5
         KDS.Audio.playSound(item_pickup)
         return True
 
 class Plasmarifle(Item):
+
+    ammunition = 36
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global ammunition_plasma
-        args[1].blit(harbinger_font.render("Ammo: " + str(ammunition_plasma), True, KDS.Colors.White), (10, 360))                    
-        if args[0][0] and ammunition_plasma > 0 and KDS.World.plasmarifle_C.counter > 3:
+        args[1].blit(harbinger_font.render("Ammo: " + str(Plasmarifle.ammunition), True, KDS.Colors.White), (10, 360))                    
+        if args[0][0] and Plasmarifle.ammunition > 0 and KDS.World.plasmarifle_C.counter > 3:
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.playSound(plasmarifle_f_sound)
-            ammunition_plasma -= 1
+            Plasmarifle.ammunition -= 1
             if direction:
                 temp = 100
             else:
@@ -1945,6 +1949,7 @@ class Soulsphere(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        global player_health
         KDS.Scores.score += 20
         player_health += 100
         KDS.Audio.playSound(item_pickup)
@@ -1984,17 +1989,20 @@ class Turboneedle(Item):
         return True
 
 class Ppsh41(Item):
+
+    ammunition = 72
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global tiles, ppsh41_ammo
-        args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.White), (10, 360))
-        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
+        args[1].blit(harbinger_font.render("Ammo: " + str(Ppsh41.ammunition), True, KDS.Colors.White), (10, 360))
+        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and Ppsh41.ammunition > 0:
             KDS.World.ppsh41_C.counter = 0
             smg_shot.stop()
             KDS.Audio.playSound(smg_shot)
-            ppsh41_ammo -= 1
+            Ppsh41.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
@@ -2008,17 +2016,19 @@ class Ppsh41(Item):
         return False
 
 class Awm(Item):
+
+    ammunition = 5
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global tiles, awm_ammo
-        args[1].blit(harbinger_font.render("Ammo: " + str(awm_ammo), True, KDS.Colors.White), (10, 360))
-        if args[0][0] and KDS.World.awm_C.counter > 130 and awm_ammo > 0:
+        args[1].blit(harbinger_font.render("Ammo: " + str(Awm.ammunitiona), True, KDS.Colors.White), (10, 360))
+        if args[0][0] and KDS.World.awm_C.counter > 130 and Awm.ammunition > 0:
             KDS.World.awm_C.counter = 0
-            ppsh41_shot.stop()
             KDS.Audio.playSound(awm_shot)
-            awm_ammo -= 1
+            Awm.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
@@ -2037,8 +2047,7 @@ class AwmMag(Item):
         return self.texture
 
     def pickup(self):
-        global awm_ammo
-        awm_ammo += 5
+        Awm.ammunition += 5
         KDS.Audio.playSound(item_pickup)
         
         return True
@@ -2144,8 +2153,7 @@ class Ppsh41Mag(Item):
     
     def pickup(self):
         KDS.Audio.playSound(item_pickup)
-        global ppsh41_ammo
-        ppsh41_ammo += 72
+        Ppsh41.ammunition += 69
 
         return True
 
@@ -3376,8 +3384,7 @@ while main_running:
                     Projectiles.append(r)
             if result[1]:
                 for serialNumber in result[1]:
-                    if serialNumber:
-                        tempItem = Item((enemy.rect.center), serialNumber=serialNumber)
+                        tempItem = Item((enemy.rect.center), serialNumber=serialNumber, texture = i_textures[serialNumber])
                         counter = 0
                         while True:
                             tempItem.rect.y += tempItem.rect.height
@@ -3393,7 +3400,7 @@ while main_running:
     Item.render(Items, screen, scroll, DebugMode)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
     if 33 in player_inventory.storage:
-        Inventory.useSpecificItem(33, screen)
+        Inventory.useSpecificItem(0, screen)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, Enemies, HitTargets, player_rect, player_health, DebugMode)
