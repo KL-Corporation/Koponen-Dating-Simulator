@@ -1810,16 +1810,19 @@ class Medkit(Item):
         return True
 
 class Pistol(Item):
+    
+    ammunition = 8
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global pistol_bullets, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(pistol_bullets), True, KDS.Colors.White), (10, 360))      
-        if args[0][0] and KDS.World.pistol_C.counter > 30 and pistol_bullets > 0:
+        if args[0][0] and KDS.World.pistol_C.counter > 30 and Pistol.ammunition > 0:
             KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
-            pistol_bullets -= 1
+            Pistol.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2),direction, -1, tiles, 100))
             return pistol_f_texture
@@ -1842,17 +1845,20 @@ class PistolMag(Item):
         return True
 
 class rk62(Item):
+
+    ammunition = 30
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global rk_62_ammo, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(rk_62_ammo), True, KDS.Colors.White), (10, 360))
-        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk_62_ammo > 0:
+        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk62.ammunition > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
             KDS.Audio.playSound(rk62_shot)
-            rk_62_ammo -= 1
+            rk62.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
             return rk62_f_texture
@@ -1868,16 +1874,19 @@ class rk62(Item):
         return False
 
 class Shotgun(Item):
+
+    ammunition = 8
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global shotgun_shells, tiles
         args[1].blit(harbinger_font.render("Ammo: " + str(shotgun_shells), True, KDS.Colors.White), (10, 360))
-        if args[0][1] and KDS.World.shotgun_C.counter > 50 and shotgun_shells > 0:
+        if args[0][1] and KDS.World.shotgun_C.counter > 50 and Shotgun.ammunition > 0:
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.playSound(player_shotgun_shot)
-            shotgun_shells -= 1
+            Shotgun.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius/2), light_sphere2))
             for x in range(10):
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
@@ -1914,16 +1923,19 @@ class ShotgunShells(Item):
         return True
 
 class Plasmarifle(Item):
+
+    ammunition = 36
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global ammunition_plasma
         args[1].blit(harbinger_font.render("Ammo: " + str(ammunition_plasma), True, KDS.Colors.White), (10, 360))                    
-        if args[0][0] and ammunition_plasma > 0 and KDS.World.plasmarifle_C.counter > 3:
+        if args[0][0] and Plasmarifle.ammunition > 0 and KDS.World.plasmarifle_C.counter > 3:
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.playSound(plasmarifle_f_sound)
-            ammunition_plasma -= 1
+            Plasmarifle.ammunition -= 1
             if direction:
                 temp = 100
             else:
@@ -1984,17 +1996,20 @@ class Turboneedle(Item):
         return True
 
 class Ppsh41(Item):
+
+    ammunition = 72
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global tiles, ppsh41_ammo
         args[1].blit(harbinger_font.render("Ammo: " + str(ppsh41_ammo), True, KDS.Colors.White), (10, 360))
-        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and ppsh41_ammo > 0:
+        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and Ppsh41.ammunition > 0:
             KDS.World.ppsh41_C.counter = 0
             smg_shot.stop()
             KDS.Audio.playSound(smg_shot)
-            ppsh41_ammo -= 1
+            Ppsh41.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
@@ -2008,17 +2023,19 @@ class Ppsh41(Item):
         return False
 
 class Awm(Item):
+
+    ammunition = 5
+
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         global tiles, awm_ammo
         args[1].blit(harbinger_font.render("Ammo: " + str(awm_ammo), True, KDS.Colors.White), (10, 360))
-        if args[0][0] and KDS.World.awm_C.counter > 130 and awm_ammo > 0:
+        if args[0][0] and KDS.World.awm_C.counter > 130 and Awm.ammunition > 0:
             KDS.World.awm_C.counter = 0
-            ppsh41_shot.stop()
             KDS.Audio.playSound(awm_shot)
-            awm_ammo -= 1
+            Awm.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
