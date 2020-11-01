@@ -1,6 +1,5 @@
 #region Importing
 import os
-from numpy.core import test
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -28,7 +27,6 @@ import random
 import threading
 import concurrent.futures
 import sys
-import importlib
 import shutil
 import json
 import zipfile
