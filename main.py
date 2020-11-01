@@ -189,7 +189,7 @@ pygame.key.stop_text_input()
 #region Loading
 #region Settings
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-transparent_background.png").convert()
+CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-transparent_background.png").convert_alpha()
 scaledCompanyLogo = pygame.transform.scale2x(CompanyLogo)
 window.fill((255, 255, 255))
 window.blit(scaledCompanyLogo, (window.get_width() / 2 - scaledCompanyLogo.get_width() / 2, window.get_height() / 2 - scaledCompanyLogo.get_height() / 2))
