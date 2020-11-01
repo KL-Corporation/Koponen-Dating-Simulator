@@ -1346,8 +1346,7 @@ class Cell(Item):
     def pickup(self):
         KDS.Scores.score += 4
         KDS.Audio.playSound(item_pickup)
-        global ammunition_plasma
-        ammunition_plasma += 30
+        Plasmarifle.ammunition += 30
         return True
 
 class Coffeemug(Item):
@@ -1731,7 +1730,7 @@ class MethFlask(Item):
             global player_health
             KDS.Scores.score += 1
             player_health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
-            player_inventory.storage[player_inventory.SIndex] = KDS.Items.serialNumbers[26]((0, 0), 26, i_textures[26])
+            player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26, i_textures[26])
             KDS.Audio.playSound(glug_sound)
         return i_textures[27]
 
@@ -1749,7 +1748,7 @@ class BloodFlask(Item):
             global player_health
             KDS.Scores.score += 1
             player_health += random.randint(0, 10)
-            player_inventory.storage[player_inventory.SIndex] = KDS.Items.serialNumbers[26]((0, 0), 26, i_textures[26])
+            player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26, i_textures[26])
             KDS.Audio.playSound(glug_sound)
         return i_textures[28]
 
