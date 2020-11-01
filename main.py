@@ -8,6 +8,7 @@ import KDS.Animator
 import KDS.Audio
 import KDS.Colors
 import KDS.ConfigManager
+import KDS.Console
 import KDS.Convert
 import KDS.Gamemode
 import KDS.Keys
@@ -181,6 +182,7 @@ KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 
 #KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+KDS.Console.Start(window)
 #endregion
 #region Loading
 #region Settings

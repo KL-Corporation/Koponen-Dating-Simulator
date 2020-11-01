@@ -187,7 +187,7 @@ def resizeGrid(size, grid: list):
                 row.pop()
     return grid
 
-def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = "") -> str:
+def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = ""):
     pygame.key.set_repeat(500, 31)
     r = True
     rstring = defVal
