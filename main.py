@@ -1845,6 +1845,8 @@ class Chainsaw(Item):
     def use(self, *args):
         if self.pickupFinished:
             if args[0][0]:
+                print("   ss ")
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 18 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 4, 1, 1), direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
                     Chainsaw.soundCounter = 0
@@ -3105,7 +3107,7 @@ while main_running:
         Inventory.useSpecificItem(0, screen)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, Enemies, HitTargets, player_rect, player_health, DebugMode)
+        result = Projectile.update(screen, scroll, Enemies, HitTargets, Particles, player_rect, player_health, DebugMode)
         if result:
             v = result[0]
             Enemies = result[1]
