@@ -46,13 +46,13 @@ for element in data["tile_textures"]:
     srl = f"0{element}"
 
     t_textures[srl] = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Map/" + data["tile_textures"][element]).convert(), (scalesize, scalesize), horizontalOnly=True)
-    t_textures[srl].set_colorkey(KDS.Colors.GetPrimary.White)
+    t_textures[srl].set_colorkey(KDS.Colors.White)
 
 i_textures = {}
 for element in data["item_textures"]:
     srl = f"1{element}"
     i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + data["item_textures"][element]).convert()
-    i_textures[srl].set_colorkey(KDS.Colors.GetPrimary.White)
+    i_textures[srl].set_colorkey(KDS.Colors.White)
 
 e_textures = {
     "2001": pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert(),
@@ -150,7 +150,7 @@ class tileInfo:
                     if keys_pressed[K_p] and unit.getSerialNumber(0)[0] == "3":
                         pygame.draw.rect(Surface, (120,120,120), (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize, 100, 30))
         
-        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.Get.AviatorRed)
+        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
                 #print(unit.rect.topleft)
         return renderList, brushtemp
@@ -232,14 +232,14 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
                     rstring += event.unicode
         main_display.fill(consoleBackground.get_at((0, 0)))
         main_display.blit(KDS.Convert.AspectScale(consoleBackground, display_size),( (display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2)-consoleBackground.get_size()[1] / 2 )  )
-        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.GetPrimary.White)
+        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.White)
         main_display.blit(consoleText, (10, 10))
         if inputError:
             warningText = "[invalid value]"
-            warningColor = KDS.Colors.GetPrimary.Red
+            warningColor = KDS.Colors.Red
         elif inputWarning:
             warningText = "[performance warning]"
-            warningColor = KDS.Colors.GetPrimary.Yellow
+            warningColor = KDS.Colors.Yellow
         else:
             #Pylance ei tykkää, jos tän poistaa
             warningText = ""
@@ -249,7 +249,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
             notValidSurf.fill(warningColor)
             notValidSurf.set_alpha(128)
             main_display.blit(notValidSurf, (harbinger_font.size(daInput)[0] + 10, 10))
-            main_display.blit(harbinger_font_small.render(warningText, True, KDS.Colors.GetPrimary.White), (consoleText.get_width() + 20, 15))
+            main_display.blit(harbinger_font_small.render(warningText, True, KDS.Colors.White), (consoleText.get_width() + 20, 15))
         pygame.display.update()
     pygame.key.set_repeat(0, 0)
 
@@ -439,10 +439,10 @@ def main():
             else: 
                 btn_menu = True
         else: btn_menu = False
-    newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), button_handler, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), button_handler, harbinger_font.render("Quit", True, KDS.Colors.GetPrimary.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), button_handler, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), button_handler, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     while btn_menu:
         clicked = False
         for event in pygame.event.get():
@@ -452,7 +452,7 @@ def main():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
-        main_display.fill(KDS.Colors.GetPrimary.Gray)
+        main_display.fill(KDS.Colors.Gray)
         mouse_pos = pygame.mouse.get_pos()
         newMap_btn.update(main_display, mouse_pos, clicked)
         openMap_btn.update(main_display, mouse_pos, clicked, True)
@@ -460,7 +460,7 @@ def main():
         quit_btn.update(main_display, mouse_pos, clicked, False, False, True)
         pygame.display.update()
     
-    main_display.fill(KDS.Colors.GetPrimary.Black)
+    main_display.fill(KDS.Colors.Black)
     
     if grid == None:
         g = inputConsole("Grid size: (int, int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
@@ -568,11 +568,11 @@ def main():
         if modifiedAfterSave:
             if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
                 timesModifiedAfterSave += 1
-            _color = KDS.Colors.GetPrimary.Yellow
+            _color = KDS.Colors.Yellow
             if 200 > timesModifiedAfterSave > 100:
-                _color = KDS.Colors.GetPrimary.Orange
+                _color = KDS.Colors.Orange
             elif timesModifiedAfterSave > 200:
-                _color = KDS.Colors.GetPrimary.Red
+                _color = KDS.Colors.Red
             pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
         elif pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
             modifiedAfterSave = True
