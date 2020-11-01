@@ -116,7 +116,7 @@ class Bullet:
                     if self.rect.colliderect(target.rect) and target.health > 0:
                         target.dmg(self.damage)
                         target.sleep = False
-                        Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, 1, (180, 0, 0)))
+                        Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
                         return "wall", targets, plr_htlt, HitTargets, Particles
                 
                 if plr_rct.colliderect(self.rect):

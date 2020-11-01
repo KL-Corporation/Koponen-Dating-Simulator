@@ -1317,7 +1317,8 @@ class Item:
             self.texture.set_colorkey(KDS.Colors.White)
 
     def pickup(self):
-        pass
+        
+        return False
 
     def use(self, *args):
         return self.texture
@@ -1873,6 +1874,10 @@ class Chainsaw(Item):
         KDS.Audio.playSound(Chainsaw.pickup_sound)
         return False
 
+class GasCanister(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+
 Item.serialNumbers = {
     1: BlueKey,
     2: Cell,
@@ -1907,7 +1912,8 @@ Item.serialNumbers = {
     31:LevelEnder1,
     32:Ppsh41Mag,
     33:Lantern,
-    34:Chainsaw
+    34:Chainsaw,
+    35:GasCanister
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
