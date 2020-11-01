@@ -185,9 +185,11 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 #region Loading
 #region Settings
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
-window.fill(loadingScreen.get_at((0, 0)))
-window.blit(KDS.Convert.AspectScale(loadingScreen, window_size), Fullscreen.offset)
+CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-transparent_background.png").convert()
+scaledCompanyLogo = pygame.transform.scale2x(CompanyLogo)
+window.fill((255, 255, 255))
+window.blit(scaledCompanyLogo, (window.get_width() / 2 - scaledCompanyLogo.get_width() / 2, window.get_height() / 2 - scaledCompanyLogo.get_height() / 2))
+del scaledCompanyLogo
 pygame.display.update()
 clearLag = KDS.ConfigManager.GetSetting("Settings", "ClearLag", False)
 tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
@@ -355,6 +357,7 @@ settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.pn
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
+loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
 #endregion
