@@ -1319,7 +1319,8 @@ class Item:
             self.texture.set_colorkey(KDS.Colors.White)
 
     def pickup(self):
-        pass
+        
+        return False
 
     def use(self, *args):
         return self.texture
@@ -1847,6 +1848,8 @@ class Chainsaw(Item):
     def use(self, *args):
         if self.pickupFinished:
             if args[0][0]:
+                print("   ss ")
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 18 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 4, 1, 1), direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
                     Chainsaw.soundCounter = 0
@@ -1872,6 +1875,10 @@ class Chainsaw(Item):
     def pickup(self):
         KDS.Audio.playSound(Chainsaw.pickup_sound)
         return False
+
+class GasCanister(Item):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
 
 Item.serialNumbers = {
     1: BlueKey,
@@ -1907,7 +1914,8 @@ Item.serialNumbers = {
     31:LevelEnder1,
     32:Ppsh41Mag,
     33:Lantern,
-    34:Chainsaw
+    34:Chainsaw,
+    35:GasCanister
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
@@ -3108,7 +3116,7 @@ while main_running:
         Inventory.useSpecificItem(0, screen)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, Enemies, HitTargets, player_rect, player_health, DebugMode)
+        result = Projectile.update(screen, scroll, Enemies, HitTargets, Particles, player_rect, player_health, DebugMode)
         if result:
             v = result[0]
             Enemies = result[1]

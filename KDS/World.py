@@ -29,6 +29,53 @@ def collision_test(rect: pygame.Rect, Tile_list):
                 hit_list.append(tile.rect)
     return hit_list
 
+class Lighting:
+
+    @staticmethod
+    def circle_surface(radius, color):
+        surf = pygame.Surface((radius*2, radius*2))
+        pygame.draw.circle(surf, color, (radius, radius), radius)
+        surf.set_colorkey((0,0,0))
+        return surf
+
+    @staticmethod
+    def lamp_cone(topwidth, bottomwidth, height, color):
+        surf = pygame.Surface((bottomwidth, height))
+        pygame.draw.polygon(surf, color, [(bottomwidth/2+topwidth/2,0),(bottomwidth/2 - topwidth/2,0),(0, height),(bottomwidth, height)])
+        surf.set_colorkey((0,0,0))
+        return surf
+    
+    class Light:
+        def __init__(self, position, surf):
+            self.surf = surf
+            self.position = position
+
+    class Fireparticle:
+        def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
+            self.rect = pygame.Rect(position[0], position[1], size, size)
+            self.size = size
+            self.speed = speed
+            self.lifetime = lifetime
+            self.dying_speed = size/lifetime
+            self.bsurf = Lighting.circle_surface(size, color)
+            self.tsurf = Lighting.circle_surface(size*2, color)
+        
+        @staticmethod
+        def update(particle, Surface: pygame.Surface, scroll: list[int]):
+            particle.rect.y -= particle.speed
+            particle.rect.x += random.randint(-1, 1)
+            particle.size -= particle.dying_speed
+
+            if particle.size < 0:
+                return None
+            
+            particle.bsurf = pygame.transform.scale(particle.bsurf, (round(particle.size), round(particle.size)))
+            Surface.blit(particle.bsurf, (particle.rect.x-scroll[0], particle.rect.y-scroll[1]))
+
+            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size*2), round(particle.size*2)))
+
+            return particle.tsurf
+
 class Bullet:
     def __init__(self, rect, direction: bool, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
@@ -43,7 +90,7 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self,Surface:pygame.Surface, scroll: list[int], targets, HitTargets, plr_rct, plr_htlt, debugMode = False):
+    def update(self,Surface:pygame.Surface, scroll: list[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
@@ -64,23 +111,24 @@ class Bullet:
                 for hTarget in HitTargets:
                     if HitTargets[hTarget].rect.colliderect(self.rect):
                         HitTargets[hTarget].hitted = True
-                        return "wall", targets, plr_htlt, HitTargets
+                        return "wall", targets, plr_htlt, HitTargets, Particles
 
                 for target in targets:
                     if self.rect.colliderect(target.rect) and target.health > 0:
                         target.dmg(self.damage)
                         target.sleep = False
-                        return "wall", targets, plr_htlt, HitTargets
+                        Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
+                        return "wall", targets, plr_htlt, HitTargets, Particles
                 
                 if plr_rct.colliderect(self.rect):
                     plr_htlt -= self.damage
                     if plr_htlt < 0:
                         plr_htlt = 0
-                    return "wall", targets, plr_htlt, HitTargets
+                    return "wall", targets, plr_htlt, HitTargets, Particles
                 if collision_list:
-                    return "wall", targets, plr_htlt, HitTargets
+                    return "wall", targets, plr_htlt, HitTargets, Particles
 
-            return "air", targets, plr_htlt, HitTargets
+            return "air", targets, plr_htlt, HitTargets, Particles
         else:
             if self.direction:
                 self.rect.x -= self.speed
@@ -97,24 +145,24 @@ class Bullet:
             for hTarget in HitTargets:
                 if HitTargets[hTarget].rect.colliderect(self.rect):
                     HitTargets[hTarget].hitted = True
-                    return "wall", targets, plr_htlt, HitTargets
+                    return "wall", targets, plr_htlt, HitTargets, Particles
 
             for target in targets:
                 if target.rect.colliderect(self.rect) and target.health > 0:
                     target.sleep = False
                     target.dmg(self.damage)
-                    return "wall", targets, plr_htlt, HitTargets
+                    return "wall", targets, plr_htlt, HitTargets, Particles
 
             if plr_rct.colliderect(self.rect):
                 plr_htlt -= self.damage
                 if plr_htlt < 0:
                     plr_htlt = 0
 
-                return "wall", targets, plr_htlt, HitTargets
+                return "wall", targets, plr_htlt, HitTargets, Particles
             if collision_list:
-                return "wall", targets, plr_htlt, HitTargets
+                return "wall", targets, plr_htlt, HitTargets, Particles
             if self.movedDistance > self.maxDistance:
-                return "air", targets, plr_htlt, HitTargets
+                return "air", targets, plr_htlt, HitTargets, Particles
 
 class HitTarget:
     def __init__(self, rect: pygame.Rect):
@@ -197,55 +245,7 @@ class BallisticProjectile:
         """
         if isinstance(self.texture, pygame.Surface):
             self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
-        
-
-class Lighting:
-
-    @staticmethod
-    def circle_surface(radius, color):
-        surf = pygame.Surface((radius*2, radius*2))
-        pygame.draw.circle(surf, color, (radius, radius), radius)
-        surf.set_colorkey((0,0,0))
-        return surf
-
-    @staticmethod
-    def lamp_cone(topwidth, bottomwidth, height, color):
-        surf = pygame.Surface((bottomwidth, height))
-        pygame.draw.polygon(surf, color, [(bottomwidth/2+topwidth/2,0),(bottomwidth/2 - topwidth/2,0),(0, height),(bottomwidth, height)])
-        surf.set_colorkey((0,0,0))
-        return surf
     
-    class Light:
-        def __init__(self, position, surf):
-            self.surf = surf
-            self.position = position
-
-    class Fireparticle:
-        def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
-            self.rect = pygame.Rect(position[0], position[1], size, size)
-            self.size = size
-            self.speed = speed
-            self.lifetime = lifetime
-            self.dying_speed = size/lifetime
-            self.bsurf = Lighting.circle_surface(size, color)
-            self.tsurf = Lighting.circle_surface(size*2, color)
-        
-        @staticmethod
-        def update(particle, Surface: pygame.Surface, scroll: list[int]):
-            particle.rect.y -= particle.speed
-            particle.rect.x += random.randint(-1, 1)
-            particle.size -= particle.dying_speed
-
-            if particle.size < 0:
-                return None
-            
-            particle.bsurf = pygame.transform.scale(particle.bsurf, (round(particle.size), round(particle.size)))
-            Surface.blit(particle.bsurf, (particle.rect.x-scroll[0], particle.rect.y-scroll[1]))
-
-            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size*2), round(particle.size*2)))
-
-            return particle.tsurf
-
 
 class itemTools:
     class rk62:

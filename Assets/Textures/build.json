@@ -138,7 +138,8 @@
         "031":"level_ender.png",
         "032":"ppsh41_mag.png",
         "033":"lantern.png",
-        "034":"chainsaw.png"
+        "034":"chainsaw.png",
+        "035":"gas_canister.png"
     },
 
     "item_doubles":[
