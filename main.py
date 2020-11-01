@@ -1,5 +1,6 @@
 #region Importing
 import os
+from numpy.core import test
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -20,6 +21,7 @@ import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
+import KDS.mpgPlayer
 import numpy
 import random
 import threading
