@@ -12,6 +12,7 @@ import KDS.Logging
 import KDS.World
 
 pygame.init()
+pygame.key.stop_text_input()
 
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)

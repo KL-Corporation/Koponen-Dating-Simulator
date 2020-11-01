@@ -2,6 +2,7 @@ import pygame, numpy, math, random
 import KDS.Convert, KDS.Math, KDS.Animator
 
 pygame.init()
+pygame.key.stop_text_input()
 
 def collision_test(rect: pygame.Rect, Tile_list):
     hit_list = []

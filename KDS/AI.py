@@ -3,6 +3,7 @@ import concurrent.futures
 import KDS.Animator, KDS.Audio, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
 pygame.mixer.init()
 pygame.init()
+pygame.key.stop_text_input()
 
 def __collision_test(rect, Tile_list):
     hit_list = []

@@ -38,6 +38,7 @@ class text_padding:
 #endregion
 
 pygame.init()
+pygame.key.stop_text_input()
 
 """
 def koponen_talk():

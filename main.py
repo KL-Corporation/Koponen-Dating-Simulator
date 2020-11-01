@@ -180,9 +180,11 @@ KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
-
+KDS.Console.init(window, display, display_size, Fullscreen, clock)
 #KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
 KDS.Console.Start(window)
+
+pygame.key.stop_text_input()
 #endregion
 #region Loading
 #region Settings
@@ -2934,6 +2936,7 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.moveLeft, True)
             elif event.key == K_w:
                 KDS.Keys.SetPressed(KDS.Keys.moveUp, True)
+                print("JUUJAA")
             elif event.key == K_s:
                 KDS.Keys.SetPressed(KDS.Keys.moveDown, True)
             elif event.key == K_SPACE:
