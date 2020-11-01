@@ -2644,8 +2644,8 @@ def main_menu():
 
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
-            display.blit(frames[current_frame - 1].convert(), (0, 0))
-            display.blit(frames[current_frame].convert(), (0,0))
+            display.blit(frames[current_frame - 1].convert_alpha(), (0, 0))
+            display.blit(frames[current_frame].convert_alpha(), (0,0))
 
             main_menu_play_button.update(display, mouse_pos, c, Mode.ModeSelectionMenu)
             main_menu_settings_button.update(display, mouse_pos, c)
