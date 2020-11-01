@@ -701,10 +701,9 @@ class Inventory:
         self.storage = [Inventory.emptySlot for _ in range(self.size)]
 
     def render(self, Surface: pygame.Surface):
-        pygame.draw.rect(Surface, (192, 192, 192),
-                         (10, 75, self.size*34, 34), 3)
+        pygame.draw.rect(Surface, (192, 192, 192), (10, 75, self.size*34, 34), 3)
 
-        if self.storage[self.SIndex] in inventoryDobulesSerialNumbers:
+        if not isinstance(self.storage[self.SIndex], str) and self.storage[self.SIndex].serialNumber in inventoryDobulesSerialNumbers:
             slotwidth = 68
         else:
             slotwidth = 34
@@ -1230,353 +1229,8 @@ specialTilesD = {
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 #endregion
 
-class pickupFunctions:  # Jokaiselle itemille määritetään funktio, joka kutsutaan, kun item poimitaan maasta
-    @staticmethod
-    def gasburner_p():
-        KDS.Audio.playSound(gasburner_clip)
-        KDS.Scores.score += 10
-
-        return False
-
-    @staticmethod
-    def coffeemug_p():
-        KDS.Audio.playSound(coffeemug_sound)
-        KDS.Scores.score += 6
-
-        return False
-
-    @staticmethod
-    def knife_p():
-        KDS.Audio.playSound(knife_pickup)
-        KDS.Scores.score += 10
-
-        return False
-
-    @staticmethod
-    def ss_bonuscard_p():
-        KDS.Audio.playSound(ss_sound)
-        KDS.Scores.score += 10
-
-        return False
-
-    @staticmethod
-    def lappi_sytytyspalat_p():
-        KDS.Audio.playSound(lappi_sytytyspalat_sound)
-        KDS.Scores.score += 10
-
-        return False
-
-    @staticmethod
-    def iPuhelin_p():
-        KDS.Scores.score -= 10
-        KDS.Missions.Listeners.iPuhelinPickup.Trigger()
-
-        return False
-
-    @staticmethod
-    def plasmarifle_p():
-        KDS.Audio.playSound(weapon_pickup)
-        KDS.Scores.score += 20
-
-        return False
-
-    @staticmethod
-    def pistol_p():
-        KDS.Audio.playSound(weapon_pickup)
-        KDS.Scores.score += 20
-
-        return False
-
-    @staticmethod
-    def rk62_p():
-        KDS.Audio.playSound(weapon_pickup)
-        KDS.Scores.score += 20
-
-        return False
-
-    @staticmethod
-    def shotgun_p():
-        KDS.Audio.playSound(weapon_pickup)
-        KDS.Scores.score += 20
-
-        return False
-
-    @staticmethod
-    def cell_p():
-        global ammunition_plasma
-        KDS.Audio.playSound(item_pickup)
-        KDS.Scores.score += 1
-
-        ammunition_plasma += 30
-        return True
-
-    @staticmethod
-    def red_key_p():
-        global player_keys
-        KDS.Audio.playSound(key_pickup)
-        player_keys["red"] = True
-
-        return True
-
-    @staticmethod
-    def green_key_p():
-        global player_keys
-        KDS.Audio.playSound(key_pickup)
-        player_keys["green"] = True
-
-        return True
-
-    @staticmethod
-    def blue_key_p():
-        global player_keys
-        KDS.Audio.playSound(key_pickup)
-        player_keys["blue"] = True
-
-        return True
-
-    @staticmethod
-    def medkit_p():
-        global player_health
-        KDS.Audio.playSound(item_pickup)
-        player_health = min(player_health + 25, 100)
-
-        return True
-
-    @staticmethod
-    def pistol_mag_p():
-        global pistol_bullets
-        KDS.Audio.playSound(item_pickup)
-        pistol_bullets += 7
-
-        return True
-
-    @staticmethod
-    def rk_mag_p():
-        global rk_62_ammo
-        rk_62_ammo += 30
-        KDS.Audio.playSound(item_pickup)
-
-        return True
-
-    @staticmethod
-    def shotgun_shells_p():
-        global shotgun_shells
-        shotgun_shells += 4
-        KDS.Audio.playSound(item_pickup)
-
-        return True
-
-    @staticmethod
-    def soulsphere_p():
-        global player_health
-        player_health = min(player_health + 100, 200)
-
-        return True
-
-    @staticmethod
-    def turboneedle_p():
-        global playerStamina
-        playerStamina += 250
-
-        return True
-
-    @staticmethod
-    def ppsh41_p():
-        KDS.Scores.score += 20
-        KDS.Audio.playSound(weapon_pickup)
-
-        return False
-
-    @staticmethod
-    def awm_p():
-        KDS.Scores.score += 40
-        KDS.Audio.playSound(weapon_pickup)
-
-        return False
-
-    @staticmethod
-    def awm_mag_p():
-        global awm_ammo 
-        KDS.Scores.score += 20
-        awm_ammo += 5
-        KDS.Audio.playSound(item_pickup)
-
-        return True
-
-    @staticmethod
-    def empty_flask_p():
-        KDS.Scores.score += 2
-        KDS.Audio.playSound(coffeemug_sound)
-
-        return False
-
-    @staticmethod
-    def flask_meth_p():
-        KDS.Scores.score += 8
-        KDS.Audio.playSound(coffeemug_sound)
-
-        return False
-
-    @staticmethod
-    def flask_blood_p():
-        KDS.Scores.score += 8
-        KDS.Audio.playSound(coffeemug_sound)
-
-        return False
-
-    @staticmethod
-    def grenade_p():
-        KDS.Scores.score += 19
-        KDS.Audio.playSound(weapon_pickup)
-
-        return False
-
-    @staticmethod
-    def fire_extinguisher_p():
-
-        return False
-
-    @staticmethod
-    def level_ender_p():
-        KDS.Audio.playSound(weapon_pickup)
-
-        return False
-
-    @staticmethod
-    def ppsh41_mag_p():
-        KDS.Audio.playSound(item_pickup)
-        global ppsh41_ammo
-        ppsh41_ammo += 72
-
-        return True
-
-    @staticmethod
-    def lantern_p():
-        KDS.Audio.playSound(lantern_pickup)
-
-        return False
-
-    @staticmethod
-    def emptyOperation():
-        return True
-
-
-lantern_animation = KDS.Animator.Animation("lantern_burning", 2, 4, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-
-Pfunctions = {
-    0: pickupFunctions.emptyOperation,
-    1: pickupFunctions.blue_key_p,
-    2: pickupFunctions.cell_p,
-    3: pickupFunctions.coffeemug_p,
-    4: pickupFunctions.gasburner_p,
-    5: pickupFunctions.green_key_p,
-    6: pickupFunctions.iPuhelin_p,
-    7: pickupFunctions.knife_p,
-    8: pickupFunctions.lappi_sytytyspalat_p,
-    9: pickupFunctions.medkit_p,
-    10: pickupFunctions.pistol_p,
-    11: pickupFunctions.pistol_mag_p,
-    12: pickupFunctions.plasmarifle_p,
-    13: pickupFunctions.red_key_p,
-    14: pickupFunctions.rk_mag_p,
-    15: pickupFunctions.rk62_p,
-    16: pickupFunctions.shotgun_p,
-    17: pickupFunctions.shotgun_shells_p,
-    18: pickupFunctions.soulsphere_p,
-    19: pickupFunctions.ss_bonuscard_p,
-    20: pickupFunctions.turboneedle_p,
-    21: pickupFunctions.ppsh41_p,
-    24: pickupFunctions.awm_p,
-    25: pickupFunctions.awm_mag_p,
-    26: pickupFunctions.empty_flask_p,
-    27: pickupFunctions.flask_meth_p,
-    28: pickupFunctions.flask_blood_p,
-    29: pickupFunctions.grenade_p,
-    30: pickupFunctions.fire_extinguisher_p,
-    31: pickupFunctions.level_ender_p,
-    32: pickupFunctions.ppsh41_mag_p,
-    33: pickupFunctions.lantern_p
-}
-
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Items...")
-"""
-class Item:
 
-    def __init__(self, position: tuple[int, int], serialNumber: int):
-        if serialNumber:
-            self.texture = i_textures[serialNumber]
-        self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture.get_size()[
-                                1]), self.texture.get_size()[0], self.texture.get_size()[1])
-        self.serialNumber = serialNumber
-
-    @staticmethod
-    # Item_list is a 2d numpy array
-    def render(Item_list, Surface: pygame.Surface, scroll: list):
-        for renderable in Item_list:
-            if DebugMode:
-                pygame.draw.rect(screen, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-
-    @staticmethod
-    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory: Inventory):
-        index = 0
-        showItemTip = True
-        collision = False
-        shortest_index = 0
-        shortest_distance = sys.maxsize
-        for item in Item_list:
-            if collidingRect.colliderect(item.rect):
-                collision = True
-                distance = KDS.Math.getDistance(item.rect.midbottom, player_rect.midbottom)
-                if distance < shortest_distance:
-                    shortest_index = index
-                    shortest_distance = distance
-                if functionKey:
-                    if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
-                            temp_var = Pfunctions[item.serialNumber]()
-                            if not temp_var:
-                                inventory.storage[inventory.SIndex] = item.serialNumber
-                                if item.serialNumber == 6:
-                                    KDS.Missions.Listeners.iPuhelinPickup
-                            Item_list = numpy.delete(Item_list, index)
-                            showItemTip = False
-                        elif item.serialNumber not in inventory_items:
-                            try:
-                                Pfunctions[item.serialNumber]()
-                                Item_list = numpy.delete(Item_list, index)
-                                showItemTip = False
-                            except IndexError as e:
-                                KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
-                    else:
-                        if inventory.SIndex < inventory.size - 1 and inventory.storage[inventory.SIndex] == Inventory.emptySlot:
-                            if inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
-                                Pfunctions[item.serialNumber]()
-                                inventory.storage[inventory.SIndex] = item.serialNumber
-                                inventory.storage[inventory.SIndex +
-                                                  1] = "doubleItemPlaceholder"
-                                Item_list = numpy.delete(Item_list, index)
-                                showItemTip = False
-            index += 1
-        
-        if collision and showItemTip:
-            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
-
-        return Item_list, inventory
-
-    def toString2(self):
-        Converts all textures to strings
-        
-        if isinstance(self.texture, pygame.Surface):
-            self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
-            
-    def fromString(self):
-        Converts all strings back to textures
-        
-        if not isinstance(self.texture, pygame.Surface):
-            self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
-            self.texture.set_colorkey(KDS.Colors.White)
-"""   
 
 class Item:
 
@@ -1624,7 +1278,6 @@ class Item:
                         elif item.serialNumber not in inventory_items:
                             try:
                                 item.pickup()
-                                inventory.storage[inventory.SIndex] = item
                                 Item_list = numpy.delete(Item_list, index)
                                 showItemTip = False
                             except IndexError as e:
@@ -1799,7 +1452,7 @@ class Medkit(Item):
     def pickup(self):
         global player_health
         KDS.Audio.playSound(item_pickup)
-        player_health = min(player_health + 100, player_health)
+        player_health = min(player_health + 25, 100)
         return True
 
 class Pistol(Item):
@@ -2158,13 +1811,14 @@ class Ppsh41Mag(Item):
         return True
 
 class Lantern(Item):
+    Ianimation = KDS.Animator.Animation("lantern_burning", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
         scale = random.randint(180, 220)
         Lights.append( KDS.World.Lighting.Light( (player_rect.centerx - scale/2, player_rect.centery - scale/2) , pygame.transform.scale(warm_white_lightSphere0, (scale, scale)) ))
-        return lantern_animation.update()
+        return Lantern.Ianimation.update()
 
     def pickup(self):
         KDS.Audio.playSound(lantern_pickup)
