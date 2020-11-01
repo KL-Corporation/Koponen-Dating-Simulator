@@ -2634,17 +2634,18 @@ def main_menu():
 
         if MenuMode == Mode.MainMenu:
             Frame1.blit(main_menu_background, (0, 0))
+
             Frame1.blit(pygame.transform.flip(
                 menu_gasburner_animation.update(), False, False), (625, 445))
             Frame1.blit(pygame.transform.flip(
                 menu_toilet_animation.update(), False, False), (823, 507))
             Frame1.blit(pygame.transform.flip(
                 menu_trashcan_animation.update(), False, False), (283, 585))
-            
+
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
-            display.blit(frames[current_frame - 1], (0, 0))
-            display.blit(frames[current_frame], (0,0))
+            display.blit(frames[current_frame - 1].convert(), (0, 0))
+            display.blit(frames[current_frame].convert(), (0,0))
 
             main_menu_play_button.update(display, mouse_pos, c, Mode.ModeSelectionMenu)
             main_menu_settings_button.update(display, mouse_pos, c)
