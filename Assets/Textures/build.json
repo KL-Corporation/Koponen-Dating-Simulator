@@ -137,7 +137,8 @@
         "030":"fire_extinguisher.png",
         "031":"level_ender.png",
         "032":"ppsh41_mag.png",
-        "033":"lantern.png"
+        "033":"lantern.png",
+        "034":"chainsaw.png"
     },
 
     "item_doubles":[
@@ -145,7 +146,8 @@
         15,
         16,
         21,
-        24
+        24,
+        34
     ],
 
     "inventory_items":[
@@ -166,7 +168,8 @@
         29,
         30,
         31,
-        33
+        33,
+        34
     ]
 
 }

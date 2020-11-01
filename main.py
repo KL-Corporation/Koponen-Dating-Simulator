@@ -1829,6 +1829,48 @@ class Lantern(Item):
 
         return False
 
+class Chainsaw(Item):
+    pickup_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_start.ogg")
+    freespin_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_freespin.ogg")
+    throttle_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_throttle.ogg")
+    soundCounter = 70
+    soundCounter1 = 122
+    a_a = False
+    Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
+        super().__init__(position, serialNumber, texture)
+        self.pickupFinished = False
+        self.pickupCounter = 0
+
+    def use(self, *args):
+        if self.pickupFinished:
+            if args[0][0]:
+                if Chainsaw.soundCounter > 70:
+                    KDS.Audio.playSound(Chainsaw.throttle_sound)
+                    Chainsaw.soundCounter = 0
+                    Chainsaw.freespin_sound.stop()
+                Chainsaw.a_a = True
+
+            elif not args[0][0]:
+                Chainsaw.a_a = False
+                if Chainsaw.soundCounter1 > 103:
+                    Chainsaw.soundCounter1 = 0
+                    Chainsaw.throttle_sound.stop()
+                    KDS.Audio.playSound(Chainsaw.freespin_sound)
+        else:
+            self.pickupCounter += 1
+            if self.pickupCounter > 180:
+                self.pickupFinished = True
+        Chainsaw.soundCounter += 1
+        Chainsaw.soundCounter1 += 1
+        if Chainsaw.a_a:
+            return Chainsaw.Ianimation.update()
+        return self.texture
+
+    def pickup(self):
+        KDS.Audio.playSound(Chainsaw.pickup_sound)
+        return False
+
 Item.serialNumbers = {
     1: BlueKey,
     2: Cell,
@@ -1862,7 +1904,8 @@ Item.serialNumbers = {
     30:FireExtinguisher,
     31:LevelEnder1,
     32:Ppsh41Mag,
-    33:Lantern
+    33:Lantern,
+    34:Chainsaw
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
