@@ -56,43 +56,41 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str =
                             cursor_index -= 1
                     else:
                         rmv = cmd[:cursor_index].rstrip(matchChars)
-                        split1 = re.findall(f"[{matchChars}]", rmv)
-                        split2 = re.split(f"[{matchChars}]", rmv)
-                        rmv_split = [split2[i] + split1[i] for i in range(len(split1))]
-                        cmd = "".join(rmv_split) + cmd[cursor_index:]
-                        cursor_index = len("".join(rmv_split))
+                        found = [i.end() for i in re.finditer(f"[{matchChars}][{matchChars}]*", rmv)]
+                        if len(found) > 0: cmd = cmd[:found[-1]] + cmd[cursor_index:]
+                        else: cmd = r""
+
                 elif event.key == K_DELETE:
                     cursor_animation.tick = 0
                     if not pygame.key.get_pressed()[K_LCTRL]:
-                        if len(cmd[cursor_index:]) > 0:
-                            cmd = cmd[:cursor_index] + cmd[cursor_index:][1:]
+                        if len(cmd[cursor_index:]) > 0: cmd = cmd[:cursor_index] + cmd[cursor_index:][1:]
                     else:
-                        pass
+                        rmv = cmd[cursor_index:].lstrip(matchChars)
+                        found = [i.start() for i in re.finditer(f"[{matchChars}][{matchChars}]*", rmv)]
+                        if len(found) > 0: cmd = cmd[:cursor_index] + cmd[cursor_index + found[0] + (len(cmd[cursor_index:]) - len(rmv)):]
+                        else: cmd = cmd[:cursor_index]
+                        
                 elif event.key == K_RETURN and allowEscape:
                     pygame.key.stop_text_input()
                     textInput = False
                     running = False
                 elif event.key == K_ESCAPE and allowEscape:
-                    cmd = r""
+                    cmd = r""                 
                     running = False
                 elif event.key == K_LEFT:
                     cursor_animation.tick = 0
                     if not pygame.key.get_pressed()[K_LCTRL]: cursor_index = max(cursor_index - 1, 0)
                     elif cursor_index > 0:
-                        tst = cmd[:cursor_index - 1].strip(matchChars)
-                        found = re.findall(f"[{matchChars}]", tst)
-                        if len(found) > 0: cursor_index = cmd[:cursor_index - 1].rfind(found[0]) + 1
+                        found = [i.end() for i in re.finditer(f"[{matchChars}][{matchChars}]*", f"{cmd[:cursor_index]} ")]
+                        if len(found) > 1: cursor_index = found[-2]
                         else: cursor_index = 0
-                    else: cursor_index = 0
                 elif event.key == K_RIGHT:
                     cursor_animation.tick = 0
                     if not pygame.key.get_pressed()[K_LCTRL]: cursor_index = min(cursor_index + 1, len(cmd))
                     elif cursor_index < len(cmd):
-                        tst = cmd[cursor_index:].strip(matchChars)
-                        found = re.findall(f"[{matchChars}]", tst)
-                        if len(found) > 0: cursor_index = tst.find(found[-1]) + (len(cmd) - len(cmd[cursor_index:])) + 1
+                        found = [i.end() for i in re.finditer(f"[{matchChars}][{matchChars}]*", cmd[cursor_index:])]
+                        if len(found) > 1: cursor_index = len(cmd[:cursor_index]) + found[0]
                         else: cursor_index = len(cmd)
-                    else: cursor_index = len(cmd)
             elif event.type == MOUSEBUTTONDOWN:
                 cursor_animation.tick = 0
                 if text_input_rect.collidepoint(pygame.mouse.get_pos()):
@@ -114,7 +112,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str =
         text_y = text_rect.y + text_rect.height / 2 - console_font.get_height() / 2
         display.blit(text, (text_rect.left, text_y))
         if textInput and cursor_animation.update() >= 1.0:
-            pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:cursor_index])[0], text_y, cursor_width, console_font.get_height()))
+            pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:cursor_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
 
         if regex != None:
             if len(re.findall(regex, cmd)) != 1:
