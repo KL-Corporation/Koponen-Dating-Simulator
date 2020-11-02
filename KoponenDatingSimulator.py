@@ -182,7 +182,7 @@ KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 KDS.Console.init(window, display, display_size, Fullscreen, clock)
 #KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
-#KDS.Console.Start(window)
+#KDS.Console.Start()
 
 pygame.key.stop_text_input()
 #endregion

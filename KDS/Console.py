@@ -9,7 +9,7 @@ pygame.key.stop_text_input()
 console_font = pygame.font.SysFont("Consolas", 25, bold=0, italic=0)
 console_font_small = pygame.font.SysFont("Consolas", 15, bold=0, italic=0)
 text_input_rect = pygame.Rect(0, 750, 1200, 50)
-text_rect = pygame.Rect(10, 750, 1180, 50)
+text_rect = pygame.Rect(10, 762, 1180, 25)
 cursor_width = 3
 matchChars = r" ; , \/ \\ \" "
 #endregion
@@ -22,15 +22,9 @@ def init(_window, _display, _display_size, _Fullscreen, _clock):
     Fullscreen = _Fullscreen
     clock = _clock
 
-class RegexPresets:
-    @staticmethod
-    def Tuple(length: int, min_val: int, max_val: int):
-        regex = r""
-        for i in range(length):
-            regex += f"[{min_val}-{max_val}]"
-            if i < length - 1:
-                regex += r",\s?"
-        return regex
+class TypeChecker:
+    pass
+#WRITE TYPE CHECKING FOR CONSOLE AND COMMAND TABBING WOULD BE NICE
 
 def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str = None, background: pygame.Surface = None, *commands) -> str:
     cmd = r""
@@ -116,7 +110,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str =
 
         if regex != None:
             if len(re.findall(regex, cmd)) != 1:
-                pygame.draw.rect(display, (255, 255, 255, 128), pygame.Rect(text_rect.left, text_rect.top, text.get_width(), text_rect.height))
+                invld_surf = pygame.Surface(text.get_size())
+                invld_surf.fill(KDS.Colors.Red)
+                invld_surf.set_alpha(128)
+                display.blit(invld_surf, text_rect.topleft)
         
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
