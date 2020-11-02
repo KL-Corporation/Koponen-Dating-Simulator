@@ -5,7 +5,7 @@ pygame.mixer.init()
 pygame.init()
 pygame.key.stop_text_input()
 
-def __collision_test(rect, Tile_list):
+def ai_collision_test(rect, Tile_list):
     hit_list = []
     x = int((rect.x/34)-3)
     y = int((rect.y/34)-3)
@@ -35,7 +35,7 @@ def move(rect, movement, tiles):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
     rect.x += movement[0]
-    hit_list = __collision_test(rect, tiles)
+    hit_list = ai_collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0:
             rect.right = tile.left
@@ -44,7 +44,7 @@ def move(rect, movement, tiles):
             rect.left = tile.right
             collision_types['left'] = True
     rect.y += int(movement[1])
-    hit_list = __collision_test(rect, tiles)
+    hit_list = ai_collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.top

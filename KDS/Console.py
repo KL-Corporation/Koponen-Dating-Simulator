@@ -11,6 +11,7 @@ console_font_small = pygame.font.SysFont("Consolas", 15, bold=0, italic=0)
 text_input_rect = pygame.Rect(0, 750, 1200, 50)
 text_rect = pygame.Rect(10, 750, 1180, 50)
 cursor_width = 3
+ctrlMatch = r" ; , \/ \\ \""
 #endregion
 
 def init(_window, _display, _display_size, _Fullscreen, _clock):
@@ -54,9 +55,9 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str =
                             cmd = cmd[:cursor_index][:-1] + cmd[cursor_index:]
                             cursor_index -= 1
                     else:
-                        rmv = cmd[:cursor_index].rstrip()
-                        split1 = re.findall(r"[ ;,\/\\]", rmv)
-                        split2 = re.split(r"[ ;,\/\\]", rmv)
+                        rmv = cmd[:cursor_index].rstrip(ctrlMatch)
+                        split1 = re.findall(f"[{ctrlMatch}]", rmv)
+                        split2 = re.split(f"[{ctrlMatch}]", rmv)
                         rmv_split = [split2[i] + split1[i] for i in range(len(split1))]
                         cmd = "".join(rmv_split) + cmd[cursor_index:]
                         cursor_index = len("".join(rmv_split))
@@ -79,7 +80,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str =
                     if not pygame.key.get_pressed()[K_LCTRL]:
                         cursor_index = max(cursor_index - 1, 0)
                     else:
-                        found = re.findall(r"[ ;,\/\\]", cmd)
+                        found = re.findall(f"[{ctrlMatch}]", cmd)
                         if len(found) > 0:
                             cmd[:cursor_index].rfind(found[0])
                         else: cursor_index = 0
@@ -88,7 +89,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, regex: str =
                     if not pygame.key.get_pressed()[K_LCTRL]:
                         cursor_index = min(cursor_index + 1, len(cmd))
                     else:
-                        found = re.findall(r"[ ;,\/\\]", cmd)
+                        found = re.findall(f"[{ctrlMatch}]", cmd)
                         if len(found) > 0:
                             cmd[cursor_index:].find(found[0])
                         else: cursor_index = len(cmd)

@@ -1960,55 +1960,6 @@ koponen_talking_background = pygame.image.load(
 koponen_talking_foreground_indexes = [0, 0, 0, 0, 0]
 #endregion
 #region Player
-def collision_test(rect, Tile_list):
-    hit_list = []
-    x = int((rect.x/34)-3)
-    y = int((rect.y/34)-3)
-    if x < 0:
-        x = 0
-    if y < 0:
-        y = 0
-
-    max_x = len(Tile_list[0])-1
-    max_y = len(Tile_list)-1
-    end_x = x + 6
-    end_y = y + 6
-
-    if end_x > max_x:
-        end_x = max_x
-
-    if end_y > max_y:
-        end_y = max_y
-
-    for row in Tile_list[y:end_y]:
-        for tile in row[x:end_x]:
-            if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
-                hit_list.append(tile.rect)
-    return hit_list
-
-def move_entity(rect, movement, tiles, skip_horisontal_movement_check=False, skip_vertical_movement_check=False):
-    collision_types = {'top': False, 'bottom': False,
-                       'right': False, 'left': False}
-    rect.x += movement[0]
-    hit_list = collision_test(rect, tiles)
-    for tile in hit_list:
-        if movement[0] > 0 or skip_horisontal_movement_check:
-            rect.right = tile.left
-            collision_types['right'] = True
-        elif movement[0] < 0 or skip_horisontal_movement_check:
-            rect.left = tile.right
-            collision_types['left'] = True
-    rect.y += int(movement[1])
-    hit_list = collision_test(rect, tiles)
-    for tile in hit_list:
-        if movement[1] > 0 or skip_vertical_movement_check:
-            rect.bottom = tile.top
-            collision_types['bottom'] = True
-        elif movement[1] < 0 or skip_vertical_movement_check:
-            rect.top = tile.bottom
-            collision_types['top'] = True
-    return rect, collision_types
-
 player_animations = KDS.Animator.MultiAnimation(
         idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
         walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
@@ -2966,7 +2917,7 @@ while main_running:
                     counter = 0
                     while True:
                         temp.rect.y += temp.rect.height
-                        for collision in collision_test(temp.rect, tiles):
+                        for collision in KDS.World.collision_test(temp.rect, tiles):
                             temp.rect.bottom = collision.top
                             counter = 250
                         counter += 1
@@ -3100,7 +3051,7 @@ while main_running:
                         counter = 0
                         while True:
                             tempItem.rect.y += tempItem.rect.height
-                            for collision in collision_test(tempItem.rect, tiles):
+                            for collision in KDS.World.collision_test(tempItem.rect, tiles):
                                 tempItem.rect.bottom = collision.top
                                 counter = 250
                             counter += 1
@@ -3254,7 +3205,7 @@ while main_running:
     if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
 
     if check_crouch == True:
-        crouch_collisions = move_entity(pygame.Rect(
+        crouch_collisions = KDS.World.move_entity(pygame.Rect(
             player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
     else:
         crouch_collisions = collision_types = {
@@ -3276,14 +3227,14 @@ while main_running:
     #toilet_collisions(player_rect, gasburnerBurning)
 
     if player_health > 0:
-        player_rect, collisions = move_entity(
+        player_rect, collisions = KDS.World.move_entity(
             player_rect, player_movement, tiles)
 
     else:
-        player_rect, collisions = move_entity(player_rect, [0, 8], tiles)
+        player_rect, collisions = KDS.World.move_entity(player_rect, [0, 8], tiles)
 #endregion
 #region AI
-    koponen_rect, k_collisions = move_entity(
+    koponen_rect, k_collisions = KDS.World.move_entity(
         koponen_rect, koponen_movement, tiles)
 
     with concurrent.futures.ThreadPoolExecutor() as e:

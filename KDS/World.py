@@ -4,18 +4,19 @@ import KDS.Convert, KDS.Math, KDS.Animator
 pygame.init()
 pygame.key.stop_text_input()
 
-def collision_test(rect: pygame.Rect, Tile_list):
+def collision_test(rect, Tile_list):
     hit_list = []
-    x = int((rect.x/34)-2)
-    y = int((rect.y/34)-2)
+    x = int((rect.x/34) - 3)
+    y = int((rect.y/34) - 3)
     if x < 0:
         x = 0
     if y < 0:
         y = 0
-    max_x = len(Tile_list[0])-1
-    max_y = len(Tile_list)-1
-    end_x = x+4
-    end_y = y+4
+
+    max_x = len(Tile_list[0]) - 1
+    max_y = len(Tile_list) - 1
+    end_x = x + 6
+    end_y = y + 6
 
     if end_x > max_x:
         end_x = max_x
@@ -28,6 +29,29 @@ def collision_test(rect: pygame.Rect, Tile_list):
             if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
                 hit_list.append(tile.rect)
     return hit_list
+
+def move_entity(rect: pygame.Rect, movement: tuple[int, int], tiles, skip_horisontal_movement_check: bool = False, skip_vertical_movement_check=False):
+    collision_types = {'top': False, 'bottom': False,
+                       'right': False, 'left': False}
+    rect.x += movement[0]
+    hit_list = collision_test(rect, tiles)
+    for tile in hit_list:
+        if movement[0] > 0 or skip_horisontal_movement_check:
+            rect.right = tile.left
+            collision_types['right'] = True
+        elif movement[0] < 0 or skip_horisontal_movement_check:
+            rect.left = tile.right
+            collision_types['left'] = True
+    rect.y += int(movement[1])
+    hit_list = collision_test(rect, tiles)
+    for tile in hit_list:
+        if movement[1] > 0 or skip_vertical_movement_check:
+            rect.bottom = tile.top
+            collision_types['bottom'] = True
+        elif movement[1] < 0 or skip_vertical_movement_check:
+            rect.top = tile.bottom
+            collision_types['top'] = True
+    return rect, collision_types
 
 class Lighting:
 
