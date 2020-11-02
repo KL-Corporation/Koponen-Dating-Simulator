@@ -345,7 +345,10 @@ def InitialiseMissions(LevelIndex):
         InitialiseTask("first_mission", "return_mug", "Palauta Koposen Kahvikuppi", (Listeners.KoponenReturnMission, 1.0))
         
         InitialiseMission("sauna_and_exit", "Suuret Haaveet")
-        InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi saunavessa koulupolkusi jatkamiseksi", (Listeners.LevelEnder, 1.0))
+        InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
+        
+        InitialiseMission("biology_test", "Biologian Tunti")
+        InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")
         
     else:
         if LevelIndex < 2:
