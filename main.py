@@ -2944,7 +2944,6 @@ while main_running:
                 KDS.Keys.SetPressed(KDS.Keys.moveLeft, True)
             elif event.key == K_w:
                 KDS.Keys.SetPressed(KDS.Keys.moveUp, True)
-                print("JUUJAA")
             elif event.key == K_s:
                 KDS.Keys.SetPressed(KDS.Keys.moveDown, True)
             elif event.key == K_SPACE:
