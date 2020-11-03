@@ -6,7 +6,7 @@ from inspect import currentframe
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
 
-def ToBool(value, fallbackValue: bool = False) -> bool:
+def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -> bool:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]
@@ -26,7 +26,7 @@ def ToBool(value, fallbackValue: bool = False) -> bool:
             return True
         elif value in ("f", "false"):
             return False
-        else:
+        elif not hideErrorMessage:
             KDS.Logging.AutoError(f"Cannot convert {value} to bool.", currentframe())
             return fallbackValue
     elif isinstance(value, int):
@@ -35,14 +35,13 @@ def ToBool(value, fallbackValue: bool = False) -> bool:
         else:
             return False
     elif isinstance(value, float):
-        value = float(round(value))
         if value > 0.0:
             return True
         else:
             return False
     elif isinstance(value, bool):
         return value
-    else:
+    elif not hideErrorMessage:
         KDS.Logging.AutoError(f"Value {value} is not a valid type.", currentframe())
         return fallbackValue
 

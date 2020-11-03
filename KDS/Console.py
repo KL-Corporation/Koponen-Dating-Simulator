@@ -1,6 +1,9 @@
+from inspect import currentframe
 import re
 import sys
 import KDS.Colors
+import KDS.Convert
+import KDS.Logging
 import KDS.Animator
 import pygame
 from pygame.locals import *
@@ -17,12 +20,13 @@ matchChars = r" ; , \/ \\ \" "
 #endregion
 
 def init(_window, _display, _display_size, _Fullscreen, _clock):
-    global window, display, display_size, Fullscreen, clock
+    global window, display, display_size, Fullscreen, clock, defaultBackground
     window = _window
     display = _display
     display_size = _display_size
     Fullscreen = _Fullscreen
     clock = _clock
+    defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
     pygame.scrap.init()
     pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 
@@ -59,8 +63,17 @@ class CheckTypes:
             "maxSize": maxSize,
             "size": 4
         }
+    @staticmethod
+    def Bool():
+        return {
+            "type": "bool"
+        }
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: tuple[str] = None, showFeed: bool = False) -> str:
+Escaped = False
+Feed = []
+
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: tuple[tuple[str]] = None, showFeed: bool = False) -> str:
+    global Escaped
     cmd = ""
     renderedCmd = None
     running = True
@@ -73,7 +86,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     warning = False
     warnText = console_font_small.render("[PERFORMANCE WARNING]", True, text_color)
     pygame.key.set_repeat(500, 31)
-    ovrColor = KDS.Colors.White
+    promptRender = console_font.render(prompt, True, text_color)
+    while len(Feed) * console_font.get_height() > display_size[1] - text_input_rect.height: del Feed[0]
     
     def addText(text: str):
         nonlocal cursor_index, cmd
@@ -121,6 +135,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 elif event.key == K_ESCAPE and allowEscape:
                     cmd = ""                 
                     running = False
+                    Escaped = True
                 elif event.key == K_LEFT:
                     cursor_animation.tick = 0
                     if not pygame.key.get_pressed()[K_LCTRL]: cursor_index = max(cursor_index - 1, 0)
@@ -149,13 +164,14 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     textInput = False
             elif event.type == QUIT and allowEscape:
                 cmd = ""
-                pygame.key.stop_text_input()
                 textInput = False
                 running = False
 
         while console_font.size(cmd)[0] + cursor_width >= text_rect.width: cmd = cmd[:-1]
 
-        pygame.draw.rect(display, KDS.Colors.DarkGray, text_input_rect)
+        display.blit(defaultBackground if background == None else background, (0, 0))
+        display.blit(promptRender, (text_input_rect.left, text_input_rect.top - promptRender.get_height()))
+        pygame.draw.rect(display, KDS.Colors.Black, text_input_rect)
         renderedCmd = console_font.render(cmd, True, text_color)
         text_y = text_rect.y + text_rect.height / 2 - console_font.get_height() / 2
         display.blit(renderedCmd, (text_rect.left, text_y))
@@ -165,7 +181,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         invalid = False
         warning = False
         if checkType != None:
-            if checkType["type"] == "int":
+            _type = checkType["type"]
+            if _type == "int":
                 if re.fullmatch(r"^[+-]?\d+$", cmd) != None:
                         cmdInt = int(cmd)
                         if cmdInt > sys.maxsize: invalid = True
@@ -176,7 +193,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         if _max != None:
                             if max(_max, cmdInt) != _max: invalid = True
                 else: invalid = True
-            elif checkType["type"] == "float":
+            
+            elif _type == "float":
                 
                 if re.fullmatch(r"^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$", cmd) != None:
                     cmdFloat = float(cmd)
@@ -188,8 +206,11 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     if _max != None:
                         if max(_max, cmdFloat) != _max: invalid = True
                 else: invalid = True
-                
-            elif checkType["type"] in ("tuple", "rect"):
+            
+            elif _type == "bool":
+                if KDS.Convert.ToBool(cmd, None, True) == None: invalid = True
+                   
+            elif _type in ("tuple", "rect"):
                 cmdSplit = re.sub(r"\)$", "", re.sub(r"^\(", "", cmd)).split(",")
                 for i in range(1, len(cmdSplit)): cmdSplit[i] = re.sub(r"^\s", "", cmdSplit[i])
                 for s in cmdSplit: 
@@ -226,6 +247,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                             if min(_size[0], min(cmdIntSplit[2:])) != _size[0]: invalid = True
                         if _size[1] != None:
                             if max(_size[1], max(cmdIntSplit[2:])) != _size[1]: invalid = True
+            else: KDS.Logging.AutoError("Check Type invalid!", currentframe())
         
         overlayColor = KDS.Colors.White
         if invalid:
@@ -238,12 +260,16 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             overlaySurf.fill(overlayColor)
             overlaySurf.set_alpha(128)
             display.blit(overlaySurf, (text_rect.left, text_y))
-            
+        
+        if commands != None:
+            print("REMEMBER TO CODE THIS!")
+        
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)
         clock.tick(60)
 
+    pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
     return cmd
