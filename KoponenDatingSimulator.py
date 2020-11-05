@@ -182,7 +182,24 @@ KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 KDS.Console.init(window, display, display_size, Fullscreen, clock)
 #KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
-#KDS.Console.Start("TEST PROMPT:", False, KDS.Console.CheckTypes.Int(), None)
+"""
+KDS.Console.Start("TEST PROMPT:", False, KDS.Console.CheckTypes.Commands(), None, 
+                  {
+                      "TestCommand": {
+                          "TestedPositive": "end",
+                          "LayeredTest": "end",
+                          "Galluppia": "end",
+                          "HmmUp": "none"
+                          },
+                      "TestCommand2": "end",
+                      "AnotherTestCommand": "end",
+                      "AnotherTestCommand2": "end",
+                      "WeLikeTesting": "end",
+                      "YaasYass": "end",
+                      "YassTestTest" : "end"
+                  }
+                  )
+"""
 
 pygame.key.stop_text_input()
 #endregion

@@ -16,7 +16,7 @@ def Clamp(value: int or float, _min: int or float, _max: int or float) -> int or
     """
     return max(_min, min(value, _max))
 
-def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: float):
+def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
