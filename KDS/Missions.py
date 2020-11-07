@@ -1,6 +1,7 @@
 #region Importing
 import math
 import os
+from typing import Dict, List, Tuple
 import pygame
 import KDS.Animator
 import KDS.Audio
@@ -105,9 +106,9 @@ class Mission:
         self.text = text
         self.renderedText = MissionFont.render(self.text, True, KDS.Colors.White)
         self.textSize = self.renderedText.get_size()
-        self.tasks: dict[str, Task] = {}
-        self.task_keys: list[str] = []
-        self.task_values: list[Task] = []
+        self.tasks: Dict[str, Task] = {}
+        self.task_keys: List[str] = []
+        self.task_values: List[Task] = []
         self.finished = False
         self.lastFinished = False
         self.finishedTicks = 0
@@ -182,9 +183,9 @@ class Mission:
 
 class MissionHolder:
     def __init__(self) -> None:
-        self.missions: dict[str, Mission] = {}
-        self.mission_keys: list[str] = []
-        self.mission_values: list[Mission] = []
+        self.missions: Dict[str, Mission] = {}
+        self.mission_keys: List[str] = []
+        self.mission_values: List[Mission] = []
         self.finished = False
         
     def GetMission(self, safeName: str):
@@ -233,7 +234,7 @@ def init():
 #endregion
 #region Initialize
 
-def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: tuple[Listeners and Listener, float]):
+def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Tuple[Listeners and Listener, float]):
     """Initialises a task.
 
     Args:

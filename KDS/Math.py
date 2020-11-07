@@ -1,3 +1,4 @@
+from typing import Tuple
 import KDS.Logging
 import math
 from inspect import currentframe
@@ -24,7 +25,7 @@ def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: f
 #endregion
 
 #region Conversion
-def CorrelatedColorTemperatureToRGB(kelvin: float) -> tuple[int, int, int]:
+def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     kelvin = Clamp(kelvin, 1000, 40000)
     
     tmp_internal = kelvin / 100.0
@@ -57,7 +58,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> tuple[int, int, int]:
 #endregion
 
 #region Distance
-def getDistance(point1: tuple[int, int], point2: tuple[int, int]) -> float:
+def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
     """
     Calculates the distance between two points.
     """
@@ -72,7 +73,7 @@ def getDistance(point1: tuple[int, int], point2: tuple[int, int]) -> float:
 #endregion
 
 #region Slope
-def getSlope(p1: tuple[int, int], p2: tuple[int, int]):
+def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]):
     """
     Calculates slope of straight going trough two points
     """
@@ -86,7 +87,7 @@ def getSlope2(angle): #Angle in degrees
 #endregion
 
 #region Angles
-def getAngle(p1: tuple[int, int], p2: tuple[int, int]):
+def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
     """Calculates the angle between two vectors.
 
     Args:
@@ -113,7 +114,7 @@ def getAngle(p1: tuple[int, int], p2: tuple[int, int]):
         KDS.Logging.AutoError(e, currentframe())
         return 0
 
-def getAngle2(p1: tuple[int, int], p2: tuple[int, int]):
+def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
     """Calculates the angle between two vectors faster, but without error handling.
 
     Args:

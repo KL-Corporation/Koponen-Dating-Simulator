@@ -1,5 +1,6 @@
 import os
 import random
+from typing import List, Tuple
 import pygame
 from pygame.locals import *
 import math
@@ -250,7 +251,7 @@ class Talk:
     surface_size = surface.get_size()
     lineCount = math.floor((surface.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     
-    lines: list[str] = []
+    lines: List[str] = []
         
     class Conversation:
         @staticmethod
@@ -272,7 +273,7 @@ class Talk:
                 Talk.Conversation.scrollToBottom()
         
         @staticmethod
-        def render(mouse_pos: tuple[int, int], clicked: bool):
+        def render(mouse_pos: Tuple[int, int], clicked: bool):
             Talk.surface.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
@@ -294,7 +295,7 @@ class Talk:
             return Talk.surface
 
     @staticmethod
-    def renderMenu(surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool):
+    def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool):
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_foreground, (40, 474))
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)

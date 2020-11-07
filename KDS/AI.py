@@ -1,3 +1,4 @@
+from typing import List, Tuple
 import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
 import KDS.Animator, KDS.Audio, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
@@ -150,7 +151,7 @@ class Bulldog:
 
     a = False
 
-    def __init__(self, position: tuple[int, int], health: int, speed: int, animation):
+    def __init__(self, position: Tuple[int, int], health: int, speed: int, animation):
         self.position = position
         self.health = health
         self.speed = speed
@@ -232,7 +233,7 @@ class Bulldog:
                 self.direction = False
         return self.rect, self.animation.get_frame(), self.direction, self.damage
 
-    def AI_Update(self, surface: pygame.Surface, scroll: tuple[int, int], render_rect: pygame.Rect):
+    def AI_Update(self, surface: pygame.Surface, scroll: Tuple[int, int], render_rect: pygame.Rect):
         if not self.a:
             if self.movement[0] < 0:
                 self.direction = True
@@ -288,7 +289,7 @@ class HostileEnemy:
     def attack(self):
         pass
 
-    def update(self, Surface: pygame.Surface, scroll: list[int, int], tiles, targetRect):
+    def update(self, Surface: pygame.Surface, scroll: List[int, int], tiles, targetRect):
         enemyProjectiles = None
         dropItems = []
         if self.health:

@@ -1,3 +1,4 @@
+from typing import List, Tuple
 import pygame, numpy, math, random
 import KDS.Convert, KDS.Math, KDS.Animator
 
@@ -30,7 +31,7 @@ def collision_test(rect, Tile_list):
                 hit_list.append(tile.rect)
     return hit_list
 
-def move_entity(rect: pygame.Rect, movement: tuple[int, int], tiles, skip_horisontal_movement_check: bool = False, skip_vertical_movement_check=False):
+def move_entity(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horisontal_movement_check: bool = False, skip_vertical_movement_check=False):
     collision_types = {'top': False, 'bottom': False,
                        'right': False, 'left': False}
     rect.x += movement[0]
@@ -85,7 +86,7 @@ class Lighting:
             self.tsurf = Lighting.circle_surface(size*2, color)
         
         @staticmethod
-        def update(particle, Surface: pygame.Surface, scroll: list[int]):
+        def update(particle, Surface: pygame.Surface, scroll: List[int]):
             particle.rect.y -= particle.speed
             particle.rect.x += random.randint(-1, 1)
             particle.size -= particle.dying_speed
@@ -114,7 +115,7 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self,Surface:pygame.Surface, scroll: list[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
+    def update(self,Surface:pygame.Surface, scroll: List[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
@@ -302,12 +303,12 @@ class itemTools:
             self.counter = arg
 
 class Explosion:
-    def __init__(self, animation: KDS.Animator.Animation, pos: tuple[int, int]):
+    def __init__(self, animation: KDS.Animator.Animation, pos: Tuple[int, int]):
         self.animation = animation
         self.xpos = pos[0]
         self.ypos = pos[1]
 
-    def update(self, Surface: pygame.Surface, scroll: list[int]):
+    def update(self, Surface: pygame.Surface, scroll: List[int]):
         txtre = self.animation.update()
         Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
         return self.animation.done, self.animation.tick

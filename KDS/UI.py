@@ -1,6 +1,6 @@
 from shutil import move
 from turtle import position
-from typing import Callable
+from typing import Callable, Tuple
 import KDS.Animator
 import KDS.ConfigManager
 import KDS.Convert
@@ -24,7 +24,7 @@ class Slider:
     8. handle_pressed_color (OPTIONAL): The color of the handle in idle state. [DEFAULT: (90, 90, 90)]
     """
 
-    def __init__(self, safe_name, slider_rect, handle_size: tuple[int, int], default_value=0.0, handle_move_area_padding=(0, 0), slider_default_color=(120, 120, 120), slider_fill_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), lerp_duration=3, custom_dir: str = None, custom_safename: str = None):
+    def __init__(self, safe_name, slider_rect, handle_size: Tuple[int, int], default_value=0.0, handle_move_area_padding=(0, 0), slider_default_color=(120, 120, 120), slider_fill_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), lerp_duration=3, custom_dir: str = None, custom_safename: str = None):
         self.safe_name = safe_name
         self.slider_rect = slider_rect
         self.handle_rect = pygame.Rect(self.slider_rect.midleft[0] + (float(KDS.ConfigManager.GetSetting("Sliders", safe_name, str(default_value))) * self.slider_rect.width) - (handle_size[0] / 2), slider_rect.centery - (handle_size[1] / 2), handle_size[0], handle_size[1])
@@ -94,17 +94,17 @@ class Slider:
 
 class Button:
 
-    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface = None, button_default_color: tuple[int, int, int] = (100, 100, 100), button_highlighted_color: tuple[int, int, int] = (115, 115, 115), button_pressed_color: tuple[int, int, int] = (90, 90, 90), button_disabled_color: tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
+    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
         """Instantiates a new Button
 
         Args:
             rect (Rect): The rect where the button will be drawn.
             function (Callable): A function to be called when the button is pressed.
             overlay (Surface, optional): Any surface you want to write on top of the button. Defaults to None.
-            button_default_color (tuple[int, int, int], optional): The color of the button by default. Defaults to (100, 100, 100).
-            button_highlighted_color (tuple[int, int, int], optional): The color of the button when highlighted. Defaults to (115, 115, 115).
-            button_pressed_color (tuple[int, int, int], optional): The color of the button when pressed. Defaults to (90, 90, 90).
-            button_disabled_color (tuple[int, int, int], optional): The color of the button when disabled. Defaults to (75, 75, 75).
+            button_default_color (Tuple[int, int, int], optional): The color of the button by default. Defaults to (100, 100, 100).
+            button_highlighted_color (Tuple[int, int, int], optional): The color of the button when highlighted. Defaults to (115, 115, 115).
+            button_pressed_color (Tuple[int, int, int], optional): The color of the button when pressed. Defaults to (90, 90, 90).
+            button_disabled_color (Tuple[int, int, int], optional): The color of the button when disabled. Defaults to (75, 75, 75).
             lerp_duration (int, optional): The duration it takes to switch from one color to another. Defaults to 3.
             enabled (bool, optional): Determines if the button is enabled or disabled from the start. Defaults to True.
         """
@@ -119,12 +119,12 @@ class Button:
         self.button_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
         self.enabled = enabled
         
-    def update(self, surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool, *args):
+    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args):
         """Updates and draws the button onto a surface.
 
         Args:
             surface (Surface): The surface the button will be drawn onto.
-            mouse_pos (tuple[int, int]): The SCALED position of the mouse.
+            mouse_pos (Tuple[int, int]): The SCALED position of the mouse.
             clicked (bool): Determines if the button's function should be executed.
             args (any): Any arguments for the button's function.
         """
@@ -165,7 +165,7 @@ class Switch:
     8. handle_pressed_color (OPTIONAL): The color of the handle in idle state. [DEFAULT: (90, 90, 90)]
     """
 
-    def __init__(self, safe_name, switch_rect, handle_size: tuple[int, int], default_value=False, switch_move_area_padding=(0, 0), switch_off_color=(120, 120, 120), switch_on_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), fade_lerp_duration=3, move_lerp_duration=15, custom_dir: str = None, custom_safename: str = None):
+    def __init__(self, safe_name, switch_rect, handle_size: Tuple[int, int], default_value=False, switch_move_area_padding=(0, 0), switch_off_color=(120, 120, 120), switch_on_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), fade_lerp_duration=3, move_lerp_duration=15, custom_dir: str = None, custom_safename: str = None):
         self.safe_name = safe_name
         self.switch_rect = switch_rect
         self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Switches", safe_name, str(default_value)))
