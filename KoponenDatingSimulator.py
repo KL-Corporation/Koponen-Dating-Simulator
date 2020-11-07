@@ -1772,7 +1772,7 @@ class Grenade(Item):
         pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
         if args[0][0]:
             KDS.Audio.playSound(grenade_throw)
-            player_inventory.storage[player_inventory.SIndex] = "none"
+            player_inventory.storage[player_inventory.SIndex] = Inventory.emptySlot
             BallisticObjects.append(KDS.World.BallisticProjectile((player_rect.centerx, player_rect.centery - 25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
 
@@ -2070,14 +2070,17 @@ def console():
         if command_list[0] == "give":
             if command_list[1] != "key":
                 if command_list[1] in itemDict:
-                    player_inventory.storage[player_inventory.SIndex] = int(itemDict[command_list[1]])
+                    consoleItemSerial = int(itemDict[command_list[1]])
+                    player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial, i_textures[consoleItemSerial])
                     KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
                 else: KDS.Console.Feed.append(f"Item not found.")
             else:
-                if command_list[2] in player_keys:
-                    player_keys[command_list[2]] = True
-                    KDS.Console.Feed.append(f"Item was given: {command_list[1]} {command_list[2]}")
-                else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
+                if len(command_list) > 2:
+                    if command_list[2] in player_keys:
+                        player_keys[command_list[2]] = True
+                        KDS.Console.Feed.append(f"Item was given: {command_list[1]} {command_list[2]}")
+                    else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
+                else: KDS.Console.Feed.append("No key specified!")
         elif command_list[0] == "remove":
             if command_list[1] == "item":
                 if player_inventory.storage[player_inventory.SIndex] != Inventory.emptySlot:

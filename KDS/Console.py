@@ -90,13 +90,16 @@ class CheckTypes:
 
 Escaped = False
 Feed = []
+OldCommands = []
 
 def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: Dict[str, any] = None, showFeed: bool = False) -> str:
-    global Escaped, Feed
+    global Escaped, Feed, OldCommands
     commandsFound = commands
+    previousCommandsFound = commandsFound
     commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
     cmd = ""
     lastCmd = ""
+    tabbedCmd = ""
     suggestionPathIndex = 0
     suggestionIndex = 0
     suggestionsRendered = False
@@ -116,6 +119,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     text_y = text_rect.y + text_rect.height / 2 - console_font.get_height() / 2
     tabAdd = False
     match: List[str] = []
+    oldIndex = -1
     
     if checkType != None and checkType["type"] == "commands" and commands != None: checkType = None
     else: KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
@@ -129,6 +133,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     while running:
         showSuggestions = True
         tabbed = False
+        Key_Up = False
+        Key_Down = False
         for event in pygame.event.get():
             if event.type == TEXTINPUT:
                 addText(event.text)
@@ -190,9 +196,11 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 elif event.key == K_UP:
                     tabAdd = False
                     suggestionIndex -= 1
+                    Key_Up = True
                 elif event.key == K_DOWN:
                     tabAdd = False
                     suggestionIndex += 1
+                    Key_Down = True
                 elif event.key == K_v and pygame.key.get_pressed()[K_LCTRL]:
                     clipboardText = pygame.scrap.get(SCRAP_TEXT)
                     if clipboardText: addText(clipboardText)
@@ -216,6 +224,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             suggestionIndex = 0
             suggestionsOverride = False
             tabAdd = False
+            if tabbedCmd != cmd:
+                tabbedCmd = ""
         
         display.blit(defaultBackground if background == None else background, (0, 0))
         pygame.draw.rect(display, KDS.Colors.Black, text_input_rect)
@@ -318,6 +328,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 suggestionPathIndex = 0
                 while suggestionPathIndex < len(cmdSplit):
                     if isinstance(commandsFound, dict) and cmdSplit[suggestionPathIndex].lower() in commandsFoundLowerKeys:
+                        previousCommandsFound = commandsFound
                         commandsFound = commandsFound[commandsFoundLowerKeys[cmdSplit[suggestionPathIndex].lower()]]
                         if isinstance(commandsFound, dict):
                             commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
@@ -340,15 +351,14 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             if suggestionIndex < 0: suggestionIndex = len(match) - 1
             elif suggestionIndex >= len(match): suggestionIndex = 0
             
-            if showSuggestions and (len(cmdSplit) > 0 or len(cmdSplit) - 1 == suggestionPathIndex or (len(cmd) > 0 and cmd[-1] == " ")):
-                clampedSuggestionIndex = KDS.Math.Clamp(suggestionIndex, 0, len(match) - 1)
-                renderIndex = max(suggestionCount, clampedSuggestionIndex + 1)
+            if showSuggestions and (len(cmdSplit) > 0 or len(cmdSplit) - 1 == suggestionPathIndex) and (tabbedCmd == cmd or cmdSplit[-1] not in previousCommandsFound):
+                renderIndex = max(suggestionCount, suggestionIndex + 1)
                 y = (suggestionSpacing + console_font.get_height()) * min(len(match), suggestionCount)
                 w = 0
                 suggestions = []
                 for r in match[renderIndex - suggestionCount:renderIndex]:
                     rndrCol = text_color
-                    if match.index(r) == clampedSuggestionIndex:
+                    if match.index(r) == suggestionIndex:
                         rndrCol = suggestionColor
                         if tabbed:
                             if len(cmd) > 0:
@@ -358,6 +368,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                                 else: tmpCmd = [cmdTxt + " " for cmdTxt in cmd.split(" ")]
                                 cmd = "".join(tmpCmd[:-1])
                             cmd += r
+                            tabbedCmd = cmd
                             cursor_index = len(cmd)
                             suggestionsOverride = True
                         else:
@@ -366,14 +377,15 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                                 for i in range(len(cmdSplit) - 1): previewOffsetX += console_font.size(f"{cmdSplit[i]} ")[0]
                             else: previewOffsetX = text_rect.left
                             tempSplit = cmdSplit[-1]
-                            previewTxt = r
-                            for l in range(min(len(tempSplit), len(previewTxt))):
-                                if previewTxt[l].isupper() and not tempSplit[l].isupper(): previewTxt = previewTxt[:l] + tempSplit[l] + previewTxt[l + 1:]
-                            previewTxt = console_font.render(previewTxt, True, suggestionPreviewColor)
-                            previewSurf = pygame.Surface(previewTxt.get_size())
-                            previewSurf.blit(previewTxt, (0, 0))
-                            previewSurf.set_alpha(suggestionPreviewAlpha)
-                            display.blit(previewSurf, (previewOffsetX, text_y))
+                            if len(cmdSplit) < 1 or cmdSplit[-1] in r:
+                                previewTxt = r
+                                for l in range(min(len(tempSplit), len(previewTxt))):
+                                    if previewTxt[l].isupper() and not tempSplit[l].isupper(): previewTxt = previewTxt[:l] + tempSplit[l] + previewTxt[l + 1:]
+                                previewTxt = console_font.render(previewTxt, True, suggestionPreviewColor)
+                                previewSurf = pygame.Surface(previewTxt.get_size())
+                                previewSurf.blit(previewTxt, (0, 0))
+                                previewSurf.set_alpha(suggestionPreviewAlpha)
+                                display.blit(previewSurf, (previewOffsetX, text_y))
                     rndrd = console_font.render(r, True, rndrCol)
                     suggestions.append(rndrd)
                     w = max(w, rndrd.get_width())
@@ -386,6 +398,17 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 for r in suggestions:
                     display.blit(r, (0, text_input_rect.top - y))
                     y -= suggestionSpacing + console_font.get_height()
+                    
+            if (len(cmd) <= 0 or cmd in OldCommands) and ((len(OldCommands) > oldIndex and oldIndex != -1 or len(OldCommands) > oldIndex + 1 and oldIndex == -1)) and (Key_Up or Key_Down):
+                if Key_Up:
+                    oldIndex += 1
+                    if oldIndex >= len(OldCommands): oldIndex = len(OldCommands) - 1
+                    cmd = OldCommands[len(OldCommands) - 1 - oldIndex]
+                else:
+                    oldIndex -= 1
+                    if oldIndex < -1: oldIndex = -1
+                    cmd = OldCommands[len(OldCommands) - 1 - oldIndex] if oldIndex > -1 else ""
+                cursor_index = len(cmd)
   
         if not suggestionsRendered: display.blit(promptRender, (text_input_rect.left, text_input_rect.top - promptRender.get_height()))
         #endregion
@@ -426,4 +449,5 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
+    if len(cmd) > 0: OldCommands.append(cmd)
     return cmd
