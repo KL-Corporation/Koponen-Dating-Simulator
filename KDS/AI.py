@@ -289,7 +289,7 @@ class HostileEnemy:
     def attack(self):
         pass
 
-    def update(self, Surface: pygame.Surface, scroll: List[int, int], tiles, targetRect):
+    def update(self, Surface: pygame.Surface, scroll: Tuple[int, int] or List[int], tiles, targetRect):
         enemyProjectiles = None
         dropItems = []
         if self.health:
