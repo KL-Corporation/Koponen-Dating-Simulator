@@ -1,3 +1,5 @@
+if __name__ != "__main__":
+    raise ImportError("Level Builder cannot be imported!")
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -587,7 +589,5 @@ def main():
         grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
         pygame.display.update()
         clock.tick(60)
-if __name__ == "__main__":
-    main()
-else:
-    print("Level Builder cannot be imported!")
+
+main()
