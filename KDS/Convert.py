@@ -95,5 +95,5 @@ def ToLines(text: str, font: pygame.font.Font, max_width: int or float):
             new_split.append(toTest[i:])
             new_split[-2] = toTest[:i]
         if len(new_split[-1]) < 1: del(new_split[-1])
-        return ["".join(new_split[i]) for i in range(len(new_split))]
-    else: return text
+        return tuple(["".join(new_split[i]) for i in range(len(new_split))])
+    else: return tuple([text])

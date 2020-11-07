@@ -1,7 +1,8 @@
 from inspect import currentframe
 import re
 import sys
-from typing import Dict
+import math
+from typing import Dict, List
 import KDS.Colors
 import KDS.Convert
 import KDS.Logging
@@ -27,6 +28,8 @@ suggestionPreviewColor = KDS.Colors.Gray
 suggestionPreviewAlpha = 128
 suggestionBackgroundColor = KDS.Colors.DarkGray
 suggestionBackgroundAlpha = 128
+feedRect = pygame.Rect(10, 10, 1180, 700)
+feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
@@ -89,17 +92,15 @@ Escaped = False
 Feed = []
 
 def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: Dict[str, any] = None, showFeed: bool = False) -> str:
-    global Escaped
+    global Escaped, Feed
     commandsFound = commands
     commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
     cmd = ""
     lastCmd = ""
     suggestionPathIndex = 0
-    suggestionIndex = -69
+    suggestionIndex = 0
     suggestionsRendered = False
-    loadNewSuggestions = False
     suggestionsOverride = False
-    filledSuggestion = ""
     renderedCmd = None
     running = True
     pygame.key.set_text_input_rect(text_input_rect)
@@ -113,8 +114,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     pygame.key.set_repeat(500, 31)
     promptRender = console_font.render(prompt, True, text_color)
     text_y = text_rect.y + text_rect.height / 2 - console_font.get_height() / 2
-    
-    while len(Feed) * console_font.get_height() > display_size[1] - text_input_rect.height: del Feed[0]
+    tabAdd = False
+    match: List[str] = []
     
     if checkType != None and checkType["type"] == "commands" and commands != None: checkType = None
     else: KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
@@ -126,6 +127,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         cursor_animation.tick = 0
 
     while running:
+        showSuggestions = True
         tabbed = False
         for event in pygame.event.get():
             if event.type == TEXTINPUT:
@@ -183,14 +185,14 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         else: cursor_index = len(cmd)
                 elif event.key == K_TAB:
                     tabbed = True
-                    if suggestionIndex != -69: suggestionIndex += 1
-                    else: suggestionIndex = 0
+                    if tabAdd: suggestionIndex += 1
+                    tabAdd = True
                 elif event.key == K_UP:
-                    if suggestionIndex != -69: suggestionIndex -= 1
-                    else: suggestionIndex = -1
+                    tabAdd = False
+                    suggestionIndex -= 1
                 elif event.key == K_DOWN:
-                    if suggestionIndex != -69: suggestionIndex += 1
-                    else: suggestionIndex = 0
+                    tabAdd = False
+                    suggestionIndex += 1
                 elif event.key == K_v and pygame.key.get_pressed()[K_LCTRL]:
                     clipboardText = pygame.scrap.get(SCRAP_TEXT)
                     if clipboardText: addText(clipboardText)
@@ -211,13 +213,28 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         while console_font.size(cmd)[0] + cursor_width >= text_rect.width: cmd = cmd[:-1]
 
         if lastCmd != cmd:
-            loadNewSuggestions = True if not suggestionsOverride else False
-            suggestionIndex = 0 if len(cmd) > 0 else -69
-        suggestionsOverride = False
+            suggestionIndex = 0
+            suggestionsOverride = False
+            tabAdd = False
         
         display.blit(defaultBackground if background == None else background, (0, 0))
         pygame.draw.rect(display, KDS.Colors.Black, text_input_rect)
 
+        #region Feed Rendering
+        if showFeed:
+            newFeed: List[str] = []
+            for line in Feed:
+                 splitFeed = KDS.Convert.ToLines(line, console_font, feedRect.width)
+                 for newLine in splitFeed: newFeed.append(newLine)
+            while len(newFeed) > feedRect.height / console_font.get_height(): del newFeed[0]
+            Feed = newFeed
+            renderFeed = Feed.copy()
+            renderFeed.reverse()
+            for y_i in range(len(renderFeed)): display.blit(console_font.render(renderFeed[y_i], True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - y_i * console_font.get_height()))
+                
+        #endregion
+
+        #region Type Checking
         invalid = False
         warning = False
         if checkType != None:
@@ -288,10 +305,14 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         if _size[1] != None:
                             if max(_size[1], max(cmdIntSplit[2:])) != _size[1]: invalid = True
             else: KDS.Logging.AutoError("Check Type invalid!", currentframe())
+        #endregion
         
+        #region Commands and Suggestions
         if commands != None:
-            cmdSplit = cmd.split()
-            if loadNewSuggestions:
+            if not tabbed and len(cmd) < 1: showSuggestions = False
+            
+            cmdSplit = cmd.split(" ")
+            if not suggestionsOverride:
                 commandsFound = commands
                 commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
                 suggestionPathIndex = 0
@@ -300,75 +321,82 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         commandsFound = commandsFound[commandsFoundLowerKeys[cmdSplit[suggestionPathIndex].lower()]]
                         if isinstance(commandsFound, dict):
                             commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
+                        else:
+                            showSuggestions = False
+                            break
                         suggestionPathIndex += 1
                     else:
                         break
               
-            if not suggestionsOverride and isinstance(commandsFound, dict):
-                letterMatch = []
-                defaultMatch = []
-                if len(cmdSplit) - 1 == suggestionPathIndex:
-                    for k in commandsFound:
-                        found = k.lower().find(cmdSplit[suggestionPathIndex].lower())
-                        if found == 0: letterMatch.append(k)
-                        elif found != -1: defaultMatch.append(k)
-                else:
-                    for k in commandsFound: defaultMatch.append(k)
-                letterMatch.sort()
-                defaultMatch.sort()
-                match = letterMatch + defaultMatch
-                if len(cmdSplit) > 0 or suggestionIndex != -69 or len(cmdSplit) - 1 == suggestionPathIndex or (len(cmd) > 0 and cmd[-1] == " "):
-                    if suggestionIndex >= len(match): suggestionIndex = 0
-                    if suggestionIndex < 0: suggestionIndex = len(match) - 1
-                    renderIndex = max(suggestionCount, suggestionIndex + 1)
-                    y = (suggestionSpacing + console_font.get_height()) * min(len(match), suggestionCount)
-                    w = 0
-                    suggestions = []
-                    for r in match[renderIndex - suggestionCount:renderIndex]:
-                        rndrCol = text_color
-                        if match.index(r) == suggestionIndex:
-                            rndrCol = suggestionColor
-                            if tabbed:
-                                cmd = cmd[:-len(filledSuggestion)]
-                                filledSuggestion = r
-                                cmd += filledSuggestion
-                                suggestionsOverride = True
-                            else:
-                                if len(cmdSplit) > 0:
-                                    previewOffsetX = text_rect.left
-                                    for letter in range(len(cmdSplit) - 1):
-                                        previewOffsetX += console_font.size(cmdSplit[letter])[0]
-                                else: previewOffsetX = text_rect.left
-                                tempSplit = cmdSplit[-1:]
-                                previewTxt = r
-                                for l in range(len(tempSplit)):
-                                    if previewTxt[l].isupper() and not tempSplit[l].isupper(): previewTxt = previewTxt[:l] + tempSplit[-1][l] + previewTxt[l + 1:]
-                                previewTxt = console_font.render(previewTxt, True, suggestionPreviewColor)
-                                previewSurf = pygame.Surface(previewTxt.get_size())
-                                previewSurf.blit(previewTxt, (0, 0))
-                                previewSurf.set_alpha(suggestionPreviewAlpha)
-                                display.blit(previewSurf, (previewOffsetX, text_y))
-                        rndrd = console_font.render(r, True, rndrCol)
-                        suggestions.append(rndrd)
-                        w = max(w, rndrd.get_width())
-                    
-                    suggestionsRendered = True
-                    suggestionSurf = pygame.Surface((w, y))
-                    suggestionSurf.fill(suggestionBackgroundColor)
-                    suggestionSurf.set_alpha(suggestionBackgroundAlpha)
-                    display.blit(suggestionSurf, (0, text_input_rect.top - y))
-                    for r in suggestions:
-                        display.blit(r, (0, text_input_rect.top - y))
-                        y -= suggestionSpacing + console_font.get_height()
+                if isinstance(commandsFound, dict):
+                    match: List[str] = []
+                    if len(cmdSplit) - 1 == suggestionPathIndex:
+                        for k in commandsFound:
+                            found = k.lower().find(cmdSplit[suggestionPathIndex].lower())
+                            if found == 0: match.append(k)
+                    else:
+                        for k in commandsFound: match.append(k)
+                
+            if suggestionIndex < 0: suggestionIndex = len(match) - 1
+            elif suggestionIndex >= len(match): suggestionIndex = 0
+            
+            if showSuggestions and (len(cmdSplit) > 0 or len(cmdSplit) - 1 == suggestionPathIndex or (len(cmd) > 0 and cmd[-1] == " ")):
+                clampedSuggestionIndex = KDS.Math.Clamp(suggestionIndex, 0, len(match) - 1)
+                renderIndex = max(suggestionCount, clampedSuggestionIndex + 1)
+                y = (suggestionSpacing + console_font.get_height()) * min(len(match), suggestionCount)
+                w = 0
+                suggestions = []
+                for r in match[renderIndex - suggestionCount:renderIndex]:
+                    rndrCol = text_color
+                    if match.index(r) == clampedSuggestionIndex:
+                        rndrCol = suggestionColor
+                        if tabbed:
+                            if len(cmd) > 0:
+                                if cmd[-1] != " " or cmd[-1] in commandsFound:
+                                    tmpCmd = [cmdTxt + " " for cmdTxt in cmd.split(" ")]
+                                    tmpCmd[-1].rstrip()
+                                else: tmpCmd = [cmdTxt + " " for cmdTxt in cmd.split(" ")]
+                                cmd = "".join(tmpCmd[:-1])
+                            cmd += r
+                            cursor_index = len(cmd)
+                            suggestionsOverride = True
+                        else:
+                            if len(cmdSplit) > 0:
+                                previewOffsetX = text_rect.left
+                                for i in range(len(cmdSplit) - 1): previewOffsetX += console_font.size(f"{cmdSplit[i]} ")[0]
+                            else: previewOffsetX = text_rect.left
+                            tempSplit = cmdSplit[-1]
+                            previewTxt = r
+                            for l in range(min(len(tempSplit), len(previewTxt))):
+                                if previewTxt[l].isupper() and not tempSplit[l].isupper(): previewTxt = previewTxt[:l] + tempSplit[l] + previewTxt[l + 1:]
+                            previewTxt = console_font.render(previewTxt, True, suggestionPreviewColor)
+                            previewSurf = pygame.Surface(previewTxt.get_size())
+                            previewSurf.blit(previewTxt, (0, 0))
+                            previewSurf.set_alpha(suggestionPreviewAlpha)
+                            display.blit(previewSurf, (previewOffsetX, text_y))
+                    rndrd = console_font.render(r, True, rndrCol)
+                    suggestions.append(rndrd)
+                    w = max(w, rndrd.get_width())
+                
+                suggestionsRendered = True
+                suggestionSurf = pygame.Surface((w, y))
+                suggestionSurf.fill(suggestionBackgroundColor)
+                suggestionSurf.set_alpha(suggestionBackgroundAlpha)
+                display.blit(suggestionSurf, (0, text_input_rect.top - y))
+                for r in suggestions:
+                    display.blit(r, (0, text_input_rect.top - y))
+                    y -= suggestionSpacing + console_font.get_height()
   
         if not suggestionsRendered: display.blit(promptRender, (text_input_rect.left, text_input_rect.top - promptRender.get_height()))
+        #endregion
         
+        #region Text Rendering
         text_render_color = text_color
         if warning and not invalid:
             text_render_color = text_warn_color
             display.blit(warnText, (text_rect.left + console_font.size(cmd)[0] + 5, text_y + (console_font.get_height() - console_font_small.get_height())))
         if invalid: text_render_color = text_invalid_color
-        renderedCmd = console_font.render(cmd, True, text_color)
+        renderedCmd = console_font.render(cmd, True, text_render_color)
         display.blit(renderedCmd, (text_rect.left, text_y))
         if textInput and cursor_animation.update() >= 1.0:
             pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:cursor_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
@@ -386,10 +414,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             overlaySurf.set_alpha(128)
             display.blit(overlaySurf, (text_rect.left, text_y))
         """
-            
+        #endregion
+        
         suggestionsRendered = False 
         lastCmd = cmd
-        loadNewSuggestions = False
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
         display.fill(KDS.Colors.Black)

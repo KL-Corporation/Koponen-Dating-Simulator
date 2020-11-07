@@ -5,7 +5,7 @@ def init(_mixer):
     MusicMixer = _mixer.music
     SoundMixer = _mixer
     
-    _mixer.set_num_channels(KDS.ConfigManager.GetGameSetting("Mixer", "Music", "channelCount"))
+    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer", "channelCount", 32))
 
     MusicVolume = KDS.ConfigManager.GetSetting("Settings", "MusicVolume", 1.0)
     EffectVolume = KDS.ConfigManager.GetSetting("Settings", "SoundEffectVolume", 1.0)

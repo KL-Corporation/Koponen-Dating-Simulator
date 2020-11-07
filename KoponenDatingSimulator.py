@@ -182,26 +182,6 @@ KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 KDS.Console.init(window, display, display_size, Fullscreen, clock)
 #KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
-"""
-KDS.Console.Start("TEST PROMPT:", False, KDS.Console.CheckTypes.Commands(), None, 
-                  {
-                      "TestCommand": {
-                          "TestedPositive": "end",
-                          "LayeredTest": "end",
-                          "Galluppia": "end",
-                          "HmmUp": "none"
-                          },
-                      "TestCommand2": "end",
-                      "AnotherTestCommand": "end",
-                      "AnotherTestCommand2": "end",
-                      "WeLikeTesting": "end",
-                      "YaasYass": "end",
-                      "YassTestTest" : "end"
-                  }
-                  )
-"""
-
-pygame.key.stop_text_input()
 #endregion
 #region Loading
 #region Settings
@@ -493,6 +473,7 @@ gamemode_bc_2_alpha = KDS.Animator.Float(
     0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
+go_to_console = False
 
 main_menu_running = False
 level_finished_running = False
@@ -2039,160 +2020,147 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
-consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
-def inputConsole(daInput = ">>>  ", allowEscape: bool = True, defVal: str = ""):
-    pygame.key.set_repeat(500, 31)
-    r = True
-    rstring = defVal
-    while r:
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == K_ESCAPE:
-                    if allowEscape:
-                        r = False
-                        return None
-                elif event.key == K_RETURN:
-                        return rstring.strip()
-                elif event.key == K_BACKSPACE:
-                    rstring = rstring[:-1]
-                elif event.unicode:
-                    rstring += event.unicode
-            elif event.type == pygame.QUIT:
-                r = False
-                pygame.quit()
-                quit()
-        window.fill(consoleBackground.get_at((0, 0)))
-        window.blit(KDS.Convert.AspectScale(consoleBackground, display_size), ((display_size[0] / 2) - consoleBackground.get_size()[0] / 2, (display_size[1] / 2) - consoleBackground.get_size()[1] / 2 ))
-        consoleText = harbinger_font.render(daInput + rstring, True, KDS.Colors.White)
-        window.blit(consoleText, (10, 10))
-        pygame.display.update()
-    pygame.key.set_repeat(0, 0)
-
 def console():
-    global player_keys, player_health, level_finished
+    global player_keys, player_health, level_finished, go_to_console
+    go_to_console = False
 
+    itemDict = {}
+    for itemKey in buildData["item_textures"]:
+        if int(itemKey) in buildData["inventory_items"]: itemDict[buildData["item_textures"][itemKey][:-4]] = itemKey
+    itemDict["key"] = {}
+    for key in player_keys: itemDict["key"][key] = "break"
+    
+    trueFalseTree = {"true": "break", "false": "break"}
+    
+    commandTree = {
+        "give": itemDict,
+        "remove": {
+            "item": "break",
+            "key": "break"
+        },
+        "playboy": "break",
+        "kill": "break",
+        "stop": "break",
+        "killme": "break",
+        "terms": trueFalseTree,
+        "woof": trueFalseTree,
+        "invl": trueFalseTree,
+        "finish": {"missions": "break"}
+    }
+    
+    consoleRunning = True
+    
+    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
+    
     #command_input = input("command: ")
+    """
     command_input = inputConsole("Command >>> ")
     if not command_input:
         return None
     command_input = command_input.lower()
     command_list = command_input.split()
+    """
+    while consoleRunning:
+        consoleOutput = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), blurred_background, commandTree, True)
+        if len(consoleOutput) < 1:
+            consoleRunning = False
+            break
+        command_list = consoleOutput.lower().split(" ")
 
-    if command_list[0] == "give":
-        if command_list[1] != "key":
-            player_inventory.storage[player_inventory.SIndex] = int(command_list[1])
-            KDS.Logging.Log(KDS.Logging.LogType.info,
-                            "Item was given: " + str(command_list[1]), True)
-        else:
-            if command_list[2] in player_keys:
-                player_keys[command_list[2]] = True
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Item was given: " +
-                                str(command_list[1]) + " " + str(command_list[2]), True)
+        if command_list[0] == "give":
+            if command_list[1] != "key":
+                if command_list[1] in itemDict:
+                    player_inventory.storage[player_inventory.SIndex] = int(itemDict[command_list[1]])
+                    KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
+                else: KDS.Console.Feed.append(f"Item not found.")
             else:
-                KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " +
-                                str(command_list[1]) + " " + str(command_list[2]), True)
-    elif command_list[0] == "remove":
-        if command_list[1] == "item":
-            if player_inventory.storage[player_inventory.SIndex] != Inventory.emptySlot:
-                old_item = player_inventory.storage[player_inventory.SIndex]
-                player_inventory.storage[player_inventory.SIndex] = Inventory.emptySlot
-                KDS.Logging.Log(KDS.Logging.LogType.info,
-                                "Item was removed: " + str(old_item), True)
-            else:
-                KDS.Logging.Log(
-                    KDS.Logging.LogType.info, "Selected inventory slot is empty already!", True)
-        elif command_list[1] == "key":
-            if command_list[2] in player_keys:
-                if player_keys[command_list[2]] == True:
-                    player_keys[command_list[2]] = False
-                    KDS.Logging.Log(KDS.Logging.LogType.info, "Item was removed: " +
-                                    str(command_list[1]) + " " + str(command_list[2]), True)
+                if command_list[2] in player_keys:
+                    player_keys[command_list[2]] = True
+                    KDS.Console.Feed.append(f"Item was given: {command_list[1]} {command_list[2]}")
+                else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
+        elif command_list[0] == "remove":
+            if command_list[1] == "item":
+                if player_inventory.storage[player_inventory.SIndex] != Inventory.emptySlot:
+                    KDS.Console.Feed.append(f"Item was removed: {player_inventory.storage[player_inventory.SIndex]}")
+                    player_inventory.storage[player_inventory.SIndex] = Inventory.emptySlot
+                else: KDS.Console.Feed.append("Selected inventory slot is already empty!")
+            elif command_list[1] == "key":
+                if command_list[2] in player_keys:
+                    if player_keys[command_list[2]] == True:
+                        player_keys[command_list[2]] = False
+                        KDS.Console.Feed.append(f"Item was removed: {command_list[1]} {command_list[2]}")
+                    else: KDS.Console.Feed.append("You don't have that item!")
+                else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
+            else: KDS.Console.Feed.append("Not a valid remove command.")
+        elif command_list[0] == "playboy":
+            KDS.Scores.koponen_happiness = 1000
+            KDS.Console.Feed.append("You are now a playboy")
+            KDS.Console.Feed.append(f"Koponen happines: {KDS.Scores.koponen_happiness}")
+        elif command_list[0] == "kill" or command_list[0] == "stop":
+            KDS.Console.Feed.append("Stopping Game...")
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Stop command issued through console.", True)
+            KDS_Quit()
+        elif command_list[0] == "killme":
+            KDS.Console.Feed.append("Player Killed.")
+            KDS.Logging.Log(KDS.Logging.LogType.info, "Player kill command issued through console.", True)
+            player_health = 0
+        elif command_list[0] == "terms":
+            setTerms = False
+            if len(command_list) > 1:
+                setTerms = KDS.Convert.ToBool(command_list[1])
+                if setTerms != None:
+                    KDS.ConfigManager.SetSetting("Data", "TermsAccepted", setTerms)
+                    KDS.Console.Feed.append(f"Terms status set to: {setTerms}")
                 else:
-                    KDS.Logging.Log(
-                        KDS.Logging.LogType.info, "You don't have that item!", True)
+                    KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
             else:
-                KDS.Logging.Log(KDS.Logging.LogType.info, "That item does not exist: " +
-                                str(command_list[1]) + " " + str(command_list[2]), True)
-        else:
-            KDS.Logging.Log(KDS.Logging.LogType.info,
-                            "Not a valid remove command.", True)
-    elif command_list[0] == "playboy":
-        KDS.Scores.koponen_happiness = 1000
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "You are now a playboy", True)
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        f"Koponen happines: {KDS.Scores.koponen_happiness}", True)
-    elif command_list[0] == "kill" or command_list[0] == "stop":
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Stop command issued through console.", True)
-        KDS_Quit()
-    elif command_list[0] == "killme":
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Player kill command issued through console.", True)
-        player_health = 0
-    elif command_list[0] == "terms":
-        setTerms = False
-        if len(command_list) > 1:
-            setTerms = KDS.Convert.ToBool(command_list[1])
-            if setTerms != None:
-                KDS.ConfigManager.SetSetting("Data", "TermsAccepted", setTerms)
-                KDS.Logging.Log(KDS.Logging.LogType.info,
-                                "Terms status set to: " + str(setTerms), True)
+                KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
+        elif command_list[0] == "woof":
+            if len(command_list) > 1:
+                woofState = KDS.Convert.ToBool(command_list[1])
+                if woofState != None:
+                    KDS.Console.Feed.append("Woof state assignment has not been implemented for the new AI system yet.")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper state for woof")
             else:
-                KDS.Logging.Log(KDS.Logging.LogType.info,
-                                "Please provide a proper state for terms & conditions", True)
-        else:
-            KDS.Logging.Log(KDS.Logging.LogType.info,
-                            "Please provide a proper state for terms & conditions", True)
-    elif command_list[0] == "woof":
-        if len(command_list) > 1:
-            woofState = KDS.Convert.ToBool(command_list[1])
-            if woofState != None:
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Woof state assignment has not been implemented for the new AI system yet.")
+                KDS.Console.Feed.append("Please provide a proper state for woof")
+        elif command_list[0] == "invl":
+            if len(command_list) > 1:
+                invlState = KDS.Convert.ToBool(command_list[1])
+                if invlState != None:
+                    global godmode
+                    godmode = invlState
+                    KDS.Console.Feed.append(f"Invulnerability state has been set to: {godmode}")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper state for invl")
             else:
-                KDS.Logging.Log(KDS.Logging.LogType.info,
-                                "Please provide a proper state for woof", True)
-        else:
-            KDS.Logging.Log(KDS.Logging.LogType.info,
-                            "Please provide a proper state for woof", True)
-    elif command_list[0] == "invl":
-        if len(command_list) > 1:
-            invlState = KDS.Convert.ToBool(command_list[1])
-            if invlState != None:
-                global godmode
-                godmode = invlState
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Invulnerability state has been set to: " + str(godmode))
+                KDS.Console.Feed.append("Please provide a proper state for invl")
+        elif command_list[0] == "finish":
+            if len(command_list) > 1 and command_list[1] == "missions":
+                KDS.Console.Feed.append("Missions Finished.")
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Mission finish issued through console.", True)
+                KDS.Missions.Finish()
+            elif len(command_list) == 1:
+                KDS.Console.Feed.append("Level Finished.")
+                KDS.Logging.Log(KDS.Logging.LogType.info, "Level finish issued through console.", True)
+                level_finished = True
             else:
-                KDS.Logging.Log(KDS.Logging.LogType.info,
-                                "Please provide a proper state for invl", True)
+                KDS.Console.Feed.append("Please provide a proper finish type.")
+        elif command_list[0] == "help":
+            KDS.Console.Feed.append("""
+    Console Help:
+        - give => Adds the specified item to your inventory.
+        - playboy => Sets Koponen's happiness to unseen levels.
+        - kill | stop => Stops the game.
+        - killme => Kills the player.
+        - terms => Sets Terms and Conditions accepted to the specified value.
+        - woof => Sets all bulldogs anger to the specified value.
+        - finish => Finishes level or missions.
+        - invl => Sets invulnerability mode to the specified value.
+        - help => Shows the list of commands.
+    """)
         else:
-            KDS.Logging.Log(KDS.Logging.LogType.info,
-                            "Please provide a proper state for invl", True)
-    elif command_list[0] == "finish":
-        if len(command_list) > 1 and command_list[1] == "missions":
-            KDS.Logging.Log(KDS.Logging.LogType.info, "Mission finish issued through console.", True)
-            KDS.Missions.Finish()
-        elif len(command_list) <= 1:
-            KDS.Logging.Log(KDS.Logging.LogType.info, "Level finish issued through console.", True)
-            level_finished = True
-        else:
-            KDS.Logging.Log(KDS.Logging.LogType.info, "Please provide a proper finish type.", True)
-    elif command_list[0] == "help":
-        KDS.Logging.Log(KDS.Logging.LogType.info, """
-Console Help:
-    - give [item: str] => Adds the specified item to your inventory. Allows to add items not available in-game.
-    - playboy => Sets Koponen's happiness to unseen levels.
-    - kill / stop => Stops the game.
-    - killme => Kills the player.
-    - terms [state: bool] => Sets Terms and Conditions accepted to specified value.
-    - woof [state: bool] => Sets all bulldogs anger to specified value.
-    - finish => Finishes level or missions.
-    - invl => Sets invulnerability mode on/off
-    - help => Shows a list of commands.
-""", True)
-    else:
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "This command does not exist.", True)
+            KDS.Console.Feed.append("Invalid Command.")
 #endregion
 #region Terms and Conditions
 def agr(tcagr: bool):
@@ -2959,7 +2927,7 @@ while main_running:
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
-                console()
+                go_to_console = True
             elif event.key == K_F3:
                 DebugMode = not DebugMode
             elif event.key == K_F4:
@@ -3433,6 +3401,17 @@ while main_running:
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         level_finished_menu()
         level_finished = False
+    if go_to_console:
+        KDS.Scores.ScoreCounter.pause()
+        KDS.Audio.MusicMixer.pause()
+        KDS.Audio.pauseAllSounds()
+        game_pause_background = pygame.transform.scale(screen.copy(), display_size)
+        pygame.mouse.set_visible(True)
+        console()
+        pygame.mouse.set_visible(False)
+        KDS.Audio.MusicMixer.unpause()
+        KDS.Audio.unpauseAllSounds()
+        KDS.Scores.ScoreCounter.unpause()
     if go_to_main_menu:
         KDS.Audio.stopAllSounds()
         KDS.Audio.MusicMixer.stop()
