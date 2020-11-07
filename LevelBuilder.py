@@ -15,6 +15,7 @@ import KDS.ConfigManager
 import KDS.System
 import KDS.Math
 import KDS.UI
+import KDS.Console
 import numpy
 import tkinter 
 import re
@@ -95,6 +96,9 @@ keys_pressed = {
     K_LSHIFT: False,
     K_LCTRL: False,
 }
+
+KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0))
+
 ##################################################
 
 class tileInfo:
@@ -187,6 +191,7 @@ def resizeGrid(size, grid: list):
                 row.pop()
     return grid
 
+"""
 def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = ""):
     pygame.key.set_repeat(500, 31)
     r = True
@@ -252,6 +257,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
             main_display.blit(harbinger_font_small.render(warningText, True, KDS.Colors.White), (consoleText.get_width() + 20, 15))
         pygame.display.update()
     pygame.key.set_repeat(0, 0)
+"""
 
 def saveMap(grd, name: str):
     outputString = ''
@@ -377,35 +383,35 @@ def generateLevelProp():
     """
     Generate a levelProp.kdf using this tool.
     """
-    ic = KDS.Convert.ToBool(inputConsole("Darkness Enabled: (bool) >>> ", False))
+    ic = KDS.Convert.ToBool(KDS.Console.Start("Darkness Enabled: (bool)", False, KDS.Console.CheckTypes.Bool()))
     if isinstance(ic, bool):
         dark = ic
     else:
         dark = False
     if dark:
-        ic = int(inputConsole("Darkness Strength: (int[0, 255]) >>> ", False))
+        ic = int(KDS.Console.Start("Darkness Strength: (int[0, 255])", False, KDS.Console.CheckTypes.Int()))
     else:
         ic = 0
     darkness = KDS.Math.Clamp(ic, 0, 255)
     
-    ic = KDS.Convert.ToBool(inputConsole("Ambient Light Enabled: (bool) >>> ", False))
+    ic = KDS.Convert.ToBool(KDS.Console.Start("Ambient Light Enabled: (bool)", False, KDS.Console.CheckTypes.Bool()))
     if isinstance(ic, bool):
         ambient_light = ic
     else:
         ambient_light = False
     if ambient_light:
-        ic = inputConsole("Ambient Light Strength: (int, int, int) >>> ", False).replace(" ", "").split(",")
+        ic = KDS.Console.Start("Ambient Light Tint: (int, int, int)", False, KDS.Console.CheckTypes.Tuple(3, 0, 255)).replace(" ", "").split(",")
     else:
         ic = (0, 0, 0)
     ambient_light_tint = (int(ic[0]), int(ic[1]), int(ic[2]))
     
-    ic = inputConsole("Player Start Position: (int, int) >>> ", False, defVal="100, 100").replace(" ", "").split(",")
+    ic = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100").replace(" ", "").split(",")
     p_start_pos = (int(ic[0]), int(ic[1]))
     
-    ic = inputConsole("Koponen Start Position: (int, int) >>> ", False, defVal="200, 200").replace(" ", "").split(",")
+    ic = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200").replace(" ", "").split(",")
     k_start_pos = (int(ic[0]), int(ic[1]))
     
-    ic = inputConsole("Time Bonus Range in seconds: (full points: int, no points: int) >>> ", False).replace(" ", "").split(",")
+    ic = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0)).replace(" ", "").split(",")
     tb_start = int(ic[0])
     tb_end = int(ic[1])
     
@@ -463,7 +469,7 @@ def main():
     main_display.fill(KDS.Colors.Black)
     
     if grid == None:
-        g = inputConsole("Grid size: (int, int) >>>  ", allowEscape=False, gridSizeExtras=True).replace(" ", "").split(",")
+        g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000)).replace(" ", "").split(",")
             
         gridSize = (int(g[0]), int(g[1]))
         grid = loadGrid(gridSize)
@@ -487,14 +493,14 @@ def main():
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
                     if keys_pressed[K_LSHIFT]:
-                        scroll[1] -= 1
-                    else:
                         scroll[0] -= 1
+                    else:
+                        scroll[1] -= 1
                 elif event.button == 5:
                     if keys_pressed[K_LSHIFT]:
-                        scroll[1] += 1
-                    else:
                         scroll[0] += 1
+                    else:
+                        scroll[1] += 1
                 elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
@@ -505,10 +511,10 @@ def main():
                 if event.key == K_LCTRL:
                     keys_pressed[K_LCTRL] = True
                 elif event.key == K_t:
-                    inputConsole_output = inputConsole()
+                    inputConsole_output = KDS.Console.Start()
                 elif event.key == K_r:
-                    resize_output = inputConsole("New grid size: (int, int) >>>  ", True, True)
-                    if resize_output != None:
+                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000))
+                    if len(resize_output) > 0:
                         resize_output = resize_output.replace(" ", "").split(",")
                         grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_s:

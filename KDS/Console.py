@@ -2,7 +2,7 @@ from inspect import currentframe
 import re
 import sys
 import math
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import KDS.Colors
 import KDS.Convert
 import KDS.Logging
@@ -33,12 +33,17 @@ feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
-def init(_window, _display, _display_size, _Fullscreen, _clock):
+class ConsoleDefaultFullscreen:
+    offset = (0, 0)
+    scaling = 1
+
+def init(_window, _display, _clock, _Fullscreen = None, _Offset: Tuple[int, int] = None):
     global window, display, display_size, Fullscreen, clock, defaultBackground
     window = _window
     display = _display
-    display_size = _display_size
-    Fullscreen = _Fullscreen
+    display_size = display.get_size()
+    ConsoleDefaultFullscreen.offset = _Offset if _Offset != None else ConsoleDefaultFullscreen.offset
+    Fullscreen = _Fullscreen if _Fullscreen != None else ConsoleDefaultFullscreen
     clock = _clock
     defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
     pygame.scrap.init()
@@ -92,13 +97,14 @@ Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: Dict[str, any] = None, showFeed: bool = False) -> str:
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: Dict[str, any] = None, showFeed: bool = False, defVal: str = None) -> str:
     global Escaped, Feed, OldCommands
-    commandsFound = commands
-    previousCommandsFound = commandsFound
-    commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
-    cmd = ""
-    lastCmd = ""
+    if commands != None:
+        commandsFound = commands
+        previousCommandsFound = commandsFound
+        commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
+    cmd = "" if defVal == None else defVal
+    lastCmd = cmd
     tabbedCmd = ""
     suggestionPathIndex = 0
     suggestionIndex = 0
@@ -122,7 +128,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     oldIndex = -1
     
     if checkType != None and checkType["type"] == "commands" and commands != None: checkType = None
-    else: KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
+    elif checkType["type"] == "commands" or commands != None: KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
     
     def addText(text: str):
         nonlocal cursor_index, cmd
