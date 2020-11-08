@@ -1,8 +1,6 @@
 *.pyc
 *.vscode/
 *.vs/
-*.db
-*.ini
 ~$S Script.docx
 
 ### GitHub default .gitignore for Python below ###
