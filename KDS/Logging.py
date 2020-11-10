@@ -76,13 +76,15 @@ def Profiler(enabled):
     elif not enabled and profiler_running:
         profiler_running = False
         profile.disable()
-        log_stream = open(logFileName, "a+")
-        log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
-        ps = pstats.Stats(profile, stream=log_stream)
-        ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
-        ps.print_stats()
-        log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
-        log_stream.close()
+        try:
+            log_stream = open(logFileName, "a+")
+            log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
+            ps = pstats.Stats(profile, stream=log_stream)
+            ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
+            ps.print_stats()
+            log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
+            log_stream.close()
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
         
 def quit():
     global running

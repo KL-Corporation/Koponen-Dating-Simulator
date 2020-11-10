@@ -499,10 +499,12 @@ farting = False
 
 renderPlayer = True
 
-with open("Assets/Maps/map_names.txt", "r") as file:
-    cntnts = file.read()
-    cntnts = cntnts.split('\n')
-    file.close()
+try:
+    with open("Assets/Maps/map_names.txt", "r") as file:
+        cntnts = file.read()
+        cntnts = cntnts.split('\n')
+        file.close()
+except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
 
 map_names = tuple(cntnts)
 
@@ -597,8 +599,10 @@ class WorldData():
                     else:
                         KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
                 shutil.rmtree(fpath)
-        with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
-            map_data = map_file.read().split("\n")
+        try:
+            with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
+                map_data = map_file.read().split("\n")
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
 
         global dark, darkness, ambient_light, ambient_light_tint, player_light
         dark = KDS.ConfigManager.GetLevelProp("Darkness", "enabled", False)
@@ -667,8 +671,10 @@ class WorldData():
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
 
-with open ("Assets/Textures/build.json", "r") as f:
-    data = f.read()
+try:
+    with open ("Assets/Textures/build.json", "r") as f:
+        data = f.read()
+except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
 
 buildData = json.loads(data)
 

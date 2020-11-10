@@ -17,19 +17,20 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
 
 def GetJSON(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
     if os.path.isfile(FilePath):
-        with open(FilePath, "r") as f:
-            try:
-                config = json.loads(f.read())
-            except json.decoder.JSONDecodeError:
-                config = {}
+        try:
+            with open(FilePath, "r") as f:
+                try: config = json.loads(f.read())
+                except json.decoder.JSONDecodeError: config = {}
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
     else:
         config = {}
     if SaveDirectory not in config:
         config[SaveDirectory] = {}
     if SaveName not in config[SaveDirectory]:
         config[SaveDirectory][SaveName] = DefaultValue
-        with open(FilePath, "w") as f:
-            f.write(json.dumps(config, sort_keys=True, indent=4))
+        try:
+            with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
     return config[SaveDirectory][SaveName]
 
 def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
@@ -41,8 +42,10 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
     return GetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
 
 def GetGameSetting(*path: str):
-    with open("Assets/GameSettings.kdf") as f:
-        data: dict = json.loads(f.read())
+    try:
+        with open("Assets/GameSettings.kdf") as f:
+            data: dict = json.loads(f.read())
+    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
     value = data
     for p in path:
         value = value[p]
@@ -53,18 +56,19 @@ def GetLevelProp(SaveDirectory: str, SaveName: str, DefaultValue):
 
 def SetJSON(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
     if os.path.isfile(FilePath):
-        with open(FilePath, "r") as f:
-            try:
-                config = json.loads(f.read())
-            except json.decoder.JSONDecodeError:
-                config = {}
+        try:
+            with open(FilePath, "r") as f:
+                try: config = json.loads(f.read())
+                except json.decoder.JSONDecodeError: config = {}
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
     else:
         config = {}
     if SaveDirectory not in config:
         config[SaveDirectory] = {}
     config[SaveDirectory][SaveName] = SaveValue
-    with open(FilePath, "w") as f:
-        f.write(json.dumps(config, sort_keys=True, indent=4))
+    try:
+        with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
+    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
 
 def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     """
@@ -136,9 +140,11 @@ class Save:
                 toStringF = getattr(item, "toString", None)
                 if callable(toStringF):
                     toStringF()
-            with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
-                temp = pickle.dumps(SaveItem)
-                f.write(temp)
+            try:
+                with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
+                    temp = pickle.dumps(SaveItem)
+                    f.write(temp)
+            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
             for item in SaveItem:
                 fromStringF = getattr(item, "fromString", None)
                 if callable(fromStringF):
@@ -148,16 +154,20 @@ class Save:
     def SetPlayer(SafeName: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             if os.path.isfile(Save.PlayerFileCache):
-                with open(Save.PlayerFileCache, "r") as f:
-                    try:
-                        data = json.loads(f.read())
-                    except json.decoder.JSONDecodeError:
-                        data = {}
+                try:
+                    with open(Save.PlayerFileCache, "r") as f:
+                        try:
+                            data = json.loads(f.read())
+                        except json.decoder.JSONDecodeError:
+                            data = {}
+                    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
             else:
                 data = {}
             data[SafeName] = SaveItem
-            with open(Save.PlayerFileCache, "w") as f:
-                f.write(json.dumps(data, sort_keys=True, indent=4))
+            try:
+                with open(Save.PlayerFileCache, "w") as f:
+                    f.write(json.dumps(data, sort_keys=True, indent=4))
+            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
     
     @staticmethod
     def GetWorld(SafeName: str, DefaultValue):
@@ -180,8 +190,10 @@ class Save:
     def GetPlayer(SafeName: str, DefaultValue):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             if os.path.isfile(Save.PlayerFileCache):
-                with open(Save.PlayerFileCache, "r") as f:
-                    data = json.loads(f.read())
+                try:
+                    with open(Save.PlayerFileCache, "r") as f:
+                        data = json.loads(f.read())
+                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
                 if SafeName in data:
                     return data[SafeName]
                 else:
