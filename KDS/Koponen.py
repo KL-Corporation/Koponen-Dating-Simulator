@@ -25,7 +25,8 @@ line_reveal_speed = 5
 line_scroll_speed = 1
 min_time_before_scroll = 120 #ticks
 auto_scroll_offset_index = 10
-scroll_to_bottom_rect = pygame.Rect(665, 365, 25, 25)
+scroll_to_bottom_rect = pygame.Rect(640, 340, 50, 50)
+scroll_arrow_padding = 5
 scroll_to_bottom_colors = {
     "default": (KDS.Colors.DarkGray),
     "highlighted": (KDS.Colors.Gray),
@@ -230,19 +231,19 @@ class Prefixes:
     player = "p:"
     koponen = "k:"
     class Rendered:
-        player = text_font.render(f"ERROR: ", True, text_color)
+        player = text_font.render("ERROR: ", True, text_color)
         koponen = text_font.render("Koponen: ", True, text_color)
 
 def init(playerName: str):
     global talk_background, talk_foregrounds, talk_foreground, scrollArrow, scrollToBottomButton
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
-    scrollArrow = pygame.transform.rotate(pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert(), 90)
+    scrollArrow = pygame.transform.scale(pygame.transform.rotate(pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha(), -90), (scroll_to_bottom_rect.width - scroll_arrow_padding * 2, scroll_to_bottom_rect.height - scroll_arrow_padding * 2))
     scrollToBottomButton = KDS.UI.Button(scroll_to_bottom_rect, Talk.Conversation.scrollToBottom, scrollArrow, scroll_to_bottom_colors["default"], scroll_to_bottom_colors["highlighted"], scroll_to_bottom_colors["pressed"])
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"):
         talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_foregrounds)
     talk_foreground = talk_foregrounds[0]
-    Prefixes.player = text_font.render(f"{playerName}: ", True, KDS.Colors.White)
+    Prefixes.Rendered.player = text_font.render(f"{playerName}: ", True, text_color)
 
 class Talk:
     running = False
@@ -308,7 +309,7 @@ class Talk:
         surface_size = surface.get_size()
         Talk.running = True
         while Talk.running:
-            mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+            mouse_pos = (int((pygame.mouse.get_pos()[0] - conversation_rect.left - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - conversation_rect.top - Fullscreen.offset[1]) / Fullscreen.scaling))
             c = False
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -321,7 +322,7 @@ class Talk:
                     if event.button == 4:
                         Talk.Conversation.scroll = max(Talk.Conversation.scroll - line_scroll_speed, 0)
                     elif event.button == 5:
-                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, len(Talk.lines) - 1)
+                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, len(Talk.lines) - Talk.lineCount)
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True
@@ -346,3 +347,20 @@ Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommel
 Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
 Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
 Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)

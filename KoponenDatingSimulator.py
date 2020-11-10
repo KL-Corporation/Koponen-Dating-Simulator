@@ -181,6 +181,7 @@ KDS.Scores.init()
 KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
 KDS.Console.init(window, display, clock, Fullscreen)
+
 #KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
 #endregion
 #region Loading

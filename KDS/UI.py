@@ -24,7 +24,7 @@ class Slider:
     8. handle_pressed_color (OPTIONAL): The color of the handle in idle state. [DEFAULT: (90, 90, 90)]
     """
 
-    def __init__(self, safe_name, slider_rect, handle_size: Tuple[int, int], default_value=0.0, handle_move_area_padding=(0, 0), slider_default_color=(120, 120, 120), slider_fill_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), lerp_duration=3, custom_dir: str = None, custom_safename: str = None):
+    def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: float = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 3, custom_dir: str = None, custom_safename: str = None):
         self.safe_name = safe_name
         self.slider_rect = slider_rect
         self.handle_rect = pygame.Rect(self.slider_rect.midleft[0] + (float(KDS.ConfigManager.GetSetting("Sliders", safe_name, str(default_value))) * self.slider_rect.width) - (handle_size[0] / 2), slider_rect.centery - (handle_size[1] / 2), handle_size[0], handle_size[1])
@@ -165,7 +165,7 @@ class Switch:
     8. handle_pressed_color (OPTIONAL): The color of the handle in idle state. [DEFAULT: (90, 90, 90)]
     """
 
-    def __init__(self, safe_name, switch_rect, handle_size: Tuple[int, int], default_value=False, switch_move_area_padding=(0, 0), switch_off_color=(120, 120, 120), switch_on_color=(0, 120, 0), handle_default_color=(100, 100, 100), handle_highlighted_color=(115, 115, 115), handle_pressed_color=(90, 90, 90), fade_lerp_duration=3, move_lerp_duration=15, custom_dir: str = None, custom_safename: str = None):
+    def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: bool = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 3, move_lerp_duration: int = 15, custom_dir: str = None, custom_safename: str = None):
         self.safe_name = safe_name
         self.switch_rect = switch_rect
         self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting("Switches", safe_name, str(default_value)))

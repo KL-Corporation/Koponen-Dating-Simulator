@@ -160,7 +160,7 @@ class Save:
                             data = json.loads(f.read())
                         except json.decoder.JSONDecodeError:
                             data = {}
-                    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
             else:
                 data = {}
             data[SafeName] = SaveItem
