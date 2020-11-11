@@ -66,6 +66,7 @@ pygame.display.set_caption("Koponen Dating Simulator")
 window_size = tuple(KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800)))
 window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_info = pygame.display.Info()
+#Nice
 window_resize_size = window_size
 display_size = (1200, 800)
 display = pygame.Surface(display_size)
@@ -416,6 +417,7 @@ plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
+#Nice
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
 #endregion
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
