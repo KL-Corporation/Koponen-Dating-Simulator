@@ -1,3 +1,4 @@
+from inspect import currentframe
 import os
 import random
 from typing import List, Tuple
@@ -10,6 +11,7 @@ import KDS.Convert
 import KDS.Animator
 import KDS.Audio
 import KDS.UI
+import KDS.Logging
 import KDS.Math
 
 #region Settings
@@ -253,31 +255,41 @@ class Talk:
     lineCount = math.floor((surface.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     
     lines: List[str] = []
+    scheduled: List[str] = []
         
     class Conversation:
         @staticmethod
         def scrollToBottom():
-            Talk.Conversation.scroll = len(Talk.lines) - Talk.lineCount
+            Talk.Conversation.scroll = max(len(Talk.lines) - Talk.lineCount, 0)
         scroll = 0
+        animationProgress = -1
+        animationWidth = 0
+        newAnimation = False
         
         @staticmethod
         def schedule(text, prefix: Prefixes and str):
             prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.surface_size[0] - text_padding.left - text_padding.right - prefixWidth)
-            for _text in lineSplit:
-                Talk.lines.append(prefix + _text)
-            itemsDeleted = 0
-            while len(Talk.lines) > 1000:
-                del Talk.lines[0]
-                itemsDeleted += 1
-            if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index:
-                Talk.Conversation.scrollToBottom()
+            for _text in lineSplit: Talk.scheduled.append(prefix + _text)
+        
+        @staticmethod
+        def update():
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0:
+                Talk.lines.append(Talk.scheduled.pop(0))
+                Talk.Conversation.newAnimation = True
+                deleteCount = 0
+                while len(Talk.lines) > 1000:
+                    del Talk.lines[0]
+                    deleteCount += 1
+                if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index: Talk.Conversation.scrollToBottom()
+                else: Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
         
         @staticmethod
         def render(mouse_pos: Tuple[int, int], clicked: bool):
             Talk.surface.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
             
+            lastIncluded = False
             for i in range(Talk.Conversation.scroll, min(Talk.Conversation.scroll + Talk.lineCount + 1, len(Talk.lines))):
                 text = Talk.lines[i]
                 if text[:2] == Prefixes.player: prefix = Prefixes.Rendered.player
@@ -285,23 +297,43 @@ class Talk:
                 offsetX = text_padding.left + prefix.get_width()
                 offsetY = text_padding.top + (i - Talk.Conversation.scroll) * line_spacing
                 Talk.surface.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
-                if i - 1 < 0 or text[:2] != Talk.lines[i - 1][:2]:
+                if i - 1 < 0 or text[:2] != Talk.lines[i - 1][:2]: 
                     Talk.surface.blit(prefix, (text_padding.left, offsetY))
                 
-                if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index:
-                    scrollToBottomButton.update(Talk.surface, mouse_pos, clicked)
+                if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.surface, mouse_pos, clicked)
+                
+                if i == len(Talk.lines) - 1: lastIncluded = True
+
+            if len(Talk.lines) > 0:
+                animationRectTarget = pygame.Rect(text_padding.left + (Prefixes.Rendered.player if Talk.lines[-1][:2] == Prefixes.player else Prefixes.Rendered.koponen).get_width(),
+                                                text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(Talk.lines[-1][2:])[0], text_font.get_height())
+            else:
+                KDS.Logging.AutoError("No lines found! Line reveal animation might break.", currentframe())
+                animationRectTarget = pygame.Rect(0, 0, 5, 5)
+                
+            if Talk.Conversation.newAnimation:
+                Talk.Conversation.newAnimation = False
+                Talk.Conversation.animationProgress = 0.0
+                Talk.Conversation.animationWidth = animationRectTarget.width
+                
+            if Talk.Conversation.animationProgress >= 1.0:
+                Talk.Conversation.animationProgress = -1
+            if Talk.Conversation.animationProgress != -1:
+                Talk.Conversation.animationWidth = max(Talk.Conversation.animationWidth - line_reveal_speed, 0)
+                Talk.Conversation.animationProgress = KDS.Math.Remap(Talk.Conversation.animationWidth, animationRectTarget.width, 0, 0, 1)
+                if lastIncluded:
+                    pygame.draw.rect(Talk.surface, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
             
             pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
-            
             return Talk.surface
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool):
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_foreground, (40, 474))
+        Talk.Conversation.update()
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
-        
-            
+
     @staticmethod
     def start(window: pygame.Surface, surface: pygame.Surface, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
         global talk_foreground
@@ -322,7 +354,7 @@ class Talk:
                     if event.button == 4:
                         Talk.Conversation.scroll = max(Talk.Conversation.scroll - line_scroll_speed, 0)
                     elif event.button == 5:
-                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, len(Talk.lines) - Talk.lineCount)
+                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, max(len(Talk.lines) - Talk.lineCount, 0))
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True
@@ -332,35 +364,45 @@ class Talk:
                     ResizeWindow(event.size)
                 
                 
-            Talk.renderMenu(surface, mouse_pos, False)
+            Talk.renderMenu(surface, mouse_pos, c)
             window.blit(pygame.transform.scale(surface, (int(surface_size[0] * Fullscreen.scaling), int(surface_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
             pygame.display.update()
             window.fill(KDS.Colors.Black)
             clock.tick(fps)
     
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.player)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
-Talk.Conversation.schedule("testosteroni teksti juttu hommeli homma testi hommeli homma", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.player)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)
+Talk.Conversation.schedule(f"testosteroni teksti juttu hommeli homma testi hommeli homma {random.randint(1, 10)}", Prefixes.koponen)

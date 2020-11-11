@@ -140,7 +140,7 @@ class MultiAnimation:
         return self.active.update(reverse)
     
     def get_frame(self):
-        return self.active.reset()
+        return self.active.get_frame()
     
     def reset(self):
         for anim in self.animations:

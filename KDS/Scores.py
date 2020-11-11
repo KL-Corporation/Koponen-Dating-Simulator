@@ -1,5 +1,6 @@
 from inspect import currentframe
 import time
+from typing import Tuple
 import pygame
 import KDS.Animator
 import KDS.Audio
@@ -17,9 +18,8 @@ score = 0
 koponen_happiness = 40
 
 def init():
-    global pointSound, pointSound1
+    global pointSound
     pointSound = pygame.mixer.Sound("Assets/Audio/Effects/pointCount.ogg")
-    pointSound1 = pygame.mixer.Sound("Assets/Audio/Effects/pointCount1.ogg")
 
 class GameTime:
     formattedGameTime = "null"
@@ -88,8 +88,8 @@ class ScoreCounter:
 
 class ScoreAnimation:
     animationIndex = 0
-    animationList = ()
-    valueList = ()
+    animationList: Tuple = ()
+    valueList: Tuple = ()
     soundCooldown = 5
     finished = False
     
@@ -119,7 +119,7 @@ class ScoreAnimation:
                 if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                     ScoreAnimation.finished = True
             elif ScoreAnimation.soundCooldown > 2: 
-                KDS.Audio.playSound(pointSound1)
+                KDS.Audio.playSound(pointSound)
                 ScoreAnimation.soundCooldown = 0
             ScoreAnimation.soundCooldown += 1
                         
