@@ -768,7 +768,7 @@ class Inventory:
             return temp
 
     def useItem(self, Surface: pygame.Surface, *args):
-        if self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
+        if not isinstance(self.storage[self.SIndex], Lantern) and self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
             dumpValues = self.storage[self.SIndex].use(args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
@@ -779,7 +779,7 @@ class Inventory:
         return None
 
     def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
-        dumpValues = self.storage[index].use(args, Surface)
+        dumpValues = nullLantern.use(args, Surface)
         if direction:
             renderOffset = -dumpValues.get_size()[0]
         else:
@@ -1836,6 +1836,8 @@ class Lantern(Item):
         KDS.Audio.playSound(lantern_pickup)
 
         return False
+
+nullLantern = Lantern((0, 0), 33, texture = i_textures[33])
 
 class Chainsaw(Item):
     pickup_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_start.ogg")
@@ -3057,8 +3059,10 @@ while main_running:
 
     Item.render(Items, screen, scroll, DebugMode)
     player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
-    if 33 in player_inventory.storage:
-        Inventory.useSpecificItem(0, screen)
+    for item in player_inventory.storage:
+        if isinstance(item, Lantern):
+            player_inventory.useSpecificItem(0, screen)
+            break
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, Enemies, HitTargets, Particles, player_rect, player_health, DebugMode)
