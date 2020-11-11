@@ -367,6 +367,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Light Textures...")
 light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
 light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").convert_alpha()
+light_cone1 = pygame.image.load("Assets/Textures/Misc/light_350_cone_hard.png").convert_alpha()
 orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
 orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
 blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
@@ -529,12 +530,14 @@ lightsUpdating = 0
 player_light_sphere_radius = 300
 decor_head_light_sphere_radius = 150
 blue_light_scale = 40
+light_cone1_radius = 100
 
 light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
 light_sphere2 = pygame.transform.scale(light_sphere2, (player_light_sphere_radius, player_light_sphere_radius))
 orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
 orange_light_sphere2 = pygame.transform.scale(orange_light_sphere2, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
 blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scale, blue_light_scale))
+light_cone1 = pygame.transform.scale(light_cone1, (light_cone1_radius, light_cone1_radius))
 
 Items = numpy.array([])
 Enemies = numpy.array([])
@@ -1214,6 +1217,20 @@ class SkullTile(Tile):
     def update(self):
         return self.texture
 
+class WallLight(Tile):
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[71]
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = False
+        self.direction = True if serialNumber == 72 else False
+        self.texture = pygame.transform.flip(self.texture, self.direction, False)
+        self.light_t = pygame.transform.flip(light_cone1, self.direction, False).convert_alpha()
+
+    def update(self):
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - light_cone1_radius / 2 - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - light_cone1_radius/2), self.light_t))
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1235,7 +1252,9 @@ specialTilesD = {
     55: Candle,
     58: LampPoleLamp,
     59: Chair,
-    66: SkullTile
+    66: SkullTile,
+    71: WallLight,
+    72: WallLight
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")

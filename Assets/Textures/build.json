@@ -67,7 +67,11 @@
         "065":"gray_stone.png",
         "066":"skull.png",
         "067":"kaakeliseina.png",
-        "068":"iron_bars_texture.png"
+        "068":"iron_bars_texture.png",
+        "069":"nice.png",
+        "070":"block_r.png",
+        "071":"wall_light.png",
+        "072":"wall_light1.png"
     },
 
     "special_tiles": [
@@ -91,7 +95,9 @@
         55,
         58,
         59,
-        66
+        66,
+        71,
+        72
     ],
 
     "checkCollisionFalse": [
