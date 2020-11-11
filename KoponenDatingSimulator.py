@@ -3435,7 +3435,6 @@ while main_running:
         level_finished_menu()
         level_finished = False
     if go_to_console:
-        KDS.Scores.ScoreCounter.pause()
         KDS.Audio.MusicMixer.pause()
         KDS.Audio.pauseAllSounds()
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)
@@ -3444,7 +3443,6 @@ while main_running:
         pygame.mouse.set_visible(False)
         KDS.Audio.MusicMixer.unpause()
         KDS.Audio.unpauseAllSounds()
-        KDS.Scores.ScoreCounter.unpause()
     if go_to_main_menu:
         KDS.Audio.stopAllSounds()
         KDS.Audio.MusicMixer.stop()
