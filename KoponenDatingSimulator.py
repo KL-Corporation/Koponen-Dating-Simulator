@@ -66,6 +66,7 @@ pygame.display.set_caption("Koponen Dating Simulator")
 window_size = tuple(KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800)))
 window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
 window_info = pygame.display.Info()
+#Nice
 window_resize_size = window_size
 display_size = (1200, 800)
 display = pygame.Surface(display_size)
@@ -416,6 +417,7 @@ plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.9)
 player_shotgun_shot.set_volume(0.8)
+#Nice
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
 #endregion
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
@@ -657,7 +659,14 @@ class WorldData():
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif data[0] == "3":
-                            tiles[y][x] = Teleport((x*34, y*34), serialNumber=serialNumber)
+                            temp_teleport = Teleport((x*34, y*34), serialNumber=serialNumber)
+                            try: 
+                                Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
+                            except KeyError:
+                                Teleport.teleportT_IDS[serialNumber] = []
+                                Teleport.teleportT_IDS[serialNumber].append(temp_teleport)                               
+                            tiles[y][x] = temp_teleport
+                            del temp_teleport
                 else:
                     x += 1
             y += 1
@@ -1176,15 +1185,36 @@ class Candle(Tile):
         return self.texture.update()
 
 class Teleport(Tile):
+    tex = pygame.image.load("Assets/Textures/Misc/telep.png").convert()
+    tex.set_colorkey((255, 255, 255))
     def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
-        self.texture = soulsphere
+        self.texture = Teleport.tex
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
+        self.specialTileFlag = True
+        self.teleportReady = True
         self.serialNumber = serialNumber
     
     def update(self):
+        #Calculating next teleport with same serial number
+        index = Teleport.teleportT_IDS[self.serialNumber].index(self) + 1
+        if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
+            index = 0
+        if self.rect.colliderect(player_rect) and Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
+            #Executing teleporting process
+            player_rect.center = (Teleport.teleportT_IDS[self.serialNumber][index].rect.centerx, Teleport.teleportT_IDS[self.serialNumber][index].rect.y - 17)
+            Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
+            Teleport.last_teleported = True
+            #Reseting scroll
+            true_scroll[0] += (player_rect.x - true_scroll[0] - (screen_size[0] / 2))
+            true_scroll[1] += (player_rect.y - true_scroll[1] - 220) 
+        if not self.rect.colliderect(player_rect): #Checking if it is possible to release teleport from teleport-lock
+            Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
+
         return self.texture
+
+    teleportT_IDS = {}
 
 class LampPoleLamp(Tile):
     def __init__(self, position, serialNumber: int):        
@@ -2930,6 +2960,7 @@ while main_running:
                 if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
                     temp = player_inventory.dropItem()
                     temp.rect.x = player_rect.centerx
+                    temp.rect.y = player_rect.centery
                     counter = 0
                     while True:
                         temp.rect.y += temp.rect.height

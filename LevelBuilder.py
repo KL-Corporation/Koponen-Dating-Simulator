@@ -68,7 +68,7 @@ e_textures = {
 }
 
 teleports = {
-    "3001" : pygame.image.load("Assets/Textures/Items/empty.png").convert()
+    "3001" : pygame.image.load("Assets/Textures/Misc/telep.png").convert()
 }
 
 Atextures = {
