@@ -2930,6 +2930,7 @@ while main_running:
                 if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
                     temp = player_inventory.dropItem()
                     temp.rect.x = player_rect.centerx
+                    temp.rect.y = player_rect.centery
                     counter = 0
                     while True:
                         temp.rect.y += temp.rect.height
