@@ -97,7 +97,7 @@ class Slider:
 
 class Button:
 
-    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface | str = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
+    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface or str = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
         """Instantiates a new Button
 
         Args:
