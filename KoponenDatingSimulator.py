@@ -936,7 +936,7 @@ class Jukebox(Tile):
                 KDS.Audio.MusicMixer.pause()
                 loopStopper = 0
                 while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
-                    self.playing = int(random.uniform(0, len(jukebox_music)))
+                    self.playing = random.randint(0, len(jukebox_music) - 1)
                     loopStopper += 1
                 self.lastPlayed.pop(0)
                 self.lastPlayed.append(self.playing)
