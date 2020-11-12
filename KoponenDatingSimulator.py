@@ -948,6 +948,11 @@ class Jukebox(Tile):
         return self.texture
 
 class Door(Tile):
+    keys = {
+        24: "red",
+        25: "blue",
+        26: "green"
+    }
 
     def __init__(self, position: tuple[int, int], serialNumber: int, closingCounter = 600):        
         super().__init__(position, serialNumber)
@@ -961,11 +966,6 @@ class Door(Tile):
     
     def update(self):
         global player_rect
-        keys = {
-            24: "red",
-            25: "blue",
-            26: "green"
-        }
 
         if self.open:
             self.closingCounter += 1
@@ -975,7 +975,7 @@ class Door(Tile):
                 self.checkCollision = True
                 self.closingCounter = 0
         if KDS.Math.getDistance(player_rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
-            if self.serialNumber == 23 or player_keys[keys[self.serialNumber]]:
+            if self.serialNumber == 23 or player_keys[Door.keys[self.serialNumber]]:
                 KDS.Audio.playSound(door_opening)
                 self.closingCounter = 0
                 self.open = not self.open

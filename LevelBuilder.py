@@ -1,6 +1,8 @@
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
 import os
+
+from pygame import surface
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 from inspect import currentframe
@@ -28,7 +30,9 @@ root = tkinter.Tk()
 root.withdraw()
 pygame.init()
 display_size = (1600, 800)
-scalesize = 55
+scalesize = 68
+gamesize = 34
+scaleMultiplier = scalesize / gamesize
 
 main_display = pygame.display.set_mode(display_size)
 pygame.display.set_caption("KDS Level Builder")
@@ -48,7 +52,7 @@ t_textures = {}
 for element in data["tile_textures"]:
     srl = f"0{element}"
 
-    t_textures[srl] = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Map/" + data["tile_textures"][element]).convert(), (scalesize, scalesize), horizontalOnly=True)
+    t_textures[srl] = pygame.image.load("Assets/Textures/Map/" + data["tile_textures"][element]).convert()
     t_textures[srl].set_colorkey(KDS.Colors.White)
 
 i_textures = {}
@@ -109,7 +113,7 @@ KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200,
 
 class tileInfo:
     def __init__(self, position: (int, int), serialNumber = "0000 0000 0000 0000 / "):
-        self.rect = pygame.Rect(position[0], position[1], scalesize, scalesize)
+        self.rect = pygame.Rect(position[0], position[1], 1, 1)
         self.serialNumber = serialNumber
 
     def setNewSerialNumber(self, srlNumber: str):
@@ -127,28 +131,28 @@ class tileInfo:
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh = "0000", updttiles=True):
         brushtemp = brsh
-        if scroll[0] < 0:
-            scroll[0] = 0
-        if scroll[1] < 0:
-            scroll[1] = 0
-        bpos = [0, 0]
-        for row in renderList[scroll[1]:scroll[1]+int((display_size[1]/scalesize)+2)]:
-            for unit in row[scroll[0]:scroll[0]+int((display_size[0]/scalesize)+2)]:
-                blitPos = (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize)
-                pygame.draw.rect(Surface, (80, 30, 30), (blitPos[0], blitPos[1], scalesize, scalesize))
+        scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
+        scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
+        bpos = (0, 0)
+        
+        pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
+        for row in renderList[scroll[1] : scroll[1] + int((display_size[1] / scalesize) + 2)]:
+            for unit in row[scroll[0] : scroll[0] + int((display_size[0] / scalesize) + 2)]:
+                blitPos = (unit.rect.x * scalesize - scroll[0] * scalesize, unit.rect.y * scalesize - scroll[1] * scalesize)
                 mpos = pygame.mouse.get_pos()
                 tempSerial = unit.serialNumber.replace(" / ", "")
                 srlist = tempSerial.split()
                 for number in srlist:
-                    try:
-                        Surface.blit(Atextures[number[0]][number], (blitPos[0],blitPos[1]))
-                    except:
-                        pass
-                if unit.rect.collidepoint(mpos[0]+scroll[0]*scalesize, mpos[1]+scroll[1]*scalesize):
+                    if int(number) != 0:
+                        unitTexture = None
+                        try: unitTexture = Atextures[number[0]][number]
+                        except: print(f"Cannot render unit because texture is not added: {srlist}")
+                        if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
+                if unit.rect.collidepoint(mpos[0] / scalesize + scroll[0], mpos[1] / scalesize + scroll[1]):
                     if pygame.mouse.get_pressed()[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerialNumber(0)
-                    pygame.draw.rect(Surface,(20,20,20),(blitPos[0], blitPos[1], scalesize, scalesize), 2)
-                    bpos = [unit.rect.x/scalesize, unit.rect.y/scalesize]
+                    pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
+                    bpos = (unit.rect.x, unit.rect.y)
                     if pygame.mouse.get_pressed()[0] and updttiles:
                         if brsh != "0000":
                             unit.setNewSerialNumber(brsh)
@@ -158,9 +162,9 @@ class tileInfo:
                         unit.serialNumber = "0000 0000 0000 0000 / "
 
                     if keys_pressed[K_p] and unit.getSerialNumber(0)[0] == "3":
-                        pygame.draw.rect(Surface, (120,120,120), (unit.rect.x-scroll[0]*scalesize, unit.rect.y-scroll[1]*scalesize, 100, 30))
+                        pygame.draw.rect(Surface, (120, 120, 120), (unit.rect.x - scroll[0] * scalesize, unit.rect.y - scroll[1] * scalesize, 100, 30))
         
-        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
+        mousePosText = harbinger_font.render(f"({round(bpos[0] * scaleMultiplier)}, {round(bpos[1] * scaleMultiplier)})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
                 #print(unit.rect.topleft)
         return renderList, brushtemp
@@ -170,8 +174,10 @@ def loadGrid(size):
     for y in range(size[1]):
         row = []
         for x in range(size[0]):
-            row.append(tileInfo((x * scalesize, y * scalesize)))
+            row.append(tileInfo((x, y)))
         rlist.append(row)
+    global gridSize
+    gridSize = size
     return rlist
 
 def resizeGrid(size, grid: list):
@@ -181,7 +187,7 @@ def resizeGrid(size, grid: list):
         for y in range(grid_size[1], size[1]):
             row = []
             for x in range(grid_size[0]):
-                row.append(tileInfo((x * scalesize, y * scalesize)))
+                row.append(tileInfo((x, y)))
             grid.append(row)
     else:
         for y in range(abs(size_difference[1])):
@@ -190,11 +196,13 @@ def resizeGrid(size, grid: list):
         for y in range(len(grid)):
             row = grid[y]
             while len(row) < size[0]:
-                row.append(tileInfo(((len(row)) * scalesize, y * scalesize)))
+                row.append(tileInfo(((len(row)), y)))
     else:
         for row in grid:
             while len(row) > size[0]:
                 row.pop()
+    global gridSize
+    gridSize = size
     return grid
 
 """
@@ -285,7 +293,7 @@ def saveMapName():
         currentSaveName = savePath
 
 def openMap(): #Returns a 2d array
-    global currentSaveName
+    global currentSaveName, gridSize
     fileName = filedialog.askopenfilename(filetypes = (("Data file", "*.dat"), ("All files", "*.*")))
     if fileName:
         with open(fileName, 'r') as f:
@@ -320,12 +328,12 @@ def consoleHandler(inputString: str):
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
             for _ in range(int(commandlist[2])):
-                grid.append([tileInfo((x*scalesize, len(grid)*scalesize)) for x in range(len(grid[0]))])
+                grid.append([tileInfo((x, len(grid))) for x in range(len(grid[0]))])
         elif commandlist[1] == "cols":
             for _ in range(int(commandlist[2])):
                 y = 0
                 for row in grid:
-                    row.append(tileInfo((len(row)*scalesize, y*scalesize)))
+                    row.append(tileInfo((len(row), y)))
                     y += 1
     elif commandlist[0] == "gremv":
         if commandlist[1] == "rows":
@@ -431,7 +439,7 @@ def generateLevelProp():
         KDS.ConfigManager.SetJSON(savePath, "TimeBonus", "end", tb_end)
 
 def main():
-    global currentSaveName, brush, grid, modifiedAfterSave, timesModifiedAfterSave, btn_menu
+    global currentSaveName, brush, grid, gridSize, modifiedAfterSave, timesModifiedAfterSave, btn_menu, gamesize, scaleMultiplier, scalesize
     btn_menu = True
     grid = None
     def button_handler(_openMap: bool = False, _generateLevelProp: bool = False, _quit: bool = False):
@@ -494,11 +502,17 @@ def main():
                 if event.button == 4:
                     if keys_pressed[K_LSHIFT]:
                         scroll[0] -= 1
+                    elif keys_pressed[K_LCTRL]:
+                        scalesize = KDS.Math.Clamp(scalesize + 5, 1, 136)
+                        scaleMultiplier = scalesize / gamesize
                     else:
                         scroll[1] -= 1
                 elif event.button == 5:
                     if keys_pressed[K_LSHIFT]:
                         scroll[0] += 1
+                    elif keys_pressed[K_LCTRL]:
+                        scalesize = KDS.Math.Clamp(scalesize - 5, 1, 136)
+                        scaleMultiplier = scalesize / gamesize
                     else:
                         scroll[1] += 1
                 elif event.button == 2:
@@ -513,7 +527,7 @@ def main():
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start()
                 elif event.key == K_r:
-                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000))
+                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}")
                     if len(resize_output) > 0:
                         resize_output = resize_output.replace(" ", "").split(",")
                         grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
