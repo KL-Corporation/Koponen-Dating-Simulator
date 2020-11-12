@@ -239,8 +239,8 @@ green_door_closed = pygame.image.load(
     "Assets/Textures/Map/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
     "Assets/Textures/Map/blue_door_closed.png").convert()
-door_open = pygame.image.load(
-    "Assets/Textures/Map/door_open2.png").convert()
+door_open = pygame.image.load("Assets/Textures/Map/door_front.png").convert()
+exit_door_open = pygame.image.load("Assets/Textures/Map/door_open.png").convert_alpha()
 bricks = pygame.image.load("Assets/Textures/Map/bricks.png").convert()
 tree = pygame.image.load("Assets/Textures/Map/tree.png").convert()
 planks = pygame.image.load("Assets/Textures/Map/planks.png").convert()
@@ -823,9 +823,7 @@ class Tile:
         else:
             self.air = True
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
-        self.checkCollision = True
-        if self.serialNumber in sref:
-            self.checkCollision = False
+        self.checkCollision = True if self.serialNumber not in sref else False
 
     @staticmethod
     # Tile_list is a 2d numpy array
@@ -985,10 +983,7 @@ class Door(Tile):
                     if self.rect.centerx - player_rect.centerx > 0: player_rect.right = self.rect.left
                     else: player_rect.left = self.rect.right
                 self.checkCollision = not self.checkCollision
-        if not self.open:
-            return self.texture
-        else:
-            return self.opentexture
+        return self.texture if not self.open else self.opentexture
 
 class Landmine(Tile):
     def __init__(self, position: tuple[int, int], serialNumber: int):        
@@ -1151,20 +1146,37 @@ class GoryHead(Tile):
         return self.texture
 
 class LevelEnder(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):       
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 16, 34, 50)
         self.checkCollision = False
 
     def update(self):
-        global level_finished
         Lights.append(KDS.World.Lighting.Light( (self.rect.x, self.rect.y), blue_light_sphere1))
         if player_rect.colliderect(self.rect):
-            screen.blit(level_ender_tip, (self.rect.x - level_ender_tip.get_width() / 2 - scroll[0], self.rect.y - 40 - scroll[1]))
+            screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey):
                 KDS.Missions.Listeners.LevelEnder.Trigger()
         return t_textures[self.serialNumber]
+    
+class LevelEnderDoor(Tile):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.opentexture = exit_door_open
+        self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
+        self.checkCollision = False
+        self.opened = False
+
+    def update(self):
+        if player_rect.colliderect(self.rect):
+            screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+                KDS.Missions.Listeners.LevelEnder.Trigger()
+                KDS.Audio.playSound(door_opening)
+                self.opened = True
+        return t_textures[self.serialNumber] if not self.opened else self.opentexture
 
 class Candle(Tile):
     def __init__(self, position: tuple[int, int], serialNumber: int):        
@@ -1282,7 +1294,8 @@ specialTilesD = {
     59: Chair,
     66: SkullTile,
     71: WallLight,
-    72: WallLight
+    72: WallLight,
+    73: LevelEnderDoor
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -1837,12 +1850,11 @@ class FireExtinguisher(Item):
     def pickup(self):
         return False
 
-class LevelEnder1(Item):
+class LevelEnderItem(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global level_finished
         if args[0][0]:
             KDS.Missions.Listeners.LevelEnder.Trigger()
 
@@ -1958,7 +1970,7 @@ Item.serialNumbers = {
     28:BloodFlask,
     29:Grenade,
     30:FireExtinguisher,
-    31:LevelEnder1,
+    31:LevelEnderItem,
     32:Ppsh41Mag,
     33:Lantern,
     34:Chainsaw,
