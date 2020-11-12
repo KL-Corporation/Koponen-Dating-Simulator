@@ -71,8 +71,7 @@ class Task:
         Missions.GetMission(missionName).AddTask(safeName, self)
         
     def Progress(self, Value: float, Add: bool = False):
-        if Add: self.progress += Value
-        else: self.progress = Value
+        self.progress = self.progress + Value if Add else Value
         if self.progress >= 1.0:
             self.finished = True
             self.progress = 1.0
