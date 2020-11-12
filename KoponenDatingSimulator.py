@@ -2335,6 +2335,7 @@ def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_
     if reset_scroll:
         true_scroll = KDS.ConfigManager.Save.GetPlayer("scroll", [-200, -190])
     pygame.event.clear()
+    KDS.Keys.Reset()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
 def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")

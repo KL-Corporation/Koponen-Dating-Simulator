@@ -339,8 +339,8 @@ def InitialiseMissions(LevelIndex):
         Presets.KoponenIntroduction()
         
         InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
-        InitialiseTask("first_mission", "find_mug", "Etsi Koposen Kahvikuppi")
-        InitialiseTask("first_mission", "return_mug", "Palauta Koposen Kahvikuppi", (Listeners.KoponenReturnMission, 1.0))
+        InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi")
+        InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi", (Listeners.KoponenReturnMission, 1.0))
         
         InitialiseMission("sauna_and_exit", "Suuret Haaveet")
         InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
