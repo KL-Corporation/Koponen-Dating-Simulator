@@ -124,6 +124,11 @@ class tileInfo:
             serialIdentifier += 1
         self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier+4:]
 
+    def setNewSerialNumber_attempt2(self, srlNumber, slot):
+        #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
+        #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+
     def getSerialNumber(self, index):
         if index > 0:
             index += 1
@@ -147,8 +152,13 @@ class tileInfo:
                     if int(number) != 0:
                         unitTexture = None
                         try: unitTexture = Atextures[number[0]][number]
-                        except: print(f"Cannot render unit because texture is not added: {srlist}")
+                        except: 
+                            if number[0] == '3':
+                                unitTexture = Atextures["3"]["3001"]
+                            else:
+                                print(f"Cannot render unit because texture is not added: {srlist}")
                         if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
+
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize):
                     if pygame.mouse.get_pressed()[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerialNumber(0)
@@ -161,10 +171,12 @@ class tileInfo:
                             unit.serialNumber = "0000 0000 0000 0000 / "
                     if pygame.mouse.get_pressed()[2]:
                         unit.serialNumber = "0000 0000 0000 0000 / "
+                    if keys_pressed[K_p] and unit.serialNumber[0] == "3":
+                        temp_serial = int(KDS.Console.Start('New serial number for teleport: ', False, KDS.Console.CheckTypes.Int(0, 999)))
+                        temp_serial = f"3{temp_serial:03d}"
+                        unit.setNewSerialNumber_attempt2(temp_serial, 0)
+                        keys_pressed[K_p] = False
 
-                    if keys_pressed[K_p] and unit.getSerialNumber(0)[0] == "3":
-                        pygame.draw.rect(Surface, (120, 120, 120), (unit.pos[0] - scroll[0] * scalesize, unit.pos[0] - scroll[1] * scalesize, 100, 30))
-        
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
         return renderList, brushtemp
