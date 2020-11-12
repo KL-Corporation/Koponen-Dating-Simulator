@@ -10,6 +10,7 @@ import KDS.Convert
 import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
+import KDS.Koponen
 from inspect import currentframe
 #endregion
 #region Settings
@@ -43,14 +44,13 @@ class Listener:
     def Trigger(self):
         for listnr in self.listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
-            
+           
 class Listeners:
     InventorySlotSwitching = Listener()
     Movement = Listener()
     KoponenTalk = Listener()
-    KoponenRequestMission = Listener()
-    KoponenReturnMission = Listener()
     KoponenAskDate = Listener()
+    KoponenRequestMission = Listener()
     iPuhelinPickup = Listener()
     iPuhelinDrop = Listener()
     LevelEnder = Listener()
@@ -96,6 +96,17 @@ class Task:
                 self.color.changeValues(TaskColor, TaskUnFinishedColor)
         self.lastFinished = self.finished
         return surface
+
+class KoponenTask(Task):
+    def __init__(self, missionName: str, safeName: str, text: str, itemID: int) -> None:
+        super().__init__(missionName, safeName, text)
+        koponenTaskCount = 0
+        for task in Missions.GetMission(missionName).GetTaskList():
+            if isinstance(task, KoponenTask): koponenTaskCount += 1
+        if koponenTaskCount > 1:
+            KDS.Logging.AutoError("Only one Koponen Task allowed per mission!", currentframe())
+        else: self.item = itemID
+        
 
 class Mission:
     def __init__(self, safeName: str, text: str) -> None:
@@ -340,7 +351,7 @@ def InitialiseMissions(LevelIndex):
         
         InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
         InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi")
-        InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi", (Listeners.KoponenReturnMission, 1.0))
+        InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi")
         
         InitialiseMission("sauna_and_exit", "Suuret Haaveet")
         InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))

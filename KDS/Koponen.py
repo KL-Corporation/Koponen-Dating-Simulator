@@ -44,6 +44,8 @@ class text_padding:
 pygame.init()
 pygame.key.stop_text_input()
 
+Task = None
+
 """
 def koponen_talk():
     global main_running, currently_on_mission, player_score, ad_images, koponen_talking_background, koponen_talking_foreground_indexes, koponenTalking
@@ -252,6 +254,11 @@ def init(playerName: str):
     ]
     random.shuffle(ambientTalkAudios)
 
+class Date:
+    @staticmethod
+    def start(window: pygame.Surface, surface: pygame.Surface, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
+        pass
+
 class Talk:
     running = False
     mask = pygame.mask.Mask(conversation_rect.size, True)
@@ -346,11 +353,17 @@ class Talk:
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
 
     @staticmethod
-    def start(window: pygame.Surface, surface: pygame.Surface, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
+    def start(window: pygame.Surface, surface: pygame.Surface, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
         global talk_foreground
         talk_foreground = talk_foregrounds[random.randint(0, len(talk_foregrounds) - 1)]
         surface_size = surface.get_size()
         Talk.running = True
+        
+        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80))
+        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80))
+        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), )
+        date_button = KDS.UI.Button(pygame.Rect(50, 610, 450, 80), Date.start, "ASK FOR A DATE")
+        
         while Talk.running:
             mouse_pos = (int((pygame.mouse.get_pos()[0] - conversation_rect.left - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - conversation_rect.top - Fullscreen.offset[1]) / Fullscreen.scaling))
             c = False

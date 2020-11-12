@@ -568,10 +568,11 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, awm_ammo, fall_max_velocity
+    global fall_speed, fall_multiplier, awm_ammo, fall_max_velocity, renderPadding
     fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMaxVelocity")
+    renderPadding = KDS.ConfigManager.GetGameSetting("Renderer", "Tile", "renderPadding")
 LoadGameSettings()
 #endregion
 #region World Data
@@ -829,14 +830,14 @@ class Tile:
     # Tile_list is a 2d numpy array
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: tuple[int, int], *args):
         tilesUpdating = 0
-        x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 2
-        y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 2
+        x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
+        y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
         x = max(x, 0)
         y = max(y, 0)
         max_x = len(Tile_list[0])
         max_y = len(Tile_list)
-        end_x = round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2)) + 1
-        end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + 1
+        end_x = round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2)) + renderPadding
+        end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
         for row in Tile_list[y:end_y]:
@@ -2332,7 +2333,7 @@ def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_
     
     ########## iPuhelin ##########
     if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and is_new_save):
-        player_inventory.storage[0] = 6
+        player_inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6, i_textures[6])
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
@@ -2472,8 +2473,7 @@ def settings_menu():
     def reset_data():
         KDS_Quit(True, True)
     
-    return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, button_font1.render(
-        "Return", True, KDS.Colors.White))
+    return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider(
         "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_dir="Settings")
     effect_volume_slider = KDS.UI.Slider(
@@ -2612,12 +2612,9 @@ def main_menu():
     framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.AnimationType.SmoothStep, KDS.Animator.OnAnimationEnd.Stop)
     framechange_lerp.tick = framechange_lerp.ticks
 
-    main_menu_play_button = KDS.UI.Button(pygame.Rect(
-        450, 180, 300, 60), menu_mode_selector, button_font1.render("PLAY", True, KDS.Colors.White))
-    main_menu_settings_button = KDS.UI.Button(pygame.Rect(
-        450, 250, 300, 60), settings_function, button_font1.render("SETTINGS", True, KDS.Colors.White))
-    main_menu_quit_button = KDS.UI.Button(pygame.Rect(
-        450, 320, 300, 60), KDS_Quit, button_font1.render("QUIT", True, KDS.Colors.White))
+    main_menu_play_button = KDS.UI.Button(pygame.Rect(450, 180, 300, 60), menu_mode_selector, "PLAY")
+    main_menu_settings_button = KDS.UI.Button(pygame.Rect(450, 250, 300, 60), settings_function, "SETTINGS")
+    main_menu_quit_button = KDS.UI.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, "QUIT")
     #Frame 2
     Frame2 = pygame.Surface(display_size)
     Frame2.blit(main_menu_background_2, (0,0))
@@ -2633,10 +2630,8 @@ def main_menu():
     mode_selection_modes.append(KDS.Gamemode.Modes.Story)
     mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
     mode_selection_buttons = []
-    story_mode_button = pygame.Rect(
-        0, 0, display_size[0], int(display_size[1] / 2))
-    campaign_mode_button = pygame.Rect(
-        0, int(display_size[1] / 2), display_size[0], int(display_size[1] / 2))
+    story_mode_button = pygame.Rect(0, 0, display_size[0], int(display_size[1] / 2))
+    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), display_size[0], int(display_size[1] / 2))
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
     #endregion
@@ -3387,7 +3382,7 @@ while main_running:
             koponen_alive = False
         if KDS.Keys.GetPressed(KDS.Keys.functionKey):
             KDS.Keys.Reset()
-            KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+            KDS.Koponen.Talk.start(window, display, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
     else:
         koponen_movement[0] = koponen_movingx
     h = 0

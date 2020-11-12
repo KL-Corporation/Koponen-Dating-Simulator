@@ -4,12 +4,15 @@ from typing import Callable, Tuple
 import KDS.Animator
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Colors
 import KDS.Math
 import pygame
 from pygame.locals import *
-import os
 
 slider_dragged = None
+
+pygame.init()
+buttonFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 
 class Slider:
 
@@ -94,7 +97,7 @@ class Slider:
 
 class Button:
 
-    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
+    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface | str = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
         """Instantiates a new Button
 
         Args:
@@ -110,7 +113,7 @@ class Button:
         """
         self.rect = rect
         self.function = function
-        self.overlay = overlay
+        self.overlay = overlay if not isinstance(overlay, str) else buttonFont.render(overlay, True, KDS.Colors.White)
         self.button_default_color = button_default_color
         self.button_highlighted_color = button_highlighted_color
         self.button_pressed_color = button_pressed_color

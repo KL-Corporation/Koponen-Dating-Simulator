@@ -20,5 +20,10 @@
                 "timeBonus": 500
             }
         }
+    },
+    "Renderer": {
+        "Tile": {
+            "renderPadding": 5
+        }
     }
 }
