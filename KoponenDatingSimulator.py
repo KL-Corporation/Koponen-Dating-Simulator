@@ -930,7 +930,7 @@ class Jukebox(Tile):
 
     def update(self):
         if self.rect.colliderect(player_rect):
-            screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1] - 30))
+            screen.blit(jukebox_tip, (self.rect.centerx - scroll[0] - jukebox_tip.get_width() / 2, self.rect.y - scroll[1] - 30))
             if KDS.Keys.GetClicked(KDS.Keys.functionKey) and not KDS.Keys.GetHoldClicked(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
                 KDS.Audio.MusicMixer.pause()
@@ -3176,12 +3176,13 @@ while main_running:
     #UI
     if renderUI:
         player_health = max(player_health, 0)
+        ui_hand_item = player_inventory.getHandItem()
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
         screen.blit(score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.White), (10, 55))
         screen.blit(score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
-        if hasattr(player_inventory.getHandItem(), "ammunition"): screen.blit(harbinger_font.render(f"AMMO: {player_inventory.getHandItem().ammunition}", True, KDS.Colors.White), (10, 360))
+        if hasattr(ui_hand_item, "ammunition"): screen.blit(harbinger_font.render(f"AMMO: {ui_hand_item.ammunition}", True, KDS.Colors.White), (10, 360))
 
         KDS.Missions.Render(screen)
 
