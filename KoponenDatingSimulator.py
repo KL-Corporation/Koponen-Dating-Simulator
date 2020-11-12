@@ -426,13 +426,14 @@ black_tint = pygame.Surface(screen_size)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 
-#################### Vähän Ghetto, mutta en halua turhia variableja. ####################
-jukebox_tip = pygame.Surface((tip_font.size("Use Jukebox [Press: E]")[0], tip_font.size("Use Jukebox [Press: E]")[1] * 2), pygame.SRCALPHA, 32)
-jukebox_tip.blit(tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.White), (int((jukebox_tip.get_width() - tip_font.size("Stop Jukebox [Hold: E]")[0]) / 2), int(jukebox_tip.get_height() / 2)))
-#################### Vähän Ghetto, mutta en halua turhia variableja. ####################
+tmp_jukebox_data = tip_font.render("Use Jukebox [Click: E]", True, KDS.Colors.White)
+tmp_jukebox_data2 = tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.White)
+jukebox_tip = pygame.Surface(max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height())
+jukebox_tip.blit(tmp_jukebox_data, ((tmp_jukebox_data2.get_width() - tmp_jukebox_data.get_width()) / 2, 0))
+jukebox_tip.blit(tmp_jukebox_data2, ((tmp_jukebox_data.get_width() - tmp_jukebox_data2.get_width()) / 2, tmp_jukebox_data.get_height()))
+del tmp_jukebox_data, tmp_jukebox_data2
 decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.White)
 level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.White)
-jukebox_tip.blit(tip_font.render("Use Jukebox [E]", True, KDS.Colors.White), (0, 0))
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
 restart = False
@@ -931,7 +932,7 @@ class Jukebox(Tile):
     def update(self):
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.x - scroll[0] - 20, self.rect.y - scroll[1] - 30))
-            if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+            if KDS.Keys.GetClicked(KDS.Keys.functionKey) and not KDS.Keys.GetHoldClicked(KDS.Keys.functionKey):
                 self.stopPlayingTrack()
                 KDS.Audio.MusicMixer.pause()
                 loopStopper = 0
