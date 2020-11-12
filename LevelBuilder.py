@@ -148,7 +148,7 @@ class tileInfo:
                 mpos = pygame.mouse.get_pos()
                 tempSerial = unit.serialNumber.replace(" / ", "")
                 srlist = tempSerial.split()
-                for number in srlist:
+                for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
                         try: unitTexture = Atextures[number[0]][number]
@@ -157,6 +157,12 @@ class tileInfo:
                                 unitTexture = Atextures["3"]["3001"]
                             else:
                                 print(f"Cannot render unit because texture is not added: {srlist}")
+                        if keys_pressed[K_p] and number[0] == "3":
+                            temp_serial = int(KDS.Console.Start('New serial number for teleport: ', False, KDS.Console.CheckTypes.Int(0, 999)))
+                            temp_serial = f"3{temp_serial:03d}"
+                            unit.setNewSerialNumber_attempt2(temp_serial, index)
+                            keys_pressed[K_p] = False
+
                         if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize):
@@ -171,12 +177,6 @@ class tileInfo:
                             unit.serialNumber = "0000 0000 0000 0000 / "
                     if pygame.mouse.get_pressed()[2]:
                         unit.serialNumber = "0000 0000 0000 0000 / "
-                    if keys_pressed[K_p] and unit.serialNumber[0] == "3":
-                        temp_serial = int(KDS.Console.Start('New serial number for teleport: ', False, KDS.Console.CheckTypes.Int(0, 999)))
-                        temp_serial = f"3{temp_serial:03d}"
-                        unit.setNewSerialNumber_attempt2(temp_serial, 0)
-                        keys_pressed[K_p] = False
-
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
         return renderList, brushtemp
