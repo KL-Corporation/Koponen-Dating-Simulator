@@ -225,9 +225,9 @@ def koponen_talk():
         window.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 """
-talk_background = pygame.Surface((1, 1))
-talk_foregrounds = [pygame.Surface((1, 1))]
-talk_foreground = pygame.Surface((1, 1))
+talk_background = pygame.Surface((0, 0))
+talk_foregrounds = [pygame.Surface((0, 0), SRCALPHA)]
+talk_foreground = talk_foregrounds[0]
 
 class Prefixes:
     player = "p:"
@@ -244,7 +244,6 @@ def init(playerName: str):
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"):
         talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_foregrounds)
-    talk_foreground = talk_foregrounds[0]
     Prefixes.Rendered.player = text_font.render(f"{playerName}: ", True, text_color)
 
 class Talk:
@@ -348,6 +347,8 @@ class Talk:
                     elif event.key == K_F4:
                         if pygame.key.get_pressed()[K_LALT]:
                             KDS_Quit()
+                    elif event.key == K_ESCAPE:
+                        Talk.running = False
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4:
                         Talk.Conversation.scroll = max(Talk.Conversation.scroll - line_scroll_speed, 0)
