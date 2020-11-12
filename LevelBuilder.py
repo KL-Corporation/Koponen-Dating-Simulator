@@ -1,6 +1,7 @@
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
 import os
+from typing import Tuple
 
 from pygame import surface
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -112,8 +113,8 @@ KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200,
 ##################################################
 
 class tileInfo:
-    def __init__(self, position: (int, int), serialNumber = "0000 0000 0000 0000 / "):
-        self.rect = pygame.Rect(position[0], position[1], 1, 1)
+    def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
+        self.pos = position
         self.serialNumber = serialNumber
 
     def setNewSerialNumber(self, srlNumber: str):
@@ -138,7 +139,7 @@ class tileInfo:
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
         for row in renderList[scroll[1] : scroll[1] + int((display_size[1] / scalesize) + 2)]:
             for unit in row[scroll[0] : scroll[0] + int((display_size[0] / scalesize) + 2)]:
-                blitPos = (unit.rect.x * scalesize - scroll[0] * scalesize, unit.rect.y * scalesize - scroll[1] * scalesize)
+                blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 mpos = pygame.mouse.get_pos()
                 tempSerial = unit.serialNumber.replace(" / ", "")
                 srlist = tempSerial.split()
@@ -148,11 +149,11 @@ class tileInfo:
                         try: unitTexture = Atextures[number[0]][number]
                         except: print(f"Cannot render unit because texture is not added: {srlist}")
                         if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
-                if unit.rect.collidepoint(mpos[0] / scalesize + scroll[0], mpos[1] / scalesize + scroll[1]):
+                if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize):
                     if pygame.mouse.get_pressed()[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerialNumber(0)
                     pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
-                    bpos = (unit.rect.x, unit.rect.y)
+                    bpos = unit.pos
                     if pygame.mouse.get_pressed()[0] and updttiles:
                         if brsh != "0000":
                             unit.setNewSerialNumber(brsh)
@@ -162,11 +163,10 @@ class tileInfo:
                         unit.serialNumber = "0000 0000 0000 0000 / "
 
                     if keys_pressed[K_p] and unit.getSerialNumber(0)[0] == "3":
-                        pygame.draw.rect(Surface, (120, 120, 120), (unit.rect.x - scroll[0] * scalesize, unit.rect.y - scroll[1] * scalesize, 100, 30))
+                        pygame.draw.rect(Surface, (120, 120, 120), (unit.pos[0] - scroll[0] * scalesize, unit.pos[0] - scroll[1] * scalesize, 100, 30))
         
-        mousePosText = harbinger_font.render(f"({round(bpos[0] * scaleMultiplier)}, {round(bpos[1] * scaleMultiplier)})", True, KDS.Colors.AviatorRed)
+        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
-                #print(unit.rect.topleft)
         return renderList, brushtemp
 
 def loadGrid(size):
