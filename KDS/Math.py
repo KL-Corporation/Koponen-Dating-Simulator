@@ -4,7 +4,7 @@ import math
 from inspect import currentframe
 
 #region Value Manipulation
-def Clamp(value: int or float, _min: int or float, _max: int or float) -> int or float:
+def Clamp(value: float, _min: float, _max: float) -> float:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
     Args:
@@ -135,7 +135,7 @@ def DeltaAngle(current: int or float, target: int or float):
 #endregion
 
 #region Interpolation
-def Lerp(a: float, b: float, t: float):
+def Lerp(a: float, b: float, t: float) -> float:
     """Linearly interpolates between a and b by t.
 
     The parameter t is clamped to the range [0, 1].
