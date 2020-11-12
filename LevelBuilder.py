@@ -503,7 +503,7 @@ def main():
                     if keys_pressed[K_LSHIFT]:
                         scroll[0] -= 1
                     elif keys_pressed[K_LCTRL]:
-                        scalesize = KDS.Math.Clamp(scalesize + 5, 1, 136)
+                        scalesize = KDS.Math.Clamp(scalesize + 5, 1, 272)
                         scaleMultiplier = scalesize / gamesize
                     else:
                         scroll[1] -= 1
@@ -511,7 +511,7 @@ def main():
                     if keys_pressed[K_LSHIFT]:
                         scroll[0] += 1
                     elif keys_pressed[K_LCTRL]:
-                        scalesize = KDS.Math.Clamp(scalesize - 5, 1, 136)
+                        scalesize = KDS.Math.Clamp(scalesize - 5, 1, 272)
                         scaleMultiplier = scalesize / gamesize
                     else:
                         scroll[1] += 1
