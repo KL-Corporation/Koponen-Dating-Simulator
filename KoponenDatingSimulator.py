@@ -64,7 +64,7 @@ game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 window_size = tuple(KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800)))
-window = pygame.display.set_mode(window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
+window = pygame.display.set_mode(window_size, RESIZABLE | HWSURFACE | DOUBLEBUF)
 window_info = pygame.display.Info()
 #Nice
 window_resize_size = window_size
@@ -113,12 +113,11 @@ class Fullscreen:
         if Fullscreen.enabled:
             window_size = window_resize_size
             window = pygame.display.set_mode(
-                window_size, pygame.RESIZABLE | pygame.DOUBLEBUF)
+                window_size, RESIZABLE | HWSURFACE | DOUBLEBUF)
             Fullscreen.enabled = False
         else:
             window_size = monitor_size
-            window = pygame.display.set_mode(
-                window_size, pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
+            window = pygame.display.set_mode(window_size, FULLSCREEN | HWSURFACE | DOUBLEBUF)
             Fullscreen.enabled = True
         KDS.ConfigManager.SetSetting("Settings", "Fullscreen", Fullscreen.enabled)
         if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
@@ -569,7 +568,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, rk_62_ammo, ammunition_plasma, ppsh41_ammo, awm_ammo, shotgun_shells, pistol_bullets, fall_max_velocity
+    global fall_speed, fall_multiplier, awm_ammo, fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMaxVelocity")
@@ -1523,8 +1522,7 @@ class Pistol(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global pistol_bullets, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(Pistol.ammunition), True, KDS.Colors.White), (10, 360))      
+        global tiles
         if args[0][0] and KDS.World.pistol_C.counter > 30 and Pistol.ammunition > 0:
             KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
@@ -1559,8 +1557,7 @@ class rk62(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global rk_62_ammo, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(rk62.ammunition), True, KDS.Colors.White), (10, 360))
+        global tiles
         if args[0][0] and KDS.World.rk62_C.counter > 4 and rk62.ammunition > 0:
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
@@ -1588,8 +1585,7 @@ class Shotgun(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global shotgun_shells, tiles
-        args[1].blit(harbinger_font.render("Ammo: " + str(Shotgun.ammunition), True, KDS.Colors.White), (10, 360))
+        global tiles
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and Shotgun.ammunition > 0:
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.playSound(player_shotgun_shot)
@@ -1634,9 +1630,7 @@ class Plasmarifle(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def use(self, *args):
-        global ammunition_plasma
-        args[1].blit(harbinger_font.render("Ammo: " + str(Plasmarifle.ammunition), True, KDS.Colors.White), (10, 360))                    
+    def use(self, *args):               
         if args[0][0] and Plasmarifle.ammunition > 0 and KDS.World.plasmarifle_C.counter > 3:
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.playSound(plasmarifle_f_sound)
@@ -1709,8 +1703,7 @@ class Ppsh41(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global tiles, ppsh41_ammo
-        args[1].blit(harbinger_font.render("Ammo: " + str(Ppsh41.ammunition), True, KDS.Colors.White), (10, 360))
+        global tiles
         if args[0][0] and KDS.World.ppsh41_C.counter > 2 and Ppsh41.ammunition > 0:
             KDS.World.ppsh41_C.counter = 0
             smg_shot.stop()
@@ -1737,7 +1730,6 @@ class Awm(Item):
 
     def use(self, *args):
         global tiles, awm_ammo
-        args[1].blit(harbinger_font.render("Ammo: " + str(Awm.ammunitiona), True, KDS.Colors.White), (10, 360))
         if args[0][0] and KDS.World.awm_C.counter > 130 and Awm.ammunition > 0:
             KDS.World.awm_C.counter = 0
             KDS.Audio.playSound(awm_shot)
@@ -3185,15 +3177,11 @@ while main_running:
     if renderUI:
         player_health = max(player_health, 0)
 
-        score = score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White)
-        health = score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.White)
-        stamina = score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White)
-        happiness = score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White)
-
-        screen.blit(score, (10, 45))
-        screen.blit(happiness, (10, 55))
-        screen.blit(health, (10, 120))
-        screen.blit(stamina, (10, 130))
+        screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
+        screen.blit(score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.White), (10, 55))
+        screen.blit(score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White), (10, 120))
+        screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
+        if hasattr(player_inventory.getHandItem(), "ammunition"): screen.blit(harbinger_font.render(f"AMMO: {player_inventory.getHandItem().ammunition}", True, KDS.Colors.White), (10, 360))
 
         KDS.Missions.Render(screen)
 
