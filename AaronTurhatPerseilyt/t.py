@@ -1,8 +1,8 @@
+def gen(x):
+    while True:
+        yield x + 1
 
-def add(v):
-    v[0] += 1
+s = gen(1)
 
-new = [0]
-print(new)
-add(new)
-print(new)
+for v in s:
+    print(v)
