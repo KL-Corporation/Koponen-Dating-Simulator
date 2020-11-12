@@ -1880,9 +1880,9 @@ class Lantern(Item):
 nullLantern = Lantern((0, 0), 33, texture = i_textures[33])
 
 class Chainsaw(Item):
-    pickup_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_start.ogg")
-    freespin_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_freespin.ogg")
-    throttle_sound = pygame.mixer.Sound("Assets/Audio/effects/chainsaw_throttle.ogg")
+    pickup_sound = pygame.mixer.Sound("Assets/Audio/Effects/chainsaw_start.ogg")
+    freespin_sound = pygame.mixer.Sound("Assets/Audio/Effects/chainsaw_freespin.ogg")
+    throttle_sound = pygame.mixer.Sound("Assets/Audio/Effects/chainsaw_throttle.ogg")
     soundCounter = 70
     soundCounter1 = 122
     a_a = False
