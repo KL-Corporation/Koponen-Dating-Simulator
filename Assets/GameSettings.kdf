@@ -6,6 +6,14 @@
             "fallMaxVelocity": 8
         }
     },
+    "Renderer": {
+        "Tile": {
+            "renderPadding": 5
+        },
+        "Item": {
+
+        }
+    },
     "GameData": {
         "Default": {
             "Ammo": {
