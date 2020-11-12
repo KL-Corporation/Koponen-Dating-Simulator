@@ -99,7 +99,11 @@ keys_pressed = {
     K_LCTRL: False,
 }
 
-KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0))
+def LB_Quit():
+    pygame.quit()
+    quit()
+
+KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
 
 ##################################################
 
@@ -356,9 +360,7 @@ def materialMenu(previousMaterial):
     while r:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                r = False
-                pygame.quit()
-                quit()
+                LB_Quit()
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     r = False
@@ -437,8 +439,7 @@ def main():
         if _generateLevelProp:
             generateLevelProp()
         elif _quit:
-            pygame.quit()
-            quit()
+            LB_Quit
         elif _openMap:
             o_m = openMap()
             if o_m != None: 
@@ -455,8 +456,7 @@ def main():
         clicked = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                LB_Quit()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
@@ -487,11 +487,9 @@ def main():
             if event.type == pygame.QUIT:
                 if modifiedAfterSave:
                     if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == 6:
-                        pygame.quit()
-                        quit()
+                        LB_Quit()
                 else:
-                    pygame.quit()
-                    quit()
+                    LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
                     if keys_pressed[K_LSHIFT]:

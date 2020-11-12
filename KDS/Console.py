@@ -37,8 +37,8 @@ class ConsoleDefaultFullscreen:
     offset = (0, 0)
     scaling = 1
 
-def init(_window, _display, _clock, _Fullscreen = None, _Offset: Tuple[int, int] = None):
-    global window, display, display_size, Fullscreen, clock, defaultBackground
+def init(_window, _display, _clock, _Fullscreen = None, _Offset: Tuple[int, int] = None, _KDS_Quit = None):
+    global window, display, display_size, Fullscreen, clock, defaultBackground, KDS_Quit
     window = _window
     display = _display
     display_size = display.get_size()
@@ -46,6 +46,7 @@ def init(_window, _display, _clock, _Fullscreen = None, _Offset: Tuple[int, int]
     Fullscreen = _Fullscreen if _Fullscreen != None else ConsoleDefaultFullscreen
     clock = _clock
     defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
+    KDS_Quit = _KDS_Quit
     pygame.scrap.init()
     pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 
@@ -219,10 +220,12 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 else:
                     pygame.key.stop_text_input()
                     textInput = False
-            elif event.type == QUIT and allowEscape:
-                cmd = ""
-                textInput = False
-                running = False
+            elif event.type == QUIT:
+                if allowEscape:
+                    cmd = ""
+                    textInput = False
+                    running = False
+                if KDS_Quit != None: KDS_Quit()
         
         while console_font.size(cmd)[0] + cursor_width >= text_rect.width: cmd = cmd[:-1]
 

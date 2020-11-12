@@ -1,6 +1,5 @@
 #region Importing
 import math
-import os
 from typing import Dict, List, Tuple
 import pygame
 import KDS.Animator
@@ -233,7 +232,6 @@ def init():
     hundredSize = TaskFont.size("100%")
 #endregion
 #region Initialize
-
 def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Tuple[Listeners and Listener, float]):
     """Initialises a task.
 

@@ -181,9 +181,7 @@ KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
-KDS.Console.init(window, display, clock, Fullscreen)
-
-#KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+KDS.Console.init(window, display, clock, Fullscreen, _KDS_Quit = KDS_Quit)
 #endregion
 #region Loading
 #region Settings
@@ -3386,7 +3384,7 @@ while main_running:
             koponen_alive = False
         if KDS.Keys.GetPressed(KDS.Keys.functionKey):
             KDS.Keys.Reset()
-            koponen_talk()
+            KDS.Koponen.Talk.start(window, display, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
     else:
         koponen_movement[0] = koponen_movingx
     h = 0
