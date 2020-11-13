@@ -13,6 +13,7 @@ import KDS.Audio
 import KDS.UI
 import KDS.Logging
 import KDS.Math
+import KDS.Missions
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
@@ -43,8 +44,6 @@ class text_padding:
 
 pygame.init()
 pygame.key.stop_text_input()
-
-Task = None
 
 """
 def koponen_talk():
@@ -259,6 +258,22 @@ class Date:
     def start(window: pygame.Surface, surface: pygame.Surface, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
         pass
 
+class Mission:
+    Task = None
+    
+    @staticmethod
+    def Return(player_inventory):
+        if Mission.Task != None:
+            if Mission.Task.item in player_inventory.storage:
+                Mission.Task.Progress(1.0)
+                Mission.Task = None
+            else: Talk.Conversation.schedule("Olen pahoillani, en löydä pyytämääni esinettä pöksyistäsi. Pyysin sinua tuomaan minulle {}.", Prefixes.koponen)
+        else:
+            Talk.Conversation.schedule("Sinulla ei ole palautettavaa tehtävää.", Prefixes.koponen)
+    @staticmethod
+    def Request():
+        pass
+
 class Talk:
     running = False
     mask = pygame.mask.Mask(conversation_rect.size, True)
@@ -353,19 +368,26 @@ class Talk:
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
 
     @staticmethod
+    def stop():
+        Talk.running = False
+
+    @staticmethod
     def start(window: pygame.Surface, surface: pygame.Surface, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
+        pygame.mouse.set_visible(True)
         global talk_foreground
         talk_foreground = talk_foregrounds[random.randint(0, len(talk_foregrounds) - 1)]
         surface_size = surface.get_size()
         Talk.running = True
         
-        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80))
-        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80))
-        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), )
+        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
+        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
+        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, "RETURN MISSION")
         date_button = KDS.UI.Button(pygame.Rect(50, 610, 450, 80), Date.start, "ASK FOR A DATE")
         
         while Talk.running:
-            mouse_pos = (int((pygame.mouse.get_pos()[0] - conversation_rect.left - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - conversation_rect.top - Fullscreen.offset[1]) / Fullscreen.scaling))
+            unscaled_mouse_pos = pygame.mouse.get_pos()
+            conversation_mouse_pos = (int((unscaled_mouse_pos[0] - conversation_rect.left - Fullscreen.offset[0]) / Fullscreen.scaling), int((unscaled_mouse_pos[1] - conversation_rect.top - Fullscreen.offset[1]) / Fullscreen.scaling))
+            mouse_pos = (int((unscaled_mouse_pos[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((unscaled_mouse_pos[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
             c = False
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -388,9 +410,17 @@ class Talk:
                     KDS_Quit()
                 elif event.type == pygame.VIDEORESIZE:
                     ResizeWindow(event.size)
-
+            
             Talk.renderMenu(surface, mouse_pos, c)
+            
+            exit_button.update(surface, mouse_pos, c)
+            request_mission_button.update(surface, mouse_pos, c)
+            return_mission_button.update(surface, mouse_pos, c, player_inventory)
+            date_button.update(surface, mouse_pos, c)
+            
             window.blit(pygame.transform.scale(surface, (int(surface_size[0] * Fullscreen.scaling), int(surface_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
             pygame.display.update()
             window.fill(KDS.Colors.Black)
             clock.tick(fps)
+        
+        pygame.mouse.set_visible(False)

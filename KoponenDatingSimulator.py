@@ -681,11 +681,8 @@ class WorldData():
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
 
-try:
-    with open ("Assets/Textures/build.json", "r") as f:
-        data = f.read()
-except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
-
+with open ("Assets/Textures/build.json", "r") as f:
+    data = f.read()
 buildData = json.loads(data)
 
 t_textures = {}
@@ -1075,7 +1072,7 @@ class DecorativeHead(Tile):
                 if not KDS.Keys.GetPressed(KDS.Keys.functionKey):
                     pray_sound.stop()
                     self.praying = False
-                player_health = min(player_health + 0.01, 100)
+                if player_health > 0: player_health = min(player_health + 0.01, 100)
         else:
             pray_sound.stop()
             self.praying = False
@@ -3184,7 +3181,7 @@ while main_running:
         ui_hand_item = player_inventory.getHandItem()
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
-        screen.blit(score_font.render(f"HEALTH: {player_health}", True, KDS.Colors.White), (10, 55))
+        screen.blit(score_font.render(f"HEALTH: {math.ceil(player_health)}", True, KDS.Colors.White), (10, 55))
         screen.blit(score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
         if hasattr(ui_hand_item, "ammunition"): screen.blit(harbinger_font.render(f"AMMO: {ui_hand_item.ammunition}", True, KDS.Colors.White), (10, 360))

@@ -11,7 +11,13 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Math
 import KDS.Koponen
+import json
 from inspect import currentframe
+#endregion
+#region Initialisation
+with open ("Assets/Textures/build.json", "r") as f:
+    data = f.read()
+buildData = json.loads(data)
 #endregion
 #region Settings
 MissionColor = (128, 128, 128)
@@ -98,15 +104,15 @@ class Task:
         return surface
 
 class KoponenTask(Task):
-    def __init__(self, missionName: str, safeName: str, text: str, itemID: int) -> None:
+    def __init__(self, missionName: str, safeName: str, text: str, itemID: int, itemPrompt: str) -> None:
         super().__init__(missionName, safeName, text)
         koponenTaskCount = 0
         for task in Missions.GetMission(missionName).GetTaskList():
             if isinstance(task, KoponenTask): koponenTaskCount += 1
-        if koponenTaskCount > 1:
-            KDS.Logging.AutoError("Only one Koponen Task allowed per mission!", currentframe())
-        else: self.item = itemID
-        
+        if koponenTaskCount > 1: KDS.Logging.AutoError("Only one Koponen Task allowed per mission!", currentframe())
+        self.item = itemID
+        self.itemPrompt = itemPrompt
+        if itemID not in buildData["inventory_items"]: KDS.Logging.AutoError("Item cannot be returned, since it cannot be picked up into inventory!", currentframe())
 
 class Mission:
     def __init__(self, safeName: str, text: str) -> None:
@@ -150,15 +156,20 @@ class Mission:
         self.finished = True
         self.playSound = False
         notFinished = 0
+        taskAssigned = False
         for task in self.task_values:
             if not task.finished:
                 self.finished = False
                 notFinished += 1
-                
+
+            if isinstance(task, KoponenTask):
+                KDS.Koponen.Mission.Task = task
+                taskAssigned = True
+
             if notFinished > 1:
                 self.playSound = True
-                del notFinished
-                break
+                if taskAssigned: break
+        del notFinished, taskAssigned
 
         if self.finished:
             self.finishedTicks += 1
