@@ -185,9 +185,11 @@ KDS.Console.init(window, display, clock, Fullscreen, _KDS_Quit = KDS_Quit)
 #region Loading
 #region Settings
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
-window.fill(CompanyLogo.get_at((0, 0)))
-window.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (window_size[0] / 2 - 250, window_size[1] / 2 - 250))
+CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-transparent_background.png").convert_alpha()
+scaledCompanyLogo = pygame.transform.scale2x(CompanyLogo)
+window.fill((255, 255, 255))
+window.blit(scaledCompanyLogo, (window.get_width() / 2 - scaledCompanyLogo.get_width() / 2, window.get_height() / 2 - scaledCompanyLogo.get_height() / 2))
+del scaledCompanyLogo
 pygame.display.update()
 clearLag = KDS.ConfigManager.GetSetting("Settings", "ClearLag", False)
 tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
