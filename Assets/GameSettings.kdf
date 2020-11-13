@@ -8,7 +8,7 @@
     },
     "Renderer": {
         "Tile": {
-            "renderPadding": 5
+            "renderPadding": 4
         },
         "Item": {
 
