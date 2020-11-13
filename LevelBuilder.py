@@ -382,7 +382,7 @@ def materialMenu(previousMaterial):
             if event.type == pygame.QUIT:
                 LB_Quit()
             elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
+                if event.key == K_ESCAPE or event.key == K_e:
                     r = False
                     return previousMaterial
             elif event.type == MOUSEBUTTONDOWN:
@@ -597,21 +597,21 @@ def main():
 
         main_display.fill((30,20,60))
         
+        if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
+            modifiedAfterSave = True
+            timesModifiedAfterSave += 1
+            
+        grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
+
         if modifiedAfterSave:
-            if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
-                timesModifiedAfterSave += 1
             _color = KDS.Colors.Yellow
             if 200 > timesModifiedAfterSave > 100:
                 _color = KDS.Colors.Orange
             elif timesModifiedAfterSave > 200:
                 _color = KDS.Colors.Red
             pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
-        elif pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
-            modifiedAfterSave = True
-            timesModifiedAfterSave += 1
-        
-        grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
+
         pygame.display.update()
         clock.tick(60)
-
+        
 main()
