@@ -227,8 +227,9 @@ def koponen_talk():
     pygame.mouse.set_visible(False)
 """
 talk_background = pygame.Surface((0, 0))
-talk_foregrounds = [pygame.Surface((0, 0), SRCALPHA)]
-talk_foreground = talk_foregrounds[0]
+talk_ads = [pygame.Surface((0, 0), SRCALPHA)]
+old_ads = [-69 for _ in range(5)]
+talk_ad = talk_ads[0]
 
 class Prefixes:
     player = "p:"
@@ -238,12 +239,12 @@ class Prefixes:
         koponen = text_font.render("Koponen: ", True, text_color)
 
 def init(playerName: str):
-    global talk_background, talk_foregrounds, talk_foreground, scrollArrow, scrollToBottomButton, ambientTalkAudios
+    global talk_background, talk_ads, talk_ad, scrollArrow, scrollToBottomButton, ambientTalkAudios
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
     scrollArrow = pygame.transform.scale(pygame.transform.rotate(pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha(), -90), (scroll_to_bottom_rect.width - scroll_arrow_padding * 2, scroll_to_bottom_rect.height - scroll_arrow_padding * 2))
     scrollToBottomButton = KDS.UI.Button(scroll_to_bottom_rect, Talk.Conversation.scrollToBottom, scrollArrow, scroll_to_bottom_colors["default"], scroll_to_bottom_colors["highlighted"], scroll_to_bottom_colors["pressed"])
-    for ad in os.listdir("Assets/Textures/KoponenTalk/ads"): talk_foregrounds.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
-    random.shuffle(talk_foregrounds)
+    for ad in os.listdir("Assets/Textures/KoponenTalk/ads"): talk_ads.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
+    random.shuffle(talk_ads)
     Prefixes.Rendered.player = text_font.render(f"{playerName}: ", True, text_color)
     ambientTalkAudios = [
         pygame.mixer.Sound("Assets/Audio/Koponen/talk_0.ogg"),
@@ -363,7 +364,7 @@ class Talk:
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool):
         surface.blit(talk_background, (0, 0))
-        surface.blit(talk_foreground, (40, 474))
+        surface.blit(talk_ad, (40, 474))
         Talk.Conversation.update()
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
 
@@ -374,8 +375,15 @@ class Talk:
     @staticmethod
     def start(window: pygame.Surface, surface: pygame.Surface, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
         pygame.mouse.set_visible(True)
-        global talk_foreground
-        talk_foreground = talk_foregrounds[random.randint(0, len(talk_foregrounds) - 1)]
+        global talk_ad, old_ads
+        loopStopper = 0
+        ad_index = -1
+        while (ad_index in old_ads or ad_index == -1) and loopStopper < 10:
+            ad_index = random.randint(0, len(talk_ads) - 1)
+            loopStopper += 1
+        del old_ads[0]
+        old_ads.append(ad_index)
+        talk_ad = talk_ads[ad_index]
         surface_size = surface.get_size()
         Talk.running = True
         

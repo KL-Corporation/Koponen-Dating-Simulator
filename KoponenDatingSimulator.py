@@ -913,7 +913,7 @@ class Jukebox(Tile):
         self.rect = pygame.Rect(position[0], position[1] - 27, 40, 60)
         self.checkCollision = False
         self.playing = -1
-        self.lastPlayed = [0 for _ in range(5)]
+        self.lastPlayed = [-69 for _ in range(5)]
 
     def stopPlayingTrack(self):
         for music in jukebox_music:
@@ -932,7 +932,7 @@ class Jukebox(Tile):
                 while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
                     self.playing = random.randint(0, len(jukebox_music) - 1)
                     loopStopper += 1
-                self.lastPlayed.pop(0)
+                del self.lastPlayed[0]
                 self.lastPlayed.append(self.playing)
                 KDS.Audio.playSound(jukebox_music[self.playing], KDS.Audio.MusicVolume)
             elif KDS.Keys.GetHeld(KDS.Keys.functionKey): self.stopPlayingTrack()
