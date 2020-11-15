@@ -76,6 +76,11 @@
         "074": "respawn_anchor_off.png",
         "075": "teleport_base.png"
     },
+
+    "tile_sounds" : {
+        "008" : "grass.ogg"
+    },
+
     "special_tiles": [
         15,
         16,

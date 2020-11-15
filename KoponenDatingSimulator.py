@@ -702,6 +702,12 @@ specialTilesSerialNumbers = buildData["special_tiles"]
 
 inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
+path_sounds_temp = buildData["tile_sounds"]
+path_sounds = {}
+for p in path_sounds_temp:
+    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
+del path_sounds_temp
+
 sref = buildData["checkCollisionFalse"]
 
 """ CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
@@ -838,8 +844,8 @@ class Tile:
         end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
-        for row in Tile_list[y:end_y]:
-            for renderable in row[x:end_x]:
+        for row in Tile_list[y : end_y]:
+            for renderable in row[x : end_x]:
                 if not renderable.air:
                     tilesUpdating += 1
                     if not renderable.specialTileFlag:
