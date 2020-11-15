@@ -1,19 +1,16 @@
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
 import os
-from typing import Tuple
-
-from pygame import surface
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from inspect import currentframe
+
+from typing import List, Tuple
 import sys
-from turtle import st
-from numpy.core.fromnumeric import resize, size
 import pygame
 from pygame.locals import *
 pygame.init()
 import threading
+import math
 import KDS.Colors
 import KDS.Convert
 import KDS.ConfigManager
@@ -490,6 +487,18 @@ def main():
     
     main_display.fill(KDS.Colors.Black)
     
+    def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
+        global scalesize, scaleMultiplier
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos_scaled = (math.floor(mouse_pos[0] / scalesize + scroll[0]), math.floor(mouse_pos[1] / scalesize + scroll[1]))
+        hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
+        scalesize = KDS.Math.Clamp(scalesize + add, 1, 272)
+        scaleMultiplier = scalesize / gamesize
+        mouse_pos_scaled = (math.floor(mouse_pos[0] / scalesize + scroll[0]), math.floor(mouse_pos[1] / scalesize + scroll[1]))
+        scroll[0] += hitPos[0] - mouse_pos_scaled[0]
+        scroll[1] += hitPos[1] - mouse_pos_scaled[1]
+        
+
     if grid == None:
         g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000)).replace(" ", "").split(",")
             
@@ -515,16 +524,14 @@ def main():
                     if keys_pressed[K_LSHIFT]:
                         scroll[0] -= 1
                     elif keys_pressed[K_LCTRL]:
-                        scalesize = KDS.Math.Clamp(scalesize + 5, 1, 272)
-                        scaleMultiplier = scalesize / gamesize
+                        zoom(5, scroll, grid)
                     else:
                         scroll[1] -= 1
                 elif event.button == 5:
                     if keys_pressed[K_LSHIFT]:
                         scroll[0] += 1
                     elif keys_pressed[K_LCTRL]:
-                        scalesize = KDS.Math.Clamp(scalesize - 5, 1, 272)
-                        scaleMultiplier = scalesize / gamesize
+                        zoom(-5, scroll, grid)
                     else:
                         scroll[1] += 1
                 elif event.button == 2:

@@ -44,7 +44,7 @@ def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -
         return value
     elif not hideErrorMessage:
         KDS.Logging.AutoError(f"Value {value} is not a valid type.", currentframe())
-        return fallbackValue
+    return fallbackValue
 
 def ToGrayscale(image: pygame.Surface):
     """Converts an image to grayscale.
