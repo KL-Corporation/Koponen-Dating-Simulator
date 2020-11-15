@@ -1,5 +1,4 @@
 import sys
-from typing import List
 from pygame.locals import *
 
 #The amount of ticks before hold is activated.
