@@ -2406,6 +2406,7 @@ def respawn_function():
     farting = False
     playerStamina = 100.0
     player_animations.reset()
+
 #endregion
 #region Menus
 def esc_menu_f():
@@ -3126,6 +3127,7 @@ while main_running:
             if death_wait > 240:
                 if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
                     respawn_function()
+                    KDS.Audio.MusicMixer.play(-1)
                 else:
                     pass
 #endregion
