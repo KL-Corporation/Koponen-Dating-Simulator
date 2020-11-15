@@ -176,6 +176,7 @@ I=====[ System Info ]=====I
 I=====[ System Info ]=====I""")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising KDS modules...")
 KDS.AI.init()
+KDS.World.init()
 KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init("Sinä")
@@ -360,17 +361,6 @@ loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").conver
 main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
 #endregion
-#region Light Textures
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Light Textures...")
-light_sphere = pygame.image.load("Assets/Textures/Lighting/light_350_soft.png").convert_alpha()
-light_sphere2 = pygame.image.load("Assets/Textures/Lighting/light_350_hard.png").convert_alpha()
-light_cone1 = pygame.image.load("Assets/Textures/Lighting/light_350_cone_hard.png").convert_alpha()
-orange_light_sphere1 = pygame.image.load("Assets/Textures/Lighting/orange_gradient_sphere.png").convert_alpha()
-orange_light_sphere2 = pygame.image.load("Assets/Textures/Lighting/orange_gradient_sphere1.png").convert_alpha()
-blue_light_sphere1 = pygame.image.load("Assets/Textures/Lighting/blue_gradient_sphere.png").convert_alpha()
-warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Lighting/warm_white_lightSphere0.png").convert_alpha()
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Light Texture Loading Complete.")
-#endregion
 #region Audio
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Audio Files...")
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
@@ -490,7 +480,7 @@ animation_counter = 0
 animation_duration = 0
 animation_image = 0
 air_timer = 0
-player_light = True
+player_light = KDS.ConfigManager.GetGameSetting("Renderer", "Lighting", "playerLight")
 player_health = 100
 last_player_health = 100
 player_death_event = False
@@ -527,18 +517,6 @@ godmode = False
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
 lightsUpdating = 0
-
-player_light_sphere_radius = 300
-decor_head_light_sphere_radius = 150
-blue_light_scale = 40
-light_cone1_radius = 100
-
-light_sphere = pygame.transform.scale(light_sphere, (player_light_sphere_radius, player_light_sphere_radius))
-light_sphere2 = pygame.transform.scale(light_sphere2, (player_light_sphere_radius, player_light_sphere_radius))
-orange_light_sphere1 = pygame.transform.scale(orange_light_sphere1, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
-orange_light_sphere2 = pygame.transform.scale(orange_light_sphere2, (decor_head_light_sphere_radius, decor_head_light_sphere_radius))
-blue_light_sphere1 = pygame.transform.scale(blue_light_sphere1, (blue_light_scale, blue_light_scale))
-light_cone1 = pygame.transform.scale(light_cone1, (light_cone1_radius, light_cone1_radius))
 
 Items = numpy.array([])
 Enemies = numpy.array([])
@@ -860,7 +838,7 @@ class Toilet(Tile):
 
     def update(self):
         global renderPlayer
-        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 50 and gasburnerBurning and not self.burning:
+        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery), self.rect.center) < 50 and gasburnerBurning and not self.burning:
             self.burning = True
             KDS.Scores.score += 30
             renderPlayer = True
@@ -873,7 +851,7 @@ class Toilet(Tile):
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
                 Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x + 7, self.rect.x + self.rect.width - 13), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
-            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale)), True))
             return self.animation.update()
         else:
             return self.texture
@@ -889,7 +867,7 @@ class Trashcan(Tile):
 
     def update(self):
         
-        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery),(self.rect.centerx, self.rect.centery)) < 48 and gasburnerBurning and not self.burning:
+        if KDS.Math.getDistance((player_rect.centerx, player_rect.centery), self.rect.center) < 48 and gasburnerBurning and not self.burning:
             self.burning = True
             KDS.Scores.score += 20
         if self.burning:
@@ -901,7 +879,7 @@ class Trashcan(Tile):
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
                 Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x, self.rect.x + self.rect.width - 16), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
-            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius/2, self.rect.centery - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale)), True))
             return self.animation.update()
         else:
             return self.texture
@@ -938,7 +916,7 @@ class Jukebox(Tile):
                 KDS.Audio.playSound(jukebox_music[self.playing], KDS.Audio.MusicVolume)
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
         if self.playing != -1:
-            lerp_multiplier = KDS.Math.getDistance((self.rect.centerx,self.rect.centery), (player_rect.centerx,player_rect.centery)) / 350
+            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, player_rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
             jukebox_music[self.playing].set_volume(jukebox_volume)
 
@@ -1079,9 +1057,9 @@ class DecorativeHead(Tile):
             self.praying = False
         if self.prayed:
             if dark:
-                Lights.append(KDS.World.Lighting.Light((self.rect.centerx - decor_head_light_sphere_radius / 2, self.rect.centery - decor_head_light_sphere_radius/2), orange_light_sphere1))
+                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.get(150, 1900), True))
             else:
-                day_light = orange_light_sphere1.copy()
+                day_light = KDS.World.Lighting.Shapes.splatter.get(150, 1900).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
         return self.texture
@@ -1123,7 +1101,7 @@ class Torch(Tile):
             self.light_scale += 4
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light((self.rect.x - decor_head_light_sphere_radius/2, self.rect.y - decor_head_light_sphere_radius/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light(self.rect.topleft, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale))))
         return self.texture.update()
 
 class GoryHead(Tile):
@@ -1150,7 +1128,7 @@ class LevelEnder(Tile):
         self.checkCollision = False
 
     def update(self):
-        Lights.append(KDS.World.Lighting.Light( (self.rect.x, self.rect.y), blue_light_sphere1))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.top + 10), KDS.World.Lighting.Shapes.circle.get(40, 40000), True))
         if player_rect.colliderect(self.rect):
             screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
@@ -1188,7 +1166,7 @@ class Candle(Tile):
             self.light_scale = random.randint(20, 60)
         if random.randint(0, 50) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale/2), pygame.transform.scale(orange_light_sphere2, (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale))))
         return self.texture.update()
 
 class Teleport(Tile):
@@ -1231,7 +1209,7 @@ class LampPoleLamp(Tile):
         self.checkCollision = False
     
     def update(self):
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - player_light_sphere_radius / 2, self.rect.centery - player_light_sphere_radius/2), light_sphere2))
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
         return self.texture
 
 class Chair(Tile):
@@ -1262,10 +1240,10 @@ class WallLight(Tile):
         self.checkCollision = False
         self.direction = True if serialNumber == 72 else False
         self.texture = pygame.transform.flip(self.texture, self.direction, False)
-        self.light_t = pygame.transform.flip(light_cone1, self.direction, False).convert_alpha()
+        self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6600), self.direction, False).convert_alpha()
 
     def update(self):
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - light_cone1_radius / 2 - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - light_cone1_radius/2), self.light_t))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery), self.light_t, True))
         return self.texture
 
 class RespawnAnchor(Tile):
@@ -1284,9 +1262,9 @@ class RespawnAnchor(Tile):
     def update(self):
         if RespawnAnchor.active == self:
             if dark:
-                Lights.append(KDS.World.Lighting.Light((self.rect.centerx - orange_light_sphere1.get_width() / 2, self.rect.centery - orange_light_sphere1.get_height() / 2), orange_light_sphere1))
+                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.get(150, 1900), True))
             else:
-                day_light = orange_light_sphere1.copy()
+                day_light = KDS.World.Lighting.Shapes.splatter.get(150, 1900).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
             return self.ontexture
@@ -1573,7 +1551,7 @@ class Pistol(Item):
             KDS.Audio.playSound(pistol_shot)
             KDS.World.pistol_C.counter = 0
             Pistol.ammunition -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light(player_rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2),direction, -1, tiles, 100))
             return pistol_f_texture
         else:
@@ -1609,7 +1587,7 @@ class rk62(Item):
             rk62_shot.stop()
             KDS.Audio.playSound(rk62_shot)
             rk62.ammunition -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius/2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light(player_rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25))
             return rk62_f_texture
         else:
@@ -1636,7 +1614,7 @@ class Shotgun(Item):
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.playSound(shotgun_shot)
             Shotgun.ammunition -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius/2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light(player_rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
             return shotgun_f
@@ -1685,7 +1663,7 @@ class Plasmarifle(Item):
                 temp = 100
             else:
                 temp = -80
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - temp / 1.4, player_rect.centery - 30), blue_light_sphere1))
+            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - temp / 1.4, player_rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx - temp,player_rect.centery - 19, 2, 2), direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
             return plasmarifle_animation.update()
         else:
@@ -1755,7 +1733,7 @@ class Ppsh41(Item):
             smg_shot.stop()
             KDS.Audio.playSound(smg_shot)
             Ppsh41.ammunition -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light(player_rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
@@ -1780,7 +1758,7 @@ class Awm(Item):
             KDS.World.awm_C.counter = 0
             KDS.Audio.playSound(awm_shot)
             Awm.ammunition -= 1
-            Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius / 2), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light(player_rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 19, 2, 2), direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
         else:
@@ -3198,7 +3176,7 @@ while main_running:
         if finished:
             Explosions.remove(unit)
         elif etick < 10:
-            Lights.append(KDS.World.Lighting.Light((unit.xpos - 80, unit.ypos - 80), light_sphere2))
+            Lights.append(KDS.World.Lighting.Light((unit.xpos - 80, unit.ypos - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
 
     #Partikkelit
     while len(Particles) > 20:
@@ -3225,9 +3203,9 @@ while main_running:
                 rectSurf.fill(KDS.Colors.Yellow)
                 rectSurf.set_alpha(128)
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
-            #black_tint.blit(blue_light_sphere1, (20, 20))
+            #black_tint.blit(KDS.World.Lighting.Shapes.circle.get(40, 40000), (20, 20))
         if player_light:
-            black_tint.blit(light_sphere, (int(player_rect.centerx - scroll[0] - player_light_sphere_radius / 2), int(player_rect.centery - scroll[1] - player_light_sphere_radius / 2)))
+            black_tint.blit(KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), (int(player_rect.centerx - scroll[0] - 150), int(player_rect.centery - scroll[1] - 150)))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:

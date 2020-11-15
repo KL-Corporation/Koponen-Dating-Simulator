@@ -12,6 +12,9 @@
         },
         "Item": {
 
+        },
+        "Lighting": {
+            "playerLight": true
         }
     },
     "GameData": {

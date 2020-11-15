@@ -1,9 +1,22 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 import pygame, numpy, math, random
-import KDS.Convert, KDS.Math, KDS.Animator
+from pygame.locals import *
+import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging
 
 pygame.init()
 pygame.key.stop_text_input()
+
+def init():
+    Lighting.Shapes.circle_softest = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_softest.png").convert_alpha())
+    Lighting.Shapes.circle_soft = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_soft.png").convert_alpha())
+    Lighting.Shapes.circle_softer = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_softer.png").convert_alpha())
+    Lighting.Shapes.circle = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle.png").convert_alpha())
+    Lighting.Shapes.circle_harder = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_harder.png").convert_alpha())
+    Lighting.Shapes.circle_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_hard.png").convert_alpha())
+    Lighting.Shapes.circle_hardest = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_hardest.png").convert_alpha())
+    Lighting.Shapes.cone_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_hard.png").convert_alpha())
+    Lighting.Shapes.cone_small_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_small_hard.png").convert_alpha())
+    Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
 
 def collision_test(rect, Tile_list):
     hit_list = []
@@ -56,7 +69,52 @@ def move_entity(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horiso
 
 class Lighting:
 
-    
+    class Shapes:
+        class LightShape:
+            def __init__(self, texture: pygame.Surface) -> None:
+                self.texture = texture
+                self.rendered: Dict[dict] = {}
+                
+            def __addColor(self, radius: int, color: int):
+                if radius in self.rendered:
+                    corRad = self.rendered[radius]
+                    tmp_tex: pygame.Surface = corRad["default"].copy()
+                    convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
+                    tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
+                    radius[color] = tmp_tex
+                else: KDS.Logging.AutoError("Targeted radius not initialised!")
+                
+            def get(self, radius: int, color: int):
+                """Loads a light shape from memory
+
+                Args:
+                    radius (int): Light radius in pixels.
+                    color (int): A Correlated Color Temperature (in Kelvin) that will determine the light's color.
+
+                Returns:
+                    Surface: The surface that contains the light texture
+                """
+                if radius not in self.rendered:
+                    self.rendered[radius]: Dict[str or int, pygame.Surface] = { "default": pygame.transform.scale(self.texture, (radius, radius)) }
+
+                corRad = self.rendered[radius]
+                if color not in self.rendered:
+                    tmp_tex: pygame.Surface = corRad["default"].copy()
+                    convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
+                    tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
+                    corRad[color] = tmp_tex
+                return corRad[color]
+        
+        circle_softest: LightShape = None
+        circle_soft: LightShape = None
+        circle_softer: LightShape = None
+        circle: LightShape = None
+        circle_harder: LightShape = None
+        circle_hard: LightShape = None
+        circle_hardest: LightShape = None
+        cone_hard: LightShape = None
+        cone_small_hard: LightShape = None
+        splatter: LightShape = None
 
     @staticmethod
     def circle_surface(radius, color):
@@ -68,14 +126,22 @@ class Lighting:
     @staticmethod
     def lamp_cone(topwidth, bottomwidth, height, color):
         surf = pygame.Surface((bottomwidth, height))
-        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0),(bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)])
+        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0), (bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)])
         surf.set_colorkey((0, 0, 0))
         return surf
     
     class Light:
-        def __init__(self, position, surf):
-            self.surf = surf
-            self.position = position
+        def __init__(self, position: Tuple[int, int], shape: pygame.Surface, positionFromCenter: bool = False):
+            """Instantiates a new light.
+
+            Args:
+                position (Tuple[int, int]): The position where the light will be rendered.
+                shape (Lighting.Shapes): The shape of the light.
+                color (int): A Correlated Color Temperature (in Kelvin) which will determine the light's color. Is clamped to the range [1000, 40000].
+            """
+            self.surf = shape
+            if not positionFromCenter: self.position = position
+            else: self.position = (position[0] - shape.get_width() / 2, position[1] - shape.get_height() / 2)
 
     class Fireparticle:
         def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
