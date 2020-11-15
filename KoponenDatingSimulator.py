@@ -405,7 +405,7 @@ smg_shot = pygame.mixer.Sound("Assets/Audio/Items/smg_shoot.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
 lantern_pickup = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
 camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
-respawn_anchor = [
+respawn_anchor_sounds = [
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_0.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_2.ogg")
@@ -434,6 +434,7 @@ jukebox_tip.blit(tmp_jukebox_data, ((tmp_jukebox_data2.get_width() - tmp_jukebox
 jukebox_tip.blit(tmp_jukebox_data2, ((tmp_jukebox_data.get_width() - tmp_jukebox_data2.get_width()) / 2, tmp_jukebox_data.get_height()))
 del tmp_jukebox_data, tmp_jukebox_data2
 decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.White)
+respawn_anchor_tip = tip_font.render("Set Respawn Point [E]", True, KDS.Colors.White)
 level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.White)
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
@@ -604,10 +605,8 @@ class WorldData():
                     else:
                         KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
                 shutil.rmtree(fpath)
-        try:
-            with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
-                map_data = map_file.read().split("\n")
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+        with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
+            map_data = map_file.read().split("\n")
 
         global dark, darkness, ambient_light, ambient_light_tint, player_light
         dark = KDS.ConfigManager.GetLevelProp("Darkness", "enabled", False)
@@ -1278,14 +1277,25 @@ class RespawnAnchor(Tile):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.ontexture = respawn_anchor_on
+        self.checkCollision = False
         RespawnAnchor.rspP_list.append(self)
     
     def update(self):
         if RespawnAnchor.active == self:
-            pass
-        elif KDS.Keys.functionKey.clicked:
-            RespawnAnchor.active = self
-            RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - player_rect.height + 34)
+            if dark:
+                Lights.append(KDS.World.Lighting.Light((self.rect.centerx - orange_light_sphere1.get_width() / 2, self.rect.centery - orange_light_sphere1.get_height() / 2), orange_light_sphere1))
+            else:
+                day_light = orange_light_sphere1.copy()
+                day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
+                screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
+            return self.ontexture
+        elif self.rect.colliderect(player_rect):
+            screen.blit(respawn_anchor_tip, (self.rect.centerx - scroll[0] - int(respawn_anchor_tip.get_width() / 2), self.rect.top - scroll[1] - 50))
+            if KDS.Keys.functionKey.clicked:
+                RespawnAnchor.active = self
+                RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - player_rect.height + 34)
+                KDS.Audio.playSound(random.choice(respawn_anchor_sounds))
+        return self.texture
             
 specialTilesD = {
     15: Toilet,
@@ -2327,7 +2337,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     #endregion
 
     #region Set Game Data
-    global player_death_event, animation_has_played, level_finished
+    global player_death_event, animation_has_played, level_finished, death_wait
     player_death_event = False
     animation_has_played = False
     level_finished = False
@@ -2359,6 +2369,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
+
 def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
     global Items, Enemies, Explosions, BallisticObjects
@@ -2376,6 +2387,19 @@ def save_function():
     KDS.ConfigManager.Save.SetPlayer("scroll", scroll)
     KDS.ConfigManager.Save.quit()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
+
+def respawn_function():
+    global player_death_event, animation_has_played, level_finished, death_wait, player_health, player_rect, farting, playerStamina
+    player_death_event = False
+    animation_has_played = False
+    level_finished = False
+    death_wait = 0
+    player_health = 100
+    if RespawnAnchor.active != None: player_rect.bottomleft = RespawnAnchor.active.rect.bottomleft
+    else: player_rect.topleft = KDS.ConfigManager.GetLevelProp("StartPos", "player", (100, 100))
+    farting = False
+    playerStamina = 100.0
+    player_animations.reset()
 #endregion
 #region Menus
 def esc_menu_f():
@@ -3094,7 +3118,10 @@ while main_running:
         else:
             death_wait += 1
             if death_wait > 240:
-                play_function(KDS.Gamemode.gamemode, False, False)
+                if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+                    respawn_function()
+                else:
+                    pass
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######

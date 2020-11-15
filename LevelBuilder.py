@@ -50,7 +50,7 @@ t_textures = {}
 for element in data["tile_textures"]:
     srl = f"0{element}"
 
-    t_textures[srl] = pygame.image.load("Assets/Textures/Map/" + data["tile_textures"][element]).convert()
+    t_textures[srl] = pygame.image.load("Assets/Textures/Tiles/" + data["tile_textures"][element]).convert()
     t_textures[srl].set_colorkey(KDS.Colors.White)
 
 i_textures = {}
