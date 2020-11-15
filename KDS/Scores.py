@@ -19,7 +19,7 @@ koponen_happiness = 40
 
 def init():
     global pointSound
-    pointSound = pygame.mixer.Sound("Assets/Audio/Effects/pointCount.ogg")
+    pointSound = pygame.mixer.Sound("Assets/Audio/Effects/point_count.ogg")
 
 class GameTime:
     formattedGameTime = "null"

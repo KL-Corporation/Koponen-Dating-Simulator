@@ -60,12 +60,12 @@ imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
 imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.wav")
 zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav")
 zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav")
-shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/player_shotgun.wav")
-cavemonster_gun = pygame.mixer.Sound("Assets/Audio/effects/cavemonster_fire.ogg")
-impAtack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
-double_barrel_fire = pygame.mixer.Sound("Assets/Audio/effects/double_barrel_fire.ogg")
-basicGunshot = pygame.mixer.Sound("Assets/Audio/effects/gunshot_basic1.ogg")
-pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
+shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/shotgun_shoot.ogg")
+cavemonster_gun = pygame.mixer.Sound("Assets/Audio/Entities/cavemonster_fire.ogg")
+impAttack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
+double_barrel_fire = pygame.mixer.Sound("Assets/Audio/Entities/double_barrel_fire.ogg")
+basicGunshot = pygame.mixer.Sound("Assets/Audio/Entities/gunshot_basic1.ogg")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistol_shoot.ogg")
 drug_dealer_sight = pygame.mixer.Sound("Assets/Audio/entities/dshight.ogg")
 drug_dealer_death_sound = pygame.mixer.Sound("Assets/Audio/entities/ddth.ogg")
 mafiaman_sight = pygame.mixer.Sound("Assets/Audio/entities/mafiaman_sight.ogg")
@@ -365,8 +365,8 @@ class Imp(HostileEnemy):
         dist = max(0, dist)
         dist = 1200 - dist
         dist /= 1200
-        impAtack.set_volume(dist)
-        impAtack.play()
+        impAttack.set_volume(dist)
+        KDS.Audio.playSound(impAttack)
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
     def onDeath(self):
         return [0]
@@ -404,7 +404,7 @@ class SergeantZombie(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         shotgunShot.set_volume(dist)
-        shotgunShot.play()
+        KDS.Audio.playSound(shotgunShot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 35), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
@@ -448,7 +448,7 @@ class DrugDealer(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         pistol_shot.set_volume(dist)
-        pistol_shot.play()
+        KDS.Audio.playSound(pistol_shot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
@@ -494,7 +494,7 @@ class TurboShotgunner(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         double_barrel_fire.set_volume(dist)
-        double_barrel_fire.play()
+        KDS.Audio.playSound(double_barrel_fire)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction)+(3-fd)*1.5 ) for fd in range(6)]
 
@@ -537,7 +537,7 @@ class MafiaMan(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         basicGunshot.set_volume(dist)
-        basicGunshot.play()
+        KDS.Audio.playSound(basicGunshot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
@@ -580,7 +580,7 @@ class MethMaker(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         basicGunshot.set_volume(dist)
-        basicGunshot.play()
+        KDS.Audio.playSound(basicGunshot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
@@ -625,7 +625,7 @@ class CaveMonster(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         cavemonster_gun.set_volume(dist)
-        cavemonster_gun.play()
+        KDS.Audio.playSound(cavemonster_gun)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 

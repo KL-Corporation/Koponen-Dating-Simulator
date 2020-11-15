@@ -218,50 +218,51 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Font Loading Complete.")
 #endregion
 #region Building Textures
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Building Textures...")
-floor0 = pygame.image.load("Assets/Textures/Map/floor0v2.png").convert()
+floor0 = pygame.image.load("Assets/Textures/Tiles/floor0v2.png").convert()
 concrete0 = pygame.image.load(
-    "Assets/Textures/Map/concrete0.png").convert()
-wall0 = pygame.image.load("Assets/Textures/Map/wall0.png").convert()
-table0 = pygame.image.load("Assets/Textures/Map/table0.png").convert()
-toilet0 = pygame.image.load("Assets/Textures/Map/toilet0.png").convert()
-tp_shitting = pygame.image.load("Assets/Textures/Map/player_shitting_toilet.png").convert()
-lamp0 = pygame.image.load("Assets/Textures/Map/lamp0.png").convert()
-trashcan = pygame.image.load("Assets/Textures/Map/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Map/ground0.png").convert()
-grass = pygame.image.load("Assets/Textures/Map/grass0.png").convert()
+    "Assets/Textures/Tiles/concrete0.png").convert()
+wall0 = pygame.image.load("Assets/Textures/Tiles/wall0.png").convert()
+table0 = pygame.image.load("Assets/Textures/Tiles/table0.png").convert()
+toilet0 = pygame.image.load("Assets/Textures/Tiles/toilet0.png").convert()
+tp_shitting = pygame.image.load("Assets/Textures/Tiles/player_shitting_toilet.png").convert()
+lamp0 = pygame.image.load("Assets/Textures/Tiles/lamp0.png").convert()
+trashcan = pygame.image.load("Assets/Textures/Tiles/trashcan.png").convert()
+ground1 = pygame.image.load("Assets/Textures/Tiles/ground0.png").convert()
+grass = pygame.image.load("Assets/Textures/Tiles/grass0.png").convert()
 door_closed = pygame.image.load(
-    "Assets/Textures/Map/door_closed.png").convert()
+    "Assets/Textures/Tiles/door_closed.png").convert()
 red_door_closed = pygame.image.load(
-    "Assets/Textures/Map/red_door_closed.png").convert()
+    "Assets/Textures/Tiles/red_door_closed.png").convert()
 green_door_closed = pygame.image.load(
-    "Assets/Textures/Map/green_door_closed.png").convert()
+    "Assets/Textures/Tiles/green_door_closed.png").convert()
 blue_door_closed = pygame.image.load(
-    "Assets/Textures/Map/blue_door_closed.png").convert()
-door_open = pygame.image.load("Assets/Textures/Map/door_front.png").convert()
-exit_door_open = pygame.image.load("Assets/Textures/Map/door_open.png").convert_alpha()
-bricks = pygame.image.load("Assets/Textures/Map/bricks.png").convert()
-tree = pygame.image.load("Assets/Textures/Map/tree.png").convert()
-planks = pygame.image.load("Assets/Textures/Map/planks.png").convert()
+    "Assets/Textures/Tiles/blue_door_closed.png").convert()
+door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
+exit_door_open = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
+respawn_anchor_on = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
+bricks = pygame.image.load("Assets/Textures/Tiles/bricks.png").convert()
+tree = pygame.image.load("Assets/Textures/Tiles/tree.png").convert()
+planks = pygame.image.load("Assets/Textures/Tiles/planks.png").convert()
 jukebox_texture = pygame.image.load(
-    "Assets/Textures/Map/jukebox.png").convert()
+    "Assets/Textures/Tiles/jukebox.png").convert()
 landmine_texture = pygame.image.load(
-    "Assets/Textures/Map/landmine.png").convert()
+    "Assets/Textures/Tiles/landmine.png").convert()
 ladder_texture = pygame.image.load(
-    "Assets/Textures/Map/ladder.png").convert()
+    "Assets/Textures/Tiles/ladder.png").convert()
 background_wall = pygame.image.load(
-    "Assets/Textures/Map/background_wall.png").convert()
+    "Assets/Textures/Tiles/background_wall.png").convert()
 light_bricks = pygame.image.load(
-    "Assets/Textures/Map/light_bricks.png").convert()
+    "Assets/Textures/Tiles/light_bricks.png").convert()
 iron_bar = pygame.image.load(
-    "Assets/Textures/Map/iron_bars_texture.png").convert()
-soil = pygame.image.load("Assets/Textures/Map/soil.png").convert()
-blh = pygame.image.load("Assets/Textures/Map/bloody_h.png").convert()
+    "Assets/Textures/Tiles/iron_bars_texture.png").convert()
+soil = pygame.image.load("Assets/Textures/Tiles/soil.png").convert()
+blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
 mossy_bricks = pygame.image.load(
-    "Assets/Textures/Map/mossy_bricks.png").convert()
-stone = pygame.image.load("Assets/Textures/Map/stone.png").convert()
-hay = pygame.image.load("Assets/Textures/Map/hay.png").convert()
-soil1 = pygame.image.load("Assets/Textures/Map/soil_2.png").convert()
-wood = pygame.image.load("Assets/Textures/Map/wood.png").convert()
+    "Assets/Textures/Tiles/mossy_bricks.png").convert()
+stone = pygame.image.load("Assets/Textures/Tiles/stone.png").convert()
+hay = pygame.image.load("Assets/Textures/Tiles/hay.png").convert()
+soil1 = pygame.image.load("Assets/Textures/Tiles/soil_2.png").convert()
+wood = pygame.image.load("Assets/Textures/Tiles/wood.png").convert()
 table0.set_colorkey(KDS.Colors.White)
 toilet0.set_colorkey(KDS.Colors.White)
 lamp0.set_colorkey(KDS.Colors.White)
@@ -372,46 +373,49 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Light Texture Loading Complete.")
 #endregion
 #region Audio
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Audio Files...")
-gasburner_clip = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_clip.wav")
-gasburner_fire = pygame.mixer.Sound("Assets/Audio/Effects/gasburner_fire.wav")
-door_opening = pygame.mixer.Sound("Assets/Audio/Effects/door.wav")
-player_death_sound = pygame.mixer.Sound("Assets/Audio/Effects/dspldeth.wav")
-player_walking = pygame.mixer.Sound("Assets/Audio/Effects/walking.wav")
-coffeemug_sound = pygame.mixer.Sound("Assets/Audio/Effects/coffeemug.wav")
-knife_pickup = pygame.mixer.Sound("Assets/Audio/Effects/knife.wav")
-key_pickup = pygame.mixer.Sound("Assets/Audio/Effects/pickup_key.wav")
-ss_sound = pygame.mixer.Sound("Assets/Audio/Effects/ss.wav")
-lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/Effects/sytytyspalat.wav")
-ppsh41_shot = pygame.mixer.Sound("Assets/Audio/Effects/sgunshot.wav")
-landmine_explosion = pygame.mixer.Sound("Assets/Audio/Effects/landmine.wav")
-hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplpain.wav")
-plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/Effects/dsplasma.wav")
-weapon_pickup = pygame.mixer.Sound("Assets/Audio/Effects/weapon_pickup.wav")
-item_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsitemup.wav")
-plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/dsfirxpl.wav")
-pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistolshot.wav")
-rk62_shot = pygame.mixer.Sound("Assets/Audio/Effects/rk62_shot.wav")
-shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun.wav")
+gasburner_clip = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
+gasburner_fire = pygame.mixer.Sound("Assets/Audio/Items/gasburner_use.ogg")
+door_opening = pygame.mixer.Sound("Assets/Audio/Tiles/door.ogg")
+player_death_sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
+player_walking = pygame.mixer.Sound("Assets/Audio/Effects/player_walk.ogg")
+coffeemug_sound = pygame.mixer.Sound("Assets/Audio/Items/coffeemug.ogg")
+knife_pickup = pygame.mixer.Sound("Assets/Audio/Items/knife_pickup.ogg")
+key_pickup = pygame.mixer.Sound("Assets/Audio/Items/key_pickup.ogg")
+ss_sound = pygame.mixer.Sound("Assets/Audio/Items/ssbonuscard_pickup.ogg")
+lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/Items/lappisytytyspalat_pickup.ogg")
+ppsh41_shot = pygame.mixer.Sound("Assets/Audio/Items/ppsh41_shoot.ogg")
+landmine_explosion = pygame.mixer.Sound("Assets/Audio/Tiles/landmine_explosion.ogg")
+hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/player_hurt.ogg")
+plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/Items/plasmarifle_shoot.ogg")
+weapon_pickup = pygame.mixer.Sound("Assets/Audio/Items/weapon_pickup.ogg")
+item_pickup = pygame.mixer.Sound("Assets/Audio/Items/default_pickup.ogg")
+plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/plasma_hit.ogg")
+pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistol_shoot.ogg")
+rk62_shot = pygame.mixer.Sound("Assets/Audio/Items/rk62_shoot.ogg")
 glug_sound = pygame.mixer.Sound("Assets/Audio/Effects/glug.ogg")
-player_shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/player_shotgun.wav")
-archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/dsflame.wav")
-archvile_death = pygame.mixer.Sound("Assets/Audio/Effects/dsvildth.wav")
-fart = pygame.mixer.Sound("Assets/Audio/Effects/fart_attack.wav")
-soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Effects/dsgetpow.wav")
-pray_sound = pygame.mixer.Sound("Assets/Audio/Effects/prayer.ogg")
-decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Effects/DecorativeHead_wakeup.ogg")
-awm_shot = pygame.mixer.Sound("Assets/Audio/Effects/awm_shot.ogg")
-smg_shot = pygame.mixer.Sound("Assets/Audio/Effects/smg.ogg")
-grenade_throw = pygame.mixer.Sound("Assets/Audio/Effects/grenade_throw.ogg")
-lantern_pickup = pygame.mixer.Sound("Assets/Audio/Effects/lantern_pickup.ogg")
+shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun_shoot.ogg")
+archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/flame.ogg")
+archvile_death = pygame.mixer.Sound("Assets/Audio/Entities/archvile_death.ogg")
+fart = pygame.mixer.Sound("Assets/Audio/Effects/player_fart.ogg")
+soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Items/soulsphere_pick.ogg")
+pray_sound = pygame.mixer.Sound("Assets/Audio/Tiles/decorative_head_pray.ogg")
+decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Tiles/decorative_head_wakeup.ogg")
+awm_shot = pygame.mixer.Sound("Assets/Audio/Items/awm_shot.ogg")
+smg_shot = pygame.mixer.Sound("Assets/Audio/Items/smg_shoot.ogg")
+grenade_throw = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
+lantern_pickup = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
 camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
+respawn_anchor = [
+    pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_0.ogg"),
+    pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
+    pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_2.ogg")
+]
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
-shotgun_shot.set_volume(0.9)
-player_shotgun_shot.set_volume(0.8)
+shotgun_shot.set_volume(0.8)
 #Nice
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
 #endregion
@@ -499,12 +503,10 @@ farting = False
 
 renderPlayer = True
 
-try:
-    with open("Assets/Maps/map_names.txt", "r") as file:
-        cntnts = file.read()
-        cntnts = cntnts.split('\n')
-        file.close()
-except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+with open("Assets/Maps/map_names.txt", "r") as file:
+    cntnts = file.read()
+    cntnts = cntnts.split('\n')
+    file.close()
 
 map_names = tuple(cntnts)
 
@@ -687,7 +689,7 @@ buildData = json.loads(data)
 
 t_textures = {}
 for t in buildData["tile_textures"]:
-    t_textures[int(t)] = pygame.image.load("Assets/Textures/Map/" + buildData["tile_textures"][t]).convert()
+    t_textures[int(t)] = pygame.image.load("Assets/Textures/Tiles/" + buildData["tile_textures"][t]).convert()
     t_textures[int(t)].set_colorkey(KDS.Colors.White)
 
 i_textures = {}
@@ -1267,6 +1269,24 @@ class WallLight(Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx - light_cone1_radius / 2 - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - light_cone1_radius/2), self.light_t))
         return self.texture
 
+class RespawnAnchor(Tile):
+    respawnPoint = None
+    active = None
+    rspP_list = []
+    
+    def __init__(self, position, serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.ontexture = respawn_anchor_on
+        RespawnAnchor.rspP_list.append(self)
+    
+    def update(self):
+        if RespawnAnchor.active == self:
+            pass
+        elif KDS.Keys.functionKey.clicked:
+            RespawnAnchor.active = self
+            RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - player_rect.height + 34)
+            
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1291,7 +1311,8 @@ specialTilesD = {
     66: SkullTile,
     71: WallLight,
     72: WallLight,
-    73: LevelEnderDoor
+    73: LevelEnderDoor,
+    74: RespawnAnchor
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -1459,7 +1480,7 @@ class GreenKey(Item):
         return True
 
 class iPuhelin(Item):
-    #pickup_sound = pygame.mixer.Sound("Assets/Audio/Effects/apple_o_paskaa.ogg")
+    #pickup_sound = pygame.mixer.Sound("Assets/Audio/Legacy/apple_o_paskaa.ogg")
     realistic_texture = pygame.image.load("Assets/Textures/Items/iPuhelin_realistic.png").convert()
     realistic_texture.set_colorkey(KDS.Colors.White)
     def __init__(self, position: tuple, serialNumber: int, texture = None):
@@ -1597,7 +1618,7 @@ class Shotgun(Item):
         global tiles
         if args[0][1] and KDS.World.shotgun_C.counter > 50 and Shotgun.ammunition > 0:
             KDS.World.shotgun_C.counter = 0
-            KDS.Audio.playSound(player_shotgun_shot)
+            KDS.Audio.playSound(shotgun_shot)
             Shotgun.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light((player_rect.centerx - player_light_sphere_radius / 2, player_rect.centery - player_light_sphere_radius/2), light_sphere2))
             for x in range(10):
@@ -1888,9 +1909,9 @@ class Lantern(Item):
 nullLantern = Lantern((0, 0), 33, texture = i_textures[33])
 
 class Chainsaw(Item):
-    pickup_sound = pygame.mixer.Sound("Assets/Audio/Effects/chainsaw_start.ogg")
-    freespin_sound = pygame.mixer.Sound("Assets/Audio/Effects/chainsaw_freespin.ogg")
-    throttle_sound = pygame.mixer.Sound("Assets/Audio/Effects/chainsaw_throttle.ogg")
+    pickup_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_start.ogg")
+    freespin_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_freespin.ogg")
+    throttle_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_throttle.ogg")
     soundCounter = 70
     soundCounter1 = 122
     a_a = False
@@ -2271,7 +2292,7 @@ def agr(tcagr: bool):
     return True
 #endregion
 #region Game Start and Stop
-def play_function(gamemode: KDS.Gamemode.Modes or int, reset_scroll: bool, show_loading: bool = True):
+def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show_loading: bool = True):
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
     global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
