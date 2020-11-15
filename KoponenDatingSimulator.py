@@ -362,13 +362,13 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
 #endregion
 #region Light Textures
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Light Textures...")
-light_sphere = pygame.image.load("Assets/Textures/Misc/light_350_soft.png").convert_alpha()
-light_sphere2 = pygame.image.load("Assets/Textures/Misc/light_350_hard.png").convert_alpha()
-light_cone1 = pygame.image.load("Assets/Textures/Misc/light_350_cone_hard.png").convert_alpha()
-orange_light_sphere1 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere.png").convert_alpha()
-orange_light_sphere2 = pygame.image.load("Assets/Textures/Misc/orange_gradient_sphere1.png").convert_alpha()
-blue_light_sphere1 = pygame.image.load("Assets/Textures/Misc/blue_gradient_sphere.png").convert_alpha()
-warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Misc/warm_white_lightSphere0.png").convert_alpha()
+light_sphere = pygame.image.load("Assets/Textures/Lighting/light_350_soft.png").convert_alpha()
+light_sphere2 = pygame.image.load("Assets/Textures/Lighting/light_350_hard.png").convert_alpha()
+light_cone1 = pygame.image.load("Assets/Textures/Lighting/light_350_cone_hard.png").convert_alpha()
+orange_light_sphere1 = pygame.image.load("Assets/Textures/Lighting/orange_gradient_sphere.png").convert_alpha()
+orange_light_sphere2 = pygame.image.load("Assets/Textures/Lighting/orange_gradient_sphere1.png").convert_alpha()
+blue_light_sphere1 = pygame.image.load("Assets/Textures/Lighting/blue_gradient_sphere.png").convert_alpha()
+warm_white_lightSphere0 = pygame.image.load("Assets/Textures/Lighting/warm_white_lightSphere0.png").convert_alpha()
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Light Texture Loading Complete.")
 #endregion
 #region Audio

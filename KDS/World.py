@@ -56,18 +56,20 @@ def move_entity(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horiso
 
 class Lighting:
 
+    
+
     @staticmethod
     def circle_surface(radius, color):
-        surf = pygame.Surface((radius*2, radius*2))
+        surf = pygame.Surface((radius * 2, radius * 2))
         pygame.draw.circle(surf, color, (radius, radius), radius)
-        surf.set_colorkey((0,0,0))
+        surf.set_colorkey((0, 0, 0))
         return surf
 
     @staticmethod
     def lamp_cone(topwidth, bottomwidth, height, color):
         surf = pygame.Surface((bottomwidth, height))
-        pygame.draw.polygon(surf, color, [(bottomwidth/2+topwidth/2,0),(bottomwidth/2 - topwidth/2,0),(0, height),(bottomwidth, height)])
-        surf.set_colorkey((0,0,0))
+        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0),(bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)])
+        surf.set_colorkey((0, 0, 0))
         return surf
     
     class Light:
@@ -81,7 +83,7 @@ class Lighting:
             self.size = size
             self.speed = speed
             self.lifetime = lifetime
-            self.dying_speed = size/lifetime
+            self.dying_speed = size / lifetime
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
         
@@ -91,13 +93,12 @@ class Lighting:
             particle.rect.x += random.randint(-1, 1)
             particle.size -= particle.dying_speed
 
-            if particle.size < 0:
-                return None
+            if particle.size < 0: return None
             
             particle.bsurf = pygame.transform.scale(particle.bsurf, (round(particle.size), round(particle.size)))
-            Surface.blit(particle.bsurf, (particle.rect.x-scroll[0], particle.rect.y-scroll[1]))
+            Surface.blit(particle.bsurf, (particle.rect.x - scroll[0], particle.rect.y - scroll[1]))
 
-            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size*2), round(particle.size*2)))
+            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size * 2), round(particle.size * 2)))
 
             return particle.tsurf
 
@@ -270,7 +271,6 @@ class BallisticProjectile:
         """
         if isinstance(self.texture, pygame.Surface):
             self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
-    
 
 class itemTools:
     class rk62:

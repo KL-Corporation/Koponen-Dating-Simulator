@@ -24,39 +24,6 @@ def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: f
     return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 #endregion
 
-#region Conversion
-def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
-    kelvin = Clamp(kelvin, 1000, 40000)
-    
-    tmp_internal = kelvin / 100.0
-    
-    # red 
-    if tmp_internal <= 66:
-        red = 255
-    else:
-        tmp_red = 329.698727446 * math.pow(tmp_internal - 60, -0.1332047592)
-        red = round(Clamp(tmp_red, 0, 255))
-    
-    # green
-    if tmp_internal <= 66:
-        tmp_green = 99.4708025861 * math.log(tmp_internal) - 161.1195681661
-        green = round(Clamp(tmp_green, 0, 255))
-    else:
-        tmp_green = 288.1221695283 * math.pow(tmp_internal - 60, -0.0755148492)
-        green = round(Clamp(tmp_green, 0, 255))
-    
-    # blue
-    if tmp_internal >= 66:
-        blue = 255
-    elif tmp_internal <= 19:
-        blue = 0
-    else:
-        tmp_blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
-        blue = round(Clamp(tmp_blue, 0, 255))
-    
-    return red, green, blue
-#endregion
-
 #region Distance
 def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
     """

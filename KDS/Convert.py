@@ -1,5 +1,6 @@
 from typing import Tuple
 import pygame
+import math
 import KDS.Logging
 import KDS.Colors
 import KDS.Math
@@ -78,6 +79,46 @@ def AspectScale(image: pygame.Surface, size: Tuple[int, int], horizontalOnly: bo
 
 def ToMultiplier(boolean: bool):
     return -1 if boolean else 1
+
+def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
+    """Color Correlated Color Temperature as an RGB color.
+
+    Args:
+        kelvin (float): The correlated color temperature. Is clamped to the range [1000, 40000].
+
+    Returns:
+        Tuple[int, int, int]: [description]
+    """
+    
+    kelvin = KDS.Math.Clamp(kelvin, 1000, 40000)
+    
+    tmp_internal = kelvin / 100.0
+    
+    # red 
+    if tmp_internal <= 66:
+        red = 255
+    else:
+        tmp_red = 329.698727446 * math.pow(tmp_internal - 60, -0.1332047592)
+        red = round(KDS.Math.Clamp(tmp_red, 0, 255))
+    
+    # green
+    if tmp_internal <= 66:
+        tmp_green = 99.4708025861 * math.log(tmp_internal) - 161.1195681661
+        green = round(KDS.Math.Clamp(tmp_green, 0, 255))
+    else:
+        tmp_green = 288.1221695283 * math.pow(tmp_internal - 60, -0.0755148492)
+        green = round(KDS.Math.Clamp(tmp_green, 0, 255))
+    
+    # blue
+    if tmp_internal >= 66:
+        blue = 255
+    elif tmp_internal <= 19:
+        blue = 0
+    else:
+        tmp_blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
+        blue = round(KDS.Math.Clamp(tmp_blue, 0, 255))
+    
+    return red, green, blue
 
 def ToLines(text: str, font: pygame.font.Font, max_width: int or float):
     if font.size(text)[0] > max_width:
