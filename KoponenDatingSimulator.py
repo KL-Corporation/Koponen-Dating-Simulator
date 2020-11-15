@@ -1278,6 +1278,7 @@ class RespawnAnchor(Tile):
         self.texture = t_textures[serialNumber]
         self.ontexture = respawn_anchor_on
         self.checkCollision = False
+        self.sound = random.choice(respawn_anchor_sounds)
         RespawnAnchor.rspP_list.append(self)
     
     def update(self):
@@ -1294,7 +1295,12 @@ class RespawnAnchor(Tile):
             if KDS.Keys.functionKey.clicked:
                 RespawnAnchor.active = self
                 RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - player_rect.height + 34)
-                KDS.Audio.playSound(random.choice(respawn_anchor_sounds))
+                loopStopper = 0
+                oldSound = self.sound
+                while self.sound == oldSound and loopStopper < 10:
+                    self.sound = random.choice(respawn_anchor_sounds)
+                    loopStopper += 1
+                KDS.Audio.playSound(self.sound)
         return self.texture
             
 specialTilesD = {
