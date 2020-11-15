@@ -1930,6 +1930,7 @@ class Chainsaw(Item):
     throttle_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_throttle.ogg")
     soundCounter = 70
     soundCounter1 = 122
+    gasoline = 100.0
     a_a = False
     Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
     def __init__(self, position: tuple, serialNumber: int, texture = None):
@@ -1938,14 +1939,14 @@ class Chainsaw(Item):
         self.pickupCounter = 0
 
     def use(self, *args):
-        if self.pickupFinished:
+        if self.pickupFinished and Chainsaw.gasoline > 0:
             if args[0][0]:
-                print("   ss ")
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 18 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 4, 1, 1), direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
+                    Chainsaw.freespin_sound.stop()
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
                     Chainsaw.soundCounter = 0
-                    Chainsaw.freespin_sound.stop()
+                    Chainsaw.gasoline -= 0.8
                 Chainsaw.a_a = True
 
             elif not args[0][0]:
@@ -1953,6 +1954,7 @@ class Chainsaw(Item):
                 if Chainsaw.soundCounter1 > 103:
                     Chainsaw.soundCounter1 = 0
                     Chainsaw.throttle_sound.stop()
+                    Chainsaw.gasoline -= 0.1
                     KDS.Audio.playSound(Chainsaw.freespin_sound)
         else:
             self.pickupCounter += 1
@@ -1971,6 +1973,10 @@ class Chainsaw(Item):
 class GasCanister(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        Chainsaw.gasoline = min(100, Chainsaw.gasoline + 50)
+        return True
 
 Item.serialNumbers = {
     1: BlueKey,
