@@ -754,6 +754,8 @@ class Inventory:
                 self.SIndex -= 1
         if self.SIndex < 0:
             self.SIndex = self.size - 1
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex -= 1
 
     def pickSlot(self, index):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
