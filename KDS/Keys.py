@@ -54,5 +54,4 @@ def Update():
     for key in keyList: key.update()
         
 def Reset():
-    for key in keyList:
-        key.SetState(False)
+    for key in keyList: key.SetState(False)
