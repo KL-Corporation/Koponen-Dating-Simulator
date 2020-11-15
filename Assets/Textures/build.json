@@ -73,8 +73,14 @@
         "071": "wall_light.png",
         "072": "wall_light1.png",
         "073": "door_front.png",
-        "074": "respawn_anchor_off.png"
+        "074": "respawn_anchor_off.png",
+        "075": "teleport_base.png"
     },
+
+    "tile_sounds" : {
+        "008" : "grass.ogg"
+    },
+
     "special_tiles": [
         15,
         16,
@@ -108,7 +114,8 @@
         45,
         46,
         56,
-        57
+        57,
+        75
     ],
     "item_textures": {
         "000": "empty.png",

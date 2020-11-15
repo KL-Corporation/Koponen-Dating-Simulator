@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 import pygame, numpy, math, random
 from pygame.locals import *
-import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging
+import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging, KDS.Audio
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -41,7 +41,7 @@ def collision_test(rect, Tile_list):
     for row in Tile_list[y:end_y]:
         for tile in row[x:end_x]:
             if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
-                hit_list.append(tile.rect)
+                hit_list.append(tile)
     return hit_list
 
 def move_entity(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horisontal_movement_check: bool = False, skip_vertical_movement_check=False):
@@ -51,19 +51,44 @@ def move_entity(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horiso
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0 or skip_horisontal_movement_check:
-            rect.right = tile.left
+            rect.right = tile.rect.left
             collision_types['right'] = True
         elif movement[0] < 0 or skip_horisontal_movement_check:
-            rect.left = tile.right
+            rect.left = tile.rect.right
             collision_types['left'] = True
     rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0 or skip_vertical_movement_check:
-            rect.bottom = tile.top
+            rect.bottom = tile.rect.top
             collision_types['bottom'] = True
         elif movement[1] < 0 or skip_vertical_movement_check:
-            rect.top = tile.bottom
+            rect.top = tile.rect.bottom
+            collision_types['top'] = True
+    return rect, collision_types
+
+def move_entity2(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horisontal_movement_check: bool = False, skip_vertical_movement_check=False, w_sounds: dict = {"default" : []}, playWalkSound = False):
+    collision_types = {'top': False, 'bottom': False,
+                       'right': False, 'left': False}
+    rect.x += movement[0]
+    hit_list = collision_test(rect, tiles)
+    for tile in hit_list:
+        if movement[0] > 0 or skip_horisontal_movement_check:
+            rect.right = tile.rect.left
+            collision_types['right'] = True
+        elif movement[0] < 0 or skip_horisontal_movement_check:
+            rect.left = tile.rect.right
+            collision_types['left'] = True
+    rect.y += int(movement[1])
+    hit_list = collision_test(rect, tiles)
+    for tile in hit_list:
+        if movement[1] > 0 or skip_vertical_movement_check:
+            rect.bottom = tile.rect.top
+            collision_types['bottom'] = True
+            if movement[0] and playWalkSound:
+                KDS.Audio.playSound(random.choice(w_sounds["default"]))
+        elif movement[1] < 0 or skip_vertical_movement_check:
+            rect.top = tile.rect.bottom
             collision_types['top'] = True
     return rect, collision_types
 

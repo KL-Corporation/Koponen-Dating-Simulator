@@ -1,5 +1,6 @@
 #region Importing
 import os
+from os import walk
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -514,6 +515,7 @@ LightScroll = [0, 0]
 onLadder = False
 renderUI = True
 godmode = False
+walk_sound_delay = 0
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
 lightsUpdating = 0
@@ -680,6 +682,17 @@ specialTilesSerialNumbers = buildData["special_tiles"]
 
 inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
+path_sounds_temp = buildData["tile_sounds"]
+path_sounds = {}
+default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
+sounds = []
+for p in default_paths:
+    sounds.append(pygame.mixer.Sound(os.path.join("Assets/Audio/Tiles/path_sounds/default", p)))
+path_sounds["default"] = sounds
+#for p in path_sounds_temp:
+#    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
+del path_sounds_temp, default_paths, sounds
+
 sref = buildData["checkCollisionFalse"]
 
 """ CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
@@ -732,6 +745,8 @@ class Inventory:
                 self.SIndex -= 1
         if self.SIndex < 0:
             self.SIndex = self.size - 1
+            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+                self.SIndex -= 1
 
     def pickSlot(self, index):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
@@ -814,8 +829,8 @@ class Tile:
         end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
-        for row in Tile_list[y:end_y]:
-            for renderable in row[x:end_x]:
+        for row in Tile_list[y : end_y]:
+            for renderable in row[x : end_x]:
                 if not renderable.air:
                     tilesUpdating += 1
                     if not renderable.specialTileFlag:
@@ -1197,7 +1212,7 @@ class Teleport(Tile):
         if not self.rect.colliderect(player_rect): #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
-        return self.texture
+        return pygame.Surface((0, 0))
 
     teleportT_IDS = {}
 
@@ -1908,6 +1923,7 @@ class Chainsaw(Item):
     throttle_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_throttle.ogg")
     soundCounter = 70
     soundCounter1 = 122
+    gasoline = 100.0
     a_a = False
     Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
     def __init__(self, position: tuple, serialNumber: int, texture = None):
@@ -1916,14 +1932,14 @@ class Chainsaw(Item):
         self.pickupCounter = 0
 
     def use(self, *args):
-        if self.pickupFinished:
+        if self.pickupFinished and Chainsaw.gasoline > 0:
             if args[0][0]:
-                print("   ss ")
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 18 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 4, 1, 1), direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
+                    Chainsaw.freespin_sound.stop()
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
                     Chainsaw.soundCounter = 0
-                    Chainsaw.freespin_sound.stop()
+                    Chainsaw.gasoline -= 0.8
                 Chainsaw.a_a = True
 
             elif not args[0][0]:
@@ -1931,6 +1947,7 @@ class Chainsaw(Item):
                 if Chainsaw.soundCounter1 > 103:
                     Chainsaw.soundCounter1 = 0
                     Chainsaw.throttle_sound.stop()
+                    Chainsaw.gasoline -= 0.1
                     KDS.Audio.playSound(Chainsaw.freespin_sound)
         else:
             self.pickupCounter += 1
@@ -1949,6 +1966,10 @@ class Chainsaw(Item):
 class GasCanister(Item):
     def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def pickup(self):
+        Chainsaw.gasoline = min(100, Chainsaw.gasoline + 50)
+        return True
 
 Item.serialNumbers = {
     1: BlueKey,
@@ -2384,6 +2405,7 @@ def respawn_function():
     farting = False
     playerStamina = 100.0
     player_animations.reset()
+
 #endregion
 #region Menus
 def esc_menu_f():
@@ -3104,6 +3126,7 @@ while main_running:
             if death_wait > 240:
                 if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
                     respawn_function()
+                    KDS.Audio.MusicMixer.play(-1)
                 else:
                     pass
 #endregion
@@ -3275,31 +3298,27 @@ while main_running:
     if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
 
     if check_crouch == True:
-        crouch_collisions = KDS.World.move_entity(pygame.Rect(
-            player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
+        crouch_collisions = KDS.World.move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
     else:
         crouch_collisions = collision_types = {
             'top': False, 'bottom': False, 'right': False, 'left': False}
 
     if KDS.Keys.moveDown.pressed and not onLadder and player_rect.height != crouch_size[1] and death_wait < 1:
-        player_rect = pygame.Rect(player_rect.x, player_rect.y + (
-            stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
     elif (not KDS.Keys.moveDown.pressed or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
-        player_rect = pygame.Rect(player_rect.x, player_rect.y +
-                                  (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
         check_crouch = False
     elif not KDS.Keys.moveDown.pressed and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (
             stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
 
-    #toilet_collisions(player_rect, gasburnerBurning)
-
     if player_health > 0:
-        player_rect, collisions = KDS.World.move_entity(
-            player_rect, player_movement, tiles)
-
+        walk_sound_delay += abs(player_movement[0])
+        s = walk_sound_delay > 16
+        if s: walk_sound_delay = 0
+        player_rect, collisions = KDS.World.move_entity2(player_rect, player_movement, tiles, w_sounds=path_sounds, playWalkSound=s)
     else:
         player_rect, collisions = KDS.World.move_entity(player_rect, [0, 8], tiles)
 #endregion
