@@ -20,9 +20,9 @@ import KDS.UI
 import KDS.Console
 import numpy
 import tkinter 
+from tkinter import filedialog
 import re
 import json
-from tkinter import filedialog
 
 root = tkinter.Tk()
 root.withdraw()
