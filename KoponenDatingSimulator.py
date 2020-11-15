@@ -1219,7 +1219,7 @@ class Teleport(Tile):
         if not self.rect.colliderect(player_rect): #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
-        return self.texture
+        return pygame.Surface((0, 0))
 
     teleportT_IDS = {}
 
