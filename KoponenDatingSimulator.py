@@ -704,9 +704,14 @@ inventoryDobulesSerialNumbers = buildData["item_doubles"]
 
 path_sounds_temp = buildData["tile_sounds"]
 path_sounds = {}
-for p in path_sounds_temp:
-    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
-del path_sounds_temp
+default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
+sounds = []
+for p in default_paths:
+    sounds.append(pygame.mixer.Sound(os.path.join("Assets/Audio/Tiles/path_sounds/default", p)))
+path_sounds["default"] = sounds
+#for p in path_sounds_temp:
+#    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
+del path_sounds_temp, default_paths, sounds
 
 sref = buildData["checkCollisionFalse"]
 
