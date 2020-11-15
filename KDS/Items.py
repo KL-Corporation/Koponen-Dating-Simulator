@@ -320,7 +320,7 @@ class Ppsh41(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        if KDS.World.ppsh41_C.counter > 3 and KDS.Keys.GetPressed(KDS.Keys.mainKey):
+        if KDS.World.ppsh41_C.counter > 3 and KDS.Keys.mainKey.pressed:
             KDS.World.ppsh41_C.counter = 0
             print("dddd")
             args[2].append(KDS.World.Bullet(pygame.Rect(args[3].centerx, args[3].y, 0, 0), False, -1, args[4], 11, slope=(random.uniform(-0.7, 0.7))))

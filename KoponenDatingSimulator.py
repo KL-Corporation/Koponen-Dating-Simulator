@@ -925,7 +925,7 @@ class Jukebox(Tile):
     def update(self):
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.centerx - scroll[0] - jukebox_tip.get_width() / 2, self.rect.y - scroll[1] - 30))
-            if KDS.Keys.GetClicked(KDS.Keys.functionKey) and not KDS.Keys.GetHoldClicked(KDS.Keys.functionKey):
+            if KDS.Keys.functionKey.clicked and not KDS.Keys.functionKey.holdClicked:
                 self.stopPlayingTrack()
                 KDS.Audio.MusicMixer.pause()
                 loopStopper = 0
@@ -935,7 +935,7 @@ class Jukebox(Tile):
                 del self.lastPlayed[0]
                 self.lastPlayed.append(self.playing)
                 KDS.Audio.playSound(jukebox_music[self.playing], KDS.Audio.MusicVolume)
-            elif KDS.Keys.GetHeld(KDS.Keys.functionKey): self.stopPlayingTrack()
+            elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance((self.rect.centerx,self.rect.centery), (player_rect.centerx,player_rect.centery)) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
@@ -970,7 +970,7 @@ class Door(Tile):
                 self.open = False
                 self.checkCollision = True
                 self.closingCounter = 0
-        if KDS.Math.getDistance(player_rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.GetClicked(KDS.Keys.functionKey):
+        if KDS.Math.getDistance(player_rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.functionKey.clicked:
             if self.serialNumber == 23 or player_keys[Door.keys[self.serialNumber]]:
                 KDS.Audio.playSound(door_opening)
                 self.closingCounter = 0
@@ -1057,19 +1057,19 @@ class DecorativeHead(Tile):
         if self.rect.colliderect(player_rect):
             if not self.prayed:
                 screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - int(decorative_head_tip.get_width() / 2), self.rect.top - scroll[1] - 20))
-                if KDS.Keys.GetPressed(KDS.Keys.functionKey):
+                if KDS.Keys.functionKey.pressed:
                     if not self.praying and not self.prayed:
                         KDS.Audio.playSound(pray_sound)
                         self.praying = True
                 else:
                     pray_sound.stop()
                     self.praying = False
-                if KDS.Keys.GetHeld(KDS.Keys.functionKey):
+                if KDS.Keys.functionKey.held:
                     self.prayed = True
                     self.justPrayed = True
                     KDS.Audio.playSound(decorative_head_wakeup_sound)
             else:
-                if not KDS.Keys.GetPressed(KDS.Keys.functionKey):
+                if not KDS.Keys.functionKey.pressed:
                     pray_sound.stop()
                     self.praying = False
                 if player_health > 0: player_health = min(player_health + 0.01, 100)
@@ -1152,7 +1152,7 @@ class LevelEnder(Tile):
         Lights.append(KDS.World.Lighting.Light( (self.rect.x, self.rect.y), blue_light_sphere1))
         if player_rect.colliderect(self.rect):
             screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-            if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+            if KDS.Keys.functionKey.clicked:
                 KDS.Missions.Listeners.LevelEnder.Trigger()
         return t_textures[self.serialNumber]
     
@@ -1168,7 +1168,7 @@ class LevelEnderDoor(Tile):
     def update(self):
         if player_rect.colliderect(self.rect):
             screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-            if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+            if KDS.Keys.functionKey.clicked:
                 KDS.Missions.Listeners.LevelEnder.Trigger()
                 KDS.Audio.playSound(door_opening)
                 self.opened = True
@@ -1467,7 +1467,7 @@ class iPuhelin(Item):
         self.useCount = 0
 
     def use(self, *args):
-        if KDS.Keys.GetClicked(KDS.Keys.functionKey):
+        if KDS.Keys.functionKey.clicked:
             self.useCount += 1
         if self.useCount > 7:
             self.useCount = 7
@@ -1820,9 +1820,9 @@ class Grenade(Item):
 
     def use(self, *args):
 
-        if KDS.Keys.GetPressed(KDS.Keys.altUp):
+        if KDS.Keys.altUp.pressed:
             KDS.World.Grenade_O.Slope += 0.03
-        elif KDS.Keys.GetPressed(KDS.Keys.altDown):
+        elif KDS.Keys.altDown.pressed:
             KDS.World.Grenade_O.Slope -= 0.03
 
         pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
@@ -2930,22 +2930,22 @@ while main_running:
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_d:
-                KDS.Keys.SetPressed(KDS.Keys.moveRight, True)
+                KDS.Keys.moveRight.SetState(True)
             elif event.key == K_a:
-                KDS.Keys.SetPressed(KDS.Keys.moveLeft, True)
+                KDS.Keys.moveLeft.SetState(True)
             elif event.key == K_w:
-                KDS.Keys.SetPressed(KDS.Keys.moveUp, True)
+                KDS.Keys.moveUp.SetState(True)
             elif event.key == K_s:
-                KDS.Keys.SetPressed(KDS.Keys.moveDown, True)
+                KDS.Keys.moveDown.SetState(True)
             elif event.key == K_SPACE:
-                KDS.Keys.SetPressed(KDS.Keys.moveUp, True)
+                KDS.Keys.moveUp.SetState(True)
             elif event.key == K_LCTRL:
-                KDS.Keys.SetPressed(KDS.Keys.moveDown, True)
+                KDS.Keys.moveDown.SetState(True)
             elif event.key == K_LSHIFT:
-                if not KDS.Keys.GetPressed(KDS.Keys.moveDown):
-                    KDS.Keys.SetPressed(KDS.Keys.moveRun, True)
+                if not KDS.Keys.moveDown.pressed:
+                    KDS.Keys.moveRun.SetState(True)
             elif event.key == K_e:
-                KDS.Keys.SetPressed(KDS.Keys.functionKey, True)
+                KDS.Keys.functionKey.SetState(True)
             elif event.key == K_ESCAPE:
                 esc_menu = True
             elif event.key in KDS.Keys.inventoryKeys:
@@ -2973,13 +2973,13 @@ while main_running:
                     KDS.Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_DOWN:
-                KDS.Keys.SetPressed(KDS.Keys.altDown, True)
+                KDS.Keys.altDown.SetState(True)
             elif event.key == K_UP:
-                KDS.Keys.SetPressed(KDS.Keys.altUp, True)
+                KDS.Keys.altUp.SetState(True)
             elif event.key == K_LEFT:
-                KDS.Keys.SetPressed(KDS.Keys.altLeft, True)
+                KDS.Keys.altLeft.SetState(True)
             elif event.key == K_RIGHT:
-                KDS.Keys.SetPressed(KDS.Keys.altRight, True)
+                KDS.Keys.altRight.SetState(True)
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
@@ -2998,7 +2998,7 @@ while main_running:
                 KDS.Audio.playSound(camera_shutter, 1)
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
-                KDS.Keys.SetPressed(KDS.Keys.mainKey, True)
+                KDS.Keys.mainKey.SetState(True)
                 rk62_sound_cooldown = 11
                 weapon_fire = True
             elif event.button == 4:
@@ -3007,36 +3007,36 @@ while main_running:
                 player_inventory.moveRight()
         elif event.type == KEYUP:
             if event.key == K_d:
-                KDS.Keys.SetPressed(KDS.Keys.moveRight, False)
+                KDS.Keys.moveRight.SetState(False)
             elif event.key == K_a:
-                KDS.Keys.SetPressed(KDS.Keys.moveLeft, False)
+                KDS.Keys.moveLeft.SetState(False)
             elif event.key == K_w:
-                KDS.Keys.SetPressed(KDS.Keys.moveUp, False)
+                KDS.Keys.moveUp.SetState(False)
             elif event.key == K_s:
-                KDS.Keys.SetPressed(KDS.Keys.moveDown, False)
+                KDS.Keys.moveDown.SetState(False)
             elif event.key == K_SPACE:
-                KDS.Keys.SetPressed(KDS.Keys.moveUp, False)
+                KDS.Keys.moveUp.SetState(False)
             elif event.key == K_LCTRL:
-                KDS.Keys.SetPressed(KDS.Keys.moveDown, False)
+                KDS.Keys.moveDown.SetState(False)
             elif event.key == K_LSHIFT:
-                KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
+                KDS.Keys.moveRun.SetState(False)
             elif event.key == K_e:
-                KDS.Keys.SetPressed(KDS.Keys.functionKey, False)
+                KDS.Keys.functionKey.SetState(False)
             elif event.key == K_c:
                 if player_hand_item == "gasburner":
                     gasburnerBurning = not gasburnerBurning
                     gasburner_fire.stop()
             elif event.key == K_DOWN:
-                KDS.Keys.SetPressed(KDS.Keys.altDown, False)
+                KDS.Keys.altDown.SetState(False)
             elif event.key == K_UP:
-                KDS.Keys.SetPressed(KDS.Keys.altUp, False)
+                KDS.Keys.altUp.SetState(False)
             elif event.key == K_LEFT:
-                KDS.Keys.SetPressed(KDS.Keys.altLeft, False)
+                KDS.Keys.altLeft.SetState(False)
             elif event.key == K_RIGHT:
-                KDS.Keys.SetPressed(KDS.Keys.altRight, False)
+                KDS.Keys.altRight.SetState(False)
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
-                KDS.Keys.SetPressed(KDS.Keys.mainKey, False)
+                KDS.Keys.mainKey.SetState(False)
         elif event.type == pygame.QUIT:
             KDS_Quit()
         elif event.type == pygame.VIDEORESIZE:
@@ -3077,7 +3077,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Items, player_inventory = Item.checkCollisions(Items, player_rect, screen, scroll, KDS.Keys.GetPressed(KDS.Keys.functionKey), player_inventory)
+    Items, player_inventory = Item.checkCollisions(Items, player_rect, screen, scroll, KDS.Keys.functionKey.pressed, player_inventory)
     Tile.renderUpdate(tiles, screen, scroll, (player_rect.centerx - (player_rect.x - scroll[0] - 301), player_rect.centery - (player_rect.y - scroll[1] - 221)))
     for enemy in Enemies:
         if KDS.Math.getDistance(player_rect.center, enemy.rect.center) < 1200:
@@ -3102,7 +3102,7 @@ while main_running:
                         del tempItem
 
     Item.render(Items, screen, scroll, DebugMode)
-    player_inventory.useItem(screen, KDS.Keys.GetPressed(KDS.Keys.mainKey), weapon_fire)
+    player_inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
     for item in player_inventory.storage:
         if isinstance(item, Lantern):
             player_inventory.useSpecificItem(0, screen)
@@ -3207,37 +3207,35 @@ while main_running:
     if onLadder:
         vertical_momentum = 0
         air_timer = 0
-        if KDS.Keys.GetPressed(KDS.Keys.moveUp):
+        if KDS.Keys.moveUp.pressed:
             player_movement[1] = -1
-        elif KDS.Keys.GetPressed(KDS.Keys.moveDown):
+        elif KDS.Keys.moveDown.pressed:
             player_movement[1] = 1
         else:
             player_movement[1] = 0
 
-    if KDS.Keys.GetPressed(KDS.Keys.moveUp) and KDS.Keys.GetTicksHeld(KDS.Keys.moveUp) == 0 and not KDS.Keys.GetPressed(KDS.Keys.moveDown) and air_timer < 6 and not onLadder:
+    if KDS.Keys.moveUp.pressed and KDS.Keys.moveUp.ticksHeld == 0 and not KDS.Keys.moveDown.pressed and air_timer < 6 and not onLadder:
         vertical_momentum = -10
     elif vertical_momentum > 0:
         fall_speed_copy *= fall_multiplier
-    elif not KDS.Keys.GetPressed(KDS.Keys.moveUp):
+    elif not KDS.Keys.moveUp.pressed:
         fall_speed_copy *= fall_multiplier
 
     if player_health > 0:
-        if not KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina < 100.0:
-            playerStamina += 0.25
-        elif KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0:
-            playerStamina -= 0.75
-        elif KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina <= 0:
-            KDS.Keys.SetPressed(KDS.Keys.moveRun, False)
+        if KDS.Keys.moveRun.pressed:
+            if playerStamina <= 0: KDS.Keys.moveRun.SetState(False)
+            else: playerStamina -= 0.75     
+        elif playerStamina < 100.0: playerStamina += 0.25
 
-    if KDS.Keys.GetPressed(KDS.Keys.moveRight):
-        if not KDS.Keys.GetPressed(KDS.Keys.moveDown): player_movement[0] += 4
+    if KDS.Keys.moveRight.pressed:
+        if not KDS.Keys.moveDown.pressed: player_movement[0] += 4
         else: player_movement[0] += 2
-        if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0: player_movement[0] += 4
+        if KDS.Keys.moveRun.pressed and playerStamina > 0: player_movement[0] += 4
 
-    if KDS.Keys.GetPressed(KDS.Keys.moveLeft):
-        if not KDS.Keys.GetPressed(KDS.Keys.moveDown): player_movement[0] -= 4
+    if KDS.Keys.moveLeft.pressed:
+        if not KDS.Keys.moveDown.pressed: player_movement[0] -= 4
         else: player_movement[0] -= 2
-        if KDS.Keys.GetPressed(KDS.Keys.moveRun) and playerStamina > 0: player_movement[0] -= 4
+        if KDS.Keys.moveRun.pressed and playerStamina > 0: player_movement[0] -= 4
     for i in range(round(abs(player_movement[0]))):
         KDS.Missions.Listeners.Movement.Trigger()
     player_movement[1] += vertical_momentum
@@ -3251,15 +3249,15 @@ while main_running:
         crouch_collisions = collision_types = {
             'top': False, 'bottom': False, 'right': False, 'left': False}
 
-    if KDS.Keys.GetPressed(KDS.Keys.moveDown) and not onLadder and player_rect.height != crouch_size[1] and death_wait < 1:
+    if KDS.Keys.moveDown.pressed and not onLadder and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (
             stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
-    elif (not KDS.Keys.GetPressed(KDS.Keys.moveDown) or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
+    elif (not KDS.Keys.moveDown.pressed or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
         player_rect = pygame.Rect(player_rect.x, player_rect.y +
                                   (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
         check_crouch = False
-    elif not KDS.Keys.GetPressed(KDS.Keys.moveDown) and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1] and death_wait < 1:
+    elif not KDS.Keys.moveDown.pressed and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (
             stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
@@ -3320,7 +3318,7 @@ while main_running:
 
     if player_health > 0:
         if walking:
-            if not KDS.Keys.GetPressed(KDS.Keys.moveRun):
+            if not KDS.Keys.moveRun.pressed:
                 if player_rect.height == stand_size[1]:
                     player_animations.trigger("walk")
                 else:
@@ -3375,7 +3373,7 @@ while main_running:
         koponen_movement[0] = 0
         if knifeInUse:
             koponen_alive = False
-        if KDS.Keys.GetPressed(KDS.Keys.functionKey):
+        if KDS.Keys.functionKey.pressed:
             KDS.Keys.Reset()
             KDS.Koponen.Talk.start(window, display, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
     else:
