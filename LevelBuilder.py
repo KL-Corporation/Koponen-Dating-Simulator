@@ -79,7 +79,7 @@ Atextures = {
     "2": e_textures,
     "3": teleports
 }
-""" GLOBAL VARIABLES """
+### GLOBAL VARIABLES ###
 
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
