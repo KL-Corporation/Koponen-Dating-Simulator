@@ -1,5 +1,6 @@
 #region Importing
 import os
+from os import walk
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -524,6 +525,7 @@ LightScroll = [0, 0]
 onLadder = False
 renderUI = True
 godmode = False
+walk_sound_delay = 0
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
 lightsUpdating = 0
@@ -3318,31 +3320,27 @@ while main_running:
     if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
 
     if check_crouch == True:
-        crouch_collisions = KDS.World.move_entity(pygame.Rect(
-            player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
+        crouch_collisions = KDS.World.move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
     else:
         crouch_collisions = collision_types = {
             'top': False, 'bottom': False, 'right': False, 'left': False}
 
     if KDS.Keys.moveDown.pressed and not onLadder and player_rect.height != crouch_size[1] and death_wait < 1:
-        player_rect = pygame.Rect(player_rect.x, player_rect.y + (
-            stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
     elif (not KDS.Keys.moveDown.pressed or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
-        player_rect = pygame.Rect(player_rect.x, player_rect.y +
-                                  (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+        player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
         check_crouch = False
     elif not KDS.Keys.moveDown.pressed and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (
             stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
 
-    #toilet_collisions(player_rect, gasburnerBurning)
-
     if player_health > 0:
-        player_rect, collisions = KDS.World.move_entity(
-            player_rect, player_movement, tiles)
-
+        walk_sound_delay += abs(player_movement[0])
+        s = walk_sound_delay > 16
+        if s: walk_sound_delay = 0
+        player_rect, collisions = KDS.World.move_entity2(player_rect, player_movement, tiles, w_sounds=path_sounds, playWalkSound=s)
     else:
         player_rect, collisions = KDS.World.move_entity(player_rect, [0, 8], tiles)
 #endregion
