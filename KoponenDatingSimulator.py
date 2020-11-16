@@ -550,10 +550,10 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #region Game Settings
 def LoadGameSettings():
     global fall_speed, fall_multiplier, awm_ammo, fall_max_velocity, renderPadding
-    fall_speed = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallSpeed")
-    fall_multiplier = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMultiplier")
-    fall_max_velocity = KDS.ConfigManager.GetGameSetting("Physics", "Player", "fallMaxVelocity")
-    renderPadding = KDS.ConfigManager.GetGameSetting("Renderer", "Tile", "renderPadding")
+    fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
+    fall_multiplier = KDS.ConfigManager.GetGameData("Physics/Player/fallMultiplier")
+    fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Player/fallMaxVelocity")
+    renderPadding = KDS.ConfigManager.GetGameData("Renderer/Tile/renderPadding")
 LoadGameSettings()
 #endregion
 #region World Data
@@ -589,15 +589,15 @@ class WorldData():
             map_data = map_file.read().split("\n")
 
         global dark, darkness, ambient_light, ambient_light_tint, player_light
-        dark = KDS.ConfigManager.GetLevelProp("Darkness", "enabled", False)
-        dval = 255 - KDS.ConfigManager.GetLevelProp("Darkness", "strength", 0)
+        dark = KDS.ConfigManager.GetLevelProp("Darkness/enabled", False)
+        dval = 255 - KDS.ConfigManager.GetLevelProp("Darkness/strength", 0)
         darkness = (dval, dval, dval)
-        ambient_light = KDS.ConfigManager.GetLevelProp("AmbientLight", "enabled", False)
-        player_light = KDS.ConfigManager.GetLevelProp("Darkness", "player_light", True)
-        ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("AmbientLight", "tint", (255, 255, 255)))
+        ambient_light = KDS.ConfigManager.GetLevelProp("AmbientLight/enabled", False)
+        player_light = KDS.ConfigManager.GetLevelProp("Darkness/player_light", True)
+        ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("AmbientLight/tint", (255, 255, 255)))
         
-        p_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos", "player", (100, 100)))
-        k_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos", "koponen", (200, 200)))
+        p_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos/player", (100, 100)))
+        k_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos/koponen", (200, 200)))
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -866,7 +866,7 @@ class Toilet(Tile):
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
                 Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x + 7, self.rect.x + self.rect.width - 13), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
-            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale)), True))
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1700), (self.light_scale, self.light_scale)), True))
             return self.animation.update()
         else:
             return self.texture
@@ -894,7 +894,7 @@ class Trashcan(Tile):
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
                 Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x, self.rect.x + self.rect.width - 16), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
-            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale)), True))
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1700), (self.light_scale, self.light_scale)), True))
             return self.animation.update()
         else:
             return self.texture
@@ -1072,9 +1072,9 @@ class DecorativeHead(Tile):
             self.praying = False
         if self.prayed:
             if dark:
-                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.get(150, 1900), True))
+                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 1900), True))
             else:
-                day_light = KDS.World.Lighting.Shapes.splatter.get(150, 1900).copy()
+                day_light = KDS.World.Lighting.Shapes.circle.get(150, 1900).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
         return self.texture
@@ -1116,7 +1116,7 @@ class Torch(Tile):
             self.light_scale += 4
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light(self.rect.topleft, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light(self.rect.topleft, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1850), (self.light_scale, self.light_scale))))
         return self.texture.update()
 
 class GoryHead(Tile):
@@ -1181,7 +1181,7 @@ class Candle(Tile):
             self.light_scale = random.randint(20, 60)
         if random.randint(0, 50) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), KDS.World.Lighting.Shapes.circle.get(256, 2000)))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 2000)))
         return self.texture.update()
 
 class Teleport(Tile):
@@ -1224,7 +1224,7 @@ class LampPoleLamp(Tile):
         self.checkCollision = False
     
     def update(self):
-        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5000), True))
         return self.texture
 
 class Chair(Tile):
@@ -1255,7 +1255,7 @@ class WallLight(Tile):
         self.checkCollision = False
         self.direction = True if serialNumber == 72 else False
         self.texture = pygame.transform.flip(self.texture, self.direction, False)
-        self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6600), self.direction, False).convert_alpha()
+        self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False).convert_alpha()
 
     def update(self):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery), self.light_t, True))
@@ -1277,9 +1277,9 @@ class RespawnAnchor(Tile):
     def update(self):
         if RespawnAnchor.active == self:
             if dark:
-                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.get(150, 1900), True))
+                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 2400), True))
             else:
-                day_light = KDS.World.Lighting.Shapes.splatter.get(150, 1900).copy()
+                day_light = KDS.World.Lighting.Shapes.splatter.get(150, 2400).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
             return self.ontexture
@@ -2401,7 +2401,7 @@ def respawn_function():
     death_wait = 0
     player_health = 100
     if RespawnAnchor.active != None: player_rect.bottomleft = RespawnAnchor.active.rect.bottomleft
-    else: player_rect.topleft = KDS.ConfigManager.GetLevelProp("StartPos", "player", (100, 100))
+    else: player_rect.topleft = KDS.ConfigManager.GetLevelProp("StartPos/player", (100, 100))
     farting = False
     playerStamina = 100.0
     player_animations.reset()
