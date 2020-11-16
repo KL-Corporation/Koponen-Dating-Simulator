@@ -1907,7 +1907,7 @@ class Lantern(Item):
 
     def use(self, *args):
         scale = random.randint(180, 220)
-        Lights.append( KDS.World.Lighting.Light( (player_rect.centerx - scale/2, player_rect.centery - scale/2) , pygame.transform.scale(warm_white_lightSphere0, (scale, scale)) ))
+        Lights.append( KDS.World.Lighting.Light( (player_rect.centerx - scale/2, player_rect.centery - scale/2) , KDS.World.Lighting.Shapes.circle_hardest.get(scale, 5000).convert_alpha() ))
         return Lantern.Ianimation.update()
 
     def pickup(self):
@@ -3010,7 +3010,7 @@ while main_running:
                     while True:
                         temp.rect.y += temp.rect.height
                         for collision in KDS.World.collision_test(temp.rect, tiles):
-                            temp.rect.bottom = collision.top
+                            temp.rect.bottom = collision.rect.top
                             counter = 250
                         counter += 1
                         if counter > 250:
@@ -3148,7 +3148,7 @@ while main_running:
                         while True:
                             tempItem.rect.y += tempItem.rect.height
                             for collision in KDS.World.collision_test(tempItem.rect, tiles):
-                                tempItem.rect.bottom = collision.top
+                                tempItem.rect.bottom = collision.rect.top
                                 counter = 250
                             counter += 1
                             if counter > 250:
@@ -3315,8 +3315,10 @@ while main_running:
         check_crouch = True
 
     if player_health > 0:
+        if not player_movement[0] or air_timer > 1:
+            walk_sound_delay = 9999
         walk_sound_delay += abs(player_movement[0])
-        s = walk_sound_delay > 16
+        s = walk_sound_delay > 60
         if s: walk_sound_delay = 0
         player_rect, collisions = KDS.World.move_entity2(player_rect, player_movement, tiles, w_sounds=path_sounds, playWalkSound=s)
     else:

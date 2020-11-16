@@ -110,7 +110,7 @@ class Lighting:
                 else: KDS.Logging.AutoError("Targeted radius not initialised!")
                 
             def get(self, radius: int, color: int):
-                """Loads a light shape from memory
+                """Returns a light shape from memory
 
                 Args:
                     radius (int): Light radius in pixels.
