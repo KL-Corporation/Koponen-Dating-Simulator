@@ -1181,7 +1181,7 @@ class Candle(Tile):
             self.light_scale = random.randint(20, 60)
         if random.randint(0, 50) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 2000), (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), KDS.World.Lighting.Shapes.circle.get(256, 2000)))
         return self.texture.update()
 
 class Teleport(Tile):
