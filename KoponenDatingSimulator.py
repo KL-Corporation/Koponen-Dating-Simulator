@@ -23,7 +23,7 @@ import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
-import KDS.mpgPlayer
+import KDS.videoPlayer
 import numpy
 import random
 import threading
@@ -1286,7 +1286,17 @@ class RespawnAnchor(Tile):
                     loopStopper += 1
                 KDS.Audio.playSound(self.sound)
         return self.texture
-            
+
+class Spruce(Tile):
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0] - 10, position[1] - 40, 63, 75)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1312,7 +1322,9 @@ specialTilesD = {
     71: WallLight,
     72: WallLight,
     73: LevelEnderDoor,
-    74: RespawnAnchor
+    74: RespawnAnchor,
+    76: Spruce,
+    77: Spruce
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")

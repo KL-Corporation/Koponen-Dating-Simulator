@@ -74,7 +74,9 @@
         "072": "wall_light1.png",
         "073": "door_front.png",
         "074": "respawn_anchor_off.png",
-        "075": "teleport_base.png"
+        "075": "teleport_base.png",
+        "076": "spruce.png",
+        "077": "allahmas_spruce.png"
     },
 
     "tile_sounds" : {
@@ -106,7 +108,9 @@
         71,
         72,
         73,
-        74
+        74,
+        76,
+        77
     ],
     "checkCollisionFalse": [
         10,
