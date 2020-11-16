@@ -168,7 +168,14 @@ class Lighting:
             if not positionFromCenter: self.position = position
             else: self.position = (position[0] - shape.get_width() / 2, position[1] - shape.get_height() / 2)
 
-    class Fireparticle:
+    class Particle:
+        def __init__(self):
+            pass
+
+        def update(self, Surface, scroll):
+            pass
+        
+    class Fireparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
             self.rect = pygame.Rect(position[0], position[1], size, size)
             self.size = size
