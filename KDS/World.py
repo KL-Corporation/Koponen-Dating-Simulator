@@ -123,8 +123,7 @@ class Lighting:
                     self.rendered[radius] = { "default": pygame.transform.scale(self.texture, (radius, radius)).convert_alpha() }
 
                 corRad = self.rendered[radius]
-                print(self.rendered[radius])
-                if color not in self.rendered[radius]:
+                if color not in corRad:
                     tmp_tex: pygame.Surface = corRad["default"].copy()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
