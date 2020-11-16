@@ -17,6 +17,7 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     CachePath = _CachePath
     SaveDirPath = _SaveDirPath
     SaveCachePath = os.path.join(CachePath, "save")
+    if not os.path.isfile(os.path.join(AppDataPath, "settings.cfg")): shutil.copyfile("Assets/defaultSettings.kdf", os.path.join(AppDataPath, "settings.cfg"))
 
 def SetJSON(filePath: str, jsonPath: str, value: Any) -> Any:
     config = {}
@@ -40,7 +41,7 @@ def SetJSON(filePath: str, jsonPath: str, value: Any) -> Any:
         with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
     except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
     
-def GetJSON(filePath: str, jsonPath: str, defaultValue: Any) -> Any:
+def GetJSON(filePath: str, jsonPath: str, defaultValue: Any, addMissing: bool = True) -> Any:
     config = {}
     if os.path.isfile(filePath):
         try:
@@ -52,74 +53,41 @@ def GetJSON(filePath: str, jsonPath: str, defaultValue: Any) -> Any:
         tmpConfig = config
         for i in range(len(path)):
             p = path[i]
-            if i < len(path) - 1:
-                if p not in tmpConfig:
-                    SetJSON(filePath, jsonPath, defaultValue)
-                    return defaultValue
-                tmpConfig = tmpConfig[p]
+            if p not in tmpConfig:
+                if addMissing: SetJSON(filePath, jsonPath, defaultValue)
+                else: KDS.Logging.AutoError(f"No value found in path: {jsonPath} of file: {filePath}", currentframe())
+                return defaultValue
+            if i < len(path) - 1: tmpConfig = tmpConfig[p]
             else: return tmpConfig[p]
     else:
-        SetJSON(filePath, jsonPath, defaultValue)
+        if addMissing: SetJSON(filePath, jsonPath, defaultValue)
+        else: KDS.Logging.AutoError(f"No value found in path: {jsonPath} of file: {filePath}", currentframe())
         return defaultValue
     KDS.Logging.AutoError("Unknown Error! This code should never execute.", currentframe())
     return defaultValue
-
-def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
-    if os.path.isfile(FilePath):
-        try:
-            with open(FilePath, "r") as f:
-                try: config = json.loads(f.read())
-                except json.decoder.JSONDecodeError: config = {}
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
-    else:
-        config = {}
-    if SaveDirectory not in config:
-        config[SaveDirectory] = {}
-    if SaveName not in config[SaveDirectory]:
-        config[SaveDirectory][SaveName] = DefaultValue
-        try:
-            with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
-    return config[SaveDirectory][SaveName]
-
-def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
+def GetSetting(path: str, default: Any):
     """
     1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    return GetJSONLegacy(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
+    return GetJSON(os.path.join(AppDataPath, "settings.cfg"), path, default, addMissing=False)
 
 def GetGameData(path: str):
     return GetJSON("Assets/GameData.kdf", path, None)
 
-def GetLevelProp(path: str, DefaultValue: Any):
-    return GetJSON(os.path.join(CachePath, "map", "levelprop.kdf"), path, DefaultValue)
+def GetLevelProp(path: str, DefaultValue: Any, listToTuple: bool = True):
+    val = GetJSON(os.path.join(CachePath, "map", "levelprop.kdf"), path, DefaultValue)
+    return tuple(val) if isinstance(val, list) and listToTuple else val
 
-def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
-    if os.path.isfile(FilePath):
-        try:
-            with open(FilePath, "r") as f:
-                try: config = json.loads(f.read())
-                except json.decoder.JSONDecodeError: config = {}
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
-    else:
-        config = {}
-    if SaveDirectory not in config:
-        config[SaveDirectory] = {}
-    config[SaveDirectory][SaveName] = SaveValue
-    try:
-        with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
-
-def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
+def SetSetting(path: str, value: Any):
     """
     Automatically fills FilePath to SaveFunction
     1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    SetJSONLegacy(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, SaveValue)
+    SetJSON(os.path.join(AppDataPath, "settings.cfg"), path, value)
 
 class Save:
     WorldDirCache = ""
@@ -244,3 +212,39 @@ class Save:
                 return DefaultValue
         else:
             return DefaultValue
+
+"""
+def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
+    if os.path.isfile(FilePath):
+        try:
+            with open(FilePath, "r") as f:
+                try: config = json.loads(f.read())
+                except json.decoder.JSONDecodeError: config = {}
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    else:
+        config = {}
+    if SaveDirectory not in config:
+        config[SaveDirectory] = {}
+    config[SaveDirectory][SaveName] = SaveValue
+    try:
+        with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
+    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    
+def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
+    if os.path.isfile(FilePath):
+        try:
+            with open(FilePath, "r") as f:
+                try: config = json.loads(f.read())
+                except json.decoder.JSONDecodeError: config = {}
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    else:
+        config = {}
+    if SaveDirectory not in config:
+        config[SaveDirectory] = {}
+    if SaveName not in config[SaveDirectory]:
+        config[SaveDirectory][SaveName] = DefaultValue
+        try:
+            with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    return config[SaveDirectory][SaveName]
+"""

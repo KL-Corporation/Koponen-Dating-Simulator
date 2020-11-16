@@ -72,8 +72,8 @@ class ScoreCounter:
     @staticmethod
     def calculateScores():
         global score, koponen_happiness
-        tb_start: int = KDS.ConfigManager.GetLevelProp("TimeBonus/start", None)
-        tb_end: int = KDS.ConfigManager.GetLevelProp("TimeBonus/end", None)
+        tb_start: int = KDS.ConfigManager.GetLevelProp("Data/TimeBonus/start", None)
+        tb_end: int = KDS.ConfigManager.GetLevelProp("Data/TimeBonus/end", None)
         if tb_start == None or tb_end == None:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})", currentframe())
             tb_start = 1

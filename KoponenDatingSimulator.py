@@ -64,7 +64,7 @@ pygame.mouse.set_cursor(*pygame.cursors.arrow)
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
-window_size = tuple(KDS.ConfigManager.GetSetting("Settings", "WindowSize", (1200, 800)))
+window_size = tuple(KDS.ConfigManager.GetSetting("Renderer/windowSize", (1200, 800)))
 window = pygame.display.set_mode(window_size, RESIZABLE | HWSURFACE | DOUBLEBUF)
 window_info = pygame.display.Info()
 #Nice
@@ -120,7 +120,7 @@ class Fullscreen:
             window_size = monitor_size
             window = pygame.display.set_mode(window_size, FULLSCREEN | HWSURFACE | DOUBLEBUF)
             Fullscreen.enabled = True
-        KDS.ConfigManager.SetSetting("Settings", "Fullscreen", Fullscreen.enabled)
+        KDS.ConfigManager.SetSetting("Renderer/fullscreen", Fullscreen.enabled)
         if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
             Fullscreen.size = (
                 int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
@@ -138,12 +138,12 @@ def ResizeWindow(set_size: tuple):
     if not Fullscreen.enabled:
         window_resize_size = set_size
         del set_size
-        KDS.ConfigManager.SetSetting("Settings", "WindowSize", window_resize_size)
+        KDS.ConfigManager.SetSetting("Renderer/windowSize", window_resize_size)
         Fullscreen.Set(True)
 #endregion
 #region Initialisation
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
-Fullscreen.enabled = KDS.ConfigManager.GetSetting("Settings", "Fullscreen", False)
+Fullscreen.enabled = KDS.ConfigManager.GetSetting("Renderer/fullscreen", False)
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
 I=====[ System Info ]=====I
@@ -191,10 +191,9 @@ CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.pn
 window.fill(CompanyLogo.get_at((0, 0)))
 window.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (window_size[0] / 2 - 250, window_size[1] / 2 - 250))
 pygame.display.update()
-clearLag = KDS.ConfigManager.GetSetting("Settings", "ClearLag", False)
-tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
-current_map = KDS.ConfigManager.GetSetting("Settings", "CurrentMap", "01")
-max_map = KDS.ConfigManager.GetSetting("Settings", "MaxMap", 99)
+tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
+current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
+max_map = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
 KDS.Logging.Log(KDS.Logging.LogType.debug, 
                 f"""Settings Loading Complete.
 I=====[ Settings Loaded ]=====I
@@ -202,7 +201,6 @@ I=====[ Settings Loaded ]=====I
    - Music Volume: {KDS.Audio.MusicVolume}
    - Sound Effect Volume: {KDS.Audio.EffectVolume}
    - Fullscreen: {Fullscreen.enabled}
-   - Clear Lag: {clearLag}
    - Current Map: {current_map}
    - Max Map: {max_map}
 I=====[ Settings Loaded ]=====I""", False)
@@ -589,15 +587,15 @@ class WorldData():
             map_data = map_file.read().split("\n")
 
         global dark, darkness, ambient_light, ambient_light_tint, player_light
-        dark = KDS.ConfigManager.GetLevelProp("Darkness/enabled", False)
-        dval = 255 - KDS.ConfigManager.GetLevelProp("Darkness/strength", 0)
+        dark = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/enabled", False)
+        dval = 255 - KDS.ConfigManager.GetLevelProp("Rendering/Darkness/strength", 0)
         darkness = (dval, dval, dval)
-        ambient_light = KDS.ConfigManager.GetLevelProp("AmbientLight/enabled", False)
-        player_light = KDS.ConfigManager.GetLevelProp("Darkness/player_light", True)
-        ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("AmbientLight/tint", (255, 255, 255)))
+        ambient_light = KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/enabled", False)
+        player_light = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/playerLight", True)
+        ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/tint", (255, 255, 255)))
         
-        p_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos/player", (100, 100)))
-        k_start_pos = tuple(KDS.ConfigManager.GetLevelProp("StartPos/koponen", (200, 200)))
+        p_start_pos = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
+        k_start_pos = KDS.ConfigManager.GetLevelProp("Entities/Koponen/startPos", (200, 200))
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -2205,7 +2203,7 @@ def console():
             if len(command_list) > 1:
                 setTerms = KDS.Convert.ToBool(command_list[1])
                 if setTerms != None:
-                    KDS.ConfigManager.SetSetting("Data", "TermsAccepted", setTerms)
+                    KDS.ConfigManager.SetSetting("Data/Terms/accepted", setTerms)
                     KDS.Console.Feed.append(f"Terms status set to: {setTerms}")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
@@ -2275,8 +2273,8 @@ def agr(tcagr: bool):
                         "Terms and Conditions have been accepted.", False)
         KDS.Logging.Log(KDS.Logging.LogType.info,
                         "You said you will not get offended... Dick!", False)
-        KDS.ConfigManager.SetSetting("Data", "TermsAccepted", True)
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: {}".format(KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)), False)
+        KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
+        KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: {}".format(KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)), False)
         tcagr_running = False
         
 
@@ -2401,7 +2399,7 @@ def respawn_function():
     death_wait = 0
     player_health = 100
     if RespawnAnchor.active != None: player_rect.bottomleft = RespawnAnchor.active.rect.bottomleft
-    else: player_rect.topleft = KDS.ConfigManager.GetLevelProp("StartPos/player", (100, 100))
+    else: player_rect.topleft = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
     farting = False
     playerStamina = 100.0
     player_animations.reset()
@@ -2430,16 +2428,16 @@ def esc_menu_f():
         go_to_main_menu = True
 
     resume_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("Resume", True, KDS.Colors.White))
+        display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("RESUME", True, KDS.Colors.White))
     save_button_enabled = True
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         save_button_enabled = False
     save_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
         "Save", True, KDS.Colors.White), enabled=save_button_enabled)
     settings_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("Settings", True, KDS.Colors.White))
+        display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("SETTINGS", True, KDS.Colors.White))
     main_menu_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("Main menu", True, KDS.Colors.White))
+        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -2498,7 +2496,7 @@ def esc_menu_f():
         clock.tick(locked_fps)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, clearLag
+    global main_menu_running, esc_menu, main_running, settings_running, DebugMode
     c = False
     settings_running = True
 
@@ -2513,18 +2511,15 @@ def settings_menu():
         return_def()
         os.remove(os.path.join(PersistentPaths.AppDataPath, "settings.cfg"))
         KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
-        KDS.ConfigManager.SetSetting("Data", "TermsAccepted", True)
+        KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
         Fullscreen.Set(True)
     
     def reset_data():
         KDS_Quit(True, True)
     
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
-    music_volume_slider = KDS.UI.Slider(
-        "MusicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_dir="Settings")
-    effect_volume_slider = KDS.UI.Slider(
-        "SoundEffectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_dir="Settings")
-    clearLag_switch = KDS.UI.Switch("ClearLag", pygame.Rect(450, 240, 100, 30), (30, 50), custom_dir="Settings")
+    music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
+    effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
     reset_window_button = KDS.UI.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.White))
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
@@ -2574,7 +2569,6 @@ def settings_menu():
         reset_window_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
         reset_data_button.update(display, mouse_pos, c)
-        clearLag = clearLag_switch.update(display, mouse_pos, c)
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
@@ -2641,10 +2635,10 @@ def main_menu():
                 current_map_int += 1
             if current_map_int < 1:
                 current_map_int = 1
-            if current_map_int > max_map:
-                current_map_int = max_map
+            if current_map_int > int(max_map):
+                current_map_int = int(max_map)
             current_map = f"{current_map_int:02d}"
-            KDS.ConfigManager.SetSetting("Settings", "CurrentMap", current_map)
+            KDS.ConfigManager.SetSetting("Player/currentMap", current_map)
 
     def menu_mode_selector(mode):
         global MenuMode
@@ -2882,7 +2876,7 @@ def level_finished_menu():
         current_map = f"{int(current_map) + 1:02}"
         play_function(KDS.Gamemode.Modes.Campaign, True)
 
-    next_level_bool = True if int(current_map) < max_map else False
+    next_level_bool = True if int(current_map) < int(max_map) else False
     
     main_menu_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
     next_level_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
@@ -2968,7 +2962,7 @@ def level_finished_menu():
 #endregion
 #region Check Terms
 agr(tcagr)
-tcagr = KDS.ConfigManager.GetSetting("Data", "TermsAccepted", False)
+tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 if tcagr:
     main_menu()
 else:

@@ -1,0 +1,49 @@
+{
+    "Data": {
+        "Terms": {
+            "accepted": false
+        }
+    },
+    "Mixer": {
+        "channelCount": 32,
+        "Volume": {
+            "music": 0.25,
+            "effect": 0.75
+        }
+    },
+    "Renderer": {
+        "fullscreen": false,
+        "windowSize": [
+            1200,
+            800
+        ],
+
+        "Tile": {
+            "renderPadding": 4
+        },
+        "Item": {
+
+        },
+        "Entity": {
+
+        },
+        "Lighting": {
+            
+        },
+        "Particle": {
+
+        }
+    },
+    "Player": {
+        "currentMap": "01",
+        "maxMap": "99"
+    },
+    "UI": {
+        "Sliders": {
+
+        },
+        "Switches": {
+
+        }
+    }
+}
