@@ -1,6 +1,7 @@
 #region Importing
 import os
 from os import walk
+from shutil import ExecError
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -1114,7 +1115,7 @@ class Torch(Tile):
             self.light_scale += 4
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light(self.rect.topleft, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1850), (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light((self.rect.x - 64, self.rect.y - 70), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1850)))
         return self.texture.update()
 
 class GoryHead(Tile):
@@ -1179,7 +1180,7 @@ class Candle(Tile):
             self.light_scale = random.randint(20, 60)
         if random.randint(0, 50) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1850), (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 2000)))
         return self.texture.update()
 
 class Teleport(Tile):
@@ -1921,7 +1922,7 @@ class Chainsaw(Item):
     throttle_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_throttle.ogg")
     soundCounter = 70
     soundCounter1 = 122
-    gasoline = 100.0
+    ammunition = 100.0
     a_a = False
     Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
     def __init__(self, position: tuple, serialNumber: int, texture = None):
@@ -1930,14 +1931,14 @@ class Chainsaw(Item):
         self.pickupCounter = 0
 
     def use(self, *args):
-        if self.pickupFinished and Chainsaw.gasoline > 0:
+        if self.pickupFinished and Chainsaw.ammunition > 0:
             if args[0][0]:
+                Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(player_rect.centerx + 18 * KDS.Convert.ToMultiplier(direction), player_rect.centery - 4, 1, 1), direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     Chainsaw.freespin_sound.stop()
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
                     Chainsaw.soundCounter = 0
-                    Chainsaw.gasoline -= 0.8
                 Chainsaw.a_a = True
 
             elif not args[0][0]:
@@ -1945,7 +1946,7 @@ class Chainsaw(Item):
                 if Chainsaw.soundCounter1 > 103:
                     Chainsaw.soundCounter1 = 0
                     Chainsaw.throttle_sound.stop()
-                    Chainsaw.gasoline -= 0.1
+                    Chainsaw.ammunition = round(max(0, Chainsaw.ammunition - 0.1), 1)
                     KDS.Audio.playSound(Chainsaw.freespin_sound)
         else:
             self.pickupCounter += 1
@@ -1966,7 +1967,7 @@ class GasCanister(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        Chainsaw.gasoline = min(100, Chainsaw.gasoline + 50)
+        Chainsaw.ammunition = min(100, Chainsaw.ammunition + 50)
         return True
 
 Item.serialNumbers = {
@@ -2136,7 +2137,10 @@ def console():
         "terms": trueFalseTree,
         "woof": trueFalseTree,
         "invl": trueFalseTree,
-        "finish": {"missions": "break"}
+        "finish": {"missions": "break"},
+        "teleport" : {
+         "~" : "break" 
+        }
     }
     
     consoleRunning = True
@@ -2240,6 +2244,27 @@ def console():
                 level_finished = True
             else:
                 KDS.Console.Feed.append("Please provide a proper finish type.")
+        elif command_list[0] == "teleport":
+            if len(command_list) > 1 and command_list[1] == "~":
+                try:
+                    xt = int(command_list[2])
+                    yt = int(command_list[3])
+                    xk = player_rect.x + xt
+                    yk = player_rect.y - yt
+                    player_rect.x = xk
+                    player_rect.y = yk
+                    KDS.Console.Feed.append(f"Teleported player to X{xk}, Y{yk}.")
+                except:
+                    KDS.Console.Feed.append("Please provide proper relative coordinates.")
+            else:
+                try:
+                    xt = int(command_list[1])
+                    yt = int(command_list[2])
+                    player_rect.x = xt
+                    player_rect.y = yt
+                    KDS.Console.Feed.append(f"Teleported player to X{xk}, Y{yk}.")
+                except:
+                    KDS.Console.Feed.append("Please provide proper relative coordinates.")
         elif command_list[0] == "help":
             KDS.Console.Feed.append("""
     Console Help:
@@ -2251,6 +2276,7 @@ def console():
         - woof => Sets all bulldogs anger to the specified value.
         - finish => Finishes level or missions.
         - invl => Sets invulnerability mode to the specified value.
+        - teleport => Teleports player either to static coordinates or relative coordinates.
         - help => Shows the list of commands.
     """)
         else:
@@ -3233,7 +3259,9 @@ while main_running:
         screen.blit(score_font.render(f"HEALTH: {math.ceil(player_health)}", True, KDS.Colors.White), (10, 55))
         screen.blit(score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
-        if hasattr(ui_hand_item, "ammunition"): screen.blit(harbinger_font.render(f"AMMO: {ui_hand_item.ammunition}", True, KDS.Colors.White), (10, 360))
+        if hasattr(ui_hand_item, "ammunition"): 
+            if isinstance(ui_hand_item.ammunition, int): screen.blit(harbinger_font.render(f"AMMO: {ui_hand_item.ammunition}", True, KDS.Colors.White), (10, 360))
+            else: screen.blit(harbinger_font.render(f"AMMO: {round(ui_hand_item.ammunition, 1)}", True, KDS.Colors.White), (10, 360))
 
         KDS.Missions.Render(screen)
 
