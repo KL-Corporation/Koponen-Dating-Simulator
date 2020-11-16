@@ -195,16 +195,8 @@ pygame.display.update()
 tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
 max_map = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
-KDS.Logging.Log(KDS.Logging.LogType.debug, 
-                f"""Settings Loading Complete.
-I=====[ Settings Loaded ]=====I
-   - Terms Accepted: {tcagr}
-   - Music Volume: {KDS.Audio.MusicVolume}
-   - Sound Effect Volume: {KDS.Audio.EffectVolume}
-   - Fullscreen: {Fullscreen.enabled}
-   - Current Map: {current_map}
-   - Max Map: {max_map}
-I=====[ Settings Loaded ]=====I""", False)
+maxParticles = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded.")
 #endregion
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
 #region Fonts
@@ -800,6 +792,8 @@ class Inventory:
 player_inventory = Inventory(5)
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
+
+#region Tiles
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
 
@@ -838,8 +832,6 @@ class Tile:
                     else: 
                         Surface.blit(renderable.update(), (renderable.rect.x -
                                                         scroll[0], renderable.rect.y - scroll[1]))                        
-
-#region Erikois-tilet >>>>>>>>>>>>>>
 
 class Toilet(Tile):
     def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
@@ -1326,9 +1318,8 @@ specialTilesD = {
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
 #endregion
 
+#region Items
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Items...")
-
-
 class Item:
 
     serialNumbers = {}
@@ -2007,8 +1998,8 @@ Item.serialNumbers = {
     34:Chainsaw,
     35:GasCanister
 }
-
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
+#endregion
 
 def load_jukebox_music():
     musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
@@ -2018,7 +2009,6 @@ def load_jukebox_music():
     random.shuffle(musics)
     return musics
 jukebox_music = load_jukebox_music()
-
 
 def shakeScreen():
     scroll[0] += random.randint(-10, 10)
@@ -3222,7 +3212,7 @@ while main_running:
             Lights.append(KDS.World.Lighting.Light((unit.xpos - 80, unit.ypos - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
 
     #Partikkelit
-    while len(Particles) > 20:
+    while len(Particles) > maxParticles:
         Particles.pop(0)
     for particle in Particles:
         result = KDS.World.Lighting.Fireparticle.update(particle, screen, scroll)
