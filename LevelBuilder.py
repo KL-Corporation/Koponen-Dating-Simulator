@@ -324,7 +324,11 @@ def openMap(): #Returns a 2d array
         with open(fileName, 'r') as f:
             contents = f.read().split("\n")
             contents = contents[:-1]
-        temporaryGrid = loadGrid((len(contents[0][:-2].split("/")), len(contents)))
+            
+        maxW = 0
+        for i in range(len(contents)):
+            maxW = max(maxW, len(contents[i][:-2].split("/")))
+        temporaryGrid = loadGrid((maxW, len(contents)))
 
         for row, rRow in zip(contents, temporaryGrid):
             for unit, rUnit in zip(row[:-2].split("/"), rRow):
