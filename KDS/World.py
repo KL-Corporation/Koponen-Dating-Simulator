@@ -100,15 +100,6 @@ class Lighting:
                 self.texture = texture
                 self.rendered: Dict[dict] = {}
                 
-            def __addColor(self, radius: int, color: int):
-                if radius in self.rendered:
-                    corRad = self.rendered[radius]
-                    tmp_tex: pygame.Surface = corRad["default"].copy()
-                    convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
-                    tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
-                    radius[color] = tmp_tex
-                else: KDS.Logging.AutoError("Targeted radius not initialised!")
-                
             def get(self, radius: int, color: int, conv_a = False):
                 """Returns a light shape from memory
 
@@ -119,15 +110,14 @@ class Lighting:
                 Returns:
                     Surface: The surface that contains the light texture
                 """
-                if radius not in self.rendered:
-                    self.rendered[radius] = { "default": pygame.transform.scale(self.texture, (radius, radius)).convert_alpha() }
+                if radius not in self.rendered: self.rendered[radius] = { "default": pygame.transform.scale(self.texture, (radius, radius)).convert_alpha() }
 
                 corRad = self.rendered[radius]
                 if color not in corRad:
-                    tmp_tex: pygame.Surface = corRad["default"].copy()
+                    tmp_tex: pygame.Surface = corRad["default"].copy().convert_alpha()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
-                    corRad[color] = tmp_tex.convert_alpha()
+                    corRad[color] = tmp_tex
                 return corRad[color]
         
         circle_softest: LightShape = None
