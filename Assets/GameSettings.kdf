@@ -14,7 +14,7 @@
 
         },
         "Lighting": {
-            "playerLight": true
+            
         }
     },
     "GameData": {

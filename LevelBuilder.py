@@ -42,6 +42,17 @@ harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0
 
 consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 
+brushNames = {
+    "imp": "2001",
+    "seargeant": "2002",
+    "drug_dealer": "2003",
+    "turbo_shotgunner": "2004",
+    "mafiaman": "2005",
+    "methmaker": "2006",
+    "undead_monster": "2007",
+    "teleport": "3001"
+}
+
 with open("Assets/Textures/build.json") as f:
     d = f.read()
 data = json.loads(d)
@@ -50,14 +61,19 @@ t_textures = {}
 for element in data["tile_textures"]:
     srl = f"0{element}"
 
-    t_textures[srl] = pygame.image.load("Assets/Textures/Tiles/" + data["tile_textures"][element]).convert()
+    elmt = data["tile_textures"][element]
+    t_textures[srl] = pygame.image.load("Assets/Textures/Tiles/" + elmt).convert()
     t_textures[srl].set_colorkey(KDS.Colors.White)
+    brushNames[os.path.splitext(elmt)[0]] = srl
 
 i_textures = {}
 for element in data["item_textures"]:
     srl = f"1{element}"
-    i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + data["item_textures"][element]).convert()
+    
+    elmt = data["item_textures"][element]
+    i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + elmt).convert()
     i_textures[srl].set_colorkey(KDS.Colors.White)
+    brushNames[os.path.splitext(elmt)[0]] = srl
 
 e_textures = {
     "2001": pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert(),
@@ -327,31 +343,54 @@ def openMap(): #Returns a 2d array
     else: 
         return None
 
+commandTree = {
+    "set": {
+        "brush": brushNames
+    },
+    "add": {
+        "rows": "break",
+        "cols": "break"
+    },
+    "rmv": {
+        "rows": "break",
+        "cols": "break"
+    }
+}
 def consoleHandler(inputString: str):
     global brush, grid
-    commandlist = inputString.strip().split()
+    commandlist = inputString.lower().strip().split()
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
-            if len(commandlist[2]) == 4 and commandlist[2].isnumeric():
-                brush = commandlist[2]
+            if commandlist[2] in brushNames:
+                brush = brushNames[commandlist[2]]
+                KDS.Console.Feed.append(f"Brush set: [{brushNames[commandlist[2]]}: {commandlist[2]}]")
+            else: KDS.Console.Feed.append("Invalid brush.")
+        else: KDS.Console.Feed.append("Invalid set command.")
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
-            for _ in range(int(commandlist[2])):
-                grid.append([tileInfo((x, len(grid))) for x in range(len(grid[0]))])
+            if commandlist[2].isnumeric:
+                resizeGrid((gridSize[0], gridSize[1] + int(commandlist[2])), grid)
+                KDS.Console.Feed.append(f"Added {int(commandlist[2])} rows.")
+            else: KDS.Console.Feed.append("Row add count is not a valid value.")
         elif commandlist[1] == "cols":
-            for _ in range(int(commandlist[2])):
-                y = 0
-                for row in grid:
-                    row.append(tileInfo((len(row), y)))
-                    y += 1
-    elif commandlist[0] == "gremv":
+            if commandlist[2].isnumeric:
+                resizeGrid((gridSize[0] + int(commandlist[2]), gridSize[1]), grid)
+                KDS.Console.Feed.append(f"Added {int(commandlist[2])} columns.")
+            else: KDS.Console.Feed.append("Column add count is not a valid value.")
+        else: KDS.Console.Feed.append("Invalid add command.")
+    elif commandlist[0] == "rmv":
         if commandlist[1] == "rows":
-            for _ in range(int(commandlist[2])):
-                grid = grid[:-1]
+            if commandlist[2].isnumeric:
+                resizeGrid((gridSize[0], gridSize[1] - int(commandlist[2])), grid)
+                KDS.Console.Feed.append(f"Removed {int(commandlist[2])} rows.")
+            else: KDS.Console.Feed.append("Row add count is not a valid value.")
         elif commandlist[1] == "cols":
-            for _ in range(int(commandlist[2])):
-                for row in grid:
-                    row = row[:-1]
+            if commandlist[2].isnumeric:
+                resizeGrid((gridSize[0] - int(commandlist[2]), gridSize[1]), grid)
+                KDS.Console.Feed.append(f"Removed {int(commandlist[2])} columns.")
+            else: KDS.Console.Feed.append("Column add count is not a valid value.")
+        else: KDS.Console.Feed.append("Invalid remove command.")
+    else: KDS.Console.Feed.append("Invalid command.")
 def materialMenu(previousMaterial):
     r = True
     rscroll = 0
@@ -544,7 +583,7 @@ def main():
                 if event.key == K_LCTRL:
                     keys_pressed[K_LCTRL] = True
                 elif event.key == K_t:
-                    inputConsole_output = KDS.Console.Start()
+                    inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True)
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}")
                     if len(resize_output) > 0:

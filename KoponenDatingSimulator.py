@@ -481,7 +481,7 @@ animation_counter = 0
 animation_duration = 0
 animation_image = 0
 air_timer = 0
-player_light = KDS.ConfigManager.GetGameSetting("Renderer", "Lighting", "playerLight")
+player_light = False
 player_health = 100
 last_player_health = 100
 player_death_event = False
@@ -2119,7 +2119,7 @@ def console():
 
     itemDict = {}
     for itemKey in buildData["item_textures"]:
-        if int(itemKey) in buildData["inventory_items"]: itemDict[buildData["item_textures"][itemKey][:-4]] = itemKey
+        if int(itemKey) in buildData["inventory_items"]: itemDict[os.path.splitext(buildData["item_textures"][itemKey])[0]] = itemKey
     itemDict["key"] = {}
     for key in player_keys: itemDict["key"][key] = "break"
     
