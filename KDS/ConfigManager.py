@@ -52,11 +52,10 @@ def GetJSON(filePath: str, jsonPath: str, defaultValue: Any) -> Any:
         tmpConfig = config
         for i in range(len(path)):
             p = path[i]
-            if i < len(path) - 1:
-                if p not in tmpConfig:
-                    SetJSON(filePath, jsonPath, defaultValue)
-                    return defaultValue
-                tmpConfig = tmpConfig[p]
+            if p not in tmpConfig:
+                SetJSON(filePath, jsonPath, defaultValue)
+                return defaultValue
+            if i < len(path) - 1: tmpConfig = tmpConfig[p]
             else: return tmpConfig[p]
     else:
         SetJSON(filePath, jsonPath, defaultValue)

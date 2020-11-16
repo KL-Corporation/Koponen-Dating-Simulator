@@ -109,7 +109,7 @@ class Lighting:
                     radius[color] = tmp_tex
                 else: KDS.Logging.AutoError("Targeted radius not initialised!")
                 
-            def get(self, radius: int, color: int):
+            def get(self, radius: int, color: int, conv_a = False):
                 """Returns a light shape from memory
 
                 Args:
@@ -120,14 +120,15 @@ class Lighting:
                     Surface: The surface that contains the light texture
                 """
                 if radius not in self.rendered:
-                    self.rendered[radius]: Dict[str or int, pygame.Surface] = { "default": pygame.transform.scale(self.texture, (radius, radius)) }
+                    self.rendered[radius] = { "default": pygame.transform.scale(self.texture, (radius, radius)).convert_alpha() }
 
                 corRad = self.rendered[radius]
-                if color not in self.rendered:
+                print(self.rendered[radius])
+                if color not in self.rendered[radius]:
                     tmp_tex: pygame.Surface = corRad["default"].copy()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
-                    corRad[color] = tmp_tex
+                    corRad[color] = tmp_tex.convert_alpha()
                 return corRad[color]
         
         circle_softest: LightShape = None
@@ -311,10 +312,10 @@ class BallisticProjectile:
         }
         for c1 in c:
             if self.force > 0:
-                self.rect.right = c1.left
+                self.rect.right = c1.rect.left
                 c_types['left'] = True
             elif self.force < 0:
-                self.rect.left = c1.right
+                self.rect.left = c1.rect.right
                 c_types['right'] = True
 
         self.rect.y += self.upforce
@@ -325,7 +326,7 @@ class BallisticProjectile:
 
         for c1 in c:
             if self.upforce > 0:
-                self.rect.bottom = c1.top
+                self.rect.bottom = c1.rect.top
                 c_types['bottom'] = True
             elif self.upforce < 0:
                 self.rect.top = c1.bottom
