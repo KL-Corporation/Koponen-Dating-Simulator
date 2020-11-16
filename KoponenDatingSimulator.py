@@ -2127,9 +2127,9 @@ def console():
         "terms": trueFalseTree,
         "woof": trueFalseTree,
         "invl": trueFalseTree,
-        "finish": {"missions": "break"},
-        "teleport" : {
-         "~" : "break" 
+        "finish": { "missions": "break" },
+        "teleport": {
+         "~": { "~": "break" },
         }
     }
     
@@ -2235,26 +2235,35 @@ def console():
             else:
                 KDS.Console.Feed.append("Please provide a proper finish type.")
         elif command_list[0] == "teleport":
-            if len(command_list) > 1 and command_list[1] == "~":
-                try:
-                    xt = int(command_list[2])
-                    yt = int(command_list[3])
-                    xk = player_rect.x + xt
-                    yk = player_rect.y - yt
-                    player_rect.x = xk
-                    player_rect.y = yk
-                    KDS.Console.Feed.append(f"Teleported player to X{xk}, Y{yk}.")
-                except:
-                    KDS.Console.Feed.append("Please provide proper relative coordinates.")
-            else:
-                try:
-                    xt = int(command_list[1])
-                    yt = int(command_list[2])
-                    player_rect.x = xt
-                    player_rect.y = yt
-                    KDS.Console.Feed.append(f"Teleported player to X{xt}, Y{yt}.")
-                except:
-                    KDS.Console.Feed.append("Please provide proper relative coordinates.")
+            if len(command_list) == 3:
+                if command_list[1][0] == "~":
+                    if len(command_list[1]) < 2: command_list[1] += "0"
+                    xt = command_list[1][1:]
+                    try: xt = player_rect.x + int(xt)
+                    except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+                else:
+                    xt = command_list[1]
+                    try: xt = int(xt)
+                    except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+
+                if command_list[2][0] == "~":
+                    if len(command_list[2]) < 2: command_list[2] += "0"
+                    yt = command_list[2][1:]
+                    try: yt = player_rect.y + int(yt)
+                    except ValueError:
+                        if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
+                        else: KDS.Console.Feed.append("Y-coordinate invalid.")
+                else:
+                    yt = command_list[2]
+                    try: yt = int(yt)
+                    except ValueError:
+                        if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
+                        else: KDS.Console.Feed.append("Y-coordinate invalid.")
+                
+                if isinstance(xt, int) and isinstance(yt, int):
+                    player_rect.topleft = (xt, yt)
+                    KDS.Console.Feed.append(f"Teleported player to {xt}, {yt}")
+            else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
         elif command_list[0] == "help":
             KDS.Console.Feed.append("""
     Console Help:
