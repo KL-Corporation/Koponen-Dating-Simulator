@@ -1,7 +1,10 @@
 #region Importing
 import json
+from os import read
 import pickle
+import re
 import shutil
+from typing import Any
 import KDS.Gamemode
 import KDS.Logging
 import os
@@ -15,7 +18,53 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     SaveDirPath = _SaveDirPath
     SaveCachePath = os.path.join(CachePath, "save")
 
-def GetJSON(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
+def SetJSON(filePath: str, jsonPath: str, value: Any) -> Any:
+    config = {}
+    if os.path.isfile(filePath):
+        try:
+            with open(filePath, "r") as f:
+                try: config = json.loads(f.read())
+                except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}", currentframe())
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    
+    path = jsonPath.split("/")
+    tmpConfig = config
+    for i in range(len(path)):
+        p = path[i]
+        if i < len(path) - 1:
+            if p not in tmpConfig: tmpConfig[p] = {}
+            tmpConfig = tmpConfig[p]
+        else: tmpConfig[p] = value
+    
+    try:
+        with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
+    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    
+def GetJSON(filePath: str, jsonPath: str, defaultValue: Any) -> Any:
+    config = {}
+    if os.path.isfile(filePath):
+        try:
+            with open(filePath, "r") as f:
+                try: config = json.loads(f.read())
+                except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}", currentframe())
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+        path = jsonPath.split("/")
+        tmpConfig = config
+        for i in range(len(path)):
+            p = path[i]
+            if i < len(path) - 1:
+                if p not in tmpConfig:
+                    SetJSON(filePath, jsonPath, defaultValue)
+                    return defaultValue
+                tmpConfig = tmpConfig[p]
+            else: return tmpConfig[p]
+    else:
+        SetJSON(filePath, jsonPath, defaultValue)
+        return defaultValue
+    KDS.Logging.AutoError("Unknown Error! This code should never execute.", currentframe())
+    return defaultValue
+
+def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
     if os.path.isfile(FilePath):
         try:
             with open(FilePath, "r") as f:
@@ -39,22 +88,15 @@ def GetSetting(SaveDirectory: str, SaveName: str, DefaultValue):
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    return GetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
+    return GetJSONLegacy(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, DefaultValue)
 
-def GetGameSetting(*path: str):
-    try:
-        with open("Assets/GameSettings.kdf") as f:
-            data: dict = json.loads(f.read())
-    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
-    value = data
-    for p in path:
-        value = value[p]
-    return value
+def GetGameData(path: str):
+    return GetJSON("Assets/GameData.kdf", path, None)
 
-def GetLevelProp(SaveDirectory: str, SaveName: str, DefaultValue):
-    return GetJSON(os.path.join(CachePath, "map", "levelprop.kdf"), SaveDirectory, SaveName, DefaultValue)
+def GetLevelProp(path: str, DefaultValue: Any):
+    return GetJSON(os.path.join(CachePath, "map", "levelprop.kdf"), path, DefaultValue)
 
-def SetJSON(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
+def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
     if os.path.isfile(FilePath):
         try:
             with open(FilePath, "r") as f:
@@ -77,7 +119,7 @@ def SetSetting(SaveDirectory: str, SaveName: str, SaveValue):
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    SetJSON(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, SaveValue)
+    SetJSONLegacy(os.path.join(AppDataPath, "settings.cfg"), SaveDirectory, SaveName, SaveValue)
 
 class Save:
     WorldDirCache = ""

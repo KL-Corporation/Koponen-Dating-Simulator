@@ -477,14 +477,14 @@ def generateLevelProp():
     
     savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
     if len(savePath) > 0:
-        KDS.ConfigManager.SetJSON(savePath, "Darkness", "enabled", dark)
-        KDS.ConfigManager.SetJSON(savePath, "Darkness", "strength", darkness)
-        KDS.ConfigManager.SetJSON(savePath, "AmbientLight", "enabled", ambient_light)
-        KDS.ConfigManager.SetJSON(savePath, "AmbientLight", "tint", ambient_light_tint)
-        KDS.ConfigManager.SetJSON(savePath, "StartPos", "player", p_start_pos)
-        KDS.ConfigManager.SetJSON(savePath, "StartPos", "koponen", k_start_pos)
-        KDS.ConfigManager.SetJSON(savePath, "TimeBonus", "start", tb_start)
-        KDS.ConfigManager.SetJSON(savePath, "TimeBonus", "end", tb_end)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "Darkness", "enabled", dark)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "Darkness", "strength", darkness)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "AmbientLight", "enabled", ambient_light)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "AmbientLight", "tint", ambient_light_tint)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "StartPos", "player", p_start_pos)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "StartPos", "koponen", k_start_pos)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "TimeBonus", "start", tb_start)
+        KDS.ConfigManager.SetJSONLegacy(savePath, "TimeBonus", "end", tb_end)
 
 def main():
     global currentSaveName, brush, grid, gridSize, modifiedAfterSave, timesModifiedAfterSave, btn_menu, gamesize, scaleMultiplier, scalesize
