@@ -2252,7 +2252,7 @@ def console():
                     yt = int(command_list[2])
                     player_rect.x = xt
                     player_rect.y = yt
-                    KDS.Console.Feed.append(f"Teleported player to X{xk}, Y{yk}.")
+                    KDS.Console.Feed.append(f"Teleported player to X{xt}, Y{yt}.")
                 except:
                     KDS.Console.Feed.append("Please provide proper relative coordinates.")
         elif command_list[0] == "help":
@@ -3446,17 +3446,12 @@ while main_running:
 #region Interactable Objects
     if DebugMode:
         pygame.draw.rect(screen, KDS.Colors.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
-    screen.blit(koponen_animations.update(), (
-        koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
+    screen.blit(koponen_animations.update(), (koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if DebugMode:
-        pygame.draw.rect(screen, (KDS.Colors.Green), (player_rect.x - 
-                                                                 scroll[0], player_rect.y - scroll[1], 
-                                                                 player_rect.width, player_rect.height))
+        pygame.draw.rect(screen, (KDS.Colors.Green), (player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
 
-    screen.blit(pygame.transform.flip(player_animations.update(), direction, False), (
-        int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - player_animations.active.size[0]) / 2)), 
-        int(player_rect.bottomleft[1] - scroll[1] - player_animations.active.size[1])))
+    screen.blit(pygame.transform.flip(player_animations.update(), direction, False), (int(player_rect.topleft[0] - scroll[0] + ((player_rect.width - player_animations.active.size[0]) / 2)), int(player_rect.bottomleft[1] - scroll[1] - player_animations.active.size[1])))
 
 #endregion
 #region Debug Mode
@@ -3474,8 +3469,7 @@ while main_running:
 #endregion
 #region Screen Rendering
     window.fill(KDS.Colors.Black)
-    window.blit(pygame.transform.scale(screen, Fullscreen.size),
-                (Fullscreen.offset[0], Fullscreen.offset[1]))
+    window.blit(pygame.transform.scale(screen, Fullscreen.size), (Fullscreen.offset[0], Fullscreen.offset[1]))
     #Updating display object
     pygame.display.update()
 #endregion
