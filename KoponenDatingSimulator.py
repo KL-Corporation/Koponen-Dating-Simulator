@@ -3226,10 +3226,8 @@ while main_running:
         Particles.pop(0)
     for particle in Particles:
         result = KDS.World.Lighting.Fireparticle.update(particle, screen, scroll)
-        if result:
-            Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
-        else:
-            Particles.remove(particle)
+        if result: Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
+        else: Particles.remove(particle)
 
     #Valojen käsittely
     lightsUpdating = 0
