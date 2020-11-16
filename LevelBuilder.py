@@ -323,7 +323,7 @@ def openMap(): #Returns a 2d array
     if fileName:
         with open(fileName, 'r') as f:
             contents = f.read().split("\n")
-            contents = contents[:-1]
+            while len(contents[-1]) < 1: contents = contents[:-1]
             
         maxW = 0
         for i in range(len(contents)):
