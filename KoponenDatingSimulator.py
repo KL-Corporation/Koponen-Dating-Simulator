@@ -1,6 +1,7 @@
 #region Importing
 import os
 from os import walk
+from shutil import ExecError
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -1116,7 +1117,7 @@ class Torch(Tile):
             self.light_scale += 4
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light(self.rect.topleft, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1850), (self.light_scale, self.light_scale))))
+        Lights.append(KDS.World.Lighting.Light((self.rect.x - 64, self.rect.y - 70), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1850)))
         return self.texture.update()
 
 class GoryHead(Tile):
@@ -2138,7 +2139,10 @@ def console():
         "terms": trueFalseTree,
         "woof": trueFalseTree,
         "invl": trueFalseTree,
-        "finish": {"missions": "break"}
+        "finish": {"missions": "break"},
+        "teleport" : {
+         "~" : "break" 
+        }
     }
     
     consoleRunning = True
@@ -2242,6 +2246,27 @@ def console():
                 level_finished = True
             else:
                 KDS.Console.Feed.append("Please provide a proper finish type.")
+        elif command_list[0] == "teleport":
+            if len(command_list) > 1 and command_list[1] == "~":
+                try:
+                    xt = int(command_list[2])
+                    yt = int(command_list[3])
+                    xk = player_rect.x + xt
+                    yk = player_rect.y - yt
+                    player_rect.x = xk
+                    player_rect.y = yk
+                    KDS.Console.Feed.append(f"Teleported player to X{xk}, Y{yk}.")
+                except:
+                    KDS.Console.Feed.append("Please provide proper relative coordinates.")
+            else:
+                try:
+                    xt = int(command_list[1])
+                    yt = int(command_list[2])
+                    player_rect.x = xt
+                    player_rect.y = yt
+                    KDS.Console.Feed.append(f"Teleported player to X{xk}, Y{yk}.")
+                except:
+                    KDS.Console.Feed.append("Please provide proper relative coordinates.")
         elif command_list[0] == "help":
             KDS.Console.Feed.append("""
     Console Help:
@@ -2253,6 +2278,7 @@ def console():
         - woof => Sets all bulldogs anger to the specified value.
         - finish => Finishes level or missions.
         - invl => Sets invulnerability mode to the specified value.
+        - teleport => Teleports player either to static coordinates or relative coordinates.
         - help => Shows the list of commands.
     """)
         else:
