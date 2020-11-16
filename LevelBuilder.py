@@ -173,8 +173,6 @@ class tileInfo:
                             else:
                                 print(f"Cannot render unit because texture is not added: {srlist}")
 
-                        if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
-                        
                         if number[0] == "3":
                             if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
                                 t_ind = str(int(number[1:]))
@@ -185,6 +183,8 @@ class tileInfo:
                                         temp_serial = f"3{int(temp_serial):03d}"
                                         unit.setNewSerialNumber_attempt2(temp_serial, index)
                                     keys_pressed[K_p] = False
+
+                        if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
                     if pygame.mouse.get_pressed()[1] and not keys_pressed[K_LSHIFT]:
