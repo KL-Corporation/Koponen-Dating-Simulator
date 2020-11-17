@@ -3129,11 +3129,11 @@ while main_running:
             if event.button == 1:
                 KDS.Keys.mainKey.SetState(False)
         elif event.type == MOUSEWHEEL:
-            tmpAmount = event.x - event.y
+            tmpAmount = abs(event.x - event.y)
             if tmpAmount > 0:
-                for _ in range(abs(tmpAmount)): player_inventory.moveRight()
+                for _ in range(tmpAmount): player_inventory.moveRight()
             else:
-                for _ in range(abs(tmpAmount)): player_inventory.moveLeft()
+                for _ in range(tmpAmount): player_inventory.moveLeft()
         elif event.type == pygame.QUIT:
             KDS_Quit()
         elif event.type == pygame.VIDEORESIZE:
