@@ -107,16 +107,6 @@ grid = [[]]
 modifiedAfterSave = False
 timesModifiedAfterSave = 0
 
-keys_pressed = {
-    K_RETURN: False,
-    K_e: False,
-    K_s: False,
-    K_o: False,
-    K_p: False,
-    K_LSHIFT: False,
-    K_LCTRL: False,
-}
-
 def LB_Quit():
     pygame.quit()
     quit()
@@ -126,30 +116,53 @@ KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200,
 ##################################################
 
 class tileInfo:
+    releasedButtons = { 0: True, 2: True }
+    placedOnTile = None
+    
     def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
         self.pos = position
         self.serialNumber = serialNumber
 
-    
-    def setNewSerialNumber(self, srlNumber: str):
+    def setSerial(self, srlNumber: str):
         serialIdentifier = int(srlNumber[1])
         serialIdentifier *= 4
         if serialIdentifier:
             serialIdentifier += 1
         self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier + 4:]
-
-    def setNewSerialNumber2(self, srlNumber, slot):
+    
+    def setSerialToSlot(self, srlNumber, slot):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
-
+        
     def getSerialNumber(self, index):
         if index > 0:
             index += 1
-        return self.serialNumber[index: index + 4]
+        return self.serialNumber[index : index + 4]
+
+    def getSerialList(self):
+        return self.serialNumber.replace(" / ", "").split()
+
+    def addSerial(self, srlNumber):
+        srlist = self.getSerialList()
+        for index, number in enumerate(srlist):
+            if int(number) == 0:
+                if srlNumber not in srlist: self.setSerialToSlot(srlNumber, index)
+                else: print(f"Serial {srlNumber} already in {self.pos}!")
+                return
+        print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
+        
+    def removeSerial(self):
+        srlist = self.getSerialList()
+        for index, number in reversed(list(enumerate(srlist))):
+            if int(number) != 0:
+                self.setSerialToSlot("0000", index)
+                return
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh = "0000", updttiles=True):
+    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh: str = "0000", updttiles: bool = True):
+        keys_pressed = pygame.key.get_pressed()
+        mouse_pressed = pygame.mouse.get_pressed()
         brushtemp = brsh
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
@@ -162,8 +175,7 @@ class tileInfo:
         for row in renderList[scroll[1] : scroll[1] + int((display_size[1] / scalesize) + 2)]:
             for unit in row[scroll[0] : scroll[0] + int((display_size[0] / scalesize) + 2)]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
-                tempSerial = unit.serialNumber.replace(" / ", "")
-                srlist = tempSerial.split()
+                srlist = unit.getSerialList()
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
@@ -182,23 +194,27 @@ class tileInfo:
                                     temp_serial = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
                                     if len(temp_serial) > 0:
                                         temp_serial = f"3{int(temp_serial):03d}"
-                                        unit.setNewSerialNumber2(temp_serial, index)
+                                        unit.setSerialToSlot(temp_serial, index)
                                     keys_pressed[K_p] = False
 
                         if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
-                    if pygame.mouse.get_pressed()[1] and not keys_pressed[K_LSHIFT]:
+                    if mouse_pressed[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerialNumber(0)
                     pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
-                    if pygame.mouse.get_pressed()[0] and updttiles:
+                    if mouse_pressed[0] and updttiles:
                         if brsh != "0000":
-                            unit.setNewSerialNumber(brsh)
+                            if not keys_pressed[K_LSHIFT]: unit.setSerial(brsh)
+                            elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
-                            unit.serialNumber = "0000 0000 0000 0000 / "
-                    if pygame.mouse.get_pressed()[2]:
-                        unit.serialNumber = "0000 0000 0000 0000 / "
+                            if not keys_pressed[K_LSHIFT]: unit.serialNumber = "0000 0000 0000 0000 / "
+                            elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                    elif mouse_pressed[2]:
+                        if not keys_pressed[K_LSHIFT]: unit.serialNumber = "0000 0000 0000 0000 / "
+                        elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                    tileInfo.placedOnTile = unit
         
         if tip_render != None:
             pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, tip_render.get_width() + 5, tip_render.get_height() + 5))
@@ -206,6 +222,10 @@ class tileInfo:
         
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
+        
+        tileInfo.releasedButtons[0] = False if mouse_pressed[0] else True
+        tileInfo.releasedButtons[2] = False if mouse_pressed[2] else True
+        
         return renderList, brushtemp
 
 def loadGrid(size):
@@ -432,6 +452,7 @@ def materialMenu(previousMaterial):
                 y += 1
 
     while r:
+        mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 LB_Quit()
@@ -453,7 +474,7 @@ def materialMenu(previousMaterial):
             main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber],(blocksize,blocksize)), (selection.rect.x,selection.rect.y-rscroll*30))
             if selection.rect.collidepoint(mpos[0],mpos[1]+rscroll*30):
                 pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y-rscroll*30, blocksize, blocksize), 3)
-                if pygame.mouse.get_pressed()[0]:
+                if mouse_pressed[0]:
                     return selection.serialNumber
         pygame.display.update()
 
@@ -570,8 +591,12 @@ def main():
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
+    rndr_mb1_rel = True
+    rndr_mb2_rel = True
     while True:
         mouse_pos = pygame.mouse.get_pos()
+        keys_pressed = pygame.key.get_pressed()
+        mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
                 if modifiedAfterSave:
@@ -600,43 +625,22 @@ def main():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     updateTiles = True
+                    rndr_mb1_rel = True
+                elif event.button == 2:
+                    rndr_mb2_rel = True
             elif event.type == KEYDOWN:
-                if event.key == K_LCTRL:
-                    keys_pressed[K_LCTRL] = True
-                elif event.key == K_t:
+                if event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True)
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}")
                     if len(resize_output) > 0:
                         resize_output = resize_output.replace(" ", "").split(",")
                         grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
-                elif event.key == K_s:
-                    keys_pressed[K_s] = True
                 elif event.key == K_e:
                     brush = materialMenu(brush)
                     updateTiles = False
-                    keys_pressed[K_e] = True
-                elif event.key == K_o:
-                    keys_pressed[K_o] = True
-                elif event.key == K_LSHIFT:
-                    keys_pressed[K_LSHIFT] = True
-                elif event.key == K_p:
-                    keys_pressed[K_p] = True
-            elif event.type == KEYUP:
-                if event.key == K_LCTRL:
-                    keys_pressed[K_LCTRL] = False
-                elif event.key == K_e:
-                    keys_pressed[K_e] = False
-                elif event.key == K_s:
-                    keys_pressed[K_s] = False
-                elif event.key == K_o:
-                    keys_pressed[K_o] = False 
-                elif event.key == K_p:
-                    keys_pressed[K_p] = False
-                elif event.key == K_LSHIFT:
-                    keys_pressed[K_LSHIFT] = False
         
-        if pygame.mouse.get_pressed()[1] and keys_pressed[K_LSHIFT]:
+        if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = int(round((mouse_pos_beforeMove[0] - mouse_pos[0]) / scalesize))
             mid_scroll_y = int(round((mouse_pos_beforeMove[1] - mouse_pos[1]) / scalesize))
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
@@ -664,7 +668,7 @@ def main():
 
         main_display.fill((30,20,60))
         
-        if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
+        if mouse_pressed[0] or mouse_pressed[2]:
             modifiedAfterSave = True
             timesModifiedAfterSave += 1
             
