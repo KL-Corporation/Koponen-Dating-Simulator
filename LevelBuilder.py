@@ -104,9 +104,8 @@ brush = "0000"
 teleportTemp = "001"
 currentSaveName = ''
 grid = [[]]
+gridChanges = 0
 gridSize = (0, 0)
-modifiedAfterSave = False
-timesModifiedAfterSave = 0
 
 def LB_Quit():
     pygame.quit()
@@ -129,12 +128,18 @@ class tileInfo:
         serialIdentifier *= 4
         if serialIdentifier:
             serialIdentifier += 1
+        oldSerial = self.serialNumber
         self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier + 4:]
+        global gridChanges
+        if self.serialNumber != oldSerial: gridChanges += 1
     
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        oldSerial = self.serialNumber
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        global gridChanges
+        if self.serialNumber != oldSerial: gridChanges += 1
         
     def getSerial(self, slot: int):
         if slot > 0:
@@ -360,9 +365,10 @@ def saveMap(grd, name: str):
         outputString += "\n"
     with open(name, 'w') as f:
         f.write(outputString)
-    global modifiedAfterSave, timesModifiedAfterSave
-    modifiedAfterSave = False
-    timesModifiedAfterSave = 0
+    global gridChanges
+    gridChanges = 0
+    global gridBeforeSave
+    gridBeforeSave = grd.copy()
         
 def saveMapName():
     global currentSaveName, grid
@@ -374,6 +380,7 @@ def saveMapName():
 def openMap(): #Returns a 2d array
     global currentSaveName, gridSize
     fileName = filedialog.askopenfilename(filetypes = (("Data file", "*.dat"), ("All files", "*.*")))
+    temporaryGrid = None
     if fileName:
         with open(fileName, 'r') as f:
             contents = f.read().split("\n")
@@ -396,10 +403,10 @@ def openMap(): #Returns a 2d array
         
         #return tempGrid
         currentSaveName = fileName
-        return temporaryGrid
-
-    else: 
-        return None
+    if temporaryGrid != None:
+        global gridBeforeSave, grid
+        grid = temporaryGrid
+        gridBeforeSave = grid.copy()
 
 commandTree = {
     "set": {
@@ -557,7 +564,7 @@ def generateLevelProp():
         KDS.ConfigManager.SetJSON(savePath, "Data/TimeBonus/end", tb_end)
 
 def main():
-    global currentSaveName, brush, grid, gridSize, modifiedAfterSave, timesModifiedAfterSave, btn_menu, gamesize, scaleMultiplier, scalesize
+    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize
     btn_menu = True
     grid = None
     def button_handler(_openMap: bool = False, _generateLevelProp: bool = False, _quit: bool = False):
@@ -567,9 +574,8 @@ def main():
         elif _quit:
             LB_Quit()
         elif _openMap:
-            o_m = openMap()
-            if o_m != None: 
-                grid = o_m
+            openMap()
+            if grid != None:
                 btn_menu = False
             else: 
                 btn_menu = True
@@ -619,17 +625,14 @@ def main():
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
-    rndr_mb1_rel = True
-    rndr_mb2_rel = True
     while True:
         mouse_pos = pygame.mouse.get_pos()
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
-                if modifiedAfterSave:
-                    if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == 6:
-                        LB_Quit()
+                if gridChanges > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == 6:
+                    LB_Quit()
                 else:
                     LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
@@ -684,30 +687,22 @@ def main():
             saveMapName()
 
         if keys_pressed[K_o] and keys_pressed[K_LCTRL]:
-            tempGr = openMap()
-            if tempGr:
-                grid = tempGr
-            else:
-                print("saveMap returned None")
+            openMap()
+            if grid == None:
+                print("Map opening cancelled.")
 
         if inputConsole_output != None:
             consoleHandler(inputConsole_output)
             inputConsole_output = None
 
         main_display.fill((30,20,60))
-        
-        if mouse_pressed[0] or mouse_pressed[2]:
-            modifiedAfterSave = True
-            timesModifiedAfterSave += 1
             
         grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
 
-        if modifiedAfterSave:
+        if gridChanges > 0:
             _color = KDS.Colors.Yellow
-            if 200 > timesModifiedAfterSave > 100:
-                _color = KDS.Colors.Orange
-            elif timesModifiedAfterSave > 200:
-                _color = KDS.Colors.Red
+            if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
+            elif gridChanges > 100: _color = KDS.Colors.Red
             pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
 
         pygame.display.update()
