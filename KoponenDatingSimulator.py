@@ -704,6 +704,7 @@ Items.init(inventoryDobulesSerialNumbers, inventory_items)
 
 class Inventory:
     emptySlot = "none"
+    doubleItem = "doubleItem"
 
     def __init__(self, size):
         self.storage = [Inventory.emptySlot for _ in range(size)]
@@ -734,27 +735,28 @@ class Inventory:
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex += 1
         if self.SIndex < self.size:
-            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+            if self.storage[self.SIndex] == Inventory.doubleItem:
                 self.SIndex += 1
 
-        if self.SIndex > self.size - 1:
+        if self.SIndex >= self.size:
             self.SIndex = 0
 
     def moveLeft(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex -= 1
         if self.SIndex >= 0:
-            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+            if self.storage[self.SIndex] == Inventory.doubleItem:
                 self.SIndex -= 1
+                
         if self.SIndex < 0:
             self.SIndex = self.size - 1
-            if self.storage[self.SIndex] == "doubleItemPlaceholder":
+            if self.storage[self.SIndex] == Inventory.doubleItem:
                 self.SIndex -= 1
 
     def pickSlot(self, index):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         if 0 <= index <= len(self.storage)-1:
-            if self.storage[index] == "doubleItemPlaceholder":
+            if self.storage[index] == Inventory.doubleItem:
                 self.SIndex = index - 1
             else:
                 self.SIndex = index
@@ -762,7 +764,7 @@ class Inventory:
     def dropItem(self):
         if self.storage[self.SIndex] != Inventory.emptySlot:
             if self.SIndex < self.size - 1:
-                if self.storage[self.SIndex + 1] == "doubleItemPlaceholder":
+                if self.storage[self.SIndex + 1] == Inventory.doubleItem:
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
                 elif self.storage[self.SIndex] == 6:
                     KDS.Missions.Listeners.iPuhelinDrop.Trigger()
@@ -771,7 +773,7 @@ class Inventory:
             return temp
 
     def useItem(self, Surface: pygame.Surface, *args):
-        if not isinstance(self.storage[self.SIndex], Lantern) and self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != "doubleItemPlaceholder":
+        if not isinstance(self.storage[self.SIndex], Lantern) and self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != Inventory.doubleItem:
             dumpValues = self.storage[self.SIndex].use(args, Surface)
             if direction:
                 renderOffset = -dumpValues.get_size()[0]
@@ -1399,8 +1401,7 @@ class Item:
                             if inventory.storage[inventory.SIndex + 1] == "none":
                                 item.pickup()
                                 inventory.storage[inventory.SIndex] = item
-                                inventory.storage[inventory.SIndex +
-                                                  1] = "doubleItemPlaceholder"
+                                inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
                                 Item_list = numpy.delete(Item_list, index)
                                 showItemTip = False
             index += 1
@@ -3045,7 +3046,7 @@ while main_running:
             elif event.key in KDS.Keys.inventoryKeys:
                 player_inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
-                if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != "doubleItemPlaceholder":
+                if player_inventory.getHandItem() != "none" and player_inventory.getHandItem() != Inventory.doubleItem:
                     temp = player_inventory.dropItem()
                     temp.rect.x = player_rect.centerx
                     temp.rect.y = player_rect.centery
@@ -3095,10 +3096,6 @@ while main_running:
                 KDS.Keys.mainKey.SetState(True)
                 rk62_sound_cooldown = 11
                 weapon_fire = True
-            elif event.button == 4:
-                player_inventory.moveLeft()
-            elif event.button == 5:
-                player_inventory.moveRight()
         elif event.type == KEYUP:
             if event.key == K_d:
                 KDS.Keys.moveRight.SetState(False)
@@ -3131,6 +3128,11 @@ while main_running:
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
                 KDS.Keys.mainKey.SetState(False)
+        elif event.type == MOUSEWHEEL:
+            if event.x > 0 or event.y < 0:
+                for _ in range(max(event.x, abs(event.y))): player_inventory.moveRight()
+            else:
+                for _ in range(max(abs(event.x), event.y)): player_inventory.moveLeft()
         elif event.type == pygame.QUIT:
             KDS_Quit()
         elif event.type == pygame.VIDEORESIZE:

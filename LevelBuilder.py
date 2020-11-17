@@ -495,20 +495,17 @@ def materialMenu(previousMaterial):
                 if event.key == K_ESCAPE or event.key == K_e:
                     r = False
                     return previousMaterial
-            elif event.type == MOUSEBUTTONDOWN:
-                if event.button == 5:
-                    rscroll += 1
-                elif event.button == 4:
-                    rscroll -= 1
-                    if rscroll < 0:
-                        rscroll = 0
+            elif event.type == MOUSEWHEEL:
+                if event.y > 0: rscroll = max(rscroll - 1, 0)
+                else: rscroll = min(rscroll + 1, sys.maxsize)
+                
         mpos = pygame.mouse.get_pos()
         main_display.fill((20,20,20))
         for selection in selectorRects:
             sorting = selection.serialNumber[0]
-            main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber],(blocksize,blocksize)), (selection.rect.x,selection.rect.y-rscroll*30))
-            if selection.rect.collidepoint(mpos[0],mpos[1]+rscroll*30):
-                pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y-rscroll*30, blocksize, blocksize), 3)
+            main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
+            if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
+                pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
                 if mouse_pressed[0]:
                     return selection.serialNumber
         pygame.display.update()
@@ -636,21 +633,7 @@ def main():
                 else:
                     LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
-                if event.button == 4:
-                    if keys_pressed[K_LSHIFT]:
-                        scroll[0] -= 1
-                    elif keys_pressed[K_LCTRL]:
-                        zoom(5, scroll, grid)
-                    else:
-                        scroll[1] -= 1
-                elif event.button == 5:
-                    if keys_pressed[K_LSHIFT]:
-                        scroll[0] += 1
-                    elif keys_pressed[K_LCTRL]:
-                        zoom(-5, scroll, grid)
-                    else:
-                        scroll[1] += 1
-                elif event.button == 2:
+                if event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
             elif event.type == MOUSEBUTTONUP:
@@ -670,7 +653,15 @@ def main():
                 elif event.key == K_e:
                     brush = materialMenu(brush)
                     updateTiles = False
-        
+            elif event.type == MOUSEWHEEL:
+                if keys_pressed[K_LSHIFT]:
+                    scroll[0] -= event.y
+                elif keys_pressed[K_LCTRL]:
+                    zoom(event.y * 5, scroll, grid)
+                else:
+                    scroll[1] -= event.y
+                scroll[0] += event.x
+            
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = int(round((mouse_pos_beforeMove[0] - mouse_pos[0]) / scalesize))
             mid_scroll_y = int(round((mouse_pos_beforeMove[1] - mouse_pos[1]) / scalesize))
