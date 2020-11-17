@@ -144,6 +144,7 @@ def ResizeWindow(set_size: tuple):
 #endregion
 #region Initialisation
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
+KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Display Driver...")
 Fullscreen.enabled = KDS.ConfigManager.GetSetting("Renderer/fullscreen", False)
 Fullscreen.Set(True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
