@@ -39,6 +39,8 @@
         "maxMap": "99"
     },
     "UI": {
+        "cursor": 0,
+
         "Sliders": {
 
         },

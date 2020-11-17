@@ -12,7 +12,7 @@ waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait befo
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
 animationDivider = 2 #The value the default animation length will be divided
 
-maxTimeBonus = int(KDS.ConfigManager.GetGameData("GameData/Default/Score/timeBonus"))
+maxTimeBonus = 500
 
 score = 0
 koponen_happiness = 40

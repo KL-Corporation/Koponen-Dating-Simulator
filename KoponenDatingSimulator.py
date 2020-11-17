@@ -60,7 +60,17 @@ pygame.init()
 monitor_info = pygame.display.Info()
 monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
-pygame.mouse.set_system_cursor(SYSTEM_CURSOR_ARROW)
+cursorIndex = KDS.ConfigManager.GetSetting("UI/cursor", 0)
+cursorData = {
+    1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
+    2: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"),
+    3: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor3.xbm", "Assets/Textures/UI/Cursors/cursor3.xbm"),
+    4: pygame.cursors.arrow,
+    5: pygame.cursors.tri_left
+}
+if cursorIndex in cursorData: pygame.mouse.set_cursor(*cursorData[cursorIndex])
+else: pygame.mouse.set_system_cursor(SYSTEM_CURSOR_ARROW)
+del cursorData
 
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
@@ -421,6 +431,8 @@ respawn_anchor_tip = tip_font.render("Set Respawn Point [E]", True, KDS.Colors.W
 level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.White)
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
+renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
+
 restart = False
 reset_data = False
 
@@ -545,7 +557,6 @@ def LoadGameSettings():
     fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameData("Physics/Player/fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Player/fallMaxVelocity")
-    renderPadding = KDS.ConfigManager.GetGameData("Renderer/Tile/renderPadding")
 LoadGameSettings()
 #endregion
 #region World Data
