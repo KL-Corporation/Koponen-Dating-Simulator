@@ -104,6 +104,7 @@ brush = "0000"
 teleportTemp = "001"
 currentSaveName = ''
 grid = [[]]
+gridSize = (0, 0)
 modifiedAfterSave = False
 timesModifiedAfterSave = 0
 
@@ -130,21 +131,21 @@ class tileInfo:
             serialIdentifier += 1
         self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier + 4:]
     
-    def setSerialToSlot(self, srlNumber, slot):
+    def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
         
-    def getSerialNumber(self, index):
-        if index > 0:
-            index += 1
-        return self.serialNumber[index : index + 4]
+    def getSerial(self, slot: int):
+        if slot > 0:
+            slot += 1
+        return self.serialNumber[slot : slot + 4]
 
-    def getSerialList(self):
-        return self.serialNumber.replace(" / ", "").split()
+    def getSerials(self):
+        return tuple(self.serialNumber.replace(" / ", "").split())
 
     def addSerial(self, srlNumber):
-        srlist = self.getSerialList()
+        srlist = self.getSerials()
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist: self.setSerialToSlot(srlNumber, index)
@@ -153,7 +154,7 @@ class tileInfo:
         print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
         
     def removeSerial(self):
-        srlist = self.getSerialList()
+        srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
                 self.setSerialToSlot("0000", index)
@@ -168,14 +169,14 @@ class tileInfo:
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
         bpos = (0, 0)
         
-        tip_render = None
+        tip_renders = []
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
         for row in renderList[scroll[1] : scroll[1] + int((display_size[1] / scalesize) + 2)]:
             for unit in row[scroll[0] : scroll[0] + int((display_size[0] / scalesize) + 2)]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
-                srlist = unit.getSerialList()
+                srlist = unit.getSerials()
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
@@ -189,7 +190,7 @@ class tileInfo:
                         if number[0] == "3":
                             if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
                                 t_ind = str(int(number[1:]))
-                                tip_render = harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed)
+                                tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
                                 if keys_pressed[K_p]:
                                     temp_serial = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
                                     if len(temp_serial) > 0:
@@ -200,8 +201,17 @@ class tileInfo:
                         if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
+                    
+                    srlist = unit.getSerials()
+                    fld_srls = 0
+                    for sr in srlist:
+                        if int(sr) != 0: fld_srls += 1
+                        else: break
+                    if fld_srls > 1:
+                        for i in range(fld_srls): tip_renders.append(harbinger_font_small.render(srlist[i], True, KDS.Colors.RiverBlue))
+                    
                     if mouse_pressed[1] and not keys_pressed[K_LSHIFT]:
-                        brushtemp = unit.getSerialNumber(0)
+                        brushtemp = unit.getSerial(0)
                     pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
                     if mouse_pressed[0] and updttiles:
@@ -216,9 +226,19 @@ class tileInfo:
                         elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     tileInfo.placedOnTile = unit
         
-        if tip_render != None:
-            pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, tip_render.get_width() + 5, tip_render.get_height() + 5))
-            main_display.blit(tip_render, (mpos[0] + 15, mpos[1] + 15))
+        if len(tip_renders) > 0:
+            totHeight = 0
+            maxWidth = 0
+            for tip in tip_renders:
+                totHeight += tip.get_height() + 8
+                maxWidth = max(maxWidth, tip.get_width())
+            totHeight -= 8
+            pygame.draw.rect(main_display, KDS.Colors.Gray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, maxWidth + 5, totHeight + 5))
+            cumHeight = 0
+            for tip in tip_renders:
+                pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
+                main_display.blit(tip, (mpos[0] + 15 + int(maxWidth / 2 - tip.get_width() / 2), mpos[1] + 15 + cumHeight))
+                cumHeight += tip.get_height() + 8
         
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
@@ -391,7 +411,8 @@ commandTree = {
     },
     "rmv": {
         "rows": "break",
-        "cols": "break"
+        "cols": "break",
+        "stacks": "break"
     }
 }
 def consoleHandler(inputString: str):
@@ -427,6 +448,13 @@ def consoleHandler(inputString: str):
                 resizeGrid((gridSize[0] - int(commandlist[2]), gridSize[1]), grid)
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} columns.")
             else: KDS.Console.Feed.append("Column add count is not a valid value.")
+        elif commandlist[1] == "stacks":
+            for row in grid:
+                for unit in row:
+                    unit: tileInfo
+                    srlist = unit.getSerials()
+                    for i in range(1, len(srlist)):
+                        unit.setSerialToSlot("0000", i)
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
 def materialMenu(previousMaterial):
