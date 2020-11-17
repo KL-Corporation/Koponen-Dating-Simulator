@@ -60,7 +60,7 @@ pygame.init()
 monitor_info = pygame.display.Info()
 monitor_size = (monitor_info.current_w, monitor_info.current_h)
 
-pygame.mouse.set_cursor(*pygame.cursors.arrow)
+pygame.mouse.set_system_cursor(SYSTEM_CURSOR_ARROW)
 
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
