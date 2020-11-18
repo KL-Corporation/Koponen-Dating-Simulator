@@ -653,9 +653,7 @@ class WorldData():
                 if tile.serialNumber == 22:
                     tile.initHeight(tiles)
 
-        KDS.Audio.MusicMixer.load(os.path.join(PersistentMapPath, "music.ogg"))
-        KDS.Audio.MusicMixer.play(-1)
-        KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
+        KDS.Audio.Music.play(os.path.join(PersistentMapPath, "music.ogg"))
         return p_start_pos, k_start_pos
 #endregion
 #region Data
@@ -914,15 +912,14 @@ class Jukebox(Tile):
         for music in jukebox_music:
             music.stop()
         self.playing = -1
-        KDS.Audio.MusicMixer.unpause()
-        KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
+        KDS.Audio.Music.unpause()
 
     def update(self):
         if self.rect.colliderect(player_rect):
             screen.blit(jukebox_tip, (self.rect.centerx - scroll[0] - jukebox_tip.get_width() / 2, self.rect.y - scroll[1] - 30))
             if KDS.Keys.functionKey.clicked and not KDS.Keys.functionKey.holdClicked:
                 self.stopPlayingTrack()
-                KDS.Audio.MusicMixer.pause()
+                KDS.Audio.Music.pause()
                 loopStopper = 0
                 while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
                     self.playing = random.randint(0, len(jukebox_music) - 1)
@@ -2358,8 +2355,8 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
         window.fill(scaled_loadingScreen.get_at((0, 0)))
         window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
         pygame.display.update()
-    KDS.Audio.MusicMixer.stop()
-    KDS.Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
+
+    KDS.Audio.Music.unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     
     KDS.ConfigManager.Save.init(1)
@@ -2448,6 +2445,7 @@ def respawn_function():
     farting = False
     playerStamina = 100.0
     player_animations.reset()
+    KDS.Audio.Music.play(None)
 
 #endregion
 #region Menus
@@ -2606,8 +2604,7 @@ def settings_menu():
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
         display.blit(clear_lag_text, (50, 240))
-        KDS.Audio.MusicVolume = music_volume_slider.update(display, mouse_pos)
-        KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
+        KDS.Audio.Music.setVolume(music_volume_slider.update(display, mouse_pos))
         KDS.Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
 
         return_button.update(display, mouse_pos, c)
@@ -2653,9 +2650,7 @@ def main_menu():
     main_menu_running = True
     c = False
 
-    KDS.Audio.MusicMixer.load("Assets/Audio/music/lobbymusic.ogg")
-    KDS.Audio.MusicMixer.play(-1)
-    KDS.Audio.MusicMixer.set_volume(KDS.Audio.MusicVolume)
+    KDS.Audio.Music.play("Assets/Audio/music/lobbymusic.ogg")
 
     def settings_function():
         settings_menu()
@@ -2899,9 +2894,7 @@ def level_finished_menu():
         ArialSysFont.render("Total:", True, score_color)
     )
     
-    KDS.Audio.MusicMixer.stop()
-    KDS.Audio.MusicMixer.load("Assets/Audio/Music/level_cleared.ogg")
-    KDS.Audio.MusicMixer.play(-1)
+    KDS.Audio.Music.play("Assets/Audio/Music/level_cleared.ogg")
     
     KDS.Scores.ScoreAnimation.init()
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
@@ -2913,7 +2906,7 @@ def level_finished_menu():
         global level_finished_running, go_to_main_menu
         level_finished_running = False
         go_to_main_menu = True
-        KDS.Audio.MusicMixer.unpause()
+        KDS.Audio.Music.unpause()
 
     def next_level():
         global level_finished_running, current_map
@@ -3158,7 +3151,7 @@ while main_running:
     if player_health <= 0:
         if not animation_has_played:
             player_death_event = True
-            KDS.Audio.MusicMixer.stop()
+            KDS.Audio.Music.stop()
             pygame.mixer.Sound.play(player_death_sound)
             player_death_sound.set_volume(0.5)
             animation_has_played = True
@@ -3167,7 +3160,6 @@ while main_running:
             if death_wait > 240:
                 if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
                     respawn_function()
-                    KDS.Audio.MusicMixer.play(-1)
                 else:
                     pass
 #endregion
@@ -3523,7 +3515,7 @@ while main_running:
         player_rect.y = len(tiles) * 34 + 340
     if esc_menu:
         KDS.Scores.ScoreCounter.pause()
-        KDS.Audio.MusicMixer.pause()
+        KDS.Audio.Music.pause()
         KDS.Audio.pauseAllSounds()
         window.fill(KDS.Colors.Black)
         window.blit(pygame.transform.scale(screen, Fullscreen.size),
@@ -3532,29 +3524,29 @@ while main_running:
         pygame.mouse.set_visible(True)
         esc_menu_f()
         pygame.mouse.set_visible(False)
-        KDS.Audio.MusicMixer.unpause()
+        KDS.Audio.Music.unpause()
         KDS.Audio.unpauseAllSounds()
         KDS.Scores.ScoreCounter.unpause()
     if level_finished:
         KDS.Scores.ScoreCounter.stop()
         KDS.Audio.stopAllSounds()
-        KDS.Audio.MusicMixer.stop()
+        KDS.Audio.Music.stop()
         pygame.mouse.set_visible(True)
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         level_finished_menu()
         level_finished = False
     if go_to_console:
-        KDS.Audio.MusicMixer.pause()
+        KDS.Audio.Music.pause()
         KDS.Audio.pauseAllSounds()
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         pygame.mouse.set_visible(True)
         console()
         pygame.mouse.set_visible(False)
-        KDS.Audio.MusicMixer.unpause()
+        KDS.Audio.Music.unpause()
         KDS.Audio.unpauseAllSounds()
     if go_to_main_menu:
         KDS.Audio.stopAllSounds()
-        KDS.Audio.MusicMixer.stop()
+        KDS.Audio.Music.stop()
         pygame.mouse.set_visible(True)
         main_menu()
 #endregion
@@ -3575,7 +3567,7 @@ while main_running:
 #endregion
 #region Application Quitting
 KDS.ConfigManager.Save.quit()
-KDS.Audio.MusicMixer.load("Assets/Audio/Music/lobbymusic.ogg")
+KDS.Audio.Music.unload()
 KDS.System.emptdir(PersistentPaths.CachePath)
 KDS.Logging.quit()
 pygame.mixer.quit()

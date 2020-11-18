@@ -12,6 +12,46 @@ def init(_mixer):
     EffectChannels = []
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))
+        
+class Music:
+    @staticmethod
+    def play(path: str, loops: int = -1):
+        global MusicMixer, MusicVolume
+        if MusicMixer.get_busy(): MusicMixer.stop()
+        if path != None: MusicMixer.load(path)
+        MusicMixer.play(loops)
+        MusicMixer.set_volume(MusicVolume)
+        
+    @staticmethod
+    def stop():
+        global MusicMixer, MusicVolume
+        MusicMixer.stop()
+        
+    @staticmethod
+    def pause():
+        global MusicMixer, MusicVolume
+        MusicMixer.pause()
+        
+    @staticmethod
+    def unpause():
+        global MusicMixer, MusicVolume
+        MusicMixer.unpause()
+        
+    @staticmethod
+    def unload():
+        global MusicMixer, MusicVolume
+        MusicMixer.unload()
+        
+    @staticmethod
+    def rewind():
+        global MusicMixer, MusicVolume
+        MusicMixer.rewind()
+  
+    @staticmethod
+    def setVolume(volume: float):
+        global MusicVolume, MusicMixer
+        MusicVolume = volume
+        MusicMixer.set_volume(MusicVolume)
  
 def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
