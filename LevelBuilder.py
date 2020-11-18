@@ -201,7 +201,7 @@ class tileInfo:
                                     if len(temp_serial) > 0:
                                         temp_serial = f"3{int(temp_serial):03d}"
                                         unit.setSerialToSlot(temp_serial, index)
-                                    keys_pressed[K_p] = False
+                                    #keys_pressed[K_p] = False
 
                         if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
 

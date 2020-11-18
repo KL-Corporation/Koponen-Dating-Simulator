@@ -92,6 +92,13 @@ def move_entity2(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horis
             collision_types['top'] = True
     return rect, collision_types
 
+class simpleRect:
+    def __init__(self, _x = 1, _y = 1, _w = 1, _h = 1):
+        self.x = _x
+        self.y = _y
+        self.w = _w
+        self.h = _h
+
 class Lighting:
 
     class Shapes:
