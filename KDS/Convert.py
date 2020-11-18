@@ -4,7 +4,7 @@ import math
 import KDS.Logging
 import KDS.Colors
 import KDS.Math
-from inspect import currentframe, getouterframes
+from inspect import currentframe
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
 
