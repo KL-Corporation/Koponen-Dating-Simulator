@@ -1,6 +1,7 @@
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
 import os
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 
@@ -260,8 +261,9 @@ def loadGrid(size):
         for x in range(size[0]):
             row.append(tileInfo((x, y)))
         rlist.append(row)
-    global gridSize
+    global gridSize, gridChanges
     gridSize = size
+    gridChanges += 1
     return rlist
 
 def resizeGrid(size, grid: list):
@@ -285,8 +287,9 @@ def resizeGrid(size, grid: list):
         for row in grid:
             while len(row) > size[0]:
                 row.pop()
-    global gridSize
+    global gridSize, gridChanges
     gridSize = size
+    gridChanges += 1
     return grid
 
 """
@@ -365,9 +368,8 @@ def saveMap(grd, name: str):
         outputString += "\n"
     with open(name, 'w') as f:
         f.write(outputString)
-    global gridChanges
+    global gridBeforeSave, gridChanges
     gridChanges = 0
-    global gridBeforeSave
     gridBeforeSave = grd.copy()
         
 def saveMapName():
@@ -378,7 +380,7 @@ def saveMapName():
         currentSaveName = savePath
 
 def openMap(): #Returns a 2d array
-    global currentSaveName, gridSize
+    global currentSaveName, gridSize, gridChanges
     fileName = filedialog.askopenfilename(filetypes = (("Data file", "*.dat"), ("All files", "*.*")))
     temporaryGrid = None
     if fileName:
@@ -403,6 +405,7 @@ def openMap(): #Returns a 2d array
         
         #return tempGrid
         currentSaveName = fileName
+        gridChanges = 0
     if temporaryGrid != None:
         global gridBeforeSave, grid
         grid = temporaryGrid
@@ -422,9 +425,8 @@ commandTree = {
         "stacks": "break"
     }
 }
-def consoleHandler(inputString: str):
+def consoleHandler(commandlist):
     global brush, grid
-    commandlist = inputString.lower().strip().split()
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
             if commandlist[2] in brushNames:
@@ -514,42 +516,27 @@ def generateLevelProp():
     """
     Generate a levelProp.kdf using this tool.
     """
-    ic = KDS.Convert.ToBool(KDS.Console.Start("Darkness Enabled: (bool)", False, KDS.Console.CheckTypes.Bool()))
-    if isinstance(ic, bool):
-        dark = ic
-    else:
-        dark = False
+    dark = KDS.Console.Start("Darkness Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
     if dark:
-        ic = int(KDS.Console.Start("Darkness Strength: (int[0, 255])", False, KDS.Console.CheckTypes.Int()))
-        player_light = KDS.Convert.ToBool(KDS.Console.Start("Player Light: (bool)", False, KDS.Console.CheckTypes.Bool()))
+        darkness = KDS.Console.Start("Darkness Strength: (int[0, 255])", False, KDS.Console.CheckTypes.Int(0, 255), autoFormat=True)
+        player_light = KDS.Console.Start("Player Light: (bool)", False, KDS.Console.CheckTypes.Bool(), defVal="true", autoFormat=True)
     else:
-        ic = 0
+        darkness = 0
         player_light = False
-    darkness = KDS.Math.Clamp(ic, 0, 255)
     
-    ic = KDS.Convert.ToBool(KDS.Console.Start("Ambient Light Enabled: (bool)", False, KDS.Console.CheckTypes.Bool()))
-    if isinstance(ic, bool):
-        ambient_light = ic
-    else:
-        ambient_light = False
-    if ambient_light:
-        ic = KDS.Console.Start("Ambient Light Tint: (int, int, int)", False, KDS.Console.CheckTypes.Tuple(3, 0, 255)).replace(" ", "").split(",")
-    else:
-        ic = (0, 0, 0)
-    ambient_light_tint = (int(ic[0]), int(ic[1]), int(ic[2]))
+    ambient_light = KDS.Console.Start("Ambient Light Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
+    if ambient_light: ambient_light_tint = KDS.Console.Start("Ambient Light Tint: (int, int, int)", False, KDS.Console.CheckTypes.Tuple(3, 0, 255), autoFormat=True)
+    else: ambient_light_tint = (0, 0, 0)
     
-    ic = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100").replace(" ", "").split(",")
-    p_start_pos = (int(ic[0]), int(ic[1]))
+    p_start_pos = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100", autoFormat=True)
     
-    ic = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200").replace(" ", "").split(",")
-    k_start_pos = (int(ic[0]), int(ic[1]))
+    k_start_pos = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200", autoFormat=True)
     
-    ic = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0)).replace(" ", "").split(",")
-    tb_start = int(ic[0])
-    tb_end = int(ic[1])
+    tb_start, tb_end = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0, requireIncrease=True), autoFormat=True)
     
     savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
     if len(savePath) > 0:
+        if os.path.isfile(savePath): os.remove(savePath)
         KDS.ConfigManager.SetJSON(savePath, "Rendering/Darkness/enabled", dark)
         KDS.ConfigManager.SetJSON(savePath, "Rendering/Darkness/strength", darkness)
         KDS.ConfigManager.SetJSON(savePath, "Rendering/Darkness/playerLight", player_light)
@@ -628,10 +615,10 @@ def main():
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
-                if gridChanges > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == 6:
-                    LB_Quit()
-                else:
-                    LB_Quit()
+                if gridChanges > 0:
+                    if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == KDS.System.MessageBox.Responses.Yes:
+                        LB_Quit()
+                else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
@@ -644,12 +631,10 @@ def main():
                     rndr_mb2_rel = True
             elif event.type == KEYDOWN:
                 if event.key == K_t:
-                    inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True)
+                    inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
-                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}")
-                    if len(resize_output) > 0:
-                        resize_output = resize_output.replace(" ", "").split(",")
-                        grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
+                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
+                    if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     brush = materialMenu(brush)
                     updateTiles = False

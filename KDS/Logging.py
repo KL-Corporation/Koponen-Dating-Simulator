@@ -50,7 +50,7 @@ def Log(Log_Type: LogType and int, Message: str, Console_Visible=False):
             elif Log_Type == LogType.debug: Message = colored(Message, "green")
             else: Message = colored(Message, "cyan")
             print(Message)
-    else: print("Log not successful! Logger has been shut down already.")
+    else: print(f"Log not successful! Logger has been shut down already. Original message: {Message}")
 
 def AutoError(Message, _currentframe):
     """Generates an automatic error message.

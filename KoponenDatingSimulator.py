@@ -2171,11 +2171,10 @@ def console():
     command_list = command_input.split()
     """
     while consoleRunning:
-        consoleOutput = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), blurred_background, commandTree, True)
-        if len(consoleOutput) < 1:
+        command_list: list = KDS.Console.Start(prompt="Enter Command:", allowEscape=True, checkType=KDS.Console.CheckTypes.Commands(), background=blurred_background, commands=commandTree, autoFormat=True, enableOld=True, showFeed=True)
+        if command_list == None:
             consoleRunning = False
             break
-        command_list = consoleOutput.lower().split(" ")
 
         if command_list[0] == "give":
             if command_list[1] != "key":

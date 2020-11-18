@@ -12,7 +12,7 @@ def init(_mixer):
     EffectChannels = []
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))
-        
+ 
 def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()

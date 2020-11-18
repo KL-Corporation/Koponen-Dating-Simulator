@@ -45,6 +45,13 @@ class MessageBox:
         Yes_No = 4
         Retry_No = 5
         Cancel_TryAgain_Continue = 6
+        
+    class Responses:
+        Ok = 0
+        Cancel = 2
+        Abort = 3
+        Yes = 6
+        No = 7
     
     @staticmethod
     def Show(title: str, text: str, style: Styles and int):

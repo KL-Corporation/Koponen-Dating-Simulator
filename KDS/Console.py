@@ -65,13 +65,14 @@ class CheckTypes:
             "min":_min,
             "max": _max }
     @staticmethod
-    def Tuple(size: int, _min: int = None, _max: int = None, perfWarning: int = None):
+    def Tuple(size: int, _min: int = None, _max: int = None, perfWarning: int = None, requireIncrease: bool = False):
         return {
             "type": "tuple",
             "size": size,
             "min":_min,
             "max": _max,
-            "perfWarning": perfWarning #inclusive
+            "perfWarning": perfWarning, #inclusive
+            "requireIncrease": requireIncrease
             }
     @staticmethod
     def Rect(minPos: int = None, maxPos: int = None, minSize: int = None, maxSize: int = None):
@@ -98,7 +99,7 @@ Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: Dict[str, any] = None, showFeed: bool = False, defVal: str = None) -> str:
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None):
     global Escaped, Feed, OldCommands
     if commands != None:
         commandsFound = commands
@@ -128,8 +129,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     match: List[str] = []
     oldIndex = -1
     
-    if checkType != None and checkType["type"] == "commands" and commands != None: checkType = None
-    elif checkType["type"] == "commands" or commands != None: KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
+    if (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
     
     def addText(text: str):
         nonlocal cursor_index, cmd
@@ -289,13 +289,23 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             elif _type in ("tuple", "rect"):
                 cmdSplit = re.sub(r"\)$", "", re.sub(r"^\(", "", cmd)).split(",")
                 for i in range(1, len(cmdSplit)): cmdSplit[i] = re.sub(r"^\s", "", cmdSplit[i])
-                for s in cmdSplit: 
+                for i, s in enumerate(cmdSplit): 
                     if len(s) > 0:
                         if re.fullmatch(r"^[+-]?\d+$", s) == None: 
                             invalid = True
-                        elif int(s) > sys.maxsize: invalid = True
-                        elif len(cmdSplit) != checkType["size"]: invalid = True
-                    else: invalid = True
+                            break
+                        elif int(s) > sys.maxsize:
+                            invalid = True
+                            break
+                        elif len(cmdSplit) != checkType["size"]:
+                            invalid = True
+                            break
+                        elif checkType["requireIncrease"] and i > 0 and int(cmdSplit[i - 1]) >= int(s):
+                            invalid = True
+                            break
+                    else:
+                        invalid = True
+                        break
                         
                 if not invalid:
                     cmdIntSplit = [int(v) for v in cmdSplit]
@@ -323,7 +333,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                             if min(_size[0], min(cmdIntSplit[2:])) != _size[0]: invalid = True
                         if _size[1] != None:
                             if max(_size[1], max(cmdIntSplit[2:])) != _size[1]: invalid = True
-            else: KDS.Logging.AutoError("Check Type invalid!", currentframe())
+            elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!", currentframe())
         #endregion
         
         #region Commands and Suggestions
@@ -408,7 +418,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     display.blit(r, (0, text_input_rect.top - y))
                     y -= suggestionSpacing + console_font.get_height()
                     
-            if (len(cmd) <= 0 or cmd in OldCommands) and ((len(OldCommands) > oldIndex and oldIndex != -1 or len(OldCommands) > oldIndex + 1 and oldIndex == -1)) and (Key_Up or Key_Down):
+            if enableOld and (len(cmd) <= 0 or cmd in OldCommands) and ((len(OldCommands) > oldIndex and oldIndex != -1 or len(OldCommands) > oldIndex + 1 and oldIndex == -1)) and (Key_Up or Key_Down):
                 if Key_Up:
                     oldIndex += 1
                     if oldIndex >= len(OldCommands): oldIndex = len(OldCommands) - 1
@@ -458,5 +468,26 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
-    if len(cmd) > 0: OldCommands.append(cmd)
+    if enableOld and len(cmd) > 0: OldCommands.append(cmd)
+    
+    #region Formatting
+    if autoFormat:
+        if len(cmd) > 0:
+            _type = checkType["type"]
+            if _type == "int":
+                return int(cmd)
+            elif _type == "float":
+                return float(cmd)
+            elif _type == "bool":
+                return KDS.Convert.ToBool(cmd)
+            elif _type in ("tuple", "rect"):
+                tmpSplit = cmd.split(",")
+                tmpVals = [int(re.sub(r"\D", "", val)) for val in tmpSplit]
+                if _type == "rect": return pygame.Rect(*tmpVals)
+                else: return tuple(tmpVals)
+            elif _type == "commands": return cmd.lower().split()
+            else: KDS.Logging.AutoError("Invalid type for automatic formatting!", currentframe())
+        return None
+    #endregion
+    
     return cmd

@@ -1,29 +1,37 @@
 {
-    "AmbientLight": {
-        "enabled": false,
-        "tint": [
-            0,
-            0,
-            0
-        ]
+    "Data": {
+        "TimeBonus": {
+            "end": 220,
+            "start": 100
+        }
     },
-    "Darkness": {
-        "enabled": true,
-        "strength": 249,
-        "player_light": false
+    "Entities": {
+        "Koponen": {
+            "startPos": [
+                200,
+                200
+            ]
+        },
+        "Player": {
+            "startPos": [
+                330,
+                4459
+            ]
+        }
     },
-    "StartPos": {
-        "koponen": [
-            200,
-            200
-        ],
-        "player": [
-            330,
-            4459
-        ]
-    },
-    "TimeBonus": {
-        "end": 220,
-        "start": 100
+    "Rendering": {
+        "AmbientLight": {
+            "enabled": false,
+            "tint": [
+                0,
+                0,
+                0
+            ]
+        },
+        "Darkness": {
+            "enabled": true,
+            "playerLight": false,
+            "strength": 249
+        }
     }
 }

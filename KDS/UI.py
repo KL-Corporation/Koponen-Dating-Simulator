@@ -163,7 +163,7 @@ class Switch:
     def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: bool = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 3, move_lerp_duration: int = 15, custom_path: str = None):
         self.safe_name = safe_name
         self.switch_rect = switch_rect
-        self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(f"UI/Switches{self.safe_name}", str(default_value)))
+        self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(f"UI/Switches{self.safe_name}", default_value))
         self.range = (switch_rect.left + switch_move_area_padding[0] - (handle_size[0] / 2), switch_rect.right + switch_move_area_padding[1] - (handle_size[0] / 2))
         self.switch_move_area_padding = switch_move_area_padding
         self.switch_off_color = switch_off_color
