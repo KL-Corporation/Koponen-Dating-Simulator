@@ -166,23 +166,23 @@ class Lighting:
             else: self.position = (position[0] - shape.get_width() / 2, position[1] - shape.get_height() / 2)
 
     class Particle:
-        def __init__(self):
-            pass
+        def __init__(self, position, size):
+            self.rect = pygame.Rect(position[0], position[1], size, size)
+            self.size = size
 
         def update(self, Surface, scroll):
-            pass
+            
+            return "null"
         
     class Fireparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
-            self.rect = pygame.Rect(position[0], position[1], size, size)
-            self.size = size
+            super().__init__(position, size)
             self.speed = speed
             self.lifetime = lifetime
             self.dying_speed = size / lifetime
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
         
-        @staticmethod
         def update(particle, Surface: pygame.Surface, scroll: List[int]):
             particle.rect.y -= particle.speed
             particle.rect.x += random.randint(-1, 1)

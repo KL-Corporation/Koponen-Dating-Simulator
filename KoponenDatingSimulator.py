@@ -3251,8 +3251,8 @@ while main_running:
     while len(Particles) > maxParticles:
         Particles.pop(0)
     for particle in Particles:
-        result = KDS.World.Lighting.Fireparticle.update(particle, screen, scroll)
-        if result: Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
+        result = particle.update(screen, scroll)
+        if isinstance(result, pygame.Surface): Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
         else: Particles.remove(particle)
 
     #Valojen käsittely
@@ -3260,6 +3260,7 @@ while main_running:
     if ambient_light:
         ambient_tint.fill(ambient_light_tint)
         screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
+    #dark = False if player_rect.x > 500 else 1
     if dark:
         black_tint.fill(darkness)
         for light in Lights:
