@@ -1,7 +1,5 @@
 #region Importing
 import os
-from os import walk
-from shutil import ExecError
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
