@@ -77,7 +77,12 @@
         "075": "teleport_base.png",
         "076": "spruce.png",
         "077": "allahmas_spruce.png",
-        "078": "methtable.png"
+        "078": "methtable.png",
+        "079": "clear_tiles.png",
+        "080": "floor1.png",
+        "081": "floor1_drain.png",
+        "082": "steel_ladder.png",
+        "083": "metal_platform.png"
     },
 
     "tile_sounds" : {
@@ -112,7 +117,8 @@
         74,
         76,
         77,
-        78
+        78,
+        82
     ],
     "checkCollisionFalse": [
         10,

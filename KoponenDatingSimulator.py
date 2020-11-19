@@ -1302,7 +1302,8 @@ specialTilesD = {
     74: RespawnAnchor,
     76: Spruce,
     77: Spruce,
-    78: Methtable
+    78: Methtable,
+    82: Ladder
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
