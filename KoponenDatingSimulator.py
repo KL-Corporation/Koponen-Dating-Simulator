@@ -3259,6 +3259,7 @@ while main_running:
             Lights.append(KDS.World.Lighting.Light((unit.xpos - 80, unit.ypos - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
 
     #Partikkelit
+    #Particles.append(KDS.World.Lighting.Sparkparticle((player_rect.x, player_rect.y - 20), random.randint(1, 20), random.randint(1, 20), random.randint(1, 9)))
     while len(Particles) > maxParticles:
         Particles.pop(0)
     for particle in Particles:

@@ -169,6 +169,7 @@ class Lighting:
         def __init__(self, position, size):
             self.rect = pygame.Rect(position[0], position[1], size, size)
             self.size = size
+            self.pos = position
 
         def update(self, Surface, scroll):
             
@@ -196,6 +197,38 @@ class Lighting:
             particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size * 2), round(particle.size * 2)))
 
             return particle.tsurf
+
+    class Sparkparticle(Particle):
+        def __init__(self, position, size, lifetime, speed, color = (200, 221, 5), direction = 1, slope = 1):
+            super().__init__(position, size)
+            self.speed = speed
+            self.size = size
+            self.lifetime =lifetime
+            self.color = color
+            self.direction = direction
+            self.slope = slope
+            self.dying_speed = size / lifetime
+            self.relativeX = 0.0
+            self.relativeY = 0.0
+            self.bsurf = pygame.Surface((size/2, size*2))
+            self.bsurf.fill(color)
+            self.tsurf = Lighting.circle_surface(size*2, color)
+            self.tsurf.fill(color)
+
+        def update(self, Surface: pygame.Surface, scroll):
+            self.relativeX += self.direction * self.speed
+            self.relativeY = self.relativeX * self.slope
+            self.rect.x = self.pos[0] + round(self.relativeX)
+            self.rect.y = self.pos[1] + round(self.relativeY)
+            self.size -= self.dying_speed
+            if self.size < 0: return None
+
+            self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size/2), round(self.size*2)))
+            Surface.blit(self.bsurf, (self.rect.centerx - self.bsurf.get_width()/2 - scroll[0], self.rect.centery - self.bsurf.get_height()/2 - scroll[1]))
+
+            self.tsurf = pygame.transform.scale(self.tsurf, (self.bsurf.get_width()*2, self.bsurf.get_height()*2))
+            return self.tsurf
+
 
 class Bullet:
     def __init__(self, rect, direction: bool, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
