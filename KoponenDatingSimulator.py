@@ -2300,6 +2300,7 @@ def agr(tcagr: bool):
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
+                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2461,6 +2462,7 @@ def esc_menu_f():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
+                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.key == K_ESCAPE:
                     esc_menu = False
                 elif event.key == K_F4:
@@ -2542,6 +2544,7 @@ def settings_menu():
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
+                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2700,6 +2703,7 @@ def main_menu():
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
+                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2877,6 +2881,7 @@ def level_finished_menu():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
+                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -3016,6 +3021,7 @@ while main_running:
                     player_health = 0
             elif event.key == K_F11:
                 pygame.display.toggle_fullscreen()
+                KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
             elif event.key == K_F12:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.playSound(camera_shutter, 1)

@@ -14,6 +14,7 @@ import KDS.UI
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
+import KDS.ConfigManager
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
@@ -398,6 +399,7 @@ class Talk:
                 if event.type == KEYDOWN:
                     if event.key == K_F11:
                         pygame.display.toggle_fullscreen()
+                        KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                     elif event.key == K_F4:
                         if pygame.key.get_pressed()[K_LALT]:
                             KDS_Quit()
