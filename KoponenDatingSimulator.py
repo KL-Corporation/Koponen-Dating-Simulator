@@ -344,6 +344,7 @@ smg_shot = pygame.mixer.Sound("Assets/Audio/Items/smg_shoot.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
 lantern_pickup = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
 camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
+flicker_trigger_sound = pygame.mixer.Sound("Assets/Audio/Tiles/flicker_trigger.wav")
 respawn_anchor_sounds = [
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_0.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
@@ -382,6 +383,8 @@ pauseOnFocusLoss = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
 
 restart = False
 reset_data = False
+
+colorInvert = False
 
 monstersLeft = 0
 
@@ -1295,6 +1298,48 @@ class Methtable(Tile):
             KDS.Audio.playSound(random.choice(Methtable.o_sounds))
         return self.animation.update()
 
+class FlickerTrigger(Tile):
+    def __init__(self, position, serialNumber, repeating: bool = False, animationLength: int = 12, animationSpeed: int = 2) -> None:
+        super().__init__(position, serialNumber)
+        self.checkCollision = False
+        self.exited = True
+        self.tick = 0
+        self.ticks = animationLength
+        self.anim = False
+        self.animTick = 0
+        self.animTicks = animationSpeed
+        self.repeating = repeating
+        self.stopAnim = False
+    
+    def update(self):
+        if self.rect.colliderect(player_rect):
+            if self.exited:
+                self.anim = True
+                self.exited = False
+                KDS.Audio.pauseAllSounds()
+                KDS.Audio.playSound(flicker_trigger_sound)
+        else:
+            if self.repeating: self.tick = 0
+            self.exited = True
+            self.stopAnim = True
+        if self.tick < self.ticks:
+            if self.anim:
+                self.tick += 1
+                if self.animTick >= self.animTicks: self.animTick = 0
+                global colorInvert
+                if self.animTick == 0: colorInvert = True
+                self.animTick += 1
+        else:
+            self.stopAnim = True
+        
+        if self.stopAnim:
+            self.anim = False
+            flicker_trigger_sound.stop()
+            KDS.Audio.unpauseAllSounds()
+            self.stopAnim = False
+            
+        return pygame.Surface((0, 0))
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1324,7 +1369,8 @@ specialTilesD = {
     76: Spruce,
     77: AllahmasSpruce,
     78: Methtable,
-    82: Ladder
+    82: Ladder,
+    84: FlickerTrigger
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -3461,6 +3507,12 @@ while main_running:
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.White), (5, 35))
 #endregion
 #region Screen Rendering
+    if colorInvert:
+        invPix = pygame.surfarray.pixels2d(screen)
+        invPix ^= 2 ** 32 - 1
+        del invPix
+        colorInvert = False
+
     display.fill(KDS.Colors.Black)
     display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     #Updating display object
