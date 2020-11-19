@@ -4,6 +4,9 @@
             "accepted": false
         }
     },
+    "Game": {
+        "pauseOnFocusLoss": true
+    },
     "Mixer": {
         "channelCount": 32,
         "Volume": {

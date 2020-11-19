@@ -177,10 +177,12 @@ class Switch:
         self.custom_path = custom_path
         if self.state:
             self.handle_rect = pygame.Rect(self.range[0], switch_rect.centery - handle_size[1] / 2, int(handle_size[0]), int(handle_size[1]))
-            #self.handle_move_animation.(move_lerp_duration)
+            self.handle_move_animation.tick = self.handle_move_animation.ticks
+            self.handle_color_fade.tick = self.handle_color_fade.ticks
         else:
             self.handle_rect = pygame.Rect(self.range[1], switch_rect.centery - handle_size[1] / 2, int(handle_size[0]), int(handle_size[1]))
-            #self.handle_move_animation._set(0)
+            self.handle_move_animation.tick = 0
+            self.handle_color_fade.tick = 0
 
     def update(self, surface, mouse_pos, clicked):
         """

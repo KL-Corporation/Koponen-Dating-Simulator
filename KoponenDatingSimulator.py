@@ -428,6 +428,7 @@ level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.White)
 itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
 renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
+pauseOnFocusLoss = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
 
 restart = False
 reset_data = False
@@ -2335,9 +2336,9 @@ def agr(tcagr: bool):
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            elif event.type == pygame.QUIT:
+            elif event.type == QUIT:
                 KDS_Quit()
-            elif event.type == pygame.VIDEORESIZE:
+            elif event.type == VIDEORESIZE:
                 ResizeWindow(event.size)
         display.blit(agr_background, (0, 0))
         agree_button.update(display, mouse_pos, c)
@@ -2539,7 +2540,7 @@ def esc_menu_f():
         clock.tick(locked_fps)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, DebugMode
+    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, pauseOnFocusLoss
     c = False
     settings_running = True
 
@@ -2563,6 +2564,7 @@ def settings_menu():
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
+    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 240, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
     reset_window_button = KDS.UI.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.White))
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
@@ -2570,7 +2572,7 @@ def settings_menu():
         "Music Volume", True, KDS.Colors.White)
     effect_volume_text = button_font.render(
         "Sound Effect Volume", True, KDS.Colors.White)
-    clear_lag_text = button_font.render("Clear Lag", True, KDS.Colors.White)
+    pause_loss_text = button_font.render("Pause On Focus Loss", True, KDS.Colors.White)
 
     while settings_running:
         mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
@@ -2603,9 +2605,10 @@ def settings_menu():
 
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
-        display.blit(clear_lag_text, (50, 240))
+        display.blit(pause_loss_text, (50, 240))
         KDS.Audio.Music.setVolume(music_volume_slider.update(display, mouse_pos))
         KDS.Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
+        pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)
 
         return_button.update(display, mouse_pos, c)
         reset_window_button.update(display, mouse_pos, c)
@@ -2652,9 +2655,6 @@ def main_menu():
 
     KDS.Audio.Music.play("Assets/Audio/music/lobbymusic.ogg")
 
-    def settings_function():
-        settings_menu()
-
     class level_pick:
         class direction:
             left = 0
@@ -2693,7 +2693,7 @@ def main_menu():
     framechange_lerp.tick = framechange_lerp.ticks
 
     main_menu_play_button = KDS.UI.Button(pygame.Rect(450, 180, 300, 60), menu_mode_selector, "PLAY")
-    main_menu_settings_button = KDS.UI.Button(pygame.Rect(450, 250, 300, 60), settings_function, "SETTINGS")
+    main_menu_settings_button = KDS.UI.Button(pygame.Rect(450, 250, 300, 60), settings_menu, "SETTINGS")
     main_menu_quit_button = KDS.UI.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, "QUIT")
     #Frame 2
     Frame2 = pygame.Surface(display_size)
@@ -3122,10 +3122,13 @@ while main_running:
                 for _ in range(abs(tmpAmount)): player_inventory.moveRight()
             else:
                 for _ in range(abs(tmpAmount)): player_inventory.moveLeft()
-        elif event.type == pygame.QUIT:
+        elif event.type == QUIT:
             KDS_Quit()
-        elif event.type == pygame.VIDEORESIZE:
+        elif event.type == VIDEORESIZE:
             ResizeWindow(event.size)
+        elif event.type == WINDOWEVENT:
+            if event.event == WINDOWEVENT_FOCUS_LOST:
+                if pauseOnFocusLoss: esc_menu = True
 #endregion
 #region Data
 
