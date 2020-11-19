@@ -1,4 +1,4 @@
-from inspect import getframeinfo
+from inspect import currentframe, getframeinfo
 import logging
 from logging import warning
 import os
@@ -84,7 +84,7 @@ def Profiler(enabled):
             ps.print_stats()
             log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
             log_stream.close()
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+        except IOError as e: AutoError(f"IO Error! Details: {e}", currentframe())
         
 def quit():
     global running
