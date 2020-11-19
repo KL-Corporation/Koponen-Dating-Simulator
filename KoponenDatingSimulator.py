@@ -73,6 +73,11 @@ display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
+CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
+display.fill(CompanyLogo.get_at((0, 0)))
+display.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (display_size[0] / 2 - 250, display_size[1] / 2 - 250))
+pygame.display.update()
+
 KDS.Audio.init(pygame.mixer)
 
 clock = pygame.time.Clock()
@@ -144,10 +149,6 @@ KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 #region Loading
 #region Settings
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
-CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
-display.fill(CompanyLogo.get_at((0, 0)))
-display.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (display_size[0] / 2 - 250, display_size[1] / 2 - 250))
-pygame.display.update()
 tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
 max_map = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
@@ -1256,6 +1257,26 @@ class Spruce(Tile):
 
     def update(self):
         return self.texture
+    
+class AllahmasSpruce(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0] - 10, position[1] - 40, 63, 75)
+        self.checkCollision = False
+        self.spruce_kColors = (1000, 2500, 40000)
+        self.colorIndex = 0
+        self.colorTicks = 60
+        self.colorTick = 0
+        
+    def update(self):
+        self.colorTick += 1
+        if self.colorTick > self.colorTicks:
+            self.colorTick = 0
+            self.colorIndex += 1
+            self.colorIndex = 0 if self.colorIndex >= len(self.spruce_kColors) else self.colorIndex
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.get(150, self.spruce_kColors[self.colorIndex]), True))
+        return self.texture
 
 class Methtable(Tile):
 
@@ -1301,7 +1322,7 @@ specialTilesD = {
     73: LevelEnderDoor,
     74: RespawnAnchor,
     76: Spruce,
-    77: Spruce,
+    77: AllahmasSpruce,
     78: Methtable,
     82: Ladder
 }
