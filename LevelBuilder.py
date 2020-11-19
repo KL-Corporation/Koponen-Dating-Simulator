@@ -616,7 +616,7 @@ def main():
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
                 if gridChanges > 0:
-                    if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Styles.Yes_No) == KDS.System.MessageBox.Responses.Yes:
+                    if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
                         LB_Quit()
                 else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:

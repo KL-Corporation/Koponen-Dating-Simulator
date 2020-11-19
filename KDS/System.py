@@ -37,22 +37,46 @@ def emptdir(dirpath: str):
             KDS.Logging.AutoError("Cannot determine child type.", currentframe())
             
 class MessageBox:
-    class Styles:
-        Ok = 0
-        Ok_Cancel = 1
-        Abort_Retry_Ignore = 2
-        Yes_No_Cancel = 3
-        Yes_No = 4
-        Retry_No = 5
-        Cancel_TryAgain_Continue = 6
+    class Buttons:
+        ABORTRETRYIGNORE = 2
+        CANCELTRYCONTINUE = 6
+        HELP = 16384
+        OK = 0
+        OKCANCEL = 1
+        RETRYCANCEL = 5
+        YESNO = 4
+        YESNOCANCEL = 3
+        
+    class Icon:
+        EXCLAMATION = 48
+        WARNING = 48
+        INFORMATION = 64
+        ASTERISK = 64
+        QUESTION = 32
+        STOP = 16
+        ERROR = 16
+        HAND = 16
+        
+    class DefaultButton:
+        BUTTON1 = 0
+        BUTTON2 = 256
+        BUTTON3 = 512
+        BUTTON4 = 768
         
     class Responses:
-        Ok = 0
-        Cancel = 2
-        Abort = 3
-        Yes = 6
-        No = 7
+        ABORT = 3
+        CANCEL = 2
+        CONTINUE = 11
+        IGNORE = 5
+        NO = 7
+        OK = 1
+        RETRY = 4
+        TRYAGAIN = 10
+        YES = 6
     
     @staticmethod
-    def Show(title: str, text: str, style: Styles and int):
-        return ctypes.windll.user32.MessageBoxW(0, text, title, style)
+    def Show(title: str, text: str, buttons: Buttons and int = None, icon: Icon and int = None, *args: int):
+        argVal = buttons if buttons != None else 0
+        argVal += icon if icon != None else 0
+        for arg in args: argVal += arg
+        return ctypes.windll.user32.MessageBoxW(0, text, title, argVal)
