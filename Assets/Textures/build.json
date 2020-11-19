@@ -76,7 +76,8 @@
         "074": "respawn_anchor_off.png",
         "075": "teleport_base.png",
         "076": "spruce.png",
-        "077": "allahmas_spruce.png"
+        "077": "allahmas_spruce.png",
+        "078": "methtable.png"
     },
 
     "tile_sounds" : {
@@ -110,7 +111,8 @@
         73,
         74,
         76,
-        77
+        77,
+        78
     ],
     "checkCollisionFalse": [
         10,
