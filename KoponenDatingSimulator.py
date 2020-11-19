@@ -842,6 +842,9 @@ class Tile:
                         Surface.blit(renderable.update(), (renderable.rect.x -
                                                         scroll[0], renderable.rect.y - scroll[1]))                        
 
+    def update(self):
+        return self.texture
+        
 class Toilet(Tile):
     def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
@@ -1305,6 +1308,23 @@ class Spruce(Tile):
     def update(self):
         return self.texture
 
+class Methtable(Tile):
+
+    o_sounds = [pygame.mixer.Sound("Assets/Audio/Tiles/methtable_0.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/methtable_1.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/methtable_2.ogg")]
+
+    def __init__(self, position, serialNumber: int):        
+        super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("methtable", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        for index, im in enumerate(self.animation.images):
+            self.animation.images[index] = pygame.transform.scale(im, (int(im.get_width()/2.5), int(im.get_height()/2.5)))
+        self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
+        self.checkCollision = False
+
+    def update(self):
+        if random.randint(0, 105) == 50 and KDS.Math.getDistance(self.rect.center, player_rect.center) < 355:
+            KDS.Audio.playSound(random.choice(Methtable.o_sounds))
+        return self.animation.update()
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1332,7 +1352,8 @@ specialTilesD = {
     73: LevelEnderDoor,
     74: RespawnAnchor,
     76: Spruce,
-    77: Spruce
+    77: Spruce,
+    78: Methtable
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
