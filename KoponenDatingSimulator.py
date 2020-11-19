@@ -52,9 +52,6 @@ KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, P
 pygame.mixer.init()
 pygame.init()
 
-monitor_info = pygame.display.Info()
-monitor_size = (monitor_info.current_w, monitor_info.current_h)
-
 cursorIndex = KDS.ConfigManager.GetSetting("UI/cursor", 0)
 cursorData = {
     1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
@@ -70,13 +67,9 @@ del cursorData
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
-window_size = tuple(KDS.ConfigManager.GetSetting("Renderer/windowSize", (1200, 800)))
-window = pygame.display.set_mode(window_size, RESIZABLE | HWSURFACE | DOUBLEBUF)
-window_info = pygame.display.Info()
-#Nice
-window_resize_size = window_size
 display_size = (1200, 800)
-display = pygame.Surface(display_size)
+display = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | DOUBLEBUF | SCALED)
+display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
@@ -105,82 +98,39 @@ def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
     reset_data = _reset_data
     level_finished_running = False
 #endregion
-#region Window
-class Fullscreen:
-    enabled = False
-    size = display_size
-    offset = (0, 0)
-    scaling = 0
-
-    @staticmethod
-    def Set(reverseFullscreen: bool = False):
-        global window, window_size, window_resize_size, window_info
-        if reverseFullscreen:
-            Fullscreen.enabled = not Fullscreen.enabled
-        if Fullscreen.enabled:
-            window_size = window_resize_size
-            window = pygame.display.set_mode(
-                window_size, RESIZABLE | HWSURFACE | DOUBLEBUF)
-            Fullscreen.enabled = False
-        else:
-            window_size = monitor_size
-            window = pygame.display.set_mode(window_size, FULLSCREEN | HWSURFACE | DOUBLEBUF)
-            Fullscreen.enabled = True
-        KDS.ConfigManager.SetSetting("Renderer/fullscreen", Fullscreen.enabled)
-        if window_size[0] / window_size[1] > display_size[0] / display_size[1]:
-            Fullscreen.size = (
-                int(window_size[1] * (display_size[0] / display_size[1])), int(window_size[1]))
-            Fullscreen.scaling = window_size[1] / display_size[1]
-        else:
-            Fullscreen.size = (int(window_size[0]), int(
-                window_size[0] / (display_size[0] / display_size[1])))
-            Fullscreen.scaling = window_size[0] / display_size[0]
-        Fullscreen.offset = (int((window_size[0] / 2) - (Fullscreen.size[0] / 2)), int(
-            (window_size[1] / 2) - (Fullscreen.size[1] / 2)))
-        window_info = pygame.display.Info()
-    
-def ResizeWindow(set_size: tuple):
-    global window_resize_size
-    if not Fullscreen.enabled:
-        window_resize_size = set_size
-        del set_size
-        KDS.ConfigManager.SetSetting("Renderer/windowSize", window_resize_size)
-        Fullscreen.Set(True)
-#endregion
 #region Initialisation
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Display Driver...")
-Fullscreen.enabled = KDS.ConfigManager.GetSetting("Renderer/fullscreen", False)
-Fullscreen.Set(True)
+if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False): pygame.display.toggle_fullscreen()
 KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
 I=====[ System Info ]=====I
    [Version Info]
    - PyGame Version: {pygame.version.ver}
    - SDL Version: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
    
-   [Window Info]
-   - Window Size: {(window_info.current_w, window_info.current_h)}
+   [Display Info]
+   - Display Size: {(display_info.current_w, display_info.current_h)}
    
    [Driver Info]
    - SDL Video Driver: {pygame.display.get_driver()}
-   - Hardware Acceleration: {KDS.Convert.ToBool(window_info.hw)}
-   - Window Allowed: {KDS.Convert.ToBool(window_info.wm)}
-   - Video Memory: {window_info.video_mem if window_info.video_mem != 0 else "unknown"}
+   - Hardware Acceleration: {KDS.Convert.ToBool(display_info.hw)}
+   - Display Allowed: {KDS.Convert.ToBool(display_info.wm)}
+   - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "unknown"}
    
    [Pixel Info]
-   - Bit Size: {window_info.bitsize}
-   - Byte Size: {window_info.bytesize}
-   - Masks: {window_info.masks}
-   - Shifts: {window_info.shifts}
-   - Losses: {window_info.losses}
+   - Bit Size: {display_info.bitsize}
+   - Byte Size: {display_info.bytesize}
+   - Masks: {display_info.masks}
+   - Shifts: {display_info.shifts}
+   - Losses: {display_info.losses}
    
    [Hardware Acceleration]
-   - Hardware Blitting: {KDS.Convert.ToBool(window_info.blit_hw)}
-   - Hardware Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_hw_CC)}
-   - Hardware Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_hw_A)}
-   - Software Blitting: {KDS.Convert.ToBool(window_info.blit_sw)}
-   - Software Colorkey Blitting: {KDS.Convert.ToBool(window_info.blit_sw_CC)}
-   - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(window_info.blit_sw_A)}
+   - Hardware Blitting: {KDS.Convert.ToBool(display_info.blit_hw)}
+   - Hardware Colorkey Blitting: {KDS.Convert.ToBool(display_info.blit_hw_CC)}
+   - Hardware Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_hw_A)}
+   - Software Blitting: {KDS.Convert.ToBool(display_info.blit_sw)}
+   - Software Colorkey Blitting: {KDS.Convert.ToBool(display_info.blit_sw_CC)}
+   - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_sw_A)}
 I=====[ System Info ]=====I""")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising KDS modules...")
 KDS.AI.init()
@@ -189,14 +139,14 @@ KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init("Sinä")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
-KDS.Console.init(window, display, clock, Fullscreen, _KDS_Quit = KDS_Quit)
+KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 #endregion
 #region Loading
 #region Settings
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
-window.fill(CompanyLogo.get_at((0, 0)))
-window.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (window_size[0] / 2 - 250, window_size[1] / 2 - 250))
+display.fill(CompanyLogo.get_at((0, 0)))
+display.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (display_size[0] / 2 - 250, display_size[1] / 2 - 250))
 pygame.display.update()
 tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
@@ -2345,11 +2295,11 @@ def agr(tcagr: bool):
         "I Agree", True, KDS.Colors.White))
 
     while tcagr_running:
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
-                    Fullscreen.Set()
+                    pygame.display.toggle_fullscreen()
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2358,11 +2308,8 @@ def agr(tcagr: bool):
                     c = True
             elif event.type == QUIT:
                 KDS_Quit()
-            elif event.type == VIDEORESIZE:
-                ResizeWindow(event.size)
         display.blit(agr_background, (0, 0))
         agree_button.update(display, mouse_pos, c)
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
         c = False
     return True
@@ -2372,9 +2319,9 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
     global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
-        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, window_size)
-        window.fill(scaled_loadingScreen.get_at((0, 0)))
-        window.blit(scaled_loadingScreen, (window_size[0] / 2 - scaled_loadingScreen.get_width() / 2, window_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
+        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
+        display.fill(scaled_loadingScreen.get_at((0, 0)))
+        display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
         pygame.display.update()
 
     KDS.Audio.Music.unload()
@@ -2508,12 +2455,12 @@ def esc_menu_f():
     while esc_menu:
         display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
         anim_x = anim_lerp_x.update(False)
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
-                    Fullscreen.Set()
+                    pygame.display.toggle_fullscreen()
                 elif event.key == K_ESCAPE:
                     esc_menu = False
                 elif event.key == K_F4:
@@ -2524,8 +2471,6 @@ def esc_menu_f():
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-            elif event.type == pygame.VIDEORESIZE:
-                ResizeWindow(event.size)
 
         esc_surface.blit(pygame.transform.scale(
             blurred_background, display_size), (0, 0))
@@ -2551,10 +2496,8 @@ def esc_menu_f():
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        display.blit(pygame.transform.scale(display, display_size), (0, 0))
         pygame.display.update()
-        window.fill(KDS.Colors.Black)
         display.fill(KDS.Colors.Black)
         c = False
         clock.tick(locked_fps)
@@ -2568,15 +2511,11 @@ def settings_menu():
         global settings_running
         settings_running = False
 
-    def reset_window():
-        ResizeWindow(display_size)
-
     def reset_settings():
         return_def()
         os.remove(os.path.join(PersistentPaths.AppDataPath, "settings.cfg"))
         KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
         KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
-        Fullscreen.Set(True)
     
     def reset_data():
         KDS_Quit(True, True)
@@ -2585,7 +2524,6 @@ def settings_menu():
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 240, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
-    reset_window_button = KDS.UI.Button(pygame.Rect(470, 360, 260, 40), reset_window, button_font.render("Reset Window Size", True, KDS.Colors.White))
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
     music_volume_text = button_font.render(
@@ -2595,8 +2533,7 @@ def settings_menu():
     pause_loss_text = button_font.render("Pause On Focus Loss", True, KDS.Colors.White)
 
     while settings_running:
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
-            (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2604,7 +2541,7 @@ def settings_menu():
                     c = True
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
-                    Fullscreen.Set()
+                    pygame.display.toggle_fullscreen()
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2614,9 +2551,6 @@ def settings_menu():
                     DebugMode = not DebugMode
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-
-            elif event.type == pygame.VIDEORESIZE:
-                ResizeWindow(event.size)
 
         display.blit(settings_background, (0, 0))
 
@@ -2631,7 +2565,6 @@ def settings_menu():
         pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)
 
         return_button.update(display, mouse_pos, c)
-        reset_window_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
         reset_data_button.update(display, mouse_pos, c)
         KDS.Logging.Profiler(DebugMode)
@@ -2647,10 +2580,8 @@ def settings_menu():
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        window.fill((0, 0, 0))
+        display.fill((0, 0, 0))
         c = False
         clock.tick(locked_fps)
 
@@ -2761,15 +2692,14 @@ def main_menu():
     frames = [Frame1, Frame2, Frame3, Frame4]
     #endregion
     while main_menu_running:
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
-            (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
-                    Fullscreen.Set()
+                    pygame.display.toggle_fullscreen()
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2782,8 +2712,6 @@ def main_menu():
                         menu_mode_selector(Mode.ModeSelectionMenu)
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-            elif event.type == pygame.VIDEORESIZE:
-                ResizeWindow(event.size)
 
         if MenuMode == Mode.MainMenu:
             Frame1.blit(main_menu_background, (0, 0))
@@ -2891,10 +2819,8 @@ def main_menu():
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
-        display.fill(KDS.Colors.Black)
         pygame.display.update()
-        window.fill(KDS.Colors.Black)
+        display.fill(KDS.Colors.Black)
         clock.tick(locked_fps)
 
 def level_finished_menu():
@@ -2944,13 +2870,13 @@ def level_finished_menu():
     while level_finished_running:
         display.blit(game_pause_background, (0, 0))
         anim_x = anim_lerp_x.update(False)
-        mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+        mouse_pos = pygame.mouse.get_pos()
         
         c = False
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_F11:
-                    Fullscreen.Set()
+                    pygame.display.toggle_fullscreen()
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -2965,8 +2891,6 @@ def level_finished_menu():
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-            elif event.type == pygame.VIDEORESIZE:
-                ResizeWindow(event.size)
 
         level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
         pygame.draw.rect(level_f_surf, (123, 134, 111), menu_rect)
@@ -3010,10 +2934,7 @@ def level_finished_menu():
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
-            display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
         pygame.display.update()
-        window.fill(KDS.Colors.Black)
         display.fill(KDS.Colors.Black)
         clock.tick(locked_fps)
 #endregion
@@ -3094,7 +3015,7 @@ while main_running:
                 else:
                     player_health = 0
             elif event.key == K_F11:
-                Fullscreen.Set()
+                pygame.display.toggle_fullscreen()
             elif event.key == K_F12:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.playSound(camera_shutter, 1)
@@ -3143,15 +3064,13 @@ while main_running:
                 for _ in range(abs(tmpAmount)): player_inventory.moveLeft()
         elif event.type == QUIT:
             KDS_Quit()
-        elif event.type == VIDEORESIZE:
-            ResizeWindow(event.size)
         elif event.type == WINDOWEVENT:
             if event.event == WINDOWEVENT_FOCUS_LOST:
                 if pauseOnFocusLoss: esc_menu = True
 #endregion
 #region Data
 
-    window.fill((20, 25, 20))
+    display.fill((20, 25, 20))
     screen.fill((20, 25, 20))
 
     Lights.clear()
@@ -3165,8 +3084,7 @@ while main_running:
     if farting:
         shakeScreen()
     player_hand_item = "none"
-    mouse_pos = (int((pygame.mouse.get_pos()[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int(
-        (pygame.mouse.get_pos()[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+    mouse_pos = pygame.mouse.get_pos()
     onLadder = False
 #endregion
 #region Player Death
@@ -3484,7 +3402,7 @@ while main_running:
             koponen_alive = False
         if KDS.Keys.functionKey.pressed:
             KDS.Keys.Reset()
-            KDS.Koponen.Talk.start(window, display, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock, locked_fps)
+            KDS.Koponen.Talk.start(display, player_inventory, KDS_Quit, clock, locked_fps)
     else:
         koponen_movement[0] = koponen_movingx
     h = 0
@@ -3514,8 +3432,8 @@ while main_running:
         screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.White), (5, 35))
 #endregion
 #region Screen Rendering
-    window.fill(KDS.Colors.Black)
-    window.blit(pygame.transform.scale(screen, Fullscreen.size), (Fullscreen.offset[0], Fullscreen.offset[1]))
+    display.fill(KDS.Colors.Black)
+    display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     #Updating display object
     pygame.display.update()
 #endregion
@@ -3539,9 +3457,8 @@ while main_running:
         KDS.Scores.ScoreCounter.pause()
         KDS.Audio.Music.pause()
         KDS.Audio.pauseAllSounds()
-        window.fill(KDS.Colors.Black)
-        window.blit(pygame.transform.scale(screen, Fullscreen.size),
-                    (Fullscreen.offset[0], Fullscreen.offset[1]))
+        display.fill(KDS.Colors.Black)
+        display.blit(pygame.transform.scale(screen, display_size), (0, 0))
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         pygame.mouse.set_visible(True)
         esc_menu_f()

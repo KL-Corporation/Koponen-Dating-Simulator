@@ -31,17 +31,12 @@ feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
-class ConsoleDefaultFullscreen:
-    offset = (0, 0)
-    scaling = 1
-
-def init(_window, _display, _clock, _Fullscreen = None, _Offset: Tuple[int, int] = None, _KDS_Quit = None):
-    global window, display, display_size, Fullscreen, clock, defaultBackground, KDS_Quit
+def init(_window, _display, _clock, _Offset: Tuple[int, int] = None, _KDS_Quit = None):
+    global window, display, display_size, clock, defaultBackground, KDS_Quit, rndrOffset
     window = _window
     display = _display
     display_size = display.get_size()
-    ConsoleDefaultFullscreen.offset = _Offset if _Offset != None else ConsoleDefaultFullscreen.offset
-    Fullscreen = _Fullscreen if _Fullscreen != None else ConsoleDefaultFullscreen
+    rndrOffset = _Offset if _Offset != None else (0, 0)
     clock = _clock
     defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
     KDS_Quit = _KDS_Quit
@@ -458,7 +453,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         
         suggestionsRendered = False 
         lastCmd = cmd
-        window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+        window.blit(pygame.transform.scale(display, (display_size[0], display_size[1])), (0, 0))
         pygame.display.update()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)

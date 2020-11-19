@@ -196,8 +196,6 @@ def koponen_talk():
                     c = True
             elif event.type == pygame.QUIT:
                 KDS_Quit()
-            elif event.type == pygame.VIDEORESIZE:
-                ResizeWindow(event.size)
         display.blit(pygame.transform.scale(koponen_talking_background, (int(
             koponen_talking_background.get_width()), int(koponen_talking_background.get_height()))), (0, 0))
         display.blit(pygame.transform.scale(koponen_talk_foreground, (int(
@@ -256,7 +254,7 @@ def init(playerName: str):
 
 class Date:
     @staticmethod
-    def start(window: pygame.Surface, surface: pygame.Surface, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
+    def start(display: pygame.Surface, KDS_Quit, clock: pygame.time.Clock, fps: int):
         pass
 
 class Mission:
@@ -278,9 +276,9 @@ class Mission:
 class Talk:
     running = False
     mask = pygame.mask.Mask(conversation_rect.size, True)
-    surface = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
-    surface_size = surface.get_size()
-    lineCount = math.floor((surface.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
+    display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
+    display_size = display.get_size()
+    lineCount = math.floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     audioChannel = None
     soundPlaying = None
     
@@ -299,7 +297,7 @@ class Talk:
         @staticmethod
         def schedule(text, prefix: Prefixes and str):
             prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
-            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.surface_size[0] - text_padding.left - text_padding.right - prefixWidth)
+            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
             for _text in lineSplit: Talk.scheduled.append(prefix + _text)
         
         @staticmethod
@@ -322,8 +320,8 @@ class Talk:
         
         @staticmethod
         def render(mouse_pos: Tuple[int, int], clicked: bool):
-            Talk.surface.fill((0, 0, 0, 0))
-            pygame.draw.rect(Talk.surface, background_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), 0, conversation_border_radius)
+            Talk.display.fill((0, 0, 0, 0))
+            pygame.draw.rect(Talk.display, background_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), 0, conversation_border_radius)
             
             lastIncluded = False
             for i in range(Talk.Conversation.scroll, min(Talk.Conversation.scroll + Talk.lineCount + 1, len(Talk.lines))):
@@ -332,11 +330,11 @@ class Talk:
                 else: prefix = Prefixes.Rendered.koponen
                 offsetX = text_padding.left + prefix.get_width()
                 offsetY = text_padding.top + (i - Talk.Conversation.scroll) * line_spacing
-                Talk.surface.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
+                Talk.display.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
                 if i - 1 < 0 or text[:2] != Talk.lines[i - 1][:2]: 
-                    Talk.surface.blit(prefix, (text_padding.left, offsetY))
+                    Talk.display.blit(prefix, (text_padding.left, offsetY))
                 
-                if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.surface, mouse_pos, clicked)
+                if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.display, mouse_pos, clicked)
                 
                 if i == len(Talk.lines) - 1: lastIncluded = True
 
@@ -356,10 +354,10 @@ class Talk:
                 Talk.Conversation.animationWidth = max(Talk.Conversation.animationWidth - line_reveal_speed, 0)
                 Talk.Conversation.animationProgress = KDS.Math.Remap(Talk.Conversation.animationWidth, animationRectTarget.width, 0, 0, 1)
                 if lastIncluded:
-                    pygame.draw.rect(Talk.surface, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
+                    pygame.draw.rect(Talk.display, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
             
-            pygame.draw.rect(Talk.surface, background_outline_color, pygame.Rect(0, 0, Talk.surface_size[0], Talk.surface_size[1]), conversation_outline_width, conversation_border_radius)
-            return Talk.surface
+            pygame.draw.rect(Talk.display, background_outline_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), conversation_outline_width, conversation_border_radius)
+            return Talk.display
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool):
@@ -373,7 +371,7 @@ class Talk:
         Talk.running = False
 
     @staticmethod
-    def start(window: pygame.Surface, surface: pygame.Surface, player_inventory, Fullscreen, ResizeWindow, KDS_Quit, clock: pygame.time.Clock, fps: int):
+    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock, fps: int):
         pygame.mouse.set_visible(True)
         global talk_ad, old_ads
         loopStopper = 0
@@ -384,7 +382,7 @@ class Talk:
         del old_ads[0]
         old_ads.append(ad_index)
         talk_ad = talk_ads[ad_index]
-        surface_size = surface.get_size()
+        display_size = display.get_size()
         Talk.running = True
         
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
@@ -393,14 +391,13 @@ class Talk:
         date_button = KDS.UI.Button(pygame.Rect(50, 610, 450, 80), Date.start, "ASK FOR A DATE")
         
         while Talk.running:
-            unscaled_mouse_pos = pygame.mouse.get_pos()
-            conversation_mouse_pos = (int((unscaled_mouse_pos[0] - conversation_rect.left - Fullscreen.offset[0]) / Fullscreen.scaling), int((unscaled_mouse_pos[1] - conversation_rect.top - Fullscreen.offset[1]) / Fullscreen.scaling))
-            mouse_pos = (int((unscaled_mouse_pos[0] - Fullscreen.offset[0]) / Fullscreen.scaling), int((unscaled_mouse_pos[1] - Fullscreen.offset[1]) / Fullscreen.scaling))
+            mouse_pos = pygame.mouse.get_pos()
+            conversation_mouse_pos = (mouse_pos[0] - conversation_rect.left, mouse_pos[0] - conversation_rect.top)
             c = False
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_F11:
-                        Fullscreen.Set()
+                        pygame.display.toggle_fullscreen()
                     elif event.key == K_F4:
                         if pygame.key.get_pressed()[K_LALT]:
                             KDS_Quit()
@@ -416,19 +413,16 @@ class Talk:
                         c = True
                 elif event.type == pygame.QUIT:
                     KDS_Quit()
-                elif event.type == pygame.VIDEORESIZE:
-                    ResizeWindow(event.size)
             
-            Talk.renderMenu(surface, mouse_pos, c)
+            Talk.renderMenu(display, mouse_pos, c)
             
-            exit_button.update(surface, mouse_pos, c)
-            request_mission_button.update(surface, mouse_pos, c)
-            return_mission_button.update(surface, mouse_pos, c, player_inventory)
-            date_button.update(surface, mouse_pos, c)
-            
-            window.blit(pygame.transform.scale(surface, (int(surface_size[0] * Fullscreen.scaling), int(surface_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
+            exit_button.update(display, mouse_pos, c)
+            request_mission_button.update(display, mouse_pos, c)
+            return_mission_button.update(display, mouse_pos, c, player_inventory)
+            date_button.update(display, mouse_pos, c)
+
             pygame.display.update()
-            window.fill(KDS.Colors.Black)
+            display.fill(KDS.Colors.Black)
             clock.tick(fps)
         
         pygame.mouse.set_visible(False)
