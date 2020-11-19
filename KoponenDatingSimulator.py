@@ -32,7 +32,6 @@ import math
 import time
 import datetime
 from pygame.locals import *
-from inspect import currentframe
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -573,7 +572,7 @@ class WorldData():
             with zipfile.ZipFile(MapPath + ".map", "r") as mapZip:
                 mapZip.extractall(PersistentMapPath)
         else:
-            KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
+            KDS.Logging.AutoError("Map file is not a valid format.")
             
         for fname in os.listdir(PersistentMapPath):
             fpath = os.path.join(PersistentMapPath, fname)
@@ -583,7 +582,7 @@ class WorldData():
                     if os.path.isfile(_fpath):
                         shutil.copy(_fpath, PersistentMapPath)
                     else:
-                        KDS.Logging.AutoError("Map file is not a valid format.", currentframe())
+                        KDS.Logging.AutoError("Map file is not a valid format.")
                 shutil.rmtree(fpath)
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
@@ -2815,8 +2814,7 @@ def main_menu():
                             MenuMode = Mode.CampaignMenu
                             c = False
                         else:
-                            KDS.Logging.AutoError("Invalid mode_selection_mode! Value: " + str(
-                                mode_selection_modes[y]), currentframe())
+                            KDS.Logging.AutoError(f"Invalid mode_selection_mode! Value: {mode_selection_modes[y]}")
                 else:
                     if y == 0:
                         gamemode_bc_1_2.set_alpha(int(gamemode_bc_1_alpha.update(False)))

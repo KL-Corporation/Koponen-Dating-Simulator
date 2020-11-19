@@ -1,4 +1,3 @@
-from inspect import currentframe
 import subprocess
 import os
 import shutil
@@ -34,7 +33,7 @@ def emptdir(dirpath: str):
         elif os.path.isdir(itemPath):
             shutil.rmtree(itemPath)
         else:
-            KDS.Logging.AutoError("Cannot determine child type.", currentframe())
+            KDS.Logging.AutoError("Cannot determine child type.")
             
 class MessageBox:
     class Buttons:

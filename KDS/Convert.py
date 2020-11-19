@@ -4,7 +4,6 @@ import math
 import KDS.Logging
 import KDS.Colors
 import KDS.Math
-from inspect import currentframe
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
 
@@ -27,7 +26,7 @@ def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -
         if value in ("t", "true"): return True
         elif value in ("f", "false"): return False
         elif not hideErrorMessage:
-            KDS.Logging.AutoError(f"Cannot convert {value} to bool.", currentframe())
+            KDS.Logging.AutoError(f"Cannot convert {value} to bool.")
             return fallbackValue
     elif isinstance(value, int):
         if value > 0: return True
@@ -36,7 +35,7 @@ def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -
         if value > 0.0: return True
         else: return False
     elif isinstance(value, bool): return value
-    if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.", currentframe())
+    if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.")
     return fallbackValue
 
 def ToGrayscale(image: pygame.Surface):

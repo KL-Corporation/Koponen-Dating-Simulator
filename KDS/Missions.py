@@ -12,7 +12,6 @@ import KDS.Logging
 import KDS.Math
 import KDS.Koponen
 import json
-from inspect import currentframe
 #endregion
 #region Initialisation
 with open ("Assets/Textures/build.json", "r") as f:
@@ -109,10 +108,10 @@ class KoponenTask(Task):
         koponenTaskCount = 0
         for task in Missions.GetMission(missionName).GetTaskList():
             if isinstance(task, KoponenTask): koponenTaskCount += 1
-        if koponenTaskCount > 1: KDS.Logging.AutoError("Only one Koponen Task allowed per mission!", currentframe())
+        if koponenTaskCount > 1: KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
         self.item = itemID
         self.itemPrompt = itemPrompt
-        if itemID not in buildData["inventory_items"]: KDS.Logging.AutoError("Item cannot be returned, since it cannot be picked up into inventory!", currentframe())
+        if itemID not in buildData["inventory_items"]: KDS.Logging.AutoError("Item cannot be returned, since it cannot be picked up into inventory!")
 
 class Mission:
     def __init__(self, safeName: str, text: str) -> None:
@@ -137,7 +136,7 @@ class Mission:
             self.tasks[safeName] = task
             self.task_keys = safeName
             self.task_values.append(self.tasks[safeName])
-        else: KDS.Logging.AutoError("SafeName is already occupied!", currentframe())
+        else: KDS.Logging.AutoError("SafeName is already occupied!")
         
     def GetTask(self, safeName: str):
         if safeName in self.tasks: return self.tasks[safeName]
@@ -226,7 +225,7 @@ class MissionHolder:
             self.missions[safeName] = mission
             self.mission_keys.append(safeName)
             self.mission_values.append(self.missions[safeName])
-        else: KDS.Logging.AutoError("SafeName is already occupied!", currentframe())
+        else: KDS.Logging.AutoError("SafeName is already occupied!")
     
     def GetMaxWidth(self):
         maxWidth = 0

@@ -1,7 +1,6 @@
 from typing import Tuple
 import KDS.Logging
 import math
-from inspect import currentframe
 
 #region Value Manipulation
 def Clamp(value: float, _min: float, _max: float) -> float:
@@ -35,7 +34,7 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
         r = q ** 2 + w ** 2
         return math.sqrt(abs(r))
     except Exception as e:
-        KDS.Logging.AutoError(e, currentframe())
+        KDS.Logging.AutoError(e)
         return 0
 #endregion
 
@@ -78,7 +77,7 @@ def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
 
         return a
     except Exception as e:
-        KDS.Logging.AutoError(e, currentframe())
+        KDS.Logging.AutoError(e)
         return 0
 
 def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):

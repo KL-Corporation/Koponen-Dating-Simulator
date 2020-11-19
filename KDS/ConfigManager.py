@@ -1,15 +1,12 @@
 #region Importing
 import json
-from os import read
 import pickle
-import re
 import shutil
 from typing import Any
 import KDS.Gamemode
 import KDS.Logging
 import os
 import zipfile
-from inspect import currentframe
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath
@@ -25,8 +22,8 @@ def SetJSON(filePath: str, jsonPath: str, value: Any) -> Any:
         try:
             with open(filePath, "r") as f:
                 try: config = json.loads(f.read())
-                except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}", currentframe())
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+                except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     
     path = jsonPath.split("/")
     tmpConfig = config
@@ -39,7 +36,7 @@ def SetJSON(filePath: str, jsonPath: str, value: Any) -> Any:
     
     try:
         with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     
 def GetJSON(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool = False) -> Any:
     config = {}
@@ -47,8 +44,8 @@ def GetJSON(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool =
         try:
             with open(filePath, "r") as f:
                 try: config = json.loads(f.read())
-                except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}", currentframe())
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+                except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
         path = jsonPath.split("/")
         tmpConfig = config
         for i in range(len(path)):
@@ -63,7 +60,7 @@ def GetJSON(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool =
         if warnMissing: KDS.Logging.Log(KDS.Logging.LogType.warning, f"No value found in path: {jsonPath} of file: {filePath}. Value of {jsonPath} has been set as default to: {defaultValue}", True)
         SetJSON(filePath, jsonPath, defaultValue)
         return defaultValue
-    KDS.Logging.AutoError("Unknown Error! This code should never execute.", currentframe())
+    KDS.Logging.AutoError("Unknown Error! This code should never execute.")
     return defaultValue
 
 def GetSetting(path: str, default: Any):
@@ -155,7 +152,7 @@ class Save:
                 with open(os.path.join(Save.WorldDirCache, SafeName + ".kbf"), "wb") as f:
                     temp = pickle.dumps(SaveItem)
                     f.write(temp)
-            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
             for item in SaveItem:
                 fromStringF = getattr(item, "fromString", None)
                 if callable(fromStringF):
@@ -171,14 +168,14 @@ class Save:
                             data = json.loads(f.read())
                         except json.decoder.JSONDecodeError:
                             data = {}
-                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
             else:
                 data = {}
             data[SafeName] = SaveItem
             try:
                 with open(Save.PlayerFileCache, "w") as f:
                     f.write(json.dumps(data, sort_keys=True, indent=4))
-            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     
     @staticmethod
     def GetWorld(SafeName: str, DefaultValue):
@@ -204,7 +201,7 @@ class Save:
                 try:
                     with open(Save.PlayerFileCache, "r") as f:
                         data = json.loads(f.read())
-                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
                 if SafeName in data:
                     return data[SafeName]
                 else:
@@ -221,7 +218,7 @@ def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
             with open(FilePath, "r") as f:
                 try: config = json.loads(f.read())
                 except json.decoder.JSONDecodeError: config = {}
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     else:
         config = {}
     if SaveDirectory not in config:
@@ -229,7 +226,7 @@ def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
     config[SaveDirectory][SaveName] = SaveValue
     try:
         with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     
 def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
     if os.path.isfile(FilePath):
@@ -237,7 +234,7 @@ def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue
             with open(FilePath, "r") as f:
                 try: config = json.loads(f.read())
                 except json.decoder.JSONDecodeError: config = {}
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     else:
         config = {}
     if SaveDirectory not in config:
@@ -246,6 +243,6 @@ def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue
         config[SaveDirectory][SaveName] = DefaultValue
         try:
             with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}", currentframe())
+        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
     return config[SaveDirectory][SaveName]
 """

@@ -1,8 +1,6 @@
-from inspect import currentframe
 import re
 import sys
-import math
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 import KDS.Colors
 import KDS.Convert
 import KDS.Logging
@@ -129,7 +127,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     match: List[str] = []
     oldIndex = -1
     
-    if (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!", currentframe())
+    if (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
     
     def addText(text: str):
         nonlocal cursor_index, cmd
@@ -333,7 +331,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                             if min(_size[0], min(cmdIntSplit[2:])) != _size[0]: invalid = True
                         if _size[1] != None:
                             if max(_size[1], max(cmdIntSplit[2:])) != _size[1]: invalid = True
-            elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!", currentframe())
+            elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!")
         #endregion
         
         #region Commands and Suggestions
@@ -486,7 +484,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 if _type == "rect": return pygame.Rect(*tmpVals)
                 else: return tuple(tmpVals)
             elif _type == "commands": return cmd.lower().split()
-            else: KDS.Logging.AutoError("Invalid type for automatic formatting!", currentframe())
+            else: KDS.Logging.AutoError("Invalid type for automatic formatting!")
         return None
     #endregion
     

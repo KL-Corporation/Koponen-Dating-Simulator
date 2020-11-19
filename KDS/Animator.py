@@ -1,4 +1,3 @@
-from inspect import currentframe
 from typing import Callable, Tuple
 import KDS.Logging
 import KDS.Math
@@ -23,7 +22,7 @@ class Animation:
             _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         if number_of_images < 1 or duration < 1:
-            KDS.Logging.AutoError("Number of images or duration cannot be less than 1!", currentframe())
+            KDS.Logging.AutoError("Number of images or duration cannot be less than 1!")
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
@@ -70,7 +69,7 @@ class Animation:
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = True
                 else:
-                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
+                    KDS.Logging.AutoError("Invalid On Animation End Type!")
         else:
             self.tick -= 1
             if self.tick < 0:
@@ -82,7 +81,7 @@ class Animation:
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
                 else:
-                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
+                    KDS.Logging.AutoError("Invalid On Animation End Type!")
         return self.images[self.tick]
 
     def get_frame(self) -> pygame.Surface:
@@ -134,7 +133,7 @@ class MultiAnimation:
         if animation_trigger in self.animations:
             self.active = self.animations[animation_trigger]
         else:
-            KDS.Logging.AutoError("MultiAnimation trigger invalid.", currentframe())
+            KDS.Logging.AutoError("MultiAnimation trigger invalid.")
             
     def update(self, reverse: bool = False):
         return self.active.update(reverse)
@@ -241,7 +240,7 @@ class Float:
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = True
                 else:
-                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
+                    KDS.Logging.AutoError("Invalid On Animation End Type!")
         else:
             self.tick -= 1
             if self.tick < 0:
@@ -253,7 +252,7 @@ class Float:
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
                 else:
-                    KDS.Logging.AutoError("Invalid On Animation End Type!", currentframe())
+                    KDS.Logging.AutoError("Invalid On Animation End Type!")
         
         if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
         else: return self.To

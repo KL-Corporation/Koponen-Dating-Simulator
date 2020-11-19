@@ -1,4 +1,3 @@
-from inspect import currentframe
 import time
 from typing import Tuple
 import pygame
@@ -75,7 +74,7 @@ class ScoreCounter:
         tb_start: int = KDS.ConfigManager.GetLevelProp("Data/TimeBonus/start", None)
         tb_end: int = KDS.ConfigManager.GetLevelProp("Data/TimeBonus/end", None)
         if tb_start == None or tb_end == None:
-            KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})", currentframe())
+            KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})")
             tb_start = 1
             tb_end = 2
         gameTime: float = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)

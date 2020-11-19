@@ -1,6 +1,5 @@
-from inspect import currentframe, getframeinfo
+import inspect
 import logging
-from logging import warning
 import os
 import cProfile
 import pstats
@@ -52,17 +51,17 @@ def Log(Log_Type: LogType and int, Message: str, Console_Visible=False):
             print(Message)
     else: print(f"Log not successful! Logger has been shut down already. Original message: {Message}")
 
-def AutoError(Message, _currentframe):
+def AutoError(Message):
     """Generates an automatic error message.
 
     Args:
         Message (str): The error message.
         _currentframe: The current frame you get from currentframe().
     """
-    _frameinfo = getframeinfo(_currentframe)
+    _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[1]
     Log(LogType.error, f"ERROR! File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function} [Exception: {Message}]", True)
 
-def Profiler(enabled):
+def Profiler(enabled: bool = True):
     """Turns the profiler on or off.
 
     Args:
@@ -84,7 +83,7 @@ def Profiler(enabled):
             ps.print_stats()
             log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
             log_stream.close()
-        except IOError as e: AutoError(f"IO Error! Details: {e}", currentframe())
+        except IOError as e: AutoError(f"IO Error! Details: {e}")
         
 def quit():
     global running
