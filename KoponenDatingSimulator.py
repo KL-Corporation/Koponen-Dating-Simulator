@@ -32,6 +32,7 @@ import math
 import time
 import datetime
 from pygame.locals import *
+from typing import Any, Tuple
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -1399,7 +1400,7 @@ class Item:
             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
-    def checkCollisions(Item_list, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory):
+    def checkCollisions(Item_list: Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll, functionKey: bool, inventory) -> Tuple[Any, Inventory]:
         index = 0
         showItemTip = True
         collision = False
