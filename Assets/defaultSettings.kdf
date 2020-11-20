@@ -12,7 +12,8 @@
         "Volume": {
             "music": 0.25,
             "effect": 0.75
-        }
+        },
+        "walkSound": true
     },
     "Renderer": {
         "fullscreen": false,

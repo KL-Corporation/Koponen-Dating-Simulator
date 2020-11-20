@@ -153,6 +153,7 @@ tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
 max_map = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
 maxParticles = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
+play_walk_sound = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded.")
 #endregion
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
@@ -3367,9 +3368,9 @@ while main_running:
         if not player_movement[0] or air_timer > 1:
             walk_sound_delay = 9999
         walk_sound_delay += abs(player_movement[0])
-        s = walk_sound_delay > 60
+        s = (walk_sound_delay > 60) if play_walk_sound else False
         if s: walk_sound_delay = 0
-        player_rect, collisions = KDS.World.move_entity2(player_rect, player_movement, tiles, w_sounds=path_sounds, playWalkSound=s)
+        player_rect, collisions = KDS.World.move_entity(player_rect, player_movement, tiles, w_sounds=path_sounds, playWalkSound=s)
     else:
         player_rect, collisions = KDS.World.move_entity(player_rect, [0, 8], tiles)
 #endregion
