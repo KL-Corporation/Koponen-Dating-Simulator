@@ -92,13 +92,6 @@ def move_entity2(rect: pygame.Rect, movement: Tuple[int, int], tiles, skip_horis
             collision_types['top'] = True
     return rect, collision_types
 
-class simpleRect:
-    def __init__(self, _x = 1, _y = 1, _w = 1, _h = 1):
-        self.x = _x
-        self.y = _y
-        self.w = _w
-        self.h = _h
-
 class Lighting:
 
     class Shapes:
@@ -228,7 +221,6 @@ class Lighting:
 
             self.tsurf = pygame.transform.scale(self.tsurf, (self.bsurf.get_width()*2, self.bsurf.get_height()*2))
             return self.tsurf
-
 
 class Bullet:
     def __init__(self, rect, direction: bool, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
