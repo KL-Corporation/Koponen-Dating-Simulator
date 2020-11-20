@@ -82,7 +82,8 @@
         "080": "floor1.png",
         "081": "floor1_drain.png",
         "082": "steel_ladder.png",
-        "083": "metal_platform.png"
+        "083": "metal_platform.png",
+        "084": "flicker_trigger.png"
     },
 
     "tile_sounds" : {
@@ -118,7 +119,8 @@
         76,
         77,
         78,
-        82
+        82,
+        84
     ],
     "checkCollisionFalse": [
         10,
