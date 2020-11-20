@@ -44,28 +44,35 @@ def collision_test(rect, Tile_list):
                 hit_list.append(tile)
     return hit_list
 
+class Collisions:
+    def __init__(self) -> None:
+        self.top = False
+        self.bottom = False
+        self.right = False
+        self.left = False
+
 def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, skip_horisontal_movement_check: bool = False, skip_vertical_movement_check=False, w_sounds: dict = {"default" : []}, playWalkSound = False):
-    collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
+    collision_types = Collisions()
     rect.x += movement[0]
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0 or skip_horisontal_movement_check:
             rect.right = tile.rect.left
-            collision_types['right'] = True
+            collision_types.right = True
         elif movement[0] < 0 or skip_horisontal_movement_check:
             rect.left = tile.rect.right
-            collision_types['left'] = True
+            collision_types.left = True
     rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0 or skip_vertical_movement_check:
             rect.bottom = tile.rect.top
-            collision_types['bottom'] = True
+            collision_types.bottom = True
             if movement[0] and playWalkSound:
                 KDS.Audio.playSound(random.choice(w_sounds["default"]))
         elif movement[1] < 0 or skip_vertical_movement_check:
             rect.top = tile.rect.bottom
-            collision_types['top'] = True
+            collision_types.top = True
     return rect, collision_types
 
 class Lighting:

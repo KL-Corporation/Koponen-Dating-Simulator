@@ -3350,16 +3350,15 @@ while main_running:
     if check_crouch == True:
         crouch_collisions = KDS.World.move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
     else:
-        crouch_collisions = collision_types = {
-            'top': False, 'bottom': False, 'right': False, 'left': False}
+        crouch_collisions = KDS.World.Collisions()
 
     if KDS.Keys.moveDown.pressed and not onLadder and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
-    elif (not KDS.Keys.moveDown.pressed or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions['bottom'] == False:
+    elif (not KDS.Keys.moveDown.pressed or onLadder or death_wait > 0) and player_rect.height != stand_size[1] and crouch_collisions.bottom == False:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
         check_crouch = False
-    elif not KDS.Keys.moveDown.pressed and crouch_collisions['bottom'] == True and player_rect.height != crouch_size[1] and death_wait < 1:
+    elif not KDS.Keys.moveDown.pressed and crouch_collisions.bottom == True and player_rect.height != crouch_size[1] and death_wait < 1:
         player_rect = pygame.Rect(player_rect.x, player_rect.y + (
             stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
         check_crouch = True
@@ -3372,20 +3371,19 @@ while main_running:
         if s: walk_sound_delay = 0
         player_rect, collisions = KDS.World.move_entity(player_rect, player_movement, tiles, w_sounds=path_sounds, playWalkSound=s)
     else:
-        player_rect, collisions = KDS.World.move_entity(player_rect, [0, 8], tiles)
+        player_rect, collisions = KDS.World.move_entity(player_rect, (0, 8), tiles)
 #endregion
 #region AI
-    koponen_rect, k_collisions = KDS.World.move_entity(
-        koponen_rect, koponen_movement, tiles)
+    koponen_rect, k_collisions = KDS.World.move_entity(koponen_rect, koponen_movement, tiles)
 
     with concurrent.futures.ThreadPoolExecutor() as e:
         I_thread_results = [e.submit(imp._move) for imp in imps]
         I_updatethread_results = [e.submit(
             imp.update, player_rect, screen, 20, scroll, DebugMode) for imp in imps]
 
-    if k_collisions["left"]:
+    if k_collisions.left:
         koponen_movingx = -koponen_movingx
-    elif k_collisions["right"]:
+    elif k_collisions.right:
         koponen_movingx = -koponen_movingx
 
 #endregion
@@ -3401,12 +3399,12 @@ while main_running:
         KDS.Audio.playSound(hurt_sound)
 #endregion
 #region More Collisions
-    if collisions['bottom'] == True:
+    if collisions.bottom:
         air_timer = 0
         vertical_momentum = 0
     else:
         air_timer += 1
-    if collisions['top'] == True:
+    if collisions.top:
         vertical_momentum = 0
 #endregion
 #region Player Data
