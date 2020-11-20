@@ -655,7 +655,7 @@ class Inventory:
     emptySlot = "none"
     doubleItem = "doubleItem"
 
-    def __init__(self, size):
+    def __init__(self, size: int):
         self.storage = [Inventory.emptySlot for _ in range(size)]
         self.size = size
         self.SIndex = 0
@@ -702,7 +702,7 @@ class Inventory:
             if self.storage[self.SIndex] == Inventory.doubleItem:
                 self.SIndex -= 1
 
-    def pickSlot(self, index):
+    def pickSlot(self, index: int):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         if 0 <= index <= len(self.storage)-1:
             if self.storage[index] == Inventory.doubleItem:
@@ -3285,11 +3285,11 @@ while main_running:
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
         screen.blit(score_font.render(f"HEALTH: {math.ceil(player_health)}", True, KDS.Colors.White), (10, 55))
-        screen.blit(score_font.render(f"STAMINA: {round(playerStamina)}", True, KDS.Colors.White), (10, 120))
+        screen.blit(score_font.render(f"STAMINA: {math.ceil(playerStamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
-        if hasattr(ui_hand_item, "ammunition"): 
-            if isinstance(ui_hand_item.ammunition, int): screen.blit(harbinger_font.render(f"AMMO: {ui_hand_item.ammunition}", True, KDS.Colors.White), (10, 360))
-            else: screen.blit(harbinger_font.render(f"AMMO: {round(ui_hand_item.ammunition, 1)}", True, KDS.Colors.White), (10, 360))
+        if hasattr(ui_hand_item, "ammunition"):
+            tmpAmmo = ui_hand_item.ammunition if isinstance(ui_hand_item.ammunition, int) else math.ceil(ui_hand_item.ammunition * 10) / 10
+            screen.blit(harbinger_font.render(f"AMMO: {tmpAmmo}", True, KDS.Colors.White), (10, 360))
 
         KDS.Missions.Render(screen)
 
