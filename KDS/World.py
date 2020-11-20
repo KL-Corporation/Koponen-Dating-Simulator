@@ -20,23 +20,13 @@ def init():
 
 def collision_test(rect, Tile_list):
     hit_list = []
-    x = int((rect.x/34) - 3)
-    y = int((rect.y/34) - 3)
-    if x < 0:
-        x = 0
-    if y < 0:
-        y = 0
 
     max_x = len(Tile_list[0]) - 1
     max_y = len(Tile_list) - 1
-    end_x = x + 6
-    end_y = y + 6
-
-    if end_x > max_x:
-        end_x = max_x
-
-    if end_y > max_y:
-        end_y = max_y
+    x = KDS.Math.Clamp(int((rect.x / 34) - 3), 0, max_x)
+    y = KDS.Math.Clamp(int((rect.y / 34) - 3), 0, max_y)
+    end_x = KDS.Math.Clamp(x + 6, 0, max_x)
+    end_y = KDS.Math.Clamp(y + 6, 0, max_y)
 
     for row in Tile_list[y:end_y]:
         for tile in row[x:end_x]:
@@ -52,29 +42,30 @@ class Collisions:
         self.left = False
 
 def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
-    collision_types = Collisions()
+    collisions = Collisions()
+    
     rect.x += movement[0]
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0:
             rect.right = tile.rect.left
-            collision_types.right = True
+            collisions.right = True
         elif movement[0] < 0:
             rect.left = tile.rect.right
-            collision_types.left = True
+            collisions.left = True
 
     rect.y += movement[1]
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.rect.top
-            collision_types.bottom = True
+            collisions.bottom = True
             if movement[0] and playWalkSound:
                 KDS.Audio.playSound(random.choice(w_sounds["default"]))
         elif movement[1] < 0:
             rect.top = tile.rect.bottom
-            collision_types.top = True
-    return rect, collision_types
+            collisions.top = True
+    return rect, collisions
 
 class Lighting:
 
