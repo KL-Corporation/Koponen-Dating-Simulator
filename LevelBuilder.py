@@ -108,6 +108,37 @@ grid = [[]]
 gridChanges = 0
 gridSize = (0, 0)
 
+class Redo:
+    actions = []
+    
+    @staticmethod
+    def register(instance, oldSerial: str):
+        Redo.actions.append((instance, oldSerial))
+        while len(Redo.actions) > 100: del Redo.actions[0]
+    
+    @staticmethod
+    def request():
+        if len(Redo.actions) > 0:
+            action = Redo.actions.pop(-1)
+            Undo.register(action[0], action[0].serialNumber, False)
+            action[0].serialNumber = action[1]
+
+class Undo:
+    actions = []
+    
+    @staticmethod
+    def register(instance, oldSerial: str, clearRedo: bool = True):
+        if clearRedo: Redo.actions.clear()
+        Undo.actions.append((instance, oldSerial))
+        while len(Undo.actions) > 100: del Undo.actions[0]
+    
+    @staticmethod
+    def request():
+        if len(Undo.actions) > 0:
+            action = Undo.actions.pop(-1)
+            Redo.register(action[0], action[0].serialNumber)
+            action[0].serialNumber = action[1]
+
 def LB_Quit():
     pygame.quit()
     quit()
@@ -130,9 +161,11 @@ class tileInfo:
         if serialIdentifier:
             serialIdentifier += 1
         oldSerial = self.serialNumber
-        self.serialNumber = self.serialNumber[:serialIdentifier] + srlNumber + self.serialNumber[serialIdentifier + 4:]
-        global gridChanges
-        if self.serialNumber != oldSerial: gridChanges += 1
+        self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
+        if self.serialNumber != oldSerial:
+            global gridChanges
+            gridChanges += 1
+            Undo.register(self, oldSerial)
     
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
@@ -140,31 +173,49 @@ class tileInfo:
         oldSerial = self.serialNumber
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
         global gridChanges
-        if self.serialNumber != oldSerial: gridChanges += 1
+        if self.serialNumber != oldSerial:
+            gridChanges += 1
+            Undo.register(self, oldSerial)
         
     def getSerial(self, slot: int):
-        if slot > 0:
-            slot += 1
+        slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
 
     def getSerials(self):
         return tuple(self.serialNumber.replace(" / ", "").split())
 
     def addSerial(self, srlNumber):
+        oldSerial = self.serialNumber
         srlist = self.getSerials()
         for index, number in enumerate(srlist):
             if int(number) == 0:
-                if srlNumber not in srlist: self.setSerialToSlot(srlNumber, index)
+                if srlNumber not in srlist:
+                    self.setSerialToSlot(srlNumber, index)
+                    global gridChanges
+                    gridChanges += 1
+                    Undo.register(self, oldSerial)
                 else: print(f"Serial {srlNumber} already in {self.pos}!")
                 return
         print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
         
     def removeSerial(self):
+        oldSerial = self.serialNumber
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
                 self.setSerialToSlot("0000", index)
+                global gridChanges
+                gridChanges += 1
+                Undo.register(self, oldSerial)
                 return
+
+    def resetSerial(self):
+        oldSerial = self.serialNumber
+        self.serialNumber = "0000 0000 0000 0000 / "
+        global gridChanges
+        if self.serialNumber != oldSerial:
+            gridChanges += 1
+            Undo.register(self, oldSerial)
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh: str = "0000", updttiles: bool = True):
@@ -222,13 +273,14 @@ class tileInfo:
                     bpos = unit.pos
                     if mouse_pressed[0] and updttiles:
                         if brsh != "0000":
-                            if not keys_pressed[K_LSHIFT]: unit.setSerial(brsh)
+                            if not keys_pressed[K_LSHIFT]:
+                                unit.setSerial(brsh)
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
-                            if not keys_pressed[K_LSHIFT]: unit.serialNumber = "0000 0000 0000 0000 / "
+                            if not keys_pressed[K_LSHIFT]: unit.resetSerial()
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     elif mouse_pressed[2]:
-                        if not keys_pressed[K_LSHIFT]: unit.serialNumber = "0000 0000 0000 0000 / "
+                        if not keys_pressed[K_LSHIFT]: unit.resetSerial()
                         elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     tileInfo.placedOnTile = unit
         
@@ -610,6 +662,7 @@ def main():
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
     while True:
+        pygame.key.set_repeat(500, 31)
         mouse_pos = pygame.mouse.get_pos()
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
@@ -630,7 +683,13 @@ def main():
                 elif event.button == 2:
                     rndr_mb2_rel = True
             elif event.type == KEYDOWN:
-                if event.key == K_t:
+                if event.key == K_z:
+                    if keys_pressed[K_LCTRL]:
+                        Undo.request()
+                if event.key == K_y:
+                    if keys_pressed[K_LCTRL]:
+                        Redo.request()
+                elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
