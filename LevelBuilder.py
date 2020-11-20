@@ -122,6 +122,8 @@ class Redo:
             action = Redo.actions.pop(-1)
             Undo.register(action[0], action[0].serialNumber, False)
             action[0].serialNumber = action[1]
+        global gridChanges
+        gridChanges += 1
 
 class Undo:
     actions = []
@@ -138,6 +140,8 @@ class Undo:
             action = Undo.actions.pop(-1)
             Redo.register(action[0], action[0].serialNumber)
             action[0].serialNumber = action[1]
+        global gridChanges
+        gridChanges += 1
 
 def LB_Quit():
     pygame.quit()
