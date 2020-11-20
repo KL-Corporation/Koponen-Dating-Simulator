@@ -3495,15 +3495,16 @@ while main_running:
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
     if DebugMode:
-        debugSurf = pygame.Surface((200, 50))
+        debugSurf = pygame.Surface((score_font.size(f"Player Position: {player_rect.topleft}")[0] + 10, 60))
         debugSurf.fill(KDS.Colors.DarkGray)
         debugSurf.set_alpha(128)
         screen.blit(debugSurf, (0, 0))
         
-        screen.blit(score_font.render("FPS: " + str(round(clock.get_fps())), True, KDS.Colors.White), (5, 5))
-        screen.blit(score_font.render("Total Monsters: " + str(monstersLeft) + "/" + str(monsterAmount), True, KDS.Colors.White), (5, 15))
-        screen.blit(score_font.render("Sounds Playing: " + str(len(KDS.Audio.getBusyChannels())) + "/" + str(pygame.mixer.get_num_channels()), True, KDS.Colors.White), (5, 25))
-        screen.blit(score_font.render("Lights Rendering: " + str(lightsUpdating), True, KDS.Colors.White), (5, 35))
+        screen.blit(score_font.render(f"FPS: {round(clock.get_fps())}", True, KDS.Colors.White), (5, 5))
+        screen.blit(score_font.render(f"Player Position: {player_rect.topleft}", True, KDS.Colors.White), (5, 15))
+        screen.blit(score_font.render(f"Total Monsters: {monstersLeft} / {monsterAmount}", True, KDS.Colors.White), (5, 25))
+        screen.blit(score_font.render(f"Sounds Playing: {len(KDS.Audio.getBusyChannels())} / {pygame.mixer.get_num_channels()}", True, KDS.Colors.White), (5, 35))
+        screen.blit(score_font.render(f"Lights Rendering: {lightsUpdating}", True, KDS.Colors.White), (5, 45))
 #endregion
 #region Screen Rendering
     if colorInvert:
