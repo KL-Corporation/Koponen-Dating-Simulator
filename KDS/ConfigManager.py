@@ -98,8 +98,6 @@ def GetLevelProp(path: str, DefaultValue: Any, listToTuple: bool = True):
     return tuple(val) if isinstance(val, list) and listToTuple else val
 
 class Save:
-    WorldDirCache = ""
-    PlayerDirCache = ""
     PlayerFileCache = ""
     SaveIndex = -1
     """
@@ -140,8 +138,16 @@ class Save:
         #encodes and stores a save file to storage
 
     @staticmethod
-    def init(_SaveIndex: int):
-        Save.PlayerFileCache = os.path.join(Save.PlayerDirCache, "data.kdf")
+    def init(_SaveIndex: int) -> bool:
+        """decodes and loads a save file to cache.
+
+        Args:
+            _SaveIndex (int): Index of the savegame.
+
+        Returns:
+            bool: Is the save new or old.
+        """
+        Save.PlayerFileCache = os.path.join(SaveCachePath, "data.kdf")
         Save.SaveIndex = _SaveIndex
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and Save.SaveIndex >= 0:
             if os.path.isfile(Save.PlayerFileCache):
@@ -152,9 +158,10 @@ class Save:
             _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
             if os.path.isfile(_path):
                 zipfile.ZipFile(_path, "r").extractall(SaveCachePath)
-            os.makedirs(Save.WorldDirCache, exist_ok=True)
-            os.makedirs(Save.PlayerDirCache, exist_ok=True)
-            
+                return False
+            else: return True
+        return True
+
         #decodes and loads a save file to cache
      
     @staticmethod
@@ -192,12 +199,12 @@ class Save:
         else: return DefaultValue
     
     @staticmethod            
-    def SetPlayer(path: str, item: Any):
+    def SetData(path: str, item: Any):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             JSON.Set(Save.PlayerFileCache, path, item)
      
     @staticmethod
-    def GetPlayer(path: str, default: Any):
+    def GetData(path: str, default: Any):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             JSON.Get(Save.PlayerFileCache, path, default)
         else: return default
