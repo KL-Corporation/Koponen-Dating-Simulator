@@ -126,7 +126,7 @@ class Save:
     class DataType:
         World = "world"
         Player = "player"
-        
+
     @staticmethod
     def quit():
         if os.path.isdir(SaveCachePath):

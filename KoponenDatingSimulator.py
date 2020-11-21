@@ -437,7 +437,6 @@ attack_counter = 0
 fart_counter = 0
 monsterAmount = 0
 monstersLeft = 0
-farting = False
 
 renderPlayer = True
 
@@ -2068,6 +2067,7 @@ class Player:
     stamina = 100.0
     inventory = Inventory(5)
     keys = { "red": False, "green": False, "blue": False }
+    farting = False
     light = False
     dead = False
     animations = KDS.Animator.MultiAnimation(
@@ -2090,14 +2090,11 @@ class Player:
         Player.stamina = 100.0
         Player.inventory = Inventory(5)
         Player.keys = { "red": False, "green": False, "blue": False }
+        Player.farting = False
         Player.light = False
         Player.dead = False
         Player.animations.reset()
         Player.deathSound.stop()
-
-def shakeScreen():
-    scroll[0] += random.randint(-10, 10)
-    scroll[1] += random.randint(-10, 10)
 #endregion
 #region Player
 koponen_animations = KDS.Animator.MultiAnimation(
@@ -2456,14 +2453,14 @@ def save_function():
     KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
     KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
     KDS.ConfigManager.Save.SetWorld("missions", KDS.Missions.Missions)
-    global farting
+
     KDS.ConfigManager.Save.SetData("Player/position", Player.rect.topleft)
     KDS.ConfigManager.Save.SetData("Player/health", Player.health)
     KDS.ConfigManager.Save.SetData("Player/stamina", Player.stamina)
     KDS.ConfigManager.Save.SetData("Player/Inventory/storage", Player.inventory.storage)
     KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
     KDS.ConfigManager.Save.SetData("Player/keys", Player.keys)
-    KDS.ConfigManager.Save.SetData("Player/farting", farting)
+    KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
@@ -2480,14 +2477,13 @@ def load_function():
     BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
 
 def respawn_function():
-    global animation_has_played, level_finished, death_wait, farting
+    global animation_has_played, level_finished, death_wait
     Player.reset()
     animation_has_played = False
     level_finished = False
     death_wait = 0
     if RespawnAnchor.active != None: Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
     else: Player.rect.topleft = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
-    farting = False
     KDS.Audio.Music.stop()
 #endregion
 #region Menus
@@ -3070,7 +3066,7 @@ while main_running:
             elif event.key == K_f:
                 if Player.stamina == 100:
                     Player.stamina = -1000.0
-                    farting = True
+                    Player.farting = True
                     KDS.Audio.playSound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
             elif event.key == K_DOWN:
@@ -3154,8 +3150,9 @@ while main_running:
     true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]
-    if farting:
-        shakeScreen()
+    if Player.farting:
+        scroll[0] += random.randint(-10, 10)
+        scroll[1] += random.randint(-10, 10)
     mouse_pos = pygame.mouse.get_pos()
     onLadder = False
 #endregion
@@ -3448,10 +3445,10 @@ while main_running:
             Player.dead = False
             animation_has_played = True
 
-    if farting:
+    if Player.farting:
         fart_counter += 1
         if fart_counter > 250:
-            farting = False
+            Player.farting = False
             fart_counter = 0
             for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.topleft, Player.rect.topleft) < 800:
