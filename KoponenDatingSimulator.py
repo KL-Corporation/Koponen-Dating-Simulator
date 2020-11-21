@@ -2426,26 +2426,14 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     
     LoadGameSettings()
 
-    player_def_pos, koponen_def_pos = WorldData.LoadMap(loadEntities)
+    Player.rect.topleft, koponen_rect.topleft = WorldData.LoadMap(loadEntities)
 
     #region Set Game Data
     global animation_has_played, level_finished, death_wait
-    Player.dead = False
     animation_has_played = False
     level_finished = False
     death_wait = 0
     is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
-    #endregion
-    
-    #region Load Save
-    global koponen_rect, farting
-    Player.health = KDS.ConfigManager.Save.GetData("health", 100.0)
-    Player.rect.topleft = KDS.ConfigManager.Save.GetData("position", player_def_pos)
-    koponen_rect.topleft = KDS.ConfigManager.Save.GetData("koponen_position", koponen_def_pos)
-    farting = KDS.ConfigManager.Save.GetData("farting", False)
-    Player.keys = KDS.ConfigManager.Save.GetData("keys", {"red": False, "green": False, "blue": False})
-    Player.inventory.storage = KDS.ConfigManager.Save.GetData("inventory", [Inventory.emptySlot for _ in range(Player.inventory.size)])
-    Player.stamina = KDS.ConfigManager.Save.GetData("stamina", 100.0)
     #endregion
     
     ########## iPuhelin ##########
@@ -2455,8 +2443,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     pygame.mouse.set_visible(False)
     main_menu_running = False
     KDS.Scores.ScoreCounter.start()
-    if reset_scroll:
-        true_scroll = KDS.ConfigManager.Save.GetData("scroll", [-200, -190])
+    if reset_scroll: true_scroll = [-200, -190]
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
@@ -3403,7 +3390,7 @@ while main_running:
     else:
         hurted = False
 
-    player.lastHealth = Player.health
+    Player.lastHealth = Player.health
 
     if hurted:
         KDS.Audio.playSound(hurt_sound)
