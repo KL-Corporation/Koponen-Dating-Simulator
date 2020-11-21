@@ -2357,6 +2357,7 @@ def console():
         - finish => Finishes level or missions.
         - invl => Sets invulnerability mode to the specified value.
         - teleport => Teleports player either to static coordinates or relative coordinates.
+        - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
         - help => Shows the list of commands.
     """)
         else:
