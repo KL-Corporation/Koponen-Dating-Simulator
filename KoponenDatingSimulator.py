@@ -2189,6 +2189,14 @@ def console():
         "finish": { "missions": "break" },
         "teleport": {
          "~": { "~": "break" },
+        },
+        "summon": {
+            "imp": "break",
+            "sergeant": "break",
+            "drugdealer": "break",
+            "supershotgunner": "break",
+            "methmaker": "break",
+            "fucker69": "break" 
         }
     }
     
@@ -2322,6 +2330,21 @@ def console():
                     player_rect.topleft = (xt, yt)
                     KDS.Console.Feed.append(f"Teleported player to {xt}, {yt}")
             else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
+        elif command_list[0] == "summon":
+            if len(command_list) > 1:
+                summonEntity = {
+                    "imp": lambda e : numpy.append(e, KDS.AI.Imp(player_rect.topright)),
+                    "sergeant": lambda e : numpy.append(e, KDS.AI.SergeantZombie(player_rect.topright)),
+                    "drugdealer": lambda e : numpy.append(e, KDS.AI.DrugDealer(player_rect.topright)),
+                    "supershotgunner": lambda e : numpy.append(e, KDS.AI.TurboShotgunner(player_rect.topright)),
+                    "methmaker": lambda e : numpy.append(e, KDS.AI.MethMaker(player_rect.topright)),
+                    "fucker69": lambda e : numpy.append(e, KDS.AI.CaveMonster(player_rect.topright))
+                }
+                try:
+                    global Enemies
+                    Enemies = summonEntity[command_list[1]](Enemies)
+                except KeyError:
+                    KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
         elif command_list[0] == "help":
             KDS.Console.Feed.append("""
     Console Help:
