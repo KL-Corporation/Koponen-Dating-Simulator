@@ -67,13 +67,6 @@ def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dic
             collisions.top = True
     return rect, collisions
 
-class simpleRect: # I will use this in future for optimized rects
-    def __init__(self, _x = 1, _y = 1, _w = 1, _h = 1):
-        self.x = _x
-        self.y = _y
-        self.w = _w
-        self.h = _h
-
 class Lighting:
 
     class Shapes:
