@@ -3561,14 +3561,6 @@ while main_running:
         pygame.mouse.set_visible(True)
         main_menu()
 #endregion
-#region Gathering all threading results
-    # Imps
-    for x in range(len(imps)):
-        if I_thread_results[x].result() != None:
-            imps[x].rect, imps[x].movement, imps[x].direction, imps[x].speed = I_thread_results[x].result()
-        if I_updatethread_results[x].result() != None:
-            imps[x].sleep, imps[x].targetFound, imps[x].movement = I_updatethread_results[x].result()
-#endregion
 #region Ticks
     tick += 1
     if tick > 60:
