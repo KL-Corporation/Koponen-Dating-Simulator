@@ -2066,6 +2066,7 @@ class Player:
     lastHealth = health
     stamina = 100.0
     inventory = Inventory(5)
+    godmode = False
     keys = { "red": False, "green": False, "blue": False }
     farting = False
     light = False
