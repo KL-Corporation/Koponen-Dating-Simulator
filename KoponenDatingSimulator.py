@@ -3403,7 +3403,7 @@ while main_running:
     else:
         hurted = False
 
-    player.lastHealth = Player.health
+    Player.lastHealth = Player.health
 
     if hurted:
         KDS.Audio.playSound(hurt_sound)
