@@ -746,7 +746,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
 
-    def __init__(self, position: tuple[int, int], serialNumber: int):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.serialNumber = serialNumber
         if serialNumber:
@@ -759,7 +759,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a 2d numpy array
-    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: tuple[int, int], *args):
+    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
         tilesUpdating = 0
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
@@ -800,7 +800,7 @@ class Tile:
             self.texture = t_textures[self.serialNumber]
         
 class Toilet(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = t_textures[serialNumber]
@@ -837,7 +837,7 @@ class Toilet(Tile):
             return self.texture
 
 class Trashcan(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = trashcan
@@ -922,7 +922,7 @@ class Door(Tile):
         26: "green"
     }
 
-    def __init__(self, position: tuple[int, int], serialNumber: int, closingCounter = 600):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = 600):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
@@ -952,7 +952,7 @@ class Door(Tile):
         return self.texture if not self.open else self.opentexture
 
 class Landmine(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = landmine_texture
         self.rect = pygame.Rect(position[0], position[1]+26, 22, 11)
@@ -971,7 +971,7 @@ class Landmine(Tile):
         return self.texture
 
 class Ladder(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = ladder_texture
         self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
@@ -984,7 +984,7 @@ class Ladder(Tile):
         return self.texture
 
 class Lamp(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = lamp0
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
@@ -1012,7 +1012,7 @@ class Lamp(Tile):
         return self.texture
 
 class DecorativeHead(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[43]
         self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
@@ -1053,7 +1053,7 @@ class DecorativeHead(Tile):
         return self.texture
 
 class Tree(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]-50, 47, 84)
@@ -1063,7 +1063,7 @@ class Tree(Tile):
         return self.texture
 
 class Rock0(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]+19, 32, 15)
@@ -1073,7 +1073,7 @@ class Rock0(Tile):
         return self.texture
 
 class Torch(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
@@ -1093,7 +1093,7 @@ class Torch(Tile):
         return self.texture.update()
 
 class GoryHead(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 28, 34, 62)
@@ -1109,7 +1109,7 @@ class GoryHead(Tile):
         return self.texture
 
 class LevelEnder(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):       
+    def __init__(self, position: Tuple[int, int], serialNumber: int):       
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 16, 34, 50)
@@ -1124,7 +1124,7 @@ class LevelEnder(Tile):
         return t_textures[self.serialNumber]
     
 class LevelEnderDoor(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = exit_door_open
@@ -1142,7 +1142,7 @@ class LevelEnderDoor(Tile):
         return t_textures[self.serialNumber] if not self.opened else self.opentexture
 
 class Candle(Tile):
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1]+14, 20, 20)
@@ -1160,7 +1160,7 @@ class Candle(Tile):
 class Teleport(Tile):
     tex = pygame.image.load("Assets/Textures/Misc/telep.png").convert()
     tex.set_colorkey((255, 255, 255))
-    def __init__(self, position: tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
         self.texture = Teleport.tex
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -1412,7 +1412,7 @@ class Item:
 
     serialNumbers = {}
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         if serialNumber:
             self.texture = texture
         self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[
@@ -1500,7 +1500,7 @@ class Item:
         pass
 
 class BlueKey(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1510,7 +1510,7 @@ class BlueKey(Item):
         return True
 
 class Cell(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1520,7 +1520,7 @@ class Cell(Item):
         return True
 
 class Coffeemug(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1532,7 +1532,7 @@ class Coffeemug(Item):
         return False
 
 class Gasburner(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1554,7 +1554,7 @@ class Gasburner(Item):
         return False
 
 class GreenKey(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1567,7 +1567,7 @@ class iPuhelin(Item):
     #pickup_sound = pygame.mixer.Sound("Assets/Audio/Legacy/apple_o_paskaa.ogg")
     realistic_texture = pygame.image.load("Assets/Textures/Items/iPuhelin_realistic.png").convert()
     realistic_texture.set_colorkey(KDS.Colors.White)
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
         self.useCount = 0
 
@@ -1585,7 +1585,7 @@ class iPuhelin(Item):
         return False
 
 class Knife(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1607,7 +1607,7 @@ class Knife(Item):
         return False
 
 class LappiSytytyspalat(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1619,7 +1619,7 @@ class LappiSytytyspalat(Item):
         return True
 
 class Medkit(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1631,7 +1631,7 @@ class Pistol(Item):
     
     ammunition = 8
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1653,7 +1653,7 @@ class Pistol(Item):
         return False
 
 class PistolMag(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1666,7 +1666,7 @@ class rk62(Item):
 
     ammunition = 30
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1694,7 +1694,7 @@ class Shotgun(Item):
 
     ammunition = 8
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1717,7 +1717,7 @@ class Shotgun(Item):
         return False
 
 class rk62Mag(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1727,7 +1727,7 @@ class rk62Mag(Item):
         return True
 
 class ShotgunShells(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1740,7 +1740,7 @@ class Plasmarifle(Item):
 
     ammunition = 36
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):               
@@ -1765,7 +1765,7 @@ class Plasmarifle(Item):
         return False
 
 class Soulsphere(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1775,7 +1775,7 @@ class Soulsphere(Item):
         return True
 
 class RedKey(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1785,7 +1785,7 @@ class RedKey(Item):
         return True
 
 class SSBonuscard(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1797,7 +1797,7 @@ class SSBonuscard(Item):
         return False
 
 class Turboneedle(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1810,7 +1810,7 @@ class Ppsh41(Item):
 
     ammunition = 72
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1836,7 +1836,7 @@ class Awm(Item):
 
     ammunition = 5
 
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1856,7 +1856,7 @@ class Awm(Item):
         return False
 
 class AwmMag(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1869,7 +1869,7 @@ class AwmMag(Item):
         return True
 
 class EmptyFlask(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1881,7 +1881,7 @@ class EmptyFlask(Item):
         return False
 
 class MethFlask(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1898,7 +1898,7 @@ class MethFlask(Item):
         return False
 
 class BloodFlask(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1915,7 +1915,7 @@ class BloodFlask(Item):
         return False
 
 class Grenade(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1937,7 +1937,7 @@ class Grenade(Item):
         return False
 
 class FireExtinguisher(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1947,7 +1947,7 @@ class FireExtinguisher(Item):
         return False
 
 class LevelEnderItem(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1961,7 +1961,7 @@ class LevelEnderItem(Item):
         return False
 
 class Ppsh41Mag(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
     
     def pickup(self):
@@ -1972,7 +1972,7 @@ class Ppsh41Mag(Item):
 
 class Lantern(Item):
     Ianimation = KDS.Animator.Animation("lantern_burning", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1996,7 +1996,7 @@ class Chainsaw(Item):
     ammunition = 100.0
     a_a = False
     Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
         self.pickupFinished = False
         self.pickupCounter = 0
@@ -2034,7 +2034,7 @@ class Chainsaw(Item):
         return False
 
 class GasCanister(Item):
-    def __init__(self, position: tuple, serialNumber: int, texture = None):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
