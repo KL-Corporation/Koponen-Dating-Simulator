@@ -593,15 +593,15 @@ def generateLevelProp():
     savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
     if len(savePath) > 0:
         if os.path.isfile(savePath): os.remove(savePath)
-        KDS.ConfigManager.SetJSON(savePath, "Rendering/Darkness/enabled", dark)
-        KDS.ConfigManager.SetJSON(savePath, "Rendering/Darkness/strength", darkness)
-        KDS.ConfigManager.SetJSON(savePath, "Rendering/Darkness/playerLight", player_light)
-        KDS.ConfigManager.SetJSON(savePath, "Rendering/AmbientLight/enabled", ambient_light)
-        KDS.ConfigManager.SetJSON(savePath, "Rendering/AmbientLight/tint", ambient_light_tint)
-        KDS.ConfigManager.SetJSON(savePath, "Entities/Player/startPos", p_start_pos)
-        KDS.ConfigManager.SetJSON(savePath, "Entities/Koponen/startPos", k_start_pos)
-        KDS.ConfigManager.SetJSON(savePath, "Data/TimeBonus/start", tb_start)
-        KDS.ConfigManager.SetJSON(savePath, "Data/TimeBonus/end", tb_end)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/enabled", dark)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/strength", darkness)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/playerLight", player_light)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/enabled", ambient_light)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/tint", ambient_light_tint)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/startPos", p_start_pos)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startPos", k_start_pos)
+        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
+        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
 
 def main():
     global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize

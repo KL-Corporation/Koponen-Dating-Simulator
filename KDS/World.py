@@ -355,17 +355,20 @@ class BallisticProjectile:
             Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
         return self.counter > self.flight_time
     
-    def toString(self):
+    def toSave(self):
         """Converts all textures to strings
         """
-        if isinstance(self.texture, pygame.Surface):
-            self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
+        if not isinstance(self.texture, list):
+            self.texture = (pygame.surfarray.array2d(self.texture).tolist(), self.texture.get_colorkey())
         
-    def fromString(self):
+    def fromSave(self):
         """Converts all strings back to textures
         """
-        if isinstance(self.texture, pygame.Surface):
-            self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+        if isinstance(self.texture, list):
+            colorkey = self.texture[1]
+            self.texture = pygame.surfarray.make_surface(self.texture[0]).convert()
+            if colorkey != None:
+                self.texture.set_colorkey(colorkey)
 
 class itemTools:
     class rk62:
@@ -408,15 +411,15 @@ class Explosion:
         Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
         return self.animation.done, self.animation.tick
     
-    def toString(self):
+    def toSave(self):
         """Converts all textures to strings
         """
-        self.animation.toString()
+        self.animation.toSave()
         
-    def fromString(self):
+    def fromSave(self):
         """Converts all strings back to textures
         """
-        self.animation.fromString()
+        self.animation.fromSave()
     
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)

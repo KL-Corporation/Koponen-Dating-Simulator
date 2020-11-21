@@ -266,23 +266,17 @@ class HostileEnemy:
         self.movement = mv
         self.clearlagcounter = 0
 
-    def toString(self):
-        """Converts all textures and audios to strings
-        """
-        self.animation
-        if isinstance(self.sight_sound, pygame.mixer.Sound):
-            self.sight_sound = self.sight_sound.get_raw()
-        if isinstance(self.death_sound, pygame.mixer.Sound):
-            self.death_sound = self.death_sound.get_raw()
-    
-    def fromString(self):
-        """Converts all strings back to textures
-        """
-        self.animation
-        if not isinstance(self.sight_sound, pygame.mixer.Sound):
-            self.sight_sound = pygame.mixer.Sound(self.sight_sound)
-        if not isinstance(self.death_sound, pygame.mixer.Sound):
-            self.death_sound = pygame.mixer.Sound(self.death_sound)
+    def toSave(self):
+        if not isinstance(self.sight_sound, list):
+            self.sight_sound = pygame.sndarray.array(self.sight_sound).tolist()
+        if not isinstance(self.death_sound, list):
+            self.death_sound = pygame.sndarray.array(self.death_sound).tolist()
+            
+    def fromSave(self):
+        if isinstance(self.sight_sound, list):
+            self.sight_sound = pygame.sndarray.make_sound(self.sight_sound)
+        if isinstance(self.death_sound, list):
+            self.death_sound = pygame.sndarray.make_sound(self.death_sound)
 
     def onDeath(self):
         pass

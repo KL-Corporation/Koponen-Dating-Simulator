@@ -91,32 +91,17 @@ class Animation:
             pygame.Surface: Currently active frame.
         """
         return self.images[self.tick]
-        
-    def toString(self) -> None:
-        """Converts all textures to strings
-        """
-        tlist = []
-        for image in self.images:
-            if isinstance(image, pygame.Surface):
-                tlist.append([pygame.image.tostring(image, "RGBA"), image.get_size(), "RGBA"])
-        
-        self.images.clear()
-        self.images = tlist.copy()
-        del tlist
-            
-    def fromString(self) -> None:
-        """Converts all strings back to textures
-        """
-        tlist = []
-        for image in self.images:
-            if not isinstance(image, pygame.Surface):
-                tlist.append(pygame.image.fromstring(image[0], image[1], image[2]).convert())
-        
-        self.images.clear()
-        self.images = tlist.copy()
-        del tlist
-        for image in self.images:
-            image.set_colorkey(KDS.Colors.White)
+    
+    def toSave(self):
+        for i in range(len(self.images)):
+            if not isinstance(self.images[i], list):
+                self.images[i] = pygame.surfarray.array2d(self.images[i]).tolist()
+                
+    def fromSave(self):
+        for i in range(len(self.images)):
+            if isinstance(self.images[i], list):
+                self.images[i] = pygame.surfarray.make_surface(self.images[i]).convert()
+                self.images[i].set_colorkey(self.colorkey)
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
@@ -145,47 +130,21 @@ class MultiAnimation:
         for anim in self.animations:
             self.animations[anim].tick = 0
     
-    def toString(self, _global: bool = False) -> None:
-        if not _global:
-            self.active.toString()
-        else:
-            for anim in self.animations:
-                self.animations[anim].toString()
+    def toSave(self) -> None:
+        for anim in self.animations:
+            self.animations[anim].toSave()
                 
-    def fromString(self, _global: bool = False) -> None:
-        if not _global:
-            self.active.fromString()
-        else:
-            for anim in self.animations:
-                self.animations[anim].fromString()
-
-class CalcT:
-    @staticmethod
-    def Linear(t: float) -> float:
-        return t
-    @staticmethod
-    def EaseIn(t: float) -> float:
-        return 1.0 - math.cos(t * math.pi * 0.5)
-    @staticmethod
-    def EaseOut(t: float) -> float:
-        return math.sin(t * math.pi * 0.5)
-    @staticmethod
-    def Exponential(t: float) -> float:
-        return t * t
-    @staticmethod
-    def SmoothStep(t: float) -> float:
-        return t * t * (3.0 - (2.0 * t))
-    @staticmethod
-    def SmootherStep(t: float) -> float:
-        return t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)
+    def fromSave(self) -> None:
+        for anim in self.animations:
+            self.animations[anim].fromSave()
 
 class AnimationType:
-    Linear = CalcT.Linear
-    EaseIn = CalcT.EaseIn
-    EaseOut = CalcT.EaseOut
-    Exponential = CalcT.Exponential
-    SmoothStep = CalcT.SmoothStep
-    SmootherStep = CalcT.SmootherStep
+    Linear = lambda t: t
+    EaseIn = lambda t: 1.0 - math.cos(t * math.pi * 0.5)
+    EaseOut = lambda t: math.sin(t * math.pi * 0.5)
+    Exponential = lambda t: t * t
+    SmoothStep = lambda t: t * t * (3.0 - (2.0 * t))
+    SmootherStep = lambda t: t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)
 
 class Float:
     def __init__(self, From: float, To: float, Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:

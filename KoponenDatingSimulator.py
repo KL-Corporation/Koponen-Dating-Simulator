@@ -32,7 +32,7 @@ import math
 import time
 import datetime
 from pygame.locals import *
-from typing import Any, Tuple
+from typing import Any, List, Tuple
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -1445,17 +1445,17 @@ class Item:
 
         return Item_list, inventory
 
-    def toString(self):
+    def toSave(self):
         """Converts all textures to strings
         """
-        if isinstance(self.texture, pygame.Surface):
-            self.texture = (pygame.image.tostring(self.texture, "RGBA"), self.texture.get_size(), "RGBA")
+        if not isinstance(self.texture, list):
+            self.texture = pygame.surfarray.array2d(self.texture).tolist()
             
-    def fromString(self):
+    def fromSave(self):
         """Converts all strings back to textures
         """
-        if not isinstance(self.texture, pygame.Surface):
-            self.texture = pygame.image.fromstring(self.texture[0], self.texture[1], self.texture[2])
+        if isinstance(self.texture, list):
+            self.texture = pygame.surfarray.make_surface(self.texture).convert()
             self.texture.set_colorkey(KDS.Colors.White)
 
     def pickup(self):
@@ -2385,7 +2385,7 @@ def agr(tcagr: bool):
         c = False
     return True
 #endregion
-#region Game Start and Stop
+#region Game Functions
 def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show_loading: bool = True):
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
     global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
@@ -2431,7 +2431,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     
     #region Load Save
     global player_health, player_rect, koponen_rect, player_hand_item, farting, player_keys, player_inventory, playerStamina
-    player_health = KDS.ConfigManager.Save.GetPlayer("health", 100)
+    player_health = KDS.ConfigManager.Save.GetPlayer("health", 100.0)
     player_rect.topleft = KDS.ConfigManager.Save.GetPlayer("position", player_def_pos)
     koponen_rect.topleft = KDS.ConfigManager.Save.GetPlayer("koponen_position", koponen_def_pos)
     player_hand_item = KDS.ConfigManager.Save.GetPlayer("hand_item", "none")
@@ -2485,7 +2485,6 @@ def respawn_function():
     playerStamina = 100.0
     player_animations.reset()
     KDS.Audio.Music.play(None)
-
 #endregion
 #region Menus
 def esc_menu_f():
