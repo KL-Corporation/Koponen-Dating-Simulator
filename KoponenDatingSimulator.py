@@ -531,7 +531,7 @@ class WorldData():
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
-        global dark, darkness, ambient_light, ambient_light_tint
+        global dark, darkness, ambient_light, ambient_light_tint, Player
         dark = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/enabled", False)
         dval = 255 - KDS.ConfigManager.GetLevelProp("Rendering/Darkness/strength", 0)
         darkness = (dval, dval, dval)
@@ -899,6 +899,7 @@ class Door(Tile):
         self.closingCounter = 0
     
     def update(self):
+        global Player
         if self.open:
             self.closingCounter += 1
             if self.closingCounter > self.maxclosingCounter:
@@ -925,6 +926,7 @@ class Landmine(Tile):
         self.checkCollision = False
 
     def update(self):
+        global Player
         if self.rect.colliderect(Player.rect) or True in map(lambda r: r.rect.colliderect(self.rect), Enemies):
             if KDS.Math.getDistance(Player.rect.center, self.rect.center) < 100:
                 Player.health -= 100 - KDS.Math.getDistance(Player.rect.center, self.rect.center)
@@ -987,6 +989,7 @@ class DecorativeHead(Tile):
         self.prayed = False
 
     def update(self):
+        global Player
         if self.rect.colliderect(Player.rect):
             if not self.prayed:
                 screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - int(decorative_head_tip.get_width() / 2), self.rect.top - scroll[1] - 20))
@@ -1136,6 +1139,7 @@ class Teleport(Tile):
         self.serialNumber = serialNumber
     
     def update(self):
+        global Player
         #Calculating next teleport with same serial number
         index = Teleport.teleportT_IDS[self.serialNumber].index(self) + 1
         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
@@ -1470,6 +1474,7 @@ class BlueKey(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        global Player
         KDS.Audio.playSound(key_pickup)
         Player.keys["blue"] = True
 
@@ -1524,6 +1529,7 @@ class GreenKey(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        global Player
         KDS.Audio.playSound(key_pickup)
         Player.keys["green"] = True
 
@@ -1589,6 +1595,7 @@ class Medkit(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        global Player
         KDS.Audio.playSound(item_pickup)
         Player.health = min(Player.health + 25, 100)
         return True
@@ -1735,6 +1742,7 @@ class Soulsphere(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        global Player
         KDS.Scores.score += 20
         Player.health += 100
         KDS.Audio.playSound(item_pickup)
@@ -1745,6 +1753,7 @@ class RedKey(Item):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        global Player
         KDS.Audio.playSound(key_pickup)
         Player.keys["red"] = True
 
@@ -1851,6 +1860,7 @@ class MethFlask(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
+        global Player
         if args[0][0]:
             KDS.Scores.score += 1
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
@@ -1868,6 +1878,7 @@ class BloodFlask(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
+        global Player
         if args[0][0]:
             KDS.Scores.score += 1
             Player.health += random.randint(0, 10)
@@ -1885,7 +1896,8 @@ class Grenade(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-
+        global Player
+        
         if KDS.Keys.altUp.pressed:
             KDS.World.Grenade_O.Slope += 0.03
         elif KDS.Keys.altDown.pressed:
@@ -1968,6 +1980,7 @@ class Chainsaw(Item):
         self.pickupCounter = 0
 
     def use(self, *args):
+        global Player
         if self.pickupFinished and Chainsaw.ammunition > 0:
             if args[0][0]:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
@@ -2154,7 +2167,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 def console():
-    global level_finished, go_to_console
+    global level_finished, go_to_console, Player
     go_to_console = False
 
     itemDict = {}
@@ -2404,7 +2417,7 @@ def agr(tcagr: bool):
 #region Game Functions
 def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
-    global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave
+    global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave, Player
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
         display.fill(scaled_loadingScreen.get_at((0, 0)))
@@ -2450,6 +2463,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
 
 def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
+    
     global Items, Enemies, Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
     KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
@@ -2464,6 +2478,7 @@ def save_function():
     KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
     KDS.ConfigManager.Save.SetData("Player/keys", Player.keys)
     KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
+    
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
@@ -2473,14 +2488,18 @@ def save_function():
 def load_function():
     newSave = KDS.ConfigManager.Save.init(1)
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
-    global Items, Enemies, Explosions, BallisticObjects
-    Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
-    Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
-    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
-    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
+    
+    if not newSave:
+        global Items, Enemies, Explosions, BallisticObjects
+        Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
+        Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
+        Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
+        BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
+    
+        Player
 
 def respawn_function():
-    global animation_has_played, level_finished, death_wait
+    global animation_has_played, level_finished, death_wait, Player
     Player.reset()
     animation_has_played = False
     level_finished = False
