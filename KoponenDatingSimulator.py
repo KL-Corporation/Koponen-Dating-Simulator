@@ -3385,12 +3385,6 @@ while main_running:
 #endregion
 #region AI
     koponen_rect, k_collisions = KDS.World.move_entity(koponen_rect, koponen_movement, tiles)
-
-    with concurrent.futures.ThreadPoolExecutor() as e:
-        I_thread_results = [e.submit(imp._move) for imp in imps]
-        I_updatethread_results = [e.submit(
-            imp.update, Player.rect, screen, 20, scroll, DebugMode) for imp in imps]
-
     if k_collisions.left:
         koponen_movingx = -koponen_movingx
     elif k_collisions.right:
