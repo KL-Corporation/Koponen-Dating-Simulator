@@ -175,7 +175,6 @@ concrete0 = pygame.image.load(
     "Assets/Textures/Tiles/concrete0.png").convert()
 wall0 = pygame.image.load("Assets/Textures/Tiles/wall0.png").convert()
 table0 = pygame.image.load("Assets/Textures/Tiles/table0.png").convert()
-toilet0 = pygame.image.load("Assets/Textures/Tiles/toilet0.png").convert()
 tp_shitting = pygame.image.load("Assets/Textures/Tiles/player_shitting_toilet.png").convert()
 lamp0 = pygame.image.load("Assets/Textures/Tiles/lamp0.png").convert()
 trashcan = pygame.image.load("Assets/Textures/Tiles/trashcan.png").convert()
@@ -216,7 +215,6 @@ hay = pygame.image.load("Assets/Textures/Tiles/hay.png").convert()
 soil1 = pygame.image.load("Assets/Textures/Tiles/soil_2.png").convert()
 wood = pygame.image.load("Assets/Textures/Tiles/wood.png").convert()
 table0.set_colorkey(KDS.Colors.White)
-toilet0.set_colorkey(KDS.Colors.White)
 lamp0.set_colorkey(KDS.Colors.White)
 trashcan.set_colorkey(KDS.Colors.White)
 door_closed.set_colorkey(KDS.Colors.White)
@@ -785,15 +783,37 @@ class Tile:
 
     def update(self):
         return self.texture
+    
+    def toSave(self):
+        if not isinstance(self.texture, list) and not isinstance(self.texture, str):
+            if self.texture == t_textures[self.serialNumber]:
+                self.texture = "loadFromSerial"
+            else:
+                self.texture = pygame.surfarray.array2d(self.texture).tolist()
+    
+    def fromSave(self):
+        if isinstance(self.texture, list):
+            self.texture = pygame.surfarray.make_surface(self.texture).convert()
+            self.texture.set_colorkey(KDS.Colors.White)
+        elif self.texture == "loadFromSerial":
+            self.texture = t_textures[self.serialNumber]
         
 class Toilet(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
-        self.texture = toilet0
+        self.texture = t_textures[serialNumber]
         self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.White), KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
+        
+    def toSave(self):
+        super().toSave()
+        self.animation.toSave()
+        
+    def fromSave(self):
+        super().fromSave()
+        self.animation.fromSave()
 
     def update(self):
         global renderPlayer
@@ -823,6 +843,14 @@ class Trashcan(Tile):
         self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
+                
+    def toSave(self):
+        super().toSave()
+        self.animation.toSave()
+        
+    def fromSave(self):
+        super().fromSave()
+        self.animation.fromSave()
 
     def update(self):
         
@@ -844,7 +872,7 @@ class Trashcan(Tile):
             return self.texture
 
 class Jukebox(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):      
         positionC = (position[0], position[1] - 26)
         super().__init__(positionC, serialNumber)
         self.texture = jukebox_texture
@@ -852,9 +880,15 @@ class Jukebox(Tile):
         self.checkCollision = False
         self.playing = -1
         self.lastPlayed = [-69 for _ in range(5)]
+        
+        musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
+        self.songs = []
+        for musiken in musikerna:
+            self.songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
+        random.shuffle(self.songs)
 
     def stopPlayingTrack(self):
-        for music in jukebox_music:
+        for music in self.songs:
             music.stop()
         self.playing = -1
         KDS.Audio.Music.unpause()
@@ -867,16 +901,16 @@ class Jukebox(Tile):
                 KDS.Audio.Music.pause()
                 loopStopper = 0
                 while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
-                    self.playing = random.randint(0, len(jukebox_music) - 1)
+                    self.playing = random.randint(0, len(self.songs) - 1)
                     loopStopper += 1
                 del self.lastPlayed[0]
                 self.lastPlayed.append(self.playing)
-                KDS.Audio.playSound(jukebox_music[self.playing], KDS.Audio.MusicVolume)
+                KDS.Audio.playSound(self.songs[self.playing], KDS.Audio.MusicVolume)
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
-            jukebox_music[self.playing].set_volume(jukebox_volume)
+            self.songs[self.playing].set_volume(jukebox_volume)
 
         return self.texture
 
@@ -2059,59 +2093,7 @@ Item.serialNumbers = {
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
 #endregion
 
-#region Jukebox
-def load_jukebox_music():
-    musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
-    musics = []
-    for musiken in musikerna:
-        musics.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
-    random.shuffle(musics)
-    return musics
-jukebox_music = load_jukebox_music()
-#endregion
-#endregion
-#region Player
-class PlayerClass:
-    def __init__(self) -> None:
-        self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name: str = "Sinä"
-        self.health: float = 100.0
-        self.lastHealth: float = self.health
-        self.stamina: float = 100.0
-        self.inventory: Inventory = Inventory(5)
-        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
-        self.farting: bool = False
-        self.light: bool = False
-        self.godmode: bool = False
-        self.dead: bool = False
-        self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
-            idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
-        )
-        self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
-
-    def reset(self):
-        self.rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name = "Sinä"
-        self.health = 100.0
-        self.lastHealth = self.health
-        self.stamina = 100.0
-        self.inventory = Inventory(5)
-        self.keys = { "red": False, "green": False, "blue": False }
-        self.farting = False
-        self.light = False
-        self.dead = False
-        self.animations.reset()
-        self.deathSound.stop()
-        
-Player = PlayerClass()
-#endregion
-#region Player
+#region Animations
 koponen_animations = KDS.Animator.MultiAnimation(
     idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
     walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
@@ -2163,6 +2145,48 @@ knife_animation_object = KDS.Animator.Animation(
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
+#endregion
+#endregion
+#region Player
+class PlayerClass:
+    def __init__(self) -> None:
+        self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
+        self.name: str = "Sinä"
+        self.health: float = 100.0
+        self.lastHealth: float = self.health
+        self.stamina: float = 100.0
+        self.inventory: Inventory = Inventory(5)
+        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
+        self.farting: bool = False
+        self.light: bool = False
+        self.godmode: bool = False
+        self.dead: bool = False
+        self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
+            idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
+        )
+        self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
+
+    def reset(self):
+        self.rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
+        self.name = "Sinä"
+        self.health = 100.0
+        self.lastHealth = self.health
+        self.stamina = 100.0
+        self.inventory = Inventory(5)
+        self.keys = { "red": False, "green": False, "blue": False }
+        self.farting = False
+        self.light = False
+        self.dead = False
+        self.animations.reset()
+        self.deathSound.stop()
+        
+Player = PlayerClass()
 #endregion
 #region Console
 def console():
@@ -2462,14 +2486,13 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
 
 def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
-    
     global Items, Enemies, Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
     KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
     KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
     KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
     KDS.ConfigManager.Save.SetWorld("missions", KDS.Missions.Missions)
-
+    global Player
     KDS.ConfigManager.Save.SetData("Player/position", Player.rect.topleft)
     KDS.ConfigManager.Save.SetData("Player/health", Player.health)
     KDS.ConfigManager.Save.SetData("Player/stamina", Player.stamina)
@@ -2477,7 +2500,6 @@ def save_function():
     KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
     KDS.ConfigManager.Save.SetData("Player/keys", Player.keys)
     KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
-    
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
@@ -2494,8 +2516,14 @@ def load_function():
         Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
         Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
         BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
-    
-        Player
+        global Player
+        Player.rect.topleft = tuple(KDS.ConfigManager.Save.GetData("Player/position", Player.rect.topleft))
+        Player.health = KDS.ConfigManager.Save.GetData("Player/health", Player.health)
+        Player.stamina = KDS.ConfigManager.Save.GetData("Player/stamina", Player.stamina)
+        Player.inventory.storage = KDS.ConfigManager.Save.GetData("Player/Inventory/storage", Player.inventory.storage)
+        Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
+        Player.keys = KDS.ConfigManager.Save.GetData("Player/keys", Player.keys)
+        Player.farting = KDS.ConfigManager.Save.GetData("Player/farting", Player.farting)
 
 def respawn_function():
     global animation_has_played, level_finished, death_wait, Player
