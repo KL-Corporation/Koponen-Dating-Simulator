@@ -1,0 +1,9 @@
+{
+    "Physics": {
+        "Player": {
+			"fallSpeed": 0.4,
+			"fallMultiplier": 2.5,
+            "fallMaxVelocity": 8
+        }
+    }
+}

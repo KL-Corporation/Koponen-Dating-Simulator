@@ -1,0 +1,6 @@
+.kds = .KoponenDatingSimulator
+.kbf = .KoponenBinaryFormat
+.kdf = .KoponenDataFormat
+.dat = .Data
+.log = .Log
+.cfg = .Config

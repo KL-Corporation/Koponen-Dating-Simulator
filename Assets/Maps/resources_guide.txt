@@ -1,0 +1,104 @@
+Text:
+building:
+a = air
+b = floor0
+c = wall0
+d = table0
+e = toilet0
+f = lamp0
+g = trashcan
+h = ground1
+i = grass
+j = concrete
+k = door
+l = red_door
+m = green_door
+n = blue_door
+o = bricks
+p = planks
+q = ladder
+r = light_bricks
+s = iron_bars
+t = soil
+u = mossy_bricks
+decoration:
+A = tree
+B = jukebox
+enemies and other shit:
+Z = zombie
+S = sergeant
+V = archvile
+K = bulldog
+C = landmine
+items:
+0 = gasburner
+1 = knife
+2 = red_key
+3 = green_key
+4 = blue_key
+5 = coffeemug
+6 = ss_bonuscard
+7 = lappi_sytytyspalat
+8 = plasmarifle
+9 = cell
+! = pistol
+# = pistol_mag
+% = rk62
+& = rk62_mag
+( = medkit
+) = shotgun
+= = shotgun_shells
++ = soulsphere
+' = turboneedle
+
+(Resources Convert Rules are in the format of [name],[rule],[ColorR],[ColorG],[ColorB],[Category: 0 = Building, 1 = Decoration, 2 = Enemy, 3 = Item])
+Image:
+Building Layer:
+(0, 255, 255) = air
+(0, 255, 0) = floor0
+(255, 0, 0) = wall0
+(128, 0, 0) = table0
+(245, 245, 245) = toilet0
+(255, 255, 0) = lamp0
+(64, 64, 64) = trashcan
+(150, 75, 0) = ground1
+(0, 128, 0) = grass
+(192, 192, 192) = concrete
+(128, 128, 128) = door
+(255, 128, 128) = red_door
+(128, 255, 128) = green_door
+(128, 128, 255) = blue_door
+(255, 128, 0) = bricks
+(255, 64, 0) = planks
+(255, 192, 0) = ladder
+-
+-
+-
+-
+Decoration Layer:
+(0, 255, 0) = tree
+(255, 0, 0) = jukebox
+Enemies Layer:
+(0, 255, 0) = zombie
+(255, 0, 0) = sergeant
+(0, 0, 255) = archvile
+(255, 255, 0) = bulldog
+(0, 255, 255) = landmine
+Item Layer:
+(0, 0, 255) = gasburner
+(64, 64, 64) = knife
+(255, 128, 128) = red_key
+(128, 255, 128) = green_key
+(128, 128, 255) = blue_key
+(192, 192, 192) = coffeemug
+(255, 128, 0) = ss_bonuscard
+(255, 255, 0) = lappi_sytytyspalat
+(0, 128, 255) = plasmarifle
+(64, 128, 255) = cell
+(64, 255, 128) = pistol
+(192, 255, 128) = pistol_mag
+(192, 0, 255) = rk62
+(192, 64, 255) = rk62_mag
+(255, 0, 0) = medkit
+(128, 64, 0) = shotgun
+(128, 128, 0) = shotgun_shells
