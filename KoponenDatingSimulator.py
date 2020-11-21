@@ -3154,9 +3154,7 @@ while main_running:
     true_scroll[0] += (player_rect.x - true_scroll[0] - (screen_size[0] / 2)) / 12
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
 
-    scroll = true_scroll.copy()
-    scroll[0] = int(scroll[0])
-    scroll[1] = int(scroll[1])
+    scroll = (round(true_scroll[0]), round(true_scroll[1]))
     if farting:
         shakeScreen()
     player_hand_item = "none"
