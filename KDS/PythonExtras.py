@@ -11,18 +11,12 @@
 
 class Vector2:
     ZERO = (0, 0)
-    """Shorthand for writing (0, 0)."""
     ONE = (1, 1)
-    """Shorthand for writing (1, 1)."""
     
 class Vector3:
     ZERO = (0, 0, 0)
-    """Shorthand for writing (0, 0, 0)."""
     ONE = (1, 1, 1)
-    """Shorthand for writing (1, 1, 1)."""
     
 class Vector4:
     ZERO = (0, 0, 0, 0)
-    """Shorthand for writing (0, 0, 0, 0)."""
     ONE = (1, 1, 1, 1)
-    """Shorthand for writing (1, 1, 1, 1)."""
