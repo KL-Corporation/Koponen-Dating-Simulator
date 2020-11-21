@@ -32,7 +32,7 @@ import math
 import time
 import datetime
 from pygame.locals import *
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -2059,43 +2059,45 @@ jukebox_music = load_jukebox_music()
 #endregion
 #endregion
 #region Player
-class Player:
-    rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-    name = "Sinä"
-    health = 100.0
-    lastHealth = health
-    stamina = 100.0
-    inventory = Inventory(5)
-    godmode = False
-    keys = { "red": False, "green": False, "blue": False }
-    farting = False
-    light = False
-    dead = False
-    animations = KDS.Animator.MultiAnimation(
-        idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-        death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
-    )
-    deathSound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
-    
-    @staticmethod
-    def reset():
-        Player.rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        Player.name = "Sinä"
-        Player.health = 100.0
-        Player.lastHealth = Player.health
-        Player.stamina = 100.0
-        Player.inventory = Inventory(5)
-        Player.keys = { "red": False, "green": False, "blue": False }
-        Player.farting = False
-        Player.light = False
-        Player.dead = False
-        Player.animations.reset()
-        Player.deathSound.stop()
+class PlayerClass:
+    def __init__(self) -> None:
+        self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
+        self.name: str = "Sinä"
+        self.health: float = 100.0
+        self.lastHealth: float = self.health
+        self.stamina: float = 100.0
+        self.inventory: Inventory = Inventory(5)
+        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
+        self.farting: bool = False
+        self.light: bool = False
+        self.godmode: bool = False
+        self.dead: bool = False
+        self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
+            idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+            death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
+        )
+        self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
+
+    def reset(self):
+        self.rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
+        self.name = "Sinä"
+        self.health = 100.0
+        self.lastHealth = self.health
+        self.stamina = 100.0
+        self.inventory = Inventory(5)
+        self.keys = { "red": False, "green": False, "blue": False }
+        self.farting = False
+        self.light = False
+        self.dead = False
+        self.animations.reset()
+        self.deathSound.stop()
+        
+Player = PlayerClass()
 #endregion
 #region Player
 koponen_animations = KDS.Animator.MultiAnimation(
