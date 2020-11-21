@@ -31,9 +31,8 @@ import zipfile
 import math
 import time
 import datetime
-import typing
 from pygame.locals import *
-from KDS.PythonExtras import *
+from typing import Any, List, Tuple
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -76,7 +75,7 @@ screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
-display.fill(CompanyLogo.get_at(Vector2.ZERO))
+display.fill(CompanyLogo.get_at((0, 0)))
 display.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (display_size[0] / 2 - 250, display_size[1] / 2 - 250))
 pygame.display.update()
 
@@ -515,7 +514,7 @@ LoadGameSettings()
 #region World Data
 imps = []
 class WorldData():
-    MapSize = Vector2.ZERO
+    MapSize = (0, 0)
     @staticmethod
     def LoadMap(loadEntities: bool = True):
         global Items, tiles, Enemies, Projectiles
@@ -731,7 +730,7 @@ class Inventory:
             else:
                 renderOffset = player_rect.width + 2
 
-            Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 - scroll[1]))
+            Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
         return None
 
     def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
@@ -741,7 +740,7 @@ class Inventory:
         else:
             renderOffset = player_rect.width + 2
 
-        Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 - scroll[1]))
+        Surface.blit(pygame.transform.flip(dumpValues, direction, False), (player_rect.x - scroll[0] + renderOffset, player_rect.y + 10 -scroll[1]))
         return None
 
     def getHandItem(self):
@@ -1170,7 +1169,7 @@ class Teleport(Tile):
         if not self.rect.colliderect(player_rect): #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
-        return pygame.Surface(Vector2.ZERO)
+        return pygame.Surface((0, 0))
 
     teleportT_IDS = {}
 
@@ -1341,7 +1340,7 @@ class FlickerTrigger(Tile):
             KDS.Audio.unpauseAllSounds()
             self.stopAnim = False
             
-        return pygame.Surface(Vector2.ZERO)
+        return pygame.Surface((0, 0))
 
 class ImpaledBody(Tile):
     def __init__(self, position, serialNumber) -> None:
@@ -1410,10 +1409,10 @@ class Item:
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
 
     @staticmethod
-    def checkCollisions(Item_list: typing.Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: typing.Tuple[int, int], functionKey: bool, inventory: Inventory) -> typing.Tuple[typing.Any, Inventory]:
+    def checkCollisions(Item_list: Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Tuple[int, int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
         index = 0
         showItemTip = True
         collision = False
@@ -1879,7 +1878,7 @@ class MethFlask(Item):
             global player_health
             KDS.Scores.score += 1
             player_health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
-            player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[26](Vector2.ZERO, 26, i_textures[26])
+            player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26, i_textures[26])
             KDS.Audio.playSound(glug_sound)
         return i_textures[27]
 
@@ -1897,7 +1896,7 @@ class BloodFlask(Item):
             global player_health
             KDS.Scores.score += 1
             player_health += random.randint(0, 10)
-            player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[26](Vector2.ZERO, 26, i_textures[26])
+            player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26, i_textures[26])
             KDS.Audio.playSound(glug_sound)
         return i_textures[28]
 
@@ -1917,7 +1916,7 @@ class Grenade(Item):
         elif KDS.Keys.altDown.pressed:
             KDS.World.Grenade_O.Slope -= 0.03
 
-        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y + 10 + KDS.World.Grenade_O.Slope * (KDS.World.Grenade_O.force + 15) * -1 - scroll[1]) )
+        pygame.draw.line(screen, (255, 10, 10), (player_rect.centerx - scroll[0], player_rect.y + 10 - scroll[1]), (player_rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(direction) - scroll[0], player_rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
         if args[0][0]:
             KDS.Audio.playSound(grenade_throw)
             player_inventory.storage[player_inventory.SIndex] = Inventory.emptySlot
@@ -1977,7 +1976,7 @@ class Lantern(Item):
 
         return False
 
-nullLantern = Lantern(Vector2.ZERO, 33, texture = i_textures[33])
+nullLantern = Lantern((0, 0), 33, texture = i_textures[33])
 
 class Chainsaw(Item):
     pickup_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_start.ogg")
@@ -2133,7 +2132,7 @@ menu_toilet_animation = KDS.Animator.Animation(
     "menu_toilet_anim", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_trashcan_animation = KDS.Animator.Animation(
     "menu_trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, Vector3.ZERO, KDS.Animator.OnAnimationEnd.Loop)
+burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
 explosion_animation = KDS.Animator.Animation(
     "explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 plasmarifle_animation = KDS.Animator.Animation(
@@ -2235,7 +2234,7 @@ def console():
             if command_list[1] != "key":
                 if command_list[1] in itemDict:
                     consoleItemSerial = int(itemDict[command_list[1]])
-                    player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[consoleItemSerial](Vector2.ZERO, consoleItemSerial, i_textures[consoleItemSerial])
+                    player_inventory.storage[player_inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial, i_textures[consoleItemSerial])
                     KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
                 else: KDS.Console.Feed.append(f"Item not found.")
             else:
@@ -2416,7 +2415,7 @@ def agr(tcagr: bool):
                     c = True
             elif event.type == QUIT:
                 KDS_Quit()
-        display.blit(agr_background, Vector2.ZERO)
+        display.blit(agr_background, (0, 0))
         agree_button.update(display, mouse_pos, c)
         pygame.display.update()
         c = False
@@ -2428,7 +2427,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     global main_menu_running, current_map, player_death_event, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
-        display.fill(scaled_loadingScreen.get_at(Vector2.ZERO))
+        display.fill(scaled_loadingScreen.get_at((0, 0)))
         display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
         pygame.display.update()
 
@@ -2480,7 +2479,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     
     ########## iPuhelin ##########
     if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and is_new_save):
-        player_inventory.storage[0] = Item.serialNumbers[6](Vector2.ZERO, 6, i_textures[6])
+        player_inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6, i_textures[6])
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
@@ -2560,7 +2559,7 @@ def esc_menu_f():
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
-        display.blit(pygame.transform.scale(game_pause_background, display_size), Vector2.ZERO)
+        display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
         anim_x = anim_lerp_x.update(False)
         mouse_pos = pygame.mouse.get_pos()
 
@@ -2581,7 +2580,7 @@ def esc_menu_f():
                 KDS_Quit()
 
         esc_surface.blit(pygame.transform.scale(
-            blurred_background, display_size), Vector2.ZERO)
+            blurred_background, display_size), (0, 0))
         pygame.draw.rect(esc_surface, (123, 134, 111), (int(
             (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
         esc_surface.blit(pygame.transform.scale(
@@ -2594,17 +2593,17 @@ def esc_menu_f():
 
         KDS.Logging.Profiler(DebugMode)
         esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
-        display.blit(esc_surface, Vector2.ZERO)
+        display.blit(esc_surface, (0, 0))
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
             debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
-            display.blit(debugSurf, Vector2.ZERO)
+            display.blit(debugSurf, (0, 0))
         
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-        display.blit(pygame.transform.scale(display, display_size), Vector2.ZERO)
+        display.blit(pygame.transform.scale(display, display_size), (0, 0))
         pygame.display.update()
         display.fill(KDS.Colors.Black)
         c = False
@@ -2661,7 +2660,7 @@ def settings_menu():
             elif event.type == pygame.QUIT:
                 KDS_Quit()
 
-        display.blit(settings_background, Vector2.ZERO)
+        display.blit(settings_background, (0, 0))
 
         display.blit(pygame.transform.flip(
             menu_trashcan_animation.update(), False, False), (279, 515))
@@ -2681,7 +2680,7 @@ def settings_menu():
             debugSurf = pygame.Surface((200, 40))
             debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
-            display.blit(debugSurf, Vector2.ZERO)
+            display.blit(debugSurf, (0, 0))
             
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(
@@ -2690,7 +2689,7 @@ def settings_menu():
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         pygame.display.update()
-        display.fill(Vector3.ZERO)
+        display.fill((0, 0, 0))
         c = False
         clock.tick(locked_fps)
 
@@ -2757,13 +2756,13 @@ def main_menu():
     main_menu_quit_button = KDS.UI.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, "QUIT")
     #Frame 2
     Frame2 = pygame.Surface(display_size)
-    Frame2.blit(main_menu_background_2, Vector2.ZERO)
+    Frame2.blit(main_menu_background_2, (0,0))
     #Frame 3
     Frame3 = pygame.Surface(display_size)
-    Frame3.blit(main_menu_background_3, Vector2.ZERO)
+    Frame3.blit(main_menu_background_3, (0, 0))
     #Frame 4
     Frame4 = pygame.Surface(display_size)
-    Frame4.blit(main_menu_background_4, Vector2.ZERO)
+    Frame4.blit(main_menu_background_4, (0, 0))
     #endregion
     #region Mode Selection Menu
     mode_selection_modes = []
@@ -2824,7 +2823,7 @@ def main_menu():
                 KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
-            Frame1.blit(main_menu_background, Vector2.ZERO)
+            Frame1.blit(main_menu_background, (0, 0))
 
             Frame1.blit(pygame.transform.flip(
                 menu_gasburner_animation.update(), False, False), (625, 445))
@@ -2835,8 +2834,8 @@ def main_menu():
 
             frames[current_frame].set_alpha(int(framechange_lerp.update()))
 
-            display.blit(frames[current_frame - 1].convert_alpha(), Vector2.ZERO)
-            display.blit(frames[current_frame].convert_alpha(), Vector2.ZERO)
+            display.blit(frames[current_frame - 1].convert_alpha(), (0, 0))
+            display.blit(frames[current_frame].convert_alpha(), (0,0))
 
             main_menu_play_button.update(display, mouse_pos, c, Mode.ModeSelectionMenu)
             main_menu_settings_button.update(display, mouse_pos, c)
@@ -2856,7 +2855,7 @@ def main_menu():
 
         elif MenuMode == Mode.ModeSelectionMenu:
 
-            display.blit(gamemode_bc_1_1, Vector2.ZERO)
+            display.blit(gamemode_bc_1_1, (0, 0))
             display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(mouse_pos):
@@ -2912,7 +2911,7 @@ def main_menu():
                 map_name = map_names[current_map_int]
             else:
                 map_name = map_names[0]
-            level_text = button_font1.render(f"{current_map} - {map_name}", True, Vector3.ZERO)
+            level_text = button_font1.render(f"{current_map} - {map_name}", True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
         KDS.Logging.Profiler(DebugMode)
@@ -2920,7 +2919,7 @@ def main_menu():
             debugSurf = pygame.Surface((200, 40))
             debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
-            display.blit(debugSurf, Vector2.ZERO)
+            display.blit(debugSurf, (0, 0))
             
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(
@@ -2978,7 +2977,7 @@ def level_finished_menu():
     
     level_finished_running = True
     while level_finished_running:
-        display.blit(game_pause_background, Vector2.ZERO)
+        display.blit(game_pause_background, (0, 0))
         anim_x = anim_lerp_x.update(False)
         mouse_pos = pygame.mouse.get_pos()
         
@@ -3003,7 +3002,7 @@ def level_finished_menu():
             elif event.type == pygame.QUIT:
                 KDS_Quit()
 
-        level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), Vector2.ZERO)
+        level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
         pygame.draw.rect(level_f_surf, (123, 134, 111), menu_rect)
         level_f_surf.blit(pygame.transform.scale(level_cleared_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 275)))
             
@@ -3035,12 +3034,12 @@ def level_finished_menu():
 
         KDS.Logging.Profiler(DebugMode)
         level_f_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_x)))
-        display.blit(level_f_surf, Vector2.ZERO)
+        display.blit(level_f_surf, (0, 0))
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
             debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
-            display.blit(debugSurf, Vector2.ZERO)
+            display.blit(debugSurf, (0, 0))
         
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
@@ -3297,7 +3296,7 @@ while main_running:
     lightsUpdating = 0
     if ambient_light:
         ambient_tint.fill(ambient_light_tint)
-        screen.blit(ambient_tint, Vector2.ZERO, special_flags=BLEND_ADD)
+        screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
     #dark = False if player_rect.x > 500 else 1
     if dark:
         black_tint.fill(darkness)
@@ -3312,7 +3311,7 @@ while main_running:
             #black_tint.blit(KDS.World.Lighting.Shapes.circle.get(40, 40000), (20, 20))
         if player_light:
             black_tint.blit(KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), (int(player_rect.centerx - scroll[0] - 150), int(player_rect.centery - scroll[1] - 150)))
-        screen.blit(black_tint, Vector2.ZERO, special_flags=BLEND_MULT)
+        screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:
         player_health = max(player_health, 0)
@@ -3383,7 +3382,7 @@ while main_running:
     if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
 
     if check_crouch == True:
-        crouch_collisions = KDS.World.move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), Vector2.ZERO, tiles, False, True)[1]
+        crouch_collisions = KDS.World.move_entity(pygame.Rect(player_rect.x, player_rect.y - crouch_size[1], player_rect.width, player_rect.height), (0, 0), tiles, False, True)[1]
     else:
         crouch_collisions = KDS.World.Collisions()
 
@@ -3533,7 +3532,7 @@ while main_running:
         debugSurf = pygame.Surface((score_font.size(f"Player Position: {player_rect.topleft}")[0] + 10, 60))
         debugSurf.fill(KDS.Colors.DarkGray)
         debugSurf.set_alpha(128)
-        screen.blit(debugSurf, Vector2.ZERO)
+        screen.blit(debugSurf, (0, 0))
         
         screen.blit(score_font.render(f"FPS: {round(clock.get_fps())}", True, KDS.Colors.White), (5, 5))
         screen.blit(score_font.render(f"Player Position: {player_rect.topleft}", True, KDS.Colors.White), (5, 15))
@@ -3549,7 +3548,7 @@ while main_running:
         colorInvert = False
 
     display.fill(KDS.Colors.Black)
-    display.blit(pygame.transform.scale(screen, display_size), Vector2.ZERO)
+    display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     #Updating display object
     pygame.display.update()
 #endregion
@@ -3574,7 +3573,7 @@ while main_running:
         KDS.Audio.Music.pause()
         KDS.Audio.pauseAllSounds()
         display.fill(KDS.Colors.Black)
-        display.blit(pygame.transform.scale(screen, display_size), Vector2.ZERO)
+        display.blit(pygame.transform.scale(screen, display_size), (0, 0))
         game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         pygame.mouse.set_visible(True)
         esc_menu_f()
