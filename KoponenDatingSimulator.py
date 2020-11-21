@@ -1342,6 +1342,17 @@ class FlickerTrigger(Tile):
             
         return pygame.Surface((0, 0))
 
+class ImpaledBody(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.animation = KDS.Animator.Animation("impaled_corpse", 2, 50, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
+        self.checkCollision = False
+
+    def update(self):
+        return self.animation.update()
+        
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1372,7 +1383,8 @@ specialTilesD = {
     77: AllahmasSpruce,
     78: Methtable,
     82: Ladder,
-    84: FlickerTrigger
+    84: FlickerTrigger,
+    85: ImpaledBody
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")

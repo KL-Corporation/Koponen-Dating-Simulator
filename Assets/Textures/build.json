@@ -83,7 +83,8 @@
         "081": "floor1_drain.png",
         "082": "steel_ladder.png",
         "083": "metal_platform.png",
-        "084": "flicker_trigger.png"
+        "084": "flicker_trigger.png",
+        "085": "impaled_corpse.png"
     },
 
     "tile_sounds" : {
@@ -120,7 +121,8 @@
         77,
         78,
         82,
-        84
+        84,
+        85
     ],
     "checkCollisionFalse": [
         10,
