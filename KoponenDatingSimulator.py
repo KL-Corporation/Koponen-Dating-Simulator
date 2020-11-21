@@ -1342,6 +1342,17 @@ class FlickerTrigger(Tile):
             
         return pygame.Surface((0, 0))
 
+class ImpaledBody(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.animation = KDS.Animator.Animation("impaled_corpse", 2, 50, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
+        self.checkCollision = False
+
+    def update(self):
+        return self.animation.update()
+        
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1372,7 +1383,8 @@ specialTilesD = {
     77: AllahmasSpruce,
     78: Methtable,
     82: Ladder,
-    84: FlickerTrigger
+    84: FlickerTrigger,
+    85: ImpaledBody
 }
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
@@ -2189,6 +2201,14 @@ def console():
         "finish": { "missions": "break" },
         "teleport": {
          "~": { "~": "break" },
+        },
+        "summon": {
+            "imp": "break",
+            "sergeant": "break",
+            "drugdealer": "break",
+            "supershotgunner": "break",
+            "methmaker": "break",
+            "fucker69": "break" 
         }
     }
     
@@ -2322,6 +2342,21 @@ def console():
                     player_rect.topleft = (xt, yt)
                     KDS.Console.Feed.append(f"Teleported player to {xt}, {yt}")
             else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
+        elif command_list[0] == "summon":
+            if len(command_list) > 1:
+                summonEntity = {
+                    "imp": lambda e : numpy.append(e, KDS.AI.Imp(player_rect.topright)),
+                    "sergeant": lambda e : numpy.append(e, KDS.AI.SergeantZombie(player_rect.topright)),
+                    "drugdealer": lambda e : numpy.append(e, KDS.AI.DrugDealer(player_rect.topright)),
+                    "supershotgunner": lambda e : numpy.append(e, KDS.AI.TurboShotgunner(player_rect.topright)),
+                    "methmaker": lambda e : numpy.append(e, KDS.AI.MethMaker(player_rect.topright)),
+                    "fucker69": lambda e : numpy.append(e, KDS.AI.CaveMonster(player_rect.topright))
+                }
+                try:
+                    global Enemies
+                    Enemies = summonEntity[command_list[1]](Enemies)
+                except KeyError:
+                    KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
         elif command_list[0] == "help":
             KDS.Console.Feed.append("""
     Console Help:
@@ -2334,6 +2369,7 @@ def console():
         - finish => Finishes level or missions.
         - invl => Sets invulnerability mode to the specified value.
         - teleport => Teleports player either to static coordinates or relative coordinates.
+        - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
         - help => Shows the list of commands.
     """)
         else:
@@ -3153,7 +3189,7 @@ while main_running:
     true_scroll[0] += (player_rect.x - true_scroll[0] - (screen_size[0] / 2)) / 12
     true_scroll[1] += (player_rect.y - true_scroll[1] - 220) / 12
 
-    scroll = (round(true_scroll[0]), round(true_scroll[1]))
+    scroll = [round(true_scroll[0]), round(true_scroll[1])]
     if farting:
         shakeScreen()
     player_hand_item = "none"
