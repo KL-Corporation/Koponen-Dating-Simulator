@@ -500,6 +500,7 @@ def LoadGameSettings():
 LoadGameSettings()
 #endregion
 #region World Data
+imps = []
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
@@ -530,7 +531,7 @@ class WorldData():
         with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
-        global dark, darkness, ambient_light, ambient_light_tint, Player
+        global dark, darkness, ambient_light, ambient_light_tint
         dark = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/enabled", False)
         dval = 255 - KDS.ConfigManager.GetLevelProp("Rendering/Darkness/strength", 0)
         darkness = (dval, dval, dval)
@@ -747,7 +748,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.serialNumber = serialNumber
         if serialNumber:
@@ -760,7 +761,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a 2d numpy array
-    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
+    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: tuple[int, int], *args):
         tilesUpdating = 0
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
@@ -787,7 +788,7 @@ class Tile:
         return self.texture
         
 class Toilet(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
+    def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = toilet0
@@ -816,7 +817,7 @@ class Toilet(Tile):
             return self.texture
 
 class Trashcan(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
+    def __init__(self, position: tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
         self.texture = trashcan
@@ -844,7 +845,7 @@ class Trashcan(Tile):
             return self.texture
 
 class Jukebox(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         positionC = (position[0], position[1] - 26)
         super().__init__(positionC, serialNumber)
         self.texture = jukebox_texture
@@ -887,7 +888,7 @@ class Door(Tile):
         26: "green"
     }
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = 600):        
+    def __init__(self, position: tuple[int, int], serialNumber: int, closingCounter = 600):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
@@ -898,7 +899,6 @@ class Door(Tile):
         self.closingCounter = 0
     
     def update(self):
-        global Player
         if self.open:
             self.closingCounter += 1
             if self.closingCounter > self.maxclosingCounter:
@@ -918,14 +918,13 @@ class Door(Tile):
         return self.texture if not self.open else self.opentexture
 
 class Landmine(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = landmine_texture
         self.rect = pygame.Rect(position[0], position[1]+26, 22, 11)
         self.checkCollision = False
 
     def update(self):
-        global Player
         if self.rect.colliderect(Player.rect) or True in map(lambda r: r.rect.colliderect(self.rect), Enemies):
             if KDS.Math.getDistance(Player.rect.center, self.rect.center) < 100:
                 Player.health -= 100 - KDS.Math.getDistance(Player.rect.center, self.rect.center)
@@ -938,7 +937,7 @@ class Landmine(Tile):
         return self.texture
 
 class Ladder(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = ladder_texture
         self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
@@ -951,7 +950,7 @@ class Ladder(Tile):
         return self.texture
 
 class Lamp(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = lamp0
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
@@ -979,7 +978,7 @@ class Lamp(Tile):
         return self.texture
 
 class DecorativeHead(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[43]
         self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
@@ -988,7 +987,6 @@ class DecorativeHead(Tile):
         self.prayed = False
 
     def update(self):
-        global Player
         if self.rect.colliderect(Player.rect):
             if not self.prayed:
                 screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - int(decorative_head_tip.get_width() / 2), self.rect.top - scroll[1] - 20))
@@ -1021,7 +1019,7 @@ class DecorativeHead(Tile):
         return self.texture
 
 class Tree(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]-50, 47, 84)
@@ -1031,7 +1029,7 @@ class Tree(Tile):
         return self.texture
 
 class Rock0(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]+19, 32, 15)
@@ -1041,7 +1039,7 @@ class Rock0(Tile):
         return self.texture
 
 class Torch(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
@@ -1061,7 +1059,7 @@ class Torch(Tile):
         return self.texture.update()
 
 class GoryHead(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 28, 34, 62)
@@ -1077,7 +1075,7 @@ class GoryHead(Tile):
         return self.texture
 
 class LevelEnder(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):       
+    def __init__(self, position: tuple[int, int], serialNumber: int):       
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 16, 34, 50)
@@ -1092,7 +1090,7 @@ class LevelEnder(Tile):
         return t_textures[self.serialNumber]
     
 class LevelEnderDoor(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = exit_door_open
@@ -1110,7 +1108,7 @@ class LevelEnderDoor(Tile):
         return t_textures[self.serialNumber] if not self.opened else self.opentexture
 
 class Candle(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1]+14, 20, 20)
@@ -1128,7 +1126,7 @@ class Candle(Tile):
 class Teleport(Tile):
     tex = pygame.image.load("Assets/Textures/Misc/telep.png").convert()
     tex.set_colorkey((255, 255, 255))
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
         self.texture = Teleport.tex
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -1138,7 +1136,6 @@ class Teleport(Tile):
         self.serialNumber = serialNumber
     
     def update(self):
-        global Player
         #Calculating next teleport with same serial number
         index = Teleport.teleportT_IDS[self.serialNumber].index(self) + 1
         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
@@ -1381,7 +1378,7 @@ class Item:
 
     serialNumbers = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         if serialNumber:
             self.texture = texture
         self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[
@@ -1469,18 +1466,17 @@ class Item:
         pass
 
 class BlueKey(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global Player
         KDS.Audio.playSound(key_pickup)
         Player.keys["blue"] = True
 
         return True
 
 class Cell(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1490,7 +1486,7 @@ class Cell(Item):
         return True
 
 class Coffeemug(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1502,7 +1498,7 @@ class Coffeemug(Item):
         return False
 
 class Gasburner(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1524,11 +1520,10 @@ class Gasburner(Item):
         return False
 
 class GreenKey(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global Player
         KDS.Audio.playSound(key_pickup)
         Player.keys["green"] = True
 
@@ -1538,7 +1533,7 @@ class iPuhelin(Item):
     #pickup_sound = pygame.mixer.Sound("Assets/Audio/Legacy/apple_o_paskaa.ogg")
     realistic_texture = pygame.image.load("Assets/Textures/Items/iPuhelin_realistic.png").convert()
     realistic_texture.set_colorkey(KDS.Colors.White)
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
         self.useCount = 0
 
@@ -1556,7 +1551,7 @@ class iPuhelin(Item):
         return False
 
 class Knife(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1578,7 +1573,7 @@ class Knife(Item):
         return False
 
 class LappiSytytyspalat(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1590,11 +1585,10 @@ class LappiSytytyspalat(Item):
         return True
 
 class Medkit(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global Player
         KDS.Audio.playSound(item_pickup)
         Player.health = min(Player.health + 25, 100)
         return True
@@ -1603,7 +1597,7 @@ class Pistol(Item):
     
     ammunition = 8
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1625,7 +1619,7 @@ class Pistol(Item):
         return False
 
 class PistolMag(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1638,7 +1632,7 @@ class rk62(Item):
 
     ammunition = 30
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1666,7 +1660,7 @@ class Shotgun(Item):
 
     ammunition = 8
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1689,7 +1683,7 @@ class Shotgun(Item):
         return False
 
 class rk62Mag(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1699,7 +1693,7 @@ class rk62Mag(Item):
         return True
 
 class ShotgunShells(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -1712,7 +1706,7 @@ class Plasmarifle(Item):
 
     ammunition = 36
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):               
@@ -1737,29 +1731,27 @@ class Plasmarifle(Item):
         return False
 
 class Soulsphere(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global Player
         KDS.Scores.score += 20
         Player.health += 100
         KDS.Audio.playSound(item_pickup)
         return True
 
 class RedKey(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
-        global Player
         KDS.Audio.playSound(key_pickup)
         Player.keys["red"] = True
 
         return True
 
 class SSBonuscard(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1771,7 +1763,7 @@ class SSBonuscard(Item):
         return False
 
 class Turboneedle(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1784,7 +1776,7 @@ class Ppsh41(Item):
 
     ammunition = 72
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1810,7 +1802,7 @@ class Awm(Item):
 
     ammunition = 5
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1830,7 +1822,7 @@ class Awm(Item):
         return False
 
 class AwmMag(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1843,7 +1835,7 @@ class AwmMag(Item):
         return True
 
 class EmptyFlask(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1855,11 +1847,10 @@ class EmptyFlask(Item):
         return False
 
 class MethFlask(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global Player
         if args[0][0]:
             KDS.Scores.score += 1
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
@@ -1873,11 +1864,10 @@ class MethFlask(Item):
         return False
 
 class BloodFlask(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global Player
         if args[0][0]:
             KDS.Scores.score += 1
             Player.health += random.randint(0, 10)
@@ -1891,12 +1881,11 @@ class BloodFlask(Item):
         return False
 
 class Grenade(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        global Player
-        
+
         if KDS.Keys.altUp.pressed:
             KDS.World.Grenade_O.Slope += 0.03
         elif KDS.Keys.altDown.pressed:
@@ -1914,7 +1903,7 @@ class Grenade(Item):
         return False
 
 class FireExtinguisher(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1924,7 +1913,7 @@ class FireExtinguisher(Item):
         return False
 
 class LevelEnderItem(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1938,7 +1927,7 @@ class LevelEnderItem(Item):
         return False
 
 class Ppsh41Mag(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
     
     def pickup(self):
@@ -1949,7 +1938,7 @@ class Ppsh41Mag(Item):
 
 class Lantern(Item):
     Ianimation = KDS.Animator.Animation("lantern_burning", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
@@ -1973,13 +1962,12 @@ class Chainsaw(Item):
     ammunition = 100.0
     a_a = False
     Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
         self.pickupFinished = False
         self.pickupCounter = 0
 
     def use(self, *args):
-        global Player
         if self.pickupFinished and Chainsaw.ammunition > 0:
             if args[0][0]:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
@@ -2012,7 +2000,7 @@ class Chainsaw(Item):
         return False
 
 class GasCanister(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
+    def __init__(self, position: tuple, serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
@@ -2084,6 +2072,10 @@ class PlayerClass:
         self.light: bool = False
         self.godmode: bool = False
         self.dead: bool = False
+        self.air_timer = 0
+        self.movement: list = [0, 0]
+        self.walk_sound_delay = 9999
+        self.vertical_momentum = 0
         self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
             idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
@@ -2109,6 +2101,40 @@ class PlayerClass:
         self.animations.reset()
         self.deathSound.stop()
         
+    def update(self):
+        if self.godmode: self.health = 100.0
+        if self.health > 0:
+            self.movement = [0, 0]
+            fSpeed_copy = fall_speed
+
+            if KDS.Keys.moveUp.pressed and KDS.Keys.moveUp.ticksHeld == 0 and not KDS.Keys.moveDown.pressed and air_timer < 6 and not onLadder:
+                self.vertical_momentum = -10
+
+            if KDS.Keys.moveRun.pressed:
+                if self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
+                else: self.stamina -= 0.75     
+            elif self.stamina < 100.0: self.stamina += 0.25
+
+            if KDS.Keys.moveRight.pressed:
+                if not KDS.Keys.moveDown.pressed: self.movement[0] += 4
+                else: self.movement[0] += 2
+                if KDS.Keys.moveRun.pressed and self.stamina > 0: self.movement[0] += 4
+
+            if KDS.Keys.moveLeft.pressed:
+                if not KDS.Keys.moveDown.pressed: self.movement[0] -= 4
+                else: self.movement[0] -= 2
+                if KDS.Keys.moveRun.pressed and self.stamina > 0: self.movement[0] -= 4
+
+            if not self.movement[0] or self.air_timer > 1:
+                self.walk_sound_delay = 9999
+            self.walk_sound_delay += abs(self.movement[0])
+            s = (self.walk_sound_delay > 60) if play_walk_sound else False
+            if s: self.walk_sound_delay = 0
+            self.movement[1] += self.vertical_momentum
+            self.vertical_momentum += fall_speed * fall_multiplier
+            self.rect, collisions = KDS.World.move_entity(self.rect, self.movement, tiles, w_sounds=path_sounds, playWalkSound=s)
+        else:
+            pass
 Player = PlayerClass()
 #endregion
 #region Player
@@ -2166,7 +2192,7 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
 #endregion
 #region Console
 def console():
-    global level_finished, go_to_console, Player
+    global level_finished, go_to_console
     go_to_console = False
 
     itemDict = {}
@@ -2416,7 +2442,7 @@ def agr(tcagr: bool):
 #region Game Functions
 def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
-    global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave, Player
+    global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
         display.fill(scaled_loadingScreen.get_at((0, 0)))
@@ -2462,7 +2488,6 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
 
 def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
-    
     global Items, Enemies, Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
     KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
@@ -2477,7 +2502,6 @@ def save_function():
     KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
     KDS.ConfigManager.Save.SetData("Player/keys", Player.keys)
     KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
-    
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
@@ -2487,18 +2511,14 @@ def save_function():
 def load_function():
     newSave = KDS.ConfigManager.Save.init(1)
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
-    
-    if not newSave:
-        global Items, Enemies, Explosions, BallisticObjects
-        Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
-        Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
-        Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
-        BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
-    
-        Player
+    global Items, Enemies, Explosions, BallisticObjects
+    Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
+    Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
+    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
+    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
 
 def respawn_function():
-    global animation_has_played, level_finished, death_wait, Player
+    global animation_has_played, level_finished, death_wait
     Player.reset()
     animation_has_played = False
     level_finished = False
@@ -3356,8 +3376,10 @@ while main_running:
         if not KDS.Keys.moveDown.pressed: player_movement[0] -= 4
         else: player_movement[0] -= 2
         if KDS.Keys.moveRun.pressed and Player.stamina > 0: player_movement[0] -= 4
+
     for i in range(round(abs(player_movement[0]))):
         KDS.Missions.Listeners.Movement.Trigger()
+
     player_movement[1] += vertical_momentum
     vertical_momentum += fall_speed_copy
     if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
