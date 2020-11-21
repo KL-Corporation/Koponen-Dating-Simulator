@@ -500,7 +500,6 @@ def LoadGameSettings():
 LoadGameSettings()
 #endregion
 #region World Data
-imps = []
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
