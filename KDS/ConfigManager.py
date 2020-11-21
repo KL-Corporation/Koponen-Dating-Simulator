@@ -122,7 +122,9 @@ class Save:
                     ↳ farting (bool)
                 ↳ Koponen
                     ↳ position (tuple)
-                ↳ 
+                ↳ Renderer
+                    ↳ scroll (list)
+                    
     """
     class DataType:
         World = "world"
