@@ -491,12 +491,12 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, fall_max_velocity, item_fall_speed
+    global fall_speed, fall_multiplier, fall_max_velocity, item_fall_speed, item_fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameData("Physics/Player/fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Player/fallMaxVelocity")
     item_fall_speed = KDS.ConfigManager.GetGameData("Physics/Items/fallSpeed")
-    item_max_velocity = KDS.ConfigManager.GetGameData("Physics/Items/fallNaxVelocity")
+    item_fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Items/fallMaxVelocity")
 LoadGameSettings()
 #endregion
 #region World Data
@@ -1400,7 +1400,7 @@ class Item:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
             if renderable.physics:
-                renderable.momentum = min(renderable.momentum + item_fall_speed, fall_max_velocity)
+                renderable.momentum = min(renderable.momentum + item_fall_speed, item_fall_max_velocity)
                 renderable.rect.y += renderable.momentum
                 collisions = KDS.World.collision_test(renderable.rect, tiles)
                 if len(collisions) > 0:
