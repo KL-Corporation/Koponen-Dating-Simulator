@@ -3414,10 +3414,6 @@ while main_running:
         koponen_movingx = -koponen_movingx
 
 #endregion
-#region Pelaajan elämätilanteen käsittely
-#endregion
-#region Player Data
-#endregion
 #region Koponen Movement
     if koponen_movement[0] != 0:
         koponen_animations.trigger("walk")
