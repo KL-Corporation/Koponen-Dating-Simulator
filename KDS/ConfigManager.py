@@ -8,7 +8,7 @@ import KDS.Gamemode
 import KDS.Logging
 import os
 import zipfile
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath
@@ -110,14 +110,12 @@ class Save:
             ↳ explosions.kbf (binary)
             ↳ ballistic_objects.kbf (binary)
             ↳ missions.kbf (binary)
+            ↳ inventory.kbf (binary)
             ↳ data.kdf (json)
                 ↳ Player
                     ↳ position (tuple)
                     ↳ health (float)
                     ↳ stamina (float)
-                    ↳ Inventory
-                        ↳ storage (list)
-                        ↳ index (int)
                     ↳ keys: (dict)
                     ↳ farting (bool)
                 ↳ Koponen
@@ -137,7 +135,7 @@ class Save:
             if os.path.isfile(Save.PlayerFileCache):
                 _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
                 shutil.make_archive(_path, 'zip', SaveCachePath)
-                shutil.move(f"{_path}.zip", _path)
+                shutil.move(_path + ".zip", _path)
             shutil.rmtree(SaveCachePath)
         #encodes and stores a save file to storage
 
@@ -178,10 +176,6 @@ class Save:
                 if hasattr(item, "toSave"):
                     if callable(item.toSave): item.toSave()
                     else: KDS.Logging.AutoError(f"toSave of {item} is not callable!")
-                for thingy in item.__dict__:
-                    print(item.__dict__[thingy])
-                    if isinstance(item.__dict__[thingy], pygame.Surface):
-                        print(thingy)
         elif callable(SaveItem.toSave): SaveItem.toSave()
         else: KDS.Logging.AutoError(f"toSave of {SaveItem} is not callable!")
     
@@ -194,19 +188,15 @@ class Save:
                     else: KDS.Logging.AutoError(f"fromSave of {item} is not callable!")
                 for thingy in item.__dict__:
                     print(item.__dict__[thingy])
-                    if isinstance(item.__dict__[thingy], pygame.Surface):
-                        print(thingy)
         elif callable(SaveItem.fromSave): SaveItem.fromSave()
         else: KDS.Logging.AutoError(f"fromSave of {SaveItem} is not callable!")
     
     @staticmethod
     def SetWorld(path: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            _path = os.path.join(SaveDirPath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
+            _path = os.path.join(SaveCachePath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
             Save.ConvertToSave(SaveItem)
             try:
-                rl = list(filter(lambda a: not a.startswith('__'), dir(SaveItem[0])))
-                print(rl)
                 with open(_path, "wb") as f:
                     temp = pickle.dumps(SaveItem)
                     f.write(temp)
@@ -216,12 +206,13 @@ class Save:
     @staticmethod
     def GetWorld(path: str, DefaultValue):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            _path = os.path.join(SaveDirPath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
+            _path = os.path.join(SaveCachePath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
             if os.path.isfile(_path):
                 try:
                     with open(_path, "rb") as f:
                         data = pickle.loads(f.read())
                         Save.ConvertFromSave(data)
+                    return data
                 except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
         return DefaultValue
     
@@ -233,12 +224,13 @@ class Save:
     @staticmethod
     def GetData(path: str, default: Any):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            JSON.Get(Save.PlayerFileCache, path, default)
+            return JSON.Get(Save.PlayerFileCache, path, default)
         else: return default
     
     ignoreTileTypes = [
         pygame.Surface,
         pygame.mixer.Sound,
+        pygame.Rect,
         KDS.Animator.Animation,
         KDS.Animator.MultiAnimation
     ]
@@ -246,19 +238,29 @@ class Save:
     @staticmethod
     def SetTiles(tiles, specialTilesD):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            for tile in tiles:
-                if tile.serialNumber in specialTilesD:
-                    tileVars: Dict[Any] = tile.__dict__()
-                    delKeys = []
-                    for var in tileVars:
-                        for ignore in Save.ignoreTileTypes:
-                            if isinstance(tileVars[var], ignore):
-                                delKeys.append(var)
-                                break
-                    for _del in delKeys:
-                        deld = tileVars.pop(_del)
-                        KDS.Logging.Log(KDS.Logging.LogType.debug, f"Deleted variable [{_del}, {deld}] from special tile of type {tile.serialNumber} at position {tile.rect.topleft}.")
-                    Save.SetData(f"Game/SpecialTiles/{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}", tileVars)
+            tiles = tiles.copy()
+            for row in tiles:
+                for tile in row:
+                    if tile.serialNumber in specialTilesD:
+                        tileVars: Dict[Any] = tile.__dict__
+                        ignoreKeys = []
+                        for key in tileVars:
+                            if isinstance(tileVars[key], list) or isinstance(tileVars[key], tuple):
+                                for ignore in Save.ignoreTileTypes:
+                                    if isinstance(tileVars[key][0], ignore):
+                                        ignoreKeys.append(key)
+                                        break
+                            for ignore in Save.ignoreTileTypes:
+                                if isinstance(tileVars[key], ignore):
+                                    ignoreKeys.append(key)
+                                    break
+                        saveVars = {}
+                        for key, var in tileVars.items():
+                            if key not in ignoreKeys:
+                                saveVars[key] = var
+                            else:
+                                KDS.Logging.Log(KDS.Logging.LogType.debug, f"Ignored variable [{key}, {var}] from special tile of type {tile.serialNumber} at position {tile.rect.topleft}.")
+                        Save.SetData(f"Game/SpecialTiles/{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}", saveVars)
     
     @staticmethod
     def GetTiles(tiles):
