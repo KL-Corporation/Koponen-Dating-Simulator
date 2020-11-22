@@ -3402,9 +3402,8 @@ while main_running:
     ##################################################################################################################################################################
 
 #endregion
-#region PlayerMovement
+#region Player
     Player.update()
-
 #endregion
 #region AI
     koponen_rect, k_collisions = KDS.World.move_entity(koponen_rect, koponen_movement, tiles)
