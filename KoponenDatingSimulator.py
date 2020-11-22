@@ -500,7 +500,6 @@ def LoadGameSettings():
 LoadGameSettings()
 #endregion
 #region World Data
-imps = []
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
@@ -3566,8 +3565,6 @@ while main_running:
             level_finished = True
         else:
             pass
-
-    #print("Player position: " + str(Player.rect.topleft) + " Angle: " + str(KDS.Math.getAngle((Player.rect.x,Player.rect.y),imps[0].rect.topleft)))
 
 #endregion
 #region Conditional Events
