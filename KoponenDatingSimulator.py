@@ -3310,6 +3310,7 @@ while main_running:
                         Items = numpy.append(Items, tempItem)
                         del tempItem
 
+    Player.update()
     Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
     for item in Player.inventory.storage:
@@ -3405,9 +3406,6 @@ while main_running:
     ##################################################################################################################################################################
     ##################################################################################################################################################################
 
-#endregion
-#region Player
-    Player.update()
 #endregion
 #region AI
     koponen_rect, k_collisions = KDS.World.move_entity(koponen_rect, koponen_movement, tiles)
