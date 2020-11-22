@@ -857,6 +857,7 @@ class Jukebox(Tile):
         for musiken in musikerna:
             self.songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
         random.shuffle(self.songs)
+        self.songs = tuple(self.songs)
 
     def stopPlayingTrack(self):
         for music in self.songs:
@@ -925,7 +926,7 @@ class Landmine(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
         self.texture = landmine_texture
-        self.rect = pygame.Rect(position[0], position[1]+26, 22, 11)
+        self.rect = pygame.Rect(position[0], position[1] + 26, 22, 11)
         self.checkCollision = False
 
     def update(self):
@@ -2490,10 +2491,12 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
 
 def save_function():
+    KDS.ConfigManager.Save.init(1)
+    
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
     global Items, Enemies, Explosions, BallisticObjects
-    KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
-    KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
+    #KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
+    #KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
     KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
     KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
     KDS.ConfigManager.Save.SetWorld("missions", KDS.Missions.Missions)
@@ -2501,25 +2504,27 @@ def save_function():
     KDS.ConfigManager.Save.SetData("Player/position", Player.rect.topleft)
     KDS.ConfigManager.Save.SetData("Player/health", Player.health)
     KDS.ConfigManager.Save.SetData("Player/stamina", Player.stamina)
-    KDS.ConfigManager.Save.SetData("Player/Inventory/storage", Player.inventory.storage)
-    KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
+    #KDS.ConfigManager.Save.SetData("Player/Inventory/storage", Player.inventory.storage)
+    #KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
     KDS.ConfigManager.Save.SetData("Player/keys", Player.keys)
     KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
-    KDS.ConfigManager.Save.quit()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
     global tiles, specialTilesD
     KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD)
+    
+    KDS.ConfigManager.Save.init(1)
 
 def load_function():
+    KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Story, 1)
     newSave = KDS.ConfigManager.Save.init(1)
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
     
     if not newSave:
         global Items, Enemies, Explosions, BallisticObjects
-        Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
+        #Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
         Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
         Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
         BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
@@ -2527,8 +2532,8 @@ def load_function():
         Player.rect.topleft = tuple(KDS.ConfigManager.Save.GetData("Player/position", Player.rect.topleft))
         Player.health = KDS.ConfigManager.Save.GetData("Player/health", Player.health)
         Player.stamina = KDS.ConfigManager.Save.GetData("Player/stamina", Player.stamina)
-        Player.inventory.storage = KDS.ConfigManager.Save.GetData("Player/Inventory/storage", Player.inventory.storage)
-        Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
+        #Player.inventory.storage = KDS.ConfigManager.Save.GetData("Player/Inventory/storage", Player.inventory.storage)
+        #Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
         Player.keys = KDS.ConfigManager.Save.GetData("Player/keys", Player.keys)
         Player.farting = KDS.ConfigManager.Save.GetData("Player/farting", Player.farting)
         global tiles
@@ -2800,10 +2805,9 @@ def main_menu():
     story_save_button_0_rect = pygame.Rect(14, 14, 378, 500)
     story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
     story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
-    story_save_buttons_rects = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)
-    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, play_function)
-    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, play_function)
-    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, play_function)
+    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, load_function)
+    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, load_function)
+    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, load_function)
     story_new_save = button_font1.render("Start New Save", True, KDS.Colors.White)
     #endregion 
     #region Campaign Menu
@@ -2902,6 +2906,7 @@ def main_menu():
                     elif y == 1:
                         gamemode_bc_2_2.set_alpha(int(gamemode_bc_2_alpha.update(False)))
                         display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
+        
         elif MenuMode == Mode.StoryMenu:
             pygame.draw.rect(
                 display, KDS.Colors.DarkGray, story_save_button_0_rect, 10)
@@ -2910,12 +2915,9 @@ def main_menu():
             pygame.draw.rect(
                 display, KDS.Colors.DarkGray, story_save_button_2_rect, 10)
             
-            story_save_button_0.update(
-                display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
-            story_save_button_1.update(
-                display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
-            story_save_button_2.update(
-                display, mouse_pos, c, KDS.Gamemode.Modes.Story, True)
+            story_save_button_0.update(display, mouse_pos, c)
+            story_save_button_1.update(display, mouse_pos, c)
+            story_save_button_2.update(display, mouse_pos, c)
             
             #Äh, teen joskus
             
