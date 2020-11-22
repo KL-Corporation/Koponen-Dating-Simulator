@@ -666,7 +666,7 @@ class Inventory:
         index = 0
         for i in self.storage:
             if not isinstance(i, str) and i.serialNumber in i_textures:
-                Surface.blit(i.texture, (int(index * 34 + 10 + i.texture.get_size()[0] / 4), int(75 + i.texture.get_size()[1] / 4)))
+                Surface.blit(i.texture, (int(index * 34 + 10 + i.texture_size[0] / 4), int(75 + i.texture_size[1] / 4)))
             index += 1
 
     def moveRight(self):
@@ -1383,11 +1383,10 @@ class Item:
 
     serialNumbers = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
-        if serialNumber:
-            self.texture = texture
-        self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[
-                                1]), self.texture.get_size()[0], self.texture.get_size()[1])
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
+        self.texture = texture
+        self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
+        self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
         self.serialNumber = serialNumber
         self.physics = False
         self.momentum = 0
@@ -1398,7 +1397,8 @@ class Item:
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
+            if renderable.texture != None:
+                Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
             if renderable.physics:
                 renderable.momentum = min(renderable.momentum + item_fall_speed, item_fall_max_velocity)
                 renderable.rect.y += renderable.momentum

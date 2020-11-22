@@ -163,7 +163,6 @@ class Save:
             if os.path.isfile(_path):
                 zipfile.ZipFile(_path, "r").extractall(SaveCachePath)
                 return False
-            else: return True
         return True
 
         #decodes and loads a save file to cache
@@ -181,6 +180,10 @@ class Save:
                 for item in SaveItem:
                     toSaveF = getattr(item, "toSave", None)
                     if callable(toSaveF): toSaveF()
+                    for thingy in item.__dict__:
+                        print(item.__dict__[thingy])
+                        if isinstance(item.__dict__[thingy], pygame.Surface):
+                            print(thingy)
             elif callable(toSaveF): toSaveF()
             
             try:
@@ -203,8 +206,7 @@ class Save:
                     fromSaveF = getattr(item, "fromSave", None)
                     if callable(fromSaveF): fromSaveF()
                 return data
-            else: return DefaultValue
-        else: return DefaultValue
+        return DefaultValue
     
     @staticmethod            
     def SetData(path: str, item: Any):
