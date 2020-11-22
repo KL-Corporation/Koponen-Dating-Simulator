@@ -2149,10 +2149,10 @@ class PlayerClass:
         self.light: bool = False
         self.godmode: bool = False
         self.dead: bool = False
-        self.air_timer = 0
-        self.movement: list = [0, 0]
-        self.walk_sound_delay = 9999
-        self.vertical_momentum = 0
+        self.air_timer: int = 0
+        self.movement: List[float] = [0, 0]
+        self.walk_sound_delay: float = 9999
+        self.vertical_momentum: float = 0
         self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
             idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
@@ -2212,47 +2212,6 @@ class PlayerClass:
             self.rect, collisions = KDS.World.move_entity(self.rect, self.movement, tiles, w_sounds=path_sounds, playWalkSound=s)
         else:
             pass
-Player = PlayerClass()
-#endregion
-#region Player
-class PlayerClass:
-    def __init__(self) -> None:
-        self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name: str = "Sinä"
-        self.health: float = 100.0
-        self.lastHealth: float = self.health
-        self.stamina: float = 100.0
-        self.inventory: Inventory = Inventory(5)
-        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
-        self.farting: bool = False
-        self.light: bool = False
-        self.godmode: bool = False
-        self.dead: bool = False
-        self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
-            idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
-        )
-        self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
-
-    def reset(self):
-        self.rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name = "Sinä"
-        self.health = 100.0
-        self.lastHealth = self.health
-        self.stamina = 100.0
-        self.inventory = Inventory(5)
-        self.keys = { "red": False, "green": False, "blue": False }
-        self.farting = False
-        self.light = False
-        self.dead = False
-        self.animations.reset()
-        self.deathSound.stop()
-        
 Player = PlayerClass()
 #endregion
 #region Console
