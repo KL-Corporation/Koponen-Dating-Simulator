@@ -1227,17 +1227,18 @@ class RespawnAnchor(Tile):
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
             return self.ontexture
-        elif self.rect.colliderect(Player.rect):
-            screen.blit(respawn_anchor_tip, (self.rect.centerx - scroll[0] - int(respawn_anchor_tip.get_width() / 2), self.rect.top - scroll[1] - 50))
-            if KDS.Keys.functionKey.clicked:
-                RespawnAnchor.active = self
-                RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - Player.rect.height + 34)
-                loopStopper = 0
-                oldSound = self.sound
-                while self.sound == oldSound and loopStopper < 10:
-                    self.sound = random.choice(respawn_anchor_sounds)
-                    loopStopper += 1
-                KDS.Audio.playSound(self.sound)
+        else: 
+            if self.rect.colliderect(Player.rect):
+                screen.blit(respawn_anchor_tip, (self.rect.centerx - scroll[0] - int(respawn_anchor_tip.get_width() / 2), self.rect.top - scroll[1] - 50))
+                if KDS.Keys.functionKey.clicked:
+                    RespawnAnchor.active = self
+                    RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - Player.rect.height + 34)
+                    loopStopper = 0
+                    oldSound = self.sound
+                    while self.sound == oldSound and loopStopper < 10:
+                        self.sound = random.choice(respawn_anchor_sounds)
+                        loopStopper += 1
+                    KDS.Audio.playSound(self.sound)
         return self.texture
 
 class Spruce(Tile):
@@ -2547,9 +2548,9 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
 
 def save_function():
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Saving Game...")
     KDS.ConfigManager.Save.init(1)
     
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
     global Items, Enemies, Explosions, BallisticObjects
     #KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
     #KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
@@ -2566,34 +2567,37 @@ def save_function():
     KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
-    KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
     global tiles, specialTilesD
-    KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD)
+    KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
     
     KDS.ConfigManager.Save.init(1)
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Saved.")
 
 def load_function():
     KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Story, 1)
     newSave = KDS.ConfigManager.Save.init(1)
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
+    if newSave: return
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
     
-    if not newSave:
-        global Items, Enemies, Explosions, BallisticObjects
-        #Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
-        Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
-        Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
-        BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
-        global Player
-        Player.rect.topleft = tuple(KDS.ConfigManager.Save.GetData("Player/position", Player.rect.topleft))
-        Player.health = KDS.ConfigManager.Save.GetData("Player/health", Player.health)
-        Player.stamina = KDS.ConfigManager.Save.GetData("Player/stamina", Player.stamina)
-        #Player.inventory.storage = KDS.ConfigManager.Save.GetData("Player/Inventory/storage", Player.inventory.storage)
-        #Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
-        Player.keys = KDS.ConfigManager.Save.GetData("Player/keys", Player.keys)
-        Player.farting = KDS.ConfigManager.Save.GetData("Player/farting", Player.farting)
-        global tiles
-        KDS.ConfigManager.Save.GetTiles(tiles)
+    global Items, Enemies, Explosions, BallisticObjects
+    #Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
+    Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
+    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
+    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
+    global Player
+    Player.rect.topleft = tuple(KDS.ConfigManager.Save.GetData("Player/position", Player.rect.topleft))
+    Player.health = KDS.ConfigManager.Save.GetData("Player/health", Player.health)
+    Player.stamina = KDS.ConfigManager.Save.GetData("Player/stamina", Player.stamina)
+    #Player.inventory.storage = KDS.ConfigManager.Save.GetData("Player/Inventory/storage", Player.inventory.storage)
+    #Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
+    Player.keys = KDS.ConfigManager.Save.GetData("Player/keys", Player.keys)
+    Player.farting = KDS.ConfigManager.Save.GetData("Player/farting", Player.farting)
+    global koponen_rect, scroll
+    koponen_rect.topleft = KDS.ConfigManager.Save.GetData("Koponen/position", koponen_rect.topleft)
+    global tiles
+    KDS.ConfigManager.Save.GetTiles(tiles, RespawnAnchor)
+    KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
 
 def respawn_function():
     global animation_has_played, level_finished, death_wait

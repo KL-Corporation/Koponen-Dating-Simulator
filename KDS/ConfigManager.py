@@ -236,7 +236,7 @@ class Save:
     ]
     
     @staticmethod
-    def SetTiles(tiles, specialTilesD):
+    def SetTiles(tiles, specialTilesD, RespawnAnchorClass):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             tiles = tiles.copy()
             for row in tiles:
@@ -261,9 +261,10 @@ class Save:
                             else:
                                 KDS.Logging.Log(KDS.Logging.LogType.debug, f"Ignored variable [{key}, {var}] from special tile of type {tile.serialNumber} at position {tile.rect.topleft}.")
                         Save.SetData(f"Game/SpecialTiles/{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}", saveVars)
+            Save.SetData("Game/SpecialTiles/Data/RespawnAnchor/active", f"{RespawnAnchorClass.active.rect.left}-{RespawnAnchorClass.active.rect.top}-{RespawnAnchorClass.active.serialNumber}" if RespawnAnchorClass.active != None else None)
     
     @staticmethod
-    def GetTiles(tiles):
+    def GetTiles(tiles, RespawnAnchorClass):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             savedSpecials = Save.GetData("Game/SpecialTiles", {})
             for row in tiles:
@@ -272,6 +273,8 @@ class Save:
                         vals: Dict[str, Any] = savedSpecials[f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}"]
                         for k, v in vals.items():
                             setattr(tile, k, v)
+                    if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" == Save.GetData("Game/SpecialTiles/Data/RespawnAnchor/active", None):
+                        RespawnAnchorClass.active = tile
 
 """
 def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
