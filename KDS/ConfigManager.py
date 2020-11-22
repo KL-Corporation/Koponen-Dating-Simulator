@@ -197,8 +197,6 @@ class Save:
             _path = os.path.join(SaveCachePath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
             Save.ConvertToSave(SaveItem)
             try:
-                rl = list(filter(lambda a: not a.startswith('__'), dir(SaveItem[0])))
-                print(rl)
                 with open(_path, "wb") as f:
                     temp = pickle.dumps(SaveItem)
                     f.write(temp)
