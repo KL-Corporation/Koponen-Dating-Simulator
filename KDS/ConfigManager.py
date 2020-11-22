@@ -170,42 +170,57 @@ class Save:
     @staticmethod
     def GetExistence(index: int):
         return True if os.path.isfile(os.path.join(SaveDirPath, f"save_{index}.kds")) else False
-     
+    
+    @staticmethod
+    def ConvertToSave(SaveItem):
+        if not hasattr(SaveItem, "toSave"):
+            for item in SaveItem:
+                if hasattr(item, "toSave"):
+                    if callable(item.toSave): item.toSave()
+                    else: KDS.Logging.AutoError(f"toSave of {item} is not callable!")
+                for thingy in item.__dict__:
+                    print(item.__dict__[thingy])
+                    if isinstance(item.__dict__[thingy], pygame.Surface):
+                        print(thingy)
+        elif callable(SaveItem.toSave): SaveItem.toSave()
+        else: KDS.Logging.AutoError(f"toSave of {SaveItem} is not callable!")
+    
+    @staticmethod
+    def ConvertFromSave(SaveItem):
+        if not hasattr(SaveItem, "fromSave"):
+            for item in SaveItem:
+                if hasattr(item, "fromSave"):
+                    if callable(item.fromSave): item.fromSave()
+                    else: KDS.Logging.AutoError(f"fromSave of {item} is not callable!")
+                for thingy in item.__dict__:
+                    print(item.__dict__[thingy])
+                    if isinstance(item.__dict__[thingy], pygame.Surface):
+                        print(thingy)
+        elif callable(SaveItem.fromSave): SaveItem.fromSave()
+        else: KDS.Logging.AutoError(f"fromSave of {SaveItem} is not callable!")
+    
     @staticmethod
     def SetWorld(path: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             _path = os.path.join(SaveDirPath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
-            toSaveF = getattr(SaveItem, "toSave", None)
-            if toSaveF == None:
-                for item in SaveItem:
-                    toSaveF = getattr(item, "toSave", None)
-                    if callable(toSaveF): toSaveF()
-                    for thingy in item.__dict__:
-                        print(item.__dict__[thingy])
-                        if isinstance(item.__dict__[thingy], pygame.Surface):
-                            print(thingy)
-            elif callable(toSaveF): toSaveF()
-            
+            Save.ConvertToSave(SaveItem)
             try:
                 with open(_path, "wb") as f:
                     temp = pickle.dumps(SaveItem)
                     f.write(temp)
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-            for item in SaveItem:
-                fromSaveF = getattr(item, "fromSave", None)
-                if callable(fromSaveF): fromSaveF()
+            Save.ConvertFromSave(SaveItem)
     
     @staticmethod
     def GetWorld(path: str, DefaultValue):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             _path = os.path.join(SaveDirPath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
             if os.path.isfile(_path):
-                with open(_path, "rb") as f:
-                    data = pickle.loads(f.read())
-                for item in data:
-                    fromSaveF = getattr(item, "fromSave", None)
-                    if callable(fromSaveF): fromSaveF()
-                return data
+                try:
+                    with open(_path, "rb") as f:
+                        data = pickle.loads(f.read())
+                        Save.ConvertFromSave(data)
+                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
         return DefaultValue
     
     @staticmethod            
