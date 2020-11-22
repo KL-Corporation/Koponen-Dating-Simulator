@@ -367,7 +367,7 @@ class BallisticProjectile:
         """
         if isinstance(self.texture, list):
             colorkey = self.texture[1]
-            self.texture = pygame.surfarray.make_surface(self.texture[0]).convert()
+            self.texture = pygame.surfarray.make_surface(numpy.array(self.texture[0])).convert()
             if colorkey != None:
                 self.texture.set_colorkey(colorkey)
 

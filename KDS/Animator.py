@@ -1,4 +1,6 @@
 from typing import Callable, Tuple
+
+import numpy
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
@@ -100,7 +102,7 @@ class Animation:
     def fromSave(self):
         for i in range(len(self.images)):
             if isinstance(self.images[i], list):
-                self.images[i] = pygame.surfarray.make_surface(self.images[i]).convert()
+                self.images[i] = pygame.surfarray.make_surface(numpy.array(self.images[i])).convert()
                 self.images[i].set_colorkey(self.colorkey)
 
 class MultiAnimation:

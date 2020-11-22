@@ -1,12 +1,14 @@
 #region Importing
 import json
-import pickle
+import dill as pickle
 import shutil
-from typing import Any
+import pygame
+import KDS.Animator
 import KDS.Gamemode
 import KDS.Logging
 import os
 import zipfile
+from typing import Any, Dict
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath
@@ -120,8 +122,10 @@ class Save:
                     ↳ farting (bool)
                 ↳ Koponen
                     ↳ position (tuple)
-                ↳ Renderer
+                ↳ Game
                     ↳ scroll (list)
+                    ↳ SpecialTiles
+                        ↳ [{pos[0]}-{pos[1]}-{serial}] (dict of class values except pygame shite)
     """
     class DataType:
         World = "world"
@@ -172,9 +176,13 @@ class Save:
     def SetWorld(path: str, SaveItem):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             _path = os.path.join(SaveDirPath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
-            for item in SaveItem:
-                toSaveF = getattr(item, "toSave", None)
-                if callable(toSaveF): toSaveF()
+            toSaveF = getattr(SaveItem, "toSave", None)
+            if toSaveF == None:
+                for item in SaveItem:
+                    toSaveF = getattr(item, "toSave", None)
+                    if callable(toSaveF): toSaveF()
+            elif callable(toSaveF): toSaveF()
+            
             try:
                 with open(_path, "wb") as f:
                     temp = pickle.dumps(SaveItem)
@@ -208,6 +216,41 @@ class Save:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             JSON.Get(Save.PlayerFileCache, path, default)
         else: return default
+    
+    ignoreTileTypes = [
+        pygame.Surface,
+        pygame.mixer.Sound,
+        KDS.Animator.Animation,
+        KDS.Animator.MultiAnimation
+    ]
+    
+    @staticmethod
+    def SetTiles(tiles, specialTilesD):
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            for tile in tiles:
+                if tile.serialNumber in specialTilesD:
+                    tileVars: Dict[Any] = tile.__dict__()
+                    delKeys = []
+                    for var in tileVars:
+                        for ignore in Save.ignoreTileTypes:
+                            if isinstance(tileVars[var], ignore):
+                                delKeys.append(var)
+                                break
+                    for _del in delKeys:
+                        deld = tileVars.pop(_del)
+                        KDS.Logging.Log(KDS.Logging.LogType.debug, f"Deleted variable [{_del}, {deld}] from special tile of type {tile.serialNumber} at position {tile.rect.topleft}.")
+                    Save.SetData(f"Game/SpecialTiles/{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}", tileVars)
+    
+    @staticmethod
+    def GetTiles(tiles):
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            savedSpecials = Save.GetData("Game/SpecialTiles", {})
+            for row in tiles:
+                for tile in row:
+                    if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" in savedSpecials:
+                        vals: Dict[str, Any] = savedSpecials[f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}"]
+                        for k, v in vals.items():
+                            setattr(tile, k, v)
 
 """
 def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):

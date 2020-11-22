@@ -274,9 +274,9 @@ class HostileEnemy:
             
     def fromSave(self):
         if isinstance(self.sight_sound, list):
-            self.sight_sound = pygame.sndarray.make_sound(self.sight_sound)
+            self.sight_sound = pygame.sndarray.make_sound(numpy.array(self.sight_sound))
         if isinstance(self.death_sound, list):
-            self.death_sound = pygame.sndarray.make_sound(self.death_sound)
+            self.death_sound = pygame.sndarray.make_sound(numpy.array(self.death_sound))
 
     def onDeath(self):
         pass

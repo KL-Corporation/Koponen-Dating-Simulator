@@ -491,10 +491,12 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, awm_ammo, fall_max_velocity, renderPadding
+    global fall_speed, fall_multiplier, fall_max_velocity, item_fall_speed
     fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameData("Physics/Player/fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Player/fallMaxVelocity")
+    item_fall_speed = KDS.ConfigManager.GetGameData("Physics/Items/fallSpeed")
+    item_max_velocity = KDS.ConfigManager.GetGameData("Physics/Items/fallNaxVelocity")
 LoadGameSettings()
 #endregion
 #region World Data
@@ -745,7 +747,6 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
 #region Tiles
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
 class Tile:
-
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.serialNumber = serialNumber
@@ -784,20 +785,6 @@ class Tile:
 
     def update(self):
         return self.texture
-    
-    def toSave(self):
-        if not isinstance(self.texture, list) and not isinstance(self.texture, str):
-            if self.texture == t_textures[self.serialNumber]:
-                self.texture = "loadFromSerial"
-            else:
-                self.texture = pygame.surfarray.array2d(self.texture).tolist()
-    
-    def fromSave(self):
-        if isinstance(self.texture, list):
-            self.texture = pygame.surfarray.make_surface(self.texture).convert()
-            self.texture.set_colorkey(KDS.Colors.White)
-        elif self.texture == "loadFromSerial":
-            self.texture = t_textures[self.serialNumber]
         
 class Toilet(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
@@ -807,14 +794,6 @@ class Toilet(Tile):
         self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.White), KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
-        
-    def toSave(self):
-        super().toSave()
-        self.animation.toSave()
-        
-    def fromSave(self):
-        super().fromSave()
-        self.animation.fromSave()
 
     def update(self):
         global renderPlayer
@@ -844,14 +823,6 @@ class Trashcan(Tile):
         self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
-                
-    def toSave(self):
-        super().toSave()
-        self.animation.toSave()
-        
-    def fromSave(self):
-        super().fromSave()
-        self.animation.fromSave()
 
     def update(self):
         
@@ -1418,14 +1389,23 @@ class Item:
         self.rect = pygame.Rect(position[0], position[1]+(34-self.texture.get_size()[
                                 1]), self.texture.get_size()[0], self.texture.get_size()[1])
         self.serialNumber = serialNumber
+        self.physics = False
+        self.momentum = 0
 
     @staticmethod
     # Item_list is a 2d numpy array
-    def render(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
+    def renderUpdate(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
+            if renderable.physics:
+                renderable.momentum = min(renderable.momentum + item_fall_speed, fall_max_velocity)
+                renderable.rect.y += renderable.momentum
+                collisions = KDS.World.collision_test(renderable.rect, tiles)
+                if len(collisions) > 0:
+                    renderable.rect.bottom = collisions[0].rect.top
+                    renderable.physics = False
 
     @staticmethod
     def checkCollisions(Item_list: Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Tuple[int, int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
@@ -1483,7 +1463,7 @@ class Item:
         """Converts all strings back to textures
         """
         if isinstance(self.texture, list):
-            self.texture = pygame.surfarray.make_surface(self.texture).convert()
+            self.texture = pygame.surfarray.make_surface(numpy.array(self.texture)).convert()
             self.texture.set_colorkey(KDS.Colors.White)
 
     def pickup(self):
@@ -2531,6 +2511,8 @@ def save_function():
     KDS.ConfigManager.Save.SetData("Renderer/scroll", scroll)
     KDS.ConfigManager.Save.quit()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
+    global tiles, specialTilesD
+    KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD)
 
 def load_function():
     newSave = KDS.ConfigManager.Save.init(1)
@@ -2550,6 +2532,8 @@ def load_function():
         Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
         Player.keys = KDS.ConfigManager.Save.GetData("Player/keys", Player.keys)
         Player.farting = KDS.ConfigManager.Save.GetData("Player/farting", Player.farting)
+        global tiles
+        KDS.ConfigManager.Save.GetTiles(tiles)
 
 def respawn_function():
     global animation_has_played, level_finished, death_wait
@@ -3125,18 +3109,10 @@ while main_running:
             elif event.key == K_q:
                 if Player.inventory.getHandItem() != "none" and Player.inventory.getHandItem() != Inventory.doubleItem:
                     temp = Player.inventory.dropItem()
-                    temp.rect.x = Player.rect.centerx
-                    temp.rect.y = Player.rect.centery
-                    counter = 0
-                    while True:
-                        temp.rect.y += temp.rect.height
-                        for collision in KDS.World.collision_test(temp.rect, tiles):
-                            temp.rect.bottom = collision.rect.top
-                            counter = 250
-                        counter += 1
-                        if counter > 250:
-                            break
-                        
+                    temp.rect.midbottom = Player.rect.midbottom
+                    temp.physics = True
+                    # Set momentum as player momentum?
+                    temp.momentum = 0
                     Items = numpy.append(Items, temp)
             elif event.key == K_f:
                 if Player.stamina == 100:
@@ -3273,7 +3249,7 @@ while main_running:
                         Items = numpy.append(Items, tempItem)
                         del tempItem
 
-    Item.render(Items, screen, scroll, DebugMode)
+    Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
     for item in Player.inventory.storage:
         if isinstance(item, Lantern):
@@ -3415,8 +3391,7 @@ while main_running:
         KDS.Missions.Listeners.Movement.Trigger()
 
     player_movement[1] += vertical_momentum
-    vertical_momentum += fall_speed_copy
-    if vertical_momentum > fall_max_velocity: vertical_momentum = fall_max_velocity
+    vertical_momentum = min(vertical_momentum + fall_speed_copy, fall_max_velocity)
 
     if check_crouch == True:
         crouch_collisions = KDS.World.move_entity(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), (0, 0), tiles, False, True)[1]
