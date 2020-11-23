@@ -507,6 +507,8 @@ class WorldData():
         global Items, tiles, Enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
+        if not ( os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "music.ogg")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
+            return None
         if os.path.isdir(PersistentMapPath):
             shutil.rmtree(PersistentMapPath)
         if os.path.isdir(MapPath):
@@ -2501,7 +2503,7 @@ def agr(tcagr: bool):
     return True
 #endregion
 #region Game Functions
-def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
+def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
     global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
@@ -2525,7 +2527,10 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     
     LoadGameSettings()
 
-    Player.rect.topleft, koponen_rect.topleft = WorldData.LoadMap(loadEntities)
+    wdata = WorldData.LoadMap(loadEntities)
+    if not wdata:
+        return 1
+    Player.rect.topleft, koponen_rect.topleft = wdata
 
     #region Set Game Data
     global animation_has_played, level_finished, death_wait
@@ -2546,6 +2551,7 @@ def play_function(gamemode: KDS.Gamemode.Modes and int, reset_scroll: bool, show
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
+    return 0
 
 def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Saving Game...")
@@ -3170,7 +3176,7 @@ while main_running:
             elif event.key == K_q:
                 if Player.inventory.getHandItem() != "none" and Player.inventory.getHandItem() != Inventory.doubleItem:
                     temp = Player.inventory.dropItem()
-                    temp.rect.midbottom = Player.rect.midbottom
+                    temp.rect.center = Player.rect.center
                     temp.physics = True
                     # Set momentum as player momentum?
                     temp.momentum = 0
