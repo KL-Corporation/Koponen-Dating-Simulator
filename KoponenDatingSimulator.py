@@ -498,11 +498,13 @@ class WorldData():
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
         if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
-            KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
+            KDS.Logging.AutoError(f"""
+##### MAP FILE ERROR #####
 Map Directory: {os.path.isdir(MapPath)}
 Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
 LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
 Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+##### MAP FILE ERROR #####
 """)
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             return None
