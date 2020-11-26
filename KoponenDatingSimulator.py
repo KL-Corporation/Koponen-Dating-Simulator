@@ -605,8 +605,11 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
                 if tile.serialNumber == 22:
                     tile.initHeight(tiles)
 
-        KDS.Audio.Music.play(os.path.join(PersistentMapPath, "music.ogg"))
+        #KDS.Audio.Music.play(os.path.join(PersistentMapPath, "music.ogg"))
+        if os.path.isfile(os.path.join(MapPath, "music.ogg")): KDS.Audio.Music.play(os.path.join(MapPath, "music.ogg"))
+        else: KDS.Audio.Music.play(os.path.join("Assets/Maps/levelMusics", KDS.ConfigManager.GetLevelProp("Music", "music.ogg")))
         return p_start_pos, k_start_pos
+
 #endregion
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
