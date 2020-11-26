@@ -634,9 +634,9 @@ del path_sounds_temp, default_paths, sounds
 
 sref = buildData["checkCollisionFalse"]
 
-""" CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
-Items.init(inventoryDobulesSerialNumbers, inventory_items)
-"""
+##### CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
+##### Items.init(inventoryDobulesSerialNumbers, inventory_items)
+
 #region Inventory
 class Inventory:
     emptySlot = "none"
