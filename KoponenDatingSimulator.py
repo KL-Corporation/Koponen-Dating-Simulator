@@ -845,15 +845,12 @@ class Trashcan(Tile):
             return self.texture
 
 class Jukebox(Tile):
-    @staticmethod
-    def __loadSongs():
-        musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
-        musics = []
-        for musiken in musikerna:
-            musics.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
-        random.shuffle(musics)
-        return tuple(musics)
-    songs = __loadSongs()
+    __musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
+    songs = []
+    for __musiken in __musikerna:
+        songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + __musiken))
+    random.shuffle(songs)
+    del __musikerna, __musiken
     
     def __init__(self, position: Tuple[int, int], serialNumber: int):      
         positionC = (position[0], position[1] - 26)
