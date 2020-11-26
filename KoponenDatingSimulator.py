@@ -404,7 +404,6 @@ selectedSave = 0
 explosion_positions = []
 direction = True
 esc_menu = False
-onLadder = False
 shotgun_loaded = True
 shotgun_cooldown = 0
 pistol_cooldown = 0
@@ -448,7 +447,6 @@ HitTargets = {}
 enemy_difficulty = 1
 tiles = numpy.array([])
 LightScroll = [0, 0]
-onLadder = False
 renderUI = True
 godmode = False
 walk_sound_delay = 0
@@ -464,7 +462,6 @@ true_scroll = [0, 0]
 stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
-check_crouch = False
 koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_movement = [1, 6]
 koponen_movingx = 0
@@ -952,9 +949,9 @@ class Ladder(Tile):
         self.checkCollision = False
 
     def update(self):
-        global onLadder
-        if self.rect.colliderect(Player.rect):
-            onLadder = True
+        global Player
+        if self.rect.colliderect(Player.rect): Player.onLadder = True
+        else: Player.onLadder = False
         return self.texture
 
 class Lamp(Tile):
@@ -2135,18 +2132,19 @@ class PlayerClass:
         self.dead: bool = False
         self.direction: bool = False
         self.walking: bool = False
-        self.check_crouch: bool = False
         self.air_timer: int = 0
         self.movement: List[float] = [0, 0]
         self.walk_sound_delay: float = 9999
         self.vertical_momentum: float = 0
+        self.onLadder: bool = False
+        self.crouching: bool = False
+        self.running: bool = False
         self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
             idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             run = KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             idle_short = KDS.Animator.Animation("idle_short", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             walk_short = KDS.Animator.Animation("walk_short", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-            run_short = KDS.Animator.Animation("walk_short", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
         )
         self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
@@ -2166,30 +2164,46 @@ class PlayerClass:
         self.deathSound.stop()
         
     def update(self):
+        def crouch(state: bool):
+            if state:
+                if not self.crouching:
+                    self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+                    self.crouching = True
+            elif self.crouching:
+                self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+                self.crouching = False
+        
         if self.godmode: self.health = 100.0
         if self.health > 0:
             self.movement = [0, 0]
             fspeed_copy = fall_speed
-            if KDS.Keys.moveUp.pressed and KDS.Keys.moveUp.ticksHeld == 0 and not KDS.Keys.moveDown.pressed and self.air_timer < 6 and not onLadder:
+            if KDS.Keys.moveUp.pressed and KDS.Keys.moveUp.ticksHeld == 0 and not KDS.Keys.moveDown.pressed and self.air_timer < 6 and not self.onLadder:
                 self.vertical_momentum = -10
             elif vertical_momentum > 0:
                 fspeed_copy *= fall_multiplier
             elif not KDS.Keys.moveUp.pressed:
                 fspeed_copy *= fall_multiplier
-            if KDS.Keys.moveRun.pressed:
-                if self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
-                else: self.stamina -= 0.75     
-            elif self.stamina < 100.0: self.stamina += 0.25
 
             if KDS.Keys.moveRight.pressed:
-                if not KDS.Keys.moveDown.pressed: self.movement[0] += 4
+                if not self.crouching: self.movement[0] += 4
                 else: self.movement[0] += 2
-                if KDS.Keys.moveRun.pressed and self.stamina > 0: self.movement[0] += 4
+                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
+                    self.movement[0] += 4
+                    self.running = True
+                else: self.running = False
 
             if KDS.Keys.moveLeft.pressed:
-                if not KDS.Keys.moveDown.pressed: self.movement[0] -= 4
+                if not self.crouching: self.movement[0] -= 4
                 else: self.movement[0] -= 2
-                if KDS.Keys.moveRun.pressed and self.stamina > 0: self.movement[0] -= 4
+                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
+                    self.movement[0] -= 4
+                    self.running = True
+                else: self.running = False
+                
+            if self.running:
+                if self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
+                else: self.stamina -= 0.75
+            elif self.stamina < 100.0: self.stamina += 0.25
 
             if not self.movement[0] or self.air_timer > 1:
                 self.walk_sound_delay = 9999
@@ -2200,21 +2214,27 @@ class PlayerClass:
             self.movement[1] += self.vertical_momentum
             self.vertical_momentum = min(self.vertical_momentum + fspeed_copy, fall_max_velocity)
 
-            if self.check_crouch == True:
-                crouch_collisions = KDS.World.move_entity(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), (0, 0), tiles, False, True)[1]
+            if self.crouching == True:
+                crouch_collisions = len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), tiles)) > 0
             else:
-                crouch_collisions = KDS.World.Collisions()
+                crouch_collisions = False
 
-            if KDS.Keys.moveDown.pressed and not onLadder and self.rect.height != crouch_size[1] and death_wait < 1:
-                self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-                self.check_crouch = True
-            elif (not KDS.Keys.moveDown.pressed or onLadder or death_wait > 0) and Player.rect.height != stand_size[1] and crouch_collisions.bottom == False:
-                self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
-                self.check_crouch = False
-            elif not KDS.Keys.moveDown.pressed and crouch_collisions.bottom == True and self.rect.height != crouch_size[1] and death_wait < 1:
-                self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-                self.check_crouch = True
+            if KDS.Keys.moveDown.pressed and not self.onLadder:
+                crouch(True)
+            elif not crouch_collisions:
+                crouch(False)
+
             self.rect, collisions = KDS.World.move_entity(self.rect, self.movement, tiles, w_sounds=path_sounds, playWalkSound=s)
+            
+            # if self.crouching and self.rect.height != crouch_size[1] and death_wait < 1:
+            #     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+            #     self.check_crouch = True
+            # elif (not KDS.Keys.moveDown.pressed or self.onLadder or death_wait > 0) and Player.rect.height != stand_size[1] and crouch_collisions == False:
+            #     self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+            #     self.check_crouch = False
+            # elif not KDS.Keys.moveDown.pressed and crouch_collisions == True and self.rect.height != crouch_size[1] and death_wait < 1:
+            #     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
+            #     self.check_crouch = True
 
             if collisions.bottom:
                 self.air_timer = 0
@@ -2232,24 +2252,25 @@ class PlayerClass:
             else:
                 self.walking = False
             if self.walking:
-                if not KDS.Keys.moveRun.pressed:
-                    if self.rect.height == stand_size[1]:
+                if not self.running:
+                    if not self.crouching:
                         self.animations.trigger("walk")
                     else:
                         self.animations.trigger("walk_short")
                 else:
-                    if self.rect.height == stand_size[1]:
+                    if not self.crouching:
                         self.animations.trigger("run")
                     else:
-                        self.animations.trigger("run_short")
+                        self.animations.trigger("walk_short")
             else:
-                if self.rect.height == stand_size[1]:
+                if not self.crouching:
                     self.animations.trigger("idle")
                 else:
                     self.animations.trigger("idle_short")
             if self.health < self.lastHealth and self.health > 0: KDS.Audio.playSound(hurt_sound)
             self.lastHealth = self.health  
         else:
+            crouch(False)
             self.animations.trigger("death")
 
 Player = PlayerClass()
@@ -3280,7 +3301,6 @@ while main_running:
         scroll[0] += random.randint(-10, 10)
         scroll[1] += random.randint(-10, 10)
     mouse_pos = pygame.mouse.get_pos()
-    onLadder = False
 #endregion
 #region Player Death
     if Player.health <= 0:
