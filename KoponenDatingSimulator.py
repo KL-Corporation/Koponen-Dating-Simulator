@@ -611,7 +611,7 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
 #region Data
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
 
-with open ("Assets/Textures/build.json", "r") as f:
+with open("Assets/Textures/build.json", "r") as f:
     data = f.read()
 buildData = json.loads(data)
 

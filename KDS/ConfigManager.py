@@ -20,6 +20,10 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
 
 class JSON:
     @staticmethod
+    def ToKeyList(jsonPath: str):
+        return jsonPath.split("/")
+    
+    @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any):
         config = {}
         if os.path.isfile(filePath):
@@ -29,7 +33,7 @@ class JSON:
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
         
-        path = jsonPath.split("/")
+        path = JSON.ToKeyList(jsonPath)
         tmpConfig = config
         for i in range(len(path)):
             p = path[i]
@@ -51,7 +55,7 @@ class JSON:
                     try: config = json.loads(f.read())
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-            path = jsonPath.split("/")
+            path = JSON.ToKeyList(jsonPath)
             tmpConfig = config
             for i in range(len(path)):
                 p = path[i]
