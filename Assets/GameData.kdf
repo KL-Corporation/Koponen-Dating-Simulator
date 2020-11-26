@@ -2,7 +2,6 @@
     "Physics": {
         "Items": {
             "fallMaxVelocity": 8,
-            "fallNaxVelocity": null,
             "fallSpeed": 1
         },
         "Player": {

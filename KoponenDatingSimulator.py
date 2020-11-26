@@ -1129,11 +1129,9 @@ class Candle(Tile):
         return self.texture.update()
 
 class Teleport(Tile):
-    tex = pygame.image.load("Assets/Textures/Misc/telep.png").convert()
-    tex.set_colorkey((255, 255, 255))
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
-        self.texture = Teleport.tex
+        self.texture = None
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
         self.specialTileFlag = True
@@ -2150,16 +2148,26 @@ class PlayerClass:
         self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
 
     def reset(self):
-        self.rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name = "Sinä"
-        self.health = 100.0
-        self.lastHealth = self.health
-        self.stamina = 100.0
-        self.inventory = Inventory(5)
-        self.keys = { "red": False, "green": False, "blue": False }
-        self.farting = False
-        self.light = False
-        self.dead = False
+        self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
+        self.name: str = "Sinä"
+        self.health: float = 100.0
+        self.lastHealth: float = self.health
+        self.stamina: float = 100.0
+        self.inventory: Inventory = Inventory(5)
+        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
+        self.farting: bool = False
+        self.light: bool = False
+        self.godmode: bool = False
+        self.dead: bool = False
+        self.direction: bool = False
+        self.walking: bool = False
+        self.air_timer: int = 0
+        self.movement: List[float] = [0, 0]
+        self.walk_sound_delay: float = 9999
+        self.vertical_momentum: float = 0
+        self.onLadder: bool = False
+        self.crouching: bool = False
+        self.running: bool = False
         self.animations.reset()
         self.deathSound.stop()
         
@@ -2190,7 +2198,8 @@ class PlayerClass:
                 if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
                     self.movement[0] += 4
                     self.running = True
-                else: self.running = False
+                else:
+                    self.running = False
 
             if KDS.Keys.moveLeft.pressed:
                 if not self.crouching: self.movement[0] -= 4
@@ -2198,12 +2207,14 @@ class PlayerClass:
                 if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
                     self.movement[0] -= 4
                     self.running = True
-                else: self.running = False
+                else:
+                    self.running = False
                 
             if self.running:
-                if self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
-                else: self.stamina -= 0.75
-            elif self.stamina < 100.0: self.stamina += 0.25
+                self.stamina -= 0.75
+            else:
+                if not self.running: KDS.Keys.moveRun.SetState(False)
+                if self.stamina < 100.0: self.stamina += 0.25
 
             if not self.movement[0] or self.air_timer > 1:
                 self.walk_sound_delay = 9999

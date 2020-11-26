@@ -690,7 +690,7 @@ def main():
                 if event.key == K_z:
                     if keys_pressed[K_LCTRL]:
                         Undo.request()
-                if event.key == K_y:
+                elif event.key == K_y:
                     if keys_pressed[K_LCTRL]:
                         Redo.request()
                 elif event.key == K_t:
