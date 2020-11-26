@@ -847,6 +847,7 @@ class Trashcan(Tile):
 class Jukebox(Tile):
     __musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
     songs = []
+    __musiken = ""
     for __musiken in __musikerna:
         songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + __musiken))
     random.shuffle(songs)
