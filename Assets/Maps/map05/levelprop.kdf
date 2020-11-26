@@ -33,7 +33,5 @@
             "playerLight": true,
             "strength": 135
         }
-    },
-    "Music": "l3.ogg"
-
+    }
 }
