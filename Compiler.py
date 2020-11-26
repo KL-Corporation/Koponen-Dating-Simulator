@@ -19,6 +19,7 @@ questions = [
 answers = inquirer.prompt(questions)
 
 BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+EditorTexturesPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Textures", "Editor")
 BuiltNames = []
 for buildType in answers["toBuild"]:
     if buildType == "Koponen Dating Simulator":
@@ -45,6 +46,9 @@ for buildType in answers["toBuild"]:
         "F:/PyGame/Koponen-Dating-Simulator/KDS",
         f"{os.path.dirname(os.path.abspath(__file__))}/{fileName}"
     ])
+    if os.path.isdir(EditorTexturesPath):
+        shutil.rmtree(EditorTexturesPath)
+        print(f"Deleted Editor Textures directory at {EditorTexturesPath}")
     BuiltNames.append((buildType, os.path.splitext(fileName)[0]))
 
 if len(answers["toBuild"]) < 1:
