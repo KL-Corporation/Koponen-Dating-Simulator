@@ -342,7 +342,7 @@ smg_shot = pygame.mixer.Sound("Assets/Audio/Items/smg_shoot.ogg")
 grenade_throw = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
 lantern_pickup = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
 camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
-flicker_trigger_sound = pygame.mixer.Sound("Assets/Audio/Tiles/flicker_trigger.wav")
+flicker_trigger_sound = pygame.mixer.Sound("Assets/Audio/Tiles/flicker_trigger.ogg")
 respawn_anchor_sounds = [
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_0.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
@@ -865,7 +865,7 @@ class Jukebox(Tile):
         self.lastPlayed = [-69 for _ in range(5)]
 
     def stopPlayingTrack(self):
-        for music in self.songs:
+        for music in Jukebox.songs:
             music.stop()
         self.playing = -1
         KDS.Audio.Music.unpause()
@@ -878,16 +878,16 @@ class Jukebox(Tile):
                 KDS.Audio.Music.pause()
                 loopStopper = 0
                 while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
-                    self.playing = random.randint(0, len(self.songs) - 1)
+                    self.playing = random.randint(0, len(Jukebox.songs) - 1)
                     loopStopper += 1
                 del self.lastPlayed[0]
                 self.lastPlayed.append(self.playing)
-                KDS.Audio.playSound(self.songs[self.playing], KDS.Audio.MusicVolume)
+                KDS.Audio.playSound(Jukebox.songs[self.playing], KDS.Audio.MusicVolume)
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
-            self.songs[self.playing].set_volume(jukebox_volume)
+            Jukebox.songs[self.playing].set_volume(jukebox_volume)
 
         return self.texture
 

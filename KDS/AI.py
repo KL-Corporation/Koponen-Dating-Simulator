@@ -56,13 +56,13 @@ def move(rect, movement, tiles):
     return rect, collision_types
 
 
-imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.wav")
-imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.wav")
-zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.wav")
-zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.wav")
+imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.ogg")
+imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.ogg")
+zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.ogg")
+zombie_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_death.ogg")
 shotgunShot = pygame.mixer.Sound("Assets/Audio/effects/shotgun_shoot.ogg")
 cavemonster_gun = pygame.mixer.Sound("Assets/Audio/Entities/cavemonster_fire.ogg")
-impAttack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.wav")
+impAttack = pygame.mixer.Sound("Assets/Audio/entities/dsfirsht.ogg")
 double_barrel_fire = pygame.mixer.Sound("Assets/Audio/Entities/double_barrel_fire.ogg")
 basicGunshot = pygame.mixer.Sound("Assets/Audio/Entities/gunshot_basic1.ogg")
 pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistol_shoot.ogg")
