@@ -2248,10 +2248,7 @@ class PlayerClass:
                     else:
                         self.animations.trigger("walk_short")
                 else:
-                    if not self.crouching:
-                        self.animations.trigger("run")
-                    else:
-                        self.animations.trigger("walk_short")
+                    self.animations.trigger("run")
             else:
                 if not self.crouching:
                     self.animations.trigger("idle")
