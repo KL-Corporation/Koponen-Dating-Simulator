@@ -438,13 +438,6 @@ monstersLeft = 0
 
 renderPlayer = True
 
-with open("Assets/Maps/map_names.txt", "r") as file:
-    cntnts = file.read()
-    cntnts = cntnts.split('\n')
-    file.close()
-
-map_names = tuple(cntnts)
-
 Projectiles = []
 Explosions = []
 BallisticObjects = []
@@ -2897,6 +2890,15 @@ def main_menu():
 
     Frame1 = pygame.Surface(display_size)
     frames = [Frame1, Frame2, Frame3, Frame4]
+    
+    try:
+        with open("Assets/Maps/names.kdf", "r") as file:
+            map_names = file.read().split("\n")
+            for i in range(len(map_names)):
+                map_names[i] = map_names[i][4:]
+    except IOError as e:
+        KDS.Logging.AutoError(f"IO Error! Details: {e}")
+        map_names = ("ERROR")
     #endregion
     while main_menu_running:
         mouse_pos = pygame.mouse.get_pos()
@@ -3004,10 +3006,8 @@ def main_menu():
 
             current_map_int = int(current_map)
 
-            if current_map_int < len(map_names):
-                map_name = map_names[current_map_int]
-            else:
-                map_name = map_names[0]
+            if current_map_int < len(map_names): map_name = map_names[current_map_int]
+            else: map_name = map_names[0]
             level_text = button_font1.render(f"{current_map} - {map_name}", True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
