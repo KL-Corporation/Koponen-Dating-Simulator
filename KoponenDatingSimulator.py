@@ -2225,16 +2225,6 @@ class PlayerClass:
                 crouch(False)
 
             self.rect, collisions = KDS.World.move_entity(self.rect, self.movement, tiles, w_sounds=path_sounds, playWalkSound=s)
-            
-            # if self.crouching and self.rect.height != crouch_size[1] and death_wait < 1:
-            #     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-            #     self.check_crouch = True
-            # elif (not KDS.Keys.moveDown.pressed or self.onLadder or death_wait > 0) and Player.rect.height != stand_size[1] and crouch_collisions == False:
-            #     self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
-            #     self.check_crouch = False
-            # elif not KDS.Keys.moveDown.pressed and crouch_collisions == True and self.rect.height != crouch_size[1] and death_wait < 1:
-            #     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
-            #     self.check_crouch = True
 
             if collisions.bottom:
                 self.air_timer = 0
