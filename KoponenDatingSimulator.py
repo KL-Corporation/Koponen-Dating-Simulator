@@ -845,6 +845,16 @@ class Trashcan(Tile):
             return self.texture
 
 class Jukebox(Tile):
+    @staticmethod
+    def __loadSongs():
+        musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
+        musics = []
+        for musiken in musikerna:
+            musics.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
+        random.shuffle(musics)
+        return tuple(musics)
+    songs = __loadSongs()
+    
     def __init__(self, position: Tuple[int, int], serialNumber: int):      
         positionC = (position[0], position[1] - 26)
         super().__init__(positionC, serialNumber)
@@ -853,13 +863,6 @@ class Jukebox(Tile):
         self.checkCollision = False
         self.playing = -1
         self.lastPlayed = [-69 for _ in range(5)]
-        
-        musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
-        self.songs = []
-        for musiken in musikerna:
-            self.songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
-        random.shuffle(self.songs)
-        self.songs = tuple(self.songs)
 
     def stopPlayingTrack(self):
         for music in self.songs:
