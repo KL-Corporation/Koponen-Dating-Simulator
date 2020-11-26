@@ -33,5 +33,6 @@
             "playerLight": false,
             "strength": 249
         }
-    }
+    },
+    "Music": "l5.ogg"
 }

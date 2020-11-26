@@ -33,5 +33,6 @@
             "playerLight": true,
             "strength": 200
         }
-    }
+    },
+    "Music": "l2.ogg"
 }

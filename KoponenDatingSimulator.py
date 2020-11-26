@@ -507,7 +507,7 @@ class WorldData():
         global Items, tiles, Enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
-        if not ( os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "music.ogg")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
+        if not ( os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             return None
         if os.path.isdir(PersistentMapPath):
             shutil.rmtree(PersistentMapPath)
@@ -598,7 +598,8 @@ class WorldData():
                 if tile.serialNumber == 22:
                     tile.initHeight(tiles)
 
-        KDS.Audio.Music.play(os.path.join(PersistentMapPath, "music.ogg"))
+        #KDS.Audio.Music.play(os.path.join(PersistentMapPath, "music.ogg"))
+        KDS.Audio.Music.play(os.path.join("Assets/Maps/levelMusics", KDS.ConfigManager.GetLevelProp("Music", "music.ogg")))
         return p_start_pos, k_start_pos
 #endregion
 #region Data
