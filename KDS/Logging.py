@@ -56,7 +56,6 @@ def AutoError(Message):
 
     Args:
         Message (str): The error message.
-        _currentframe: The current frame you get from currentframe().
     """
     _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[1]
     Log(LogType.error, f"ERROR! File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function} [Exception: {Message}]", True)
