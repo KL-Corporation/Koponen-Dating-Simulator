@@ -1582,7 +1582,7 @@ class Knife(Item):
         if args[0][0]:
             if KDS.World.knife_C.counter > 40:
                 KDS.World.knife_C.counter = 0
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 19, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
             KDS.World.knife_C.counter  += 1
             return knife_animation_object.update()
         else:
@@ -1631,7 +1631,7 @@ class Pistol(Item):
             KDS.World.pistol_C.counter = 0
             Pistol.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 100))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 100))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -1667,7 +1667,7 @@ class rk62(Item):
             KDS.Audio.playSound(rk62_shot)
             rk62.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 50 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 50 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 25))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -1695,7 +1695,7 @@ class Shotgun(Item):
             Shotgun.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1738,7 +1738,7 @@ class Plasmarifle(Item):
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.playSound(plasmarifle_f_sound)
             Plasmarifle.ammunition -= 1
-            if direction:
+            if Player.direction:
                 temp = 100
             else:
                 temp = -80
@@ -1811,7 +1811,7 @@ class Ppsh41(Item):
             KDS.Audio.playSound(smg_shot)
             Ppsh41.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
@@ -1836,7 +1836,7 @@ class Awm(Item):
             KDS.Audio.playSound(awm_shot)
             Awm.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 90 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, random.randint(300, 590), slope=0))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 90 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
         else:
             KDS.World.awm_C.counter += 1
@@ -1915,7 +1915,7 @@ class Grenade(Item):
         elif KDS.Keys.altDown.pressed:
             KDS.World.Grenade_O.Slope -= 0.03
 
-        pygame.draw.line(screen, (255, 10, 10), (Player.rect.centerx - scroll[0], Player.rect.y + 10 - scroll[1]), (Player.rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(direction) - scroll[0], Player.rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
+        pygame.draw.line(screen, (255, 10, 10), (Player.rect.centerx - scroll[0], Player.rect.y + 10 - scroll[1]), (Player.rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(Player.direction) - scroll[0], Player.rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
         if args[0][0]:
             KDS.Audio.playSound(grenade_throw)
             Player.inventory.storage[Player.inventory.SIndex] = Inventory.emptySlot
@@ -1995,7 +1995,7 @@ class Chainsaw(Item):
         if self.pickupFinished and Chainsaw.ammunition > 0:
             if args[0][0]:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(direction), Player.rect.centery - 4, 1, 1), Player.direction, -1, tiles, damage=1, maxDistance=80))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 4, 1, 1), Player.direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     Chainsaw.freespin_sound.stop()
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
