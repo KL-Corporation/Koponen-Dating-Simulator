@@ -254,13 +254,14 @@ class Bullet:
         else:
             if self.direction:
                 self.rect.x -= self.speed
-                self.movedDistance += self.speed             
+                self.movedDistance += self.speed
             else:
                 self.rect.x += self.speed
                 self.movedDistance += self.speed
             
+
             self.slopeBuffer += self.slope*self.speed
-            self.rect.y = self.slopeBuffer
+            self.rect.y = round(self.slopeBuffer)
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
 
