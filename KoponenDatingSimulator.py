@@ -541,9 +541,9 @@ class Inventory:
     doubleItem = "doubleItem"
 
     def __init__(self, size: int):
-        self.storage = [Inventory.emptySlot for _ in range(size)]
-        self.size = size
-        self.SIndex = 0
+        self.storage: List[str or Item] = [Inventory.emptySlot for _ in range(size)]
+        self.size: int = size
+        self.SIndex: int = 0
 
     def empty(self):
         self.storage = [Inventory.emptySlot for _ in range(self.size)]
@@ -3243,7 +3243,7 @@ while main_running:
     Player.update()
     Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
-    if any(isinstance(item, Lantern) for item in Player.inventory.storage):
+    if not isinstance(Player.inventory.getHandItem(), Lantern) and any(isinstance(item, Lantern) for item in Player.inventory.storage):
         Player.inventory.useItemByClass(Lantern, screen)
 
     for Projectile in Projectiles:
