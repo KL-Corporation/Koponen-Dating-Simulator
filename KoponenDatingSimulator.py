@@ -1061,7 +1061,7 @@ class Torch(Tile):
             self.light_scale += 4
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light((self.rect.x - 64, self.rect.y - 70), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1850)))
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1850), True))
         return self.texture.update()
 
 class GoryHead(Tile):
@@ -2530,6 +2530,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
 
     KDS.Audio.Music.unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+    KDS.World.Lighting.Shapes.clear()
     
     Player.reset()
     

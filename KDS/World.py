@@ -70,6 +70,7 @@ def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dic
 class Lighting:
 
     class Shapes:
+        
         class LightShape:
             def __init__(self, texture: pygame.Surface) -> None:
                 self.texture = texture
@@ -94,6 +95,12 @@ class Lighting:
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
                 return corRad[color]
+        
+        @staticmethod
+        def clear():
+            for v in Lighting.Shapes.__dict__.values():
+                if isinstance(v, Lighting.Shapes.LightShape):
+                    v.rendered = {}
         
         circle_softest: LightShape = None
         circle_soft: LightShape = None
