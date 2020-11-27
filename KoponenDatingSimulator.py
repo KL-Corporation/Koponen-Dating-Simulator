@@ -2199,24 +2199,19 @@ class PlayerClass:
                 else: self.movement[0] += 2
                 if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
                     self.movement[0] += 4
-                    self.running = True
-                else:
-                    self.running = False
-
+                elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
+                    
             if KDS.Keys.moveLeft.pressed:
                 if not self.crouching: self.movement[0] -= 4
                 else: self.movement[0] -= 2
                 if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
                     self.movement[0] -= 4
-                    self.running = True
-                else:
-                    self.running = False
-                
-            if self.running:
-                self.stamina -= 0.75
-            else:
-                if not self.running: KDS.Keys.moveRun.SetState(False)
-                if self.stamina < 100.0: self.stamina += 0.25
+                elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
+            
+            self.running = True if abs(self.movement[0]) > 4 else False
+
+            if self.running: self.stamina -= 0.75
+            elif self.stamina < 100.0: self.stamina += 0.25
 
             if not self.movement[0] or self.air_timer > 1:
                 self.walk_sound_delay = 9999
