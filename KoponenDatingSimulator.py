@@ -92,17 +92,18 @@ level_cleared_icon.set_colorkey(KDS.Colors.White)
 locked_fps = 60
 #endregion
 #region Quit Handling
-def KDS_Quit(_restart: bool = False, _reset_data: bool = False):
+def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool = False):
     global main_running, main_menu_running, tcagr_running, esc_menu, settings_running, selectedSave, tick, restart, reset_data, level_finished_running
-    main_menu_running = False
-    main_running = False
-    tcagr_running = False
-    esc_menu = False
-    KDS.Koponen.Talk.running = False
-    settings_running = False
-    restart = _restart
-    reset_data = _reset_data
-    level_finished_running = False
+    if not confirm or KDS.System.MessageBox.Show("Quit?", "Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
+        main_menu_running = False
+        main_running = False
+        tcagr_running = False
+        esc_menu = False
+        KDS.Koponen.Talk.running = False
+        settings_running = False
+        restart = restart_s
+        reset_data = reset_data_s
+        level_finished_running = False
 #endregion
 #region Initialisation
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
@@ -2686,8 +2687,8 @@ def esc_menu_f():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            elif event.type == pygame.QUIT:
-                KDS_Quit()
+            elif event.type == QUIT:
+                KDS_Quit(confirm=True)
 
         esc_surface.blit(pygame.transform.scale(
             blurred_background, display_size), (0, 0))
@@ -2735,7 +2736,7 @@ def settings_menu():
         KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
     
     def reset_data():
-        KDS_Quit(True, True)
+        KDS_Quit(restart_s=True, reset_data_s=True)
     
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
@@ -2767,8 +2768,8 @@ def settings_menu():
                     settings_running = False
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
-            elif event.type == pygame.QUIT:
-                KDS_Quit()
+            elif event.type == QUIT:
+                KDS_Quit(confirm=True)
 
         display.blit(settings_background, (0, 0))
 
@@ -2937,7 +2938,7 @@ def main_menu():
                         MenuMode = Mode.MainMenu
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
-            elif event.type == pygame.QUIT:
+            elif event.type == QUIT:
                 KDS_Quit()
 
         if MenuMode == Mode.MainMenu:
@@ -3113,8 +3114,8 @@ def level_finished_menu():
                 if event.button == 1:
                     KDS.Scores.ScoreAnimation.skip()
                     c = True
-            elif event.type == pygame.QUIT:
-                KDS_Quit()
+            elif event.type == QUIT:
+                KDS_Quit(confirm=True)
 
         level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
         pygame.draw.rect(level_f_surf, (123, 134, 111), menu_rect)
@@ -3275,11 +3276,11 @@ while main_running:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveRight()
             else:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveLeft()
-        elif event.type == QUIT:
-            KDS_Quit()
         elif event.type == WINDOWEVENT:
             if event.event == WINDOWEVENT_FOCUS_LOST:
                 if pauseOnFocusLoss: esc_menu = True
+        elif event.type == QUIT:
+            KDS_Quit(confirm=True)
 #endregion
 #region Data
 
@@ -3533,7 +3534,6 @@ while main_running:
             level_finished = True
         else:
             pass
-
 #endregion
 #region Conditional Events
     if Player.rect.y > len(tiles) * 34 + 340:
