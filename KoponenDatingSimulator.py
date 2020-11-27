@@ -69,7 +69,7 @@ game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
-display = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | DOUBLEBUF | SCALED)
+display = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | DOUBLEBUF | SCALED, vsync=1)
 display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
@@ -88,8 +88,6 @@ text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
 text_icon.set_colorkey(KDS.Colors.White)
 level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
 level_cleared_icon.set_colorkey(KDS.Colors.White)
-
-locked_fps = 60
 #endregion
 #region Quit Handling
 def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool = False):
@@ -2718,7 +2716,7 @@ def esc_menu_f():
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         c = False
-        clock.tick_busy_loop(locked_fps)
+        clock.tick_busy_loop(60)
 
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, DebugMode, pauseOnFocusLoss
@@ -2802,7 +2800,7 @@ def settings_menu():
         pygame.display.flip()
         display.fill((0, 0, 0))
         c = False
-        clock.tick_busy_loop(locked_fps)
+        clock.tick_busy_loop(60)
 
 def main_menu():
     global current_map, MenuMode, DebugMode
@@ -3045,7 +3043,7 @@ def main_menu():
         c = False
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
-        clock.tick_busy_loop(locked_fps)
+        clock.tick_busy_loop(60)
 
 def level_finished_menu():
     global game_pause_background, DebugMode, level_finished_running
@@ -3161,7 +3159,7 @@ def level_finished_menu():
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
-        clock.tick_busy_loop(locked_fps)
+        clock.tick_busy_loop(60)
 #endregion
 #region Check Terms
 agr(tcagr)
@@ -3484,7 +3482,7 @@ while main_running:
             koponen_alive = False
         if KDS.Keys.functionKey.pressed:
             KDS.Keys.Reset()
-            KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock, locked_fps)
+            KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
     else:
         koponen_movement[0] = koponen_movingx
     h = 0
@@ -3579,7 +3577,7 @@ while main_running:
     tick += 1
     if tick > 60:
         tick = 0
-    clock.tick_busy_loop(locked_fps)
+    clock.tick_busy_loop(60)
 #endregion
 #endregion
 #region Application Quitting

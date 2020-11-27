@@ -372,7 +372,7 @@ class Talk:
         Talk.running = False
 
     @staticmethod
-    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock, fps: int):
+    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock):
         pygame.mouse.set_visible(True)
         global talk_ad, old_ads
         loopStopper = 0
@@ -425,6 +425,6 @@ class Talk:
 
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
-            clock.tick_busy_loop(fps)
+            clock.tick_busy_loop(60)
         
         pygame.mouse.set_visible(False)
