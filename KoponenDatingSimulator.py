@@ -173,72 +173,30 @@ door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 exit_door_open = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
 respawn_anchor_on = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
 blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
-door_open.set_colorkey(KDS.Colors.White)
-exit_door_open.set_colorkey(KDS.Colors.White)
-respawn_anchor_on.set_colorkey(KDS.Colors.White)
 blh.set_colorkey(KDS.Colors.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Building Texture Loading Complete.")
 #endregion
 #region Item Textures
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Item Textures...")
-gasburner_off = pygame.image.load("Assets/Textures/Items/gasburner_off.png").convert()
-knife = pygame.image.load("Assets/Textures/Items/knife.png").convert()
-knife_blood = pygame.image.load("Assets/Textures/Items/knife.png").convert()
 red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
 green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
 blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
-coffeemug = pygame.image.load("Assets/Textures/Items/coffeemug.png").convert()
-ss_bonuscard = pygame.image.load("Assets/Textures/Items/ss_bonuscard.png").convert()
-lappi_sytytyspalat = pygame.image.load("Assets/Textures/Items/lappi_sytytyspalat.png").convert()
-plasmarifle = pygame.image.load("Assets/Textures/Items/plasmarifle.png").convert()
 plasma_ammo = pygame.image.load("Assets/Textures/Items/plasma_ammo.png").convert()
-cell = pygame.image.load("Assets/Textures/Items/cell.png")
-pistol_texture = pygame.image.load("Assets/Textures/Items/pistol.png").convert()
 pistol_f_texture = pygame.image.load("Assets/Textures/Items/pistol_firing.png").convert()
-soulsphere = pygame.image.load("Assets/Textures/Items/soulsphere.png").convert()
-turboneedle = pygame.image.load("Assets/Textures/Items/turboneedle.png").convert()
-pistol_mag = pygame.image.load("Assets/Textures/Items/pistol_mag.png").convert()
-rk62_texture = pygame.image.load("Assets/Textures/Items/rk62.png").convert()
 rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
-rk62_mag = pygame.image.load("Assets/Textures/Items/rk_mag.png").convert()
-medkit = pygame.image.load("Assets/Textures/Items/medkit.png").convert()
-shotgun = pygame.image.load("Assets/Textures/Items/shotgun.png").convert()
 shotgun_f = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
-shotgun_shells_t = pygame.image.load("Assets/Textures/Items/shotgun_shells.png").convert()
-ipuhelin_texture = pygame.image.load("Assets/Textures/Items/iPuhelin.png").convert()
 ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
-ppsh41_texture = pygame.image.load("Assets/Textures/Items/ppsh41.png").convert()
 awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
 
-gasburner_off.set_colorkey(KDS.Colors.White)
-knife.set_colorkey(KDS.Colors.White)
-knife_blood.set_colorkey(KDS.Colors.White)
 red_key.set_colorkey(KDS.Colors.White)
 green_key.set_colorkey(KDS.Colors.White)
 blue_key.set_colorkey(KDS.Colors.White)
-coffeemug.set_colorkey(KDS.Colors.White)
-lappi_sytytyspalat.set_colorkey(KDS.Colors.White)
-plasmarifle.set_colorkey(KDS.Colors.White)
 plasma_ammo.set_colorkey(KDS.Colors.White)
-cell.set_colorkey(KDS.Colors.White)
-pistol_texture.set_colorkey(KDS.Colors.White)
 pistol_f_texture.set_colorkey(KDS.Colors.White)
-soulsphere.set_colorkey(KDS.Colors.White)
-turboneedle.set_colorkey(KDS.Colors.White)
-pistol_mag.set_colorkey(KDS.Colors.White)
-rk62_texture.set_colorkey(KDS.Colors.White)
 rk62_f_texture.set_colorkey(KDS.Colors.White)
-rk62_mag.set_colorkey(KDS.Colors.White)
-medkit.set_colorkey(KDS.Colors.White)
-shotgun.set_colorkey(KDS.Colors.White)
 shotgun_f.set_colorkey(KDS.Colors.White)
-shotgun_shells_t.set_colorkey(KDS.Colors.White)
-ipuhelin_texture.set_colorkey(KDS.Colors.White)
 ppsh41_f_texture.set_colorkey(KDS.Colors.White)
-ppsh41_texture.set_colorkey(KDS.Colors.White)
 awm_f_texture.set_colorkey(KDS.Colors.White)
-
-ss_bonuscard.set_colorkey(KDS.Colors.Red)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Texture Loading Complete.")
 #endregion
 #region Menu Textures
@@ -1476,7 +1434,7 @@ class Gasburner(Item):
         else:
             gasburner_fire.stop()
             gasburnerBurning = False
-            return gasburner_off
+            return self.texture
 
     def pickup(self):
         KDS.Scores.score += 12
@@ -1529,7 +1487,7 @@ class Knife(Item):
             KDS.World.knife_C.counter  += 1
             if KDS.World.knife_C.counter > 100:
                 KDS.World.knife_C.counter = 100
-            return knife
+            return self.texture
 
     def pickup(self):
         KDS.Scores.score += 15
@@ -1575,7 +1533,7 @@ class Pistol(Item):
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
-            return pistol_texture
+            return self.texture
 
     def pickup(self):
         KDS.Scores.score += 18
@@ -1613,7 +1571,7 @@ class rk62(Item):
             if not args[0][0]:
                 rk62_shot.stop() 
             KDS.World.rk62_C.counter += 1
-            return rk62_texture
+            return self.texture
 
     def pickup(self):
         KDS.Scores.score += 29
@@ -1639,7 +1597,7 @@ class Shotgun(Item):
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
-            return shotgun
+            return self.texture
 
     def pickup(self):
         KDS.Scores.score += 23
@@ -1687,7 +1645,7 @@ class Plasmarifle(Item):
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
-            return plasmarifle
+            return self.texture
 
     def pickup(self):
         KDS.Scores.score += 25
@@ -1757,7 +1715,7 @@ class Ppsh41(Item):
             if not args[0][0]:
                 smg_shot.stop() 
             KDS.World.ppsh41_C.counter += 1
-            return ppsh41_texture
+            return self.texture
 
     def pickup(self):
         return False
@@ -2018,8 +1976,7 @@ koponen_animations = KDS.Animator.MultiAnimation(
 )
 menu_gasburner_animation = KDS.Animator.Animation(
     "main_menu_bc_gasburner", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-gasburner_animation_object = KDS.Animator.Animation(
-    "gasburner_on", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+gasburner_animation_object = KDS.Animator.Animation("gasburner_on", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_toilet_animation = KDS.Animator.Animation(
     "menu_toilet_anim", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_trashcan_animation = KDS.Animator.Animation(
