@@ -169,64 +169,14 @@ KDS.Logging.Log(KDS.Logging.LogType.debug, "Font Loading Complete.")
 #endregion
 #region Building Textures
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Building Textures...")
-floor0 = pygame.image.load("Assets/Textures/Tiles/floor0v2.png").convert()
-concrete0 = pygame.image.load(
-    "Assets/Textures/Tiles/concrete0.png").convert()
-wall0 = pygame.image.load("Assets/Textures/Tiles/wall0.png").convert()
-table0 = pygame.image.load("Assets/Textures/Tiles/table0.png").convert()
-tp_shitting = pygame.image.load("Assets/Textures/Tiles/player_shitting_toilet.png").convert()
-lamp0 = pygame.image.load("Assets/Textures/Tiles/lamp0.png").convert()
-trashcan = pygame.image.load("Assets/Textures/Tiles/trashcan.png").convert()
-ground1 = pygame.image.load("Assets/Textures/Tiles/ground0.png").convert()
-grass = pygame.image.load("Assets/Textures/Tiles/grass0.png").convert()
-door_closed = pygame.image.load(
-    "Assets/Textures/Tiles/door_closed.png").convert()
-red_door_closed = pygame.image.load(
-    "Assets/Textures/Tiles/red_door_closed.png").convert()
-green_door_closed = pygame.image.load(
-    "Assets/Textures/Tiles/green_door_closed.png").convert()
-blue_door_closed = pygame.image.load(
-    "Assets/Textures/Tiles/blue_door_closed.png").convert()
 door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 exit_door_open = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
 respawn_anchor_on = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
-bricks = pygame.image.load("Assets/Textures/Tiles/bricks.png").convert()
-tree = pygame.image.load("Assets/Textures/Tiles/tree.png").convert()
-planks = pygame.image.load("Assets/Textures/Tiles/planks.png").convert()
-jukebox_texture = pygame.image.load(
-    "Assets/Textures/Tiles/jukebox.png").convert()
-landmine_texture = pygame.image.load(
-    "Assets/Textures/Tiles/landmine.png").convert()
-ladder_texture = pygame.image.load(
-    "Assets/Textures/Tiles/ladder.png").convert()
-background_wall = pygame.image.load(
-    "Assets/Textures/Tiles/background_wall.png").convert()
-light_bricks = pygame.image.load(
-    "Assets/Textures/Tiles/light_bricks.png").convert()
-iron_bar = pygame.image.load(
-    "Assets/Textures/Tiles/iron_bars_texture.png").convert()
-soil = pygame.image.load("Assets/Textures/Tiles/soil.png").convert()
 blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
-mossy_bricks = pygame.image.load(
-    "Assets/Textures/Tiles/mossy_bricks.png").convert()
-stone = pygame.image.load("Assets/Textures/Tiles/stone.png").convert()
-hay = pygame.image.load("Assets/Textures/Tiles/hay.png").convert()
-soil1 = pygame.image.load("Assets/Textures/Tiles/soil_2.png").convert()
-wood = pygame.image.load("Assets/Textures/Tiles/wood.png").convert()
-table0.set_colorkey(KDS.Colors.White)
-lamp0.set_colorkey(KDS.Colors.White)
-trashcan.set_colorkey(KDS.Colors.White)
-door_closed.set_colorkey(KDS.Colors.White)
-red_door_closed.set_colorkey(KDS.Colors.White)
-green_door_closed.set_colorkey(KDS.Colors.White)
-blue_door_closed.set_colorkey(KDS.Colors.White)
-jukebox_texture.set_colorkey(KDS.Colors.White)
-landmine_texture.set_colorkey(KDS.Colors.White)
-ladder_texture.set_colorkey(KDS.Colors.White)
-iron_bar.set_colorkey(KDS.Colors.White)
-tree.set_colorkey(KDS.Colors.Black)
+door_open.set_colorkey(KDS.Colors.White)
+exit_door_open.set_colorkey(KDS.Colors.White)
+respawn_anchor_on.set_colorkey(KDS.Colors.White)
 blh.set_colorkey(KDS.Colors.White)
-tp_shitting.set_colorkey(KDS.Colors.White)
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Building Texture Loading Complete.")
 #endregion
 #region Item Textures
@@ -818,7 +768,7 @@ class Trashcan(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
         super().__init__(position, serialNumber)
         self.burning = _burning
-        self.texture = trashcan
+        self.texture = t_textures[serialNumber]
         self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
@@ -854,7 +804,7 @@ class Jukebox(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):      
         positionC = (position[0], position[1] - 26)
         super().__init__(positionC, serialNumber)
-        self.texture = jukebox_texture
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 27, 40, 60)
         self.checkCollision = False
         self.playing = -1
@@ -884,6 +834,7 @@ class Jukebox(Tile):
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
             Jukebox.songs[self.playing].set_volume(jukebox_volume)
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
         return self.texture
 
@@ -926,7 +877,7 @@ class Door(Tile):
 class Landmine(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = landmine_texture
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] + 26, 22, 11)
         self.checkCollision = False
 
@@ -945,7 +896,7 @@ class Landmine(Tile):
 class Ladder(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = ladder_texture
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
         self.checkCollision = False
 
@@ -958,7 +909,7 @@ class Ladder(Tile):
 class Lamp(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = lamp0
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
         self.checkCollision = True
         self.coneheight = 90
@@ -986,7 +937,7 @@ class Lamp(Tile):
 class DecorativeHead(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = t_textures[43]
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
         self.checkCollision = False
         self.praying = False
@@ -1162,7 +1113,7 @@ class Teleport(Tile):
 class LampPoleLamp(Tile):
     def __init__(self, position, serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = t_textures[58]
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]-6, position[1]-6, 40, 40)
         self.checkCollision = False
     
@@ -1173,7 +1124,7 @@ class LampPoleLamp(Tile):
 class Chair(Tile):
     def __init__(self, position, serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = t_textures[59]
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]-6, position[1]-8, 40, 42)
         self.checkCollision = False
 
@@ -1183,7 +1134,7 @@ class Chair(Tile):
 class SkullTile(Tile):
     def __init__(self, position, serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = t_textures[66]
+        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]+7, position[1]+7, 27, 27)
         self.checkCollision = False
 
@@ -1193,11 +1144,10 @@ class SkullTile(Tile):
 class WallLight(Tile):
     def __init__(self, position, serialNumber: int):        
         super().__init__(position, serialNumber)
-        self.texture = t_textures[71]
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
         self.direction = True if serialNumber == 72 else False
-        self.texture = pygame.transform.flip(self.texture, self.direction, False)
+        self.texture = pygame.transform.flip(t_textures[71], self.direction, False)
         self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False).convert_alpha()
 
     def update(self):
