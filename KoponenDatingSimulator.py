@@ -294,12 +294,8 @@ colorInvert = False
 monstersLeft = 0
 
 main_running = True
-plasmarifle_fire = False
 gasburnerBurning = False
-fireExtinguisherBurning = False
-plasmabullets = []
 tick = 0
-knifeInUse = False
 currently_on_mission = False
 current_mission = "none"
 weapon_fire = False
@@ -308,12 +304,7 @@ shoot = False
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
 selectedSave = 0
 
-explosion_positions = []
-direction = True
 esc_menu = False
-shotgun_loaded = True
-shotgun_cooldown = 0
-pistol_cooldown = 0
 dark = False
 darkness = (255, 255, 255)
 
@@ -334,10 +325,8 @@ vertical_momentum = 0
 animation_counter = 0
 animation_duration = 0
 animation_image = 0
-air_timer = 0
 animation_has_played = False
 death_wait = 0
-attack_counter = 0
 fart_counter = 0
 monsterAmount = 0
 monstersLeft = 0
@@ -617,17 +606,25 @@ class Inventory:
             self.storage[self.SIndex] = Inventory.emptySlot
             return temp
 
-    def useItem(self, Surface: pygame.Surface, *args):
-        if not isinstance(self.storage[self.SIndex], Lantern) and self.storage[self.SIndex] != Inventory.emptySlot and self.storage[self.SIndex] != Inventory.doubleItem:
-            dumpValues = self.storage[self.SIndex].use(args, Surface)
-            if Player.direction:
-                renderOffset = -dumpValues.get_size()[0]
-            else:
-                renderOffset = Player.rect.width + 2
-
-            Surface.blit(pygame.transform.flip(dumpValues, Player.direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
+    def useItemAtIndex(self, index: int, surface: pygame.Surface, *args):
+        item = self.storage[index]
+        if not isinstance(item, Lantern) and item not in (Inventory.emptySlot, Inventory.doubleItem):
+            dumpVals = item.use(args, surface)
+            if Player.direction: renderOffset = -dumpVals.get_width()
+            else: renderOffset = Player.rect.width + 2
+            
+            surface.blit(pygame.transform.flip(dumpVals, Player.direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
         return None
 
+    def useItem(self, surface: pygame.Surface, *args):
+        self.useItemAtIndex(self.SIndex, surface, *args)
+
+    def useItemByClass(self, Class, surface: pygame.Surface, *args):
+        for i, v in enumerate(self.storage):
+            if isinstance(v, Class):
+                self.useItemAtIndex(i, surface, *args)
+                return
+    """
     def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
         dumpValues = nullLantern.use(args, Surface)
         if direction:
@@ -637,6 +634,7 @@ class Inventory:
 
         Surface.blit(pygame.transform.flip(dumpValues, direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
         return None
+    """
 
     def getHandItem(self):
         return self.storage[self.SIndex]
@@ -1106,7 +1104,7 @@ class WallLight(Tile):
         self.checkCollision = False
         self.direction = True if serialNumber == 72 else False
         self.texture = pygame.transform.flip(t_textures[71], self.direction, False)
-        self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False).convert_alpha()
+        self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False)
 
     def update(self):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery), self.light_t, True))
@@ -1859,21 +1857,17 @@ class Ppsh41Mag(Item):
         return True
 
 class Lantern(Item):
-    Ianimation = KDS.Animator.Animation("lantern_burning", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.animation = KDS.Animator.Animation("lantern_burning", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
     def use(self, *args):
-        scale = random.randint(180, 220)
-        Lights.append( KDS.World.Lighting.Light( (Player.rect.centerx - scale/2, Player.rect.centery - scale/2) , KDS.World.Lighting.Shapes.circle_hardest.get(scale, 5000).convert_alpha() ))
-        return Lantern.Ianimation.update()
+        Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hardest.get(random.randint(180, 220), 5000), True))
+        return self.animation.update()
 
     def pickup(self):
         KDS.Audio.playSound(lantern_pickup)
-
         return False
-
-nullLantern = Lantern((0, 0), 33, texture = i_textures[33])
 
 class Chainsaw(Item):
     pickup_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_start.ogg")
@@ -3249,10 +3243,8 @@ while main_running:
     Player.update()
     Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
-    for item in Player.inventory.storage:
-        if isinstance(item, Lantern):
-            Player.inventory.useSpecificItem(0, screen)
-            break
+    if any(isinstance(item, Lantern) for item in Player.inventory.storage):
+        Player.inventory.useItemByClass(Lantern, screen)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, Enemies, HitTargets, Particles, Player.rect, Player.health, DebugMode)
@@ -3386,8 +3378,6 @@ while main_running:
         screen.blit(
             koponen_talk_tip, (koponen_rect.centerx - scroll[0] - int(koponen_talk_tip.get_width() / 2), koponen_rect.top - scroll[1] - 20))
         koponen_movement[0] = 0
-        if knifeInUse:
-            koponen_alive = False
         if KDS.Keys.functionKey.pressed:
             KDS.Keys.Reset()
             KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
