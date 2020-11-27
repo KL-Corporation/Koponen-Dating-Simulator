@@ -77,7 +77,7 @@ screen = pygame.Surface(screen_size)
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
 display.fill(CompanyLogo.get_at((0, 0)))
 display.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (display_size[0] / 2 - 250, display_size[1] / 2 - 250))
-pygame.display.update()
+pygame.display.flip()
 
 KDS.Audio.init(pygame.mixer)
 
@@ -2516,7 +2516,7 @@ def agr(tcagr: bool):
                 KDS_Quit()
         display.blit(agr_background, (0, 0))
         agree_button.update(display, mouse_pos, c)
-        pygame.display.update()
+        pygame.display.flip()
         c = False
     return True
 #endregion
@@ -2528,7 +2528,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
         display.fill(scaled_loadingScreen.get_at((0, 0)))
         display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
-        pygame.display.update()
+        pygame.display.flip()
 
     KDS.Audio.Music.unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -2715,7 +2715,7 @@ def esc_menu_f():
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         display.blit(pygame.transform.scale(display, display_size), (0, 0))
-        pygame.display.update()
+        pygame.display.flip()
         display.fill(KDS.Colors.Black)
         c = False
         clock.tick(locked_fps)
@@ -2799,7 +2799,7 @@ def settings_menu():
             display.blit(pygame.transform.scale(fps_text, (int(
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
-        pygame.display.update()
+        pygame.display.flip()
         display.fill((0, 0, 0))
         c = False
         clock.tick(locked_fps)
@@ -3043,7 +3043,7 @@ def main_menu():
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
-        pygame.display.update()
+        pygame.display.flip()
         display.fill(KDS.Colors.Black)
         clock.tick(locked_fps)
 
@@ -3159,7 +3159,7 @@ def level_finished_menu():
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-        pygame.display.update()
+        pygame.display.flip()
         display.fill(KDS.Colors.Black)
         clock.tick(locked_fps)
 #endregion
@@ -3524,7 +3524,7 @@ while main_running:
     display.fill(KDS.Colors.Black)
     display.blit(pygame.transform.scale(screen, display_size), (0, 0))
     #Updating display object
-    pygame.display.update()
+    pygame.display.flip()
 #endregion
 #region Data Update
     animation_counter += 1

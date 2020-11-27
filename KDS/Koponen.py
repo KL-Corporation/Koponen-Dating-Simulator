@@ -221,7 +221,7 @@ def koponen_talk():
         c = False
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
-        pygame.display.update()
+        pygame.display.flip()
         window.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 """
@@ -423,7 +423,7 @@ class Talk:
             return_mission_button.update(display, mouse_pos, c, player_inventory)
             date_button.update(display, mouse_pos, c)
 
-            pygame.display.update()
+            pygame.display.flip()
             display.fill(KDS.Colors.Black)
             clock.tick(fps)
         

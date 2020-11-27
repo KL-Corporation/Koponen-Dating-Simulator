@@ -454,7 +454,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         suggestionsRendered = False 
         lastCmd = cmd
         window.blit(pygame.transform.scale(display, (display_size[0], display_size[1])), (0, 0))
-        pygame.display.update()
+        pygame.display.flip()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)
         clock.tick(60)

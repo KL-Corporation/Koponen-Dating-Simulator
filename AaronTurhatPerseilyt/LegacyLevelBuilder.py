@@ -235,7 +235,7 @@ def material_selector(prev_material):
                 x += 1
             y += 1
 
-        pygame.display.update()
+        pygame.display.flip()
         clock.tick(45)
 
 while main:
@@ -385,7 +385,7 @@ while main:
 
     main_display.blit(toplayer,(0,0))
 
-    pygame.display.update()
+    pygame.display.flip()
     clock.tick(45)
 
 pygame.display.quit()

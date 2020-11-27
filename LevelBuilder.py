@@ -411,7 +411,7 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
             notValidSurf.set_alpha(128)
             main_display.blit(notValidSurf, (harbinger_font.size(daInput)[0] + 10, 10))
             main_display.blit(harbinger_font_small.render(warningText, True, KDS.Colors.White), (consoleText.get_width() + 20, 15))
-        pygame.display.update()
+        pygame.display.flip()
     pygame.key.set_repeat(0, 0)
 """
 
@@ -565,7 +565,7 @@ def materialMenu(previousMaterial):
                 pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
                 if mouse_pressed[0]:
                     return selection.serialNumber
-        pygame.display.update()
+        pygame.display.flip()
 
 def generateLevelProp():
     """
@@ -637,7 +637,7 @@ def main():
         openMap_btn.update(main_display, mouse_pos, clicked, True)
         genProp_btn.update(main_display, mouse_pos, clicked, False, True)
         quit_btn.update(main_display, mouse_pos, clicked, False, False, True)
-        pygame.display.update()
+        pygame.display.flip()
     
     main_display.fill(KDS.Colors.Black)
     
@@ -743,7 +743,7 @@ def main():
             elif gridChanges > 100: _color = KDS.Colors.Red
             pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
 
-        pygame.display.update()
+        pygame.display.flip()
         clock.tick(60)
         
 main()
