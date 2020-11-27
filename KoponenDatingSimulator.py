@@ -608,7 +608,7 @@ class Inventory:
 
     def useItemAtIndex(self, index: int, surface: pygame.Surface, *args):
         item = self.storage[index]
-        if not isinstance(item, Lantern) and item not in (Inventory.emptySlot, Inventory.doubleItem):
+        if item not in (Inventory.emptySlot, Inventory.doubleItem):
             dumpVals = item.use(args, surface)
             if Player.direction: renderOffset = -dumpVals.get_width()
             else: renderOffset = Player.rect.width + 2
