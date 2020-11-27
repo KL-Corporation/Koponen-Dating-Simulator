@@ -46,5 +46,5 @@ while r:
         x+= 1
 
     fs+=0.01
-    c.tick(60)
+    c.tick_busy_loop(60)
     pygame.display.flip()

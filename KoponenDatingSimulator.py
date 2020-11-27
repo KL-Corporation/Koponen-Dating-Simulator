@@ -2718,7 +2718,7 @@ def esc_menu_f():
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         c = False
-        clock.tick(locked_fps)
+        clock.tick_busy_loop(locked_fps)
 
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, DebugMode, pauseOnFocusLoss
@@ -2802,7 +2802,7 @@ def settings_menu():
         pygame.display.flip()
         display.fill((0, 0, 0))
         c = False
-        clock.tick(locked_fps)
+        clock.tick_busy_loop(locked_fps)
 
 def main_menu():
     global current_map, MenuMode, DebugMode
@@ -3045,7 +3045,7 @@ def main_menu():
         c = False
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
-        clock.tick(locked_fps)
+        clock.tick_busy_loop(locked_fps)
 
 def level_finished_menu():
     global game_pause_background, DebugMode, level_finished_running
@@ -3161,7 +3161,7 @@ def level_finished_menu():
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
-        clock.tick(locked_fps)
+        clock.tick_busy_loop(locked_fps)
 #endregion
 #region Check Terms
 agr(tcagr)
@@ -3579,7 +3579,7 @@ while main_running:
     tick += 1
     if tick > 60:
         tick = 0
-    clock.tick(locked_fps)
+    clock.tick_busy_loop(locked_fps)
 #endregion
 #endregion
 #region Application Quitting

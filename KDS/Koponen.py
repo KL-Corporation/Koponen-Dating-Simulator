@@ -425,6 +425,6 @@ class Talk:
 
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
-            clock.tick(fps)
+            clock.tick_busy_loop(fps)
         
         pygame.mouse.set_visible(False)

@@ -744,6 +744,6 @@ def main():
             pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick_busy_loop(60)
         
 main()

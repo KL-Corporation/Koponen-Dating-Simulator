@@ -55,4 +55,4 @@ while True:
 
     # Update ------------------------------------------------- #
     pygame.display.flip()
-    mainClock.tick(4)
+    mainClock.tick_busy_loop(4)

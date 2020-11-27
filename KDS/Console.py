@@ -457,7 +457,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)
-        clock.tick(60)
+        clock.tick_busy_loop(60)
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
