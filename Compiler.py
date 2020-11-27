@@ -18,6 +18,8 @@ questions = [
 
 answers = inquirer.prompt(questions)
 
+parentDir = os.path.dirname(os.path.abspath(__file__))
+
 BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 EditorTexturesPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Textures", "Editor")
 BuiltNames = []
@@ -39,12 +41,12 @@ for buildType in answers["toBuild"]:
         SpecPath,
         "--windowed",
         "--icon",
-        f"F:/PyGame/Koponen-Dating-Simulator/Assets/Textures/Branding/{iconName}",
+        f"{parentDir}/Assets/Textures/Branding/{iconName}",
         "--add-data",
-        "F:/PyGame/Koponen-Dating-Simulator/Assets;Assets/",
+        f"{parentDir}/Assets;Assets/",
         "--paths",
-        "F:/PyGame/Koponen-Dating-Simulator/KDS",
-        f"{os.path.dirname(os.path.abspath(__file__))}/{fileName}"
+        f"{parentDir}/KDS",
+        f"{parentDir}/{fileName}"
     ])
     if os.path.isdir(EditorTexturesPath):
         shutil.rmtree(EditorTexturesPath)
