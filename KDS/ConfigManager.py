@@ -109,10 +109,10 @@ class Save:
     """
     Save File Structure:
         ↳ save_0.kds (.zip)
-            ↳ items.kbf (binary)
-            ↳ enemies.kbf (binary)
-            ↳ explosions.kbf (binary)
-            ↳ ballistic_objects.kbf (binary)
+            ↳ items.kdf (json)
+            ↳ enemies.kdf (json)
+            ↳ explosions.kdf (json)
+            ↳ ballistic_objects.kdf (json)
             ↳ missions.kbf (binary)
             ↳ inventory.kbf (binary)
             ↳ data.kdf (json)
@@ -200,7 +200,7 @@ class Save:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             _path = os.path.join(SaveCachePath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
             Save.ConvertToSave(SaveItem)
-            try:
+            try:1
                 with open(_path, "wb") as f:
                     temp = pickle.dumps(SaveItem)
                     f.write(temp)

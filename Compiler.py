@@ -20,8 +20,8 @@ answers = inquirer.prompt(questions)
 
 parentDir = os.path.dirname(os.path.abspath(__file__))
 
-BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 EditorTexturesPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Textures", "Editor")
+BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 BuiltNames = []
 for buildType in answers["toBuild"]:
     if buildType == "Koponen Dating Simulator":
