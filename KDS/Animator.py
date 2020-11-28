@@ -93,17 +93,6 @@ class Animation:
             pygame.Surface: Currently active frame.
         """
         return self.images[self.tick]
-    
-    def toSave(self):
-        for i in range(len(self.images)):
-            if not isinstance(self.images[i], list):
-                self.images[i] = pygame.surfarray.array2d(self.images[i]).tolist()
-                
-    def fromSave(self):
-        for i in range(len(self.images)):
-            if isinstance(self.images[i], list):
-                self.images[i] = pygame.surfarray.make_surface(numpy.array(self.images[i])).convert()
-                self.images[i].set_colorkey(self.colorkey)
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
@@ -131,14 +120,6 @@ class MultiAnimation:
     def reset(self):
         for anim in self.animations:
             self.animations[anim].tick = 0
-    
-    def toSave(self) -> None:
-        for anim in self.animations:
-            self.animations[anim].toSave()
-                
-    def fromSave(self) -> None:
-        for anim in self.animations:
-            self.animations[anim].fromSave()
 
 class AnimationType:
     Linear = lambda t: t

@@ -1359,19 +1359,6 @@ class Item:
 
         return Item_list, inventory
 
-    def toSave(self):
-        """Converts all textures to strings
-        """
-        if not isinstance(self.texture, list):
-            self.texture = pygame.surfarray.array2d(self.texture).tolist()
-            
-    def fromSave(self):
-        """Converts all strings back to textures
-        """
-        if isinstance(self.texture, list):
-            self.texture = pygame.surfarray.make_surface(numpy.array(self.texture)).convert()
-            self.texture.set_colorkey(KDS.Colors.White)
-
     def pickup(self):
         
         return False

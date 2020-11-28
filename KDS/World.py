@@ -363,21 +363,6 @@ class BallisticProjectile:
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
         return self.counter > self.flight_time
-    
-    def toSave(self):
-        """Converts all textures to strings
-        """
-        if not isinstance(self.texture, list):
-            self.texture = (pygame.surfarray.array2d(self.texture).tolist(), self.texture.get_colorkey())
-        
-    def fromSave(self):
-        """Converts all strings back to textures
-        """
-        if isinstance(self.texture, list):
-            colorkey = self.texture[1]
-            self.texture = pygame.surfarray.make_surface(numpy.array(self.texture[0])).convert()
-            if colorkey != None:
-                self.texture.set_colorkey(colorkey)
 
 class itemTools:
     class rk62:
@@ -419,16 +404,6 @@ class Explosion:
         txtre = self.animation.update()
         Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
         return self.animation.done, self.animation.tick
-    
-    def toSave(self):
-        """Converts all textures to strings
-        """
-        self.animation.toSave()
-        
-    def fromSave(self):
-        """Converts all strings back to textures
-        """
-        self.animation.fromSave()
     
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)

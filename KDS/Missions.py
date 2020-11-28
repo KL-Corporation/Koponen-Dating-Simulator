@@ -102,14 +102,6 @@ class Task:
         self.lastFinished = self.finished
         return surface
 
-    def toSave(self):
-        if self.renderedText != "unrendered":
-            self.renderedText = "unrendered"
-            
-    def fromSave(self):
-        if self.renderedText == "unrendered":
-            self.renderedText = TaskFont.render(self.text, True, KDS.Colors.White)
-
 class KoponenTask(Task):
     def __init__(self, missionName: str, safeName: str, text: str, itemID: int, itemPrompt: str) -> None:
         super().__init__(missionName, safeName, text)
@@ -208,18 +200,6 @@ class Mission:
             i += 1
         return surface
 
-    def toSave(self):
-        if self.renderedText != "unrendered":
-            self.renderedText = "unrendered"
-        for task in self.task_values:
-            task.toSave()
-
-    def fromSave(self):
-        if self.renderedText == "unrendered":
-            self.renderedText = MissionFont.render(self.text, True, KDS.Colors.White)
-        for task in self.task_values:
-            task.fromSave()
-
 class MissionHolder:
     def __init__(self) -> None:
         self.missions: Dict[str, Mission] = {}
@@ -253,12 +233,6 @@ class MissionHolder:
             for task in mission.task_values:
                 maxWidth = max(maxWidth, task.renderedTextSize[0])
         return maxWidth
-    
-    def toSave(self):
-        for mission in self.mission_values: mission.toSave()
-        
-    def fromSave(self):
-        for mission in self.mission_values: mission.fromSave()
 
 Missions = MissionHolder()     
 #endregion
