@@ -42,6 +42,7 @@ class PersistentPaths:
     LogPath = os.path.join(AppDataPath, "logs")
     Screenshots = os.path.join(AppDataPath, "screenshots")
 os.makedirs(PersistentPaths.CachePath, exist_ok=True)
+KDS.System.emptdir(PersistentPaths.CachePath)
 os.makedirs(PersistentPaths.SavePath, exist_ok=True)
 os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
 os.makedirs(PersistentPaths.LogPath, exist_ok=True)
@@ -644,6 +645,7 @@ class Inventory:
             if self.storage[i] != Inventory.emptySlot:
                 count += 1
         return count
+KDS.ConfigManager.Save.ignoreTypes.append(Inventory)
 #endregion
 
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
@@ -2459,21 +2461,20 @@ def save_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Saving Game...")
     KDS.ConfigManager.Save.init(1)
     
-    global Items, Enemies, Explosions, BallisticObjects
-    #FUCK
-    #KDS.ConfigManager.Save.SetClassList(Items, "items.kdf")
-    KDS.ConfigManager.Save.SetClassList(Enemies, "enemies.kdf")
+    global Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetClassList(Explosions, "explosions.kdf")
     KDS.ConfigManager.Save.SetClassList(BallisticObjects, "ballistic_objects.kdf")
-    global Player
-    KDS.ConfigManager.Save.SetClass(Player, "player.kdf")
+    global Player, PlayerClass
+    KDS.ConfigManager.Save.SetClass(Player, "player.kdf", identifier="")
     #KDS.ConfigManager.Save.SetClass(KDS.Missions.Missions, "missions.kdf")
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Game/scroll", scroll)
-    global tiles, specialTilesD
+    global tiles, specialTilesD, Items, Item, Enemies
     KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
-    
+    KDS.ConfigManager.Save.SetItems(Items)
+    KDS.ConfigManager.Save.SetEnemies(Enemies)
+
     KDS.ConfigManager.Save.init(1)
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Saved.")
 
@@ -2483,25 +2484,20 @@ def load_function():
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
     if newSave: return
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
-    
-    global Items, Enemies, Explosions, BallisticObjects
-    #FUCK
-    Items = numpy.array()
-    Enemies = numpy.array(KDS.ConfigManager.Save.GetClass())
-    Explosions = KDS.ConfigManager.Save.GetWorld()
-    BallisticObjects = KDS.ConfigManager.Save.GetWorld()
-    global Player
-    Player.rect.topleft = tuple(KDS.ConfigManager.Save.GetData("Player/position", Player.rect.topleft))
-    Player.health = KDS.ConfigManager.Save.GetData("Player/health", Player.health)
-    Player.stamina = KDS.ConfigManager.Save.GetData("Player/stamina", Player.stamina)
-    #Player.inventory.storage = KDS.ConfigManager.Save.GetData("Player/Inventory/storage", Player.inventory.storage)
-    #Player.inventory.SIndex = KDS.ConfigManager.Save.GetData("Player/Inventory/index", Player.inventory.SIndex)
-    Player.keys = KDS.ConfigManager.Save.GetData("Player/keys", Player.keys)
-    Player.farting = KDS.ConfigManager.Save.GetData("Player/farting", Player.farting)
+
+    global Explosions, BallisticObjects
+    KDS.ConfigManager.Save.GetClassList(Explosions, "explosions.kdf")
+    KDS.ConfigManager.Save.GetClassList(BallisticObjects, "ballistic_objects.kdf")
+    global Player, PlayerClass
+    KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", "")
     global koponen_rect, scroll
     koponen_rect.topleft = KDS.ConfigManager.Save.GetData("Koponen/position", koponen_rect.topleft)
-    global tiles
+    scroll = KDS.ConfigManager.Save.GetData("Game/scroll", scroll)
+    global tiles, specialTilesD, Items, Item, Enemies
     KDS.ConfigManager.Save.GetTiles(tiles, RespawnAnchor)
+    Items = numpy.array(KDS.ConfigManager.Save.GetItems(Item))
+    Enemies = numpy.array(KDS.ConfigManager.Save.GetEnemies())
+    
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
 
 def respawn_function():

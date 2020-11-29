@@ -4,6 +4,7 @@ import shutil
 import numpy
 import pygame
 import KDS.Animator
+import KDS.AI
 import KDS.Gamemode
 import KDS.Logging
 import os
@@ -33,14 +34,16 @@ class JSON:
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
         
-        path = JSON.ToKeyList(jsonPath)
-        tmpConfig = config
-        for i in range(len(path)):
-            p = path[i]
-            if i < len(path) - 1:
-                if p not in tmpConfig: tmpConfig[p] = {}
-                tmpConfig = tmpConfig[p]
-            else: tmpConfig[p] = value
+        if len(jsonPath) > 0:
+            path = JSON.ToKeyList(jsonPath)
+            tmpConfig = config
+            for i in range(len(path)):
+                p = path[i]
+                if i < len(path) - 1:
+                    if p not in tmpConfig: tmpConfig[p] = {}
+                    tmpConfig = tmpConfig[p]
+                else: tmpConfig[p] = value
+        else: config = value
         
         try:
             with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
@@ -146,7 +149,7 @@ class Save:
         #encodes and stores a save file to storage
 
     @staticmethod
-    def init(_SaveIndex: int) -> bool:
+    def init(_SaveIndex: int):
         """decodes and loads a save file to cache.
 
         Args:
@@ -167,8 +170,9 @@ class Save:
             if os.path.isfile(_path):
                 zipfile.ZipFile(_path, "r").extractall(SaveCachePath)
                 return False
+            return True
+        KDS.Logging.AutoError(f"Game settings are incorrect! Gamemode: {KDS.Gamemode.gamemode}, SaveIndex: {Save.SaveIndex}.")
         return True
-
         #decodes and loads a save file to cache
      
     @staticmethod
@@ -177,25 +181,23 @@ class Save:
     
     @staticmethod            
     def SetData(path: str, item: Any):
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            JSON.Set(Save.PlayerFileCache, path, item)
+        JSON.Set(Save.PlayerFileCache, path, item)
      
     @staticmethod
     def GetData(path: str, default: Any):
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            return JSON.Get(Save.PlayerFileCache, path, default)
-        else: return default
+        return JSON.Get(Save.PlayerFileCache, path, default, True)
     
-    ignoreTileTypes = [
+    ignoreTypes = [
         pygame.Surface,
         pygame.mixer.Sound,
         pygame.Rect,
         KDS.Animator.Animation,
         KDS.Animator.MultiAnimation
+        #Inventory is automatically appended here by main
     ]
     
     @staticmethod
-    def SetClass(item: Any, filePathFromSaveCache: str, *identificationAttributes: str):
+    def SetClass(item: Any, filePathFromSaveCache: str, *identificationAttributes: str, identifier: str = "null", ):
         # Älä haasta meitä oikeuteen omena, pliis.
         iVars: Dict[Any] = item.__dict__
         ignoreKeys = []
@@ -203,7 +205,7 @@ class Save:
             testVar = var
             if isinstance(var, list) or isinstance(var, tuple):
                 testVar = var[0] if len(var) > 0 else var
-            for ignore in Save.ignoreTileTypes:
+            for ignore in Save.ignoreTypes:
                 if isinstance(testVar, ignore):
                     ignoreKeys.append(key)
                     break
@@ -214,7 +216,7 @@ class Save:
                     sVars[key] = { "saveVarTupleOverride": True, "values": var }
                 else: sVars[key] = var
             else: KDS.Logging.Log(KDS.Logging.LogType.debug, f"Ignored variable [{key}, {var}] from {item}.")
-        itemIdentifier = ""
+        itemIdentifier = identifier if len(identificationAttributes) < 1 else ""
         for i in range(len(identificationAttributes)):
             if i > 0: itemIdentifier += "-"
             itemIdentifier += str(getattr(item, identificationAttributes[i]))
@@ -235,7 +237,7 @@ class Save:
 
     @staticmethod
     def SetClassList(item: Iterable[Any], filePathFromSaveCache: str):
-        for i in item: Save.SetClass(i, os.path.join(SaveCachePath, filePathFromSaveCache))
+        for i, v in enumerate(item): Save.SetClass(v, os.path.join(SaveCachePath, filePathFromSaveCache), identifier=str(i))
         
     @staticmethod
     def GetClassList(Class, filePathFromSaveCache: str):
@@ -250,61 +252,56 @@ class Save:
     
     @staticmethod
     def SetTiles(tiles, specialTilesD, RespawnAnchorClass):
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            tiles = tiles.copy()
-            for row in tiles:
-                for tile in row:
-                    if tile.serialNumber in specialTilesD:
-                        Save.SetClass(tile.__dict__, os.path.join(SaveCachePath, "tiles.kdf"), "rect", "serialNumber")
-            JSON.Set(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", f"{RespawnAnchorClass.active.rect.left}-{RespawnAnchorClass.active.rect.top}-{RespawnAnchorClass.active.serialNumber}" if RespawnAnchorClass.active != None else None)
+        tiles = tiles.copy()
+        for row in tiles:
+            for tile in row:
+                if tile.serialNumber in specialTilesD:
+                    Save.SetClass(tile, os.path.join(SaveCachePath, "tiles.kdf"), "rect", "serialNumber")
+        JSON.Set(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", f"{RespawnAnchorClass.active.rect.left}-{RespawnAnchorClass.active.rect.top}-{RespawnAnchorClass.active.serialNumber}" if RespawnAnchorClass.active != None else None)
     
     @staticmethod
     def GetTiles(tiles, RespawnAnchorClass):
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            savedSpecials = JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "", {})
-            for row in tiles:
-                for tile in row:
-                    if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" in savedSpecials:
-                        vals: Dict[str, Any] = savedSpecials[f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}"]
-                        for k, v in vals.items():
-                            if isinstance(v, dict) and "saveVarTupleOverride" in v and v["saveVarTupleOverride"] == True:
-                                setattr(tile, k, tuple(v["values"]))
-                            else: setattr(tile, k, v)
-                    if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" == JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", None):
-                        RespawnAnchorClass.active = tile
-
-"""
-def SetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, SaveValue):
-    if os.path.isfile(FilePath):
-        try:
-            with open(FilePath, "r") as f:
-                try: config = json.loads(f.read())
-                except json.decoder.JSONDecodeError: config = {}
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-    else:
-        config = {}
-    if SaveDirectory not in config:
-        config[SaveDirectory] = {}
-    config[SaveDirectory][SaveName] = SaveValue
-    try:
-        with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-    except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
+        savedSpecials = JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "", {})
+        for row in tiles:
+            for tile in row:
+                if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" in savedSpecials:
+                    vals: Dict[str, Any] = savedSpecials[f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}"]
+                    for k, v in vals.items():
+                        if isinstance(v, dict) and "saveVarTupleOverride" in v and v["saveVarTupleOverride"] == True:
+                            setattr(tile, k, tuple(v["values"]))
+                        else: setattr(tile, k, v)
+                if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" == JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", None):
+                    RespawnAnchorClass.active = tile
+                        
+    @staticmethod
+    def SetItems(items):
+        for i, v in enumerate(items): Save.SetClass(v, os.path.join(SaveCachePath, "items.kdf"), identifier=f"{v.serialNumber}-{i}")
+        
+    @staticmethod
+    def GetItems(ItemClass):
+        #Taas, omena
+        iList: Dict[str, Any] = JSON.Get(os.path.join(SaveCachePath, "items.kdf"), "", None, True)
+        if iList == None:
+            KDS.Logging.AutoError("Save file for items not found!")
+            return
+        instanceList = []
+        for key in iList:
+            srlNum = int(key.split("-")[0])
+            instanceList.append(Save.GetClass(ItemClass.serialNumbers[srlNum], "items.kdf", key))
+        return instanceList
     
-def GetJSONLegacy(FilePath: str, SaveDirectory: str, SaveName: str, DefaultValue):
-    if os.path.isfile(FilePath):
-        try:
-            with open(FilePath, "r") as f:
-                try: config = json.loads(f.read())
-                except json.decoder.JSONDecodeError: config = {}
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-    else:
-        config = {}
-    if SaveDirectory not in config:
-        config[SaveDirectory] = {}
-    if SaveName not in config[SaveDirectory]:
-        config[SaveDirectory][SaveName] = DefaultValue
-        try:
-            with open(FilePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-    return config[SaveDirectory][SaveName]
-"""
+    @staticmethod
+    def SetEnemies(enemies):
+        for i, v in enumerate(enemies): Save.SetClass(v, os.path.join(SaveCachePath, "enemies.kdf"), identifier=f"{type(v)}-{i}")
+        
+    @staticmethod
+    def GetEnemies():
+        eList: Dict[str, Any] = JSON.Get(os.path.join(SaveCachePath, "enemies.kdf"), "", None, True)
+        if eList == None:
+            KDS.Logging.AutoError("Save file for enemies not found!")
+            return
+        instanceList = []
+        for key in eList:
+            typeKey = key.split("-")[0]
+            instanceList.append(Save.GetClass(getattr(KDS.AI, typeKey)(), "enemies.kdf", key))
+        return instanceList
