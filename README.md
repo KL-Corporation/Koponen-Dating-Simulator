@@ -21,7 +21,11 @@
 [<img align="left" alt="GitHub" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Github-desktop-logo-symbol.svg" />][gitHubLink]
 [<img align="left" alt="Stack Overflow" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Stack_Overflow_icon.svg" />][stackOverflowLink]
 
-[//]: # (Temporary)
+---
+
+[<img align="left" alt="Koponen Dating Simulator Repo's Stats" src="https://github-readme-stats.codestackr.vercel.app/api?username=NALStudio/Koponen-Dating-Simulator&show_icons=true&hide_border=true&count_private=true" />][github]
+
+[//]: # (Temporary Below)
 [website]: http://NALStudio.tk
 [repo]: https://github.com/NALStudio/Koponen-Dating-Simulator
 
