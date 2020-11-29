@@ -12,6 +12,8 @@
 <br />
 <br />
 
+---
+
 ### Languages and Tools Used:
 [<img align="left" alt="Visual Studio Code" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" />][vscodeLink]
 [<img align="left" alt="Python" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" />][pythonLink]
@@ -20,10 +22,6 @@
 [<img align="left" alt="Git" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Git_Icon.svg" />][gitLink]
 [<img align="left" alt="GitHub" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Github-desktop-logo-symbol.svg" />][gitHubLink]
 [<img align="left" alt="Stack Overflow" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Stack_Overflow_icon.svg" />][stackOverflowLink]
-
----
-
-[<img align="left" alt="Koponen Dating Simulator Repo's Stats" src="https://github-readme-stats.codestackr.vercel.app/api?username=NALStudio/Koponen-Dating-Simulator&show_icons=true&hide_border=true&count_private=true" />][github]
 
 [//]: # (Temporary Below)
 [website]: http://NALStudio.tk
