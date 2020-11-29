@@ -261,7 +261,6 @@ hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.8)
-#Nice
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
 #endregion
 KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
@@ -274,7 +273,7 @@ black_tint.set_alpha(170)
 
 tmp_jukebox_data = tip_font.render("Use Jukebox [Click: E]", True, KDS.Colors.White)
 tmp_jukebox_data2 = tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.White)
-jukebox_tip = pygame.Surface((max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height()))
+jukebox_tip = pygame.Surface((max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height()), SRCALPHA)
 jukebox_tip.blit(tmp_jukebox_data, ((tmp_jukebox_data2.get_width() - tmp_jukebox_data.get_width()) / 2, 0))
 jukebox_tip.blit(tmp_jukebox_data2, ((tmp_jukebox_data.get_width() - tmp_jukebox_data2.get_width()) / 2, tmp_jukebox_data.get_height()))
 del tmp_jukebox_data, tmp_jukebox_data2
@@ -2412,7 +2411,6 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
-        display.fill(scaled_loadingScreen.get_at((0, 0)))
         display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
         pygame.display.flip()
 
@@ -2424,10 +2422,10 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     
     #region Load World Data
     global Items, Enemies, Explosions, BallisticObjects
-    Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
-    Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
-    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
-    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
+    Items = numpy.array([])
+    Enemies = numpy.array([])
+    Explosions = []
+    BallisticObjects = []
     #endregion
     
     LoadGameSettings()
@@ -2442,11 +2440,10 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     animation_has_played = False
     level_finished = False
     death_wait = 0
-    is_new_save = KDS.ConfigManager.Save.GetExistence(KDS.ConfigManager.Save.SaveIndex)
     #endregion
     
     ########## iPuhelin ##########
-    if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and is_new_save):
+    if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and loadEntities):
         Player.inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6, i_textures[6])
 
     pygame.mouse.set_visible(False)
@@ -2463,21 +2460,17 @@ def save_function():
     KDS.ConfigManager.Save.init(1)
     
     global Items, Enemies, Explosions, BallisticObjects
-    #KDS.ConfigManager.Save.SetWorld("items", Items.tolist())
-    #KDS.ConfigManager.Save.SetWorld("enemies", Enemies.tolist())
-    KDS.ConfigManager.Save.SetWorld("explosions", Explosions)
-    KDS.ConfigManager.Save.SetWorld("ballistic_objects", BallisticObjects)
-    KDS.ConfigManager.Save.SetWorld("missions", KDS.Missions.Missions)
+    #FUCK
+    #KDS.ConfigManager.Save.SetClassList(Items, "items.kdf")
+    KDS.ConfigManager.Save.SetClassList(Enemies, "enemies.kdf")
+    KDS.ConfigManager.Save.SetClassList(Explosions, "explosions.kdf")
+    KDS.ConfigManager.Save.SetClassList(BallisticObjects, "ballistic_objects.kdf")
     global Player
-    KDS.ConfigManager.Save.SetData("Player/position", Player.rect.topleft)
-    KDS.ConfigManager.Save.SetData("Player/health", Player.health)
-    KDS.ConfigManager.Save.SetData("Player/stamina", Player.stamina)
-    #KDS.ConfigManager.Save.SetData("Player/Inventory/storage", Player.inventory.storage)
-    #KDS.ConfigManager.Save.SetData("Player/Inventory/index", Player.inventory.SIndex)
-    KDS.ConfigManager.Save.SetData("Player/keys", Player.keys)
-    KDS.ConfigManager.Save.SetData("Player/farting", Player.farting)
+    KDS.ConfigManager.Save.SetClass(Player, "player.kdf")
+    #KDS.ConfigManager.Save.SetClass(KDS.Missions.Missions, "missions.kdf")
     global koponen_rect, scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
+    KDS.ConfigManager.Save.SetData("Game/scroll", scroll)
     global tiles, specialTilesD
     KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
     
@@ -2492,10 +2485,11 @@ def load_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
     
     global Items, Enemies, Explosions, BallisticObjects
-    #Items = numpy.array(KDS.ConfigManager.Save.GetWorld("items", []))
-    Enemies = numpy.array(KDS.ConfigManager.Save.GetWorld("enemies", []))
-    Explosions = KDS.ConfigManager.Save.GetWorld("explosions", [])
-    BallisticObjects = KDS.ConfigManager.Save.GetWorld("ballistic_objects", [])
+    #FUCK
+    Items = numpy.array()
+    Enemies = numpy.array(KDS.ConfigManager.Save.GetClass())
+    Explosions = KDS.ConfigManager.Save.GetWorld()
+    BallisticObjects = KDS.ConfigManager.Save.GetWorld()
     global Player
     Player.rect.topleft = tuple(KDS.ConfigManager.Save.GetData("Player/position", Player.rect.topleft))
     Player.health = KDS.ConfigManager.Save.GetData("Player/health", Player.health)

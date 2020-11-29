@@ -1,14 +1,14 @@
 #region Importing
 import json
-import dill as pickle
 import shutil
+import numpy
 import pygame
 import KDS.Animator
 import KDS.Gamemode
 import KDS.Logging
 import os
 import zipfile
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath
@@ -21,7 +21,7 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
 class JSON:
     @staticmethod
     def ToKeyList(jsonPath: str):
-        return jsonPath.split("/")
+        return jsonPath.strip("/").split("/")
     
     @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any):
@@ -55,6 +55,8 @@ class JSON:
                     try: config = json.loads(f.read())
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
+            if len(jsonPath) < 1:
+                return config
             path = JSON.ToKeyList(jsonPath)
             tmpConfig = config
             for i in range(len(path)):
@@ -109,12 +111,11 @@ class Save:
     """
     Save File Structure:
         ↳ save_0.kds (.zip)
+            ↳ tiles.kdf (json)
             ↳ items.kdf (json)
             ↳ enemies.kdf (json)
-            ↳ explosions.kdf (json)
             ↳ ballistic_objects.kdf (json)
-            ↳ missions.kbf (binary)
-            ↳ inventory.kbf (binary)
+            ↳ player.kdf (json)
             ↳ data.kdf (json)
                 ↳ Player
                     ↳ position (tuple)
@@ -126,8 +127,9 @@ class Save:
                     ↳ position (tuple)
                 ↳ Game
                     ↳ scroll (list)
-                    ↳ SpecialTiles
-                        ↳ [{pos[0]}-{pos[1]}-{serial}] (dict of class values except pygame shite)
+
+            ↳ missions.kbf ([undetermined]])
+            ↳ inventory.kbf ([undetermined]])
     """
     class DataType:
         World = "world"
@@ -173,53 +175,6 @@ class Save:
     def GetExistence(index: int):
         return True if os.path.isfile(os.path.join(SaveDirPath, f"save_{index}.kds")) else False
     
-    @staticmethod
-    def ConvertToSave(SaveItem):
-        if not hasattr(SaveItem, "toSave"):
-            for item in SaveItem:
-                if hasattr(item, "toSave"):
-                    if callable(item.toSave): item.toSave()
-                    else: KDS.Logging.AutoError(f"toSave of {item} is not callable!")
-        elif callable(SaveItem.toSave): SaveItem.toSave()
-        else: KDS.Logging.AutoError(f"toSave of {SaveItem} is not callable!")
-    
-    @staticmethod
-    def ConvertFromSave(SaveItem):
-        if not hasattr(SaveItem, "fromSave"):
-            for item in SaveItem:
-                if hasattr(item, "fromSave"):
-                    if callable(item.fromSave): item.fromSave()
-                    else: KDS.Logging.AutoError(f"fromSave of {item} is not callable!")
-                for thingy in item.__dict__:
-                    print(item.__dict__[thingy])
-        elif callable(SaveItem.fromSave): SaveItem.fromSave()
-        else: KDS.Logging.AutoError(f"fromSave of {SaveItem} is not callable!")
-    
-    @staticmethod
-    def SetWorld(path: str, SaveItem):
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            _path = os.path.join(SaveCachePath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
-            Save.ConvertToSave(SaveItem)
-            try:
-                with open(_path, "wb") as f:
-                    temp = pickle.dumps(SaveItem)
-                    f.write(temp)
-            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-            Save.ConvertFromSave(SaveItem)
-    
-    @staticmethod
-    def GetWorld(path: str, DefaultValue):
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            _path = os.path.join(SaveCachePath, path + (".kbf" if os.path.splitext(path)[1] != ".kbf" else ""))
-            if os.path.isfile(_path):
-                try:
-                    with open(_path, "rb") as f:
-                        data = pickle.loads(f.read())
-                        Save.ConvertFromSave(data)
-                    return data
-                except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-        return DefaultValue
-    
     @staticmethod            
     def SetData(path: str, item: Any):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
@@ -240,44 +195,82 @@ class Save:
     ]
     
     @staticmethod
+    def SetClass(item: Any, filePathFromSaveCache: str, *identificationAttributes: str):
+        # Älä haasta meitä oikeuteen omena, pliis.
+        iVars: Dict[Any] = item.__dict__
+        ignoreKeys = []
+        for key, var in iVars.items():
+            testVar = var
+            if isinstance(var, list) or isinstance(var, tuple):
+                testVar = var[0] if len(var) > 0 else var
+            for ignore in Save.ignoreTileTypes:
+                if isinstance(testVar, ignore):
+                    ignoreKeys.append(key)
+                    break
+        sVars = {}
+        for key, var in iVars.items():
+            if key not in ignoreKeys:
+                if isinstance(var, tuple):
+                    sVars[key] = { "saveVarTupleOverride": True, "values": var }
+                else: sVars[key] = var
+            else: KDS.Logging.Log(KDS.Logging.LogType.debug, f"Ignored variable [{key}, {var}] from {item}.")
+        itemIdentifier = ""
+        for i in range(len(identificationAttributes)):
+            if i > 0: itemIdentifier += "-"
+            itemIdentifier += str(getattr(item, identificationAttributes[i]))
+        JSON.Set(os.path.join(SaveCachePath, filePathFromSaveCache), itemIdentifier, sVars)
+    
+    @staticmethod
+    def GetClass(Class, filePathFromSaveCache: str, identifier: str):
+        attrs = JSON.Get(os.path.join(SaveCachePath, filePathFromSaveCache), identifier, None, True)
+        if attrs == None:
+            KDS.Logging.AutoError(f"Saved items of type {type(Class)} with identifier {identifier} not found!")
+            return
+        instance = Class()
+        for k, v in attrs.items():
+            if isinstance(v, dict) and "saveVarTupleOverride" in v and v["saveVarTupleOverride"] == True:
+                setattr(instance, k, tuple(v["values"]))
+            else: setattr(instance, k, v)
+        return instance
+
+    @staticmethod
+    def SetClassList(item: Iterable[Any], filePathFromSaveCache: str):
+        for i in item: Save.SetClass(i, os.path.join(SaveCachePath, filePathFromSaveCache))
+        
+    @staticmethod
+    def GetClassList(Class, filePathFromSaveCache: str):
+        cList = JSON.Get(os.path.join(SaveCachePath, filePathFromSaveCache), "", None, True)
+        if cList == None:
+            KDS.Logging.AutoError(f"Saved items file for type {type(Class)} not found!")
+            return
+        instanceList = []
+        for key in cList:
+            instanceList.append(Save.GetClass(Class, filePathFromSaveCache, key))
+        return instanceList
+    
+    @staticmethod
     def SetTiles(tiles, specialTilesD, RespawnAnchorClass):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             tiles = tiles.copy()
             for row in tiles:
                 for tile in row:
                     if tile.serialNumber in specialTilesD:
-                        tileVars: Dict[Any] = tile.__dict__
-                        ignoreKeys = []
-                        for key in tileVars:
-                            if isinstance(tileVars[key], list) or isinstance(tileVars[key], tuple):
-                                for ignore in Save.ignoreTileTypes:
-                                    if isinstance(tileVars[key][0], ignore):
-                                        ignoreKeys.append(key)
-                                        break
-                            for ignore in Save.ignoreTileTypes:
-                                if isinstance(tileVars[key], ignore):
-                                    ignoreKeys.append(key)
-                                    break
-                        saveVars = {}
-                        for key, var in tileVars.items():
-                            if key not in ignoreKeys:
-                                saveVars[key] = var
-                            else:
-                                KDS.Logging.Log(KDS.Logging.LogType.debug, f"Ignored variable [{key}, {var}] from special tile of type {tile.serialNumber} at position {tile.rect.topleft}.")
-                        Save.SetData(f"Game/SpecialTiles/{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}", saveVars)
-            Save.SetData("Game/SpecialTiles/Data/RespawnAnchor/active", f"{RespawnAnchorClass.active.rect.left}-{RespawnAnchorClass.active.rect.top}-{RespawnAnchorClass.active.serialNumber}" if RespawnAnchorClass.active != None else None)
+                        Save.SetClass(tile.__dict__, os.path.join(SaveCachePath, "tiles.kdf"), "rect", "serialNumber")
+            JSON.Set(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", f"{RespawnAnchorClass.active.rect.left}-{RespawnAnchorClass.active.rect.top}-{RespawnAnchorClass.active.serialNumber}" if RespawnAnchorClass.active != None else None)
     
     @staticmethod
     def GetTiles(tiles, RespawnAnchorClass):
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            savedSpecials = Save.GetData("Game/SpecialTiles", {})
+            savedSpecials = JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "", {})
             for row in tiles:
                 for tile in row:
                     if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" in savedSpecials:
                         vals: Dict[str, Any] = savedSpecials[f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}"]
                         for k, v in vals.items():
-                            setattr(tile, k, v)
-                    if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" == Save.GetData("Game/SpecialTiles/Data/RespawnAnchor/active", None):
+                            if isinstance(v, dict) and "saveVarTupleOverride" in v and v["saveVarTupleOverride"] == True:
+                                setattr(tile, k, tuple(v["values"]))
+                            else: setattr(tile, k, v)
+                    if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" == JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", None):
                         RespawnAnchorClass.active = tile
 
 """
