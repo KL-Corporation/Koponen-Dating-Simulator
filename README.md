@@ -1,7 +1,8 @@
 # Koponen-Dating-Simulator
-
 [<img align="left" alt="Koponen Dating Simulator" width="128px" src="https://imgur.com/jD7k2Ac.png" />][website]
 
+<br />
+<br />
 <br />
 <br />
 
