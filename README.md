@@ -2,9 +2,13 @@
 
 [<img align="left" alt="Koponen Dating Simulator" width="128px" src="https://imgur.com/jD7k2Ac.png" />][website]
 
+<br />
+
 ### Flagship Product of KL Corporation
 
 [<img align="left" alt="KL Corporation" width="64px" src="https://imgur.com/QNZjW7v.png" />][website]
+
+<br />
 
 ### Languages and Tools Used:
 [<img align="left" alt="Visual Studio Code" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" />][https://code.visualstudio.com]
