@@ -5,6 +5,8 @@
 <br />
 <br />
 
+---
+
 ### Flagship Product of KL Corporation
 
 [<img align="left" alt="KL Corporation" width="64px" src="https://imgur.com/QNZjW7v.png" />][website]
