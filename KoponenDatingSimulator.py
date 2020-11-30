@@ -2486,8 +2486,8 @@ def load_function():
     KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
 
     global Explosions, BallisticObjects
-    KDS.ConfigManager.Save.GetClassList(Explosions, "explosions.kdf")
-    KDS.ConfigManager.Save.GetClassList(BallisticObjects, "ballistic_objects.kdf")
+    KDS.ConfigManager.Save.GetClassList(KDS.World.Explosion, "explosions.kdf")
+    KDS.ConfigManager.Save.GetClassList(KDS.World.BallisticProjectile, "ballistic_objects.kdf")
     global Player, PlayerClass
     KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", "")
     global koponen_rect, scroll
