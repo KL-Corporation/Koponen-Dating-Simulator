@@ -105,10 +105,10 @@ def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool 
         level_finished_running = False
 #endregion
 #region Initialisation
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Game...")
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising Display Driver...")
+KDS.Logging.debug("Initialising Game...")
+KDS.Logging.debug("Initialising Display Driver...")
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False): pygame.display.toggle_fullscreen()
-KDS.Logging.Log(KDS.Logging.LogType.debug, f"""Display Driver initialised.
+KDS.Logging.debug(f"""Display Driver initialised.
 I=====[ System Info ]=====I
    [Version Info]
    - PyGame Version: {pygame.version.ver}
@@ -138,47 +138,47 @@ I=====[ System Info ]=====I
    - Software Colorkey Blitting: {KDS.Convert.ToBool(display_info.blit_sw_CC)}
    - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_sw_A)}
 I=====[ System Info ]=====I""")
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising KDS modules...")
+KDS.Logging.debug("Initialising KDS modules...")
 KDS.AI.init()
 KDS.World.init()
 KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init("Sinä")
-KDS.Logging.Log(KDS.Logging.LogType.debug, "KDS modules initialised.")
+KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 #endregion
 #region Loading
 #region Settings
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Settings...")
+KDS.Logging.debug("Loading Settings...")
 tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
 max_map = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
 maxParticles = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
 play_walk_sound = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Settings Loaded.")
+KDS.Logging.debug("Settings Loaded.")
 #endregion
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Assets...")
+KDS.Logging.debug("Loading Assets...")
 #region Fonts
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Fonts...")
+KDS.Logging.debug("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 ArialSysFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Font Loading Complete.")
+KDS.Logging.debug("Font Loading Complete.")
 #endregion
 #region Building Textures
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Building Textures...")
+KDS.Logging.debug("Loading Building Textures...")
 door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 exit_door_open = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
 respawn_anchor_on = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
 blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
 blh.set_colorkey(KDS.Colors.White)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Building Texture Loading Complete.")
+KDS.Logging.debug("Building Texture Loading Complete.")
 #endregion
 #region Item Textures
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Item Textures...")
+KDS.Logging.debug("Loading Item Textures...")
 red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
 green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
 blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
@@ -198,10 +198,10 @@ rk62_f_texture.set_colorkey(KDS.Colors.White)
 shotgun_f.set_colorkey(KDS.Colors.White)
 ppsh41_f_texture.set_colorkey(KDS.Colors.White)
 awm_f_texture.set_colorkey(KDS.Colors.White)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Texture Loading Complete.")
+KDS.Logging.debug("Item Texture Loading Complete.")
 #endregion
 #region Menu Textures
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Menu Textures...")
+KDS.Logging.debug("Loading Menu Textures...")
 gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_1.png").convert()
 gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_2.png").convert()
 gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_1.png").convert()
@@ -216,10 +216,10 @@ arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
 loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Menu Texture Loading Complete.")
+KDS.Logging.debug("Menu Texture Loading Complete.")
 #endregion
 #region Audio
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Audio Files...")
+KDS.Logging.debug("Loading Audio Files...")
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
 gasburner_fire = pygame.mixer.Sound("Assets/Audio/Items/gasburner_use.ogg")
 door_opening = pygame.mixer.Sound("Assets/Audio/Tiles/door.ogg")
@@ -262,9 +262,9 @@ hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.8)
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Audio File Loading Complete.")
+KDS.Logging.debug("Audio File Loading Complete.")
 #endregion
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Asset Loading Complete.")
+KDS.Logging.debug("Asset Loading Complete.")
 #endregion
 #region Variable Initialisation
 ambient_tint = pygame.Surface(screen_size)
@@ -301,7 +301,7 @@ current_mission = "none"
 weapon_fire = False
 shoot = False
 
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Defining Variables...")
+KDS.Logging.debug("Defining Variables...")
 selectedSave = 0
 
 esc_menu = False
@@ -373,7 +373,7 @@ DebugMode = False
 MenuMode = 0
 game_pause_background = pygame.transform.scale(screen.copy(), display_size)
 
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Variable Defining Complete.")
+KDS.Logging.debug("Variable Defining Complete.")
 #endregion
 #region Game Settings
 def LoadGameSettings():
@@ -497,7 +497,7 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
         return p_start_pos, k_start_pos
 #endregion
 #region Data
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Data...")
+KDS.Logging.debug("Loading Data...")
 
 with open("Assets/Textures/build.json", "r") as f:
     data = f.read()
@@ -648,10 +648,10 @@ class Inventory:
 KDS.ConfigManager.Save.ignoreTypes.append(Inventory)
 #endregion
 
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Data Loading Complete.")
+KDS.Logging.debug("Data Loading Complete.")
 
 #region Tiles
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Tiles...")
+KDS.Logging.debug("Loading Tiles...")
 class Tile:
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -1281,11 +1281,11 @@ specialTilesD = {
     85: ImpaledBody
 }
 
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Tile Loading Complete.")
+KDS.Logging.debug("Tile Loading Complete.")
 #endregion
 
 #region Items
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Items...")
+KDS.Logging.debug("Loading Items...")
 class Item:
 
     serialNumbers = {}
@@ -1344,7 +1344,7 @@ class Item:
                                 Item_list = numpy.delete(Item_list, index)
                                 showItemTip = False
                             except IndexError as e:
-                                KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
+                                KDS.Logging.AutoError(f"A non-inventory item was tried to pick up and caused an error: {e}")
                     else:
                         if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
                             if inventory.storage[inventory.SIndex + 1] == "none":
@@ -1948,7 +1948,7 @@ Item.serialNumbers = {
     34:Chainsaw,
     35:GasCanister
 }
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Item Loading Complete.")
+KDS.Logging.debug("Item Loading Complete.")
 #endregion
 
 #region Animations
@@ -2000,8 +2000,8 @@ imp_dying = KDS.Animator.Animation(
 knife_animation_object = KDS.Animator.Animation(
     "knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Animation Loading Complete.")
-KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Initialisation Complete.")
+KDS.Logging.debug("Animation Loading Complete.")
+KDS.Logging.debug("Game Initialisation Complete.")
 #endregion
 #endregion
 #region Player
@@ -2250,11 +2250,11 @@ def console():
             KDS.Console.Feed.append(f"Koponen happines: {KDS.Scores.koponen_happiness}")
         elif command_list[0] == "kill" or command_list[0] == "stop":
             KDS.Console.Feed.append("Stopping Game...")
-            KDS.Logging.Log(KDS.Logging.LogType.info, "Stop command issued through console.", True)
+            KDS.Logging.info("Stop command issued through console.", True)
             KDS_Quit()
         elif command_list[0] == "killme":
             KDS.Console.Feed.append("Player Killed.")
-            KDS.Logging.Log(KDS.Logging.LogType.info, "Player kill command issued through console.", True)
+            KDS.Logging.info("Player kill command issued through console.", True)
             Player.health = 0
         elif command_list[0] == "terms":
             setTerms = False
@@ -2290,11 +2290,11 @@ def console():
         elif command_list[0] == "finish":
             if len(command_list) > 1 and command_list[1] == "missions":
                 KDS.Console.Feed.append("Missions Finished.")
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Mission finish issued through console.", True)
+                KDS.Logging.info("Mission finish issued through console.", True)
                 KDS.Missions.Finish()
             elif len(command_list) == 1:
                 KDS.Console.Feed.append("Level Finished.")
-                KDS.Logging.Log(KDS.Logging.LogType.info, "Level finish issued through console.", True)
+                KDS.Logging.info("Level finish issued through console.", True)
                 level_finished = True
             else:
                 KDS.Console.Feed.append("Please provide a proper finish type.")
@@ -2374,12 +2374,10 @@ def agr(tcagr: bool):
 
     def tcagr_agree_function():
         global tcagr_running, main_menu_running
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "Terms and Conditions have been accepted.", False)
-        KDS.Logging.Log(KDS.Logging.LogType.info,
-                        "You said you will not get offended... Dick!", False)
-        KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "Terms Agreed. Updated Value: {}".format(KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)), False)
+        KDS.Logging.info("Terms and Conditions have been accepted.")
+        KDS.Logging.info("You said you will not get offended... Dick!")
+        updatedValue = KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
+        KDS.Logging.debug(f"Terms Agreed. Updated Value: {updatedValue}", False)
         tcagr_running = False
         
 
@@ -2409,7 +2407,7 @@ def agr(tcagr: bool):
 #endregion
 #region Game Functions
 def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Game...")
+    KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
@@ -2454,21 +2452,22 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     if reset_scroll: true_scroll = [-200, -190]
     pygame.event.clear()
     KDS.Keys.Reset()
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Loaded.")
+    KDS.Logging.debug("Game Loaded.")
     return 0
 
 def save_function():
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Saving Game...")
+    KDS.Logging.debug("Saving Game...")
     KDS.ConfigManager.Save.init(1)
     
     global Explosions, BallisticObjects
     KDS.ConfigManager.Save.SetClassList(Explosions, "explosions.kdf")
     KDS.ConfigManager.Save.SetClassList(BallisticObjects, "ballistic_objects.kdf")
     global Player, PlayerClass
-    KDS.ConfigManager.Save.SetClass(Player, "player.kdf", identifier="")
+    KDS.ConfigManager.Save.SetClass(Player, "player.kdf")
     #KDS.ConfigManager.Save.SetClass(KDS.Missions.Missions, "missions.kdf")
-    global koponen_rect, scroll
+    global koponen_rect, true_scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
+    KDS.ConfigManager.Save.SetData("Game/trueScroll", true_scroll)
     KDS.ConfigManager.Save.SetData("Game/scroll", scroll)
     global tiles, specialTilesD, Items, Item, Enemies
     KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
@@ -2476,29 +2475,30 @@ def save_function():
     KDS.ConfigManager.Save.SetEnemies(Enemies)
 
     KDS.ConfigManager.Save.init(1)
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Game Saved.")
+    KDS.Logging.debug("Game Saved.")
 
 def load_function():
     KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Story, 1)
     newSave = KDS.ConfigManager.Save.init(1)
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
     if newSave: return
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Loading Save...")
+    KDS.Logging.debug("Loading Save...")
 
     global Explosions, BallisticObjects
     KDS.ConfigManager.Save.GetClassList(KDS.World.Explosion, "explosions.kdf")
     KDS.ConfigManager.Save.GetClassList(KDS.World.BallisticProjectile, "ballistic_objects.kdf")
     global Player, PlayerClass
-    KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", "")
-    global koponen_rect, scroll
+    KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", KDS.ConfigManager.JSON.NULLPATH)
+    global koponen_rect, scroll, true_scroll
     koponen_rect.topleft = KDS.ConfigManager.Save.GetData("Koponen/position", koponen_rect.topleft)
-    scroll = KDS.ConfigManager.Save.GetData("Game/scroll", scroll)
+    true_scroll = KDS.ConfigManager.Save.GetData("Game/trueScroll", true_scroll)
+    scroll = KDS.ConfigManager.Save.GetData("Game/scroll", [round(true_scroll[0]), round(true_scroll[1])])
     global tiles, specialTilesD, Items, Item, Enemies
     KDS.ConfigManager.Save.GetTiles(tiles, RespawnAnchor)
     Items = numpy.array(KDS.ConfigManager.Save.GetItems(Item))
     Enemies = numpy.array(KDS.ConfigManager.Save.GetEnemies())
     
-    KDS.Logging.Log(KDS.Logging.LogType.debug, "Save Loaded.")
+    KDS.Logging.debug("Save Loaded.")
 
 def respawn_function():
     global animation_has_played, level_finished, death_wait

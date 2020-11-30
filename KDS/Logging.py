@@ -1,10 +1,12 @@
 import inspect
+import traceback
 import logging
 import os
 import cProfile
 import pstats
+from typing import Any
+from pygame.draw import line
 from termcolor import colored
-from pstats import SortKey
 from datetime import datetime
 
 running = False
@@ -19,46 +21,40 @@ def init(_AppDataPath: str, _LogPath: str):
     while len(os.listdir(LogPath)) >= 5:
         os.remove(os.path.join(LogPath, os.listdir(LogPath)[0]))
 
-    logFileName = os.path.join(LogPath, "log_{}.log".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")))
-    logging.basicConfig(filename=logFileName, level=logging.NOTSET, datefmt="%H:%M:%S")
+    fileTimeFormat = "%Y-%m-%d-%H-%M-%S"
+    logTimeFormat = "%H:%M:%S"
+    logFormat = "%(levelname)s-%(asctime)s: %(message)s"
+    logFileName = os.path.join(LogPath, f"log_{datetime.now().strftime(fileTimeFormat)}.log")
+    logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
     logging.debug("Created log file: " + logFileName)
 
-class LogType():
-    """The list of LogTypes you can log.
-    """
-    exception = 60
-    critical = 50
-    error = 40
-    warning = 30
-    info = 20
-    debug = 10
+def debug(message: str, consoleVisible: bool = False, stack_info: bool = False):
+    logging.debug(message, stack_info=stack_info)
+    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "green"))
+    
+def info(message: str, consoleVisible: bool = False, stack_info: bool = False):
+    logging.info(message, stack_info=stack_info)
+    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "blue"))
+    
+def warning(message: str, consoleVisible: bool = False, stack_info: bool = False):
+    logging.warning(message, stack_info=stack_info)
+    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "yellow"))
+    
+def error(message: str, consoleVisible: bool = False, stack_info: bool = False):
+    logging.error(message, stack_info=stack_info)
+    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "red"))
 
-def Log(Log_Type: LogType and int, Message: str, Console_Visible=False):
-    """Log a log.
-
-    Args:
-        Log_Type (LogType): The type of your log.
-        Message (str): The message you want to log.
-        Console_Visible (bool, optional): Determines if the message will be displayed in the console. Defaults to False.
-    """
-    if running:
-        logging.log(Log_Type, Message)
-        if Console_Visible:
-            if Log_Type >= LogType.error: Message = colored(Message, "red")
-            elif Log_Type == LogType.warning: Message = colored(Message, "yellow")
-            elif Log_Type == LogType.debug: Message = colored(Message, "green")
-            else: Message = colored(Message, "cyan")
-            print(Message)
-    else: print(f"Log not successful! Logger has been shut down already. Original message: {Message}")
-
-def AutoError(Message):
+def AutoError(message):
     """Generates an automatic error message.
 
     Args:
         Message (str): The error message.
     """
-    _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[1]
-    Log(LogType.error, f"ERROR! File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function} [Exception: {Message}]", True)
+    if running:
+        logging.exception(message, stack_info=True)
+        printInfo = inspect.getouterframes(inspect.currentframe())[1]
+        print(colored(f"File \"{printInfo.filename}\", line {printInfo.lineno}, in {printInfo.function}\nException: {message}\nRead log file for more details.", "red"))
+    else: print(f"Log not successful! Logger has been shut down already. Original message: {message}")
 
 def Profiler(enabled: bool = True):
     """Turns the profiler on or off.
@@ -78,7 +74,7 @@ def Profiler(enabled: bool = True):
             log_stream = open(logFileName, "a+")
             log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
             ps = pstats.Stats(profile, stream=log_stream)
-            ps.strip_dirs().sort_stats(SortKey.CUMULATIVE)
+            ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
             ps.print_stats()
             log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
             log_stream.close()

@@ -20,12 +20,14 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     if not os.path.isfile(os.path.join(AppDataPath, "settings.cfg")): shutil.copyfile("Assets/defaultSettings.kdf", os.path.join(AppDataPath, "settings.cfg"))
 
 class JSON:
+    NULLPATH = "[null path]"
+    
     @staticmethod
     def ToKeyList(jsonPath: str):
         return jsonPath.strip("/").split("/")
     
     @staticmethod
-    def Set(filePath: str, jsonPath: str, value: Any):
+    def Set(filePath: str, jsonPath: str, value: Any) -> Any or None:
         config = {}
         if os.path.isfile(filePath):
             try:
@@ -34,7 +36,7 @@ class JSON:
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
         
-        if len(jsonPath) > 0:
+        if jsonPath != JSON.NULLPATH:
             path = JSON.ToKeyList(jsonPath)
             tmpConfig = config
             for i in range(len(path)):
@@ -42,12 +44,17 @@ class JSON:
                 if i < len(path) - 1:
                     if p not in tmpConfig: tmpConfig[p] = {}
                     tmpConfig = tmpConfig[p]
-                else: tmpConfig[p] = value
-        else: config = value
+                elif p not in tmpConfig or tmpConfig[p] != value: tmpConfig[p] = value
+                else: return value
+        elif config != value: config = value
+        else: return value
         
         try:
             with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
-        except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
+            return value
+        except IOError as e: 
+            KDS.Logging.AutoError(f"IO Error! Details: {e}")
+            return None
         
     @staticmethod
     def Get(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool = False):
@@ -58,20 +65,20 @@ class JSON:
                     try: config = json.loads(f.read())
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-            if len(jsonPath) < 1:
+            if jsonPath == JSON.NULLPATH:
                 return config
             path = JSON.ToKeyList(jsonPath)
             tmpConfig = config
             for i in range(len(path)):
                 p = path[i]
                 if p not in tmpConfig:
-                    if warnMissing: KDS.Logging.Log(KDS.Logging.LogType.warning, f"No value found in path: {jsonPath} of file: {filePath}. Value of {jsonPath} has been set as default to: {defaultValue}", True)
+                    if warnMissing: KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}. Value of {jsonPath} has been set as default to: {defaultValue}", True)
                     JSON.Set(filePath, jsonPath, defaultValue)
                     return defaultValue
                 if i < len(path) - 1: tmpConfig = tmpConfig[p]
                 else: return tmpConfig[p]
         else:
-            if warnMissing: KDS.Logging.Log(KDS.Logging.LogType.warning, f"No value found in path: {jsonPath} of file: {filePath}. Value of {jsonPath} has been set as default to: {defaultValue}", True)
+            if warnMissing: KDS.Logging.warning(f"No file found in path: {filePath}. Value of the file's {jsonPath} has been set as default to: {defaultValue}", True)
             JSON.Set(filePath, jsonPath, defaultValue)
             return defaultValue
         KDS.Logging.AutoError("Unknown Error! This code should never execute.")
@@ -144,7 +151,7 @@ class Save:
             if os.path.isfile(Save.PlayerFileCache):
                 _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
                 shutil.make_archive(_path, 'zip', SaveCachePath)
-                shutil.move(_path + ".zip", _path)
+                shutil.move(f"{_path}.zip", _path)
             shutil.rmtree(SaveCachePath)
         #encodes and stores a save file to storage
 
@@ -197,7 +204,7 @@ class Save:
     ]
     
     @staticmethod
-    def SetClass(item: Any, filePathFromSaveCache: str, *identificationAttributes: str, identifier: str = "null", ):
+    def SetClass(item: Any, filePathFromSaveCache: str, *identificationAttributes: str, identifier: str = JSON.NULLPATH):
         # Älä haasta meitä oikeuteen omena, pliis.
         iVars: Dict[Any] = item.__dict__
         ignoreKeys = []
@@ -215,7 +222,7 @@ class Save:
                 if isinstance(var, tuple):
                     sVars[key] = { "saveVarTupleOverride": True, "values": var }
                 else: sVars[key] = var
-            else: KDS.Logging.Log(KDS.Logging.LogType.debug, f"Ignored variable [{key}, {var}] from {item}.")
+            else: KDS.Logging.debug(f"Ignored variable [{key}, {var}] from {item}.")
         itemIdentifier = identifier if len(identificationAttributes) < 1 else ""
         for i in range(len(identificationAttributes)):
             if i > 0: itemIdentifier += "-"
@@ -226,7 +233,7 @@ class Save:
     def GetClass(Class, filePathFromSaveCache: str, identifier: str):
         attrs = JSON.Get(os.path.join(SaveCachePath, filePathFromSaveCache), identifier, None, True)
         if attrs == None:
-            KDS.Logging.AutoError(f"Saved items of type {type(Class)} with identifier {identifier} not found!")
+            KDS.Logging.AutoError(f"Saved items of type {Class} with identifier {identifier} not found!")
             return
         instance = Class()
         for k, v in attrs.items():
@@ -243,7 +250,7 @@ class Save:
     def GetClassList(Class, filePathFromSaveCache: str):
         cList = JSON.Get(os.path.join(SaveCachePath, filePathFromSaveCache), "", None, True)
         if cList == None:
-            KDS.Logging.AutoError(f"Saved items file for type {type(Class)} not found!")
+            KDS.Logging.AutoError(f"Saved items file for type {Class} not found!")
             return
         instanceList = []
         for key in cList:

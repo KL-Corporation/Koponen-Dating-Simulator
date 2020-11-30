@@ -24,7 +24,7 @@ class Animation:
             _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         if number_of_images < 1 or duration < 1:
-            KDS.Logging.AutoError("Number of images or duration cannot be less than 1!")
+            KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
@@ -34,13 +34,13 @@ class Animation:
         self.PingPong = False
         self.done = False
 
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising {} Animation Images...".format(number_of_images), False)
+        KDS.Logging.debug(f"Initialising {number_of_images} Animation Images...")
         for i in range(number_of_images):
             converted_animation_name = animation_name + "_" + str(i) + filetype
             path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
-            KDS.Logging.Log(KDS.Logging.LogType.debug, f"Initialised Animation Image: {animation_dir}/{converted_animation_name}", False)
+            KDS.Logging.debug(f"Initialised Animation Image: {animation_dir}/{converted_animation_name}")
 
             for _ in range(duration):
                 self.images.append(image)

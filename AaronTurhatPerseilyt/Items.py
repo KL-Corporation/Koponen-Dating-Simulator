@@ -73,7 +73,7 @@ class Item:
                                 Item_list = numpy.delete(Item_list, index)
                                 showItemTip = False
                             except IndexError as e:
-                                KDS.Logging.Log(KDS.Logging.LogType.critical, f"A non-inventory item was tried to pick up and caused error: {e}")
+                                KDS.Logging.AutoError(f"A non-inventory item was tried to pick up and caused an error: {e}")
                     else:
                         if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
                             if inventory.storage[inventory.SIndex + 1] == "none":
