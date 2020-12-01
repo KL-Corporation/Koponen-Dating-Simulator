@@ -851,16 +851,14 @@ class Landmine(Tile):
         return self.texture
 
 class Ladder(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):   
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0]+6, position[1], 23, 34)
+        self.rect = pygame.Rect(position[0] + round(17 - self.texture.get_width() / 2), position[1] + round(17 - self.texture.get_height() / 2), self.texture.get_width(), self.texture.get_height())
         self.checkCollision = False
 
     def update(self):
-        global Player
         if self.rect.colliderect(Player.rect): Player.onLadder = True
-        else: Player.onLadder = False
         return self.texture
 
 class Lamp(Tile):
@@ -2107,6 +2105,11 @@ class PlayerClass:
             s = (self.walk_sound_delay > 60) if play_walk_sound else False
             if s: self.walk_sound_delay = 0
 
+            if self.onLadder:
+                self.vertical_momentum = 0
+                if KDS.Keys.moveUp.pressed: self.vertical_momentum = -2
+                elif KDS.Keys.moveDown.pressed: self.vertical_momentum = 2
+                
             self.movement[1] += self.vertical_momentum
             self.vertical_momentum = min(self.vertical_momentum + fspeed_copy, fall_max_velocity)
 
@@ -2151,7 +2154,8 @@ class PlayerClass:
                 else:
                     self.animations.trigger("idle_short")
             if self.health < self.lastHealth and self.health > 0: KDS.Audio.playSound(hurt_sound)
-            self.lastHealth = self.health  
+            self.lastHealth = self.health
+            self.onLadder = False
         else:
             crouch(False)
             self.animations.trigger("death")
