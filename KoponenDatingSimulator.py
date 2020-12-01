@@ -758,10 +758,9 @@ class Jukebox(Tile):
     del __musikerna, __musiken
     
     def __init__(self, position: Tuple[int, int], serialNumber: int):      
-        positionC = (position[0], position[1] - 26)
-        super().__init__(positionC, serialNumber)
+        super().__init__((0, 0), serialNumber)
         self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0], position[1] - 27, 40, 60)
+        self.rect = pygame.Rect(position[0], position[1] - 24, 38, 58)
         self.checkCollision = False
         self.playing = -1
         self.lastPlayed = [-69 for _ in range(5)]
@@ -3287,6 +3286,16 @@ while main_running:
     if ambient_light:
         ambient_tint.fill(ambient_light_tint)
         screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
+    
+    #Player ja Koponen
+    if DebugMode:
+        pygame.draw.rect(screen, KDS.Colors.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
+    screen.blit(koponen_animations.update(), (koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
+
+    if DebugMode:
+        pygame.draw.rect(screen, (KDS.Colors.Green), (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
+    screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (int(Player.rect.topleft[0] - scroll[0] + ((Player.rect.width - Player.animations.active.size[0]) / 2)), int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
+    
     #dark = False if Player.rect.x > 500 else 1
     if dark:
         black_tint.fill(darkness)
@@ -3330,7 +3339,6 @@ while main_running:
         koponen_movingx = -koponen_movingx
     elif k_collisions.right:
         koponen_movingx = -koponen_movingx
-
 #endregion
 #region Koponen Movement
     if koponen_movement[0] != 0:
@@ -3352,7 +3360,7 @@ while main_running:
             Player.farting = False
             fart_counter = 0
             for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.topleft, Player.rect.topleft) < 800:
+                if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) < 800:
                     enemy.dmg(random.randint(500, 1000))
 
     if Player.keys["red"]:
@@ -3374,17 +3382,6 @@ while main_running:
         koponen_movement[0] = koponen_movingx
     h = 0
 #endregion
-#region Interactable Objects
-    if DebugMode:
-        pygame.draw.rect(screen, KDS.Colors.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
-    screen.blit(koponen_animations.update(), (koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
-
-    if DebugMode:
-        pygame.draw.rect(screen, (KDS.Colors.Green), (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
-
-    screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (int(Player.rect.topleft[0] - scroll[0] + ((Player.rect.width - Player.animations.active.size[0]) / 2)), int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
-
-#endregion
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
     if DebugMode:
@@ -3392,7 +3389,7 @@ while main_running:
         debugSurf.fill(KDS.Colors.DarkGray)
         debugSurf.set_alpha(128)
         screen.blit(debugSurf, (0, 0))
-        
+
         screen.blit(score_font.render(f"FPS: {round(clock.get_fps())}", True, KDS.Colors.White), (5, 5))
         screen.blit(score_font.render(f"Player Position: {Player.rect.topleft}", True, KDS.Colors.White), (5, 15))
         screen.blit(score_font.render(f"Total Monsters: {monstersLeft} / {monsterAmount}", True, KDS.Colors.White), (5, 25))
