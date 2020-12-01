@@ -28,12 +28,15 @@ def init(_AppDataPath: str, _LogPath: str):
     logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
     logging.debug("Created log file: " + logFileName)
 
-def __log(message: str, consoleVisible: bool, stack_info: bool, logLevel: int, color: str):
-    _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
-    logging.log(logLevel, message, stack_info=stack_info, stacklevel=4)
-    if stack_info:
-        message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
-    if consoleVisible: print(colored(message, color))
+def __log(message: str, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any):
+    if running:
+        _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
+        logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
+        if stack_info:
+            message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
+        if consoleVisible: print(colored(message, color))
+        return
+    print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
 
 def debug(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
@@ -47,17 +50,13 @@ def warning(message: str, consoleVisible: bool = False, stack_info: bool = False
 def error(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
-def AutoError(message):
+def AutoError(message, **kwargs: Any):
     """Generates an automatic error message.
 
     Args:
         Message (str): The error message.
     """
-    if running:
-        logging.exception(message, stack_info=True)
-        printInfo = inspect.getouterframes(inspect.currentframe())[1]
-        print(colored(f"File \"{printInfo.filename}\", line {printInfo.lineno}, in {printInfo.function}\nException: {message}\nRead log file for more details.", "red"))
-    else: print(f"Log not successful! Logger has been shut down already. Original message: {message}")
+    __log(message, True, True, 40, "red", **kwargs)
 
 def Profiler(enabled: bool = True):
     """Turns the profiler on or off.

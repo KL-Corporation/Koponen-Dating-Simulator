@@ -321,7 +321,6 @@ level_finished_running = False
 tcagr_running = False
 mode_selection_running = False
 settings_running = False
-vertical_momentum = 0
 animation_counter = 0
 animation_duration = 0
 animation_image = 0
@@ -2054,6 +2053,7 @@ class PlayerClass:
         self.walk_sound_delay: float = 9999
         self.vertical_momentum: float = 0
         self.onLadder: bool = False
+        self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
         self.animations.reset()
@@ -2069,16 +2069,20 @@ class PlayerClass:
                 self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 self.crouching = False
         
+        def jump(ladderOverride: bool = False):
+            if KDS.Keys.moveUp.pressed and not KDS.Keys.moveDown.pressed:
+                if ladderOverride or (self.air_timer < 6 and KDS.Keys.moveUp.ticksHeld == 0 and not self.onLadder):
+                    self.vertical_momentum = -10
+        
         if self.godmode: self.health = 100.0
         if self.health > 0:
             self.movement = [0, 0]
-            fspeed_copy = fall_speed
-            if KDS.Keys.moveUp.pressed and KDS.Keys.moveUp.ticksHeld == 0 and not KDS.Keys.moveDown.pressed and self.air_timer < 6 and not self.onLadder:
-                self.vertical_momentum = -10
-            elif vertical_momentum > 0:
-                fspeed_copy *= fall_multiplier
+            _fall_speed = fall_speed
+            jump()
+            if self.vertical_momentum > 0:
+                _fall_speed *= fall_multiplier
             elif not KDS.Keys.moveUp.pressed:
-                fspeed_copy *= fall_multiplier
+                _fall_speed *= fall_multiplier
 
             if KDS.Keys.moveRight.pressed:
                 if not self.crouching: self.movement[0] += 4
@@ -2106,12 +2110,16 @@ class PlayerClass:
             if s: self.walk_sound_delay = 0
 
             if self.onLadder:
+                self.wasOnLadder = True
                 self.vertical_momentum = 0
-                if KDS.Keys.moveUp.pressed: self.vertical_momentum = -2
-                elif KDS.Keys.moveDown.pressed: self.vertical_momentum = 2
+                if KDS.Keys.moveUp.pressed: self.vertical_momentum += -1
+                if KDS.Keys.moveDown.pressed: self.vertical_momentum += 1
+            elif self.wasOnLadder:
+                self.wasOnLadder = False
+                jump(True)
                 
             self.movement[1] += self.vertical_momentum
-            self.vertical_momentum = min(self.vertical_momentum + fspeed_copy, fall_max_velocity)
+            self.vertical_momentum = min(self.vertical_momentum + _fall_speed, fall_max_velocity)
 
             if self.crouching == True:
                 crouch_collisions = len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), tiles)) > 0
