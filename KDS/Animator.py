@@ -1,6 +1,5 @@
 from typing import Callable, Tuple
 
-import numpy
 import KDS.Logging
 import KDS.Math
 import KDS.Colors
@@ -17,11 +16,13 @@ class Animation:
         """Initialises an animation.
 
         Args:
-            animation_name (str): The name of the animation. Will load the corresponding files from the Animations folder. Name will be converted to [animation_name]_[animation_index].
+            animation_name (str): The name of the animation. Will load the corresponding files from the Animations folder. Name will be converted to {animation_name}_{animation_index}.
             number_of_images (int): The frame count of your animation.
-            duration (int): The duration of every frame in ticks.
-            colorkey (tuple): The color that will be converted to alpha in every frame.
-            _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
+            duration (int): The duration of evert frame in ticks.
+            colorkey (tuple, optional): The color that will be converted to alpha in every frame. Defaults to (255, 255, 255).
+            _OnAnimationEnd (OnAnimationEnd, optional): What will the animator do when the animation has finished. Defaults to OnAnimationEnd.Stop.
+            filetype (str, optional): Specifies the loaded file's filetype. Defaults to ".png".
+            animation_dir (str, optional): The directory of the Textures directory this script is going to search for the animation images. Defaults to "Animations".
         """
         if number_of_images < 1 or duration < 1:
             KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
@@ -46,7 +47,6 @@ class Animation:
                 self.images.append(image)
         
         self.size = self.images[0].get_size()
-
                 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
@@ -93,6 +93,10 @@ class Animation:
             pygame.Surface: Currently active frame.
         """
         return self.images[self.tick]
+    
+    def change_colorkey(self, colorkey: Tuple[int, int, int]):
+        for image in self.images:
+            image.set_colorkey(colorkey)
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
