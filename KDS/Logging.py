@@ -28,21 +28,24 @@ def init(_AppDataPath: str, _LogPath: str):
     logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
     logging.debug("Created log file: " + logFileName)
 
+def __log(message: str, consoleVisible: bool, stack_info: bool, logLevel: int, color: str):
+    _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
+    logging.log(logLevel, message, stack_info=stack_info, stacklevel=4)
+    if stack_info:
+        message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
+    if consoleVisible: print(colored(message, color))
+
 def debug(message: str, consoleVisible: bool = False, stack_info: bool = False):
-    logging.debug(message, stack_info=stack_info)
-    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "green"))
+    __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
     
 def info(message: str, consoleVisible: bool = False, stack_info: bool = False):
-    logging.info(message, stack_info=stack_info)
-    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "blue"))
+    __log(message, consoleVisible, stack_info, logging.INFO, "blue")
     
 def warning(message: str, consoleVisible: bool = False, stack_info: bool = False):
-    logging.warning(message, stack_info=stack_info)
-    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "yellow"))
+    __log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
     
 def error(message: str, consoleVisible: bool = False, stack_info: bool = False):
-    logging.error(message, stack_info=stack_info)
-    if consoleVisible: print(colored(message + ("\nRead log file for more details." if stack_info else ""), "red"))
+    __log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
 def AutoError(message):
     """Generates an automatic error message.
