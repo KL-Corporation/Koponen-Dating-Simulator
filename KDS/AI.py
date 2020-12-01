@@ -244,8 +244,6 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
-
-
     def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
         self.rect = rect
         self.health = health
@@ -267,11 +265,12 @@ class HostileEnemy:
         self.clearlagcounter = 0
 
     def onDeath(self):
-        pass
+        return []
+    
     def attack(self):
-        pass
+        return []
 
-    def update(self, Surface: pygame.Surface, scroll: Tuple[int, int] or List[int], tiles, targetRect):
+    def update(self, Surface: pygame.Surface, scroll: Tuple[int, int] or List[int], tiles, targetRect, debug: bool = False):
         enemyProjectiles = None
         dropItems = []
         if self.health:
@@ -287,7 +286,6 @@ class HostileEnemy:
                         self.attackRunning = True
             if self.attackRunning:
                 self.animation.trigger("attack")
-                Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
                 if self.animation.active.done:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
@@ -304,11 +302,9 @@ class HostileEnemy:
                     self.movement[0] = -self.movement[0]
                     self.direction = not self.direction
                 self.animation.trigger("walk")
-                Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
         elif self.health > 0:
             self.rect, c = move(self.rect, [0,8], tiles)
             self.animation.trigger("idle")
-            Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))          
         elif self.health < 1:
             if self.playDeathSound:
                 KDS.Audio.playSound(self.death_sound)
@@ -319,11 +315,13 @@ class HostileEnemy:
                 self.playDeathSound = False
             self.rect, c = move(self.rect, [0,8], tiles)
             self.animation.trigger("death")
-            Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x-scroll[0], self.rect.y-scroll[1]))
             self.clearlagcounter += 1
             if self.clearlagcounter > 3600:
                 self.clearlagcounter = 3600
 
+        if debug:
+            pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
+        Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
 
     def dmg(self, dmgAmount):
@@ -350,6 +348,7 @@ class Imp(HostileEnemy):
         impAttack.set_volume(dist)
         KDS.Audio.playSound(impAttack)
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
+    
     def onDeath(self):
         return [0]
 

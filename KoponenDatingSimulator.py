@@ -681,12 +681,12 @@ class Tile:
             for renderable in row[x : end_x]:
                 if not renderable.air:
                     tilesUpdating += 1
+                    if DebugMode:
+                        pygame.draw.rect(Surface, KDS.Colors.Cyan, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                     if not renderable.specialTileFlag:
-                        Surface.blit(renderable.texture, (renderable.rect.x -
-                                                        scroll[0], renderable.rect.y - scroll[1]))
+                        Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                     else: 
-                        Surface.blit(renderable.update(), (renderable.rect.x -
-                                                        scroll[0], renderable.rect.y - scroll[1]))                        
+                        Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))                        
 
     def update(self):
         return self.texture
@@ -3209,7 +3209,7 @@ while main_running:
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
     for enemy in Enemies:
         if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200:
-            result = enemy.update(screen, scroll, tiles, Player.rect)
+            result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
             if result[0]:
                 #print(len(result[0]))
                 for r in result[0]:
