@@ -17,7 +17,7 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     CachePath = _CachePath
     SaveDirPath = _SaveDirPath
     SaveCachePath = os.path.join(CachePath, "save")
-    if not os.path.isfile(os.path.join(AppDataPath, "settings.cfg")): shutil.copyfile("Assets/defaultSettings.kdf", os.path.join(AppDataPath, "settings.cfg"))
+    if not os.path.isfile(os.path.join(AppDataPath, "settings.cfg")): shutil.copyfileobj("Assets/defaultSettings.kdf", os.path.join(AppDataPath, "settings.cfg"))
 
 class JSON:
     NULLPATH = "[null path]"
@@ -168,10 +168,10 @@ class Save:
         Save.PlayerFileCache = os.path.join(SaveCachePath, "data.kdf")
         Save.SaveIndex = _SaveIndex
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and Save.SaveIndex >= 0:
-            if os.path.isfile(Save.PlayerFileCache):
-                Save.quit()
-            if os.path.isdir(SaveCachePath):
-                shutil.rmtree(SaveCachePath)
+            #if os.path.isfile(Save.PlayerFileCache):
+            #    Save.quit()
+            #if os.path.isdir(SaveCachePath):
+            #    shutil.rmtree(SaveCachePath)
             os.makedirs(SaveCachePath, exist_ok=True)
             _path = os.path.join(SaveDirPath, f"save_{Save.SaveIndex}.kds")
             if os.path.isfile(_path):
@@ -223,7 +223,7 @@ class Save:
                     sVars[key] = { "saveVarTupleOverride": True, "values": var }
                 else: sVars[key] = var
             else: KDS.Logging.debug(f"Ignored variable [{key}, {var}] from {item}.")
-        itemIdentifier = identifier if len(identificationAttributes) < 1 else ""
+        itemIdentifier = identifier if identifier == JSON.NULLPATH else ""
         for i in range(len(identificationAttributes)):
             if i > 0: itemIdentifier += "-"
             itemIdentifier += str(getattr(item, identificationAttributes[i]))
@@ -244,7 +244,12 @@ class Save:
 
     @staticmethod
     def SetClassList(item: Iterable[Any], filePathFromSaveCache: str):
-        for i, v in enumerate(item): Save.SetClass(v, os.path.join(SaveCachePath, filePathFromSaveCache), identifier=str(i))
+        if len(item) > 0:
+            for i, v in enumerate(item):
+                Save.SetClass(v, filePathFromSaveCache, identifier=str(i))
+        else:
+            JSON.Set(os.path.join(SaveCachePath, filePathFromSaveCache), "", {})
+            
         
     @staticmethod
     def GetClassList(Class, filePathFromSaveCache: str):
@@ -253,6 +258,7 @@ class Save:
             KDS.Logging.AutoError(f"Saved items file for type {Class} not found!")
             return
         instanceList = []
+        if len(cList) < 1: return instanceList
         for key in cList:
             instanceList.append(Save.GetClass(Class, filePathFromSaveCache, key))
         return instanceList
