@@ -29,5 +29,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Lint with Pylint
       uses: cclauss/GitHub-Action-for-pylint@0.7.0
-    - name: Multi-lint 
-      uses: ricardochaves/python-lint@v1.3.0
+    - name: Lint with multiple linters
+        uses: sunnysid3up/python-linter@v0.1-beta.7
