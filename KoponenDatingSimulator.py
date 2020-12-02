@@ -2718,12 +2718,15 @@ def main_menu():
             left = 0
             right = 1
 
+        @staticmethod
         def right():
             level_pick.pick(level_pick.direction.right)
 
+        @staticmethod
         def left():
             level_pick.pick(level_pick.direction.left)
 
+        @staticmethod
         def pick(direction: direction):
             global current_map, max_map
             current_map_int = int(current_map)

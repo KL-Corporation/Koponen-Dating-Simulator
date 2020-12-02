@@ -99,14 +99,14 @@ def GetSetting(path: str, default: Any):
     """
     return JSON.Get(os.path.join(AppDataPath, "settings.cfg"), path, default, warnMissing=True)
 
-def SetSetting(path: str, value: Any):
+def SetSetting(path: str, value: Any) -> Any:
     """
     Automatically fills FilePath to SaveFunction
     1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    JSON.Set(os.path.join(AppDataPath, "settings.cfg"), path, value)
+    return JSON.Set(os.path.join(AppDataPath, "settings.cfg"), path, value)
 
 def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None)
