@@ -30,4 +30,4 @@ jobs:
     - name: Lint with Pylint
       uses: cclauss/GitHub-Action-for-pylint@0.7.0
     - name: Lint with multiple linters
-        uses: sunnysid3up/python-linter@v0.1-beta.7
+      uses: sunnysid3up/python-linter@v0.1-beta.7
