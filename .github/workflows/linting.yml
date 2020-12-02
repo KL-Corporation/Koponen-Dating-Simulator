@@ -1,5 +1,4 @@
 name: kds_linting
-description: GitHub action for code linting on KDS repository
 branding:
   icon: check-square
   color: blue
