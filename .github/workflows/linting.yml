@@ -1,7 +1,4 @@
 name: kds_linting
-branding:
-  icon: check-square
-  color: blue
 
 on: [push]
 
