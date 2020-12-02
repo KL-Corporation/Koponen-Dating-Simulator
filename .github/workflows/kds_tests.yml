@@ -32,5 +32,5 @@ jobs:
       run: |
         pytest
     - name: Run Tox
-        # Run tox using the version of Python in `PATH`
         run: tox -e py
+        # Run tox using the version of Python in `PATH`
