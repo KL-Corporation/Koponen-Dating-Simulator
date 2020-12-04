@@ -682,7 +682,7 @@ class Tile:
                 if not renderable.air:
                     tilesUpdating += 1
                     if DebugMode:
-                        pygame.draw.rect(Surface, KDS.Colors.Cyan, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+                        pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                     if not renderable.specialTileFlag:
                         Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                     else: 
@@ -1299,7 +1299,7 @@ class Item:
     def renderUpdate(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
-                pygame.draw.rect(Surface, KDS.Colors.Blue, pygame.Rect(renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+                pygame.draw.rect(Surface, KDS.Colors.Blue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             if renderable.texture != None:
                 Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
             if renderable.physics:
