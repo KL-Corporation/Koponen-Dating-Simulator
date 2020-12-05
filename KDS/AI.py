@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
 import KDS.Animator, KDS.Audio, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
@@ -269,7 +269,7 @@ class HostileEnemy:
     def attack(self):
         return []
 
-    def update(self, Surface: pygame.Surface, scroll: Tuple[int, int] or List[int], tiles, targetRect, debug: bool = False):
+    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
         enemyProjectiles = None
         dropItems = []
         if self.health:

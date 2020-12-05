@@ -10,7 +10,7 @@ import KDS.Logging
 import KDS.World
 import os
 import zipfile
-from typing import Any, Dict, Iterable, List, Sized, Tuple
+from typing import Any, Dict, Iterable, List, Sized, Tuple, Union
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath
@@ -29,7 +29,7 @@ class JSON:
         return jsonPath.strip("/").split("/")
     
     @staticmethod
-    def Set(filePath: str, jsonPath: str, value: Any) -> Any or None:
+    def Set(filePath: str, jsonPath: str, value: Any) ->  Union[Any, None]:
         config = {}
         if os.path.isfile(filePath):
             try:

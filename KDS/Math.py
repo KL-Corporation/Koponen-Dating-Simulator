@@ -1,9 +1,9 @@
-from typing import Tuple
+from typing import Tuple, Union
 import KDS.Logging
 import math
 
 #region Value Manipulation
-def Clamp(value: float, _min: float, _max: float) -> float:
+def Clamp(value: Union[int, float], _min: Union[int, float], _max: Union[int, float]) -> Union[int, float]:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
     Args:
@@ -96,7 +96,7 @@ def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
 
     return math.degrees(math.atan2(dy,dx))
 
-def DeltaAngle(current: int or float, target: int or float):
+def DeltaAngle(current: Union[int, float], target: Union[int, float]):
     return ((target - current) + 180) % 360 - 180
 #endregion
 

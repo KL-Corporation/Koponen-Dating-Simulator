@@ -206,7 +206,7 @@ class Lighting:
 
 
 class Bullet:
-    def __init__(self, rect, direction: bool, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect, direction: bool, speed: int, environment_obstacles, damage, texture: pygame.Surface = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction

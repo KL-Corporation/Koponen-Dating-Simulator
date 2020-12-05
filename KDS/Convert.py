@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 import pygame
 import math
 import KDS.Logging
@@ -111,7 +111,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     
     return red, green, blue
 
-def ToLines(text: str, font: pygame.font.Font, max_width: int or float):
+def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
     if font.size(text)[0] > max_width:
         text_split = [wrd + " " for wrd in text.split(" ")]
         text_split[len(text_split) - 1] = text_split[len(text_split) - 1].strip()

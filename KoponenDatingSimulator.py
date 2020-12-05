@@ -363,9 +363,6 @@ taskTaivutettu = ""
 
 DebugMode = False
 
-MenuMode = 0
-game_pause_background = pygame.transform.scale(screen.copy(), display_size)
-
 KDS.Logging.debug("Variable Defining Complete.")
 #endregion
 #region Game Settings
@@ -2216,7 +2213,7 @@ class PlayerClass:
 Player = PlayerClass()
 #endregion
 #region Console
-def console():
+def console(oldSurf: pygame.Rect):
     global level_finished, go_to_console
     go_to_console = False
 
@@ -2257,7 +2254,7 @@ def console():
     
     consoleRunning = True
     
-    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
+    blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
     
     #command_input = input("command: ")
     """
@@ -2565,20 +2562,18 @@ def respawn_function():
     KDS.Audio.Music.stop()
 #endregion
 #region Menus
-def esc_menu_f():
+def esc_menu_f(oldSurf: pygame.Rect):
     global esc_menu, go_to_main_menu, DebugMode, clock, c
     c = False
 
     esc_surface = pygame.Surface(display_size)
     
-    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
+    normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
+    blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
 
     def resume():
         global esc_menu
         esc_menu = False
-
-    def settings():
-        settings_menu()
 
     def goto_main_menu():
         global esc_menu, go_to_main_menu
@@ -2594,14 +2589,14 @@ def esc_menu_f():
     save_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
         "Save", True, KDS.Colors.White), enabled=save_button_enabled)
     settings_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 475, 200, 30), settings, button_font.render("SETTINGS", True, KDS.Colors.White))
+        display_size[0] / 2 - 100), 475, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
     main_menu_button = KDS.UI.Button(pygame.Rect(int(
         display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
-        display.blit(pygame.transform.scale(game_pause_background, display_size), (0, 0))
+        display.blit(pygame.transform.scale(normal_background, display_size), (0, 0))
         anim_x = anim_lerp_x.update(False)
         mouse_pos = pygame.mouse.get_pos()
 
@@ -2736,7 +2731,7 @@ def settings_menu():
         clock.tick_busy_loop(60)
 
 def main_menu():
-    global current_map, MenuMode, DebugMode
+    global current_map, DebugMode
     
     class Mode:
         MainMenu = 0
@@ -2785,7 +2780,7 @@ def main_menu():
             KDS.ConfigManager.SetSetting("Player/currentMap", current_map)
 
     def menu_mode_selector(mode):
-        global MenuMode
+        nonlocal MenuMode
         MenuMode = mode
 
     #region Main Menu
@@ -2981,8 +2976,8 @@ def main_menu():
         display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
 
-def level_finished_menu():
-    global game_pause_background, DebugMode, level_finished_running
+def level_finished_menu(oldSurf: pygame.Rect):
+    global DebugMode, level_finished_running
     
     score_color = KDS.Colors.Cyan
     padding = 50
@@ -3002,7 +2997,8 @@ def level_finished_menu():
     KDS.Scores.ScoreAnimation.init()
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
     level_f_surf = pygame.Surface(display_size)
-    blurred_background = KDS.Convert.ToBlur(game_pause_background, 6)
+    normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
+    blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
     menu_rect = pygame.Rect(int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 300), 500, 600)
     
     def goto_main_menu():
@@ -3026,7 +3022,7 @@ def level_finished_menu():
     
     level_finished_running = True
     while level_finished_running:
-        display.blit(game_pause_background, (0, 0))
+        display.blit(normal_background, (0, 0))
         anim_x = anim_lerp_x.update(False)
         mouse_pos = pygame.mouse.get_pos()
         
@@ -3435,9 +3431,8 @@ while main_running:
         KDS.Audio.pauseAllSounds()
         display.fill(KDS.Colors.Black)
         display.blit(pygame.transform.scale(screen, display_size), (0, 0))
-        game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         pygame.mouse.set_visible(True)
-        esc_menu_f()
+        esc_menu_f(screen)
         pygame.mouse.set_visible(False)
         KDS.Audio.Music.unpause()
         KDS.Audio.unpauseAllSounds()
@@ -3447,15 +3442,13 @@ while main_running:
         KDS.Audio.stopAllSounds()
         KDS.Audio.Music.stop()
         pygame.mouse.set_visible(True)
-        game_pause_background = pygame.transform.scale(screen.copy(), display_size)
-        level_finished_menu()
+        level_finished_menu(screen)
         level_finished = False
     if go_to_console:
         KDS.Audio.Music.pause()
         KDS.Audio.pauseAllSounds()
-        game_pause_background = pygame.transform.scale(screen.copy(), display_size)
         pygame.mouse.set_visible(True)
-        console()
+        console(screen)
         pygame.mouse.set_visible(False)
         KDS.Audio.Music.unpause()
         KDS.Audio.unpauseAllSounds()
