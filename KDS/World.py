@@ -300,8 +300,8 @@ class HitTarget:
         self.hitted = False
 
 class BallisticProjectile:
-    def __init__(self, position, width, height, slope, force, direction, gravitational_factor = 0.1, flight_time = 240, texture=None):
-        self.rect = pygame.Rect(position[0], position[1], width, height)
+    def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: pygame.Surface = None):
+        self.rect = rect
         self.sl = slope
         self.force = force*KDS.Convert.ToMultiplier(direction)
         self.upforce = -int(force*slope)
@@ -397,12 +397,10 @@ class itemTools:
 class Explosion:
     def __init__(self, animation: KDS.Animator.Animation, pos: Tuple[int, int]):
         self.animation = animation
-        self.xpos = pos[0]
-        self.ypos = pos[1]
+        self.pos = pos
 
     def update(self, Surface: pygame.Surface, scroll: List[int]):
-        txtre = self.animation.update()
-        Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
+        Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
     
 rk62_C = itemTools.rk62(100)

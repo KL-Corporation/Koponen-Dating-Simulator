@@ -393,14 +393,17 @@ class WorldData():
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
         if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
+            #region Error String
             KDS.Logging.AutoError(f"""
 ##### MAP FILE ERROR #####
 Map Directory: {os.path.isdir(MapPath)}
 Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
 LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
+TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
 Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
 ##### MAP FILE ERROR #####
 """)
+            #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             return None
         if os.path.isdir(PersistentMapPath):
@@ -1202,20 +1205,20 @@ class FlickerTrigger(Tile):
         self.animTicks = animationSpeed
         self.repeating = repeating
         self.stopAnim = False
-    
+        self.readyToTrigger = True
+
     def update(self):
         if self.rect.colliderect(Player.rect):
-            if self.exited:
+            if self.exited and self.readyToTrigger:
+                self.readyToTrigger = False
                 self.anim = True
                 self.exited = False
+                self.tick = 0
                 KDS.Audio.pauseAllSounds()
                 KDS.Audio.playSound(flicker_trigger_sound)
         else:
-            if self.repeating: self.tick = 0
             self.exited = True
-            self.stopAnim = True
-        if self.tick < self.ticks:
-            if self.anim:
+        if self.tick < self.ticks and self.anim:
                 self.tick += 1
                 if self.animTick >= self.animTicks: self.animTick = 0
                 global colorInvert
@@ -1223,13 +1226,15 @@ class FlickerTrigger(Tile):
                 self.animTick += 1
         else:
             self.stopAnim = True
-        
-        if self.stopAnim:
+
+        if self.stopAnim and self.anim:
+            self.readyToTrigger = True if self.repeating else False
             self.anim = False
             flicker_trigger_sound.stop()
             KDS.Audio.unpauseAllSounds()
-            self.stopAnim = False
-            
+
+        self.stopAnim = False
+
         return pygame.Surface((0, 0))
 
 class ImpaledBody(Tile):
@@ -1799,7 +1804,7 @@ class Grenade(Item):
         if args[0][0]:
             KDS.Audio.playSound(grenade_throw)
             Player.inventory.storage[Player.inventory.SIndex] = Inventory.emptySlot
-            BallisticObjects.append(KDS.World.BallisticProjectile((Player.rect.centerx, Player.rect.centery - 25), 10, 10, KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
+            BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return i_textures[29]
 
     def pickup(self):
@@ -2021,6 +2026,7 @@ class PlayerClass:
         self.walk_sound_delay: float = 9999
         self.vertical_momentum: float = 0
         self.onLadder: bool = False
+        self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
         self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
@@ -2470,20 +2476,20 @@ def save_function():
     KDS.Logging.debug("Saving Game...")
     KDS.ConfigManager.Save.init(1)
     
+    global tiles, specialTilesD, Items, Item, Enemies
+    KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
+    KDS.ConfigManager.Save.SetItems(Items)
+    KDS.ConfigManager.Save.SetEnemies(Enemies)
     global Explosions, BallisticObjects
-    KDS.ConfigManager.Save.SetClassList(Explosions, "explosions.kdf")
-    KDS.ConfigManager.Save.SetClassList(BallisticObjects, "ballistic_objects.kdf")
+    KDS.ConfigManager.Save.SetExplosions(Explosions)
+    KDS.ConfigManager.Save.SetBallistic(BallisticObjects)
     global Player, PlayerClass
-    KDS.ConfigManager.Save.SetClass(Player, "player.kdf")
+    KDS.ConfigManager.Save.SetClass(Player, "player.kdf", identifier=KDS.ConfigManager.JSON.NULLPATH)
     #KDS.ConfigManager.Save.SetClass(KDS.Missions.Missions, "missions.kdf")
     global koponen_rect, true_scroll
     KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
     KDS.ConfigManager.Save.SetData("Game/trueScroll", true_scroll)
     KDS.ConfigManager.Save.SetData("Game/scroll", scroll)
-    global tiles, specialTilesD, Items, Item, Enemies
-    KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
-    KDS.ConfigManager.Save.SetItems(Items)
-    KDS.ConfigManager.Save.SetEnemies(Enemies)
 
     KDS.ConfigManager.Save.init(1)
     KDS.Logging.debug("Game Saved.")
@@ -2495,19 +2501,19 @@ def load_function():
     if newSave: return
     KDS.Logging.debug("Loading Save...")
 
+    global tiles, specialTilesD, Items, Item, Enemies
+    KDS.ConfigManager.Save.GetTiles(tiles, RespawnAnchor)
+    Items = numpy.array(KDS.ConfigManager.Save.GetItems(Item))
+    Enemies = numpy.array(KDS.ConfigManager.Save.GetEnemies())
     global Explosions, BallisticObjects
-    Explosions = KDS.ConfigManager.Save.GetClassList(KDS.World.Explosion, "explosions.kdf")
-    BallisticObjects = KDS.ConfigManager.Save.GetClassList(KDS.World.BallisticProjectile, "ballistic_objects.kdf")
+    Explosions = KDS.ConfigManager.Save.GetExplosions()
+    BallisticObjects = KDS.ConfigManager.Save.GetBallistic()
     global Player, PlayerClass
     Player = KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", KDS.ConfigManager.JSON.NULLPATH)
     global koponen_rect, scroll, true_scroll
     koponen_rect.topleft = KDS.ConfigManager.Save.GetData("Koponen/position", koponen_rect.topleft)
     true_scroll = KDS.ConfigManager.Save.GetData("Game/trueScroll", true_scroll)
     scroll = KDS.ConfigManager.Save.GetData("Game/scroll", [round(true_scroll[0]), round(true_scroll[1])])
-    global tiles, specialTilesD, Items, Item, Enemies
-    KDS.ConfigManager.Save.GetTiles(tiles, RespawnAnchor)
-    Items = numpy.array(KDS.ConfigManager.Save.GetItems(Item))
-    Enemies = numpy.array(KDS.ConfigManager.Save.GetEnemies())
     
     KDS.Logging.debug("Save Loaded.")
 
