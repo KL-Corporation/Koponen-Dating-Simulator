@@ -470,7 +470,7 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
                                     (x * 34, y * 34), serialNumber=serialNumber)
                         elif data[0] == "1":
                             if loadEntities:
-                                Items = numpy.append(Items, Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber, texture=i_textures[serialNumber]))
+                                Items = numpy.append(Items, Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
                         elif data[0] == "2":
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
@@ -1287,7 +1287,7 @@ class Item:
     serialNumbers = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
-        self.texture = texture
+        self.texture = texture if texture != None else t_textures[serialNumber]
         self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
         self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
         self.serialNumber = serialNumber
@@ -1758,7 +1758,7 @@ class MethFlask(Item):
         if args[0][0]:
             KDS.Scores.score += 1
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
-            Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26, i_textures[26])
+            Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26)
             KDS.Audio.playSound(glug_sound)
         return i_textures[27]
 
@@ -1775,7 +1775,7 @@ class BloodFlask(Item):
         if args[0][0]:
             KDS.Scores.score += 1
             Player.health += random.randint(0, 10)
-            Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26, i_textures[26])
+            Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26)
             KDS.Audio.playSound(glug_sound)
         return i_textures[28]
 
@@ -2231,7 +2231,7 @@ def console():
             if command_list[1] != "key":
                 if command_list[1] in itemDict:
                     consoleItemSerial = int(itemDict[command_list[1]])
-                    Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial, i_textures[consoleItemSerial])
+                    Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial)
                     KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
                 else: KDS.Console.Feed.append(f"Item not found.")
             else:
@@ -2455,7 +2455,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     
     ########## iPuhelin ##########
     if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and loadEntities):
-        Player.inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6, i_textures[6])
+        Player.inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6)
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
@@ -2496,10 +2496,10 @@ def load_function():
     KDS.Logging.debug("Loading Save...")
 
     global Explosions, BallisticObjects
-    KDS.ConfigManager.Save.GetClassList(KDS.World.Explosion, "explosions.kdf")
-    KDS.ConfigManager.Save.GetClassList(KDS.World.BallisticProjectile, "ballistic_objects.kdf")
+    Explosions = KDS.ConfigManager.Save.GetClassList(KDS.World.Explosion, "explosions.kdf")
+    BallisticObjects = KDS.ConfigManager.Save.GetClassList(KDS.World.BallisticProjectile, "ballistic_objects.kdf")
     global Player, PlayerClass
-    KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", KDS.ConfigManager.JSON.NULLPATH)
+    Player = KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", KDS.ConfigManager.JSON.NULLPATH)
     global koponen_rect, scroll, true_scroll
     koponen_rect.topleft = KDS.ConfigManager.Save.GetData("Koponen/position", koponen_rect.topleft)
     true_scroll = KDS.ConfigManager.Save.GetData("Game/trueScroll", true_scroll)

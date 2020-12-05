@@ -55,7 +55,6 @@ def move(rect, movement, tiles):
             collision_types['top'] = True
     return rect, collision_types
 
-
 imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.ogg")
 imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.ogg")
 zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.ogg")
