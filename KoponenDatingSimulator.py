@@ -1287,7 +1287,7 @@ class Item:
     serialNumbers = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
-        self.texture = texture if texture != None else t_textures[serialNumber]
+        self.texture = texture if texture != None else i_textures[serialNumber]
         self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
         self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
         self.serialNumber = serialNumber
