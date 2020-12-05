@@ -321,12 +321,6 @@ level_finished_running = False
 tcagr_running = False
 mode_selection_running = False
 settings_running = False
-animation_counter = 0
-animation_duration = 0
-animation_image = 0
-animation_has_played = False
-death_wait = 0
-fart_counter = 0
 monsterAmount = 0
 monstersLeft = 0
 
@@ -2029,6 +2023,8 @@ class PlayerClass:
         self.light: bool = False
         self.godmode: bool = False
         self.dead: bool = False
+        self.deathAnimFinished: bool = False
+        self.deathWait: int = 0
         self.direction: bool = False
         self.walking: bool = False
         self.air_timer: int = 0
@@ -2058,9 +2054,12 @@ class PlayerClass:
         self.inventory: Inventory = Inventory(5)
         self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
         self.farting: bool = False
+        self.fart_counter: int = 0
         self.light: bool = False
         self.godmode: bool = False
         self.dead: bool = False
+        self.deathAnimFinished: bool = False
+        self.deathWait: int = 0
         self.direction: bool = False
         self.walking: bool = False
         self.air_timer: int = 0
@@ -2182,6 +2181,37 @@ class PlayerClass:
         else:
             crouch(False)
             self.animations.trigger("death")
+            
+            if self.dead and self.animations.active.tick >= self.animations.active.ticks:
+                self.dead = False
+                self.deathAnimFinished = True
+                
+            if not self.deathAnimFinished:
+                self.dead = True
+                KDS.Audio.Music.stop()
+                pygame.mixer.Sound.play(self.deathSound)
+                self.deathSound.set_volume(0.5)
+                self.deathAnimFinished = True
+            else:
+                self.deathWait += 1
+                if self.deathWait > 240:
+                    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
+                        respawn_function()
+                    else:
+                        load_function()
+
+        if self.farting:
+            global scroll
+            scroll[0] += random.randint(-10, 10)
+            scroll[1] += random.randint(-10, 10)
+            self.fart_counter += 1
+            if self.fart_counter > 250:
+                self.farting = False
+                self.fart_counter = 0
+                global Enemies
+                for enemy in Enemies:
+                    if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 800:
+                        enemy.dmg(random.randint(500, 1000))
 
 Player = PlayerClass()
 #endregion
@@ -2359,11 +2389,11 @@ def console():
             if len(command_list) > 1:
                 summonEntity = {
                     "imp": lambda e : numpy.append(e, KDS.AI.Imp(Player.rect.topright)),
-                    "sergeant": lambda e : numpy.append(e, KDS.AI.SergeantZombie(Player.rect.topright)),
+                    "sergeantzombie": lambda e : numpy.append(e, KDS.AI.SergeantZombie(Player.rect.topright)),
                     "drugdealer": lambda e : numpy.append(e, KDS.AI.DrugDealer(Player.rect.topright)),
-                    "supershotgunner": lambda e : numpy.append(e, KDS.AI.TurboShotgunner(Player.rect.topright)),
+                    "turboshotgunner": lambda e : numpy.append(e, KDS.AI.TurboShotgunner(Player.rect.topright)),
                     "methmaker": lambda e : numpy.append(e, KDS.AI.MethMaker(Player.rect.topright)),
-                    "fucker69": lambda e : numpy.append(e, KDS.AI.CaveMonster(Player.rect.topright))
+                    "cavemonster": lambda e : numpy.append(e, KDS.AI.CaveMonster(Player.rect.topright))
                 }
                 try:
                     global Enemies
@@ -2435,7 +2465,7 @@ def agr(tcagr: bool):
 #region Game Functions
 def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
     KDS.Logging.debug("Loading Game...")
-    global main_menu_running, current_map, animation_has_played, death_wait, true_scroll, selectedSave
+    global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
         display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
@@ -2463,10 +2493,8 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     Player.rect.topleft, koponen_rect.topleft = wdata
 
     #region Set Game Data
-    global animation_has_played, level_finished, death_wait
-    animation_has_played = False
+    global level_finished
     level_finished = False
-    death_wait = 0
     #endregion
     
     ########## iPuhelin ##########
@@ -2504,7 +2532,8 @@ def save_function():
     KDS.ConfigManager.Save.init(1)
     KDS.Logging.debug("Game Saved.")
 
-def load_function():
+def load_function(saveIndex: int = None):
+    saveIndex = KDS.ConfigManager.Save.SaveIndex if saveIndex == None else saveIndex
     KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Story, 1)
     newSave = KDS.ConfigManager.Save.init(1)
     play_function(KDS.Gamemode.gamemode, True, True, newSave)
@@ -2528,11 +2557,9 @@ def load_function():
     KDS.Logging.debug("Save Loaded.")
 
 def respawn_function():
-    global animation_has_played, level_finished, death_wait
+    global level_finished
     Player.reset()
-    animation_has_played = False
     level_finished = False
-    death_wait = 0
     if RespawnAnchor.active != None: Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
     else: Player.rect.topleft = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
     KDS.Audio.Music.stop()
@@ -3200,26 +3227,7 @@ while main_running:
     true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]
-    if Player.farting:
-        scroll[0] += random.randint(-10, 10)
-        scroll[1] += random.randint(-10, 10)
     mouse_pos = pygame.mouse.get_pos()
-#endregion
-#region Player Death
-    if Player.health <= 0:
-        if not animation_has_played:
-            Player.dead = True
-            KDS.Audio.Music.stop()
-            pygame.mixer.Sound.play(Player.deathSound)
-            Player.deathSound.set_volume(0.5)
-            animation_has_played = True
-        else:
-            death_wait += 1
-            if death_wait > 240:
-                if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
-                    respawn_function()
-                else:
-                    pass
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
@@ -3312,7 +3320,7 @@ while main_running:
     screen.blit(koponen_animations.update(), (koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if DebugMode:
-        pygame.draw.rect(screen, (KDS.Colors.Green), (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
+        pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
     screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (int(Player.rect.topleft[0] - scroll[0] + ((Player.rect.width - Player.animations.active.size[0]) / 2)), int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
     
     #dark = False if Player.rect.x > 500 else 1
@@ -3343,6 +3351,13 @@ while main_running:
             tmpAmmo = ui_hand_item.ammunition if isinstance(ui_hand_item.ammunition, int) else math.ceil(ui_hand_item.ammunition * 10) / 10
             screen.blit(harbinger_font.render(f"AMMO: {tmpAmmo}", True, KDS.Colors.White), (10, 360))
 
+        if Player.keys["red"]:
+            screen.blit(red_key, (10, 20))
+        if Player.keys["green"]:
+            screen.blit(green_key, (24, 20))
+        if Player.keys["blue"]:
+            screen.blit(blue_key, (38, 20))
+
         KDS.Missions.Render(screen)
 
         Player.inventory.render(screen)
@@ -3365,32 +3380,8 @@ while main_running:
     else:
         koponen_animations.trigger("idle")
 #endregion
-#region Items
-    if animation_counter > animation_duration:
-        animation_counter = 0
-        animation_image += 1
-    if Player.dead and Player.animations.tick >= Player.animations.active.ticks:
-            Player.dead = False
-            animation_has_played = True
-
-    if Player.farting:
-        fart_counter += 1
-        if fart_counter > 250:
-            Player.farting = False
-            fart_counter = 0
-            for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) < 800:
-                    enemy.dmg(random.randint(500, 1000))
-
-    if Player.keys["red"]:
-        screen.blit(red_key, (10, 20))
-    if Player.keys["green"]:
-        screen.blit(green_key, (24, 20))
-    if Player.keys["blue"]:
-        screen.blit(blue_key, (38, 20))
-#endregion
 #region Koponen Tip
-    if Player.rect.colliderect(koponen_rect):
+    if koponen_rect.colliderect(Player.rect):
         screen.blit(
             koponen_talk_tip, (koponen_rect.centerx - scroll[0] - int(koponen_talk_tip.get_width() / 2), koponen_rect.top - scroll[1] - 20))
         koponen_movement[0] = 0
@@ -3399,7 +3390,6 @@ while main_running:
             KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
     else:
         koponen_movement[0] = koponen_movingx
-    h = 0
 #endregion
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
@@ -3428,7 +3418,6 @@ while main_running:
     pygame.display.flip()
 #endregion
 #region Data Update
-    animation_counter += 1
     weapon_fire = False
     if KDS.Missions.GetFinished():
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:

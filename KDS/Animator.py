@@ -102,7 +102,6 @@ class MultiAnimation:
     def __init__(self, **animations: Animation):
         self.animations = animations
         self.active = None
-        self.tick = 0
         for key in animations:
             if self.active == None:
                 self.active = animations[key]
