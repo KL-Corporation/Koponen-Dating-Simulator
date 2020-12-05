@@ -415,7 +415,13 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
                 mapZip.extractall(PersistentMapPath)
         else:
             KDS.Logging.AutoError("Map file is not a valid format.")
-            
+            KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
+            return None
+        
+        tileprops: Dict[str, Any] = {}
+        if os.path.isfile(os.path.join(MapPath, "tileprops.kdf")):
+            tileprops = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "tileprops.kdf"), KDS.ConfigManager.JSON.NULLPATH, {})
+        
         for fname in os.listdir(PersistentMapPath):
             fpath = os.path.join(PersistentMapPath, fname)
             if os.path.isdir(fpath):
@@ -465,19 +471,23 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
                     data = list(datapoint)
                     if len(data) > 1 and int(datapoint) != 0:
                         serialNumber = int(data[1] + data[2] + data[3])
-                        if data[0] == "0":
+                        pointer = int(data[0])
+                        if pointer == 0:
                             if serialNumber not in specialTilesSerialNumbers:
                                 tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
                             else:
-                                tiles[y][x] = specialTilesD[serialNumber](
-                                    (x * 34, y * 34), serialNumber=serialNumber)
-                        elif data[0] == "1":
+                                tiles[y][x] = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                            identifier = f"{x}-{y}-{int(tiles[y][x].serialNumber):03d}"
+                            if identifier in tileprops:
+                                for k, v in tileprops[identifier].items():
+                                    setattr(tiles[y][x], k, v)
+                        elif pointer == 1:
                             if loadEntities:
                                 Items = numpy.append(Items, Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
-                        elif data[0] == "2":
+                        elif pointer == 2:
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
-                        elif data[0] == "3":
+                        elif pointer == 3:
                             temp_teleport = Teleport((x*34, y*34), serialNumber=serialNumber)
                             try: 
                                 Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
