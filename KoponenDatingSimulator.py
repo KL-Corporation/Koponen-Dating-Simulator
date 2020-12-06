@@ -1255,7 +1255,27 @@ class ImpaledBody(Tile):
 
     def update(self):
         return self.animation.update()
+
+class Car(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
         
+class Barrier(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = True
+        self.texture = pygame.Surface((0, 0))
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1287,7 +1307,9 @@ specialTilesD = {
     78: Methtable,
     82: Ladder,
     84: FlickerTrigger,
-    85: ImpaledBody
+    85: ImpaledBody,
+    86: Car,
+    87: Barrier
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
