@@ -2469,8 +2469,28 @@ def agr(tcagr: bool):
 #region Game Functions
 def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
     KDS.Logging.debug("Loading Game...")
+
+    def showLoadingCircle(wdw, stop_thread):
+        angle = 0
+        loadingCircle = pygame.image.load("Assets/Textures/UI/loading_circle.png").convert()
+        loadingCircle.set_colorkey(KDS.Colors.White)
+        loadingCircle = pygame.transform.scale(loadingCircle, (int(display_size[0] / 7), int(display_size[0] / 7)))
+        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
+        while stop_thread():
+            wdw.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
+            cpy = pygame.transform.rotate(loadingCircle, angle)
+            wdw.blit(cpy, (int(display_size[0] / 2) - cpy.get_width() / 2, 600 - cpy.get_height() / 2))
+            angle += 10
+            if angle > 360: angle = 0
+            clock.tick_busy_loop(60)
+            pygame.display.flip()
+
     global main_menu_running, current_map, true_scroll, selectedSave
+    loading = True
     if show_loading:
+        ld_thread = threading.Thread(target=showLoadingCircle, args=(display, lambda : loading))
+        ld_thread.setDaemon(True)
+        ld_thread.start()
         scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
         display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
         pygame.display.flip()
@@ -2512,6 +2532,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
+    loading = False
     return 0
 
 def save_function():
