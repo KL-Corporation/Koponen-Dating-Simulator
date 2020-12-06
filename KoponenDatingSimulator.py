@@ -853,6 +853,8 @@ class Landmine(Tile):
         return self.texture
 
 class Ladder(Tile):
+    sounds = [pygame.mixer.Sound("Assets/Audio/Tiles/ladder_0.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/ladder_1.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/ladder_2.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/ladder_3.ogg")]
+    ct = 0
     def __init__(self, position: Tuple[int, int], serialNumber: int):   
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
@@ -860,7 +862,12 @@ class Ladder(Tile):
         self.checkCollision = False
 
     def update(self):
-        if self.rect.colliderect(Player.rect): Player.onLadder = True
+        if self.rect.colliderect(Player.rect): 
+            Player.onLadder = True
+            if Ladder.ct > 45:
+                KDS.Audio.playSound(random.choice(Ladder.sounds))
+                Ladder.ct = 0
+            Ladder.ct += 1
         return self.texture
 
 class Lamp(Tile):
