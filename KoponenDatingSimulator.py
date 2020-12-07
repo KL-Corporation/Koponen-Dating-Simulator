@@ -13,6 +13,7 @@ import KDS.Convert
 import KDS.Gamemode
 import KDS.Keys
 import KDS.Koponen
+import KDS.Loading
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
@@ -214,7 +215,6 @@ settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.pn
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
-loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Menu Texture Loading Complete.")
 #endregion
@@ -2491,31 +2491,9 @@ def agr(tcagr: bool):
 #region Game Functions
 def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
     KDS.Logging.debug("Loading Game...")
-
-    def showLoadingCircle(wdw, stop_thread):
-        angle = 0
-        loadingCircle = pygame.image.load("Assets/Textures/UI/loading_circle.png").convert()
-        loadingCircle.set_colorkey(KDS.Colors.White)
-        loadingCircle = pygame.transform.scale(loadingCircle, (int(display_size[0] / 7), int(display_size[0] / 7)))
-        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
-        while stop_thread():
-            wdw.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
-            cpy = pygame.transform.rotate(loadingCircle, angle)
-            wdw.blit(cpy, (int(display_size[0] / 2) - cpy.get_width() / 2, 600 - cpy.get_height() / 2))
-            angle += 10
-            if angle > 360: angle = 0
-            clock.tick_busy_loop(60)
-            pygame.display.flip()
-
     global main_menu_running, current_map, true_scroll, selectedSave
-    loading = True
     if show_loading:
-        ld_thread = threading.Thread(target=showLoadingCircle, args=(display, lambda : loading))
-        ld_thread.setDaemon(True)
-        ld_thread.start()
-        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
-        display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
-        pygame.display.flip()
+        KDS.Loading.Start(display, clock, DebugMode)
 
     KDS.Audio.Music.unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -2554,7 +2532,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
-    loading = False
+    KDS.Loading.Stop()
     return 0
 
 def save_function():
@@ -2898,6 +2876,7 @@ def main_menu():
         map_names = ("ERROR")
     #endregion
     while main_menu_running:
+        renderUI = True
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2992,11 +2971,11 @@ def main_menu():
             story_save_button_2.update(display, mouse_pos, c)
             
             #Äh, teen joskus
-            
+
         elif MenuMode == Mode.CampaignMenu:
             pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
 
-            campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign, True)
+            renderUI = not campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign, True)
             campaign_return_button.update(display, mouse_pos, c, Mode.MainMenu)
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
@@ -3022,7 +3001,8 @@ def main_menu():
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
-        pygame.display.flip()
+        if renderUI:
+            pygame.display.flip()
         display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
 
