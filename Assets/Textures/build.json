@@ -86,7 +86,8 @@
         "084": "flicker_trigger.png",
         "085": "impaled_corpse.png",
         "086": "car.png",
-        "087": "barrier.png"
+        "087": "barrier.png",
+        "088": "tractor.png"
     },
 
     "tile_sounds" : {
@@ -126,7 +127,8 @@
         84,
         85,
         86,
-        87
+        87,
+        88
     ],
     "checkCollisionFalse": [
         10,

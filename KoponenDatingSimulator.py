@@ -1273,6 +1273,16 @@ class Barrier(Tile):
     def update(self):
         return self.texture
 
+class Tractor(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1306,7 +1316,8 @@ specialTilesD = {
     84: FlickerTrigger,
     85: ImpaledBody,
     86: Car,
-    87: Barrier
+    87: Barrier,
+    88: Tractor
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
