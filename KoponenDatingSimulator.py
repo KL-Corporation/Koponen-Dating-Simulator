@@ -2670,10 +2670,8 @@ def settings_menu():
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 240, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
-    music_volume_text = button_font.render(
-        "Music Volume", True, KDS.Colors.White)
-    effect_volume_text = button_font.render(
-        "Sound Effect Volume", True, KDS.Colors.White)
+    music_volume_text = button_font.render("Music Volume", True, KDS.Colors.White)
+    effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.White)
     pause_loss_text = button_font.render("Pause On Focus Loss", True, KDS.Colors.White)
 
     while settings_running:
