@@ -1189,7 +1189,7 @@ class Methtable(Tile):
         super().__init__(position, serialNumber)
         self.animation = KDS.Animator.Animation("methtable", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         for index, im in enumerate(self.animation.images):
-            self.animation.images[index] = pygame.transform.scale(im, (int(im.get_width() / 2.5), int(im.get_height() / 2.5)))
+            self.animation.images[index] = pygame.transform.scale(im, (round(im.get_width() / 2.5), round(im.get_height() / 2.5)))
         self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
         self.checkCollision = False
 
