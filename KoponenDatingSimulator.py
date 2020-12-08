@@ -13,6 +13,7 @@ import KDS.Convert
 import KDS.Gamemode
 import KDS.Keys
 import KDS.Koponen
+import KDS.Loading
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
@@ -214,7 +215,6 @@ settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.pn
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
-loadingScreen = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Menu Texture Loading Complete.")
 #endregion
@@ -853,6 +853,8 @@ class Landmine(Tile):
         return self.texture
 
 class Ladder(Tile):
+    sounds = [pygame.mixer.Sound("Assets/Audio/Tiles/ladder_0.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/ladder_1.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/ladder_2.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/ladder_3.ogg")]
+    ct = 0
     def __init__(self, position: Tuple[int, int], serialNumber: int):   
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
@@ -860,7 +862,12 @@ class Ladder(Tile):
         self.checkCollision = False
 
     def update(self):
-        if self.rect.colliderect(Player.rect): Player.onLadder = True
+        if self.rect.colliderect(Player.rect): 
+            Player.onLadder = True
+            if Ladder.ct > 45:
+                KDS.Audio.playSound(random.choice(Ladder.sounds))
+                Ladder.ct = 0
+            Ladder.ct += 1
         return self.texture
 
 class Lamp(Tile):
@@ -1248,7 +1255,27 @@ class ImpaledBody(Tile):
 
     def update(self):
         return self.animation.update()
+
+class Car(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
         
+class Barrier(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = True
+        self.texture = pygame.Surface((0, 0))
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1280,7 +1307,9 @@ specialTilesD = {
     78: Methtable,
     82: Ladder,
     84: FlickerTrigger,
-    85: ImpaledBody
+    85: ImpaledBody,
+    86: Car,
+    87: Barrier
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
@@ -2464,9 +2493,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
-        scaled_loadingScreen = KDS.Convert.AspectScale(loadingScreen, display_size)
-        display.blit(scaled_loadingScreen, (display_size[0] / 2 - scaled_loadingScreen.get_width() / 2, display_size[1] / 2 - scaled_loadingScreen.get_height() / 2))
-        pygame.display.flip()
+        KDS.Loading.Start(display, clock, DebugMode)
 
     KDS.Audio.Music.unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
@@ -2505,6 +2532,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
+    KDS.Loading.Stop()
     return 0
 
 def save_function():
@@ -2846,6 +2874,7 @@ def main_menu():
         map_names = ("ERROR")
     #endregion
     while main_menu_running:
+        renderUI = True
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -2940,11 +2969,11 @@ def main_menu():
             story_save_button_2.update(display, mouse_pos, c)
             
             #Äh, teen joskus
-            
+
         elif MenuMode == Mode.CampaignMenu:
             pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
 
-            campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign, True)
+            renderUI = not campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign, True)
             campaign_return_button.update(display, mouse_pos, c, Mode.MainMenu)
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
@@ -2970,7 +2999,8 @@ def main_menu():
                 fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
-        pygame.display.flip()
+        if renderUI:
+            pygame.display.flip()
         display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
 

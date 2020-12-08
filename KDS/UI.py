@@ -1,6 +1,6 @@
 from shutil import move
 from turtle import position
-from typing import Callable, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 import KDS.Animator
 import KDS.ConfigManager
 import KDS.Convert
@@ -114,7 +114,6 @@ class Button:
         self.button_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
         self.enabled = enabled
         
-    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args):
         """Updates and draws the button onto a surface.
 
         Args:
@@ -123,12 +122,26 @@ class Button:
             clicked (bool): Determines if the button's function should be executed.
             args (any): Any arguments for the button's function.
         """
+    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args: Any) -> bool:
+        """Updates and draws the button onto a surface.
 
+        Args:
+            surface (Surface): The surface the button will be drawn onto.
+            mouse_pos (Tuple[int, int]): The position of the mouse.
+            clicked (bool): Determines if the button's function should be executed.
+            args (Any): Any arguments for the button's function.
+
+        Returns:
+            bool: Has the button executed it's function.
+        """
+
+        executed = False
         button_color = self.button_disabled_color
         if self.enabled:
             if self.rect.collidepoint(mouse_pos):
                 if clicked:
                     self.function(*args)
+                    executed = True
                 button_color = self.button_highlighted_color
                 if pygame.mouse.get_pressed()[0]:
                     button_color = self.button_pressed_color
@@ -147,6 +160,8 @@ class Button:
 
         if self.overlay != None:
             surface.blit(self.overlay, (int(self.rect.center[0] - (self.overlay.get_width() / 2)), int(self.rect.center[1] - (self.overlay.get_height() / 2))))
+        
+        return executed
 
 class Switch:
     """

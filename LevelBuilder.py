@@ -40,7 +40,7 @@ clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
 
-consoleBackground = pygame.image.load("Assets/Textures/UI/loadingScreen.png").convert()
+consoleBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
 
 brushNames = {
     "imp": "2001",

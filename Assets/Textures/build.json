@@ -84,7 +84,9 @@
         "082": "steel_ladder.png",
         "083": "metal_platform.png",
         "084": "flicker_trigger.png",
-        "085": "impaled_corpse.png"
+        "085": "impaled_corpse.png",
+        "086": "car.png",
+        "087": "barrier.png"
     },
 
     "tile_sounds" : {
@@ -122,7 +124,9 @@
         78,
         82,
         84,
-        85
+        85,
+        86,
+        87
     ],
     "checkCollisionFalse": [
         10,
