@@ -1,7 +1,7 @@
 import threading
 import concurrent.futures #Tätä tarvitaan toivottavasti tulevaisuudessa
 
-class KL_Thread: #KL_Thread toistaiseksi, koska en oo varma, kuinka monta eri Thread-liittyvää keywordia on jo varattu.
+class KL_Thread: #KL_Thread toistaiseksi, koska en oo varma kuinka monta eri Thread-liittyvää keywordia on jo varattu.
     """
         Thread Handler for handling python-threads more easily.
         

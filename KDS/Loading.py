@@ -1,22 +1,43 @@
 import pygame
 import KDS.Colors
 import KDS.Convert
-import threading
+import KDS.ThreadHandler
 pygame.init()
 
 running = False
 
-loadingCircle = None
+circleMask = None
 loadingBackground = None
 debugFont = None
 
-def __rendering(surface: pygame.Surface, _runningFunc, clock: pygame.time.Clock, background: pygame.Surface, circle: pygame.Surface, debug: bool):
+def __rendering(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool, stop):
     angle = 0
+    speed = -1
     surface_size = surface.get_size()
-    while _runningFunc():
-        surface.blit(background, (surface_size[0] / 2 - background.get_width() / 2, surface_size[1] / 2 - background.get_height() / 2))
-        cpy = pygame.transform.rotate(circle, angle)
-        surface.blit(cpy, (int(surface_size[0] / 2) - cpy.get_width() / 2, 600 - cpy.get_height() / 2))
+
+    ##### NEW CIRCLE #####
+    circle_size = (surface_size[0] // 8, surface_size[0] // 8)
+    circle = pygame.Surface(circle_size, pygame.SRCALPHA)
+    pygame.draw.circle(circle, (0, 148, 255), (circle_size[0] // 2, circle_size[1] // 2), circle_size[0] // 2, 10)
+    ##### NEW CIRCLE #####
+    
+    while not stop():
+        surface.blit(scaledLoadingBackground, (surface_size[0] // 2 - scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - scaledLoadingBackground.get_height() // 2))
+        
+        ##### OLD CIRCLE #####
+        # crl_size = (surface_size[0] // 8, surface_size[0] // 8)
+        # crl = pygame.Surface(crl_size, pygame.SRCALPHA)
+        # pygame.draw.circle(crl, (0, 148, 255), (crl_size[0] // 2, crl_size[1] // 2), crl_size[0] // 2, 10, False, True, True, True)
+        # crl = pygame.transform.rotate(crl, angle * speed)
+        ##### OLD CIRCLE #####
+        
+        ##### NEW CIRCLE #####
+        crl = circle.copy()
+        maskRotated = pygame.transform.rotate(circleMask, angle * speed)
+        crl.blit(maskRotated, (circle_size[0] // 2 - maskRotated.get_width() // 2, circle_size[1] // 2 - maskRotated.get_height() // 2), special_flags=pygame.BLEND_RGBA_MULT)
+        ##### NEW CIRCLE #####
+        
+        surface.blit(crl, (surface_size[0] // 2 - crl.get_width() // 2, 600 - crl.get_height() // 2))
         angle += 4
         while angle >= 360: angle -= 360
         if debug:
@@ -34,23 +55,18 @@ def __rendering(surface: pygame.Surface, _runningFunc, clock: pygame.time.Clock,
         pygame.display.flip()
 
 def Start(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool = False):
-    global loadingCircle, loadingBackground, debugFont, running
-    if loadingCircle == None:
-        loadingCircle = pygame.image.load("Assets/Textures/UI/loading_circle.png").convert()
-        loadingCircle.set_colorkey(KDS.Colors.White)
+    global circleMask, loadingBackground, scaledLoadingBackground, debugFont, running, ld_thread
+    if circleMask == None:
+        circleMask = pygame.image.load("Assets/Textures/UI/loading_circle_mask.png").convert_alpha()
         loadingBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
         debugFont = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
     running = True
     surface_size = surface.get_size()
     scaledLoadingBackground = KDS.Convert.AspectScale(loadingBackground, surface_size)
-    scaledLoadingCircle = KDS.Convert.AspectScale(loadingCircle, (int(surface_size[0] / 7), int(surface_size[0] / 7)))
-    ld_thread = threading.Thread(target=__rendering, args=(surface, lambda: running, clock, scaledLoadingBackground, scaledLoadingCircle, debug))
-    ld_thread.setDaemon(True)
-    ld_thread.start()
-    scaledLoadingBackground = KDS.Convert.AspectScale(loadingBackground, surface_size)
-    surface.blit(scaledLoadingBackground, (surface_size[0] / 2 - scaledLoadingBackground.get_width() / 2, surface_size[1] / 2 - scaledLoadingBackground.get_height() / 2))
+    ld_thread = KDS.ThreadHandler.KL_Thread(__rendering, "loading-screen", True, True, surface, clock, debug)
+    surface.blit(scaledLoadingBackground, (surface_size[0] // 2 - scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - scaledLoadingBackground.get_height() // 2))
     pygame.display.flip()
 
 def Stop():
     global running
-    running = False
+    ld_thread.stop()

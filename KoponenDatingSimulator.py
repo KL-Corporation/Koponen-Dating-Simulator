@@ -23,14 +23,11 @@ import KDS.UI
 import KDS.World
 import numpy
 import random
-import threading
-import concurrent.futures
 import sys
 import shutil
 import json
 import zipfile
 import math
-import time
 import datetime
 from pygame.locals import *
 from typing import Any, Dict, List, Tuple
@@ -3321,7 +3318,7 @@ while main_running:
         if finished:
             Explosions.remove(unit)
         elif etick < 10:
-            Lights.append(KDS.World.Lighting.Light((unit.xpos - 80, unit.ypos - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
+            Lights.append(KDS.World.Lighting.Light((unit.pos[0] - 80, unit.pos[1] - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
 
     #Partikkelit
     #Particles.append(KDS.World.Lighting.Sparkparticle((Player.rect.x, Player.rect.y - 20), random.randint(1, 20), random.randint(1, 20), random.randint(1, 9)))
