@@ -4,11 +4,17 @@ import KDS.Convert
 import KDS.ThreadHandler
 pygame.init()
 
+#region Settings
+circleSizeDivider = 10
+#endregion
+
+#region Variables
 running = False
 
 circleMask = None
 loadingBackground = None
 debugFont = None
+#endregion
 
 def __rendering(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool, stop):
     angle = 0
@@ -16,7 +22,7 @@ def __rendering(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool, 
     surface_size = surface.get_size()
 
     ##### NEW CIRCLE #####
-    circle_size = (surface_size[0] // 8, surface_size[0] // 8)
+    circle_size = (surface_size[0] // circleSizeDivider, surface_size[0] // circleSizeDivider)
     circle = pygame.Surface(circle_size, pygame.SRCALPHA)
     pygame.draw.circle(circle, (0, 148, 255), (circle_size[0] // 2, circle_size[1] // 2), circle_size[0] // 2, 10)
     ##### NEW CIRCLE #####
