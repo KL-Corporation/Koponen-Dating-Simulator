@@ -6,6 +6,7 @@ pygame.init()
 
 #region Settings
 circleSizeDivider = 10
+circleOffset = (0, 550)
 #endregion
 
 #region Variables
@@ -43,7 +44,7 @@ def __rendering(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool, 
         crl.blit(maskRotated, (circle_size[0] // 2 - maskRotated.get_width() // 2, circle_size[1] // 2 - maskRotated.get_height() // 2), special_flags=pygame.BLEND_RGBA_MULT)
         ##### NEW CIRCLE #####
         
-        surface.blit(crl, (surface_size[0] // 2 - crl.get_width() // 2, 600 - crl.get_height() // 2))
+        surface.blit(crl, (surface_size[0] // 2 - crl.get_width() // 2 + circleOffset[0], crl.get_height() // 2 + circleOffset[1]))
         angle += 4
         while angle >= 360: angle -= 360
         if debug:
