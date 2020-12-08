@@ -562,7 +562,7 @@ class Inventory:
         index = 0
         for i in self.storage:
             if not isinstance(i, str) and i.serialNumber in i_textures:
-                Surface.blit(i.texture, (int(index * 34 + 10 + i.texture_size[0] / 4), int(75 + i.texture_size[1] / 4)))
+                Surface.blit(i.texture, (index * 34 + 10 + i.texture_size[0] // 4, 75 + i.texture_size[1] // 4))
             index += 1
 
     def moveRight(self):
@@ -891,8 +891,8 @@ class Lamp(Tile):
 
     def update(self):
         if random.randint(0, 10) != 10:
-            btmidth = int(self.coneheight*80/90)
-            Lights.append(KDS.World.Lighting.Light((self.rect.x - btmidth/2 + 7, self.rect.y + 16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
+            btmidth = self.coneheight * 80 // 90
+            Lights.append(KDS.World.Lighting.Light((self.rect.x - btmidth // 2 + 7, self.rect.y + 16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
         return self.texture
 
 class DecorativeHead(Tile):
@@ -907,7 +907,7 @@ class DecorativeHead(Tile):
     def update(self):
         if self.rect.colliderect(Player.rect):
             if not self.prayed:
-                screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - int(decorative_head_tip.get_width() / 2), self.rect.top - scroll[1] - 20))
+                screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - decorative_head_tip.get_width() // 2, self.rect.top - scroll[1] - 20))
                 if KDS.Keys.functionKey.pressed:
                     if not self.praying and not self.prayed:
                         KDS.Audio.playSound(pray_sound)
@@ -933,7 +933,7 @@ class DecorativeHead(Tile):
             else:
                 day_light = KDS.World.Lighting.Shapes.circle.get(150, 1900).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
-                screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
+                screen.blit(day_light, (self.rect.centerx - scroll[0] - day_light.get_width() // 2, self.rect.centery - scroll[1] - day_light.get_height() // 2))
         return self.texture
 
 class Tree(Tile):
@@ -1135,11 +1135,11 @@ class RespawnAnchor(Tile):
             else:
                 day_light = KDS.World.Lighting.Shapes.splatter.get(150, 2400).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
-                screen.blit(day_light, (self.rect.centerx - scroll[0] - int(day_light.get_width() / 2), self.rect.centery - scroll[1] - int(day_light.get_height() / 2)))
+                screen.blit(day_light, (self.rect.centerx - scroll[0] - day_light.get_width() // 2, self.rect.centery - scroll[1] - day_light.get_height() // 2))
             return self.ontexture
         else: 
             if self.rect.colliderect(Player.rect):
-                screen.blit(respawn_anchor_tip, (self.rect.centerx - scroll[0] - int(respawn_anchor_tip.get_width() / 2), self.rect.top - scroll[1] - 50))
+                screen.blit(respawn_anchor_tip, (self.rect.centerx - scroll[0] - respawn_anchor_tip.get_width() // 2, self.rect.top - scroll[1] - 50))
                 if KDS.Keys.functionKey.clicked:
                     RespawnAnchor.active = self
                     RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - Player.rect.height + 34)
@@ -1189,7 +1189,7 @@ class Methtable(Tile):
         super().__init__(position, serialNumber)
         self.animation = KDS.Animator.Animation("methtable", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         for index, im in enumerate(self.animation.images):
-            self.animation.images[index] = pygame.transform.scale(im, (int(im.get_width()/2.5), int(im.get_height()/2.5)))
+            self.animation.images[index] = pygame.transform.scale(im, (im.get_width() // 2.5, im.get_height() // 2.5))
         self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
         self.checkCollision = False
 
@@ -1384,7 +1384,7 @@ class Item:
             index += 1
         
         if collision and showItemTip:
-            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
+            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - itemTip.get_width() // 2 - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
 
         return Item_list, inventory
 
@@ -2606,17 +2606,13 @@ def esc_menu_f(oldSurf: pygame.Rect):
         esc_menu = False
         go_to_main_menu = True
 
-    resume_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 400, 200, 30), resume, button_font.render("RESUME", True, KDS.Colors.White))
+    resume_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 400, 200, 30), resume, button_font.render("RESUME", True, KDS.Colors.White))
     save_button_enabled = True
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
         save_button_enabled = False
-    save_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 100), 438, 200, 30), save_function, button_font.render(
-        "Save", True, KDS.Colors.White), enabled=save_button_enabled)
-    settings_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 475, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
-    main_menu_button = KDS.UI.Button(pygame.Rect(int(
-        display_size[0] / 2 - 100), 513, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
+    save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 438, 200, 30), save_function, button_font.render("Save", True, KDS.Colors.White), enabled=save_button_enabled)
+    settings_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 475, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
+    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 513, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -2643,10 +2639,9 @@ def esc_menu_f(oldSurf: pygame.Rect):
 
         esc_surface.blit(pygame.transform.scale(
             blurred_background, display_size), (0, 0))
-        pygame.draw.rect(esc_surface, (123, 134, 111), (int(
-            (display_size[0] / 2) - 250), int((display_size[1] / 2) - 200), 500, 400))
+        pygame.draw.rect(esc_surface, (123, 134, 111), (display_size[0] // 2 - 250, display_size[1] // 2 - 200, 500, 400))
         esc_surface.blit(pygame.transform.scale(
-            text_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 175)))
+            text_icon, (250, 139)), (display_size[0] // 2 - 125, display_size[1] // 2 - 175))
 
         resume_button.update(esc_surface, mouse_pos, c)
         save_button.update(esc_surface, mouse_pos, c)
@@ -2832,8 +2827,8 @@ def main_menu():
     mode_selection_modes.append(KDS.Gamemode.Modes.Story)
     mode_selection_modes.append(KDS.Gamemode.Modes.Campaign)
     mode_selection_buttons = []
-    story_mode_button = pygame.Rect(0, 0, display_size[0], int(display_size[1] / 2))
-    campaign_mode_button = pygame.Rect(0, int(display_size[1] / 2), display_size[0], int(display_size[1] / 2))
+    story_mode_button = pygame.Rect(0, 0, display_size[0], display_size[1] // 2)
+    campaign_mode_button = pygame.Rect(0, display_size[1] // 2, display_size[0], display_size[1] // 2)
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
     #endregion
@@ -2849,8 +2844,8 @@ def main_menu():
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
-    campaign_play_button_rect = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 300, 300, 100)
-    campaign_return_button_rect = pygame.Rect(int(display_size[0] / 2) - 150, display_size[1] - 150, 300, 100)
+    campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
+    campaign_return_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 150, 300, 100)
     campaign_play_text = button_font1.render("START", True, (KDS.Colors.EmeraldGreen))
     campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
     campaign_play_button = KDS.UI.Button(campaign_play_button_rect, play_function, campaign_play_text)
@@ -2928,7 +2923,7 @@ def main_menu():
         elif MenuMode == Mode.ModeSelectionMenu:
 
             display.blit(gamemode_bc_1_1, (0, 0))
-            display.blit(gamemode_bc_2_1, (0, int(display_size[1] / 2)))
+            display.blit(gamemode_bc_2_1, (0, display_size[1] // 2))
             for y in range(len(mode_selection_buttons)):
                 if mode_selection_buttons[y].collidepoint(mouse_pos):
                     if y == 0:
@@ -3024,7 +3019,7 @@ def level_finished_menu(oldSurf: pygame.Rect):
     level_f_surf = pygame.Surface(display_size)
     normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
-    menu_rect = pygame.Rect(int((display_size[0] / 2) - 250), int((display_size[1] / 2) - 300), 500, 600)
+    menu_rect = pygame.Rect(display_size[0] // 2 - 250, display_size[1] // 2 - 300, 500, 600)
     
     def goto_main_menu():
         global level_finished_running, go_to_main_menu
@@ -3040,8 +3035,8 @@ def level_finished_menu(oldSurf: pygame.Rect):
 
     next_level_bool = True if int(current_map) < int(max_map) else False
     
-    main_menu_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 - 220), menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
-    next_level_button = KDS.UI.Button(pygame.Rect(int(display_size[0] / 2 + 20), menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
+    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
+    next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
     
     pre_rendered_scores = {}
     
@@ -3074,7 +3069,7 @@ def level_finished_menu(oldSurf: pygame.Rect):
 
         level_f_surf.blit(pygame.transform.scale(blurred_background, display_size), (0, 0))
         pygame.draw.rect(level_f_surf, (123, 134, 111), menu_rect)
-        level_f_surf.blit(pygame.transform.scale(level_cleared_icon, (250, 139)), (int(display_size[0] / 2 - 125), int(display_size[1] / 2 - 275)))
+        level_f_surf.blit(pygame.transform.scale(level_cleared_icon, (250, 139)), (display_size[0] // 2 - 125, display_size[1] // 2 - 275))
             
         values = KDS.Scores.ScoreAnimation.update(True if anim_lerp_x.tick >= anim_lerp_x.ticks else False)
         comparisonValue = KDS.Math.Clamp(KDS.Scores.ScoreAnimation.animationIndex + 1, 0, len(values))
@@ -3342,7 +3337,7 @@ while main_running:
 
     if DebugMode:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
-    screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (int(Player.rect.topleft[0] - scroll[0] + ((Player.rect.width - Player.animations.active.size[0]) / 2)), int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
+    screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
     
     #dark = False if Player.rect.x > 500 else 1
     if dark:
@@ -3404,7 +3399,7 @@ while main_running:
 #region Koponen Tip
     if koponen_rect.colliderect(Player.rect):
         screen.blit(
-            koponen_talk_tip, (koponen_rect.centerx - scroll[0] - int(koponen_talk_tip.get_width() / 2), koponen_rect.top - scroll[1] - 20))
+            koponen_talk_tip, (koponen_rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, koponen_rect.top - scroll[1] - 20))
         koponen_movement[0] = 0
         if KDS.Keys.functionKey.pressed:
             KDS.Keys.Reset()

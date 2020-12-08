@@ -233,8 +233,8 @@ class tileInfo:
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
-        for row in renderList[scroll[1] : scroll[1] + int((display_size[1] / scalesize) + 2)]:
-            for unit in row[scroll[0] : scroll[0] + int((display_size[0] / scalesize) + 2)]:
+        for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
+            for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 srlist = unit.getSerials()
                 for index, number in enumerate(srlist):
@@ -298,7 +298,7 @@ class tileInfo:
             cumHeight = 0
             for tip in tip_renders:
                 pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
-                main_display.blit(tip, (mpos[0] + 15 + int(maxWidth / 2 - tip.get_width() / 2), mpos[1] + 15 + cumHeight))
+                main_display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
         
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
@@ -710,8 +710,8 @@ def main():
                 scroll[0] += event.x
             
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
-            mid_scroll_x = int(round((mouse_pos_beforeMove[0] - mouse_pos[0]) / scalesize))
-            mid_scroll_y = int(round((mouse_pos_beforeMove[1] - mouse_pos[1]) / scalesize))
+            mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
+            mid_scroll_y = (mouse_pos_beforeMove[1] - mouse_pos[1]) // scalesize
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
                 scroll[0] = scroll_beforeMove[0] + mid_scroll_x
                 scroll[1] = scroll_beforeMove[1] + mid_scroll_y

@@ -164,7 +164,7 @@ def material_selector(prev_material):
 
     #region bs
     x = len(tile_textures) + len(item_textures)
-    x = int(x/4)
+    x = x // 4
     for _ in range(x+1):
         material_list.append([])
         selector_rects.append([])

@@ -8,8 +8,8 @@ pygame.key.stop_text_input()
 
 def ai_collision_test(rect, Tile_list):
     hit_list = []
-    x = int((rect.x/34)-3)
-    y = int((rect.y/34)-3)
+    x = rect.x // 34 - 3
+    y = rect.y // 34 - 3
     if x < 0:
         x = 0
     if y < 0:
@@ -103,8 +103,8 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
     searchPointers = [(searchRect.centerx + x * 30 *dirVar, searchRect.centery + x * 30 * dirVar*slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
         
-        x = int(pointer[0]/34)
-        y = int(pointer[1]/34)
+        x = pointer[0] // 34
+        y = pointer[1] // 34
         end_y = y + 1
         end_x = x + 1
         max_x = len(obstacles[0])-1

@@ -86,7 +86,7 @@ class Item:
             index += 1
         
         if collision and showItemTip:
-            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - int(itemTip.get_width() / 2) - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
+            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - itemTip.get_width() // 2 - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
 
         return Item_list, inventory
 

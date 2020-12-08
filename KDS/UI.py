@@ -159,7 +159,7 @@ class Button:
         pygame.draw.rect(surface, draw_color, self.rect)
 
         if self.overlay != None:
-            surface.blit(self.overlay, (int(self.rect.center[0] - (self.overlay.get_width() / 2)), int(self.rect.center[1] - (self.overlay.get_height() / 2))))
+            surface.blit(self.overlay, (self.rect.center[0] - self.overlay.get_width() // 2, self.rect.center[1] - self.overlay.get_height() // 2))
         
         return executed
 
