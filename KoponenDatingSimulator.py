@@ -52,7 +52,7 @@ KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, P
 pygame.mixer.init()
 pygame.init()
 
-cursorIndex = KDS.ConfigManager.GetSetting("UI/cursor", 0)
+cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", 0)
 cursorData = {
     1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
     2: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"),
@@ -148,11 +148,11 @@ KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 #region Loading
 #region Settings
 KDS.Logging.debug("Loading Settings...")
-tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
-current_map = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
-max_map = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
-maxParticles = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
-play_walk_sound = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
+tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
+current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
+max_map: int = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
+maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
+play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
 KDS.Logging.debug("Settings Loaded.")
 #endregion
 KDS.Logging.debug("Loading Assets...")
@@ -271,17 +271,17 @@ black_tint.set_alpha(170)
 
 tmp_jukebox_data = tip_font.render("Use Jukebox [Click: E]", True, KDS.Colors.White)
 tmp_jukebox_data2 = tip_font.render("Stop Jukebox [Hold: E]", True, KDS.Colors.White)
-jukebox_tip = pygame.Surface((max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height()), SRCALPHA)
+jukebox_tip: pygame.Surface = pygame.Surface((max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height()), SRCALPHA)
 jukebox_tip.blit(tmp_jukebox_data, ((tmp_jukebox_data2.get_width() - tmp_jukebox_data.get_width()) / 2, 0))
 jukebox_tip.blit(tmp_jukebox_data2, ((tmp_jukebox_data.get_width() - tmp_jukebox_data2.get_width()) / 2, tmp_jukebox_data.get_height()))
 del tmp_jukebox_data, tmp_jukebox_data2
-decorative_head_tip = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.White)
-respawn_anchor_tip = tip_font.render("Set Respawn Point [E]", True, KDS.Colors.White)
-level_ender_tip = tip_font.render("Finish level [E]", True, KDS.Colors.White)
-itemTip = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
+decorative_head_tip: pygame.Surface = tip_font.render("Activate Head [Hold: E]", True, KDS.Colors.White)
+respawn_anchor_tip: pygame.Surface = tip_font.render("Set Respawn Point [E]", True, KDS.Colors.White)
+level_ender_tip: pygame.Surface = tip_font.render("Finish level [E]", True, KDS.Colors.White)
+itemTip: pygame.Surface = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 
-renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
-pauseOnFocusLoss = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
+renderPadding: int = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
+pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
 
 restart = False
 reset_data = False
@@ -363,6 +363,11 @@ DebugMode = False
 KDS.Logging.debug("Variable Defining Complete.")
 #endregion
 #region Game Settings
+fall_speed: float = 0.4
+fall_multiplier: float = 2.5
+fall_max_velocity: float = 8
+item_fall_speed: float = 1
+item_fall_max_velocity: float = 8
 def LoadGameSettings():
     global fall_speed, fall_multiplier, fall_max_velocity, item_fall_speed, item_fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
@@ -370,9 +375,16 @@ def LoadGameSettings():
     fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Player/fallMaxVelocity")
     item_fall_speed = KDS.ConfigManager.GetGameData("Physics/Items/fallSpeed")
     item_fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Items/fallMaxVelocity")
-LoadGameSettings()
+try:
+    LoadGameSettings()
+except:
+    KDS.Logging.AutoError("Game Settings could not be loaded!")
 #endregion
 #region World Data
+dark: bool = False
+darkness: Tuple[int, int, int] = (0, 0, 0)
+ambient_light: bool = False
+ambient_light_tint: Tuple[int, int, int] = (0, 0, 0)
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
@@ -425,14 +437,14 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
 
         global dark, darkness, ambient_light, ambient_light_tint
         dark = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/enabled", False)
-        dval = 255 - KDS.ConfigManager.GetLevelProp("Rendering/Darkness/strength", 0)
+        dval: int = 255 - KDS.ConfigManager.GetLevelProp("Rendering/Darkness/strength", 0)
         darkness = (dval, dval, dval)
         ambient_light = KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/enabled", False)
-        Player.light = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/playerLight", True)
         ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/tint", (255, 255, 255)))
+        Player.light: bool = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/playerLight", True)
         
-        p_start_pos = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
-        k_start_pos = KDS.ConfigManager.GetLevelProp("Entities/Koponen/startPos", (200, 200))
+        p_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
+        k_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Koponen/startPos", (200, 200))
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -2127,9 +2139,7 @@ class PlayerClass:
             self.movement = [0, 0]
             _fall_speed = fall_speed
             jump()
-            if self.vertical_momentum > 0:
-                _fall_speed *= fall_multiplier
-            elif not KDS.Keys.moveUp.pressed:
+            if self.vertical_momentum > 0 or not KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
                 _fall_speed *= fall_multiplier
 
             if KDS.Keys.moveRight.pressed:
@@ -3126,7 +3136,7 @@ def level_finished_menu(oldSurf: pygame.Rect):
 #endregion
 #region Check Terms
 agr(tcagr)
-tcagr = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
+tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 if tcagr:
     main_menu()
 else:
