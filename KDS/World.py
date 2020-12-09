@@ -23,8 +23,8 @@ def collision_test(rect, Tile_list):
 
     max_x = len(Tile_list[0]) - 1
     max_y = len(Tile_list) - 1
-    x = KDS.Math.Clamp(rect.x // 34 - 3, 0, max_x)
-    y = KDS.Math.Clamp(rect.y // 34 - 3, 0, max_y)
+    x = KDS.Math.Clamp(int(rect.x / 34 - 3), 0, max_x)
+    y = KDS.Math.Clamp(int(rect.y / 34 - 3), 0, max_y)
     end_x = KDS.Math.Clamp(x + 6, 0, max_x)
     end_y = KDS.Math.Clamp(y + 6, 0, max_y)
 
@@ -224,7 +224,7 @@ class Bullet:
             Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if self.speed == -1:
-            for _ in range(self.maxDistance // 18):
+            for _ in range(int(self.maxDistance / 18)):
                 if debugMode:
                     pygame.draw.rect(Surface, (255, 255, 255), (self.rect.x-scroll[0], self.rect.y-scroll[1], self.rect.width, self.rect.height))
                 if self.direction:

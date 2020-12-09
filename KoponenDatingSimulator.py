@@ -891,7 +891,7 @@ class Lamp(Tile):
 
     def update(self):
         if random.randint(0, 10) != 10:
-            btmidth = self.coneheight * 80 // 90
+            btmidth = int(self.coneheight * 80 / 90)
             Lights.append(KDS.World.Lighting.Light((self.rect.x - btmidth // 2 + 7, self.rect.y + 16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
         return self.texture
 
@@ -2698,7 +2698,7 @@ def settings_menu():
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
-    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 240, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
+    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
     music_volume_text = button_font.render("Music Volume", True, KDS.Colors.White)
@@ -2733,7 +2733,7 @@ def settings_menu():
 
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
-        display.blit(pause_loss_text, (50, 240))
+        display.blit(pause_loss_text, (50, 360))
         KDS.Audio.Music.setVolume(music_volume_slider.update(display, mouse_pos))
         KDS.Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
         pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)

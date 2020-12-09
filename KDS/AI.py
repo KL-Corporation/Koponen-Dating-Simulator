@@ -8,23 +8,13 @@ pygame.key.stop_text_input()
 
 def ai_collision_test(rect, Tile_list):
     hit_list = []
-    x = rect.x // 34 - 3
-    y = rect.y // 34 - 3
-    if x < 0:
-        x = 0
-    if y < 0:
-        y = 0
-
-    max_x = len(Tile_list[0])-1
-    max_y = len(Tile_list)-1
-    end_x = x + 6
-    end_y = y + 6
-
-    if end_x > max_x:
-        end_x = max_x
-
-    if end_y > max_y:
-        end_y = max_y
+    
+    max_x = len(Tile_list[0]) - 1
+    max_y = len(Tile_list) - 1
+    x = KDS.Math.Clamp(int(rect.x / 34 - 3), 0, max_x)
+    y = KDS.Math.Clamp(int(rect.y / 34 - 3), 0, max_y)
+    end_x = KDS.Math.Clamp(x + 6, 0, max_x)
+    end_y = KDS.Math.Clamp(y + 6, 0, max_y)
 
     for row in Tile_list[y:end_y]:
         for tile in row[x:end_x]:
@@ -103,13 +93,13 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
     searchPointers = [(searchRect.centerx + x * 30 *dirVar, searchRect.centery + x * 30 * dirVar*slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
         
-        x = pointer[0] // 34
-        y = pointer[1] // 34
+        x = int(pointer[0] / 34)
+        y = int(pointer[1] / 34)
         end_y = y + 1
         end_x = x + 1
-        max_x = len(obstacles[0])-1
-        max_y = len(obstacles)-1
-
+        max_x = len(obstacles[0]) - 1
+        max_y = len(obstacles) - 1
+        
         if end_x > max_x:
             end_x = max_x
         if end_y > max_y:
