@@ -541,8 +541,6 @@ path_sounds["default"] = sounds
 #    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
 del path_sounds_temp, default_paths, sounds
 
-sref = buildData["checkCollisionFalse"]
-
 ##### CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
 ##### Items.init(inventoryDobulesSerialNumbers, inventory_items)
 
@@ -664,16 +662,19 @@ KDS.Logging.debug("Data Loading Complete.")
 #region Tiles
 KDS.Logging.debug("Loading Tiles...")
 class Tile:
+    noCollision = buildData["noCollision"]
+    trueScale = buildData["trueScale"]
     def __init__(self, position: Tuple[int, int], serialNumber: int):
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.serialNumber = serialNumber
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
         if serialNumber:
             self.texture = t_textures[serialNumber]
             self.air = False
         else:
             self.air = True
+        if serialNumber in Tile.trueScale: self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
-        self.checkCollision = True if self.serialNumber not in sref else False
+        self.checkCollision = False if serialNumber in Tile.noCollision else True
 
     @staticmethod
     # Tile_list is a 2d numpy array
@@ -1264,32 +1265,12 @@ class ImpaledBody(Tile):
     def update(self):
         return self.animation.update()
 
-class Car(Tile):
-    def __init__(self, position, serialNumber) -> None:
-        super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
-        self.checkCollision = False
-
-    def update(self):
-        return self.texture
-        
 class Barrier(Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = True
         self.texture = pygame.Surface((0, 0))
-
-    def update(self):
-        return self.texture
-
-class Tractor(Tile):
-    def __init__(self, position, serialNumber) -> None:
-        super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
-        self.checkCollision = False
 
     def update(self):
         return self.texture
@@ -1339,11 +1320,7 @@ specialTilesD = {
     82: Ladder,
     84: FlickerTrigger,
     85: ImpaledBody,
-    86: Car,
     87: Barrier,
-    88: Tractor,
-    89: Tractor,
-    92: Tractor,
     93: GroundFire
 }
 
