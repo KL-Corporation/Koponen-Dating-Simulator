@@ -30,7 +30,7 @@ class JSON:
         return jsonPath.strip("/").split("/")
     
     @staticmethod
-    def Set(filePath: str, jsonPath: str, value: Any) ->  Union[Any, None]:
+    def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True) ->  Union[Any, None]:
         config = {}
         if os.path.isfile(filePath):
             try:
@@ -56,7 +56,7 @@ class JSON:
         else: return value
         
         try:
-            with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys=True, indent=4))
+            with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys = sortKeys, indent = 4))
             return value
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
@@ -112,7 +112,7 @@ def SetSetting(path: str, value: Any) -> Any:
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    return JSON.Set(SettingsPath, path, value)
+    return JSON.Set(SettingsPath, path, value, False)
 
 def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None)

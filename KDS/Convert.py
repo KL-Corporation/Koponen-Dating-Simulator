@@ -28,11 +28,8 @@ def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -
         elif not hideErrorMessage:
             KDS.Logging.AutoError(f"Cannot convert {value} to bool.")
             return fallbackValue
-    elif isinstance(value, int):
+    elif isinstance(value, int) or isinstance(value, float):
         if value > 0: return True
-        else: return False
-    elif isinstance(value, float):
-        if value > 0.0: return True
         else: return False
     elif isinstance(value, bool): return value
     if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.")
@@ -52,9 +49,8 @@ def ToGrayscale(image: pygame.Surface):
     return pygame.surfarray.make_surface(arr)
 
 def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False):
-    mode = "RGB"
-    if alpha:
-        mode = "RGBA"
+    mode = "RGB" if not alpha else "RGBA"
+    
     toBlur = pygame.image.tostring(image, mode)
     blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
     blurredString = blurredImage.tobytes("raw", mode)

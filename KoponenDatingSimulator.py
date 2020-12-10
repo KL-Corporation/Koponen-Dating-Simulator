@@ -107,19 +107,16 @@ KDS.Logging.debug("Initialising Game...")
 KDS.Logging.debug("Initialising Display Driver...")
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False): pygame.display.toggle_fullscreen()
 KDS.Logging.debug(f"""Display Driver initialised.
-I=====[ System Info ]=====I
+I=====[ DEBUG INFO ]=====I
    [Version Info]
    - PyGame Version: {pygame.version.ver}
    - SDL Version: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
    
-   [Display Info]
-   - Display Size: {(display_info.current_w, display_info.current_h)}
-   
    [Driver Info]
    - SDL Video Driver: {pygame.display.get_driver()}
    - Hardware Acceleration: {KDS.Convert.ToBool(display_info.hw)}
-   - Display Allowed: {KDS.Convert.ToBool(display_info.wm)}
-   - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "unknown"}
+   - Window Allowed: {KDS.Convert.ToBool(display_info.wm)}
+   - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
    
    [Pixel Info]
    - Bit Size: {display_info.bitsize}
@@ -135,7 +132,7 @@ I=====[ System Info ]=====I
    - Software Blitting: {KDS.Convert.ToBool(display_info.blit_sw)}
    - Software Colorkey Blitting: {KDS.Convert.ToBool(display_info.blit_sw_CC)}
    - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_sw_A)}
-I=====[ System Info ]=====I""")
+I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
 KDS.AI.init()
 KDS.World.init()
