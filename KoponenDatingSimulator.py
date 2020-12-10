@@ -1294,6 +1294,19 @@ class Tractor(Tile):
     def update(self):
         return self.texture
 
+class GroundFire(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("ground_fire", 3, 4, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = False
+
+    def update(self):
+        if Player.rect.colliderect(self.rect) and random.randint(0, 55) == 20:
+            Player.health -= random.randint(5, 10)
+        if random.randint(0, 2) == 0: Particles.append(KDS.World.Lighting.Fireparticle((self.rect.x + random.randint(0, 34), self.rect.y + 15 + random.randint(0, 12)), random.randint(3, 10), random.randint(1, 20), random.randint(2, 5)))
+        return self.animation.update()
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1328,7 +1341,10 @@ specialTilesD = {
     85: ImpaledBody,
     86: Car,
     87: Barrier,
-    88: Tractor
+    88: Tractor,
+    89: Tractor,
+    92: Tractor,
+    93: GroundFire
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

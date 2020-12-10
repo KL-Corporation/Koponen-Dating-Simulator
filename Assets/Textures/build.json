@@ -87,7 +87,12 @@
         "085": "impaled_corpse.png",
         "086": "car.png",
         "087": "barrier.png",
-        "088": "tractor.png"
+        "088": "tractor.png",
+        "089": "tall_tree.png",
+        "090": "dirt_0.png",
+        "091": "grass1.png",
+        "092": "bed.png",
+        "093": "ground_fire_0.png"
     },
 
     "tile_sounds" : {
@@ -128,7 +133,10 @@
         85,
         86,
         87,
-        88
+        88,
+        89,
+        92,
+        93
     ],
     "checkCollisionFalse": [
         10,
