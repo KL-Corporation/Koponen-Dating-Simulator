@@ -405,6 +405,7 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
 """)
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
+            KDS.Loading.Stop()
             return None
         if os.path.isdir(PersistentMapPath):
             shutil.rmtree(PersistentMapPath)
@@ -416,6 +417,7 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
         else:
             KDS.Logging.AutoError("Map file is not a valid format.")
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
+            KDS.Loading.Stop()
             return None
         
         tileprops: Dict[str, Any] = {}
@@ -2688,7 +2690,7 @@ def esc_menu_f(oldSurf: pygame.Rect):
         clock.tick_busy_loop(60)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, pauseOnFocusLoss
+    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, pauseOnFocusLoss, play_walk_sound
     c = False
     settings_running = True
 
@@ -2708,11 +2710,13 @@ def settings_menu():
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
+    walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), True, custom_path="Mixer/walkSound")
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
     music_volume_text = button_font.render("Music Volume", True, KDS.Colors.White)
     effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.White)
+    walk_sound_text = button_font.render("Play footstep sounds", True, KDS.Colors.White)
     pause_loss_text = button_font.render("Pause On Focus Loss", True, KDS.Colors.White)
 
     while settings_running:
@@ -2743,9 +2747,11 @@ def settings_menu():
 
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
+        display.blit(walk_sound_text, (50, 235))
         display.blit(pause_loss_text, (50, 360))
         KDS.Audio.Music.setVolume(music_volume_slider.update(display, mouse_pos))
         KDS.Audio.setVolume(effect_volume_slider.update(display, mouse_pos))
+        play_walk_sound = walk_sound_switch.update(display, mouse_pos, c)
         pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)
 
         return_button.update(display, mouse_pos, c)

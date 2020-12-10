@@ -13,12 +13,13 @@ import zipfile
 from typing import Any, Dict, Iterable, List, Sized, Tuple, Union
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
-    global AppDataPath, CachePath, SaveDirPath, SaveCachePath
+    global AppDataPath, CachePath, SaveDirPath, SaveCachePath, SettingsPath
     AppDataPath = _AppDataPath
     CachePath = _CachePath
     SaveDirPath = _SaveDirPath
     SaveCachePath = os.path.join(CachePath, "save")
-    if not os.path.isfile(os.path.join(AppDataPath, "settings.cfg")): shutil.copyfileobj("Assets/defaultSettings.kdf", os.path.join(AppDataPath, "settings.cfg"))
+    SettingsPath = os.path.join(AppDataPath, "settings.cfg")
+    if not os.path.isfile(SettingsPath): shutil.copy("Assets/defaultSettings.kdf", SettingsPath)
 
 class JSON:
     NULLPATH = "[config_manager_null_path]"
@@ -62,7 +63,7 @@ class JSON:
             return None
         
     @staticmethod
-    def Get(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool = False):
+    def Get(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool = False) -> Any:
         config = {}
         if os.path.isfile(filePath):
             try:
@@ -102,7 +103,7 @@ def GetSetting(path: str, default: Any):
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    return JSON.Get(os.path.join(AppDataPath, "settings.cfg"), path, default, warnMissing=True)
+    return JSON.Get(SettingsPath, path, default, warnMissing=True)
 
 def SetSetting(path: str, value: Any) -> Any:
     """
@@ -111,7 +112,7 @@ def SetSetting(path: str, value: Any) -> Any:
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    return JSON.Set(os.path.join(AppDataPath, "settings.cfg"), path, value)
+    return JSON.Set(SettingsPath, path, value)
 
 def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None)
