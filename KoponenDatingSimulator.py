@@ -331,7 +331,6 @@ enemy_difficulty = 1
 tiles = numpy.array([])
 LightScroll = [0, 0]
 renderUI = True
-godmode = False
 walk_sound_delay = 0
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
@@ -2060,6 +2059,7 @@ class PlayerClass:
         self.farting: bool = False
         self.light: bool = False
         self.godmode: bool = False
+        self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
         self.deathWait: int = 0
@@ -2095,6 +2095,7 @@ class PlayerClass:
         self.fart_counter: int = 0
         self.light: bool = False
         self.godmode: bool = False
+        self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
         self.deathWait: int = 0
@@ -2112,6 +2113,8 @@ class PlayerClass:
         self.deathSound.stop()
         
     def update(self):
+        
+        #region Movement
         def crouch(state: bool):
             if state:
                 if not self.crouching:
@@ -2125,9 +2128,8 @@ class PlayerClass:
             if KDS.Keys.moveUp.pressed and not KDS.Keys.moveDown.pressed:
                 if ladderOverride or (self.air_timer < 6 and KDS.Keys.moveUp.ticksHeld == 0 and not self.onLadder):
                     self.vertical_momentum = -10
-        
-        if self.godmode: self.health = 100.0
-        if self.health > 0:
+        if self.godmode: self.health = float("inf")
+        if self.health > 0 and not self.fly:
             self.movement = [0, 0]
             _fall_speed = fall_speed
             jump()
@@ -2214,6 +2216,25 @@ class PlayerClass:
             if self.health < self.lastHealth and self.health > 0: KDS.Audio.playSound(hurt_sound)
             self.lastHealth = self.health
             self.onLadder = False
+        elif self.fly:
+            self.movement = [0, 0]
+            if KDS.Keys.moveUp.pressed:
+                self.movement[1] -= 3
+            if KDS.Keys.moveDown.pressed:
+                self.movement[1] += 3
+            if KDS.Keys.moveLeft.pressed:
+                self.movement[0] -= 3
+            if KDS.Keys.moveRight.pressed:
+                self.movement[0] += 3
+            if pygame.key.get_pressed()[K_LSHIFT]:
+                self.movement[0] *= 5
+                self.movement[1] *= 5
+            if self.movement[0] > 0:
+                self.direction = False
+            elif self.movement[0] < 0:
+                self.direction = True 
+            self.rect.y += round(self.movement[1])
+            self.rect.x += round(self.movement[0])
         else:
             crouch(False)
             self.animations.trigger("death")
@@ -2235,6 +2256,7 @@ class PlayerClass:
                         respawn_function()
                     else:
                         load_function()
+        #endregion
 
         if self.farting:
             global scroll
@@ -2253,7 +2275,7 @@ Player = PlayerClass()
 #endregion
 #region Console
 def console(oldSurf: pygame.Rect):
-    global level_finished, go_to_console
+    global level_finished, go_to_console, Player
     go_to_console = False
 
     itemDict = {}
@@ -2288,7 +2310,8 @@ def console(oldSurf: pygame.Rect):
             "supershotgunner": "break",
             "methmaker": "break",
             "fucker69": "break" 
-        }
+        },
+        "fly": trueFalseTree
     }
     
     consoleRunning = True
@@ -2351,8 +2374,8 @@ def console(oldSurf: pygame.Rect):
             Player.health = 0
         elif command_list[0] == "terms":
             setTerms = False
-            if len(command_list) > 1:
-                setTerms = KDS.Convert.ToBool(command_list[1])
+            if len(command_list) == 2:
+                setTerms = KDS.Convert.ToBool(command_list[1], None)
                 if setTerms != None:
                     KDS.ConfigManager.SetSetting("Data/Terms/accepted", setTerms)
                     KDS.Console.Feed.append(f"Terms status set to: {setTerms}")
@@ -2361,8 +2384,8 @@ def console(oldSurf: pygame.Rect):
             else:
                 KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
         elif command_list[0] == "woof":
-            if len(command_list) > 1:
-                woofState = KDS.Convert.ToBool(command_list[1])
+            if len(command_list) == 2:
+                woofState = KDS.Convert.ToBool(command_list[1], None)
                 if woofState != None:
                     KDS.Console.Feed.append("Woof state assignment has not been implemented for the new AI system yet.")
                 else:
@@ -2370,12 +2393,11 @@ def console(oldSurf: pygame.Rect):
             else:
                 KDS.Console.Feed.append("Please provide a proper state for woof")
         elif command_list[0] == "invl":
-            if len(command_list) > 1:
-                invlState = KDS.Convert.ToBool(command_list[1])
+            if len(command_list) == 2:
+                invlState = KDS.Convert.ToBool(command_list[1], None)
                 if invlState != None:
-                    global godmode
-                    godmode = invlState
-                    KDS.Console.Feed.append(f"Invulnerability state has been set to: {godmode}")
+                    Player.godmode = invlState
+                    KDS.Console.Feed.append(f"Invulnerability state has been set to: {Player.godmode}")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for invl")
             else:
@@ -2436,6 +2458,16 @@ def console(oldSurf: pygame.Rect):
                     Enemies = summonEntity[command_list[1]](Enemies)
                 except KeyError:
                     KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
+        elif command_list[0] == "fly":
+            if len(command_list) == 2:
+                flyState = KDS.Convert.ToBool(command_list[1], None)
+                if flyState != None:
+                    Player.fly = flyState
+                    KDS.Console.Feed.append(f"Fly state has been set to: {Player.fly}")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper state for fly")
+            else:
+                KDS.Console.Feed.append("Please provide a proper state for fly")
         elif command_list[0] == "help":
             KDS.Console.Feed.append("""
     Console Help:
@@ -2449,6 +2481,7 @@ def console(oldSurf: pygame.Rect):
         - invl => Sets invulnerability mode to the specified value.
         - teleport => Teleports player either to static coordinates or relative coordinates.
         - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
+        - fly => Sets fly mode to the specified value.
         - help => Shows the list of commands.
     """)
         else:
@@ -3377,7 +3410,7 @@ while main_running:
         ui_hand_item = Player.inventory.getHandItem()
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
-        screen.blit(score_font.render(f"HEALTH: {math.ceil(Player.health)}", True, KDS.Colors.White), (10, 55))
+        screen.blit(score_font.render(f"""HEALTH: {math.ceil(Player.health) if Player.health != float("inf") else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
         screen.blit(score_font.render(f"STAMINA: {math.ceil(Player.stamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
         if hasattr(ui_hand_item, "ammunition"):
