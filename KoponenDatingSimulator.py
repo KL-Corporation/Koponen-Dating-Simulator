@@ -2113,8 +2113,10 @@ class PlayerClass:
         self.deathSound.stop()
         
     def update(self):
+        if self.godmode: self.health = float("inf")
         
         #region Movement
+        #region Functions
         def crouch(state: bool):
             if state:
                 if not self.crouching:
@@ -2128,7 +2130,8 @@ class PlayerClass:
             if KDS.Keys.moveUp.pressed and not KDS.Keys.moveDown.pressed:
                 if ladderOverride or (self.air_timer < 6 and KDS.Keys.moveUp.ticksHeld == 0 and not self.onLadder):
                     self.vertical_momentum = -10
-        if self.godmode: self.health = float("inf")
+        #endregion
+        #region Normal
         if self.health > 0 and not self.fly:
             self.movement = [0, 0]
             _fall_speed = fall_speed
@@ -2216,6 +2219,8 @@ class PlayerClass:
             if self.health < self.lastHealth and self.health > 0: KDS.Audio.playSound(hurt_sound)
             self.lastHealth = self.health
             self.onLadder = False
+        #endregion
+        #region Flying
         elif self.fly:
             self.movement = [0, 0]
             if KDS.Keys.moveUp.pressed:
@@ -2235,6 +2240,8 @@ class PlayerClass:
                 self.direction = True 
             self.rect.y += round(self.movement[1])
             self.rect.x += round(self.movement[0])
+        #endregion
+        #region Dead
         else:
             crouch(False)
             self.animations.trigger("death")
@@ -2256,6 +2263,7 @@ class PlayerClass:
                         respawn_function()
                     else:
                         load_function()
+        #endregion
         #endregion
 
         if self.farting:
