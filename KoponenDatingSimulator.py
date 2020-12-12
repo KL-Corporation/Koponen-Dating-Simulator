@@ -910,7 +910,7 @@ class LampChain(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0], position[1], 14, 34)
+        self.rect = pygame.Rect(position[0] + 6, position[1], 1, 34)
         self.checkCollision = True
         
     def update(self):
