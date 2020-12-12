@@ -500,8 +500,8 @@ Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
 
         for row in tiles:
             for tile in row:
-                if tile.serialNumber == 22:
-                    tile.initHeight(tiles)
+                if hasattr(tile, "lateInit"):
+                    tile.lateInit()
 
         KDS.Audio.Music.play(os.path.join(PersistentMapPath, "music.ogg"))
         return p_start_pos, k_start_pos
@@ -886,7 +886,8 @@ class Lamp(Tile):
         self.checkCollision = True
         self.coneheight = 90
 
-    def initHeight(self, tiles):
+    def lateInit(self):
+        global tiles
         y = 0
         r = True
         while r:
