@@ -906,6 +906,16 @@ class Lamp(Tile):
             Lights.append(KDS.World.Lighting.Light((self.rect.x - btmidth // 2 + 7, self.rect.y + 16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
         return self.texture
 
+class LampChain(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.rect = pygame.Rect(position[0], position[1], 14, 34)
+        self.checkCollision = True
+        
+    def update(self):
+        return self.texture
+
 class DecorativeHead(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, serialNumber)
@@ -1320,7 +1330,8 @@ specialTilesD = {
     84: FlickerTrigger,
     85: ImpaledBody,
     87: Barrier,
-    93: GroundFire
+    93: GroundFire,
+    94: LampChain
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

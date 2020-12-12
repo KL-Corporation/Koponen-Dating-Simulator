@@ -92,13 +92,14 @@
         "090": "dirt_0.png",
         "091": "grass1.png",
         "092": "bed.png",
-        "093": "ground_fire_0.png"
+        "093": "ground_fire_0.png",
+        "094": "lamp0_chain.png"
     },
-
+    
     "tile_sounds" : {
         "008" : "grass.ogg"
     },
-
+    
     "special_tiles": [
         15,
         16,
@@ -132,7 +133,8 @@
         84,
         85,
         87,
-        93
+        93,
+        94
     ],
     "noCollision": [
         10,
