@@ -262,7 +262,7 @@ KDS.Logging.debug("Asset Loading Complete.")
 #endregion
 #region Variable Initialisation
 ambient_tint = pygame.Surface(screen_size)
-black_tint = pygame.Surface(screen_size)
+black_tint = pygame.Surface(screen_size, SRCALPHA)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 
@@ -2657,7 +2657,7 @@ def esc_menu_f(oldSurf: pygame.Rect):
     global esc_menu, go_to_main_menu, DebugMode, clock, c
     c = False
 
-    esc_surface = pygame.Surface(display_size)
+    esc_surface = pygame.Surface(display_size, SRCALPHA)
     
     normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
@@ -3416,13 +3416,13 @@ while main_running:
             lightsUpdating += 1
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             if DebugMode:
-                rectSurf = pygame.Surface((light.surf.get_width(), light.surf.get_height()))
+                rectSurf = pygame.Surface(light.surf.get_size())
                 rectSurf.fill(KDS.Colors.Yellow)
                 rectSurf.set_alpha(128)
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(KDS.World.Lighting.Shapes.circle.get(40, 40000), (20, 20))
         if Player.light:
-            black_tint.blit(KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), (int(Player.rect.centerx - scroll[0] - 150), int(Player.rect.centery - scroll[1] - 150)))
+            black_tint.blit(KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), (Player.rect.centerx - scroll[0] - 150, Player.rect.centery - scroll[1] - 150))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:

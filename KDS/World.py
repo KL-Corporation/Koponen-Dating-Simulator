@@ -86,11 +86,11 @@ class Lighting:
                 Returns:
                     Surface: The surface that contains the light texture
                 """
-                if radius not in self.rendered: self.rendered[radius] = { "default": pygame.transform.scale(self.texture, (radius, radius)).convert_alpha() }
+                if radius not in self.rendered: self.rendered[radius] = { "default": pygame.transform.smoothscale(self.texture, (radius, radius)) }
 
                 corRad = self.rendered[radius]
                 if color not in corRad:
-                    tmp_tex: pygame.Surface = corRad["default"].copy().convert_alpha()
+                    tmp_tex: pygame.Surface = corRad["default"].copy()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
