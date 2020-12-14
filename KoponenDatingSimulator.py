@@ -2562,7 +2562,8 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     KDS.World.Lighting.Shapes.clear()
     
-    Player.reset()
+    global Player
+    Player = PlayerClass()
     
     #region Load World Data
     global Items, Enemies, Explosions, BallisticObjects
