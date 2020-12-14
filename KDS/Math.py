@@ -32,7 +32,7 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
         q = point1[0] - point2[0]
         w = point1[1] - point2[1]
         r = q ** 2 + w ** 2
-        return math.sqrt(abs(r))
+        return math.sqrt(r)
     except Exception as e:
         KDS.Logging.AutoError(e)
         return 0
