@@ -2095,13 +2095,13 @@ class PlayerClass:
         )
         self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
 
-    def reset(self):
+    def reset(self, clear_inventory: bool = True):
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
         self.name: str = "Sinä"
         self.health: float = 100.0
         self.lastHealth: float = self.health
         self.stamina: float = 100.0
-        self.inventory: Inventory = Inventory(5)
+        if clear_inventory: self.inventory: Inventory = Inventory(5)
         self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
         self.farting: bool = False
         self.fart_counter: int = 0
@@ -2646,7 +2646,7 @@ def load_function(saveIndex: int = None):
 
 def respawn_function():
     global level_finished
-    Player.reset()
+    Player.reset(clear_inventory=False)
     level_finished = False
     if RespawnAnchor.active != None: Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
     else: Player.rect.topleft = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
