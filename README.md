@@ -36,7 +36,3 @@
 [gitLink]: https://git-scm.com
 [gitHubLink]: https://github.com
 [stackOverflowLink]: https://stackoverflow.com
-
-<br/>
-<br/>
-[CodeFactor](https://www.codefactor.io/repository/github/kl-corporation/koponen-dating-simulator/badge?s=f8dcdcee79d5cbbcb44f938938691af150ac84b4)](https://www.codefactor.io/repository/github/kl-corporation/koponen-dating-simulator)
