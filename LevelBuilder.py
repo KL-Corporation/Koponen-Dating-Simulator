@@ -8,7 +8,6 @@ from typing import List, Tuple
 import sys
 import pygame
 from pygame.locals import *
-pygame.init()
 import threading
 import math
 import KDS.Colors
@@ -143,8 +142,10 @@ class Undo:
         gridChanges += 1
 
 def LB_Quit():
-    pygame.quit()
-    quit()
+    global matMenRunning, btn_menu, mainRunning
+    matMenRunning = False
+    btn_menu = False
+    mainRunning = False
 
 KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
 
@@ -350,9 +351,9 @@ def resizeGrid(size, grid: list):
 """
 def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bool = False, defVal: str = ""):
     pygame.key.set_repeat(500, 31)
-    r = True
+    matMenRunning = True
     rstring = defVal
-    while r:
+    while matMenRunning:
         inputError = False
         inputWarning = False
         if gridSizeExtras and len(rstring) > 0:
@@ -374,13 +375,13 @@ def inputConsole(daInput = ">>>  ", allowEscape: bool = True, gridSizeExtras: bo
                         inputError = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                r = False
+                matMenRunning = False
                 pygame.quit()
                 quit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == K_ESCAPE:
                     if allowEscape:
-                        r = False
+                        matMenRunning = False
                         return None
                 elif event.key == K_RETURN:
                     if not inputError:
@@ -522,7 +523,8 @@ def consoleHandler(commandlist):
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
 def materialMenu(previousMaterial):
-    r = True
+    global matMenRunning
+    matMenRunning = True
     rscroll = 0
     blocksize = 70
 
@@ -543,14 +545,14 @@ def materialMenu(previousMaterial):
                 x = 0
                 y += 1
 
-    while r:
+    while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 LB_Quit()
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
-                    r = False
+                    matMenRunning = False
                     return previousMaterial
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
@@ -603,7 +605,7 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
 
 def main():
-    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize
+    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
     grid = None
     def button_handler(_openMap: bool = False, _generateLevelProp: bool = False, _quit: bool = False):
@@ -638,6 +640,7 @@ def main():
         genProp_btn.update(main_display, mouse_pos, clicked, False, True)
         quit_btn.update(main_display, mouse_pos, clicked, False, False, True)
         pygame.display.flip()
+        if not mainRunning: return
     
     main_display.fill(KDS.Colors.Black)
     
@@ -664,7 +667,7 @@ def main():
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
-    while True:
+    while mainRunning:
         pygame.key.set_repeat(500, 31)
         mouse_pos = pygame.mouse.get_pos()
         keys_pressed = pygame.key.get_pressed()
@@ -746,4 +749,7 @@ def main():
         pygame.display.flip()
         clock.tick_busy_loop(60)
         
+mainRunning = True   
 main()
+
+pygame.quit()
