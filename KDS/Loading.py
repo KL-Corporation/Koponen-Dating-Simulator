@@ -70,6 +70,8 @@ def Start(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool = False
     running = True
     surface_size = surface.get_size()
     scaledLoadingBackground = KDS.Convert.AspectScale(loadingBackground, surface_size)
+    surface.blit(scaledLoadingBackground, (surface_size[0] // 2 - scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - scaledLoadingBackground.get_height() // 2))
+    pygame.display.flip()
     ld_thread = KDS.ThreadHandler.KL_Thread(__rendering, "loading-screen", True, True, surface, clock, debug)
     surface.blit(scaledLoadingBackground, (surface_size[0] // 2 - scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - scaledLoadingBackground.get_height() // 2))
     pygame.display.flip()

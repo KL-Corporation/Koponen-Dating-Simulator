@@ -812,20 +812,22 @@ class Door(Tile):
         26: "green"
     }
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = 600):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = -1):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
         self.rect = pygame.Rect(position[0], position[1], 5, 68)
         self.checkCollision = True
         self.open = False
-        self.maxclosingCounter = closingCounter
+        self.maxClosingCounter = closingCounter
         self.closingCounter = 0
     
     def update(self):
         if self.open:
-            self.closingCounter += 1
-            if self.closingCounter > self.maxclosingCounter:
+            if self.maxClosingCounter > 0:
+                self.closingCounter += 1
+            else: self.closingCounter = self.maxClosingCounter
+            if self.closingCounter > self.maxClosingCounter:
                 KDS.Audio.playSound(door_opening)
                 self.open = False
                 self.checkCollision = True
