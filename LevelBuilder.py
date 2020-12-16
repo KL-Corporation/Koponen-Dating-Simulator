@@ -94,6 +94,7 @@ Atextures = {
     "2": e_textures,
     "3": teleports
 }
+del data
 ### GLOBAL VARIABLES ###
 
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
