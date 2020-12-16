@@ -12,6 +12,7 @@ Allow use to create a Quick Launch shortcut on older versions of Windows: true
 Information file shown before installation: F:\PyGame\Koponen-Dating-Simulator\NikonTurhatPerseilyt\Installer\InfoBeforeInstallation.txt
 Non administrative install mode (install for current user only): true
 Ask the user to choose the install mode at startup: true
+Languages: English, Finnish
 Custom compiler output folder: F:\PyGame\Koponen-Dating-Simulator\NikonTurhatPerseilyt\Installer
 Compiler output base file name: Koponen Dating Simulator Installer
 Custom Setup icon file: F:\PyGame\Koponen-Dating-Simulator\Assets\Textures\Branding\gameIcon.ico
