@@ -20,14 +20,14 @@ class KL_Thread: #KL_Thread toistaiseksi, koska en oo varma kuinka monta eri Thr
 
     def stop(self):
         self.stopThread = True
-    
-    def getFinished(self):
-        if self.currently_running: return not self.thread.is_alive()
-        else: return False
 
     def getRunning(self):
         if not self.thread.is_alive(): self.currently_running = False
         return self.currently_running
+    
+    def getFinished(self):
+        if self.currently_running: return not self.getRunning()
+        else: return False
 
     def start(self):
         self.thread.start()
