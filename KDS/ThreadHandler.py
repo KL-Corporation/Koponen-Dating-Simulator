@@ -1,6 +1,6 @@
+from typing import Any, List
 import threading
-import concurrent.futures
-from typing import Any, List #Tätä tarvitaan toivottavasti tulevaisuudessa. (Haha, tulevaisuudessa... Hauska vitsi)
+import concurrent.futures #Tätä tarvitaan toivottavasti tulevaisuudessa. (Haha, tulevaisuudessa... Hauska vitsi)
 
 class KL_Thread: #KL_Thread toistaiseksi, koska en oo varma kuinka monta eri Thread-liittyvää keywordia on jo varattu.
     """
