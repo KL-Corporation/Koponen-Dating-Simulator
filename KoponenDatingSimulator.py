@@ -1960,10 +1960,12 @@ class Chainsaw(Item):
         return False
 
 class GasCanister(Item):
+    pickup_sound = pygame.mixer.Sound("assets/Audio/Items/gascanister_shake.ogg")
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        KDS.Audio.playSound(GasCanister.pickup_sound)
         Chainsaw.ammunition = min(100, Chainsaw.ammunition + 50)
         return True
 
