@@ -113,7 +113,7 @@ class Redo:
     @staticmethod
     def register(instance, oldSerial: str):
         Redo.actions.append((instance, oldSerial))
-        while len(Redo.actions) > 100: del Redo.actions[0]
+        while len(Redo.actions) > 100: Redo.actions.pop(0)
     
     @staticmethod
     def request():
@@ -131,7 +131,7 @@ class Undo:
     def register(instance, oldSerial: str, clearRedo: bool = True):
         if clearRedo: Redo.actions.clear()
         Undo.actions.append((instance, oldSerial))
-        while len(Undo.actions) > 100: del Undo.actions[0]
+        while len(Undo.actions) > 100: Undo.actions.pop(0)
     
     @staticmethod
     def request():
