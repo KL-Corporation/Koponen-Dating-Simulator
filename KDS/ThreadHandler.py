@@ -1,5 +1,5 @@
 import threading
-import concurrent.futures #Tätä tarvitaan toivottavasti tulevaisuudessa
+import concurrent.futures #Tätä tarvitaan toivottavasti tulevaisuudessa. (Haha, tulevaisuudessa... Hauska vitsi)
 
 class KL_Thread: #KL_Thread toistaiseksi, koska en oo varma kuinka monta eri Thread-liittyvää keywordia on jo varattu.
     """
