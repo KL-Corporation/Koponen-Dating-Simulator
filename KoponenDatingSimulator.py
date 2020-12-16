@@ -1960,10 +1960,12 @@ class Chainsaw(Item):
         return False
 
 class GasCanister(Item):
+    pickup_sound = pygame.mixer.Sound("assets/Audio/Items/gascanister_shake.ogg")
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        KDS.Audio.playSound(GasCanister.pickup_sound)
         Chainsaw.ammunition = min(100, Chainsaw.ammunition + 50)
         return True
 
@@ -3089,7 +3091,7 @@ def level_finished_menu(oldSurf: pygame.Rect):
     
     KDS.Scores.ScoreAnimation.init()
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
-    level_f_surf = pygame.Surface(display_size)
+    level_f_surf = pygame.Surface(display_size, SRCALPHA)
     normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
     menu_rect = pygame.Rect(display_size[0] // 2 - 250, display_size[1] // 2 - 300, 500, 600)
