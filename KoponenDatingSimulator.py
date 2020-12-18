@@ -1,4 +1,4 @@
-#region Importing
+﻿#region Importing
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -2069,6 +2069,7 @@ class PlayerClass:
         self.inventory: Inventory = Inventory(5)
         self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
         self.farting: bool = False
+        self.fart_counter: int = 0
         self.light: bool = False
         self.godmode: bool = False
         self.fly: bool = False
