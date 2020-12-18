@@ -812,20 +812,22 @@ class Door(Tile):
         26: "green"
     }
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = 600):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = -1):        
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
         self.rect = pygame.Rect(position[0], position[1], 5, 68)
         self.checkCollision = True
         self.open = False
-        self.maxclosingCounter = closingCounter
+        self.maxClosingCounter = closingCounter
         self.closingCounter = 0
     
     def update(self):
         if self.open:
-            self.closingCounter += 1
-            if self.closingCounter > self.maxclosingCounter:
+            if self.maxClosingCounter > 0:
+                self.closingCounter += 1
+            else: self.closingCounter = self.maxClosingCounter
+            if self.closingCounter > self.maxClosingCounter:
                 KDS.Audio.playSound(door_opening)
                 self.open = False
                 self.checkCollision = True
@@ -1958,10 +1960,12 @@ class Chainsaw(Item):
         return False
 
 class GasCanister(Item):
+    pickup_sound = pygame.mixer.Sound("assets/Audio/Items/gascanister_shake.ogg")
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
     def pickup(self):
+        KDS.Audio.playSound(GasCanister.pickup_sound)
         Chainsaw.ammunition = min(100, Chainsaw.ammunition + 50)
         return True
 
@@ -3088,7 +3092,7 @@ def level_finished_menu(oldSurf: pygame.Rect):
     
     KDS.Scores.ScoreAnimation.init()
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
-    level_f_surf = pygame.Surface(display_size)
+    level_f_surf = pygame.Surface(display_size, SRCALPHA)
     normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
     menu_rect = pygame.Rect(display_size[0] // 2 - 250, display_size[1] // 2 - 300, 500, 600)

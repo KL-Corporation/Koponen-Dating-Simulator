@@ -10,7 +10,8 @@ AppDataPath = os.path.join(os.getenv('APPDATA'), "KL Corporation", "KDS Compiler
 BuildsPath = os.path.join(AppDataPath, "Builds")
 os.makedirs(BuildsPath, exist_ok=True)
 WorkPath = os.path.join(AppDataPath, "cache", "work")
-SpecPath = os.path.join(AppDataPath, "cache")
+CachePath = os.path.join(AppDataPath, "cache")
+if os.path.isdir(CachePath): shutil.rmtree(CachePath)
 
 questions = [
     inquirer.Checkbox("toBuild", "Which KDS Modules you want to build?", ("Koponen Dating Simulator", "Level Builder"), "Koponen Dating Simulator")
@@ -38,7 +39,7 @@ for buildType in answers["toBuild"]:
         "--workpath",
         WorkPath,
         "--specpath",
-        SpecPath,
+        CachePath,
         "--windowed",
         "--icon",
         f"{parentDir}/Assets/Textures/Branding/{iconName}",
