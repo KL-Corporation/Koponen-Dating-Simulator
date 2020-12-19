@@ -576,28 +576,22 @@ class Inventory:
     def moveRight(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex += 1
-        if self.SIndex < self.size:
-            if self.storage[self.SIndex] == Inventory.doubleItem:
-                self.SIndex += 1
-
         if self.SIndex >= self.size:
             self.SIndex = 0
+        if self.storage[self.SIndex] == Inventory.doubleItem:
+            self.SIndex += 1
 
     def moveLeft(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex -= 1
-        if self.SIndex >= 0:
-            if self.storage[self.SIndex] == Inventory.doubleItem:
-                self.SIndex -= 1
-                
         if self.SIndex < 0:
             self.SIndex = self.size - 1
-            if self.storage[self.SIndex] == Inventory.doubleItem:
-                self.SIndex -= 1
+        if self.storage[self.SIndex] == Inventory.doubleItem:
+            self.SIndex -= 1
 
     def pickSlot(self, index: int):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
-        if 0 <= index <= len(self.storage)-1:
+        if 0 <= index < len(self.storage):
             if self.storage[index] == Inventory.doubleItem:
                 self.SIndex = index - 1
             else:
@@ -1386,7 +1380,7 @@ class Item:
                     shortest_distance = distance
                 if functionKey:
                     if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory.storage[inventory.SIndex] == "none":
+                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
                             temp_var = item.pickup()
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item
@@ -1402,8 +1396,8 @@ class Item:
                             except IndexError as e:
                                 KDS.Logging.AutoError(f"A non-inventory item was tried to pick up and caused an error: {e}")
                     else:
-                        if inventory.SIndex < inventory.size-1 and inventory.storage[inventory.SIndex] == "none":
-                            if inventory.storage[inventory.SIndex + 1] == "none":
+                        if inventory.SIndex < inventory.size - 1:
+                            if inventory.storage[inventory.SIndex] == Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
                                 item.pickup()
                                 inventory.storage[inventory.SIndex] = item
                                 inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
@@ -3245,7 +3239,7 @@ while main_running:
             elif event.key in KDS.Keys.inventoryKeys:
                 Player.inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
-                if Player.inventory.getHandItem() != "none" and Player.inventory.getHandItem() != Inventory.doubleItem:
+                if Player.inventory.getHandItem() != Inventory.emptySlot and Player.inventory.getHandItem() != Inventory.doubleItem:
                     temp = Player.inventory.dropItem()
                     temp.rect.center = Player.rect.center
                     temp.physics = True
