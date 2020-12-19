@@ -2365,6 +2365,10 @@ def console(oldSurf: pygame.Rect):
             if command_list[1] != "key":
                 if command_list[1] in itemDict:
                     consoleItemSerial = int(itemDict[command_list[1]])
+                    if consoleItemSerial in inventoryDobulesSerialNumbers:
+                        if Player.inventory.SIndex >= Player.inventory.size:
+                            Player.inventory.SIndex -= 1
+                        Player.inventory.storage[Player.inventory.SIndex + 1] = Inventory.doubleItem
                     Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial)
                     KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
                 else: KDS.Console.Feed.append(f"Item not found.")
