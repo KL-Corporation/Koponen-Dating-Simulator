@@ -549,7 +549,7 @@ class Inventory:
     doubleItem = "doubleItem"
 
     def __init__(self, size: int):
-        self.storage: List[Union[str, Item]] = [Inventory.emptySlot for _ in range(size)]
+        self.storage: List[Item] = [Inventory.emptySlot for _ in range(size)]
         self.size: int = size
         self.SIndex: int = 0
 
