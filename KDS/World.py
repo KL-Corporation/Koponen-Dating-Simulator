@@ -1,7 +1,7 @@
 from typing import Dict, List, Sequence, Tuple
 import pygame, numpy, math, random
 from pygame.locals import *
-import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging, KDS.Audio
+import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging, KDS.Audio, KDS.Colors
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -210,6 +210,7 @@ class Bullet:
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
+        self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
         self.speed = speed
         self.texture = texture
         self.maxDistance = maxDistance
@@ -219,18 +220,19 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self,Surface:pygame.Surface, scroll: List[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
+    def update(self, Surface: pygame.Surface, scroll: List[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
+        if debugMode:
+            pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
+            pygame.draw.line(Surface, KDS.Colors.Black, (self.rect.x - (self.movedDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] - (self.slope * self.movedDistance)), (self.rect.x + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] + (self.slope * Surface.get_width())))
+            
         if self.speed == -1:
-            for _ in range(int(self.maxDistance / 18)):
-                if debugMode:
-                    pygame.draw.rect(Surface, (255, 255, 255), (self.rect.x-scroll[0], self.rect.y-scroll[1], self.rect.width, self.rect.height))
-                if self.direction:
-                    self.rect.x -= 18                  
-                else:
-                    self.rect.x += 18
+            for _ in range(round(self.maxDistance / 18)):
+
+                self.rect.x += 18 * self.direction_multiplier
+                self.movedDistance += 18
 
                 self.slopeBuffer += self.slope
                 self.rect.y = self.slopeBuffer
@@ -259,15 +261,10 @@ class Bullet:
 
             return "air", targets, plr_htlt, HitTargets, Particles
         else:
-            if self.direction:
-                self.rect.x -= self.speed
-                self.movedDistance += self.speed
-            else:
-                self.rect.x += self.speed
-                self.movedDistance += self.speed
-            
+            self.rect.x += self.speed * self.direction_multiplier
+            self.movedDistance += self.speed
 
-            self.slopeBuffer += self.slope*self.speed
+            self.slopeBuffer += self.slope * self.speed
             self.rect.y = round(self.slopeBuffer)
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
@@ -303,8 +300,8 @@ class BallisticProjectile:
     def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: pygame.Surface = None):
         self.rect = rect
         self.sl = slope
-        self.force = force*KDS.Convert.ToMultiplier(direction)
-        self.upforce = -int(force*slope)
+        self.force = force * KDS.Convert.ToMultiplier(direction)
+        self.upforce = -int(force * slope)
         self.texture = texture
         self.flight_time = flight_time
         self.counter = 0

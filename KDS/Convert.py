@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 import pygame
 import math
 import KDS.Logging
@@ -7,7 +7,7 @@ import KDS.Math
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
 
-def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -> bool:
+def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]

@@ -30,7 +30,7 @@ import zipfile
 import math
 import datetime
 from pygame.locals import *
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -320,10 +320,10 @@ monstersLeft = 0
 
 renderPlayer = True
 
-Projectiles = []
-Explosions = []
-BallisticObjects = []
-Lights = []
+Projectiles: List[KDS.World.Bullet] = []
+Explosions: List[KDS.World.Explosion] = []
+BallisticObjects: List[KDS.World.BallisticProjectile] = []
+Lights: List[KDS.World.Lighting.Light] = []
 level_finished = False
 Particles = []
 HitTargets = {}
@@ -549,7 +549,7 @@ class Inventory:
     doubleItem = "doubleItem"
 
     def __init__(self, size: int):
-        self.storage: List[str or Item] = [Inventory.emptySlot for _ in range(size)]
+        self.storage: List[Union[str, Item]] = [Inventory.emptySlot for _ in range(size)]
         self.size: int = size
         self.SIndex: int = 0
 
@@ -1522,7 +1522,7 @@ class Knife(Item):
         if args[0][0]:
             if KDS.World.knife_C.counter > 40:
                 KDS.World.knife_C.counter = 0
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
             KDS.World.knife_C.counter  += 1
             return knife_animation_object.update()
         else:
@@ -1571,7 +1571,7 @@ class Pistol(Item):
             KDS.World.pistol_C.counter = 0
             Pistol.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 100))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -1607,7 +1607,7 @@ class rk62(Item):
             KDS.Audio.playSound(rk62_shot)
             rk62.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 50 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 50 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 25))
             return rk62_f_texture
         else:
             if not args[0][0]:
@@ -1635,7 +1635,7 @@ class Shotgun(Item):
             Shotgun.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
             return shotgun_f
         else:
             KDS.World.shotgun_C.counter += 1
@@ -1683,7 +1683,7 @@ class Plasmarifle(Item):
             else:
                 temp = -80
             Lights.append(KDS.World.Lighting.Light((Player.rect.centerx - temp / 1.4, Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - temp,Player.rect.centery - 19, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - temp, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -1751,7 +1751,7 @@ class Ppsh41(Item):
             KDS.Audio.playSound(smg_shot)
             Ppsh41.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
             return ppsh41_f_texture
         else:
             if not args[0][0]:
@@ -1776,7 +1776,7 @@ class Awm(Item):
             KDS.Audio.playSound(awm_shot)
             Awm.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 90 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 19, 2, 2), Player.direction, -1, tiles, random.randint(300, 590), slope=0))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 90 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, random.randint(300, 590), slope=0))
             return awm_f_texture
         else:
             KDS.World.awm_C.counter += 1
@@ -1931,7 +1931,7 @@ class Chainsaw(Item):
         if self.pickupFinished and Chainsaw.ammunition > 0:
             if args[0][0]:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery - 4, 1, 1), Player.direction, -1, tiles, damage=1, maxDistance=80))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     Chainsaw.freespin_sound.stop()
                     KDS.Audio.playSound(Chainsaw.throttle_sound)
@@ -1979,32 +1979,32 @@ Item.serialNumbers = {
     7: Knife,
     8: LappiSytytyspalat,
     9: Medkit,
-    10:Pistol,
-    11:PistolMag,
-    12:Plasmarifle,
-    13:RedKey,
-    14:rk62Mag,
-    15:rk62,
-    16:Shotgun,
-    17:ShotgunShells,
-    18:Soulsphere,
-    19:SSBonuscard,
-    20:Turboneedle,
-    21:Ppsh41,
-    22:"",
-    23:"",
-    24:Awm,
-    25:AwmMag,
-    26:EmptyFlask,
-    27:MethFlask,
-    28:BloodFlask,
-    29:Grenade,
-    30:FireExtinguisher,
-    31:LevelEnderItem,
-    32:Ppsh41Mag,
-    33:Lantern,
-    34:Chainsaw,
-    35:GasCanister
+    10: Pistol,
+    11: PistolMag,
+    12: Plasmarifle,
+    13: RedKey,
+    14: rk62Mag,
+    15: rk62,
+    16: Shotgun,
+    17: ShotgunShells,
+    18: Soulsphere,
+    19: SSBonuscard,
+    20: Turboneedle,
+    21: Ppsh41,
+    22: "",
+    23: "",
+    24: Awm,
+    25: AwmMag,
+    26: EmptyFlask,
+    27: MethFlask,
+    28: BloodFlask,
+    29: Grenade,
+    30: FireExtinguisher,
+    31: LevelEnderItem,
+    32: Ppsh41Mag,
+    33: Lantern,
+    34: Chainsaw,
+    35: GasCanister
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion
@@ -2075,7 +2075,8 @@ class PlayerClass:
         self.farting: bool = False
         self.fart_counter: int = 0
         self.light: bool = False
-        self.godmode: bool = False
+        self.infiniteHealth: bool = False
+        self.infiniteAmmo: bool = False
         self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
@@ -2111,7 +2112,8 @@ class PlayerClass:
         self.farting: bool = False
         self.fart_counter: int = 0
         self.light: bool = False
-        self.godmode: bool = False
+        self.infiniteHealth: bool = False
+        self.infiniteAmmo: bool = False
         self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
@@ -2130,7 +2132,12 @@ class PlayerClass:
         self.deathSound.stop()
         
     def update(self):
-        if self.godmode: self.health = float("inf")
+        if self.infiniteHealth: self.health = float("inf")
+        if self.infiniteAmmo:
+            inf_ammo_item = self.inventory.getHandItem()
+            for _class in Item.serialNumbers.values():
+                if hasattr(_class, "ammunition"):
+                    _class.ammunition = 69
         
         #region Movement
         #region Functions
@@ -2323,7 +2330,10 @@ def console(oldSurf: pygame.Rect):
         "killme": "break",
         "terms": trueFalseTree,
         "woof": trueFalseTree,
-        "invl": trueFalseTree,
+        "infinite": {
+            "health": trueFalseTree,
+            "ammo": trueFalseTree
+        },
         "finish": { "missions": "break" },
         "teleport": {
          "~": { "~": "break" },
@@ -2417,16 +2427,26 @@ def console(oldSurf: pygame.Rect):
                     KDS.Console.Feed.append("Please provide a proper state for woof")
             else:
                 KDS.Console.Feed.append("Please provide a proper state for woof")
-        elif command_list[0] == "invl":
-            if len(command_list) == 2:
-                invlState = KDS.Convert.ToBool(command_list[1], None)
-                if invlState != None:
-                    Player.godmode = invlState
-                    KDS.Console.Feed.append(f"Invulnerability state has been set to: {Player.godmode}")
+        elif command_list[0] == "infinite":
+            if len(command_list) == 3:
+                if command_list[1] == "health":
+                    h_state = KDS.Convert.ToBool(command_list[2], None)
+                    if h_state != None:
+                        Player.infiniteHealth = h_state
+                        KDS.Console.Feed.append(f"infinite health state has been set to: {Player.infiniteHealth}")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper state for infinite health.")
+                elif command_list[1] == "ammo":
+                    a_state = KDS.Convert.ToBool(command_list[2], None)
+                    if a_state != None:
+                        Player.infiniteAmmo = a_state
+                        KDS.Console.Feed.append(f"infinite ammo state has been set to: {Player.infiniteAmmo}")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper state for infinite ammo.")
                 else:
-                    KDS.Console.Feed.append("Please provide a proper state for invl")
+                    KDS.Console.Feed.append("Not a valid infinite command.")
             else:
-                KDS.Console.Feed.append("Please provide a proper state for invl")
+                KDS.Console.Feed.append("Not a valid infinite command.")
         elif command_list[0] == "finish":
             if len(command_list) > 1 and command_list[1] == "missions":
                 KDS.Console.Feed.append("Missions Finished.")
@@ -2503,7 +2523,7 @@ def console(oldSurf: pygame.Rect):
         - terms => Sets Terms and Conditions accepted to the specified value.
         - woof => Sets all bulldogs anger to the specified value.
         - finish => Finishes level or missions.
-        - invl => Sets invulnerability mode to the specified value.
+        - infinite => Sets the specified infinite type to the specified value.
         - teleport => Teleports player either to static coordinates or relative coordinates.
         - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
         - fly => Sets fly mode to the specified value.
