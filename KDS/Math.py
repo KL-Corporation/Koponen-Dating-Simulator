@@ -3,13 +3,16 @@ import KDS.Logging
 import math
 import sys
 
+#region Constants
 PI = math.pi
 EPSILON = sys.float_info.epsilon
 INFINITY = float("inf")
 NEGATIVEINFINITY = float("-inf")
 DEG2RAD = (PI * 2) / 360
 RAD2DEG = 360 / (PI * 2)
+#endregion
 
+#region Default Math Functions
 def Tan(f: SupportsFloat) -> float: return math.tan(f)
 @overload
 def Atan(f: SupportsFloat) -> float: return math.atan(f)
@@ -28,8 +31,7 @@ def Floor(f: SupportsFloat) -> int: return math.floor(f)
 def Sqrt(f: SupportsFloat) -> float: return math.sqrt(f)
 def Pow(f: SupportsFloat, p: SupportsFloat) -> float: return math.pow(f, p)
 def Log(f: SupportsFloat) -> float: return math.log(f)
-
-__fps = 60
+#endregion
 
 #region Value Manipulation
 @overload
