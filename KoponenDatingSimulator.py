@@ -27,7 +27,6 @@ import sys
 import shutil
 import json
 import zipfile
-import math
 import datetime
 from pygame.locals import *
 from typing import Any, Dict, List, Tuple, Union
@@ -796,7 +795,7 @@ class Jukebox(Tile):
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 350
-            jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp(lerp_multiplier, 0, 1))
+            jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp01(lerp_multiplier))
             Jukebox.songs[self.playing].set_volume(jukebox_volume)
             Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
@@ -3457,11 +3456,11 @@ while main_running:
         ui_hand_item = Player.inventory.getHandItem()
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
-        screen.blit(score_font.render(f"""HEALTH: {math.ceil(Player.health) if Player.health != float("inf") else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
-        screen.blit(score_font.render(f"STAMINA: {math.ceil(Player.stamina)}", True, KDS.Colors.White), (10, 120))
+        screen.blit(score_font.render(f"""HEALTH: {KDS.Math.Ceil(Player.health) if Player.health != float("inf") else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
+        screen.blit(score_font.render(f"STAMINA: {KDS.Math.Ceil(Player.stamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
         if hasattr(ui_hand_item, "ammunition"):
-            tmpAmmo = ui_hand_item.ammunition if isinstance(ui_hand_item.ammunition, int) else math.ceil(ui_hand_item.ammunition * 10) / 10
+            tmpAmmo = ui_hand_item.ammunition if isinstance(ui_hand_item.ammunition, int) else KDS.Math.Ceil(ui_hand_item.ammunition * 10) / 10
             screen.blit(harbinger_font.render(f"AMMO: {tmpAmmo}", True, KDS.Colors.White), (10, 360))
 
         if Player.keys["red"]:

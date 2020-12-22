@@ -4,7 +4,6 @@ import KDS.Logging
 import KDS.Math
 import KDS.Colors
 import pygame
-import math
 
 class OnAnimationEnd:
     Stop = "stop"
@@ -126,8 +125,8 @@ class MultiAnimation:
 
 class AnimationType:
     Linear = lambda t: t
-    EaseIn = lambda t: 1.0 - math.cos(t * math.pi * 0.5)
-    EaseOut = lambda t: math.sin(t * math.pi * 0.5)
+    EaseIn = lambda t: 1.0 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
+    EaseOut = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
     Exponential = lambda t: t * t
     SmoothStep = lambda t: t * t * (3.0 - (2.0 * t))
     SmootherStep = lambda t: t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)

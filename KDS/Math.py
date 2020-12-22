@@ -1,9 +1,39 @@
-from typing import Tuple, Union, overload
+from typing import List, SupportsFloat, Tuple, overload
 import KDS.Logging
 import math
+import sys
+
+PI = math.pi
+EPSILON = sys.float_info.epsilon
+INFINITY = float("inf")
+NEGATIVEINFINITY = float("-inf")
+DEG2RAD = (PI * 2) / 360
+RAD2DEG = 360 / (PI * 2)
+
+def Tan(f: SupportsFloat) -> float: return math.tan(f)
+@overload
+def Atan(f: SupportsFloat) -> float: return math.atan(f)
+@overload
+def Atan(x: SupportsFloat, y: SupportsFloat) -> float: return math.atan2(x, y)
+
+def Sin(f: SupportsFloat) -> float: return math.sin(f)
+def Asin(f: SupportsFloat) -> float: return math.asin(f)
+
+def Cos(f: SupportsFloat) -> float: return math.cos(f)
+def Acos(f: SupportsFloat) -> float: return math.acos(f)
+
+def Ceil(f: SupportsFloat) -> int: return math.ceil(f)
+def Floor(f: SupportsFloat) -> int: return math.floor(f)
+
+def Sqrt(f: SupportsFloat) -> float: return math.sqrt(f)
+def Pow(f: SupportsFloat, p: SupportsFloat) -> float: return math.pow(f, p)
+def Log(f: SupportsFloat) -> float: return math.log(f)
+
+__fps = 60
 
 #region Value Manipulation
-def Clamp(value: Union[int, float], _min: Union[int, float], _max: Union[int, float]) -> Union[int, float]:
+@overload
+def Clamp(value: float, _min: float, _max: float) -> float:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
     Args:
@@ -16,11 +46,26 @@ def Clamp(value: Union[int, float], _min: Union[int, float], _max: Union[int, fl
     """
     return max(_min, min(value, _max))
 
-def Remap(value: float, in_min: float, in_max: float, out_min: float, out_max: float) -> float:
+@overload
+def Clamp(values: List[float], _min: float, _max: float) -> List[float]:
+    for v in values:
+        v = max(_min, min(v, _max))
+    return values
+
+def Clamp01(value: float) -> float:
+    return max(0, min(value, 1))
+
+def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
-    return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    return (value - from1) / (to1 - from1) * (to2 - from2) + from2
+
+def Remap01(value: float, from1: float, from2: float) -> float:
+    """
+    Converts a value to another value within the given arguments.
+    """
+    return (value - from1) / (0 - from1) * (1 - from2) + from2
 #endregion
 
 #region Distance
@@ -32,7 +77,7 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
         q = point1[0] - point2[0]
         w = point1[1] - point2[1]
         r = q ** 2 + w ** 2
-        return math.sqrt(r)
+        return Sqrt(r)
     except Exception as e:
         KDS.Logging.AutoError(e)
         return 0
@@ -51,7 +96,7 @@ def getSlope(angle: float) -> float: #Angle in degrees
     """
     Calculates slope of straight from angle
     """
-    return math.tan(math.radians(angle)) 
+    return Tan(angle * DEG2RAD) 
 #endregion
 
 #region Angles
@@ -72,7 +117,7 @@ def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
             w = 1
         r = q / w
 
-        a = math.degrees(math.atan(r))
+        a = Atan(r) * RAD2DEG
         #a = 360 - a
         #while a >= 360:
         #    a = a - 360
@@ -96,9 +141,9 @@ def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
     dy = p1[1] - p2[1]
 
 
-    return math.degrees(math.atan2(dy,dx))
+    return Atan(dy, dx) * RAD2DEG
 
-def DeltaAngle(current: Union[int, float], target: Union[int, float]):
+def DeltaAngle(current: float, target: float):
     return ((target - current) + 180) % 360 - 180
 #endregion
 
@@ -108,22 +153,21 @@ def Lerp(a: float, b: float, t: float) -> float:
 
     The parameter t is clamped to the range [0, 1].
     """
-    t = Clamp(t, 0.0, 1.0)
-    return a + ((b - a) * t)
+    return a + (b - a) * Clamp01(t)
 
-def LerpUnclamped(a: float, b: float, t: float):
+def LerpUnclamped(a: float, b: float, t: float) -> float:
     """Linearly interpolates between a and b by t.
 
     The parameter t is not clamped.
     """
-    return a + ((b - a) * t)
+    return a + (b - a) * t
 
-def SmoothStep(a: float, b: float, t: float):
+def SmoothStep(a: float, b: float, t: float) -> float:
     """Smoothly interpolates between a and b by t.
     
     The parameter t is clamped to the range [0, 1].
     """
-    t = Clamp(t, 0, 1)
-    t = t * t * (3.0 - (2.0 * t))
-    return Lerp(a, b, t)
+    t = Clamp01(t)
+    t = -2.0 * t * t * t + 3.0 * t * t
+    return b * t + a * (1 - t)
 #endregion

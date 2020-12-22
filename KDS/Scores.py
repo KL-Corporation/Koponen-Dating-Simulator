@@ -78,7 +78,7 @@ class ScoreCounter:
             tb_start = 1
             tb_end = 2
         gameTime: float = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
-        timeBonusIndex: float = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
+        timeBonusIndex: float = KDS.Math.Remap01(gameTime, tb_start, tb_end)
         timeBonus: int = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
         
         totalScore: int = score + koponen_happiness + timeBonus

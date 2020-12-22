@@ -1,6 +1,5 @@
 from typing import Any, Tuple, Union
 import pygame
-import math
 import KDS.Logging
 import KDS.Colors
 import KDS.Math
@@ -85,15 +84,15 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     if tmp_internal <= 66:
         red = 255
     else:
-        tmp_red = 329.698727446 * math.pow(tmp_internal - 60, -0.1332047592)
+        tmp_red = 329.698727446 * KDS.Math.Pow(tmp_internal - 60, -0.1332047592)
         red = round(KDS.Math.Clamp(tmp_red, 0, 255))
     
     # green
     if tmp_internal <= 66:
-        tmp_green = 99.4708025861 * math.log(tmp_internal) - 161.1195681661
+        tmp_green = 99.4708025861 * KDS.Math.Log(tmp_internal) - 161.1195681661
         green = round(KDS.Math.Clamp(tmp_green, 0, 255))
     else:
-        tmp_green = 288.1221695283 * math.pow(tmp_internal - 60, -0.0755148492)
+        tmp_green = 288.1221695283 * KDS.Math.Pow(tmp_internal - 60, -0.0755148492)
         green = round(KDS.Math.Clamp(tmp_green, 0, 255))
     
     # blue
@@ -102,7 +101,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     elif tmp_internal <= 19:
         blue = 0
     else:
-        tmp_blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
+        tmp_blue = 138.5177312231 * KDS.Math.Log(tmp_internal - 10) - 305.0447927307
         blue = round(KDS.Math.Clamp(tmp_blue, 0, 255))
     
     return red, green, blue

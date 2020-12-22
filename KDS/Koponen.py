@@ -4,8 +4,6 @@ import random
 from typing import List, Tuple
 import pygame
 from pygame.locals import *
-import math
-import sys
 import KDS.Colors
 import KDS.Convert
 import KDS.Animator
@@ -279,7 +277,7 @@ class Talk:
     mask = pygame.mask.Mask(conversation_rect.size, True)
     display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
     display_size = display.get_size()
-    lineCount = math.floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
+    lineCount = KDS.Math.Floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     audioChannel = None
     soundPlaying = None
     
@@ -353,7 +351,7 @@ class Talk:
                 Talk.Conversation.animationProgress = -1
             if Talk.Conversation.animationProgress != -1:
                 Talk.Conversation.animationWidth = max(Talk.Conversation.animationWidth - line_reveal_speed, 0)
-                Talk.Conversation.animationProgress = KDS.Math.Remap(Talk.Conversation.animationWidth, animationRectTarget.width, 0, 0, 1)
+                Talk.Conversation.animationProgress = KDS.Math.Remap01(Talk.Conversation.animationWidth, animationRectTarget.width, 0)
                 if lastIncluded:
                     pygame.draw.rect(Talk.display, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
             

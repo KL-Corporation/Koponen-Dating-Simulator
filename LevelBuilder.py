@@ -9,7 +9,6 @@ import sys
 import pygame
 from pygame.locals import *
 import threading
-import math
 import KDS.Colors
 import KDS.Convert
 import KDS.ConfigManager
@@ -648,11 +647,11 @@ def main():
     def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
         global scalesize, scaleMultiplier
         mouse_pos = pygame.mouse.get_pos()
-        mouse_pos_scaled = (math.floor(mouse_pos[0] / scalesize + scroll[0]), math.floor(mouse_pos[1] / scalesize + scroll[1]))
+        mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
         scalesize = KDS.Math.Clamp(scalesize + add, 1, 272)
         scaleMultiplier = scalesize / gamesize
-        mouse_pos_scaled = (math.floor(mouse_pos[0] / scalesize + scroll[0]), math.floor(mouse_pos[1] / scalesize + scroll[1]))
+        mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
         
