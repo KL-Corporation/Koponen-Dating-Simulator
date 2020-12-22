@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Tuple, Union, overload
 import KDS.Logging
 import math
 
@@ -39,13 +39,15 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
 #endregion
 
 #region Slope
+@overload
 def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]):
     """
     Calculates slope of straight going trough two points
     """
     return (p2[1] - p1[1]) / (p2[0]- p1[0])
 
-def getSlope2(angle): #Angle in degrees
+@overload
+def getSlope(angle: float) -> float: #Angle in degrees
     """
     Calculates slope of straight from angle
     """

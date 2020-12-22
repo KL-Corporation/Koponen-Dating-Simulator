@@ -88,7 +88,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         angle = 90-angle
     elif angle < 0:
         angle = -90 - angle
-    slope = KDS.Math.getSlope2(angle)
+    slope = KDS.Math.getSlope(angle)
     dirVar = KDS.Convert.ToMultiplier(direction)
     searchPointers = [(searchRect.centerx + x * 30 *dirVar, searchRect.centery + x * 30 * dirVar*slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
