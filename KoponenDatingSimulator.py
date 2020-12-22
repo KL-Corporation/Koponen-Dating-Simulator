@@ -34,20 +34,23 @@ from typing import Any, Dict, List, Tuple, Union
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
-    AppDataPath = os.path.join(os.getenv('APPDATA'), "KL Corporation", "Koponen Dating Simulator")
-    CachePath = os.path.join(AppDataPath, "cache")
-    SavePath = os.path.join(AppDataPath, "saves")
-    LogPath = os.path.join(AppDataPath, "logs")
-    Screenshots = os.path.join(AppDataPath, "screenshots")
-os.makedirs(PersistentPaths.CachePath, exist_ok=True)
-KDS.System.emptdir(PersistentPaths.CachePath)
-os.makedirs(PersistentPaths.SavePath, exist_ok=True)
+    AppData = os.path.join(os.getenv('APPDATA'), "KL Corporation", "Koponen Dating Simulator")
+    Cache = os.path.join(AppData, "cache")
+    Saves = os.path.join(AppData, "saves")
+    Logs = os.path.join(AppData, "logs")
+    Screenshots = os.path.join(AppData, "screenshots")
+    CustomMaps = os.path.join(AppData, "custom_maps")
+os.makedirs(PersistentPaths.AppData, exist_ok=True)
+os.makedirs(PersistentPaths.Cache, exist_ok=True)
+KDS.System.emptdir(PersistentPaths.Cache)
+KDS.System.hide(PersistentPaths.Cache)
+os.makedirs(PersistentPaths.Saves, exist_ok=True)
+os.makedirs(PersistentPaths.Logs, exist_ok=True)
 os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
-os.makedirs(PersistentPaths.LogPath, exist_ok=True)
-KDS.System.hide(PersistentPaths.CachePath)
+os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
 
-KDS.Logging.init(PersistentPaths.AppDataPath, PersistentPaths.LogPath)
-KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
+KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
+KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
 
 pygame.mixer.init()
 pygame.init()
@@ -387,7 +390,7 @@ class WorldData():
     def LoadMap(loadEntities: bool = True):
         global Items, tiles, Enemies, Projectiles
         MapPath = os.path.join("Assets", "Maps", "map" + current_map)
-        PersistentMapPath = os.path.join(PersistentPaths.CachePath, "map")
+        PersistentMapPath = os.path.join(PersistentPaths.Cache, "map")
         if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
             #region Error String
             KDS.Logging.AutoError(f"""
@@ -2767,8 +2770,8 @@ def settings_menu():
 
     def reset_settings():
         return_def()
-        os.remove(os.path.join(PersistentPaths.AppDataPath, "settings.cfg"))
-        KDS.ConfigManager.init(PersistentPaths.AppDataPath, PersistentPaths.CachePath, PersistentPaths.SavePath)
+        os.remove(os.path.join(PersistentPaths.AppData, "settings.cfg"))
+        KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
         KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
     
     def reset_data():
@@ -3582,13 +3585,13 @@ while main_running:
 #region Application Quitting
 KDS.ConfigManager.Save.quit()
 KDS.Audio.Music.unload()
-KDS.System.emptdir(PersistentPaths.CachePath)
+KDS.System.emptdir(PersistentPaths.Cache)
 KDS.Logging.quit()
 pygame.mixer.quit()
 pygame.display.quit()
 pygame.quit()
 if reset_data:
-    shutil.rmtree(PersistentPaths.AppDataPath)
+    shutil.rmtree(PersistentPaths.AppData)
 if restart:
     os.execl(sys.executable, os.path.abspath(__file__))
 #endregion
