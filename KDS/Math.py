@@ -31,6 +31,15 @@ def Pow(f: SupportsFloat, p: SupportsFloat) -> float: return math.pow(f, p)
 def Log(f: SupportsFloat) -> float: return math.log(f)
 #endregion
 
+#region Value Comparison
+def Round(f: float) -> int:
+    """Rounds a value correctly, fuck you Python.
+    """
+    #int(f) should theoretically remove all decimals, also known as flooring the value
+    if (f != int(f) + 0.5): return round(f)
+    else: return math.ceil(f)
+#endregion
+
 #region Value Manipulation
 def Clamp(value: float, _min: float, _max: float) -> float:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
