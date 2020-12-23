@@ -36,7 +36,7 @@ def Round(f: float) -> int:
     """Rounds a value correctly, fuck you Python.
     """
     #int(f) should theoretically remove all decimals, also known as flooring the value
-    if (f != int(f) + 0.5): return round(f)
+    if (f != math.floor(f) + 0.5): return round(f)
     else: return math.ceil(f)
 #endregion
 
