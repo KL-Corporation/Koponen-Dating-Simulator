@@ -1,5 +1,5 @@
 #region Importing
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 import pygame
 import KDS.Animator
 import KDS.Audio
@@ -40,7 +40,7 @@ class Padding:
 #region Listeners
 class Listener:
     def __init__(self) -> None:
-        self.listenerList = []
+        self.listenerList: List[Tuple[str, str, float]] = []
         
     def Add(self, MissionName: str, TaskName: str, AddValue: float):
         self.listenerList.append((MissionName, TaskName, AddValue))
@@ -48,16 +48,30 @@ class Listener:
     def Trigger(self):
         for listnr in self.listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
+
+class ItemListener:
+    def __init__(self) -> None:
+        self.listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
            
+    def Add(self, itemSerial: int, MissionName: str, TaskName: str, AddValue: float):
+        if itemSerial not in self.listenerDict:
+            self.listenerDict[itemSerial] = []
+        self.listenerDict[itemSerial].append((MissionName, TaskName, AddValue))
+        
+    def Trigger(self, itemSerial: int):
+        if itemSerial in self.listenerDict:
+            for v in self.listenerDict[itemSerial]:
+                AddProgress(v[0], v[1], v[2])
+
 class Listeners:
     InventorySlotSwitching = Listener()
     Movement = Listener()
     KoponenTalk = Listener()
     KoponenAskDate = Listener()
     KoponenRequestMission = Listener()
-    iPuhelinPickup = Listener()
-    iPuhelinDrop = Listener()
     LevelEnder = Listener()
+    ItemPickup = ItemListener()
+    ItemDrop = ItemListener()
 #endregion
 #region Classes
 class Task:
@@ -251,7 +265,7 @@ def init():
     hundredSize = TaskFont.size("100%")
 #endregion
 #region Initialize
-def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Tuple[Listeners and Listener, float]):
+def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Union[Tuple[Listener, float], Tuple[ItemListener, int, float]]):
     """Initialises a task.
 
     Args:
@@ -261,7 +275,11 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Tu
     """
     Task(MissionName, SafeName, Text)
     for data in ListenerData:
-        data[0].Add(MissionName, SafeName, data[1])
+        if isinstance(data[0], Listener):
+            data[0].Add(MissionName, SafeName, data[1])
+        elif isinstance(data[0], ItemListener):
+            data[0].Add(data[1], MissionName, SafeName, data[1])
+        else: raise TypeError("Listener is not a valid type!")
         
 def InitialiseMission(SafeName: str, Text: str):
     """Initialises a mission.
@@ -335,10 +353,10 @@ class Presets:
     @staticmethod
     def Tutorial():
         InitialiseMission("tutorial", "Tutoriaali")
-        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (Listeners.Movement, 0.0025))
+        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (Listeners.Movement, 0.005))
         InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (Listeners.InventorySlotSwitching, 0.2))
         InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-        InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (Listeners.iPuhelinDrop, 1.0), (Listeners.iPuhelinPickup, -1.0))
+        InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (Listeners.ItemDrop, 6, 1.0), (Listeners.ItemPickup, 6, -1.0))
         
     @staticmethod
     def KoponenIntroduction():

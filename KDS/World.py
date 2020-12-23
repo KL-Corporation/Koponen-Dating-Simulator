@@ -226,7 +226,7 @@ class Bullet:
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if debugMode:
             pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
-            pygame.draw.line(Surface, KDS.Colors.Black, (self.rect.x - (self.movedDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] - (self.slope * self.movedDistance)), (self.rect.x + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] + (self.slope * Surface.get_width())))
+            pygame.draw.line(Surface, KDS.Colors.Black, (self.rect.x - (self.movedDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] - (self.slope * self.movedDistance)), (self.rect.x + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] + (self.slope * self.maxDistance)))
             
         if self.speed == -1:
             for _ in range(round(self.maxDistance / 18)):

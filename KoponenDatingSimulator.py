@@ -599,11 +599,10 @@ class Inventory:
 
     def dropItem(self):
         if self.storage[self.SIndex] != Inventory.emptySlot:
+            KDS.Missions.Listeners.ItemDrop.Trigger(self.storage[self.SIndex].serialNumber)
             if self.SIndex < self.size - 1:
                 if self.storage[self.SIndex + 1] == Inventory.doubleItem:
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
-                elif self.storage[self.SIndex] == 6:
-                    KDS.Missions.Listeners.iPuhelinDrop.Trigger()
             temp = self.storage[self.SIndex]
             self.storage[self.SIndex] = Inventory.emptySlot
             return temp
@@ -1417,8 +1416,8 @@ class Item:
     def use(self, *args):
         return self.texture
 
-    def drop(self):
-        pass
+    #def drop(self):
+    #    pass
 
     def init(self):
         pass
@@ -2128,7 +2127,6 @@ class PlayerClass:
     def update(self):
         if self.infiniteHealth: self.health = float("inf")
         if self.infiniteAmmo:
-            inf_ammo_item = self.inventory.getHandItem()
             for _class in Item.serialNumbers.values():
                 if hasattr(_class, "ammunition"):
                     _class.ammunition = 69
@@ -2216,9 +2214,11 @@ class PlayerClass:
             if self.movement[0] > 0:
                 self.direction = False
                 self.walking = True
+                KDS.Missions.Listeners.Movement.Trigger()
             elif self.movement[0] < 0:
                 self.direction = True
                 self.walking = True
+                KDS.Missions.Listeners.Movement.Trigger()
             else:
                 self.walking = False
             if self.walking:
