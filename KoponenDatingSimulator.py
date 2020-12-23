@@ -149,6 +149,7 @@ KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 KDS.Logging.debug("Loading Settings...")
 tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
+current_map_name: str = ""
 max_map: int = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
 play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
@@ -386,21 +387,18 @@ ambient_light_tint: Tuple[int, int, int] = (0, 0, 0)
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
-    def LoadMap(loadEntities: bool = True):
+    def LoadMap(MapPath: str, loadEntities: bool = True):
         global Items, tiles, Enemies, Projectiles
-        MapPath = os.path.join("Assets", "Maps", "map" + current_map)
         PersistentMapPath = os.path.join(PersistentPaths.Cache, "map")
         if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
             #region Error String
-            KDS.Logging.AutoError(f"""
-##### MAP FILE ERROR #####
-Map Directory: {os.path.isdir(MapPath)}
-Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
-LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
-TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
-Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
-##### MAP FILE ERROR #####
-""")
+            KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
+    Map Directory: {os.path.isdir(MapPath)}
+    Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
+    LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
+    TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
+    Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+    ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             KDS.Loading.Stop()
@@ -2582,7 +2580,12 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
         KDS.Loading.Start(display, clock, DebugMode)
-
+    
+    customMap = False
+    if gamemode == KDS.Gamemode.Modes.CustomCampaign:
+        gamemode = KDS.Gamemode.Modes.Campaign
+        customMap = True
+    
     KDS.Audio.Music.unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map))
     KDS.World.Lighting.Shapes.clear()
@@ -2590,7 +2593,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     global Player
     Player = PlayerClass()
     
-    #region Load World Data
+    #region World Data
     global Items, Enemies, Explosions, BallisticObjects
     Items = numpy.array([])
     Enemies = numpy.array([])
@@ -2600,7 +2603,12 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     
     LoadGameSettings()
 
-    wdata = WorldData.LoadMap(loadEntities)
+    if not customMap:
+        mapPath = os.path.join("Assets", "Maps", "map" + current_map)
+    else:
+        mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
+
+    wdata = WorldData.LoadMap(mapPath, loadEntities)
     if not wdata:
         return 1
     Player.rect.topleft, koponen_rect.topleft = wdata
@@ -2611,7 +2619,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     #endregion
     
     ########## iPuhelin ##########
-    if int(current_map) < 2 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and loadEntities):
+    if int(current_map) == 1 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and loadEntities):
         Player.inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6)
 
     pygame.mouse.set_visible(False)
@@ -2845,7 +2853,7 @@ def settings_menu():
         clock.tick_busy_loop(60)
 
 def main_menu():
-    global current_map, DebugMode
+    global current_map, DebugMode, current_map_name
     
     class Mode:
         MainMenu = 0
@@ -2854,7 +2862,6 @@ def main_menu():
         CampaignMenu = 3
     MenuMode = Mode.MainMenu
 
-    current_map_int = 0
     current_map_int = int(current_map)
 
     global main_menu_running, main_running, go_to_main_menu
@@ -2865,10 +2872,33 @@ def main_menu():
 
     KDS.Audio.Music.play("Assets/Audio/music/lobbymusic.ogg")
 
+    map_names = {}
+    custom_maps_names = {}
+    def load_map_names():
+        nonlocal map_names, custom_maps_names
+        map_names = {}
+        custom_maps_names = {}
+        try:
+            with open("Assets/Maps/names.kdf", "r") as file:
+                tmp = file.read().split("\n")
+                for t in tmp:
+                    tmp_split = t.split(":")
+                    for u in tmp_split: u.strip()
+                    map_names[int(tmp_split[0])] = tmp_split[1]
+        except IOError as e:
+            KDS.Logging.AutoError(f"IO Error! Details: {e}")
+        try:
+            for i, p in enumerate(os.listdir(PersistentPaths.CustomMaps)):
+                custom_maps_names[i + 1] = p
+        except IOError as e:
+            KDS.Logging.AutoError(f"IO Error! Details: {e}")
+    if len(map_names) < 1: load_map_names()
+    
     class level_pick:
         class direction:
-            left = 0
+            left = -1
             right = 1
+            none = 0
 
         @staticmethod
         def right():
@@ -2884,14 +2914,12 @@ def main_menu():
             current_map_int = int(current_map)
             if direction == level_pick.direction.left:
                 current_map_int -= 1
-            else:
+            elif direction == level_pick.direction.right:
                 current_map_int += 1
-            if current_map_int < 1:
-                current_map_int = 1
-            if current_map_int > int(max_map):
-                current_map_int = int(max_map)
+            current_map_int = KDS.Math.Clamp(current_map_int, -len(custom_maps_names), len(map_names))
             current_map = f"{current_map_int:02d}"
             KDS.ConfigManager.SetSetting("Player/currentMap", current_map)
+    level_pick.pick(level_pick.direction.none)
 
     def menu_mode_selector(mode):
         nonlocal MenuMode
@@ -2951,15 +2979,6 @@ def main_menu():
 
     Frame1 = pygame.Surface(display_size)
     frames = [Frame1, Frame2, Frame3, Frame4]
-    
-    try:
-        with open("Assets/Maps/names.kdf", "r") as file:
-            map_names = file.read().split("\n")
-            for i in range(len(map_names)):
-                map_names[i] = map_names[i][4:]
-    except IOError as e:
-        KDS.Logging.AutoError(f"IO Error! Details: {e}")
-        map_names = ("ERROR")
     #endregion
     while main_menu_running:
         renderUI = True
@@ -3059,19 +3078,28 @@ def main_menu():
             #Äh, teen joskus
 
         elif MenuMode == Mode.CampaignMenu:
+            if len(os.listdir(PersistentPaths.CustomMaps)) != len(custom_maps_names):
+                KDS.Logging.debug("New custom maps detected.", True)
+                load_map_names()
+                level_pick.pick(level_pick.direction.none)
+            
             pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
-
-            renderUI = not campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign, True)
-            campaign_return_button.update(display, mouse_pos, c, Mode.MainMenu)
-            campaign_left_button.update(display, mouse_pos, c)
-            campaign_right_button.update(display, mouse_pos, c)
 
             current_map_int = int(current_map)
 
-            if current_map_int < len(map_names): map_name = map_names[current_map_int]
-            else: map_name = map_names[0]
-            level_text = button_font1.render(f"{current_map} - {map_name}", True, (0, 0, 0))
+            if current_map_int in map_names: current_map_name = map_names[current_map_int]
+            elif current_map_int < 0 and abs(current_map_int) in custom_maps_names: current_map_name = custom_maps_names[abs(current_map_int)]
+            else: current_map_name = "[ ERROR ]"
+            if current_map_int > 0: render_map_name = f"{current_map} - {current_map_name}"
+            elif current_map_int == 0: render_map_name = "<= Custom                Campaign =>"
+            else: render_map_name = f"CUSTOM - {current_map_name}"
+            level_text = button_font1.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (125, 209))
+
+            renderUI = not campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
+            campaign_return_button.update(display, mouse_pos, c, Mode.MainMenu)
+            campaign_left_button.update(display, mouse_pos, c)
+            campaign_right_button.update(display, mouse_pos, c)
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:

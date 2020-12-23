@@ -368,7 +368,7 @@ def InitialiseMissions(LevelIndex):
         InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")
         
     else:
-        if LevelIndex < 2:
+        if LevelIndex == 1:
             Presets.Tutorial()
             Presets.KoponenIntroduction()
         elif LevelIndex == 2:

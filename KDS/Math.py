@@ -1,4 +1,4 @@
-from typing import List, SupportsFloat, Tuple, overload
+from typing import List, SupportsFloat, Tuple
 import KDS.Logging
 import math
 import sys
@@ -14,10 +14,8 @@ RAD2DEG = 360 / (PI * 2)
 
 #region Default Math Functions
 def Tan(f: SupportsFloat) -> float: return math.tan(f)
-@overload
 def Atan(f: SupportsFloat) -> float: return math.atan(f)
-@overload
-def Atan(x: SupportsFloat, y: SupportsFloat) -> float: return math.atan2(x, y)
+def Atan2(x: SupportsFloat, y: SupportsFloat) -> float: return math.atan2(x, y)
 
 def Sin(f: SupportsFloat) -> float: return math.sin(f)
 def Asin(f: SupportsFloat) -> float: return math.asin(f)
@@ -34,7 +32,6 @@ def Log(f: SupportsFloat) -> float: return math.log(f)
 #endregion
 
 #region Value Manipulation
-@overload
 def Clamp(value: float, _min: float, _max: float) -> float:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
@@ -47,12 +44,6 @@ def Clamp(value: float, _min: float, _max: float) -> float:
         The result between the min and max values.
     """
     return max(_min, min(value, _max))
-
-@overload
-def Clamp(values: List[float], _min: float, _max: float) -> List[float]:
-    for v in values:
-        v = max(_min, min(v, _max))
-    return values
 
 def Clamp01(value: float) -> float:
     return max(0, min(value, 1))
@@ -86,15 +77,13 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
 #endregion
 
 #region Slope
-@overload
 def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]):
     """
     Calculates slope of straight going trough two points
     """
     return (p2[1] - p1[1]) / (p2[0]- p1[0])
 
-@overload
-def getSlope(angle: float) -> float: #Angle in degrees
+def getSlope2(angle: float) -> float: #Angle in degrees
     """
     Calculates slope of straight from angle
     """
@@ -143,7 +132,7 @@ def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
     dy = p1[1] - p2[1]
 
 
-    return Atan(dy, dx) * RAD2DEG
+    return Atan2(dy, dx) * RAD2DEG
 
 def DeltaAngle(current: float, target: float):
     return ((target - current) + 180) % 360 - 180
