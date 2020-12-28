@@ -83,5 +83,5 @@ class Event:
     def __len__(self) -> int:
         return len(self.listeners)
     
-    def Invoke(self, *args):
-        for listener in self.listeners: listener(*args)
+    def Invoke(self, *args, **kwargs):
+        for listener in self.listeners: listener(*args, **kwargs)
