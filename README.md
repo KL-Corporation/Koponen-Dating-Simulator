@@ -27,7 +27,7 @@
 
 [//]: # (Temporary Below)
 [website]: http://NALStudio.tk
-[repo]: https://github.com/NALStudio/Koponen-Dating-Simulator
+[repo]: https://github.com/KL-Corporation/Koponen-Dating-Simulator
 
 [vscodeLink]: https://code.visualstudio.com
 [pythonLink]: https://www.python.org
