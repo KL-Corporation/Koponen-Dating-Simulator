@@ -9,7 +9,7 @@
 
 ### Flagship Product of KL Corporation
 
-[<img align="left" alt="KL Corporation" width="64px" src="https://i.imgur.com/kVjnUHx.png" />][website]
+[<img align="left" alt="KL Corporation" width="64px" src="https://imgur.com/QNZjW7v.png" />][website]
 
 <br />
 <br />
