@@ -1383,8 +1383,7 @@ class Item:
                             temp_var = item.pickup()
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item
-                                if item.serialNumber == 6:
-                                    KDS.Missions.Listeners.iPuhelinPickup.Trigger()
+                                KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
                             Item_list = numpy.delete(Item_list, index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
