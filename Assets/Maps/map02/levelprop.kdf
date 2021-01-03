@@ -21,10 +21,10 @@
     },
     "Rendering": {
         "AmbientLight": {
-            "enabled": false,
+            "enabled": true,
             "tint": [
-                0,
-                0,
+                50,
+                25,
                 0
             ]
         },
