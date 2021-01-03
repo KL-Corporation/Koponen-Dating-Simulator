@@ -338,7 +338,7 @@ class BallisticProjectile:
                 self.rect.bottom = c1.rect.top
                 c_types['bottom'] = True
             elif self.upforce < 0:
-                self.rect.top = c1.bottom
+                self.rect.top = c1.rect.bottom
                 c_types['top'] = True
 
 
