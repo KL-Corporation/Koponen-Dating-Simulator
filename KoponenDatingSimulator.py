@@ -29,7 +29,7 @@ import json
 import zipfile
 import datetime
 from pygame.locals import *
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -3520,7 +3520,7 @@ while main_running:
         koponen_animations.trigger("idle")
 #endregion
 #region Koponen Tip
-    if koponen_rect.colliderect(Player.rect):
+    if koponen_rect.colliderect(Player.rect) and KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         screen.blit(
             koponen_talk_tip, (koponen_rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, koponen_rect.top - scroll[1] - 20))
         koponen_movement[0] = 0
