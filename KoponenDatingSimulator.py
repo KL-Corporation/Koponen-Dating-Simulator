@@ -400,6 +400,7 @@ class WorldData():
     LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
     TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
     Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+    Level Background File: {os.path.isfile(os.path.join(MapPath, "background.png"))}
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
