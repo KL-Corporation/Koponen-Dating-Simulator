@@ -93,7 +93,13 @@
         "091": "grass1.png",
         "092": "bed.png",
         "093": "ground_fire_0.png",
-        "094": "lamp0_chain.png"
+        "094": "lamp0_chain.png",
+        "095": "sand.png",
+        "096": "dead_tree.png",
+        "097": "sandwall.png",
+        "098": "barricade.png",
+        "099": "old_car.png",
+        "100": "old_vase.png"
     },
     
     "tile_sounds" : {
@@ -147,13 +153,18 @@
         86,
         88,
         89,
-        92
+        92,
+        96,
+        99
     ],
     "trueScale": [
         86,
         88,
         89,
-        92
+        92,
+        96,
+        99,
+        100
     ],
     "item_textures": {
         "000": "empty.png",

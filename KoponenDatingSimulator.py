@@ -337,6 +337,8 @@ renderUI = True
 walk_sound_delay = 0
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
+level_background = False
+level_background_img = None
 lightsUpdating = 0
 
 Items = numpy.array([])
@@ -419,6 +421,11 @@ class WorldData():
         tileprops: Dict[str, Any] = {}
         if os.path.isfile(os.path.join(MapPath, "tileprops.kdf")):
             tileprops = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "tileprops.kdf"), KDS.ConfigManager.JSON.NULLPATH, {})
+        global level_background, level_background_img
+        if os.path.isfile(os.path.join(MapPath, "background.png")):
+            level_background = True
+            level_background_img = pygame.image.load( os.path.join(MapPath, "background.png")).convert()
+        else: level_background = False
         
         for fname in os.listdir(PersistentMapPath):
             fpath = os.path.join(PersistentMapPath, fname)
@@ -3358,7 +3365,6 @@ while main_running:
 #region Data
 
     display.fill((20, 25, 20))
-    screen.fill((20, 25, 20))
 
     Lights.clear()
 
@@ -3366,6 +3372,8 @@ while main_running:
     true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]
+    if level_background: screen.blit(level_background_img, (scroll[0] * 0.2 * -1, scroll[1] *0.2 * -1))
+    else: screen.fill((20, 25, 20))
     mouse_pos = pygame.mouse.get_pos()
 #endregion
 #region Rendering
