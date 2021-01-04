@@ -80,7 +80,8 @@ e_textures = {
     "2004": pygame.image.load("Assets/Textures/Animations/turbo_shotgunner_walking_0.png").convert(),
     "2005": pygame.image.load("Assets/Textures/Animations/mafiaman_walking_0.png").convert(),
     "2006": pygame.image.load("Assets/Textures/Animations/methmaker_idle_0.png").convert(),
-    "2007": pygame.image.load("Assets/Textures/Animations/undead_monster_walking_0.png").convert()
+    "2007": pygame.image.load("Assets/Textures/Animations/undead_monster_walking_0.png").convert(),
+    "2008": pygame.image.load("Assets/Textures/Animations/mummy_walking_0.png").convert()
 }
 
 teleports = {

@@ -603,6 +603,37 @@ class CaveMonster(HostileEnemy):
         items = []
         return items
 
+class Mummy(HostileEnemy):
+    soundboard_hits = (pygame.mixer.Sound("Assets/Audio/Entities/hit0.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/hit1.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/hit2.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/hit3.ogg"))
+
+    def __init__(self, pos):
+        health = 200
+        w_anim = KDS.Animator.Animation("mummy_walking", 8, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("mummy_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("mummy_attack", 3, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("mummy_dying", 10, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0]-17, pos[1]-38, 51, 72)
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[1, 8], attackPropability=50)
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
+        dist = 1200 - dist
+        dist /= 1200
+        KDS.Audio.playSound(random.choice(Mummy.soundboard_hits))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+
+    def onDeath(self):
+        items = []
+        return items
+
+    def P_update(self, *args, **kwargs):
+        pass
+
 class Projectile:
     pass
 
