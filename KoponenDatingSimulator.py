@@ -475,10 +475,9 @@ class WorldData():
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
                 if datapoint != "/":
-                    data = list(datapoint)
-                    if len(data) > 1 and int(datapoint) != 0:
-                        serialNumber = int(data[1] + data[2] + data[3])
-                        pointer = int(data[0])
+                    if len(datapoint) == 4 and int(datapoint) != 0:
+                        serialNumber = int(datapoint[1:])
+                        pointer = int(datapoint[0])
                         if pointer == 0:
                             if serialNumber not in specialTilesSerialNumbers:
                                 tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)

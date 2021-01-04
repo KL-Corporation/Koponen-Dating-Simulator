@@ -1,5 +1,8 @@
+from __future__ import annotations
+#region Import Error
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
+#endregion
 
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -8,7 +11,6 @@ from typing import List, Tuple
 import sys
 import pygame
 from pygame.locals import *
-import threading
 import KDS.Colors
 import KDS.Convert
 import KDS.ConfigManager
@@ -158,6 +160,9 @@ class tileInfo:
         self.pos = position
         self.serialNumber = serialNumber
 
+    def __eq__(self, o: tileInfo) -> bool:
+        return self.serialNumber == o.serialNumber
+
     def setSerial(self, srlNumber: str):
         serialIdentifier = int(srlNumber[1])
         serialIdentifier *= 4
@@ -179,7 +184,7 @@ class tileInfo:
         if self.serialNumber != oldSerial:
             gridChanges += 1
             Undo.register(self, oldSerial)
-        
+
     def getSerial(self, slot: int):
         slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
@@ -190,15 +195,19 @@ class tileInfo:
     def addSerial(self, srlNumber):
         oldSerial = self.serialNumber
         srlist = self.getSerials()
+        hasTile = False
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist:
-                    self.setSerialToSlot(srlNumber, index)
-                    global gridChanges
-                    gridChanges += 1
-                    Undo.register(self, oldSerial)
+                    if not hasTile:
+                        self.setSerialToSlot(srlNumber, index)
+                        global gridChanges
+                        gridChanges += 1
+                        Undo.register(self, oldSerial)
+                    else: print(f"Tile already in {self.pos}!")
                 else: print(f"Serial {srlNumber} already in {self.pos}!")
                 return
+            elif int(number[0]) == 0: hasTile = True
         print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
         
     def removeSerial(self):
@@ -532,14 +541,14 @@ def materialMenu(previousMaterial):
             self.rect = rect
             self.serialNumber = serialNumber
 
-    selectorRects = []
+    selectorRects: List[selectorRect] = []
 
     y = 0
     x = 0
     for collection in Atextures:
         for item in Atextures[collection]:
-            selectorRects.append(selectorRect(pygame.Rect(x*100+100, y*90+40, blocksize, blocksize), item))
-            x+=1
+            selectorRects.append(selectorRect(pygame.Rect(x*100 + 100, y*90 + 40, blocksize, blocksize), item))
+            x += 1
             if x > 6:
                 x = 0
                 y += 1
@@ -556,7 +565,9 @@ def materialMenu(previousMaterial):
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
                 else: rscroll = min(rscroll + 1, sys.maxsize)
-                
+        
+        tip_renders = []
+        
         mpos = pygame.mouse.get_pos()
         main_display.fill((20,20,20))
         for selection in selectorRects:
@@ -564,8 +575,23 @@ def materialMenu(previousMaterial):
             main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
             if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
                 pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
+                tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.AviatorRed))
                 if mouse_pressed[0]:
                     return selection.serialNumber
+        
+        if len(tip_renders) > 0:
+            totHeight = 0
+            maxWidth = 0
+            for tip in tip_renders:
+                totHeight += tip.get_height() + 8
+                maxWidth = max(maxWidth, tip.get_width())
+            totHeight -= 8
+            pygame.draw.rect(main_display, KDS.Colors.Gray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, maxWidth + 5, totHeight + 5))
+            cumHeight = 0
+            for tip in tip_renders:
+                pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
+                main_display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
+                cumHeight += tip.get_height() + 8
         pygame.display.flip()
 
 def generateLevelProp():
@@ -736,7 +762,7 @@ def main():
             inputConsole_output = None
 
         main_display.fill((30,20,60))
-            
+
         grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
 
         if gridChanges > 0:
