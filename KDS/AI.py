@@ -645,7 +645,7 @@ class Mummy(HostileEnemy):
         return items
 
     def P_update(self, *args):
-        if not self.sleep:
+        if not self.sleep and self.health > 0:
             s = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
             s1 = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]        
             if s or s1:
