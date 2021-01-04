@@ -395,12 +395,12 @@ class WorldData():
         if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
-    Map Directory: {os.path.isdir(MapPath)}
-    Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
-    LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
+    Map Directory:             {os.path.isdir(MapPath)}
+    Level File:                {os.path.isfile(os.path.join(MapPath, "level.dat"))}
+    LevelProp File:            {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
     TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
-    Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
-    Level Background File: {os.path.isfile(os.path.join(MapPath, "background.png"))}
+    Level Music File:          {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+    Level Background File:     {os.path.isfile(os.path.join(MapPath, "background.png"))}
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
