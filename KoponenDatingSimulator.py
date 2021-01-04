@@ -483,7 +483,7 @@ class WorldData():
                                 tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
                             else:
                                 tiles[y][x] = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                            identifier = f"{x}-{y}-{int(tiles[y][x].serialNumber):03d}"
+                            identifier = f"{x}-{y}"
                             if identifier in tileprops:
                                 for k, v in tileprops[identifier].items():
                                     setattr(tiles[y][x], k, v)
