@@ -250,8 +250,10 @@ class HostileEnemy:
         self.playSightSound = True
         self.attackF = False
         self.attackRunning = False
+        self.manualAttackHandling = False
         self.movement = mv
         self.clearlagcounter = 0
+        self.c = None
 
     def onDeath(self):
         return []
@@ -262,15 +264,20 @@ class HostileEnemy:
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
         enemyProjectiles = None
         dropItems = []
+
         if self.health:
             s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)[0]
         else:
             s = False
         if s:
             self.sleep = False
+
+        if hasattr(self, "P_update"):
+            self.P_update(tiles, targetRect, debug, scroll, Surface)
+
         if self.health > 0 and not self.sleep:
             if s:
-                if not self.attackRunning:
+                if not self.attackRunning and not self.manualAttackHandling:
                     if not random.randint(0, self.a_propability):
                         self.attackRunning = True
             if self.attackRunning:
@@ -286,8 +293,8 @@ class HostileEnemy:
                 if self.playSightSound:
                     KDS.Audio.playSound(self.sight_sound)
                     self.playSightSound = False
-                self.rect, c = move(self.rect, self.movement, tiles)
-                if c["right"] or c["left"]:
+                self.rect, self.c = move(self.rect, self.movement, tiles)
+                if self.c["right"] or self.c["left"]:
                     self.movement[0] = -self.movement[0]
                     self.direction = not self.direction
                 self.animation.trigger("walk")
@@ -608,31 +615,50 @@ class Mummy(HostileEnemy):
                         pygame.mixer.Sound("Assets/Audio/Entities/hit1.ogg"),
                         pygame.mixer.Sound("Assets/Audio/Entities/hit2.ogg"),
                         pygame.mixer.Sound("Assets/Audio/Entities/hit3.ogg"))
+    
+    soundboard_scream = (pygame.mixer.Sound("Assets/Audio/Entities/monster_scream.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl2.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl3.ogg")
+                        )
+
+    sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
 
     def __init__(self, pos):
         health = 200
         w_anim = KDS.Animator.Animation("mummy_walking", 8, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mummy_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("mummy_attack", 3, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        a_anim = KDS.Animator.Animation("mummy_attack", 3, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         d_anim = KDS.Animator.Animation("mummy_dying", 10, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0]-17, pos[1]-38, 51, 72)
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[1, 8], attackPropability=50)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(Mummy.soundboard_scream), death_sound=Mummy.sound_death, health=health, mv=[1, 8], attackPropability=50)
+
+        self.manualAttackHandling = True
 
     def attack(self, slope, env_obstacles, target, *args):
-        dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = KDS.Math.Clamp(dist, 0, 1200)
-        dist = 1200 - dist
-        dist /= 1200
         KDS.Audio.playSound(random.choice(Mummy.soundboard_hits))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
         return items
 
-    def P_update(self, *args, **kwargs):
-        pass
+    def P_update(self, *args):
+        if not self.sleep:
+            s = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
+            s1 = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]        
+            if s or s1:
+                if self.rect.centerx < args[1].centerx: self.movement[0] = abs(self.movement[0]); self.direction = False
+                elif self.rect.centerx > args[1].centerx: self.movement[0] = abs(self.movement[0]) * -1; self.direction = True
+            if self.c != None:
+                if self.c["left"] or self.c["right"]:
+                    self.rect.y -= 35
+            dist = KDS.Math.getDistance(self.rect.center, args[1].center)
+            if dist < 40 and not self.attackRunning:
+                self.attackRunning = True
+            if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.playSound(random.choice(Mummy.soundboard_scream[1:]))
+                
 
 class Projectile:
     pass
