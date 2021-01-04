@@ -16,10 +16,8 @@ import KDS.System
 import KDS.Math
 import KDS.UI
 import KDS.Console
-import numpy
 import tkinter 
 from tkinter import filedialog
-import re
 import json
 
 root = tkinter.Tk()
