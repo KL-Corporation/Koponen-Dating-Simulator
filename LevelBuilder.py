@@ -236,7 +236,7 @@ class tileInfo:
             Undo.register(self, oldSerial)
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh: str = "0000", updttiles: bool = True):
+    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
         global gridChanges
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
@@ -250,6 +250,7 @@ class tileInfo:
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
         for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
+            row: List[tileInfo]
             for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 srlist = unit.getSerials()
