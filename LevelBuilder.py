@@ -450,7 +450,7 @@ def saveMap(grd, name: str):
         f.write(outputString)
     with open(os.path.join(name[:name.rfind("/")], "tileprops.kdf"), "w") as f:
         global tileprops
-        f.write(json.dumps(tileprops))
+        f.write(json.dumps(tileprops, indent=4))
     global gridBeforeSave, gridChanges
     gridChanges = 0
     gridBeforeSave = grd.copy()

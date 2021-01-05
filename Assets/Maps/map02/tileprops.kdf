@@ -1,0 +1,923 @@
+{
+    "126-55": {
+        "checkCollision": true
+    },
+    "125-55": {
+        "checkCollision": true
+    },
+    "124-55": {
+        "checkCollision": true
+    },
+    "123-55": {
+        "checkCollision": true
+    },
+    "123-54": {
+        "checkCollision": true
+    },
+    "124-54": {
+        "checkCollision": true
+    },
+    "125-54": {
+        "checkCollision": true
+    },
+    "126-54": {
+        "checkCollision": true
+    },
+    "109-55": {
+        "checkCollision": true
+    },
+    "101-57": {
+        "checkCollision": true
+    },
+    "101-58": {
+        "checkCollision": true
+    },
+    "102-58": {
+        "checkCollision": true
+    },
+    "102-57": {
+        "checkCollision": true
+    },
+    "100-58": {
+        "checkCollision": true
+    },
+    "100-57": {
+        "checkCollision": true
+    },
+    "101-59": {
+        "checkCollision": true
+    },
+    "103-57": {
+        "checkCollision": true
+    },
+    "103-58": {
+        "checkCollision": true
+    },
+    "93-44": {
+        "checkCollision": false
+    },
+    "94-44": {
+        "checkCollision": false
+    },
+    "95-44": {
+        "checkCollision": false
+    },
+    "98-39": {
+        "checkCollision": false
+    },
+    "130-31": {
+        "checkCollision": false
+    },
+    "177-36": {
+        "checkCollision": false
+    },
+    "177-37": {
+        "checkCollision": false
+    },
+    "178-37": {
+        "checkCollision": false
+    },
+    "178-36": {
+        "checkCollision": false
+    },
+    "178-35": {
+        "checkCollision": false
+    },
+    "178-34": {
+        "checkCollision": false
+    },
+    "177-34": {
+        "checkCollision": false
+    },
+    "177-33": {
+        "checkCollision": false
+    },
+    "176-33": {
+        "checkCollision": false
+    },
+    "176-34": {
+        "checkCollision": false
+    },
+    "177-35": {
+        "checkCollision": false
+    },
+    "176-35": {
+        "checkCollision": false
+    },
+    "176-36": {
+        "checkCollision": false
+    },
+    "175-35": {
+        "checkCollision": false
+    },
+    "175-34": {
+        "checkCollision": false
+    },
+    "175-36": {
+        "checkCollision": false
+    },
+    "175-37": {
+        "checkCollision": false
+    },
+    "176-37": {
+        "checkCollision": false
+    },
+    "134-50": {
+        "checkCollision": false
+    },
+    "134-51": {
+        "checkCollision": false
+    },
+    "134-52": {
+        "checkCollision": false
+    },
+    "134-53": {
+        "checkCollision": false
+    },
+    "134-54": {
+        "checkCollision": false
+    },
+    "134-55": {
+        "checkCollision": false
+    },
+    "138-51": {
+        "checkCollision": false
+    },
+    "138-52": {
+        "checkCollision": false
+    },
+    "138-53": {
+        "checkCollision": false
+    },
+    "138-54": {
+        "checkCollision": true
+    },
+    "138-55": {
+        "checkCollision": true
+    },
+    "142-51": {
+        "checkCollision": false
+    },
+    "142-52": {
+        "checkCollision": false
+    },
+    "142-53": {
+        "checkCollision": false
+    },
+    "142-54": {
+        "checkCollision": false
+    },
+    "142-55": {
+        "checkCollision": false
+    },
+    "146-50": {
+        "checkCollision": false
+    },
+    "146-51": {
+        "checkCollision": false
+    },
+    "146-52": {
+        "checkCollision": false
+    },
+    "146-53": {
+        "checkCollision": false
+    },
+    "146-54": {
+        "checkCollision": false
+    },
+    "146-55": {
+        "checkCollision": false
+    },
+    "150-48": {
+        "checkCollision": false
+    },
+    "150-49": {
+        "checkCollision": false
+    },
+    "150-50": {
+        "checkCollision": false
+    },
+    "150-51": {
+        "checkCollision": false
+    },
+    "150-52": {
+        "checkCollision": false
+    },
+    "150-53": {
+        "checkCollision": false
+    },
+    "150-54": {
+        "checkCollision": false
+    },
+    "150-55": {
+        "checkCollision": false
+    },
+    "170-51": {
+        "checkCollision": false
+    },
+    "171-51": {
+        "checkCollision": false
+    },
+    "172-51": {
+        "checkCollision": false
+    },
+    "173-51": {
+        "checkCollision": false
+    },
+    "174-51": {
+        "checkCollision": false
+    },
+    "175-51": {
+        "checkCollision": false
+    },
+    "176-51": {
+        "checkCollision": false
+    },
+    "176-52": {
+        "checkCollision": true
+    },
+    "177-52": {
+        "checkCollision": false
+    },
+    "178-52": {
+        "checkCollision": false
+    },
+    "179-52": {
+        "checkCollision": true
+    },
+    "180-52": {
+        "checkCollision": true
+    },
+    "181-52": {
+        "checkCollision": false
+    },
+    "182-52": {
+        "checkCollision": true
+    },
+    "183-52": {
+        "checkCollision": true
+    },
+    "184-51": {
+        "checkCollision": false
+    },
+    "185-51": {
+        "checkCollision": false
+    },
+    "186-51": {
+        "checkCollision": false
+    },
+    "187-51": {
+        "checkCollision": false
+    },
+    "183-51": {
+        "checkCollision": false
+    },
+    "182-51": {
+        "checkCollision": false
+    },
+    "181-51": {
+        "checkCollision": false
+    },
+    "180-51": {
+        "checkCollision": false
+    },
+    "179-51": {
+        "checkCollision": false
+    },
+    "178-51": {
+        "checkCollision": false
+    },
+    "177-51": {
+        "checkCollision": false
+    },
+    "174-52": {
+        "checkCollision": false
+    },
+    "173-52": {
+        "checkCollision": true
+    },
+    "172-52": {
+        "checkCollision": false
+    },
+    "171-52": {
+        "checkCollision": false
+    },
+    "175-52": {
+        "checkCollision": true
+    },
+    "178-53": {
+        "checkCollision": false
+    },
+    "177-53": {
+        "checkCollision": false
+    },
+    "176-53": {
+        "checkCollision": true
+    },
+    "175-53": {
+        "checkCollision": true
+    },
+    "174-53": {
+        "checkCollision": true
+    },
+    "173-53": {
+        "checkCollision": true
+    },
+    "172-53": {
+        "checkCollision": false
+    },
+    "171-53": {
+        "checkCollision": false
+    },
+    "174-54": {
+        "checkCollision": true
+    },
+    "175-54": {
+        "checkCollision": true
+    },
+    "176-54": {
+        "checkCollision": true
+    },
+    "177-54": {
+        "checkCollision": false
+    },
+    "178-54": {
+        "checkCollision": true
+    },
+    "179-54": {
+        "checkCollision": true
+    },
+    "180-54": {
+        "checkCollision": true
+    },
+    "173-54": {
+        "checkCollision": true
+    },
+    "176-55": {
+        "checkCollision": true
+    },
+    "177-55": {
+        "checkCollision": false
+    },
+    "178-55": {
+        "checkCollision": true
+    },
+    "179-55": {
+        "checkCollision": true
+    },
+    "180-55": {
+        "checkCollision": true
+    },
+    "181-55": {
+        "checkCollision": true
+    },
+    "175-55": {
+        "checkCollision": true
+    },
+    "174-55": {
+        "checkCollision": true
+    },
+    "173-55": {
+        "checkCollision": true
+    },
+    "172-55": {
+        "checkCollision": false
+    },
+    "171-55": {
+        "checkCollision": true
+    },
+    "170-55": {
+        "checkCollision": true
+    },
+    "171-54": {
+        "checkCollision": true
+    },
+    "172-54": {
+        "checkCollision": false
+    },
+    "182-54": {
+        "checkCollision": true
+    },
+    "183-54": {
+        "checkCollision": true
+    },
+    "185-54": {
+        "checkCollision": false
+    },
+    "186-54": {
+        "checkCollision": true
+    },
+    "187-54": {
+        "checkCollision": true
+    },
+    "188-54": {
+        "checkCollision": true
+    },
+    "189-53": {
+        "checkCollision": true
+    },
+    "188-53": {
+        "checkCollision": true
+    },
+    "186-53": {
+        "checkCollision": false
+    },
+    "185-53": {
+        "checkCollision": false
+    },
+    "182-53": {
+        "checkCollision": true
+    },
+    "180-53": {
+        "checkCollision": true
+    },
+    "179-53": {
+        "checkCollision": true
+    },
+    "181-53": {
+        "checkCollision": true
+    },
+    "183-53": {
+        "checkCollision": true
+    },
+    "184-53": {
+        "checkCollision": false
+    },
+    "187-52": {
+        "checkCollision": true
+    },
+    "188-52": {
+        "checkCollision": true
+    },
+    "187-53": {
+        "checkCollision": true
+    },
+    "185-52": {
+        "checkCollision": false
+    },
+    "186-52": {
+        "checkCollision": false
+    },
+    "189-52": {
+        "checkCollision": false
+    },
+    "190-52": {
+        "checkCollision": true
+    },
+    "188-51": {
+        "checkCollision": false
+    },
+    "189-51": {
+        "checkCollision": false
+    },
+    "190-51": {
+        "checkCollision": false
+    },
+    "191-51": {
+        "checkCollision": false
+    },
+    "192-51": {
+        "checkCollision": false
+    },
+    "193-51": {
+        "checkCollision": false
+    },
+    "193-52": {
+        "checkCollision": false
+    },
+    "192-53": {
+        "checkCollision": false
+    },
+    "191-54": {
+        "checkCollision": true
+    },
+    "190-54": {
+        "checkCollision": true
+    },
+    "190-55": {
+        "checkCollision": true
+    },
+    "189-55": {
+        "checkCollision": true
+    },
+    "188-55": {
+        "checkCollision": true
+    },
+    "187-55": {
+        "checkCollision": true
+    },
+    "186-55": {
+        "checkCollision": true
+    },
+    "185-55": {
+        "checkCollision": false
+    },
+    "184-55": {
+        "checkCollision": true
+    },
+    "183-55": {
+        "checkCollision": true
+    },
+    "181-54": {
+        "checkCollision": true
+    },
+    "184-54": {
+        "checkCollision": true
+    },
+    "182-55": {
+        "checkCollision": true
+    },
+    "184-52": {
+        "checkCollision": false
+    },
+    "191-53": {
+        "checkCollision": false
+    },
+    "193-53": {
+        "checkCollision": false
+    },
+    "192-52": {
+        "checkCollision": false
+    },
+    "191-52": {
+        "checkCollision": false
+    },
+    "190-53": {
+        "checkCollision": true
+    },
+    "189-54": {
+        "checkCollision": true
+    },
+    "192-54": {
+        "checkCollision": false
+    },
+    "192-55": {
+        "checkCollision": false
+    },
+    "191-55": {
+        "checkCollision": true
+    },
+    "193-55": {
+        "checkCollision": true
+    },
+    "194-55": {
+        "checkCollision": true
+    },
+    "195-55": {
+        "checkCollision": true
+    },
+    "195-54": {
+        "checkCollision": true
+    },
+    "194-53": {
+        "checkCollision": true
+    },
+    "194-52": {
+        "checkCollision": true
+    },
+    "194-54": {
+        "checkCollision": true
+    },
+    "194-51": {
+        "checkCollision": false
+    },
+    "195-51": {
+        "checkCollision": false
+    },
+    "195-53": {
+        "checkCollision": true
+    },
+    "195-52": {
+        "checkCollision": false
+    },
+    "193-54": {
+        "checkCollision": true
+    },
+    "198-54": {
+        "checkCollision": false
+    },
+    "198-53": {
+        "checkCollision": false
+    },
+    "198-52": {
+        "checkCollision": false
+    },
+    "198-51": {
+        "checkCollision": false
+    },
+    "199-51": {
+        "checkCollision": false
+    },
+    "199-52": {
+        "checkCollision": false
+    },
+    "199-53": {
+        "checkCollision": false
+    },
+    "197-53": {
+        "checkCollision": false
+    },
+    "197-52": {
+        "checkCollision": false
+    },
+    "197-51": {
+        "checkCollision": false
+    },
+    "198-55": {
+        "checkCollision": false
+    },
+    "196-51": {
+        "checkCollision": false
+    },
+    "169-51": {
+        "checkCollision": false
+    },
+    "168-51": {
+        "checkCollision": false
+    },
+    "168-50": {
+        "checkCollision": false
+    },
+    "168-49": {
+        "checkCollision": false
+    },
+    "211-56": {
+        "checkCollision": false
+    },
+    "210-56": {
+        "checkCollision": false
+    },
+    "209-56": {
+        "checkCollision": false
+    },
+    "209-55": {
+        "checkCollision": false
+    },
+    "210-55": {
+        "checkCollision": false
+    },
+    "209-54": {
+        "checkCollision": false
+    },
+    "209-53": {
+        "checkCollision": false
+    },
+    "208-53": {
+        "checkCollision": false
+    },
+    "208-52": {
+        "checkCollision": false
+    },
+    "208-51": {
+        "checkCollision": false
+    },
+    "208-50": {
+        "checkCollision": false
+    },
+    "207-50": {
+        "checkCollision": false
+    },
+    "206-50": {
+        "checkCollision": false
+    },
+    "206-49": {
+        "checkCollision": false
+    },
+    "206-51": {
+        "checkCollision": false
+    },
+    "207-51": {
+        "checkCollision": false
+    },
+    "207-52": {
+        "checkCollision": false
+    },
+    "224-51": {
+        "checkCollision": false
+    },
+    "223-51": {
+        "checkCollision": false
+    },
+    "223-50": {
+        "checkCollision": false
+    },
+    "222-50": {
+        "checkCollision": false
+    },
+    "221-50": {
+        "checkCollision": false
+    },
+    "220-50": {
+        "checkCollision": false
+    },
+    "219-50": {
+        "checkCollision": false
+    },
+    "219-49": {
+        "checkCollision": false
+    },
+    "218-49": {
+        "checkCollision": false
+    },
+    "217-49": {
+        "checkCollision": false
+    },
+    "216-49": {
+        "checkCollision": false
+    },
+    "215-49": {
+        "checkCollision": false
+    },
+    "215-48": {
+        "checkCollision": false
+    },
+    "214-48": {
+        "checkCollision": false
+    },
+    "213-48": {
+        "checkCollision": false
+    },
+    "212-48": {
+        "checkCollision": false
+    },
+    "212-47": {
+        "checkCollision": false
+    },
+    "211-47": {
+        "checkCollision": false
+    },
+    "210-47": {
+        "checkCollision": false
+    },
+    "209-47": {
+        "checkCollision": false
+    },
+    "208-47": {
+        "checkCollision": false
+    },
+    "208-46": {
+        "checkCollision": false
+    },
+    "208-43": {
+        "checkCollision": false
+    },
+    "209-43": {
+        "checkCollision": false
+    },
+    "210-43": {
+        "checkCollision": false
+    },
+    "211-43": {
+        "checkCollision": false
+    },
+    "212-43": {
+        "checkCollision": false
+    },
+    "213-43": {
+        "checkCollision": false
+    },
+    "214-43": {
+        "checkCollision": false
+    },
+    "215-43": {
+        "checkCollision": false
+    },
+    "215-44": {
+        "checkCollision": false
+    },
+    "216-44": {
+        "checkCollision": false
+    },
+    "217-44": {
+        "checkCollision": false
+    },
+    "218-44": {
+        "checkCollision": false
+    },
+    "219-44": {
+        "checkCollision": false
+    },
+    "220-44": {
+        "checkCollision": false
+    },
+    "221-44": {
+        "checkCollision": false
+    },
+    "222-44": {
+        "checkCollision": false
+    },
+    "222-45": {
+        "checkCollision": false
+    },
+    "223-45": {
+        "checkCollision": false
+    },
+    "224-45": {
+        "checkCollision": false
+    },
+    "225-45": {
+        "checkCollision": false
+    },
+    "226-45": {
+        "checkCollision": false
+    },
+    "227-45": {
+        "checkCollision": false
+    },
+    "228-45": {
+        "checkCollision": false
+    },
+    "229-45": {
+        "checkCollision": false
+    },
+    "229-46": {
+        "checkCollision": false
+    },
+    "230-46": {
+        "checkCollision": false
+    },
+    "231-46": {
+        "checkCollision": false
+    },
+    "232-46": {
+        "checkCollision": false
+    },
+    "233-46": {
+        "checkCollision": false
+    },
+    "234-46": {
+        "checkCollision": false
+    },
+    "235-46": {
+        "checkCollision": false
+    },
+    "236-46": {
+        "checkCollision": false
+    },
+    "203-55": {
+        "checkCollision": true
+    },
+    "191-50": {
+        "checkCollision": false
+    },
+    "192-50": {
+        "checkCollision": false
+    },
+    "193-50": {
+        "checkCollision": false
+    },
+    "193-49": {
+        "checkCollision": false
+    },
+    "193-48": {
+        "checkCollision": false
+    },
+    "192-48": {
+        "checkCollision": false
+    },
+    "191-48": {
+        "checkCollision": false
+    },
+    "191-49": {
+        "checkCollision": false
+    },
+    "192-49": {
+        "checkCollision": false
+    },
+    "192-47": {
+        "checkCollision": false
+    },
+    "191-47": {
+        "checkCollision": false
+    },
+    "193-47": {
+        "checkCollision": false
+    },
+    "193-46": {
+        "checkCollision": false
+    },
+    "192-46": {
+        "checkCollision": false
+    },
+    "191-46": {
+        "checkCollision": false
+    },
+    "190-46": {
+        "checkCollision": false
+    },
+    "191-45": {
+        "checkCollision": false
+    },
+    "192-45": {
+        "checkCollision": false
+    },
+    "193-45": {
+        "checkCollision": false
+    },
+    "9-7": {
+        "checkCollision": true
+    },
+    "9-6": {
+        "checkCollision": true
+    }
+}
