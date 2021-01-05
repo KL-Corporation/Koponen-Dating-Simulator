@@ -196,11 +196,10 @@ class tileInfo:
     def addSerial(self, srlNumber):
         oldSerial = self.serialNumber
         srlist = self.getSerials()
-        hasTile = False
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist:
-                    if not hasTile:
+                    if srlNumber not in t_textures or not self.hasTile():
                         self.setSerialToSlot(srlNumber, index)
                         global gridChanges
                         gridChanges += 1
@@ -208,7 +207,6 @@ class tileInfo:
                     else: print(f"Tile already in {self.pos}!")
                 else: print(f"Serial {srlNumber} already in {self.pos}!")
                 return
-            elif int(number[0]) == 0: hasTile = True
         print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
         
     def removeSerial(self):
@@ -221,6 +219,13 @@ class tileInfo:
                 gridChanges += 1
                 Undo.register(self, oldSerial)
                 return
+
+    def hasTile(self):
+        split: List[str] = self.serialNumber.split(" ")
+        for s in split:
+            if len(s) > 0 and s[0] == "0" and s != "0000":
+                return True
+        return False
 
     def resetSerial(self):
         oldSerial = self.serialNumber
@@ -297,10 +302,11 @@ class tileInfo:
                             if not keys_pressed[K_LSHIFT]:
                                 if not keys_pressed[K_c]:
                                     unit.setSerial(brsh)
-                                elif not keys_pressed[K_LALT]:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
-                                else:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
+                                elif unit.hasTile():
+                                    if not keys_pressed[K_LALT]:
+                                        tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
+                                    else:
+                                        tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
                             if not keys_pressed[K_LSHIFT]: unit.resetSerial()
@@ -308,7 +314,8 @@ class tileInfo:
                     elif mouse_pressed[2]:
                         if not keys_pressed[K_LSHIFT]:
                             unit.resetSerial()
-                            del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
+                            if f"{unit.pos[0]}-{unit.pos[1]}" in tileprops and len(tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]) < 2:
+                                del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
                         elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     tileInfo.placedOnTile = unit
         
@@ -448,9 +455,13 @@ def saveMap(grd, name: str):
         outputString += "\n"
     with open(name, 'w') as f:
         f.write(outputString)
-    with open(os.path.join(name[:name.rfind("/")], "tileprops.kdf"), "w") as f:
-        global tileprops
-        f.write(json.dumps(tileprops))
+    #region Tile Props
+    global tileprops
+    if len(tileprops) > 0:
+        if KDS.System.MessageBox.Show("Unsaved Tileprops!", "You have unsaved tileprops in your project! Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            with open(os.path.join(os.path.dirname(name), "tileprops.kdf"), "w") as f:
+                f.write(json.dumps(tileprops))
+    #endregion
     global gridBeforeSave, gridChanges
     gridChanges = 0
     gridBeforeSave = grd.copy()
@@ -493,7 +504,7 @@ def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
         global gridBeforeSave, grid, tileprops
         grid = temporaryGrid
         gridBeforeSave = grid.copy()
-        fpath = os.path.join(fileName[:fileName.rfind("/")], "tileprops.kdf")
+        fpath = os.path.join(os.path.dirname(fileName), "tileprops.kdf")
         if os.path.isfile(fpath):
             with open(fpath, 'r') as f:
                 tileprops = json.loads(f.read())
@@ -801,3 +812,27 @@ mainRunning = True
 main()
 
 pygame.quit()
+
+#region Keymap
+"""
+    [Normal]
+    P: Set teleport index
+    Middle Mouse: Get Serial
+    Left Mouse: Set Serial
+    Left Mouse + SHIFT: Add Serial
+    Left Mouse + C: No Collision
+    Left Mouse + ALT + C: Force Collision
+    E: Open Material Menu
+    CTRL + Z: Undo
+    CTRL + Y: Redo
+    T: Input Console
+    R: Resize Map
+    CTRL + S: Save Project
+    CTRL + SHIFT + S: Save Project As
+    CTRL + O: Open Project
+    
+    [Material Menu]
+    Escape: Close Material Menu
+    E: Close Material Menu
+""" 
+#endregion
