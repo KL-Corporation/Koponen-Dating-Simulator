@@ -6,7 +6,7 @@ name: KDS Tests
 on: [push]
 
 jobs:
-  lint:
+  KDS Linting:
 
     runs-on: ubuntu-latest
 
