@@ -290,13 +290,15 @@ class tileInfo:
                                 if not keys_pressed[K_c]:
                                     unit.setSerial(brsh)
                                 else:
-                                    pass
+                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
                             if not keys_pressed[K_LSHIFT]: unit.resetSerial()
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     elif mouse_pressed[2]:
-                        if not keys_pressed[K_LSHIFT]: unit.resetSerial()
+                        if not keys_pressed[K_LSHIFT]:
+                            unit.resetSerial()
+                            tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                         elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     tileInfo.placedOnTile = unit
         
@@ -436,6 +438,9 @@ def saveMap(grd, name: str):
         outputString += "\n"
     with open(name, 'w') as f:
         f.write(outputString)
+    with open(os.path.join(name[:name.rfind("/")], "tileprops.kdf"), "w") as f:
+        global tileprops
+        f.write(json.dumps(tileprops))
     global gridBeforeSave, gridChanges
     gridChanges = 0
     gridBeforeSave = grd.copy()
