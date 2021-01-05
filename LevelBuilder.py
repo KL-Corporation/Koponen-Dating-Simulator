@@ -297,9 +297,9 @@ class tileInfo:
                             if not keys_pressed[K_LSHIFT]:
                                 if not keys_pressed[K_c]:
                                     unit.setSerial(brsh)
-                                elif not keys_pressed[K_LCTRL] and keys_pressed[K_c]:
+                                elif not keys_pressed[K_LALT]:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
-                                elif keys_pressed[K_LCTRL] and keys_pressed[K_c]:
+                                else:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
@@ -308,7 +308,7 @@ class tileInfo:
                     elif mouse_pressed[2]:
                         if not keys_pressed[K_LSHIFT]:
                             unit.resetSerial()
-                            tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
+                            del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
                         elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     tileInfo.placedOnTile = unit
         
