@@ -238,6 +238,8 @@ class tileInfo:
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
         bpos = (0, 0)
+        GraySurface = pygame.Surface((scalesize, scalesize)).convert()
+        GraySurface.set_alpha(100)
         
         tip_renders = []
         mpos = pygame.mouse.get_pos()
@@ -268,7 +270,13 @@ class tileInfo:
                                         unit.setSerialToSlot(temp_serial, index)
                                     #keys_pressed[K_p] = False
 
-                        if unitTexture != None: Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
+                        if unitTexture != None:
+                            Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
+                            try:
+                                if not tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]["checkCollision"]:
+                                    Surface.blit(GraySurface, (blitPos[0], blitPos[1]))
+                            except Exception:
+                                pass
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
                     
@@ -289,8 +297,10 @@ class tileInfo:
                             if not keys_pressed[K_LSHIFT]:
                                 if not keys_pressed[K_c]:
                                     unit.setSerial(brsh)
-                                else:
+                                elif not keys_pressed[K_LCTRL] and keys_pressed[K_c]:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
+                                elif keys_pressed[K_LCTRL] and keys_pressed[K_c]:
+                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
                             if not keys_pressed[K_LSHIFT]: unit.resetSerial()
