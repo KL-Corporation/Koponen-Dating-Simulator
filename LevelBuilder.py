@@ -104,6 +104,7 @@ brush = "0000"
 teleportTemp = "001"
 currentSaveName = ''
 grid = [[]]
+tileprops = {}
 gridChanges = 0
 gridSize = (0, 0)
 
@@ -286,7 +287,10 @@ class tileInfo:
                     if mouse_pressed[0] and updttiles:
                         if brsh != "0000":
                             if not keys_pressed[K_LSHIFT]:
-                                unit.setSerial(brsh)
+                                if not keys_pressed[K_c]:
+                                    unit.setSerial(brsh)
+                                else:
+                                    pass
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                         else:
                             if not keys_pressed[K_LSHIFT]: unit.resetSerial()
@@ -443,7 +447,7 @@ def saveMapName():
         saveMap(grid, savePath)
         currentSaveName = savePath
 
-def openMap(): #Returns a 2d array
+def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
     global currentSaveName, gridSize, gridChanges
     fileName = filedialog.askopenfilename(filetypes = (("Data file", "*.dat"), ("All files", "*.*")))
     temporaryGrid = None
@@ -471,9 +475,13 @@ def openMap(): #Returns a 2d array
         currentSaveName = fileName
         gridChanges = 0
     if temporaryGrid != None:
-        global gridBeforeSave, grid
+        global gridBeforeSave, grid, tileprops
         grid = temporaryGrid
         gridBeforeSave = grid.copy()
+        fpath = os.path.join(fileName[:fileName.rfind("/")], "tileprops.kdf")
+        if os.path.isfile(fpath):
+            with open(fpath, 'r') as f:
+                tileprops = json.loads(f.read())
 
 commandTree = {
     "set": {
