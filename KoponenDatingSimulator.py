@@ -29,7 +29,7 @@ import json
 import zipfile
 import datetime
 from pygame.locals import *
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -395,12 +395,13 @@ class WorldData():
         if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
-    Map Directory:             {os.path.isdir(MapPath)}
-    Level File:                {os.path.isfile(os.path.join(MapPath, "level.dat"))}
-    LevelProp File:            {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
-    TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
-    Level Music File:          {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
-    Level Background File:     {os.path.isfile(os.path.join(MapPath, "background.png"))}
+    Map Directory: {os.path.isdir(MapPath)}
+        Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
+        LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
+        Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+        TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
+        Level Background File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
+        Inventory File (optional): {os.path.isfile(os.path.join(MapPath, "inventory.kdf"))}
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
@@ -427,6 +428,21 @@ class WorldData():
             level_background = True
             level_background_img = pygame.image.load( os.path.join(MapPath, "background.png")).convert()
         else: level_background = False
+        if os.path.isfile(os.path.join(MapPath, "inventory.kdf")):
+            data: Dict[str, int] = {}
+            try:
+                with open(os.path.join(MapPath, "inventory.kdf"), "r") as f:
+                    data = json.loads(f.read())
+            except IOError as e:
+                KDS.Logging.AutoError(f"IO Error! Details: {e}")
+            except json.decoder.JSONDecodeError as e:
+                KDS.Logging.AutoError(f"JSON Decode Error! Details: {e}")
+            global Player
+            for k, v in data.items():
+                if k.isnumeric() and 0 <= int(k) < len(Player.inventory.storage) and v in Item.serialNumbers:
+                    Player.inventory.storage[int(k)] = Item.serialNumbers[v]((0, 0), v)
+                else:
+                    KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
         
         for fname in os.listdir(PersistentMapPath):
             fpath = os.path.join(PersistentMapPath, fname)
@@ -654,7 +670,6 @@ class Inventory:
             if self.storage[i] != Inventory.emptySlot:
                 count += 1
         return count
-KDS.ConfigManager.Save.ignoreTypes.append(Inventory)
 #endregion
 
 KDS.Logging.debug("Data Loading Complete.")
@@ -2624,10 +2639,6 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     global level_finished
     level_finished = False
     #endregion
-    
-    ########## iPuhelin ##########
-    if int(current_map) == 1 or (KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and loadEntities):
-        Player.inventory.storage[0] = Item.serialNumbers[6]((0, 0), 6)
 
     pygame.mouse.set_visible(False)
     main_menu_running = False
@@ -2639,52 +2650,9 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     KDS.Loading.Stop()
     return 0
 
-def save_function():
-    KDS.Logging.debug("Saving Game...")
-    KDS.ConfigManager.Save.init(1)
+def play_story(saveIndex: int):
+    save = KDS.ConfigManager.Save(saveIndex)
     
-    global tiles, specialTilesD, Items, Item, Enemies
-    KDS.ConfigManager.Save.SetTiles(tiles, specialTilesD, RespawnAnchor)
-    KDS.ConfigManager.Save.SetItems(Items)
-    KDS.ConfigManager.Save.SetEnemies(Enemies)
-    global Explosions, BallisticObjects
-    KDS.ConfigManager.Save.SetExplosions(Explosions)
-    KDS.ConfigManager.Save.SetBallistic(BallisticObjects)
-    global Player, PlayerClass
-    KDS.ConfigManager.Save.SetClass(Player, "player.kdf", identifier=KDS.ConfigManager.JSON.NULLPATH)
-    #KDS.ConfigManager.Save.SetClass(KDS.Missions.Missions, "missions.kdf")
-    global koponen_rect, true_scroll
-    KDS.ConfigManager.Save.SetData("Koponen/position", koponen_rect.topleft)
-    KDS.ConfigManager.Save.SetData("Game/trueScroll", true_scroll)
-    KDS.ConfigManager.Save.SetData("Game/scroll", scroll)
-
-    KDS.ConfigManager.Save.init(1)
-    KDS.Logging.debug("Game Saved.")
-
-def load_function(saveIndex: int = None):
-    saveIndex = KDS.ConfigManager.Save.SaveIndex if saveIndex == None else saveIndex
-    KDS.Gamemode.SetGamemode(KDS.Gamemode.Modes.Story, 1)
-    newSave = KDS.ConfigManager.Save.init(1)
-    play_function(KDS.Gamemode.gamemode, True, True, newSave)
-    if newSave: return
-    KDS.Logging.debug("Loading Save...")
-
-    global tiles, specialTilesD, Items, Item, Enemies
-    KDS.ConfigManager.Save.GetTiles(tiles, RespawnAnchor)
-    Items = numpy.array(KDS.ConfigManager.Save.GetItems(Item))
-    Enemies = numpy.array(KDS.ConfigManager.Save.GetEnemies())
-    global Explosions, BallisticObjects
-    Explosions = KDS.ConfigManager.Save.GetExplosions()
-    BallisticObjects = KDS.ConfigManager.Save.GetBallistic()
-    global Player, PlayerClass
-    Player = KDS.ConfigManager.Save.GetClass(PlayerClass, "player.kdf", KDS.ConfigManager.JSON.NULLPATH)
-    global koponen_rect, scroll, true_scroll
-    koponen_rect.topleft = KDS.ConfigManager.Save.GetData("Koponen/position", koponen_rect.topleft)
-    true_scroll = KDS.ConfigManager.Save.GetData("Game/trueScroll", true_scroll)
-    scroll = KDS.ConfigManager.Save.GetData("Game/scroll", [round(true_scroll[0]), round(true_scroll[1])])
-    
-    KDS.Logging.debug("Save Loaded.")
-
 def respawn_function():
     global level_finished
     Player.reset(clear_inventory=False)
@@ -2713,13 +2681,11 @@ def esc_menu_f(oldSurf: pygame.Rect):
         esc_menu = False
         go_to_main_menu = True
 
-    resume_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 400, 200, 30), resume, button_font.render("RESUME", True, KDS.Colors.White))
-    save_button_enabled = True
-    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
-        save_button_enabled = False
-    save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 438, 200, 30), save_function, button_font.render("Save", True, KDS.Colors.White), enabled=save_button_enabled)
-    settings_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 475, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
-    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, 513, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
+    aligner = (display_size[0] // 2, display_size[1] // 2 - 200, display_size[1] // 2 + 200)
+    
+    resume_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 160, 200, 30), resume, button_font.render("RESUME", True, KDS.Colors.White))
+    settings_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 120, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
+    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 80, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -2746,12 +2712,11 @@ def esc_menu_f(oldSurf: pygame.Rect):
 
         esc_surface.blit(pygame.transform.scale(
             blurred_background, display_size), (0, 0))
-        pygame.draw.rect(esc_surface, (123, 134, 111), (display_size[0] // 2 - 250, display_size[1] // 2 - 200, 500, 400))
+        pygame.draw.rect(esc_surface, (123, 134, 111), (aligner[0] - 250, aligner[1], 500, 400))
         esc_surface.blit(pygame.transform.scale(
-            text_icon, (250, 139)), (display_size[0] // 2 - 125, display_size[1] // 2 - 175))
+            text_icon, (250, 139)), (aligner[0] - 125, aligner[1] + 50))
 
         resume_button.update(esc_surface, mouse_pos, c)
-        save_button.update(esc_surface, mouse_pos, c)
         settings_button.update(esc_surface, mouse_pos, c)
         main_menu_button.update(esc_surface, mouse_pos, c)
 
@@ -2916,7 +2881,7 @@ def main_menu():
             level_pick.pick(level_pick.direction.left)
 
         @staticmethod
-        def pick(direction: direction):
+        def pick(direction: Union[direction, int]):
             global current_map, max_map
             current_map_int = int(current_map)
             if direction == level_pick.direction.left:
@@ -2967,9 +2932,9 @@ def main_menu():
     story_save_button_0_rect = pygame.Rect(14, 14, 378, 500)
     story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
     story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
-    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, load_function)
-    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, load_function)
-    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, load_function)
+    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, play_story)
+    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, play_story)
+    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, play_story)
     story_new_save = button_font1.render("Start New Save", True, KDS.Colors.White)
     #endregion 
     #region Campaign Menu
@@ -3078,9 +3043,9 @@ def main_menu():
             pygame.draw.rect(
                 display, KDS.Colors.DarkGray, story_save_button_2_rect, 10)
             
-            story_save_button_0.update(display, mouse_pos, c)
-            story_save_button_1.update(display, mouse_pos, c)
-            story_save_button_2.update(display, mouse_pos, c)
+            story_save_button_0.update(display, mouse_pos, c, 0)
+            story_save_button_1.update(display, mouse_pos, c, 1)
+            story_save_button_2.update(display, mouse_pos, c, 2)
             
             #Äh, teen joskus
 
@@ -3618,7 +3583,6 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
-KDS.ConfigManager.Save.quit()
 KDS.Audio.Music.unload()
 KDS.System.emptdir(PersistentPaths.Cache)
 KDS.Logging.quit()

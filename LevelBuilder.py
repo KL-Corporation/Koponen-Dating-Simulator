@@ -258,7 +258,7 @@ class tileInfo:
                     if int(number) != 0:
                         unitTexture = None
                         try: unitTexture = Atextures[number[0]][number]
-                        except: 
+                        except:
                             if number[0] == '3':
                                 unitTexture = Atextures["3"]["3001"]
                             else:
