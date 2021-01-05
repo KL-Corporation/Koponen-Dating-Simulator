@@ -237,14 +237,13 @@ class tileInfo:
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList, brsh: str = "0000", updttiles: bool = True):
+        global gridChanges
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         brushtemp = brsh
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
         bpos = (0, 0)
-        GraySurface = pygame.Surface((scalesize, scalesize)).convert()
-        GraySurface.set_alpha(100)
         
         tip_renders = []
         mpos = pygame.mouse.get_pos()
@@ -277,11 +276,17 @@ class tileInfo:
 
                         if unitTexture != None:
                             Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
-                            try:
-                                if not tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]["checkCollision"]:
-                                    Surface.blit(GraySurface, (blitPos[0], blitPos[1]))
-                            except Exception:
-                                pass
+                            
+                tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
+                if tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
+                    if not tileprops[tilepropsPath]["checkCollision"]:
+                        tilepropsOverlayColor = KDS.Colors.Black
+                    else:
+                        tilepropsOverlayColor = KDS.Colors.White
+                    tilepropsOverlay = pygame.Surface((scalesize, scalesize)).convert()
+                    tilepropsOverlay.fill(tilepropsOverlayColor)
+                    tilepropsOverlay.set_alpha(128)
+                    Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
                     
@@ -299,24 +304,29 @@ class tileInfo:
                     bpos = unit.pos
                     if mouse_pressed[0] and updttiles:
                         if brsh != "0000":
-                            if not keys_pressed[K_LSHIFT]:
-                                if not keys_pressed[K_c]:
+                            if not keys_pressed[K_c]:
+                                if not keys_pressed[K_LSHIFT]:
                                     unit.setSerial(brsh)
-                                elif unit.hasTile():
-                                    if not keys_pressed[K_LALT]:
-                                        tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
-                                    else:
-                                        tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
-                            elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
+                                elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
+                            elif unit.hasTile():
+                                gridChanges += 1
+                                if not keys_pressed[K_LALT]:
+                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
+                                else:
+                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                         else:
                             if not keys_pressed[K_LSHIFT]: unit.resetSerial()
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     elif mouse_pressed[2]:
-                        if not keys_pressed[K_LSHIFT]:
-                            unit.resetSerial()
-                            if f"{unit.pos[0]}-{unit.pos[1]}" in tileprops and len(tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]) < 2:
-                                del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
-                        elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                        if not keys_pressed[K_c]:
+                            if not keys_pressed[K_LSHIFT]:
+                                unit.resetSerial()
+                                if f"{unit.pos[0]}-{unit.pos[1]}" in tileprops and len(tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]) < 2:
+                                    del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
+                            elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                        elif f"{unit.pos[0]}-{unit.pos[1]}" in tileprops and len(tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]) < 2:
+                            gridChanges += 1
+                            del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
                     tileInfo.placedOnTile = unit
         
         if len(tip_renders) > 0:
@@ -457,9 +467,18 @@ def saveMap(grd, name: str):
         f.write(outputString)
     #region Tile Props
     global tileprops
+    tilepropsPath = os.path.join(os.path.dirname(name), "tileprops.kdf")
     if len(tileprops) > 0:
-        if KDS.System.MessageBox.Show("Unsaved Tileprops!", "You have unsaved tileprops in your project! Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
-            with open(os.path.join(os.path.dirname(name), "tileprops.kdf"), "w") as f:
+        if os.path.isfile(tilepropsPath) or KDS.System.MessageBox.Show("No Tileprops!", "Your project does not have a tileprops file even though it is required. Do you want to add one?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            with open(tilepropsPath, "w") as f:
+                f.write(json.dumps(tileprops))
+        else:
+            KDS.System.MessageBox.Show("Tileprops Ignored", "Tileprops generation ignored. You might lose level data.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
+    elif os.path.isfile(tilepropsPath):
+        if KDS.System.MessageBox.Show("Useless Tileprops!", "We have detected a tileprops file in your project, but this file is no longer needed. Do you want to remove it?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            os.remove(tilepropsPath)
+        else:
+            with open(tilepropsPath, "w") as f:
                 f.write(json.dumps(tileprops))
     #endregion
     global gridBeforeSave, gridChanges
@@ -822,6 +841,8 @@ pygame.quit()
     Left Mouse + SHIFT: Add Serial
     Left Mouse + C: No Collision
     Left Mouse + ALT + C: Force Collision
+    Right Mouse + C: Remove Collision Attribute
+    Right Mouse + ALT + C: Remove Collision Attribute
     E: Open Material Menu
     CTRL + Z: Undo
     CTRL + Y: Redo
