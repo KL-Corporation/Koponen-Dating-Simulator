@@ -371,15 +371,18 @@ def InitialiseMissions(index):
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
         if index == 1:
             Presets.Tutorial()
+            InitialiseMission("enter_school", "Mene Kouluun")
+            InitialiseTask("enter_school", "side_door", "Kävele Kouluun Sivuovesta", (Listeners.LevelEnder, 1.0))
+            
         elif index == 2:
             Presets.KoponenIntroduction()
-        
             InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
             InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi")
             InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi")
         
             InitialiseMission("sauna_and_exit", "Suuret Haaveet")
             InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
+            
         elif index == 3:
             InitialiseMission("biology_test", "Biologian Tunti")
             InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")

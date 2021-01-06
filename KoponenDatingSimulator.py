@@ -2639,7 +2639,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
-    KDS.Loading.Stop()
+    if (show_loading): KDS.Loading.Stop()
     return 0
 
 def play_story(saveIndex: int, newSave: bool = True):

@@ -8,14 +8,14 @@
     "Entities": {
         "Koponen": {
             "startPos": [
-                200,
-                200
+                2346,
+                -34
             ]
         },
         "Player": {
             "startPos": [
                 100,
-                100
+                204
             ]
         }
     },
