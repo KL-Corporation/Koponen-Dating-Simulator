@@ -39,7 +39,7 @@ class GameTime:
         
     @staticmethod
     def unpause():
-        GameTime.cumulativePauseTime += time.perf_counter() + GameTime.startTime
+        GameTime.cumulativePauseTime += time.perf_counter() - GameTime.pauseStartTime
         GameTime.pauseStartTime = -1
     
     @staticmethod

@@ -50,6 +50,9 @@ def AutoType(value: str, fallbackValue: Any = None) -> Union[int, float, bool, A
         return r
     return fallbackValue
 
+def AutoType2(value: str):
+    return AutoType(value, value)
+
 def ToGrayscale(image: pygame.Surface):
     """Converts an image to grayscale.
 

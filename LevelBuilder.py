@@ -292,7 +292,7 @@ class tileInfo:
                         setPropKey: str = KDS.Console.Start("Enter Property Key:")
                         if len(setPropKey) > 0:
                             tmp = KDS.Console.Start("Enter Property Value:")
-                            setPropVal = KDS.Convert.AutoType(tmp, tmp)
+                            setPropVal = KDS.Convert.AutoType(tmp)
                             if setPropVal != None:
                                 if tilepropsPath not in tileprops:
                                     tileprops[tilepropsPath] = {}
