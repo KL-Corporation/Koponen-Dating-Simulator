@@ -100,7 +100,8 @@
         "098": "barricade.png",
         "099": "old_car.png",
         "100": "old_vase.png",
-        "101": "tent.png"
+        "101": "tent.png",
+        "102": "glass_pane.png"
     },
     
     "tile_sounds" : {
@@ -141,7 +142,8 @@
         85,
         87,
         93,
-        94
+        94,
+        102
     ],
     "noCollision": [
         10,

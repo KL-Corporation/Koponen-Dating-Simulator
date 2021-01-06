@@ -1335,6 +1335,17 @@ class GroundFire(Tile):
         if random.randint(0, 2) == 0: Particles.append(KDS.World.Lighting.Fireparticle((self.rect.x + random.randint(0, 34), self.rect.y + 15 + random.randint(0, 12)), random.randint(3, 10), random.randint(1, 20), random.randint(2, 5)))
         return self.animation.update()
 
+class GlassPane(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = True
+        self.texture = t_textures[serialNumber]
+        self.texture.set_alpha(30)
+
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1369,7 +1380,8 @@ specialTilesD = {
     85: ImpaledBody,
     87: Barrier,
     93: GroundFire,
-    94: LampChain
+    94: LampChain,
+    102: GlassPane
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
