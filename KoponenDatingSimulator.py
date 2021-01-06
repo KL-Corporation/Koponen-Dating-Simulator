@@ -2306,10 +2306,10 @@ class PlayerClass:
             else:
                 self.deathWait += 1
                 if self.deathWait > 240:
-                    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
-                        respawn_function()
+                    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+                        play_story(KDS.ConfigManager.Save.Active.index, False)
                     else:
-                        load_function()
+                        respawn_function()
         #endregion
         #endregion
 
@@ -2875,7 +2875,7 @@ def main_menu():
             level_pick.pick(level_pick.direction.left)
 
         @staticmethod
-        def pick(direction: Union[direction, int]):
+        def pick(direction: int):
             global current_map, max_map
             current_map_int = int(current_map)
             if direction == level_pick.direction.left:
