@@ -7,7 +7,7 @@ if __name__ != "__main__":
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 import sys
 import pygame
 from pygame.locals import *
@@ -104,7 +104,7 @@ brush = "0000"
 teleportTemp = "001"
 currentSaveName = ''
 grid = [[]]
-tileprops = {}
+tileprops: Dict[str, Dict[str, Any]] = {}
 gridChanges = 0
 gridSize = (0, 0)
 
@@ -160,9 +160,6 @@ class tileInfo:
     def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
         self.pos = position
         self.serialNumber = serialNumber
-
-    def __eq__(self, o: tileInfo) -> bool:
-        return self.serialNumber == o.serialNumber
 
     def setSerial(self, srlNumber: str):
         serialIdentifier = int(srlNumber[1])
@@ -291,6 +288,17 @@ class tileInfo:
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
                     
+                    if keys_pressed[K_p]:
+                        setPropKey: str = KDS.Console.Start("Enter Property Key:")
+                        if len(setPropKey) > 0:
+                            tmp = KDS.Console.Start("Enter Property Value:")
+                            setPropVal = KDS.Convert.AutoType(tmp, tmp)
+                            if setPropVal != None:
+                                if tilepropsPath not in tileprops:
+                                    tileprops[tilepropsPath] = {}
+                                tileprops[tilepropsPath][setPropKey] = setPropVal
+                            else: print(f"Value {tmp} could not be parsed into any type.")
+                    
                     srlist = unit.getSerials()
                     fld_srls = 0
                     for sr in srlist:
@@ -319,16 +327,24 @@ class tileInfo:
                             if not keys_pressed[K_LSHIFT]: unit.resetSerial()
                             elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
                     elif mouse_pressed[2]:
+                        tpP = f"{unit.pos[0]}-{unit.pos[1]}"
                         if not keys_pressed[K_c]:
                             if not keys_pressed[K_LSHIFT]:
                                 unit.resetSerial()
-                                if f"{unit.pos[0]}-{unit.pos[1]}" in tileprops and len(tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]) < 2:
-                                    del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
+                                if tpP in tileprops:
+                                    gridChanges += 1
+                                    del tileprops[tpP]
                             elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
-                        elif f"{unit.pos[0]}-{unit.pos[1]}" in tileprops and len(tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]) < 2:
+                        elif tpP in tileprops and "checkCollision" in tileprops[tpP]:
                             gridChanges += 1
-                            del tileprops[f"{unit.pos[0]}-{unit.pos[1]}"]
+                            del tileprops[tpP]["checkCollision"]
+                            if len(tileprops[tpP]) < 1: del tileprops[tpP]
                     tileInfo.placedOnTile = unit
+                
+                    if tilepropsPath in tileprops:
+                        for k, v in tileprops[tilepropsPath].items():
+                            if k != "checkCollision":
+                                tip_renders.append(harbinger_font_small.render(f"{k}: {v}", True, KDS.Colors.EmeraldGreen))
         
         if len(tip_renders) > 0:
             totHeight = 0
@@ -561,7 +577,7 @@ def materialMenu(previousMaterial):
             main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
             if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
                 pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
-                tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.AviatorRed))
+                tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
                     return selection.serialNumber
         
@@ -781,6 +797,7 @@ pygame.quit()
     CTRL + Y: Redo
     T: Input Console
     R: Resize Map
+    P: Set Property
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As
     CTRL + O: Open Project

@@ -694,7 +694,6 @@ class Tile:
     @staticmethod
     # Tile_list is a 2d numpy array
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
-        tilesUpdating = 0
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
         x = max(x, 0)
@@ -705,15 +704,15 @@ class Tile:
         end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
-        for row in Tile_list[y : end_y]:
-            for renderable in row[x : end_x]:
+        for row in Tile_list[y:end_y]:
+            for renderable in row[x:end_x]:
+                renderable: Tile
                 if not renderable.air:
-                    tilesUpdating += 1
                     if DebugMode:
                         pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                     if not renderable.specialTileFlag:
                         Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                    else: 
+                    else:
                         Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))                        
 
     def update(self):
@@ -897,7 +896,7 @@ class Ladder(Tile):
         return self.texture
 
 class Lamp(Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):        
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
@@ -1239,7 +1238,9 @@ class Methtable(Tile):
         return self.animation.update()
 
 class FlickerTrigger(Tile):
-    def __init__(self, position, serialNumber, repeating: bool = False, animationLength: int = 12, animationSpeed: int = 2) -> None:
+    triggerList = []
+    
+    def __init__(self, position, serialNumber, repeating: bool = False, animationLength: int = 12, animationSpeed: int = 2, globalUpdate: bool = False) -> None:
         super().__init__(position, serialNumber)
         self.checkCollision = False
         self.exited = True
@@ -1251,34 +1252,40 @@ class FlickerTrigger(Tile):
         self.repeating = repeating
         self.stopAnim = False
         self.readyToTrigger = True
+        self.globalUpdate = globalUpdate
+        FlickerTrigger.triggerList.append(self)
 
-    def update(self):
-        if self.rect.colliderect(Player.rect):
-            if self.exited and self.readyToTrigger:
-                self.readyToTrigger = False
-                self.anim = True
-                self.exited = False
-                self.tick = 0
-                KDS.Audio.pauseAllSounds()
-                KDS.Audio.playSound(flicker_trigger_sound)
+    def update(self, forceNormal: bool = False):
+        if not self.globalUpdate or forceNormal:
+            if self.rect.colliderect(Player.rect):
+                if self.exited and self.readyToTrigger:
+                    self.readyToTrigger = False
+                    self.anim = True
+                    self.exited = False
+                    self.tick = 0
+                    KDS.Audio.pauseAllSounds()
+                    KDS.Audio.playSound(flicker_trigger_sound)
+            else:
+                self.exited = True
+            if self.tick < self.ticks and self.anim:
+                    self.tick += 1
+                    if self.animTick >= self.animTicks: self.animTick = 0
+                    global colorInvert
+                    if self.animTick == 0: colorInvert = True
+                    self.animTick += 1
+            else:
+                self.stopAnim = True
+
+            if self.stopAnim and self.anim:
+                self.readyToTrigger = True if self.repeating else False
+                self.anim = False
+                flicker_trigger_sound.stop()
+                KDS.Audio.unpauseAllSounds()
+
+            self.stopAnim = False
         else:
-            self.exited = True
-        if self.tick < self.ticks and self.anim:
-                self.tick += 1
-                if self.animTick >= self.animTicks: self.animTick = 0
-                global colorInvert
-                if self.animTick == 0: colorInvert = True
-                self.animTick += 1
-        else:
-            self.stopAnim = True
-
-        if self.stopAnim and self.anim:
-            self.readyToTrigger = True if self.repeating else False
-            self.anim = False
-            flicker_trigger_sound.stop()
-            KDS.Audio.unpauseAllSounds()
-
-        self.stopAnim = False
+            for t in FlickerTrigger.triggerList:
+                t.update(True)
 
         return pygame.Surface((0, 0))
 
@@ -2306,19 +2313,6 @@ class PlayerClass:
         #endregion
         #endregion
 
-        if self.farting:
-            global scroll
-            scroll[0] += random.randint(-10, 10)
-            scroll[1] += random.randint(-10, 10)
-            self.fart_counter += 1
-            if self.fart_counter > 250:
-                self.farting = False
-                self.fart_counter = 0
-                global Enemies
-                for enemy in Enemies:
-                    if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 800:
-                        enemy.dmg(random.randint(500, 1000))
-
 Player = PlayerClass()
 #endregion
 #region Console
@@ -2602,14 +2596,17 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
         KDS.Loading.Start(display, clock, DebugMode)
-    
-    customMap = False
+
     if gamemode == KDS.Gamemode.Modes.CustomCampaign:
+        mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
         gamemode = KDS.Gamemode.Modes.Campaign
-        customMap = True
+    elif gamemode == KDS.Gamemode.Modes.Story:
+        mapPath = os.path.join("Assets", "Maps", "StoryMode", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
+    else:
+        mapPath = os.path.join("Assets", "Maps", f"map{current_map}")
     
     KDS.Audio.Music.unload()
-    KDS.Gamemode.SetGamemode(gamemode, int(current_map))
+    KDS.Gamemode.SetGamemode(gamemode, int(current_map) if gamemode != KDS.Gamemode.Modes.Story else KDS.ConfigManager.Save.Active.Story.index)
     KDS.World.Lighting.Shapes.clear()
     
     global Player
@@ -2624,11 +2621,6 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     #endregion
     
     LoadGameSettings()
-
-    if not customMap:
-        mapPath = os.path.join("Assets", "Maps", "map" + current_map)
-    else:
-        mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
 
     wdata = WorldData.LoadMap(mapPath, loadEntities)
     if not wdata:
@@ -2650,9 +2642,11 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     KDS.Loading.Stop()
     return 0
 
-def play_story(saveIndex: int):
-    save = KDS.ConfigManager.Save(saveIndex)
-    
+def play_story(saveIndex: int, newSave: bool = True):
+    if newSave: KDS.ConfigManager.Save(saveIndex)
+    else: KDS.ConfigManager.Save.Active.save()
+    play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
+
 def respawn_function():
     global level_finished
     Player.reset(clear_inventory=False)
@@ -3329,7 +3323,6 @@ while main_running:
             KDS_Quit(confirm=True)
 #endregion
 #region Data
-
     display.fill((20, 25, 20))
 
     Lights.clear()
@@ -3341,6 +3334,17 @@ while main_running:
     if level_background: screen.blit(level_background_img, (scroll[0] * 0.12 * -1 - 68, scroll[1] *0.12 * -1 - 68))
     else: screen.fill((20, 25, 20))
     mouse_pos = pygame.mouse.get_pos()
+    
+    if Player.farting:
+        scroll[0] += random.randint(-10, 10)
+        scroll[1] += random.randint(-10, 10)
+        Player.fart_counter += 1
+        if Player.fart_counter > 256:
+            Player.farting = False
+            Player.fart_counter = 0
+            for enemy in Enemies:
+                if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) <= 800:
+                    enemy.dmg(random.randint(500, 1000))
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######

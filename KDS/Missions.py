@@ -202,16 +202,19 @@ class Mission:
                 self.color.changeValues(MissionColor, MissionUnFinishedColor)
         self.lastFinished = self.finished
     
-    def Render(self, Width: int, Height: int):
-        surface = pygame.Surface((Width, Height))
-        surface.fill(self.color.update(not self.finished))
-        surface.blit(self.renderedText, ((Width / 2) - (self.textSize[0] / 2), (HeaderHeight / 2) - (self.textSize[1] / 2)))
+    def Render(self) -> Tuple[pygame.Surface, int]:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
-        i = 0
+        _taskWidth = 0
         for task in self.task_values:
-            surface.blit(task.Update(Width, _taskHeight, self.playSound), (0, HeaderHeight + (i * _taskHeight)))
-            i += 1
-        return surface
+            _taskWidth = max(_taskWidth, task.renderedTextSize[0])
+        _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
+        HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.task_values))
+        surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.task_values))))
+        surface.fill(self.color.update(not self.finished))
+        surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
+        for i, t in enumerate(self.task_values):
+            surface.blit(t.Update(_taskWidth, _taskHeight, self.playSound), (0, HeaderHeight + (i * _taskHeight)))
+        return surface, int(_taskWidth)
 
 class MissionHolder:
     def __init__(self) -> None:
@@ -239,17 +242,11 @@ class MissionHolder:
             self.mission_keys.append(safeName)
             self.mission_values.append(self.missions[safeName])
         else: KDS.Logging.AutoError("SafeName is already occupied!")
-    
-    def GetMaxWidth(self):
-        maxWidth = 0
-        for mission in self.mission_values:
-            for task in mission.task_values:
-                maxWidth = max(maxWidth, task.renderedTextSize[0])
-        return maxWidth
 
 Missions = MissionHolder()     
 #endregion
 #region init
+Active_Mission: str
 def init():
     global MissionFont, TaskFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
     MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
@@ -290,11 +287,9 @@ def InitialiseMission(SafeName: str, Text: str):
     """
     Mission(SafeName, Text)
 #endregion
-#region Progress
+#region Rendering
 def Render(surface: pygame.Surface):
     global Missions, Active_Mission
-    maxWidth = Missions.GetMaxWidth()
-    maxWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
     Active_Mission = None
     for mission in Missions.GetMissionList():
         mission.Update()
@@ -304,8 +299,10 @@ def Render(surface: pygame.Surface):
     if Active_Mission == None: Missions.finished = True
     else: Missions.finished = False
     if not Missions.finished:
-        surface.blit(Missions.GetMission(Active_Mission).Render(maxWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(Missions.GetMission(Active_Mission).GetTaskList()))), (surface.get_width() - maxWidth, 0))
-
+        rendered, offset = Missions.GetMission(Active_Mission).Render()
+        surface.blit(rendered, (surface.get_width() - offset, 0))
+#endregion
+#region Progress
 def SetProgress(MissionName: str, TaskName: str, SetValue: float):
     """Sets a specified amount of progress to a task.
 
@@ -369,27 +366,28 @@ class Presets:
         InitialiseMission("reach_level_exit", "Uloskäynti")
         InitialiseTask("reach_level_exit", "exit", "Löydä Uloskäynti", (Listeners.LevelEnder, 1.0))
         
-def InitialiseMissions(LevelIndex):
+def InitialiseMissions(index):
     Clear()
     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-        Presets.Tutorial()
-        Presets.KoponenIntroduction()
+        if index == 1:
+            Presets.Tutorial()
+        elif index == 2:
+            Presets.KoponenIntroduction()
         
-        InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
-        InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi")
-        InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi")
+            InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
+            InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi")
+            InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi")
         
-        InitialiseMission("sauna_and_exit", "Suuret Haaveet")
-        InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
-        
-        InitialiseMission("biology_test", "Biologian Tunti")
-        InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")
-        
+            InitialiseMission("sauna_and_exit", "Suuret Haaveet")
+            InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
+        elif index == 3:
+            InitialiseMission("biology_test", "Biologian Tunti")
+            InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")
     else:
-        if LevelIndex == 1:
+        if index == 1:
             Presets.Tutorial()
             Presets.LevelExit()
-        elif LevelIndex == 2:
+        elif index == 2:
             InitialiseMission("koponen_talk", "Puhu Koposelle")
             InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", (Listeners.KoponenTalk, 1.0))
         else:

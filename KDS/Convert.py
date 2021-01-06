@@ -34,6 +34,22 @@ def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) ->
     if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.")
     return fallbackValue
 
+def AutoType(value: str, fallbackValue: Any = None) -> Union[int, float, bool, Any]:
+    try:
+        r = int(value)
+        return r
+    except ValueError:
+        pass
+    try:
+        r = float(value)
+        return r
+    except ValueError:
+        pass
+    r = ToBool(value, None, True)
+    if r != None:
+        return r
+    return fallbackValue
+
 def ToGrayscale(image: pygame.Surface):
     """Converts an image to grayscale.
 

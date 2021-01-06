@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import List, Tuple
+from typing import Any, List, Tuple, Union
 import KDS.Colors
 import KDS.Convert
 import KDS.Logging
@@ -92,7 +92,7 @@ Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None):
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Union[str, int, float, tuple, bool, Any]:
     global Escaped, Feed, OldCommands
     if commands != None:
         commandsFound = commands
@@ -122,7 +122,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     match: List[str] = []
     oldIndex = -1
     
-    if (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
+    if checkType != None and (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
     
     def addText(text: str):
         nonlocal cursor_index, cmd

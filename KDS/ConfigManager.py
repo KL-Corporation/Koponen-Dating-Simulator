@@ -1,8 +1,6 @@
 #region Importing
 import json
 import shutil
-import numpy
-import pygame
 import KDS.Animator
 import KDS.AI
 import KDS.Gamemode
@@ -10,8 +8,7 @@ import KDS.Logging
 import KDS.World
 import KDS.Missions
 import os
-import zipfile
-from typing import Any, Dict, Iterable, List, Sized, Tuple, Union
+from typing import Any, Union
 #endregion
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath, SettingsPath
@@ -123,6 +120,8 @@ def GetLevelProp(path: str, DefaultValue: Any, listToTuple: bool = True):
     return tuple(val) if isinstance(val, list) and listToTuple else val
 
 class Save:
+    Active = None
+    
     @staticmethod
     def ToPath(index: int):
         return os.path.join(SaveDirPath, f"{index}.kds")
@@ -133,6 +132,7 @@ class Save:
             self.attributes = {}
     
     def __init__(self, index: int) -> None:
+        Save.Active = self
         self.index = index
         self.Story = Save.StoryData()
         if os.path.isfile(Save.ToPath(self.index)):
@@ -140,8 +140,14 @@ class Save:
                 data = json.loads(f.read())
             self.Story.index = data["index"]
             self.Story.attributes = data["attributes"]
-    
-    def __delete__(self):
+
+    def save(self):
+        path = Save.ToPath(self.index)
+        data = { "index": self.Story.index, "attributes": self.Story.attributes }
+        with open(path, "w") as f:
+            f.write(json.dumps(data))
+
+    def delete(self):
         path = Save.ToPath(self.index)
         if os.path.isfile(path):
             os.remove(path)
