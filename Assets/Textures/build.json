@@ -99,7 +99,8 @@
         "097": "sandwall.png",
         "098": "barricade.png",
         "099": "old_car.png",
-        "100": "old_vase.png"
+        "100": "old_vase.png",
+        "101": "tent.png"
     },
     
     "tile_sounds" : {
@@ -155,7 +156,8 @@
         89,
         92,
         96,
-        99
+        99,
+        101
     ],
     "trueScale": [
         86,
@@ -164,7 +166,8 @@
         92,
         96,
         99,
-        100
+        100,
+        101
     ],
     "item_textures": {
         "000": "empty.png",
