@@ -2288,6 +2288,7 @@ class PlayerClass:
             self.rect.y += round(self.movement[1])
             self.rect.x += round(self.movement[0])
         #endregion
+        #endregion
         #region Dead
         else:
             crouch(False)
@@ -2310,7 +2311,6 @@ class PlayerClass:
                         play_story(KDS.ConfigManager.Save.Active.index, False)
                     else:
                         respawn_function()
-        #endregion
         #endregion
 
 Player = PlayerClass()
