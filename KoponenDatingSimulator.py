@@ -503,6 +503,7 @@ class WorldData():
                             if identifier in tileprops:
                                 for k, v in tileprops[identifier].items():
                                     setattr(tiles[y][x], k, v)
+                                    if tiles[y][x].checkCollisionDefault and not tiles[y][x].checkCollision: tiles[y][x].renderDark = True
                         elif pointer == 1:
                             if loadEntities:
                                 Items = numpy.append(Items, Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
@@ -690,6 +691,8 @@ class Tile:
         if serialNumber in Tile.trueScale: self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = False if serialNumber in Tile.noCollision else True
+        self.checkCollisionDefault = self.checkCollision
+        self.renderDark = False
 
     @staticmethod
     # Tile_list is a 2d numpy array
@@ -704,6 +707,8 @@ class Tile:
         end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
+        darkSurface = pygame.Surface((34, 34)).convert()
+        darkSurface.set_alpha(64)
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 renderable: Tile
@@ -712,11 +717,18 @@ class Tile:
                         pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                     if not renderable.specialTileFlag:
                         Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                        if renderable.renderDark: Surface.blit(darkSurface, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                     else:
-                        Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))                        
+                        Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))        
 
     def update(self):
         return self.texture
+    """
+    def textureUpdate(self):
+        temp_surface = pygame.Surface(self.texture.get_size()).convert()
+        temp_surface.set_alpha(68)
+        self.texture.blit(temp_surface, (0, 0))
+    """
         
 class Toilet(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):        
