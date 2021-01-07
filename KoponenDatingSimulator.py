@@ -511,12 +511,10 @@ class WorldData():
                             if loadEntities:
                                 Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif pointer == 3:
-                            temp_teleport = Teleport((x*34, y*34), serialNumber=serialNumber)
-                            try: 
-                                Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
-                            except KeyError:
+                            temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
+                            if serialNumber not in Teleport.teleportT_IDS:
                                 Teleport.teleportT_IDS[serialNumber] = []
-                                Teleport.teleportT_IDS[serialNumber].append(temp_teleport)                               
+                            Teleport.teleportT_IDS[serialNumber].append(temp_teleport)                               
                             tiles[y][x] = temp_teleport
                             del temp_teleport
                 else:
@@ -2659,7 +2657,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.mouse.set_visible(False)
     main_menu_running = False
     KDS.Scores.ScoreCounter.start()
-    if reset_scroll: true_scroll = [-200, -190]
+    if reset_scroll: true_scroll = [Player.rect.x - 301, Player.rect.y - 221]
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
