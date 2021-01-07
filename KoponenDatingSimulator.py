@@ -2664,9 +2664,22 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     if (show_loading): KDS.Loading.Stop()
     return 0
 
-def play_story(saveIndex: int, newSave: bool = True):
+def play_story(saveIndex: int = -1, newSave: bool = True, oldSurf: pygame.Surface = None):
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
+    
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    story_surf = pygame.Surface(display_size, SRCALPHA)
+    
+    _break = False
+    while _break:
+        
+        story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update())))
+        display.blit(story_surf, (0, 0))
+        pygame.display.flip()
+        display.fill(KDS.Colors.Black)
+        clock.tick_busy_loop(60)
+    
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
 
 def respawn_function():
@@ -2678,7 +2691,7 @@ def respawn_function():
     KDS.Audio.Music.stop()
 #endregion
 #region Menus
-def esc_menu_f(oldSurf: pygame.Rect):
+def esc_menu_f(oldSurf: pygame.Surface):
     global esc_menu, go_to_main_menu, DebugMode, clock, c
     c = False
 
@@ -3108,7 +3121,7 @@ def main_menu():
         display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
 
-def level_finished_menu(oldSurf: pygame.Rect):
+def level_finished_menu(oldSurf: pygame.Surface):
     global DebugMode, level_finished_running
     
     score_color = KDS.Colors.Cyan
@@ -3559,10 +3572,7 @@ while main_running:
 #region Data Update
     weapon_fire = False
     if KDS.Missions.GetFinished():
-        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Campaign:
-            level_finished = True
-        else:
-            pass
+        level_finished = True
 #endregion
 #region Conditional Events
     if Player.rect.y > len(tiles) * 34 + 340:
@@ -3584,8 +3594,12 @@ while main_running:
         KDS.Scores.ScoreCounter.stop()
         KDS.Audio.stopAllSounds()
         KDS.Audio.Music.stop()
-        pygame.mouse.set_visible(True)
-        level_finished_menu(screen)
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            KDS.ConfigManager.Save.Active.Story.index += 1
+            play_story(newSave=False, oldSurf=screen)
+        else:
+            pygame.mouse.set_visible(True)
+            level_finished_menu(screen)
         level_finished = False
     if go_to_console:
         KDS.Audio.Music.pause()
