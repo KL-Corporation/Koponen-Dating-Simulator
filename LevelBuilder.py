@@ -443,7 +443,7 @@ def saveMapName():
 
 def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
     global currentSaveName, gridSize, gridChanges
-    fileName = filedialog.askopenfilename(filetypes = (("Data file", "*.dat"), ("All files", "*.*")))
+    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
     temporaryGrid = None
     if fileName:
         with open(fileName, 'r') as f:
