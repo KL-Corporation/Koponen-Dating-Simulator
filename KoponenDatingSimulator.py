@@ -1091,10 +1091,14 @@ class Candle(Tile):
         return self.texture.update()
 
 class Teleport(Tile):
+    door_textures = (pygame.image.load("Assets/Textures/Tiles/door_front.png").convert(), pygame.image.load("Assets/Textures/Tiles/door_open.png").convert())
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
         self.texture = None
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        if serialNumber == 1:
+            self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        elif serialNumber == 2:
+            self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         self.checkCollision = False
         self.specialTileFlag = True
         self.teleportReady = True
@@ -1106,17 +1110,22 @@ class Teleport(Tile):
         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
             index = 0
         if self.rect.colliderect(Player.rect) and Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
-            #Executing teleporting process
-            Player.rect.center = (Teleport.teleportT_IDS[self.serialNumber][index].rect.centerx, Teleport.teleportT_IDS[self.serialNumber][index].rect.y - 17)
-            Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
-            Teleport.last_teleported = True
-            #Reseting scroll
-            true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] / 2))
-            true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) 
-        if not self.rect.colliderect(Player.rect): #Checking if it is possible to release teleport from teleport-lock
+            if self.serialNumber == 1 or KDS.Keys.functionKey.clicked:
+                #Executing teleporting process
+                if self.serialNumber == 2: KDS.Audio.playSound(door_opening)
+                Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
+                Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
+                Teleport.last_teleported = True
+                #Reseting scroll
+                true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] / 2))
+                true_scroll[1] += (Player.rect.y - true_scroll[1] - 220)
+        if not self.rect.colliderect(Player.rect) or self.serialNumber == 2: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
-        return pygame.Surface((0, 0))
+        if self.serialNumber == 1:
+            return pygame.Surface((0, 0))
+        elif self.serialNumber == 2:
+            return Teleport.door_textures[0]
 
     teleportT_IDS = {}
 
