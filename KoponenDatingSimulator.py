@@ -2673,23 +2673,54 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     if (show_loading): KDS.Loading.Stop()
     return 0
 
-def play_story(saveIndex: int = -1, newSave: bool = True, oldSurf: pygame.Surface = None):
+def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = True, oldSurf: pygame.Surface = None):
+    map_names = {}
+    def load_map_names():
+        nonlocal map_names
+        map_names = {}
+        try:
+            with open("Assets/Maps/StoryMode/names.kdf", "r") as file:
+                tmp = file.read().split("\n")
+                for t in tmp:
+                    tmp_split = t.split(":")
+                    for u in tmp_split: u.strip()
+                    map_names[int(tmp_split[0])] = tmp_split[1]
+        except IOError as e:
+            KDS.Logging.AutoError(f"IO Error! Details: {e}")
+    load_map_names()
+    
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
     
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
-    story_surf = pygame.Surface(display_size, SRCALPHA)
+    story_surf = pygame.Surface(display_size)
     
-    _break = False
-    while _break:
-        
-        story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update())))
-        display.blit(story_surf, (0, 0))
-        pygame.display.flip()
-        display.fill(KDS.Colors.Black)
-        clock.tick_busy_loop(60)
+    map_name = harbinger_font.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
     
+    if playAnimation:
+        _break = False
+        while not _break:
+            if (oldSurf != None):
+                display.blit(pygame.transform.scale(oldSurf, display_size), (0, 0))
+            story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
+            story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update())))
+            display.blit(story_surf, (0, 0))
+            pygame.display.flip()
+            display.fill(KDS.Colors.Black)
+            if (anim_lerp_x.get_value() >= 1.0):
+                _break = True
+            clock.tick_busy_loop(60)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
+    if playAnimation:
+        _break = False
+        while not _break:
+            story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update())))
+            display.blit(story_surf, (0, 0))
+            pygame.display.flip()
+            display.fill(KDS.Colors.Black)
+            if (anim_lerp_x.get_value() <= 0.0):
+                _break = True
+            clock.tick_busy_loop(60)
 
 def respawn_function():
     global level_finished
