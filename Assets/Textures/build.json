@@ -101,7 +101,8 @@
         "099": "old_car.png",
         "100": "old_vase.png",
         "101": "tent.png",
-        "102": "glass_pane.png"
+        "102": "glass_pane.png",
+        "103": "painting0.png"
     },
     
     "tile_sounds" : {
@@ -159,7 +160,8 @@
         92,
         96,
         99,
-        101
+        101,
+        103
     ],
     "trueScale": [
         86,
@@ -169,7 +171,8 @@
         96,
         99,
         100,
-        101
+        101,
+        103
     ],
     "item_textures": {
         "000": "empty.png",
