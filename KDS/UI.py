@@ -122,7 +122,7 @@ class Button:
             clicked (bool): Determines if the button's function should be executed.
             args (any): Any arguments for the button's function.
         """
-    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args: Any) -> bool:
+    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args: Any, **kwargs: Any) -> bool:
         """Updates and draws the button onto a surface.
 
         Args:
@@ -130,6 +130,7 @@ class Button:
             mouse_pos (Tuple[int, int]): The position of the mouse.
             clicked (bool): Determines if the button's function should be executed.
             args (Any): Any arguments for the button's function.
+            kwargs (Any): Any arguments for the button's function.
 
         Returns:
             bool: Has the button executed it's function.
@@ -140,7 +141,7 @@ class Button:
         if self.enabled:
             if self.rect.collidepoint(mouse_pos):
                 if clicked:
-                    self.function(*args)
+                    self.function(*args, **kwargs)
                     executed = True
                 button_color = self.button_highlighted_color
                 if pygame.mouse.get_pressed()[0]:

@@ -140,6 +140,7 @@ class Save:
                 data = json.loads(f.read())
             self.Story.index = data["index"]
             self.Story.attributes = data["attributes"]
+        else: self.save()
 
     def save(self):
         path = Save.ToPath(self.index)
