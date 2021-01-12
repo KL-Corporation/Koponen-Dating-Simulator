@@ -57,11 +57,11 @@ def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()
 
-def playSound(sound, volume: float = -1, loops: int = 0):
+def playSound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0):
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     if volume == -1: volume = EffectVolume
     play_channel = SoundMixer.find_channel(True)
-    play_channel.play(sound, loops)
+    play_channel.play(sound, loops, fade_ms)
     play_channel.set_volume(volume)
     return play_channel
 

@@ -163,7 +163,8 @@ tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
-ArialSysFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
+ArialFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
+ArialTitleFont = pygame.font.SysFont("Arial", 72, bold=0, italic=0)
 KDS.Logging.debug("Font Loading Complete.")
 #endregion
 #region Building Textures
@@ -305,10 +306,8 @@ esc_menu = False
 dark = False
 darkness = (255, 255, 255)
 
-gamemode_bc_1_alpha = KDS.Animator.Float(
-    0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-gamemode_bc_2_alpha = KDS.Animator.Float(
-    0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_1_alpha = KDS.Animator.Float(0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+gamemode_bc_2_alpha = KDS.Animator.Float(0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
 go_to_main_menu = False
 go_to_console = False
@@ -353,8 +352,7 @@ koponen_rect = pygame.Rect(200, 200, 24, 64)
 koponen_movement = [1, 6]
 koponen_movingx = 0
 
-koponen_talk_tip = tip_font.render(
-    "Puhu Koposelle [E]", True, KDS.Colors.White)
+koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, KDS.Colors.White)
 
 task = ""
 taskTaivutettu = ""
@@ -2689,38 +2687,39 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
     load_map_names()
     
-    if newSave: KDS.ConfigManager.Save(saveIndex)
-    else: KDS.ConfigManager.Save.Active.save()
-    
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
-    story_surf = pygame.Surface(display_size)
-    
-    map_name = harbinger_font.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
-    
-    if playAnimation:
+    def doAnimation(reverse: bool):
         _break = False
         while not _break:
             if (oldSurf != None):
                 display.blit(pygame.transform.scale(oldSurf, display_size), (0, 0))
             story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
-            story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update())))
+            story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update(reverse))))
             display.blit(story_surf, (0, 0))
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
-            if (anim_lerp_x.get_value() >= 1.0):
-                _break = True
+            if not reverse:
+                if anim_lerp_x.get_value() >= 1.0:
+                    _break = True
+            else:
+                if anim_lerp_x.get_value() <= 0.0:
+                    _break = True
             clock.tick_busy_loop(60)
-    play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
+            
+    if newSave: KDS.ConfigManager.Save(saveIndex)
+    else: KDS.ConfigManager.Save.Active.save()
+    
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    story_surf = pygame.Surface(display_size, SRCALPHA)
+    
+    map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
+    
+    KDS.Audio.playSound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
     if playAnimation:
-        _break = False
-        while not _break:
-            story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update())))
-            display.blit(story_surf, (0, 0))
-            pygame.display.flip()
-            display.fill(KDS.Colors.Black)
-            if (anim_lerp_x.get_value() <= 0.0):
-                _break = True
-            clock.tick_busy_loop(60)
+        doAnimation(False)
+    play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
+    pygame.time.delay(2000)
+    if playAnimation:
+        doAnimation(True)
 
 def respawn_function():
     global level_finished
@@ -3171,10 +3170,10 @@ def level_finished_menu(oldSurf: pygame.Surface):
     totalVertOffset = 25
     timeTakenVertOffset = 100
     scoreTexts = (
-        ArialSysFont.render("Score:", True, score_color),
-        ArialSysFont.render("Koponen Happiness:", True, score_color),
-        ArialSysFont.render("Time Bonus:", True, score_color),
-        ArialSysFont.render("Total:", True, score_color)
+        ArialFont.render("Score:", True, score_color),
+        ArialFont.render("Koponen Happiness:", True, score_color),
+        ArialFont.render("Time Bonus:", True, score_color),
+        ArialFont.render("Total:", True, score_color)
     )
     
     KDS.Audio.Music.play("Assets/Audio/Music/level_cleared.ogg")
@@ -3246,7 +3245,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
             if i < comparisonValue:
                 value = str(values[i])
                 if value not in pre_rendered_scores:
-                    rend_txt = ArialSysFont.render(value, True, score_color)
+                    rend_txt = ArialFont.render(value, True, score_color)
                     if KDS.Scores.ScoreAnimation.animationList[i].Finished:
                         pre_rendered_scores[value] = rend_txt
                 else:
@@ -3255,7 +3254,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
             level_f_surf.blit(scoreTexts[i], (menu_rect.left + padding, textY))
             
         if KDS.Scores.ScoreAnimation.finished:
-            timeTakenText = ArialSysFont.render(f"Time Taken: {KDS.Scores.GameTime.formattedGameTime}", True, score_color)
+            timeTakenText = ArialFont.render(f"Time Taken: {KDS.Scores.GameTime.formattedGameTime}", True, score_color)
             textY = textStartVertOffset + (len(values) - 1) * textVertOffset + totalVertOffset
             level_f_surf.blit(timeTakenText, (menu_rect.left + padding, textY + timeTakenVertOffset))
 
