@@ -2624,7 +2624,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
-        KDS.Loading.Start(display, clock, DebugMode)
+        KDS.Loading.Circle.Start(display, clock, DebugMode)
 
     if gamemode == KDS.Gamemode.Modes.CustomCampaign:
         mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
@@ -2668,7 +2668,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
-    if (show_loading): KDS.Loading.Stop()
+    if (show_loading): KDS.Loading.Circle.Stop()
     return 0
 
 def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = True, oldSurf: pygame.Surface = None):
@@ -2686,15 +2686,31 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
     load_map_names()
+            
+    if newSave: KDS.ConfigManager.Save(saveIndex)
+    else: KDS.ConfigManager.Save.Active.save()
+    
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    story_surf = pygame.Surface(display.get_size(), SRCALPHA)
     
     def doAnimation(reverse: bool):
         _break = False
         while not _break:
-            if (oldSurf != None):
-                display.blit(pygame.transform.scale(oldSurf, display_size), (0, 0))
+            if oldSurf != None: display.blit(oldSurf, (0, 0))
             story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
             story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update(reverse))))
             display.blit(story_surf, (0, 0))
+            
+            if DebugMode:
+                debugSurf = pygame.Surface((200, 40))
+                debugSurf.fill(KDS.Colors.DarkGray)
+                debugSurf.set_alpha(128)
+                display.blit(debugSurf, (0, 0))
+                
+                fps_text = "FPS: " + str(round(clock.get_fps()))
+                fps_text = score_font.render(fps_text, True, KDS.Colors.White)
+                display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+            
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
             if not reverse:
@@ -2704,12 +2720,6 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
                 if anim_lerp_x.get_value() <= 0.0:
                     _break = True
             clock.tick_busy_loop(60)
-            
-    if newSave: KDS.ConfigManager.Save(saveIndex)
-    else: KDS.ConfigManager.Save.Active.save()
-    
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
-    story_surf = pygame.Surface(display_size, SRCALPHA)
     
     map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
     
@@ -2717,7 +2727,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     if playAnimation:
         doAnimation(False)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
-    pygame.time.delay(2000)
+    pygame.time.wait(2000)
     if playAnimation:
         doAnimation(True)
 
@@ -3605,7 +3615,7 @@ while main_running:
 
     display.fill(KDS.Colors.Black)
     display.blit(pygame.transform.scale(screen, display_size), (0, 0))
-    #Updating display object
+    
     pygame.display.flip()
 #endregion
 #region Data Update
