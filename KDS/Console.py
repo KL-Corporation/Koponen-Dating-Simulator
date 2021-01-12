@@ -1,13 +1,16 @@
 import re
 import sys
 from typing import Any, List, Tuple, Union
+
+import pygame
+from pygame.locals import *
+
+import KDS.Animator
 import KDS.Colors
 import KDS.Convert
 import KDS.Logging
-import KDS.Animator
 import KDS.Math
-import pygame
-from pygame.locals import *
+
 pygame.init()
 pygame.key.stop_text_input()
 #region Settings

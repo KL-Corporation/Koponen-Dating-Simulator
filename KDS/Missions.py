@@ -1,16 +1,19 @@
 #region Importing
+import json
 from typing import Dict, List, Tuple, Union
+
 import pygame
+
 import KDS.Animator
 import KDS.Audio
-import KDS.ConfigManager
 import KDS.Colors
+import KDS.ConfigManager
 import KDS.Convert
 import KDS.Gamemode
+import KDS.Koponen
 import KDS.Logging
 import KDS.Math
-import KDS.Koponen
-import json
+
 #endregion
 #region Initialisation
 with open ("Assets/Textures/build.json", "r") as f:

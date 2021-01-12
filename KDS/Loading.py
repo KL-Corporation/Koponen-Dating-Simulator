@@ -1,7 +1,9 @@
 import pygame
+
 import KDS.Colors
 import KDS.Convert
 import KDS.ThreadHandler
+
 pygame.init()
 
 #region Settings

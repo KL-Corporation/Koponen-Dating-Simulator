@@ -1,13 +1,14 @@
+import cProfile
 import inspect
-import traceback
 import logging
 import os
-import cProfile
 import pstats
+import traceback
+from datetime import datetime
 from typing import Any
+
 from pygame.draw import line
 from termcolor import colored
-from datetime import datetime
 
 running = False
 profiler_running = False

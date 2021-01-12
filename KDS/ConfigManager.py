@@ -1,15 +1,17 @@
 #region Importing
 import json
+import os
 import shutil
-import KDS.Animator
+from typing import Any, Union
+
 import KDS.AI
+import KDS.Animator
 import KDS.Gamemode
 import KDS.Logging
-import KDS.World
 import KDS.Missions
-import os
-from typing import Any, Union
+import KDS.World
 #endregion
+
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     global AppDataPath, CachePath, SaveDirPath, SaveCachePath, SettingsPath
     AppDataPath = _AppDataPath

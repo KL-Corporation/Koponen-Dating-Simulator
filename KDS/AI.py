@@ -1,7 +1,21 @@
-from typing import List, Tuple, Union
-import pygame, threading, multiprocessing, numpy, math, random
 import concurrent.futures
-import KDS.Animator, KDS.Audio, KDS.Math, KDS.Colors, KDS.Logging, KDS.World, KDS.Convert
+import math
+import multiprocessing
+import random
+import threading
+from typing import List, Tuple, Union
+
+import numpy
+import pygame
+
+import KDS.Animator
+import KDS.Audio
+import KDS.Colors
+import KDS.Convert
+import KDS.Logging
+import KDS.Math
+import KDS.World
+
 pygame.mixer.init()
 pygame.init()
 pygame.key.stop_text_input()

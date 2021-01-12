@@ -1,10 +1,13 @@
 from typing import Any, Tuple, Union
+
 import pygame
-import KDS.Logging
-import KDS.Colors
-import KDS.Math
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
+
+import KDS.Colors
+import KDS.Logging
+import KDS.Math
+
 
 def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:

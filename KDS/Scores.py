@@ -1,11 +1,13 @@
 import time
 from typing import Tuple
+
 import pygame
+
 import KDS.Animator
 import KDS.Audio
-import KDS.Math
 import KDS.ConfigManager
 import KDS.Logging
+import KDS.Math
 
 waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait before updating the next animation
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take

@@ -1,7 +1,8 @@
-from typing import SupportsFloat, Tuple
-import KDS.Logging
 import math
 import sys
+from typing import SupportsFloat, Tuple
+
+import KDS.Logging
 
 #region Constants
 PI = math.pi

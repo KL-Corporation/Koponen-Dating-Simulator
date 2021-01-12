@@ -1,5 +1,6 @@
-from typing import Callable, Iterable, Union, overload
 from __future__ import annotations
+
+from typing import Callable, Iterable, Union, overload
 
 new = list()
 

@@ -1,13 +1,15 @@
 from shutil import move
 from turtle import position
 from typing import Any, Callable, Tuple, Union
-import KDS.Animator
-import KDS.ConfigManager
-import KDS.Convert
-import KDS.Colors
-import KDS.Math
+
 import pygame
 from pygame.locals import *
+
+import KDS.Animator
+import KDS.Colors
+import KDS.ConfigManager
+import KDS.Convert
+import KDS.Math
 
 slider_dragged = None
 

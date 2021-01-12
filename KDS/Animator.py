@@ -1,9 +1,11 @@
 from typing import Callable, Tuple
 
+import pygame
+
+import KDS.Colors
 import KDS.Logging
 import KDS.Math
-import KDS.Colors
-import pygame
+
 
 class OnAnimationEnd:
     Stop = "stop"

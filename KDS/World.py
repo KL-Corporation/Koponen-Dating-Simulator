@@ -1,7 +1,17 @@
+import math
+import random
 from typing import Dict, List, Sequence, Tuple
-import pygame, numpy, math, random
+
+import numpy
+import pygame
 from pygame.locals import *
-import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging, KDS.Audio, KDS.Colors
+
+import KDS.Animator
+import KDS.Audio
+import KDS.Colors
+import KDS.Convert
+import KDS.Logging
+import KDS.Math
 
 pygame.init()
 pygame.key.stop_text_input()

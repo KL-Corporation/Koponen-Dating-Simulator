@@ -1,18 +1,20 @@
-from inspect import currentframe
 import os
 import random
+from inspect import currentframe
 from typing import List, Tuple
+
 import pygame
 from pygame.locals import *
-import KDS.Colors
-import KDS.Convert
+
 import KDS.Animator
 import KDS.Audio
-import KDS.UI
+import KDS.Colors
+import KDS.ConfigManager
+import KDS.Convert
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
-import KDS.ConfigManager
+import KDS.UI
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
