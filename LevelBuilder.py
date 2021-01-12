@@ -330,8 +330,15 @@ class tileInfo:
                                 else:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                         else:
-                            if not keys_pressed[K_LSHIFT]: unit.resetSerial()
-                            elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                            if not keys_pressed[K_c]:
+                                if not keys_pressed[K_LSHIFT]: unit.resetSerial()
+                                elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                            else:
+                                gridChanges += 1
+                                if not keys_pressed[K_LALT]:
+                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
+                                else:
+                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                     elif mouse_pressed[2]:
                         tpP = f"{unit.pos[0]}-{unit.pos[1]}"
                         if not keys_pressed[K_c]:
