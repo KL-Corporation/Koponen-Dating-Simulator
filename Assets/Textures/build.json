@@ -102,7 +102,8 @@
         "100": "old_vase.png",
         "101": "tent.png",
         "102": "glass_pane.png",
-        "103": "painting0.png"
+        "103": "painting0.png",
+        "104": "painting1.png"
     },
     
     "tile_sounds" : {
@@ -172,7 +173,8 @@
         99,
         100,
         101,
-        103
+        103,
+        104
     ],
     "item_textures": {
         "000": "empty.png",

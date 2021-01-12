@@ -53,22 +53,22 @@ brushNames = {
 
 with open("Assets/Textures/build.json") as f:
     d = f.read()
-data = json.loads(d)
+buildData = json.loads(d)
 
 t_textures = {}
-for element in data["tile_textures"]:
+for element in buildData["tile_textures"]:
     srl = f"0{element}"
 
-    elmt = data["tile_textures"][element]
+    elmt = buildData["tile_textures"][element]
     t_textures[srl] = pygame.image.load("Assets/Textures/Tiles/" + elmt).convert()
     t_textures[srl].set_colorkey(KDS.Colors.White)
     brushNames[os.path.splitext(elmt)[0]] = srl
 
 i_textures = {}
-for element in data["item_textures"]:
+for element in buildData["item_textures"]:
     srl = f"1{element}"
     
-    elmt = data["item_textures"][element]
+    elmt = buildData["item_textures"][element]
     i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + elmt).convert()
     i_textures[srl].set_colorkey(KDS.Colors.White)
     brushNames[os.path.splitext(elmt)[0]] = srl
@@ -95,7 +95,8 @@ Atextures = {
     "2": e_textures,
     "3": teleports
 }
-del data
+
+trueScale = [f"0{e}" for e in buildData["trueScale"]]
 ### GLOBAL VARIABLES ###
 
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
@@ -255,12 +256,13 @@ class tileInfo:
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
-                        try: unitTexture = Atextures[number[0]][number]
-                        except:
-                            if number[0] == '3':
-                                unitTexture = Atextures["3"]["3001"]
-                            else:
-                                print(f"Cannot render unit because texture is not added: {srlist}")
+                        if number[0] == '3':
+                            unitTexture = Atextures["3"]["3001"]
+                        else:
+                            try:
+                                unitTexture = Atextures[number[0]][number]
+                            except KeyError:
+                                    print(f"Cannot render unit because texture is not added: {srlist}")
 
                         if number[0] == "3":
                             if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
@@ -274,7 +276,10 @@ class tileInfo:
                                     #keys_pressed[K_p] = False
 
                         if unitTexture != None:
-                            Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - int(unitTexture.get_height() * scaleMultiplier )+ scalesize))
+                            if number in trueScale:
+                                Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0] - (unitTexture.get_width() * scaleMultiplier - scalesize), blitPos[1] - (unitTexture.get_height() * scaleMultiplier - scalesize)))
+                            else:
+                                Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - unitTexture.get_height() * scaleMultiplier + scalesize))
                             
                 tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
                 if tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
@@ -533,6 +538,7 @@ def consoleHandler(commandlist):
                         unit.setSerialToSlot("0000", i)
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
+
 def materialMenu(previousMaterial):
     global matMenRunning
     matMenRunning = True
