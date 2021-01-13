@@ -7,7 +7,7 @@ if __name__ != "__main__":
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 import sys
 import pygame
 from pygame.locals import *
@@ -710,6 +710,8 @@ def main():
     inputConsole_output = None
     updateTiles = True
 
+    dragStartPos = None
+
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
     while mainRunning:
@@ -790,10 +792,27 @@ def main():
             if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
             elif gridChanges > 100: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
-            
+        
+        selectedTiles = []
+        selected_size = [0, 0]
         if brush != "0000":
             tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
+        elif mouse_pressed[2]:
+            dragStartPos = None
+        elif mouse_pressed[0]:
+            if dragStartPos == None:
+                dragStartPos = (int(KDS.Math.Clamp((mouse_pos[0] + scroll[0] * scalesize) / scalesize, 0, gridSize[0])), int(KDS.Math.Clamp((mouse_pos[1] + scroll[1] * scalesize) / scalesize, 0, gridSize[0])))
+            dragPos = (int(KDS.Math.Clamp(mouse_pos[0] / scalesize + scroll[0], 0, gridSize[0])), int(KDS.Math.Clamp(mouse_pos[1] / scalesize + scroll[1], 0, gridSize[1])))
+            dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
+            for row in grid[dragRect.y:dragRect.y + dragRect.height]:
+                for unit in row[dragRect.x:dragRect.x + dragRect.width]:
+                    selectedTiles.append(unit)
+        elif dragStartPos != None:
+            dragStartPos = None
+            
+        if selected_size[0] > 0 and selected_size[1] > 0:
+            pass #PIIRRÄ SE
 
         pygame.display.flip()
         clock.tick_busy_loop(60)
