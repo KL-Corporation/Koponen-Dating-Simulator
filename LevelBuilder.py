@@ -103,6 +103,7 @@ dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
 brush = "0000"
+brushTex = None
 teleportTemp = "001"
 currentSaveName = ''
 grid = [[]]
@@ -546,16 +547,16 @@ def consoleHandler(commandlist):
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
 
-def materialMenu(previousMaterial):
+def materialMenu(previousMaterial: str) -> Tuple[str, pygame.Surface]:
     global matMenRunning
     matMenRunning = True
     rscroll = 0
     blocksize = 70
 
     class selectorRect:
-        def __init__(self, rect: pygame.Rect, serialNumber):
-            self.rect = rect
-            self.serialNumber = serialNumber
+        def __init__(self, rect: pygame.Rect, serialNumber: str):
+            self.rect: pygame.Rect = rect
+            self.serialNumber: str = serialNumber
 
     selectorRects: List[selectorRect] = []
 
@@ -577,7 +578,7 @@ def materialMenu(previousMaterial):
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
                     matMenRunning = False
-                    return previousMaterial
+                    return previousMaterial, Atextures[previousMaterial[0]][previousMaterial]
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
                 else: rscroll = min(rscroll + 1, sys.maxsize)
@@ -587,13 +588,14 @@ def materialMenu(previousMaterial):
         mpos = pygame.mouse.get_pos()
         main_display.fill((20,20,20))
         for selection in selectorRects:
+            selection: selectorRect
             sorting = selection.serialNumber[0]
             main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
             if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
                 pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
                 tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
-                    return selection.serialNumber
+                    return selection.serialNumber, Atextures[selection.serialNumber[0]][selection.serialNumber]
         
         if len(tip_renders) > 0:
             totHeight = 0
@@ -609,6 +611,8 @@ def materialMenu(previousMaterial):
                 main_display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
         pygame.display.flip()
+        
+    return previousMaterial, Atextures[previousMaterial[0]][previousMaterial]
 
 def generateLevelProp():
     """
@@ -645,17 +649,13 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
 
-def main():
+def menu():
     global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
     grid = None
-    def button_handler(_openMap: bool = False, _generateLevelProp: bool = False, _quit: bool = False):
-        global btn_menu, grid
-        if _generateLevelProp:
-            generateLevelProp()
-        elif _quit:
-            LB_Quit()
-        elif _openMap:
+    def button_handler(_openMap: bool = False):
+        global btn_menu
+        if _openMap:
             openMap()
             if grid != None:
                 btn_menu = False
@@ -664,8 +664,8 @@ def main():
         else: btn_menu = False
     newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), button_handler, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), button_handler, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     while btn_menu:
         clicked = False
         for event in pygame.event.get():
@@ -678,11 +678,16 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         newMap_btn.update(main_display, mouse_pos, clicked)
         openMap_btn.update(main_display, mouse_pos, clicked, True)
-        genProp_btn.update(main_display, mouse_pos, clicked, False, True)
-        quit_btn.update(main_display, mouse_pos, clicked, False, False, True)
+        genProp_btn.update(main_display, mouse_pos, clicked)
+        quit_btn.update(main_display, mouse_pos, clicked)
         pygame.display.flip()
-        if not mainRunning: return
-    
+
+def main():
+    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex
+
+    menu()
+    if not mainRunning: return
+
     main_display.fill(KDS.Colors.Black)
     
     def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
@@ -695,7 +700,6 @@ def main():
         mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        
 
     if grid == None:
         g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000)).replace(" ", "").split(",")
@@ -742,7 +746,7 @@ def main():
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
-                    brush = materialMenu(brush)
+                    brush, brushTex = materialMenu(brush)
                     updateTiles = False
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
@@ -785,7 +789,9 @@ def main():
             _color = KDS.Colors.Yellow
             if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
             elif gridChanges > 100: _color = KDS.Colors.Red
-            pygame.draw.circle(main_display, _color, (display_size[0] - 10, 10), 5)
+            pygame.draw.circle(main_display, _color, (10, 10), 5)
+            
+        
 
         pygame.display.flip()
         clock.tick_busy_loop(60)

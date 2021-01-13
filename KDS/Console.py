@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import Any, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -34,7 +34,7 @@ feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
-def init(_window, _display, _clock, _Offset: Tuple[int, int] = None, _KDS_Quit = None):
+def init(_window: pygame.Surface, _display: pygame.Surface, _clock: pygame.time.Clock, _Offset: Tuple[int, int] = None, _KDS_Quit: Callable[[], None] = None):
     global window, display, display_size, clock, defaultBackground, KDS_Quit, rndrOffset
     window = _window
     display = _display

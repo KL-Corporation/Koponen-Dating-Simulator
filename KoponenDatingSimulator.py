@@ -2726,13 +2726,16 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     
     map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
     
+    pygame.mixer.music.stop()
+    play_function(KDS.Gamemode.Modes.Story, True, show_loading=True)
     if playAnimation:
+        pygame.mixer.music.pause()
         KDS.Audio.playSound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
         doAnimation(False)
     pygame.time.wait(1800)
     if playAnimation:
         doAnimation(True)
-    pygame.mixer.music.unpause()
+        pygame.mixer.music.unpause()
 
 def respawn_function():
     global level_finished
