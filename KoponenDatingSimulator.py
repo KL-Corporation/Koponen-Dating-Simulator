@@ -403,7 +403,7 @@ class WorldData():
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
-            KDS.Loading.Stop()
+            KDS.Loading.Circle.Stop()
             return None
         if os.path.isdir(PersistentMapPath):
             shutil.rmtree(PersistentMapPath)
@@ -415,7 +415,7 @@ class WorldData():
         else:
             KDS.Logging.AutoError("Map file is not a valid format.")
             KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
-            KDS.Loading.Stop()
+            KDS.Loading.Circle.Stop()
             return None
         
         tileprops: Dict[str, Any] = {}
@@ -2729,10 +2729,10 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     if playAnimation:
         KDS.Audio.playSound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
         doAnimation(False)
-    play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
-    pygame.time.wait(2000)
+    pygame.time.wait(1800)
     if playAnimation:
         doAnimation(True)
+    pygame.mixer.music.unpause()
 
 def respawn_function():
     global level_finished
