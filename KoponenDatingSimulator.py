@@ -2693,11 +2693,14 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
     story_surf = pygame.Surface(display.get_size(), SRCALPHA)
     
+    savingText = ArialFont.render("Saving...", True, KDS.Colors.White)
+    
     def doAnimation(reverse: bool):
         _break = False
         while not _break:
             if oldSurf != None: display.blit(oldSurf, (0, 0))
             story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
+            story_surf.blit(savingText, (story_surf.get_width() - savingText.get_width() - 10, story_surf.get_height() - savingText.get_height() - 10))
             story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update(reverse))))
             display.blit(story_surf, (0, 0))
             
@@ -2723,8 +2726,8 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     
     map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
     
-    KDS.Audio.playSound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
     if playAnimation:
+        KDS.Audio.playSound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
         doAnimation(False)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=False)
     pygame.time.wait(2000)
