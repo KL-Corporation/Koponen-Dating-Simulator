@@ -30,7 +30,7 @@ scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
-main_display = pygame.display.set_mode(display_size)
+display = pygame.display.set_mode(display_size)
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 
@@ -152,7 +152,7 @@ def LB_Quit():
     btn_menu = False
     mainRunning = False
 
-KDS.Console.init(main_display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
+KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
 
 ##################################################
 
@@ -367,15 +367,15 @@ class tileInfo:
                 totHeight += tip.get_height() + 8
                 maxWidth = max(maxWidth, tip.get_width())
             totHeight -= 8
-            pygame.draw.rect(main_display, KDS.Colors.Gray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, maxWidth + 5, totHeight + 5))
+            pygame.draw.rect(display, KDS.Colors.Gray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, maxWidth + 5, totHeight + 5))
             cumHeight = 0
             for tip in tip_renders:
-                pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
-                main_display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
+                pygame.draw.rect(display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
+                display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
         
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
-        main_display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
+        display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
         
         tileInfo.releasedButtons[0] = False if mouse_pressed[0] else True
         tileInfo.releasedButtons[2] = False if mouse_pressed[2] else True
@@ -547,7 +547,7 @@ def consoleHandler(commandlist):
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
 
-def materialMenu(previousMaterial: str) -> Tuple[str, pygame.Surface]:
+def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
     matMenRunning = True
     rscroll = 0
@@ -578,7 +578,7 @@ def materialMenu(previousMaterial: str) -> Tuple[str, pygame.Surface]:
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
                     matMenRunning = False
-                    return previousMaterial, Atextures[previousMaterial[0]][previousMaterial]
+                    return previousMaterial
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
                 else: rscroll = min(rscroll + 1, sys.maxsize)
@@ -586,16 +586,16 @@ def materialMenu(previousMaterial: str) -> Tuple[str, pygame.Surface]:
         tip_renders = []
         
         mpos = pygame.mouse.get_pos()
-        main_display.fill((20,20,20))
+        display.fill((20,20,20))
         for selection in selectorRects:
             selection: selectorRect
             sorting = selection.serialNumber[0]
-            main_display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
+            display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
             if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
-                pygame.draw.rect(main_display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
+                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
                 tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
-                    return selection.serialNumber, Atextures[selection.serialNumber[0]][selection.serialNumber]
+                    return selection.serialNumber
         
         if len(tip_renders) > 0:
             totHeight = 0
@@ -604,15 +604,15 @@ def materialMenu(previousMaterial: str) -> Tuple[str, pygame.Surface]:
                 totHeight += tip.get_height() + 8
                 maxWidth = max(maxWidth, tip.get_width())
             totHeight -= 8
-            pygame.draw.rect(main_display, KDS.Colors.Gray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, maxWidth + 5, totHeight + 5))
+            pygame.draw.rect(display, KDS.Colors.Gray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3, maxWidth + 5, totHeight + 5))
             cumHeight = 0
             for tip in tip_renders:
-                pygame.draw.rect(main_display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
-                main_display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
+                pygame.draw.rect(display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
+                display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
         pygame.display.flip()
         
-    return previousMaterial, Atextures[previousMaterial[0]][previousMaterial]
+    return previousMaterial
 
 def generateLevelProp():
     """
@@ -674,12 +674,12 @@ def menu():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
-        main_display.fill(KDS.Colors.Gray)
+        display.fill(KDS.Colors.Gray)
         mouse_pos = pygame.mouse.get_pos()
-        newMap_btn.update(main_display, mouse_pos, clicked)
-        openMap_btn.update(main_display, mouse_pos, clicked, True)
-        genProp_btn.update(main_display, mouse_pos, clicked)
-        quit_btn.update(main_display, mouse_pos, clicked)
+        newMap_btn.update(display, mouse_pos, clicked)
+        openMap_btn.update(display, mouse_pos, clicked, True)
+        genProp_btn.update(display, mouse_pos, clicked)
+        quit_btn.update(display, mouse_pos, clicked)
         pygame.display.flip()
 
 def main():
@@ -688,7 +688,7 @@ def main():
     menu()
     if not mainRunning: return
 
-    main_display.fill(KDS.Colors.Black)
+    display.fill(KDS.Colors.Black)
     
     def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
         global scalesize, scaleMultiplier
@@ -746,7 +746,7 @@ def main():
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
-                    brush, brushTex = materialMenu(brush)
+                    brush = materialMenu(brush)
                     updateTiles = False
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
@@ -781,17 +781,19 @@ def main():
             consoleHandler(inputConsole_output)
             inputConsole_output = None
 
-        main_display.fill((30,20,60))
+        display.fill((30,20,60))
 
-        grid, brush = tileInfo.renderUpdate(main_display, scroll, grid, brush, updateTiles)
+        grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
 
         if gridChanges > 0:
             _color = KDS.Colors.Yellow
             if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
             elif gridChanges > 100: _color = KDS.Colors.Red
-            pygame.draw.circle(main_display, _color, (10, 10), 5)
+            pygame.draw.circle(display, _color, (10, 10), 5)
             
-        
+        if brush != "0000":
+            tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
+            display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
 
         pygame.display.flip()
         clock.tick_busy_loop(60)
