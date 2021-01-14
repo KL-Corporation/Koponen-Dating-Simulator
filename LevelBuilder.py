@@ -21,6 +21,7 @@ import KDS.Console
 import tkinter 
 from tkinter import filedialog
 import json
+import copy
 
 root = tkinter.Tk()
 root.withdraw()
@@ -113,39 +114,41 @@ gridChanges = 0
 gridSize = (0, 0)
 
 class Redo:
-    actions = []
+    savePoints = []
     
     @staticmethod
-    def register(instance, oldSerial: str):
-        Redo.actions.append((instance, oldSerial))
-        while len(Redo.actions) > 100: Redo.actions.pop(0)
+    def register():
+        global grid, gridChanges
+        Redo.savePoints.append(copy.deepcopy(grid))
+        while len(Redo.savePoints) > 100: Redo.savePoints.pop(0)
+        gridChanges += 1
     
     @staticmethod
     def request():
-        if len(Redo.actions) > 0:
-            action = Redo.actions.pop(-1)
-            Undo.register(action[0], action[0].serialNumber, False)
-            action[0].serialNumber = action[1]
-        global gridChanges
-        gridChanges += 1
+        global grid, gridChanges
+        if len(Redo.savePoints) > 0:
+            grid = Redo.savePoints.pop(-1)
+            Undo.register(clearRedo=False)
+            gridChanges -= 2
 
 class Undo:
-    actions = []
+    savePoints = []
     
     @staticmethod
-    def register(instance, oldSerial: str, clearRedo: bool = True):
-        if clearRedo: Redo.actions.clear()
-        Undo.actions.append((instance, oldSerial))
-        while len(Undo.actions) > 100: Undo.actions.pop(0)
+    def register(clearRedo: bool = True):
+        global grid, gridChanges
+        if clearRedo: Redo.savePoints.clear()
+        Undo.savePoints.append(copy.deepcopy(grid))
+        while len(Undo.savePoints) > 100: Undo.savePoints.pop(0)
+        gridChanges += 1
     
     @staticmethod
     def request():
-        if len(Undo.actions) > 0:
-            action = Undo.actions.pop(-1)
-            Redo.register(action[0], action[0].serialNumber)
-            action[0].serialNumber = action[1]
-        global gridChanges
-        gridChanges += 1
+        global grid, gridChanges
+        if len(Undo.savePoints) > 0:
+            grid = Undo.savePoints.pop(-1)
+            Redo.register()
+            gridChanges -= 2
 
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning
@@ -169,26 +172,20 @@ class tileInfo:
         return tileInfo(self.pos, serialNumber=self.serialNumber)
 
     def setSerial(self, srlNumber: str):
+        if f"{srlNumber} 0000 0000 0000 / " == self.serialNumber: return
+        Undo.register()
         serialIdentifier = int(srlNumber[1])
         serialIdentifier *= 4
         if serialIdentifier:
             serialIdentifier += 1
-        oldSerial = self.serialNumber
         self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
-        if self.serialNumber != oldSerial:
-            global gridChanges
-            gridChanges += 1
-            Undo.register(self, oldSerial)
     
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
-        oldSerial = self.serialNumber
+        if self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:] == self.serialNumber: return
+        Undo.register()
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
-        global gridChanges
-        if self.serialNumber != oldSerial:
-            gridChanges += 1
-            Undo.register(self, oldSerial)
 
     def getSerial(self, slot: int):
         slot = slot + 1 if slot > 0 else slot
@@ -198,30 +195,24 @@ class tileInfo:
         return tuple(self.serialNumber.replace(" / ", "").split())
 
     def addSerial(self, srlNumber):
-        oldSerial = self.serialNumber
         srlist = self.getSerials()
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist:
                     if srlNumber not in t_textures or not self.hasTile():
+                        Undo.register()
                         self.setSerialToSlot(srlNumber, index)
-                        global gridChanges
-                        gridChanges += 1
-                        Undo.register(self, oldSerial)
                     else: print(f"Tile already in {self.pos}!")
                 else: print(f"Serial {srlNumber} already in {self.pos}!")
                 return
         print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
         
     def removeSerial(self):
-        oldSerial = self.serialNumber
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
+                Undo.register()
                 self.setSerialToSlot("0000", index)
-                global gridChanges
-                gridChanges += 1
-                Undo.register(self, oldSerial)
                 return
 
     def hasTile(self):
@@ -231,13 +222,10 @@ class tileInfo:
                 return True
         return False
 
-    def resetSerial(self):
-        oldSerial = self.serialNumber
+    def resetSerial(self, registerUndo: bool = True):
+        if "0000 0000 0000 0000 / " == self.serialNumber: return
+        if registerUndo: Undo.register()
         self.serialNumber = "0000 0000 0000 0000 / "
-        global gridChanges
-        if self.serialNumber != oldSerial:
-            gridChanges += 1
-            Undo.register(self, oldSerial)
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
@@ -298,7 +286,6 @@ class tileInfo:
                     Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
-                    
                     if keys_pressed[K_p]:
                         setPropKey: str = KDS.Console.Start("Enter Property Key:")
                         if len(setPropKey) > 0:
@@ -714,28 +701,39 @@ def main():
     updateTiles = True
 
     dragStartPos = None
+    dragPos = None
     dragRect = None
     selectTrigger = False
     selected: List[List[tileInfo]] = []
     
+    def getSelected():
+        nonlocal selected
+        selected = []
+        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
+            selectedRow: List[tileInfo] = []
+            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
+                selectedRow.append(unit.copy())
+            selected.append(selectedRow)
+
     def moveBy(x: int, y: int):
-        global grid, gridChanges
-        nonlocal dragRect
-        print(f"{x}, {y}")
+        global grid
+        nonlocal dragRect, dragStartPos
+        if x == 0 and y == 0: return
+        Undo.register()
         if dragRect != None:
-            gridChanges += 1
             y_i = dragRect.y
-            for row in selected:
+            newSelected = selected.copy()
+            if x > 0 or y > 0: newSelected.reverse()
+            for row in newSelected:
                 for unit in row:
-                    gridUnit = grid[y][0]
-                    for u in grid[y]:
+                    gridUnit = grid[y_i][0]
+                    for u in grid[y_i]:
                         if unit.pos == u.pos:
                             gridUnit = u
                             break
-                    newX = gridUnit.pos[0] + x
-                    newY = y_i + y
-                    gridUnit.resetSerial()
-                    print(f"{newY}, {newX}")
+                    newX = unit.pos[0] + x
+                    newY = unit.pos[1] + y
+                    gridUnit.resetSerial(False)
                     grid[newY][newX].serialNumber = unit.serialNumber
                 y_i += 1
 
@@ -761,9 +759,6 @@ def main():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     updateTiles = True
-                    rndr_mb1_rel = True
-                elif event.button == 2:
-                    rndr_mb2_rel = True
             elif event.type == KEYDOWN:
                 if event.key == K_z:
                     if keys_pressed[K_LCTRL]:
@@ -780,14 +775,19 @@ def main():
                     brush = materialMenu(brush)
                     updateTiles = False
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
+                    xy = (0, 0)
                     if event.key == K_UP:
-                        moveBy(0, -1)
+                        xy = (0, -1)
                     elif event.key == K_DOWN:
-                        moveBy(0, 1)
+                        xy = (0, 1)
                     elif event.key == K_LEFT:
-                        moveBy(-1, 0)
+                        xy = (-1, 0)
                     elif event.key == K_RIGHT:
-                        moveBy(1, 0)
+                        xy = (1, 0)
+                    moveBy(*xy)
+                    dragRect.x += xy[0]
+                    dragRect.y += xy[1]
+                    getSelected()
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -842,16 +842,11 @@ def main():
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
             dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
-            selected = []
-            for row in grid[dragRect.y:dragRect.y + dragRect.height]:
-                selectedRow: List[tileInfo] = []
-                for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                    selectedRow.append(unit.copy())
-                selected.append(selectedRow)
+            getSelected()
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
-        
+
         if mouse_pressed[2]:
             selectTrigger = False
             dragStartPos = None
@@ -873,8 +868,7 @@ main()
 
 pygame.quit()
 
-#region Keymap
-"""
+""" KEYMAP
     [Normal]
     P: Set teleport index
     Middle Mouse: Get Serial
@@ -897,5 +891,4 @@ pygame.quit()
     [Material Menu]
     Escape: Close Material Menu
     E: Close Material Menu
-""" 
-#endregion
+"""
