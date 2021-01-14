@@ -31,6 +31,7 @@ gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
 display = pygame.display.set_mode(display_size)
+display: pygame.Surface
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 
@@ -106,7 +107,7 @@ brush = "0000"
 brushTex = None
 teleportTemp = "001"
 currentSaveName = ''
-grid = [[]]
+grid: List[List[tileInfo]] = [[]]
 tileprops: Dict[str, Dict[str, Any]] = {}
 gridChanges = 0
 gridSize = (0, 0)
@@ -163,6 +164,9 @@ class tileInfo:
     def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
         self.pos = position
         self.serialNumber = serialNumber
+        
+    def copy(self) -> tileInfo:
+        return tileInfo(self.pos, serialNumber=self.serialNumber)
 
     def setSerial(self, srlNumber: str):
         serialIdentifier = int(srlNumber[1])
@@ -330,16 +334,12 @@ class tileInfo:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
                                 else:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
-                        else:
-                            if not keys_pressed[K_c]:
-                                if not keys_pressed[K_LSHIFT]: unit.resetSerial()
-                                elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.removeSerial()
+                        elif keys_pressed[K_c]:
+                            gridChanges += 1
+                            if not keys_pressed[K_LALT]:
+                                tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
                             else:
-                                gridChanges += 1
-                                if not keys_pressed[K_LALT]:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
-                                else:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
+                                tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                     elif mouse_pressed[2]:
                         tpP = f"{unit.pos[0]}-{unit.pos[1]}"
                         if not keys_pressed[K_c]:
@@ -596,6 +596,9 @@ def materialMenu(previousMaterial: str) -> str:
                 tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
                     return selection.serialNumber
+                
+        if mouse_pressed[0]:
+            return "0000"
         
         if len(tip_renders) > 0:
             totHeight = 0
@@ -711,6 +714,30 @@ def main():
     updateTiles = True
 
     dragStartPos = None
+    dragRect = None
+    selectTrigger = False
+    selected: List[List[tileInfo]] = []
+    
+    def moveBy(x: int, y: int):
+        global grid, gridChanges
+        nonlocal dragRect
+        print(f"{x}, {y}")
+        if dragRect != None:
+            gridChanges += 1
+            y_i = dragRect.y
+            for row in selected:
+                for unit in row:
+                    gridUnit = grid[y][0]
+                    for u in grid[y]:
+                        if unit.pos == u.pos:
+                            gridUnit = u
+                            break
+                    newX = gridUnit.pos[0] + x
+                    newY = y_i + y
+                    gridUnit.resetSerial()
+                    print(f"{newY}, {newX}")
+                    grid[newY][newX].serialNumber = unit.serialNumber
+                y_i += 1
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
@@ -726,7 +753,9 @@ def main():
                         LB_Quit()
                 else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
-                if event.button == 2:
+                if event.button == 1:
+                    selectTrigger = True
+                elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
             elif event.type == MOUSEBUTTONUP:
@@ -750,6 +779,15 @@ def main():
                 elif event.key == K_e:
                     brush = materialMenu(brush)
                     updateTiles = False
+                elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
+                    if event.key == K_UP:
+                        moveBy(0, -1)
+                    elif event.key == K_DOWN:
+                        moveBy(0, 1)
+                    elif event.key == K_LEFT:
+                        moveBy(-1, 0)
+                    elif event.key == K_RIGHT:
+                        moveBy(1, 0)
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -792,31 +830,44 @@ def main():
             if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
             elif gridChanges > 100: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
-        
-        selectedTiles = []
-        selected_size = [0, 0]
+
         if brush != "0000":
             tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
-        elif mouse_pressed[2]:
+            selectTrigger = False
             dragStartPos = None
-        elif mouse_pressed[0]:
+            dragRect = None
+        elif selectTrigger and mouse_pressed[0]:
             if dragStartPos == None:
-                dragStartPos = (int(KDS.Math.Clamp((mouse_pos[0] + scroll[0] * scalesize) / scalesize, 0, gridSize[0])), int(KDS.Math.Clamp((mouse_pos[1] + scroll[1] * scalesize) / scalesize, 0, gridSize[0])))
-            dragPos = (int(KDS.Math.Clamp(mouse_pos[0] / scalesize + scroll[0], 0, gridSize[0])), int(KDS.Math.Clamp(mouse_pos[1] / scalesize + scroll[1], 0, gridSize[1])))
+                dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
+            dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
+            selected = []
             for row in grid[dragRect.y:dragRect.y + dragRect.height]:
+                selectedRow: List[tileInfo] = []
                 for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                    selectedTiles.append(unit)
+                    selectedRow.append(unit.copy())
+                selected.append(selectedRow)
         elif dragStartPos != None:
+            selectTrigger = False
             dragStartPos = None
+        
+        if mouse_pressed[2]:
+            selectTrigger = False
+            dragStartPos = None
+            dragRect = None
             
-        if selected_size[0] > 0 and selected_size[1] > 0:
-            pass #PIIRRÄ SE
+        if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
+            selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
+            selectDraw = pygame.Surface(selectDrawRect.size)
+            selectDraw.fill(KDS.Colors.White)
+            pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), scalesize // 8)
+            selectDraw.set_alpha(64)
+            display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
 
         pygame.display.flip()
         clock.tick_busy_loop(60)
-        
+
 mainRunning = True   
 main()
 
