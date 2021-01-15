@@ -704,6 +704,7 @@ def main():
     dragPos = None
     dragRect = None
     selectTrigger = False
+    brushTrigger = True
     selected: List[List[tileInfo]] = []
 
     def setSelected():
@@ -800,7 +801,6 @@ def main():
             inputConsole_output = None
 
         display.fill((30,20,60))
-
         grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
 
         if gridChanges > 0:
@@ -808,14 +808,15 @@ def main():
             if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
             elif gridChanges > 100: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
-
         if brush != "0000":
             tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
-            selectTrigger = False
-            dragStartPos = None
-            dragRect = None
-            setSelected()
+            if brushTrigger:
+                selectTrigger = False
+                dragStartPos = None
+                dragRect = None
+                setSelected()
+                brushTrigger = False
         elif selectTrigger and mouse_pressed[0]:
             if dragStartPos == None:
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
@@ -830,13 +831,13 @@ def main():
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
-
+        if brush == "0000": brushTrigger = True
         if mouse_pressed[2]:
             selectTrigger = False
             dragStartPos = None
             dragRect = None
             setSelected()
-            
+
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
             selectDraw = pygame.Surface(selectDrawRect.size)
@@ -844,6 +845,7 @@ def main():
             pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), scalesize // 8)
             selectDraw.set_alpha(64)
             display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
+        
 
         if len(selected) > 0:
             for row in selected:
