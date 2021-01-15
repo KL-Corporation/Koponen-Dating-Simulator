@@ -705,37 +705,14 @@ def main():
     dragRect = None
     selectTrigger = False
     selected: List[List[tileInfo]] = []
-    
-    def getSelected():
-        nonlocal selected
-        selected = []
-        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
-            selectedRow: List[tileInfo] = []
-            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                selectedRow.append(unit.copy())
-            selected.append(selectedRow)
 
-    def moveBy(x: int, y: int):
+    def setSelected():
+        nonlocal selected
         global grid
-        nonlocal dragRect, dragStartPos
-        if x == 0 and y == 0: return
         Undo.register()
-        if dragRect != None:
-            y_i = dragRect.y
-            newSelected = selected.copy()
-            if x > 0 or y > 0: newSelected.reverse()
-            for row in newSelected:
-                for unit in row:
-                    gridUnit = grid[y_i][0]
-                    for u in grid[y_i]:
-                        if unit.pos == u.pos:
-                            gridUnit = u
-                            break
-                    newX = unit.pos[0] + x
-                    newY = unit.pos[1] + y
-                    gridUnit.resetSerial(False)
-                    grid[newY][newX].serialNumber = unit.serialNumber
-                y_i += 1
+        for row in selected:
+            for unit in row:
+                grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
@@ -784,10 +761,11 @@ def main():
                         xy = (-1, 0)
                     elif event.key == K_RIGHT:
                         xy = (1, 0)
-                    moveBy(*xy)
+                    for row in selected:
+                        for unit in row:
+                            unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
                     dragRect.x += xy[0]
                     dragRect.y += xy[1]
-                    getSelected()
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -837,12 +815,18 @@ def main():
             selectTrigger = False
             dragStartPos = None
             dragRect = None
+            setSelected()
         elif selectTrigger and mouse_pressed[0]:
             if dragStartPos == None:
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
             dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
-            getSelected()
+            selected = []
+            for row in grid[dragRect.y:dragRect.y + dragRect.height]:
+                selectedRow: List[tileInfo] = []
+                for unit in row[dragRect.x:dragRect.x + dragRect.width]:
+                    selectedRow.append(unit.copy())
+                selected.append(selectedRow)
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
@@ -851,6 +835,7 @@ def main():
             selectTrigger = False
             dragStartPos = None
             dragRect = None
+            setSelected()
             
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
@@ -860,6 +845,27 @@ def main():
             selectDraw.set_alpha(64)
             display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
 
+        if len(selected) > 0:
+            for row in selected:
+                row: List[tileInfo]
+                for unit in row:
+                    blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
+                    srlist = unit.getSerials()
+                    for number in srlist:
+                        blitTex = None
+                        if number[0] == '3':
+                            blitTex = Atextures["3"]["3001"]
+                        elif number != "0000":
+                            try:
+                                blitTex = Atextures[number[0]][number]
+                            except KeyError:
+                                    print(f"Cannot render unit because texture is not added: {srlist}")
+                        if blitTex != None:
+                            if number in trueScale:
+                                display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
+                            else:
+                                display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - blitTex.get_height() * scaleMultiplier + scalesize))
+        
         pygame.display.flip()
         clock.tick_busy_loop(60)
 
