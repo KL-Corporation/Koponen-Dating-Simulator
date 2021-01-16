@@ -114,6 +114,7 @@ gridSize = (0, 0)
 class Undo:
     savePoints = []
     saveIndex = 0
+    overflowCount = 0
     
     @staticmethod
     def register():
@@ -126,14 +127,18 @@ class Undo:
         }
         Undo.savePoints = Undo.savePoints[:Undo.saveIndex + 1]
         Undo.savePoints.append(toSave)
-        while len(Undo.savePoints) > 64: del Undo.savePoints[0]
+        while len(Undo.savePoints) > 64:
+            del Undo.savePoints[0]
+            Undo.overflowCount += 1
         Undo.saveIndex = len(Undo.savePoints) - 1
     
     @staticmethod
     def request(redo: bool = False):
         Undo.saveIndex = KDS.Math.Clamp(Undo.saveIndex - KDS.Convert.ToMultiplier(redo), 0, len(Undo.savePoints) - 1)
-        data = Undo.savePoints[Undo.saveIndex]
+        if len(Undo.savePoints) < 1: return
+        
         global grid, dragRect, brush, tileprops
+        data = Undo.savePoints[Undo.saveIndex]
         grid = data["grid"]
         dragRect = data["dragRect"]
         brush = data["brush"]
@@ -719,7 +724,7 @@ def main():
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
-                if len(Undo.savePoints) > 0:
+                if Undo.saveIndex + Undo.overflowCount > 0:
                     if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
                         LB_Quit()
                 else: LB_Quit()
@@ -745,6 +750,7 @@ def main():
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
+                    Undo.register()
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
@@ -805,10 +811,11 @@ def main():
         display.fill((30,20,60))
         grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
 
-        if len(Undo.savePoints) > 0:
-            if len(Undo.savePoints) < 50:
+        undoTotal = Undo.saveIndex + Undo.overflowCount
+        if undoTotal > 0:
+            if undoTotal < 50:
                 _color = KDS.Colors.Yellow
-            elif 100 >= len(Undo.savePoints) >= 50: _color = KDS.Colors.Orange
+            elif 100 >= undoTotal >= 50: _color = KDS.Colors.Orange
             else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
         if brush != "0000":
@@ -830,7 +837,7 @@ def main():
             selectTrigger = False
             dragStartPos = None
         if brush == "0000": brushTrigger = True
-        if mouse_pressed[2] and not keys_pressed[K_c]:
+        if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
             selectTrigger = False
             dragStartPos = None
             dragRect = None
