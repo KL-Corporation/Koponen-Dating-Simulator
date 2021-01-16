@@ -111,34 +111,37 @@ grid: List[List[tileInfo]] = [[]]
 tileprops: Dict[str, Dict[str, Any]] = {}
 gridSize = (0, 0)
 
+dragRect = None
+
 class Undo:
-    savePoints = []
-    saveIndex = 0
+    points = []
+    index = 0
     overflowCount = 0
     
     @staticmethod
     def register():
+        print(len(Undo.points))
         global grid, dragRect, brush, tileprops
         toSave = {
             "grid": copy.deepcopy(grid),
-            "dragRect": dragRect.copy if dragRect != None else dragRect,
+            "dragRect": dragRect.copy() if dragRect != None else dragRect,
             "brush": brush,
             "tileprops": copy.deepcopy(tileprops)
         }
-        Undo.savePoints = Undo.savePoints[:Undo.saveIndex + 1]
-        Undo.savePoints.append(toSave)
-        while len(Undo.savePoints) > 64:
-            del Undo.savePoints[0]
+        del Undo.points[Undo.index + 1:]
+        Undo.points.append(toSave)
+        while len(Undo.points) > 64:
+            del Undo.points[0]
             Undo.overflowCount += 1
-        Undo.saveIndex = len(Undo.savePoints) - 1
+        Undo.index = len(Undo.points) - 1
     
     @staticmethod
     def request(redo: bool = False):
-        Undo.saveIndex = KDS.Math.Clamp(Undo.saveIndex - KDS.Convert.ToMultiplier(redo), 0, len(Undo.savePoints) - 1)
-        if len(Undo.savePoints) < 1: return
+        print(len(Undo.points))
+        Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
         
         global grid, dragRect, brush, tileprops
-        data = Undo.savePoints[Undo.saveIndex]
+        data = Undo.points[Undo.index]
         grid = data["grid"]
         dragRect = data["dragRect"]
         brush = data["brush"]
@@ -146,8 +149,8 @@ class Undo:
     
     @staticmethod
     def clear():
-        Undo.savePoints = []
-        Undo.saveIndex = 0
+        Undo.points.clear()
+        Undo.index = 0
             
 
 def LB_Quit():
@@ -452,13 +455,14 @@ def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
         
         #return tempGrid
         currentSaveName = fileName
-        Undo.clear()
 
         grid = temporaryGrid
         fpath = os.path.join(os.path.dirname(fileName), "tileprops.kdf")
         if os.path.isfile(fpath):
             with open(fpath, 'r') as f:
                 tileprops = json.loads(f.read())
+                
+        Undo.clear()
 
 commandTree = {
     "set": {
@@ -711,7 +715,6 @@ def main():
 
     dragStartPos = None
     dragPos = None
-    dragRect = None
     selectTrigger = False
     brushTrigger = True
 
@@ -724,7 +727,7 @@ def main():
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
-                if Undo.saveIndex + Undo.overflowCount > 0:
+                if Undo.index + Undo.overflowCount > 0:
                     if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
                         LB_Quit()
                 else: LB_Quit()
@@ -811,7 +814,7 @@ def main():
         display.fill((30,20,60))
         grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
 
-        undoTotal = Undo.saveIndex + Undo.overflowCount
+        undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
             if undoTotal < 50:
                 _color = KDS.Colors.Yellow
@@ -882,7 +885,7 @@ def main():
             display.blit(fps_text, (10, 10))
         
         pygame.display.flip()
-        clock.tick_busy_loop(60)
+        clock.tick_busy_loop()
 
 mainRunning = True   
 main()
