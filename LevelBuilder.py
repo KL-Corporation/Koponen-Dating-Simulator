@@ -151,6 +151,7 @@ class Undo:
     def clear():
         Undo.points.clear()
         Undo.index = 0
+        Undo.register()
             
 
 def LB_Quit():
