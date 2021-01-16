@@ -1,6 +1,9 @@
 import math
 import sys
-from typing import SupportsFloat, Tuple
+from typing import SupportsFloat, Tuple, TypeVar
+
+T = TypeVar("T")
+Value = TypeVar("Value", int, float)
 
 import KDS.Logging
 
@@ -41,7 +44,7 @@ def Round(f: float) -> int:
 #endregion
 
 #region Value Manipulation
-def Clamp(value: float, _min: float, _max: float) -> float:
+def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
     Args:
@@ -54,16 +57,16 @@ def Clamp(value: float, _min: float, _max: float) -> float:
     """
     return max(_min, min(value, _max))
 
-def Clamp01(value: float) -> float:
+def Clamp01(value: Value) -> Value:
     return max(0, min(value, 1))
 
-def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
+def Remap(value: Value, from1: Value, to1: Value, from2: Value, to2: Value) -> Value:
     """
     Converts a value to another value within the given arguments.
     """
     return (value - from1) / (to1 - from1) * (to2 - from2) + from2
 
-def Remap01(value: float, from1: float, from2: float) -> float:
+def Remap01(value: Value, from1: Value, from2: Value) -> Value:
     """
     Converts a value to another value within the given arguments.
     """

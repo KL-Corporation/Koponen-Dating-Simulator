@@ -31,8 +31,7 @@ scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
-display = pygame.display.set_mode(display_size)
-display: pygame.Surface
+display: pygame.Surface = pygame.display.set_mode(display_size)
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 
@@ -113,42 +112,37 @@ tileprops: Dict[str, Dict[str, Any]] = {}
 gridChanges = 0
 gridSize = (0, 0)
 
-class Redo:
-    savePoints = []
-    
-    @staticmethod
-    def register():
-        global grid, gridChanges
-        Redo.savePoints.append(copy.deepcopy(grid))
-        while len(Redo.savePoints) > 100: Redo.savePoints.pop(0)
-        gridChanges += 1
-    
-    @staticmethod
-    def request():
-        global grid, gridChanges
-        if len(Redo.savePoints) > 0:
-            grid = Redo.savePoints.pop(-1)
-            Undo.register(clearRedo=False)
-            gridChanges -= 2
-
 class Undo:
     savePoints = []
+    saveIndex = 0
     
     @staticmethod
-    def register(clearRedo: bool = True):
+    def register(dragRect: Union[pygame.Rect, None], brush: str):
         global grid, gridChanges
-        if clearRedo: Redo.savePoints.clear()
-        Undo.savePoints.append(copy.deepcopy(grid))
-        while len(Undo.savePoints) > 100: Undo.savePoints.pop(0)
+        toSave = {
+            "grid": copy.deepcopy(grid),
+            "dragRect": dragRect.copy() if dragRect != None else None,
+            "brush": brush
+        }
+        Undo.savePoints = Undo.savePoints[:Undo.saveIndex + 1]
+        Undo.savePoints.append(toSave)
+        while len(Undo.savePoints) > 64: del Undo.savePoints[0]
+        Undo.saveIndex = len(Undo.savePoints) - 1
         gridChanges += 1
     
     @staticmethod
-    def request():
-        global grid, gridChanges
-        if len(Undo.savePoints) > 0:
-            grid = Undo.savePoints.pop(-1)
-            Redo.register()
-            gridChanges -= 2
+    def request(redo: bool = False):
+        global gridChanges
+        v = -KDS.Convert.ToMultiplier(redo)
+        gridChanges += v
+        Undo.saveIndex = KDS.Math.Clamp(Undo.saveIndex + v, 0, len(Undo.savePoints) - 1)
+        return Undo.savePoints[Undo.saveIndex]
+    
+    @staticmethod
+    def clear():
+        Undo.savePoints = []
+        Undo.saveIndex = 0
+            
 
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning
@@ -163,6 +157,7 @@ KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), 
 class tileInfo:
     releasedButtons = { 0: True, 2: True }
     placedOnTile = None
+    EMPTYSERIAL = "0000 0000 0000 0000 / "
     
     def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
         self.pos = position
@@ -172,8 +167,6 @@ class tileInfo:
         return tileInfo(self.pos, serialNumber=self.serialNumber)
 
     def setSerial(self, srlNumber: str):
-        if f"{srlNumber} 0000 0000 0000 / " == self.serialNumber: return
-        Undo.register()
         serialIdentifier = int(srlNumber[1])
         serialIdentifier *= 4
         if serialIdentifier:
@@ -183,8 +176,6 @@ class tileInfo:
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
-        if self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:] == self.serialNumber: return
-        Undo.register()
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
 
     def getSerial(self, slot: int):
@@ -200,7 +191,6 @@ class tileInfo:
             if int(number) == 0:
                 if srlNumber not in srlist:
                     if srlNumber not in t_textures or not self.hasTile():
-                        Undo.register()
                         self.setSerialToSlot(srlNumber, index)
                     else: print(f"Tile already in {self.pos}!")
                 else: print(f"Serial {srlNumber} already in {self.pos}!")
@@ -211,7 +201,6 @@ class tileInfo:
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
-                Undo.register()
                 self.setSerialToSlot("0000", index)
                 return
 
@@ -222,10 +211,8 @@ class tileInfo:
                 return True
         return False
 
-    def resetSerial(self, registerUndo: bool = True):
-        if "0000 0000 0000 0000 / " == self.serialNumber: return
-        if registerUndo: Undo.register()
-        self.serialNumber = "0000 0000 0000 0000 / "
+    def resetSerial(self):
+        self.serialNumber = tileInfo.EMPTYSERIAL
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
@@ -431,9 +418,8 @@ def saveMap(grd, name: str):
             with open(tilepropsPath, "w") as f:
                 f.write(json.dumps(tileprops))
     #endregion
-    global gridBeforeSave, gridChanges
+    global gridChanges
     gridChanges = 0
-    gridBeforeSave = grd.copy()
         
 def saveMapName():
     global currentSaveName, grid
@@ -470,9 +456,8 @@ def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
         currentSaveName = fileName
         gridChanges = 0
     if temporaryGrid != None:
-        global gridBeforeSave, grid, tileprops
+        global grid, tileprops
         grid = temporaryGrid
-        gridBeforeSave = grid.copy()
         fpath = os.path.join(os.path.dirname(fileName), "tileprops.kdf")
         if os.path.isfile(fpath):
             with open(fpath, 'r') as f:
@@ -700,20 +685,29 @@ def main():
     inputConsole_output = None
     updateTiles = True
 
+    DebugMode = False
+
     dragStartPos = None
     dragPos = None
     dragRect = None
     selectTrigger = False
     brushTrigger = True
-    selected: List[List[tileInfo]] = []
+    selected: List[tileInfo] = []
 
-    def setSelected():
-        nonlocal selected
-        global grid
-        Undo.register()
-        for row in selected:
-            for unit in row:
-                grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber
+    def setSelected(serialOverride: str = None):
+        nonlocal selected, dragRect
+        global grid, brush
+        Undo.register(dragRect, brush)
+        for unit in selected:
+            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+                
+    def updateSelected():
+        nonlocal selected, dragRect
+        selected = []
+        if dragRect == None: return
+        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
+            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
+                selected.append(unit.copy())
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
@@ -730,7 +724,10 @@ def main():
                 else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
+                    Undo.register(dragRect, brush)
                     selectTrigger = True
+                elif event.button == 3:
+                    Undo.register(dragRect, brush)
                 elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
@@ -738,12 +735,15 @@ def main():
                 if event.button == 1:
                     updateTiles = True
             elif event.type == KEYDOWN:
-                if event.key == K_z:
+                if event.key == K_z or event.key == K_y:
                     if keys_pressed[K_LCTRL]:
-                        Undo.request()
-                elif event.key == K_y:
-                    if keys_pressed[K_LCTRL]:
-                        Redo.request()
+                        redo = False
+                        if event.key == K_y: redo = True
+                        undoData = Undo.request(redo)
+                        grid = undoData["grid"]
+                        dragRect = undoData["dragRect"]
+                        brush = undoData["brush"]
+                        updateSelected()
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
@@ -752,6 +752,11 @@ def main():
                 elif event.key == K_e:
                     brush = materialMenu(brush)
                     updateTiles = False
+                elif event.key == K_F3:
+                    DebugMode = not DebugMode
+                elif event.key == K_DELETE:
+                    setSelected(tileInfo.EMPTYSERIAL)
+                    updateSelected()
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                     xy = (0, 0)
                     if event.key == K_UP:
@@ -762,9 +767,8 @@ def main():
                         xy = (-1, 0)
                     elif event.key == K_RIGHT:
                         xy = (1, 0)
-                    for row in selected:
-                        for unit in row:
-                            unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
+                    for unit in selected:
+                        unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
                     dragRect.x += xy[0]
                     dragRect.y += xy[1]
             elif event.type == MOUSEWHEEL:
@@ -822,12 +826,7 @@ def main():
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
             dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
-            selected = []
-            for row in grid[dragRect.y:dragRect.y + dragRect.height]:
-                selectedRow: List[tileInfo] = []
-                for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                    selectedRow.append(unit.copy())
-                selected.append(selectedRow)
+            updateSelected()
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
@@ -837,7 +836,27 @@ def main():
             dragStartPos = None
             dragRect = None
             setSelected()
+            updateSelected()
 
+        if len(selected) > 0:
+            for unit in selected:
+                blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
+                srlist = unit.getSerials()
+                for number in srlist:
+                    blitTex = None
+                    if number[0] == '3':
+                        blitTex = Atextures["3"]["3001"]
+                    elif number != "0000":
+                        try:
+                            blitTex = Atextures[number[0]][number]
+                        except KeyError:
+                                print(f"Cannot render unit because texture is not added: {srlist}")
+                    if blitTex != None:
+                        if number in trueScale:
+                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
+                        else:
+                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - blitTex.get_height() * scaleMultiplier + scalesize))
+        
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
             selectDraw = pygame.Surface(selectDrawRect.size)
@@ -846,27 +865,15 @@ def main():
             selectDraw.set_alpha(64)
             display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
         
-
-        if len(selected) > 0:
-            for row in selected:
-                row: List[tileInfo]
-                for unit in row:
-                    blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
-                    srlist = unit.getSerials()
-                    for number in srlist:
-                        blitTex = None
-                        if number[0] == '3':
-                            blitTex = Atextures["3"]["3001"]
-                        elif number != "0000":
-                            try:
-                                blitTex = Atextures[number[0]][number]
-                            except KeyError:
-                                    print(f"Cannot render unit because texture is not added: {srlist}")
-                        if blitTex != None:
-                            if number in trueScale:
-                                display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
-                            else:
-                                display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - blitTex.get_height() * scaleMultiplier + scalesize))
+        if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+        
+            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
+            display.blit(fps_text, (10, 10))
         
         pygame.display.flip()
         clock.tick_busy_loop(60)
