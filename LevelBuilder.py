@@ -117,12 +117,11 @@ class Undo:
     saveIndex = 0
     
     @staticmethod
-    def register(dragRect: Union[pygame.Rect, None], brush: str):
+    def register(**saveData):
         global grid, gridChanges
         toSave = {
             "grid": copy.deepcopy(grid),
-            "dragRect": dragRect.copy() if dragRect != None else None,
-            "brush": brush
+            **saveData
         }
         Undo.savePoints = Undo.savePoints[:Undo.saveIndex + 1]
         Undo.savePoints.append(toSave)
@@ -167,10 +166,6 @@ class tileInfo:
         return tileInfo(self.pos, serialNumber=self.serialNumber)
 
     def setSerial(self, srlNumber: str):
-        serialIdentifier = int(srlNumber[1])
-        serialIdentifier *= 4
-        if serialIdentifier:
-            serialIdentifier += 1
         self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
     
     def setSerialToSlot(self, srlNumber: str, slot: int):
@@ -213,6 +208,10 @@ class tileInfo:
 
     def resetSerial(self):
         self.serialNumber = tileInfo.EMPTYSERIAL
+
+    @staticmethod
+    def toSerialString(srlNumber: str):
+        return f"{srlNumber} 0000 0000 0000 / "
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
@@ -465,7 +464,8 @@ def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
 
 commandTree = {
     "set": {
-        "brush": brushNames
+        "brush": brushNames,
+        **brushNames
     },
     "add": {
         "rows": "break",
@@ -478,13 +478,19 @@ commandTree = {
     }
 }
 def consoleHandler(commandlist):
-    global brush, grid
+    global brush, grid, dragRect
+    Undo.register(dragRect=dragRect, brush=brush)
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
             if commandlist[2] in brushNames:
                 brush = brushNames[commandlist[2]]
                 KDS.Console.Feed.append(f"Brush set: [{brushNames[commandlist[2]]}: {commandlist[2]}]")
             else: KDS.Console.Feed.append("Invalid brush.")
+        elif dragRect != None:
+            if commandlist[1] in brushNames:
+                Selected.Set(tileInfo.toSerialString(brushNames[commandlist[1]]))
+                Selected.Update()
+                KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{brushNames[commandlist[1]]}: {commandlist[1]}]")
         else: KDS.Console.Feed.append("Invalid set command.")
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
@@ -657,8 +663,26 @@ def menu():
         quit_btn.update(display, mouse_pos, clicked)
         pygame.display.flip()
 
+class Selected:
+    units: List[tileInfo] = []
+    
+    @staticmethod
+    def Set(serialOverride: str = None):
+        global grid, brush
+        Undo.register(dragRect=dragRect, brush=brush)
+        for unit in Selected.units:
+            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+    
+    @staticmethod         
+    def Update():
+        Selected.units = []
+        if dragRect == None: return
+        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
+            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
+                Selected.units.append(unit.copy())
+
 def main():
-    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex
+    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
 
     menu()
     if not mainRunning: return
@@ -692,22 +716,6 @@ def main():
     dragRect = None
     selectTrigger = False
     brushTrigger = True
-    selected: List[tileInfo] = []
-
-    def setSelected(serialOverride: str = None):
-        nonlocal selected, dragRect
-        global grid, brush
-        Undo.register(dragRect, brush)
-        for unit in selected:
-            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
-                
-    def updateSelected():
-        nonlocal selected, dragRect
-        selected = []
-        if dragRect == None: return
-        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
-            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                selected.append(unit.copy())
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
@@ -724,10 +732,10 @@ def main():
                 else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    Undo.register(dragRect, brush)
+                    Undo.register(dragRect=dragRect, brush=brush)
                     selectTrigger = True
                 elif event.button == 3:
-                    Undo.register(dragRect, brush)
+                    Undo.register(dragRect=dragRect, brush=brush)
                 elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
@@ -743,7 +751,7 @@ def main():
                         grid = undoData["grid"]
                         dragRect = undoData["dragRect"]
                         brush = undoData["brush"]
-                        updateSelected()
+                        Selected.Update()
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
@@ -755,8 +763,8 @@ def main():
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
                 elif event.key == K_DELETE:
-                    setSelected(tileInfo.EMPTYSERIAL)
-                    updateSelected()
+                    Selected.Set(tileInfo.EMPTYSERIAL)
+                    Selected.Update()
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                     xy = (0, 0)
                     if event.key == K_UP:
@@ -767,7 +775,7 @@ def main():
                         xy = (-1, 0)
                     elif event.key == K_RIGHT:
                         xy = (1, 0)
-                    for unit in selected:
+                    for unit in Selected.units:
                         unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
                     dragRect.x += xy[0]
                     dragRect.y += xy[1]
@@ -819,14 +827,14 @@ def main():
                 selectTrigger = False
                 dragStartPos = None
                 dragRect = None
-                setSelected()
+                Selected.Set()
                 brushTrigger = False
         elif selectTrigger and mouse_pressed[0]:
             if dragStartPos == None:
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
             dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
-            updateSelected()
+            Selected.Update()
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
@@ -835,11 +843,11 @@ def main():
             selectTrigger = False
             dragStartPos = None
             dragRect = None
-            setSelected()
-            updateSelected()
+            Selected.Set()
+            Selected.Update()
 
-        if len(selected) > 0:
-            for unit in selected:
+        if len(Selected.units) > 0:
+            for unit in Selected.units:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 srlist = unit.getSerials()
                 for number in srlist:
