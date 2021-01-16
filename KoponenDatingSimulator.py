@@ -292,7 +292,6 @@ colorInvert = False
 monstersLeft = 0
 
 main_running = True
-gasburnerBurning = False
 tick = 0
 currently_on_mission = False
 current_mission = "none"
@@ -737,7 +736,7 @@ class Toilet(Tile):
 
     def update(self):
         global renderPlayer
-        if KDS.Math.getDistance((Player.rect.centerx, Player.rect.centery), self.rect.center) < 50 and gasburnerBurning and not self.burning:
+        if KDS.Math.getDistance((Player.rect.centerx, Player.rect.centery), self.rect.center) < 50 and Gasburner.burning and not self.burning:
             self.burning = True
             KDS.Scores.score += 30
             renderPlayer = True
@@ -766,7 +765,7 @@ class Trashcan(Tile):
 
     def update(self):
         
-        if KDS.Math.getDistance((Player.rect.centerx, Player.rect.centery), self.rect.center) < 48 and gasburnerBurning and not self.burning:
+        if KDS.Math.getDistance((Player.rect.centerx, Player.rect.centery), self.rect.center) < 48 and Gasburner.burning and not self.burning:
             self.burning = True
             KDS.Scores.score += 20
         if self.burning:
@@ -1513,20 +1512,22 @@ class Coffeemug(Item):
         return False
 
 class Gasburner(Item):
+    burning = False
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.sound = False
 
     def use(self, *args):
-        global gasburnerBurning
-        
         if args[0][0] == True:
-            gasburnerBurning = True
-            gasburner_fire.stop()
-            KDS.Audio.playSound(gasburner_fire)
+            Gasburner.burning = True
+            if not self.sound:
+                KDS.Audio.playSound(gasburner_fire, loops=-1)
+                self.sound = True
             return gasburner_animation_object.update()
         else:
             gasburner_fire.stop()
-            gasburnerBurning = False
+            self.sound = False
+            Gasburner.burning = False
             return self.texture
 
     def pickup(self):
