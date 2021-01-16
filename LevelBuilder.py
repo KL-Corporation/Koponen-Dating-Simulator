@@ -19,7 +19,7 @@ import KDS.Math
 import KDS.UI
 import KDS.Console
 import tkinter 
-from tkinter import filedialog
+from tkinter import Grid, filedialog
 import json
 import copy
 
@@ -109,7 +109,6 @@ teleportTemp = "001"
 currentSaveName = ''
 grid: List[List[tileInfo]] = [[]]
 tileprops: Dict[str, Dict[str, Any]] = {}
-gridChanges = 0
 gridSize = (0, 0)
 
 class Undo:
@@ -117,25 +116,28 @@ class Undo:
     saveIndex = 0
     
     @staticmethod
-    def register(**saveData):
-        global grid, gridChanges
+    def register():
+        global grid, dragRect, brush, tileprops
         toSave = {
             "grid": copy.deepcopy(grid),
-            **saveData
+            "dragRect": dragRect.copy if dragRect != None else dragRect,
+            "brush": brush,
+            "tileprops": copy.deepcopy(tileprops)
         }
         Undo.savePoints = Undo.savePoints[:Undo.saveIndex + 1]
         Undo.savePoints.append(toSave)
         while len(Undo.savePoints) > 64: del Undo.savePoints[0]
         Undo.saveIndex = len(Undo.savePoints) - 1
-        gridChanges += 1
     
     @staticmethod
     def request(redo: bool = False):
-        global gridChanges
-        v = -KDS.Convert.ToMultiplier(redo)
-        gridChanges += v
-        Undo.saveIndex = KDS.Math.Clamp(Undo.saveIndex + v, 0, len(Undo.savePoints) - 1)
-        return Undo.savePoints[Undo.saveIndex]
+        Undo.saveIndex = KDS.Math.Clamp(Undo.saveIndex - KDS.Convert.ToMultiplier(redo), 0, len(Undo.savePoints) - 1)
+        data = Undo.savePoints[Undo.saveIndex]
+        global grid, dragRect, brush, tileprops
+        grid = data["grid"]
+        dragRect = data["dragRect"]
+        brush = data["brush"]
+        tileprops = data["tileprops"]
     
     @staticmethod
     def clear():
@@ -215,7 +217,6 @@ class tileInfo:
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
-        global gridChanges
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         brushtemp = brsh
@@ -302,13 +303,11 @@ class tileInfo:
                                     unit.setSerial(brsh)
                                 elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
                             elif unit.hasTile():
-                                gridChanges += 1
                                 if not keys_pressed[K_LALT]:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
                                 else:
                                     tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
                         elif keys_pressed[K_c]:
-                            gridChanges += 1
                             if not keys_pressed[K_LALT]:
                                 tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
                             else:
@@ -319,11 +318,9 @@ class tileInfo:
                             if not keys_pressed[K_LSHIFT]:
                                 unit.resetSerial()
                                 if tpP in tileprops:
-                                    gridChanges += 1
                                     del tileprops[tpP]
                             elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
                         elif tpP in tileprops and "checkCollision" in tileprops[tpP]:
-                            gridChanges += 1
                             del tileprops[tpP]["checkCollision"]
                             if len(tileprops[tpP]) < 1: del tileprops[tpP]
                     tileInfo.placedOnTile = unit
@@ -362,9 +359,8 @@ def loadGrid(size):
         for x in range(size[0]):
             row.append(tileInfo((x, y)))
         rlist.append(row)
-    global gridSize, gridChanges
+    global gridSize
     gridSize = size
-    gridChanges += 1
     return rlist
 
 def resizeGrid(size, grid: list):
@@ -388,9 +384,8 @@ def resizeGrid(size, grid: list):
         for row in grid:
             while len(row) > size[0]:
                 row.pop()
-    global gridSize, gridChanges
+    global gridSize
     gridSize = size
-    gridChanges += 1
     return grid
 
 def saveMap(grd, name: str):
@@ -417,8 +412,7 @@ def saveMap(grd, name: str):
             with open(tilepropsPath, "w") as f:
                 f.write(json.dumps(tileprops))
     #endregion
-    global gridChanges
-    gridChanges = 0
+    Undo.clear()
         
 def saveMapName():
     global currentSaveName, grid
@@ -428,7 +422,7 @@ def saveMapName():
         currentSaveName = savePath
 
 def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
-    global currentSaveName, gridSize, gridChanges
+    global currentSaveName, gridSize, grid, tileprops
     fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
     temporaryGrid = None
     if fileName:
@@ -453,9 +447,8 @@ def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
         
         #return tempGrid
         currentSaveName = fileName
-        gridChanges = 0
-    if temporaryGrid != None:
-        global grid, tileprops
+        Undo.clear()
+
         grid = temporaryGrid
         fpath = os.path.join(os.path.dirname(fileName), "tileprops.kdf")
         if os.path.isfile(fpath):
@@ -479,7 +472,7 @@ commandTree = {
 }
 def consoleHandler(commandlist):
     global brush, grid, dragRect
-    Undo.register(dragRect=dragRect, brush=brush)
+    Undo.register()
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
             if commandlist[2] in brushNames:
@@ -631,7 +624,7 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
 
 def menu():
-    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
     grid = None
     def button_handler(_openMap: bool = False):
@@ -669,7 +662,7 @@ class Selected:
     @staticmethod
     def Set(serialOverride: str = None):
         global grid, brush
-        Undo.register(dragRect=dragRect, brush=brush)
+        Undo.register()
         for unit in Selected.units:
             grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
     
@@ -682,7 +675,7 @@ class Selected:
                 Selected.units.append(unit.copy())
 
 def main():
-    global currentSaveName, brush, grid, gridSize, gridChanges, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
 
     menu()
     if not mainRunning: return
@@ -726,16 +719,16 @@ def main():
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
             if event.type == pygame.QUIT:
-                if gridChanges > 0:
+                if len(Undo.savePoints) > 0:
                     if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
                         LB_Quit()
                 else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    Undo.register(dragRect=dragRect, brush=brush)
+                    Undo.register()
                     selectTrigger = True
                 elif event.button == 3:
-                    Undo.register(dragRect=dragRect, brush=brush)
+                    Undo.register()
                 elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
@@ -747,10 +740,7 @@ def main():
                     if keys_pressed[K_LCTRL]:
                         redo = False
                         if event.key == K_y: redo = True
-                        undoData = Undo.request(redo)
-                        grid = undoData["grid"]
-                        dragRect = undoData["dragRect"]
-                        brush = undoData["brush"]
+                        Undo.request(redo)
                         Selected.Update()
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
@@ -815,10 +805,11 @@ def main():
         display.fill((30,20,60))
         grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
 
-        if gridChanges > 0:
-            _color = KDS.Colors.Yellow
-            if 100 >= gridChanges >= 50: _color = KDS.Colors.Orange
-            elif gridChanges > 100: _color = KDS.Colors.Red
+        if len(Undo.savePoints) > 0:
+            if len(Undo.savePoints) < 50:
+                _color = KDS.Colors.Yellow
+            elif 100 >= len(Undo.savePoints) >= 50: _color = KDS.Colors.Orange
+            else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
         if brush != "0000":
             tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
@@ -829,7 +820,7 @@ def main():
                 dragRect = None
                 Selected.Set()
                 brushTrigger = False
-        elif selectTrigger and mouse_pressed[0]:
+        elif selectTrigger and mouse_pressed[0] and not keys_pressed[K_c]:
             if dragStartPos == None:
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
             dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
@@ -839,7 +830,7 @@ def main():
             selectTrigger = False
             dragStartPos = None
         if brush == "0000": brushTrigger = True
-        if mouse_pressed[2]:
+        if mouse_pressed[2] and not keys_pressed[K_c]:
             selectTrigger = False
             dragStartPos = None
             dragRect = None
