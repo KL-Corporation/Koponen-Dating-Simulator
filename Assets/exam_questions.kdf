@@ -1,0 +1,34 @@
+{
+    "q1" : {
+        "question": "Mika on KL-Corporationin lippulaiva tuote?",
+        "choices": [
+            "KDS Level Builder",
+            "Mastermind by KL-Corporation",
+            "KDS Compiler"
+        ]
+    },
+    "q2" : {
+        "question": "Kuka kehitti Rise and Fall-nimisen videopelin?",
+        "choices": [
+            "Matias Broman",
+            "KL-Corporation",
+            "NALStudio"
+        ]
+    },
+    "q3" : {
+        "question": "Mika seuraavista ei ole KL-Corporationin tuote?",
+        "choices": [
+            "Koponen Dating Simulator",
+            "Mastermind by KL-Corporation",
+            "Rise and Fall"
+        ]
+    },
+    "q4" : {
+        "question": "Mina vuonna Rise and Fall tuli saataville NALStudio game launcheriin?",
+        "choices": [
+            "2019",
+            "2020",
+            "2021"
+        ]
+    }
+}
