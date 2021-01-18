@@ -114,7 +114,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, showtitle = T
         if showtitle: showTitle(titleSurf)
         Audio.playSound(exam_music, loops = -1)
         pygame.mouse.set_visible(True)
-        questions = loadQuestions("Assets/exam_questions.kdf", 1)
+        questions = loadQuestions("Assets/exam_questions.kdf", amount=4)
 
         exam_running = True
         Display.blit(background, (0, 0))
