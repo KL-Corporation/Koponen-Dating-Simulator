@@ -7,7 +7,7 @@ from pygame.locals import *
 import KDS.Colors
 from KDS.System import MessageBox
 
-def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, showtitle = True):
+def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle = True):
     _quit = False
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
@@ -127,9 +127,13 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, showtitle = T
                     if MessageBox.Show("Quit?", "Are you sure you want to quit?", MessageBox.Buttons.YESNO, MessageBox.Icon.WARNING) == MessageBox.Responses.YES:
                         _quit = True
                         return
-                if event.type == MOUSEBUTTONDOWN:
+                elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
                         c = True
+                elif event.type == KEYDOWN:
+                    if event.key == K_F11:
+                        pygame.display.toggle_fullscreen()
+                        CM.SetSetting("Renderer/fullscreen", not CM.GetSetting("Renderer/fullscreen", False))
 
             Display.blit(background, (0, 0))
             Display.blit(exam_paper, relative_position)

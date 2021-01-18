@@ -35,25 +35,19 @@
         "Scratch": false
         },
         
-    "Kuinka paljon ihmisia oli maailman suurimmassa ryhmaseksissa" :{
-        "Noin 10": false,
-        "Noin 50": false,
-        "Noin 500": true
-        },
-        
     "Mina vuonna sahko loydettiin?" :{
         "1902": false,
         "1881": false,
         "1879": true
         },
         
-    "Mika on maailman pisin karme?" :{
+    "Mika on maailman pisin kaarme?" :{
         "Anaconda": false,
         "Python": true,
         "Mun kyrpa ( ͡° ͜ʖ ͡°)": true
         },
         
-    "Kuinka suuri on kirahvin kesiverto hupituutti?" :{
+    "Kuinka suuri on kirahvin keskiverto hupituutti?" :{
         "50 cm": false,
         "100 cm": true,
         "69 cm": false

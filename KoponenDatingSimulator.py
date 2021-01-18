@@ -3365,7 +3365,7 @@ while main_running:
                     Player.health = 0
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
-                quit_temp = KDS.Exam.Exam(display, clock, KDS.Audio)
+                quit_temp = KDS.Exam.Exam(display, clock, KDS.Audio, KDS.ConfigManager)
                 pygame.mouse.set_visible(False)
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
