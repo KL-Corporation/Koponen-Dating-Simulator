@@ -2,7 +2,7 @@ import random
 import pygame
 from json import load, loads
 from math import sin, radians
-from typing import List
+from typing import Dict
 from pygame.locals import *
 import KDS.Colors
 from KDS.System import MessageBox
@@ -19,26 +19,49 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, showtitle = T
     titleSurf = titleFont.render(title, False, KDS.Colors.White)
 
     question_maxwidth = exam_paper.get_width() - 18
+    question_indent = 20
 
     class Question:
-        def __init__(self, question: str, options: List[str]):
-            t_rows = []
-            words = question.split()
-            c = 1
-            while c > 0:
-                c = len(words)
-                while True:
-                    s = examTestFont.render(" ".join(words[ : c]), False, KDS.Colors.Black)
-                    if s.get_width() < question_maxwidth:
-                        t_rows.append(s)
-                        words = words[c : ]
-                        break
-                    c -= 1
+        def __init__(self, question: str, options: Dict[str, bool]):
 
-            self.qsurf = pygame.Surface((question_maxwidth, len(t_rows) * t_rows[0].get_height()))
+            def splitToRows(string_value, max_width):
+                _t_rows = []
+                words = string_value.split()
+                c = 1
+                while c > 0:
+                    c = len(words)
+                    while True:
+                        s = examTestFont.render(" ".join(words[ : c]), False, KDS.Colors.Black)
+                        if s.get_width() < max_width:
+                            _t_rows.append(s)
+                            words = words[c : ]
+                            break
+                        c -= 1
+                return _t_rows
+            
+            t_rows = splitToRows(question, question_maxwidth)
+
+            for option in options.keys():
+                o_trows = splitToRows(option, question_maxwidth - question_indent)
+                print(option)
+                s_bool = options[option]
+                options[option] = {"surface": pygame.Surface((question_maxwidth, (len(o_trows) - 1) * o_trows[0].get_height())), "s_bool": s_bool}
+                del s_bool
+                options[option]["surface"].fill(KDS.Colors.White)
+                options[option]["surface"].set_colorkey(KDS.Colors.White)
+                for index, row in enumerate(o_trows):
+                    options[option]["surface"].blit(row, (0, index * row.get_height()))
+
+            self.qsurf = pygame.Surface((question_maxwidth, (len(t_rows) + 1) * t_rows[0].get_height() + len(options) * t_rows[0].get_height())).convert()
             self.qsurf.fill(KDS.Colors.White)
+            b_index = 0
             for index, row in enumerate(t_rows):
                 self.qsurf.blit(row, (0, index * row.get_height()))
+                if index == len(t_rows) - 1: b_index = index * row.get_height() + row.get_height()
+            for index, question in enumerate(options.keys()):
+                pygame.draw.rect(self.qsurf, KDS.Colors.Black, (0, b_index + index * options[question]["surface"].get_height(), question_indent - question_indent / 5, options[question]["surface"].get_height()), 1)
+                self.qsurf.blit(options[question]["surface"], (question_indent, b_index + index * options[question]["surface"].get_height()))
+            self.options = options
             self.qsurf.set_colorkey(KDS.Colors.White)
 
     def showTitle(_title):
@@ -60,14 +83,11 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, showtitle = T
             rawData = loads(qfile.read())
 
         while len(qs) < amount:
-            print(len(qs), amount)
-            temp_qs = rawData[random.choice(list(rawData.keys()))]
-            if temp_qs["question"] not in loaded_questions:
-                print("Added question")
-                loaded_questions.append(temp_qs["question"])
-                qs.append(Question(temp_qs["question"], temp_qs["choices"]))
-        
-        #qs.append(Question("Homopippelipeenis kakka himmeli kakka saatanan pippeli himmeli suututewhds ass", ["Oikea", "Vaara", "Hehehe V"]))
+            temp_qs = random.choice(list(rawData.keys()))
+            if temp_qs not in loaded_questions:
+                loaded_questions.append(temp_qs)
+                print(rawData[temp_qs])
+                qs.append(Question(temp_qs, rawData[temp_qs]))
         return qs
 
     def exam():

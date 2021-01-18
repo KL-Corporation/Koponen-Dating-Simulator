@@ -1,34 +1,78 @@
 {
-    "q1" : {
-        "question": "Mika on KL-Corporationin lippulaiva tuote?",
-        "choices": [
-            "KDS Level Builder",
-            "Mastermind by KL-Corporation",
-            "KDS Compiler"
-        ]
+
+    "Mika on KL-Corporationin lippulaiva tuote?" : {
+        "KDS Level Builder": false,
+        "Mastermind by KL-Corporation": false,
+        "KDS Compiler" : false,
+        "Koponen Dating Simulator": true
     },
-    "q2" : {
-        "question": "Kuka kehitti Rise and Fall-nimisen videopelin?",
-        "choices": [
-            "Matias Broman",
-            "KL-Corporation",
-            "NALStudio"
-        ]
+
+    "Kuka kehitti Rise and Fall-nimisen videopelin?" : {
+        "Matias Broman": true,
+        "KL-Corporation": false,
+        "NALStudio": false
     },
-    "q3" : {
-        "question": "Mika seuraavista ei ole KL-Corporationin tuote?",
-        "choices": [
-            "Koponen Dating Simulator",
-            "Mastermind by KL-Corporation",
-            "Rise and Fall"
-        ]
+
+    "Mika seuraavista ei ole KL-Corporationin tuote?": {
+        "Koponen Dating Simulator": false,
+        "Mastermind by KL-Corporation": false,
+        "Rise and Fall": true
     },
-    "q4" : {
-        "question": "Mina vuonna Rise and Fall tuli saataville NALStudio game launcheriin?",
-        "choices": [
-            "2019",
-            "2020",
-            "2021"
-        ]
-    }
+    "Mina vuonna Rise and Fall tuli saataville NALStudio game launcheriin?": {
+        "2019": false,
+        "2020": true,
+        "2021": false
+    },
+    "Kenella miehella on vaitetysti maailman suurin penis?" :{
+        "Saddam Hussein": false,
+        "Roberto Esquivel Cabrera": true,
+        "Donald Trump": false
+        },
+        
+    "Mika naista koodikielista on vanhin?" :{
+        "Python": true,
+        "C#": false,
+        "Scratch": false
+        },
+        
+    "Kuinka paljon ihmisia oli maailman suurimmassa ryhmaseksissa" :{
+        "Noin 10": false,
+        "Noin 50": false,
+        "Noin 500": true
+        },
+        
+    "Mina vuonna sahko loydettiin?" :{
+        "1902": false,
+        "1881": false,
+        "1879": true
+        },
+        
+    "Mika on maailman pisin karme?" :{
+        "Anaconda": false,
+        "Python": true,
+        "Mun kyrpa ( ͡° ͜ʖ ͡°)": true
+        },
+        
+    "Kuinka suuri on kirahvin kesiverto hupituutti?" :{
+        "50 cm": false,
+        "100 cm": true,
+        "69 cm": false
+        },
+        
+    "Mika on oikea vastaus tahan kysymykseen?" :{
+        "Tama?": true,
+        "tama?": false,
+        "vai tama?": false
+        },
+        
+    "Kuinka monta kertaa keskimarin ihminen rapayttaa silmiaan paivassa?" :{
+        "9 000 - 13 000": false,
+        "14 000 - 19 000": true,
+        "20 000 - 25 000": false
+        },
+    "Milla naista vaikeusasteista Creeper voi tappaa sinut jos sinulla on taydet timantti armorit ja 8 sydanta elama?" :{
+        "Peaceful": false,
+        "Medium": false,
+        "Hard": true
+        }
 }
