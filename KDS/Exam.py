@@ -1,9 +1,9 @@
 import random
 import pygame
 import numpy
-from json import loads
+import json
 from math import sin, radians
-from typing import Dict, List
+from typing import Dict, List, Union
 from pygame.locals import *
 import KDS.Colors
 from KDS.Convert import ToGrayscale
@@ -101,9 +101,10 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
     def loadQuestions(path: str, amount = 5):
         qs = []
         loaded_questions = []
-        rawData = {}
-        with open(path, 'r') as qfile:
-            rawData = loads(qfile.read())
+        rawData: Dict[str, Dict[str, bool]] = {}
+        with open(path, "r", encoding="utf-8") as qfile:
+            tmp = qfile.read()
+            rawData = json.loads(tmp)
 
         while len(qs) < amount:
             temp_qs = random.choice(list(rawData.keys()))
@@ -120,7 +121,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         if showtitle: showTitle(titleSurf)
         Audio.playSound(exam_music, loops = -1)
         pygame.mouse.set_visible(True)
-        questions = loadQuestions("Assets/exam_questions.kdf", amount=10)
+        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=10)
 
         page_index = 0
         pages = []
