@@ -98,5 +98,43 @@
         "Disulfiraamista": true,
         "Etanolista": false,
         "Saippuasta": false
-    }
+    },
+
+    "Sinulla on kolme flamingoa ja Simo ottaa niista kaksi. Mita sinulla on?" :{
+        "Yksi flamingo" :false, 
+        "Ruumis ja kolme flamingoa" :true, 
+        "Yksi flamingo ja masennus" :false
+        }, 
+    "Seppo Virtanen omistaa koiran ja tama koira haluaa ruokaa, mutta  haluat kaljaa. Sinulla on 15€ ja koiranruoka maksaa 10€. 6 pack kaljaa maksaa 8€. Miten  toimii seuraavaksi?" :{
+        "Veta kunnon kannit eika huoli koirastaan" :false, 
+        "Ostaa koiranruokaa ja ruokkii koiran" :false, 
+        "Ostaa kaljaa ja juottaa koirankin kanniin" :true
+        }, 
+    "Kuka kirjoitti Kommunistisen Manifestin?" :{
+        "Josif Stalin" :false, 
+        "Vladimir Putin" :false, 
+        "Karl Marx" :true, 
+        "Carl Marks" :false, 
+        "Karl Max" :false, 
+        "Vladimir Lenin" :false, 
+        "Carl Marx" :false, 
+        "Karl Marz" :false
+        },
+    "Kuka oli Yhdysvaltain 36. Presidentti?":{
+        "Lyndon b. Johnson": true,
+        "Harry S. Truman": false,
+        "Jimmy Carter": false,
+        "James Garfield": false,
+        "James Madison": false,
+        "John Adams": false,
+        "Chester A. Arthur": false,
+        "Grover Cleveland": false,
+        "Donald Trump": false,
+        "Osama bin Laden": false,
+        "Matias Broman": true,
+        "Muammar Gaddafi": false,
+        "Saddam Hussein": false,
+        "Jussi Halla-aho": false,
+        "Juha Sipila": false
+        } 
 }
