@@ -53,12 +53,6 @@
         "69 cm": false
         },
         
-    "Mika on oikea vastaus tahan kysymykseen?" :{
-        "Tama?": true,
-        "tama?": false,
-        "vai tama?": false
-        },
-        
     "Kuinka monta kertaa keskimarin ihminen rapayttaa silmiaan paivassa?" :{
         "9 000 - 13 000": false,
         "14 000 - 19 000": true,
@@ -68,5 +62,41 @@
         "Peaceful": false,
         "Medium": false,
         "Hard": true
-        }
+        },
+
+    "Miikalla on viisi banaania, Miikan kaverilla on herpes. Laske auringon massa.": {
+        "2 000 000 000 000 000 000 000 000kg": false,
+        "1 980 000 000 000 000 000 000 000 000 000kg": true,
+        "3 094 000 000 000 000 000 000 000 000 000kg": false
+    },
+
+    "Heikilla on 420 karkkia. Heikki syo niista 69. Mita Heikilla nyt on?": {
+        "69 karkkia": false,
+        "Diabetes": true,
+        "351 karkkia": true
+    },
+    
+    "Kaljat eivat mahdu liikkumaan enaa korissasi ja yli 100% verestasi on alkoholia. Mita teet?": {
+        "Kuolet": false,
+        "Otat Antabus 200mg": true,
+        "Valloitat Yhdysvallat": false
+    },
+
+    "Mika seuraavista juomista tuottaa suurimman humalatilan": {
+        "Gambina": false,
+        "Finlandia": false,
+        "Viru Valge": false,
+        "Lasol": true,
+        "Valdemar": false,
+        "Pirkka III-olut": false,
+        "GatoNegro": false,
+        "Koskenkorva": false
+    },
+
+    "Mista Antabus-laake on valmistetu?": {
+        "Lyijysta": false,
+        "Disulfiraamista": true,
+        "Etanolista": false,
+        "Saippuasta": false
+    }
 }
