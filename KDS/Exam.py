@@ -4,6 +4,7 @@ from time import perf_counter
 from json import loads
 from math import sin, radians
 from typing import Dict, List, Union
+from pygame import surface
 from pygame.locals import *
 import KDS.Colors
 from math import floor
@@ -56,9 +57,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                 while c > 0:
                     c = len(words)
                     while True:
-                        s = examTestFont.render(" ".join(words[ : c]), False, KDS.Colors.Black)
-                        if s.get_width() < max_width:
-                            _t_rows.append(s)
+                        if examTestFont.size(" ".join(words[ : c]))[0] < max_width:
+                            _t_rows.append(examTestFont.render(" ".join(words[ : c]), False, KDS.Colors.Black))
                             words = words[c : ]
                             break
                         c -= 1
@@ -83,16 +83,16 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
 
             self.qsurf = pygame.Surface((question_maxwidth, (len(t_rows) + 1) * t_rows[0].get_height() + len(options) * t_rows[0].get_height())).convert()
             self.qsurf.fill(KDS.Colors.White)
-            b_index = 0
-            
             for index, row in enumerate(t_rows):
                 self.qsurf.blit(row, (0, index * row.get_height()))
                 if index == len(t_rows) - 1: b_index = index * row.get_height() + row.get_height()
-                
+
+            b_index = 0
             for index, question in enumerate(option_keys_shuffled):
-                options[question]["rect"] = pygame.Rect(0, b_index + index * options[question]["surface"].get_height(), question_indent - question_indent / 5, options[question]["surface"].get_height())
+                surface_height = options[question]["surface"].get_height()
+                options[question]["rect"] = pygame.Rect(0, b_index + index * surface_height, question_indent - question_indent / 5, surface_height)
                 pygame.draw.rect(self.qsurf, KDS.Colors.Black, options[question]["rect"], 1)
-                self.qsurf.blit(options[question]["surface"], (question_indent, b_index + index * options[question]["surface"].get_height()))
+                self.qsurf.blit(options[question]["surface"], (question_indent, b_index + index * surface_height))
                 
             self.options = options
             self.qsurf.set_colorkey(KDS.Colors.White)
@@ -100,13 +100,14 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         def update(self, relative_mouse_position, clicked):
             for option in self.options.keys():
                 if self.options[option]["rect"].collidepoint(relative_mouse_position) and clicked: 
-                    pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
-                    pygame.draw.rect(self.qsurf, KDS.Colors.Black, self.options[option]["rect"], 1)
                     if not self.options[option]["selected"]:
                         Audio.playSound(random.choice(pencil_scribbles))
                         self.options[option]["selected"] = True
-                        self.qsurf.blit(pygame.transform.scale(x_texture, (self.options[option]["rect"].w, self.options[option]["rect"].h)), self.options[option]["rect"].topleft)
-                    else: self.options[option]["selected"] = False
+                        self.qsurf.blit(pygame.transform.scale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)                 
+                    else: 
+                        self.options[option]["selected"] = False
+                        pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
+                        pygame.draw.rect(self.qsurf, KDS.Colors.Black, self.options[option]["rect"], 1)
 
     def showTitle(_title):
         counter = 0
@@ -139,7 +140,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         rawData: Dict[str, Dict[str, bool]] = {}
         with open(path, "r", encoding="utf-8") as qfile:
             tmp = qfile.read()
-            rawData = json.loads(tmp)
+            rawData = loads(tmp)
 
         while len(qs) < amount:
             temp_qs = random.choice(list(rawData.keys()))
