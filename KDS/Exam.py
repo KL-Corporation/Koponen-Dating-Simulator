@@ -1,6 +1,6 @@
 import random
 import pygame
-import numpy
+from time import perf_counter
 from json import loads
 from math import sin, radians
 from typing import Dict, List
@@ -8,6 +8,21 @@ from pygame.locals import *
 import KDS.Colors
 from KDS.Convert import ToGrayscale
 from KDS.System import MessageBox
+
+class Timer:
+    def __init__(self, start_time = 60):
+        self.time = start_time
+        self.start_time = 0
+
+    def start(self):
+        self.start_time = perf_counter()
+    
+    def get_time(self) -> str:
+        self.time -= perf_counter() - self.start_time
+        self.start_time = perf_counter()
+        time = divmod(int(self.time), 60)
+        return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
+
 
 def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle = True):
     _quit = False
@@ -19,10 +34,12 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
     page_turning = (pygame.mixer.Sound("Assets/Audio/effects/page_turning0.ogg"), pygame.mixer.Sound("Assets/Audio/effects/page_turning1.ogg"), pygame.mixer.Sound("Assets/Audio/effects/page_turning2.ogg"))
     title = "Pistokoe"
     titleFont = pygame.font.SysFont("Arial", 100)
+    timerFont = pygame.font.SysFont("Arial", 40)
     examTestFont = pygame.font.SysFont("Calibri", 20)
     titleSurf = titleFont.render(title, False, KDS.Colors.White)
 
     x_texture = examTestFont.render("X", False, KDS.Colors.Black)
+    time_ended = titleFont.render("Aika loppui!", False, KDS.Colors.Red)
 
     question_maxwidth = exam_paper.get_width() - 18
     exam_paper_height = exam_paper.get_height()
@@ -97,6 +114,20 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             counter += 1
+    
+    def checkAnswers(lstc: List[List[Question]]) -> float:
+        questions_correct = 0
+        questions_amount = 0
+        for page in lstc:
+            for question in page:
+                questions_amount += 1
+                question_right = True
+                for option in question.options.keys():
+                    if question.options[option]["selected"] is not question.options[option]["s_bool"]: question_right = False
+                if question_right: questions_correct += 1
+        
+        return questions_correct / questions_amount
+
 
     def loadQuestions(path: str, amount = 5):
         qs = []
@@ -166,7 +197,20 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             Audio.playSound(random.choice(page_turning))
 
         def return_exam():
-            pass
+            nonlocal exam_running, _quit
+            oldSurf = Display.copy()
+            exam_music.stop()
+            r = True
+            print(checkAnswers(pages))
+            while r:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        r = False
+                        _quit = True
+
+                Display.blit(oldSurf, (0, 0))
+                pygame.display.flip()
+            exam_running = False
 
         pg_button1 = pygame.image.load("Assets/textures/UI/Buttons/page_arrow_red.png").convert()
         pg_button1 = pygame.transform.scale(pg_button1, (round(pg_button1.get_width() / 2), round(pg_button1.get_height() / 2)))
@@ -184,9 +228,12 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                                          pg_button1)
 
         exam_return_button = pageButton((relative_position[0] + exam_paper.get_width() / 2 - pg_button2.get_width() / 2, relative_position[1] + exam_paper.get_height() - 55),
-                                         page_next, 
+                                         return_exam, 
                                          ToGrayscale(pg_button2),
                                          pg_button2)
+
+        timer = Timer(100)
+        timer.start()
 
         c = False
         while exam_running:
@@ -225,14 +272,26 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                 lastYoffset += question.qsurf.get_height()
 
             mouse_position = pygame.mouse.get_pos()
+            strtime, nmtime = timer.get_time()
             if page_index > 0: page_return_button.update(mouse_position, c)
             if page_index < len(pages) - 1: page_next_button.update(mouse_position, c)
             exam_return_button.update(mouse_position, c)
+            if nmtime < 0:
+                exam_music.stop()
+                oldSurf = Display.copy()
+                Audio.playSound(pygame.mixer.Sound("Assets/Audio/effects/timeup.ogg"))
+                for x in range(0, Display.get_width() + time_ended.get_width(), int(Display.get_width() / 100)):
+                    Display.blit(oldSurf, (0, 0))
+                    Display.blit(time_ended, (x - time_ended.get_width() + 10, Display.get_height() / 2 - time_ended.get_height() / 2))
+                    pygame.display.flip()
+                    Clock.tick_busy_loop(60)
+                return_exam()
+            Display.blit(timerFont.render(strtime, False, KDS.Colors.Red), (10, 10))
 
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             c = False
-        
+
         exam_music.stop()
             
     
