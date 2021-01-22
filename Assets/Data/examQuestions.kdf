@@ -92,10 +92,10 @@
         "Ruumis ja kolme flamingoa": true,
         "Yksi flamingo ja masennus": false
     },
-    "Seppo Virtanen omistaa koiran ja tama koira haluaa ruokaa, mutta  haluat kaljaa. Sinulla on 15€ ja koiranruoka maksaa 10€. 6 pack kaljaa maksaa 8€. Miten  toimii seuraavaksi?": {
-        "Veta kunnon kannit eika huoli koirastaan": false,
+    "Seppo Virtanen omistaa koiran. Hänen koiransa haluaa ruokaa, mutta Seppo haluaa kaljaa. Sepolla on 15€ ja koiranruoka maksaa 10€. Sixpack kaljaa maksaa 8€. Miten Seppo toimii seuraavaksi? Hän...": {
+        "Vetää kunnon kännit eikä huoli koirastaan": false,
         "Ostaa koiranruokaa ja ruokkii koiran": false,
-        "Ostaa kaljaa ja juottaa koirankin kanniin": true
+        "Ostaa kaljaa ja juottaa koirankin känniin": true
     },
     "Kuka kirjoitti Kommunistisen Manifestin?": {
         "Josif Stalin": false,
