@@ -93,3 +93,7 @@ def setVolume(volume: float):
     EffectVolume = volume
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
+
+def playFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+    sound = SoundMixer.Sound(path)
+    playSound(sound, volume, loops, fade_ms)

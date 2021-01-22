@@ -19,7 +19,7 @@ class Timer:
     def start(self):
         self.start_time = perf_counter()
     
-    def get_time(self) -> str:
+    def get_time(self):
         self.time -= perf_counter() - self.start_time
         self.start_time = perf_counter()
         time = divmod(int(self.time), 60)
@@ -83,7 +83,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
 
             self.qsurf = pygame.Surface((question_maxwidth, (len(t_rows) + 1) * t_rows[0].get_height() + len(options) * t_rows[0].get_height())).convert()
             self.qsurf.fill(KDS.Colors.White)
-            
+
             b_index = 0
             for index, row in enumerate(t_rows):
                 self.qsurf.blit(row, (0, index * row.get_height()))
@@ -127,12 +127,17 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         for page in lstc:
             for question in page:
                 questions_amount += 1
-                total_options = 0
-                total_score = 0
+                totalTrueQuestions = 0
+                totalTrueQuestionsRight = 0
+                point = True
                 for option in question.options.keys():
-                    total_options += 1
-                    if question.options[option]["selected"] is not question.options[option]["s_bool"]: total_score += 1
-                questions_correct += total_score / total_options
+                    if not question.options[option]["s_bool"] and question.options[option]["selected"]:
+                        point = False
+                        break
+                    if question.options[option]["s_bool"]:
+                        totalTrueQuestions += 1
+                        if question.options[option]["selected"]: totalTrueQuestionsRight += 1
+                if point: questions_correct += totalTrueQuestionsRight / totalTrueQuestions
         
         return questions_correct / questions_amount
 
@@ -160,7 +165,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         Audio.playSound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
         if showtitle: showTitle(titleSurf)
         pygame.mouse.set_visible(True)
-        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=10)
+        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=random.randint(9, 13))
 
         page_index = 0
         pages = []
@@ -209,8 +214,22 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             nonlocal exam_running, _quit
             oldSurf = Display.copy()
             exam_music.stop()
+            exam_returned = pygame.mixer.Sound("Assets/Audio/effects/exam_returned.ogg")
+            Audio.playSound(exam_returned)
+
             score = checkAnswers(pages)
-            timer2 = Timer()
+            passLine = CM.GetGameData("Exam/passLine")
+            passed_stamp = pygame.image.load("Assets/Textures/UI/passed_stamp.png").convert(); passed_stamp.set_colorkey(KDS.Colors.White)
+            failed_stamp = pygame.image.load("Assets/Textures/UI/failed_stamp.png").convert(); failed_stamp.set_colorkey(KDS.Colors.White)
+            stamp = None
+            scoreSurf = None
+            stamp_size = (270, 125)
+            passed_stamp = pygame.transform.scale(passed_stamp, stamp_size); failed_stamp = pygame.transform.scale(failed_stamp, stamp_size)
+            timer2 = Timer(7.5)
+            timer3 = Timer(6)
+            timer2.start()
+            timer_finished = False
+
             r = True
             while r:
                 for event in pygame.event.get():
@@ -218,7 +237,25 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                         r = False
                         _quit = True
 
+                if round(timer2.get_time()[1]) <= 0 and not timer_finished:
+                    timer_finished = True
+                    timer3.start()
+                    exam_returned.stop()
+                    scoreSurf = timerFont.render(f"{round(score, 3) * 100}/100", False, KDS.Colors.Red)
+                    if score < passLine: 
+                        Audio.playFromFile("Assets/Audio/effects/exam_failed.ogg")
+                        stamp = failed_stamp   
+                    else: 
+                        Audio.playFromFile("Assets/Audio/effects/exam_passed.ogg")
+                        stamp = passed_stamp
+
                 Display.blit(oldSurf, (0, 0))
+
+                if timer_finished:
+                    if timer3.get_time()[1] <= 0: r = False
+                    Display.blit(stamp, relative_position)
+                    Display.blit(scoreSurf, (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width(), relative_position[1]))
+                    
                 pygame.display.flip()
             exam_running = False
 
@@ -242,7 +279,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                                          ToGrayscale(pg_button2),
                                          pg_button2)
 
-        timer = Timer(100)
+        timer = Timer(random.randint(75, 95))
         timer.start()
         Audio.playSound(exam_music, loops = -1)
 
@@ -290,7 +327,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             if nmtime < 0:
                 exam_music.stop()
                 oldSurf = Display.copy()
-                Audio.playSound(pygame.mixer.Sound("Assets/Audio/effects/timeup.ogg"))
+                Audio.playFromFile("Assets/Audio/effects/timeup.ogg")
                 for x in range(0, Display.get_width() + time_ended.get_width(), int(Display.get_width() / 100)):
                     Display.blit(oldSurf, (0, 0))
                     Display.blit(time_ended, (x - time_ended.get_width() + 10, Display.get_height() / 2 - time_ended.get_height() / 2))
