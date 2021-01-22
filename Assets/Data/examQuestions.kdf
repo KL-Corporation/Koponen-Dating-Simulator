@@ -135,5 +135,71 @@
         "Donald Trump": false,
         "Vladimir Putin": false,
         "Josif Vissarionovitš Džugašvili": true
+    },
+    "20-vuotiaalla maalaismiehellä on ongelma. Hänen tarvitsee saada viiden päivän kuluessa toimitettua 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Miten hän hankkii loput rynnäkkökiväärit?": {
+        "Mies ostaa kiväärit Lidlistä": false,
+        "Mies varastaa kiväärit Lidlistä": false,
+        "Mies kutsuu koskenlaskijaa tuomaan kiväärit": true,
+        "Mies tilaa kiväärit AliExpressistä": true
+    },
+    "Mikä väri on #FF0000?": {
+        "Punainen": true,
+        "Sininen": false,
+        "Vihreä": false
+    },
+    "Mikä on hienoin asia, joka löytyy Turusta?" : {
+        "Joku kirkko": false,
+        "Turkulainen murre": false,
+        "Moottoritie Tampereelle": true,
+        "Satama": false
+    },
+    "Kuka oli Suomen pääministeri vuosina 2014-2015?": {
+        "Aleksander Stubb": true,
+        "Sanna Marin": false,
+        "Juha Sipilä": false,
+        "Jussi Halla-aho": false
+    },
+    "Aiheuttaako äidinkielen opettaja tarpeetonta stressiä oppilaille?": {
+        "Kyllä": true,
+        "Ei": false
+    },
+    "Mikä on drumliinin jäätikön puoleinen osa?": {
+        "proksimaaliosa": true,
+        "distaaliosa": false,
+        "ideaaliosa": false,
+        "tantaaliosa": false
+    },
+    "Mikä aatesuunta pyrkii luomaan tuotantovälineiden yhteisomistukseen perustuvan yhteiskuntajärjestyksen": {
+        "Kapitalismi": false,
+        "Sosialismi": true,
+        "Demokratia": false,
+        "Fasismi": false
+    },
+    "Missä valtiossa sijaitsee \"Jerusalemi\"?": {
+        "Israelissa": false,
+        "Suomessa": true,
+        "Syyriassa": false,
+        "Neuvostoliitossa": false
+    },
+    "Mikä seuraavista valtioista ei kerää tuloveroa?": {
+        "Yhdistyneet Arabiemiirikunnat": true,
+        "Vanuatu": true,
+        "Etelä-Afrikka": false,
+        "Uusi-Seelanti": false
+    },
+    "Mikä seuraavista Kiinalaisista verkkokaupoista on huonoin?": {
+        "Wish": true,
+        "AliExpress": false,
+        "DealExtreme": false
+    },
+    "Kirjoittavatko Amerikkalaiset päivämääränsä oikein?": {
+        "Kyllä": false,
+        "Ei": true
+    },
+    "Mikä on pinta-alaltaan maailman suurimman valtion virallinen nimi?": {
+        "Venäjä": false,
+        "Venäjän federaatio": true,
+        "Kiina": false,
+        "Pohjois-Korean demokraattinen kansantasavalta": false
     }
 }

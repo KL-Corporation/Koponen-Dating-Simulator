@@ -165,7 +165,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         Audio.playSound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
         if showtitle: showTitle(titleSurf)
         pygame.mouse.set_visible(True)
-        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=random.randint(9, 13))
+        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=random.randint(10, 13))
 
         page_index = 0
         pages = []
