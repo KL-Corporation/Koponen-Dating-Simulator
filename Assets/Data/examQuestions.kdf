@@ -25,9 +25,16 @@
         "Roberto Esquivel Cabrera": true,
         "Donald Trump": false
     },
-    "Mika näista koodikielistä on vanhin?": {
+    "Mikä näista koodikielistä on vanhin?": {
         "Python": true,
         "C#": false,
+        "JavaScript": false,
+        "Scratch": false
+    },
+    "Mikä näistä koodikielistä on huonoin?": {
+        "Python": false,
+        "C#": false,
+        "JavaScript": true,
         "Scratch": false
     },
     "Minä vuonna sähkö löydettiin?": {
@@ -123,14 +130,12 @@
         "Jussi Halla-aho": false,
         "Juha Sipilä": false
     },
-    
     "Mistä maasta ruokalaji \"Pączki\" on kotoisin?": {
         "Puolasta": true,
         "Suomesta": false,
         "Virosta": false,
         "Romaniasta": false
     },
-
     "Kuka hallitsija tuli tunnetuksi Gulageistaan?": {
         "Donald Trump": false,
         "Vladimir Putin": false,
@@ -147,7 +152,7 @@
         "Sininen": false,
         "Vihreä": false
     },
-    "Mikä on hienoin asia, joka löytyy Turusta?" : {
+    "Mikä on hienoin asia, joka löytyy Turusta?": {
         "Joku kirkko": false,
         "Turkulainen murre": false,
         "Moottoritie Tampereelle": true,
@@ -158,10 +163,6 @@
         "Sanna Marin": false,
         "Juha Sipilä": false,
         "Jussi Halla-aho": false
-    },
-    "Aiheuttaako äidinkielen opettaja tarpeetonta stressiä oppilaille?": {
-        "Kyllä": true,
-        "Ei": false
     },
     "Mikä on drumliinin jäätikön puoleinen osa?": {
         "proksimaaliosa": true,
@@ -201,5 +202,11 @@
         "Venäjän federaatio": true,
         "Kiina": false,
         "Pohjois-Korean demokraattinen kansantasavalta": false
+    },
+    "Mikä seuraavista pelin jakelupalveluista on paras?": {
+        "Steam": false,
+        "Epic Games Store": false,
+        "NALStudio Game Launcher": true,
+        "Apple App Store": false
     }
 }
