@@ -123,5 +123,18 @@
         "Saddam Hussein": false,
         "Jussi Halla-aho": false,
         "Juha Sipilä": false
+    },
+    
+    "Mistä maasta ruokalaji \"Pączki\" on kotoisin?": {
+        "Puolasta": true,
+        "Suomesta": false,
+        "Virosta": false,
+        "Romaniasta": false
+    },
+
+    "Kuka hallitsija tuli tunnetuksi Gulageistaan?": {
+        "Donald Trump": false,
+        "Vladimir Putin": false,
+        "Josif Vissarionovitš Džugašvili": true
     }
 }

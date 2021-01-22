@@ -83,11 +83,12 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
 
             self.qsurf = pygame.Surface((question_maxwidth, (len(t_rows) + 1) * t_rows[0].get_height() + len(options) * t_rows[0].get_height())).convert()
             self.qsurf.fill(KDS.Colors.White)
+            
+            b_index = 0
             for index, row in enumerate(t_rows):
                 self.qsurf.blit(row, (0, index * row.get_height()))
                 if index == len(t_rows) - 1: b_index = index * row.get_height() + row.get_height()
 
-            b_index = 0
             for index, question in enumerate(option_keys_shuffled):
                 surface_height = options[question]["surface"].get_height()
                 options[question]["rect"] = pygame.Rect(0, b_index + index * surface_height, question_indent - question_indent / 5, surface_height)
@@ -126,10 +127,12 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         for page in lstc:
             for question in page:
                 questions_amount += 1
-                question_right = True
+                total_options = 0
+                total_score = 0
                 for option in question.options.keys():
-                    if question.options[option]["selected"] is not question.options[option]["s_bool"]: question_right = False
-                if question_right: questions_correct += 1
+                    total_options += 1
+                    if question.options[option]["selected"] is not question.options[option]["s_bool"]: total_score += 1
+                questions_correct += total_score / total_options
         
         return questions_correct / questions_amount
 
@@ -154,8 +157,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         questions = []
         relative_position = (1200 / 2 - exam_paper.get_width() / 2, 800 / 2 - exam_paper.get_height() / 2)
 
+        Audio.playSound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
         if showtitle: showTitle(titleSurf)
-        Audio.playSound(exam_music, loops = -1)
         pygame.mouse.set_visible(True)
         questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=10)
 
@@ -206,8 +209,9 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             nonlocal exam_running, _quit
             oldSurf = Display.copy()
             exam_music.stop()
+            score = checkAnswers(pages)
+            timer2 = Timer()
             r = True
-            print(checkAnswers(pages))
             while r:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -240,6 +244,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
 
         timer = Timer(100)
         timer.start()
+        Audio.playSound(exam_music, loops = -1)
 
         c = False
         while exam_running:
