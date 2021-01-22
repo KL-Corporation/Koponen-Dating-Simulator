@@ -120,7 +120,7 @@ class ScoreAnimation:
                 if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                     ScoreAnimation.finished = True
             elif ScoreAnimation.soundCooldown > 2: 
-                KDS.Audio.playSound(pointSound)
+                KDS.Audio.PlaySound(pointSound)
                 ScoreAnimation.soundCooldown = 0
             ScoreAnimation.soundCooldown += 1
                         

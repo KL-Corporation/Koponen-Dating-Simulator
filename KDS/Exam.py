@@ -7,6 +7,8 @@ from typing import Dict, List, Union
 from pygame import surface
 from pygame.locals import *
 import KDS.Colors
+import KDS.Audio
+import KDS.ConfigManager
 from math import floor
 from KDS.Convert import ToGrayscale
 from KDS.System import MessageBox
@@ -26,7 +28,7 @@ class Timer:
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
 
-def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle = True):
+def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     _quit = False
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
@@ -102,7 +104,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             for option in self.options.keys():
                 if self.options[option]["rect"].collidepoint(relative_mouse_position) and clicked: 
                     if not self.options[option]["selected"]:
-                        Audio.playSound(random.choice(pencil_scribbles))
+                        KDS.Audio.PlaySound(random.choice(pencil_scribbles))
                         self.options[option]["selected"] = True
                         self.qsurf.blit(pygame.transform.scale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)                 
                     else: 
@@ -162,7 +164,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         questions = []
         relative_position = (1200 / 2 - exam_paper.get_width() / 2, 800 / 2 - exam_paper.get_height() / 2)
 
-        Audio.playSound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
+        KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
         if showtitle: showTitle(titleSurf)
         pygame.mouse.set_visible(True)
         questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=random.randint(10, 13))
@@ -203,22 +205,22 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         def page_return():
             nonlocal page_index
             page_index -= 1
-            Audio.playSound(random.choice(page_turning))
+            KDS.Audio.PlaySound(random.choice(page_turning))
 
         def page_next():
             nonlocal page_index
             page_index += 1
-            Audio.playSound(random.choice(page_turning))
+            KDS.Audio.PlaySound(random.choice(page_turning))
 
         def return_exam():
             nonlocal exam_running, _quit
             oldSurf = Display.copy()
             exam_music.stop()
             exam_returned = pygame.mixer.Sound("Assets/Audio/effects/exam_returned.ogg")
-            Audio.playSound(exam_returned)
+            KDS.Audio.PlaySound(exam_returned)
 
             score = checkAnswers(pages)
-            passLine = CM.GetGameData("Exam/passLine")
+            passLine = KDS.ConfigManager.GetGameData("Exam/passLine")
             passed_stamp = pygame.image.load("Assets/Textures/UI/passed_stamp.png").convert(); passed_stamp.set_colorkey(KDS.Colors.White)
             failed_stamp = pygame.image.load("Assets/Textures/UI/failed_stamp.png").convert(); failed_stamp.set_colorkey(KDS.Colors.White)
             stamp = None
@@ -243,10 +245,10 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                     exam_returned.stop()
                     scoreSurf = timerFont.render(f"{round(score, 3) * 100}/100", False, KDS.Colors.Red)
                     if score < passLine: 
-                        Audio.playFromFile("Assets/Audio/effects/exam_failed.ogg")
+                        KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg")
                         stamp = failed_stamp   
                     else: 
-                        Audio.playFromFile("Assets/Audio/effects/exam_passed.ogg")
+                        KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_passed.ogg")
                         stamp = passed_stamp
 
                 Display.blit(oldSurf, (0, 0))
@@ -281,7 +283,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
 
         timer = Timer(random.randint(75, 95))
         timer.start()
-        Audio.playSound(exam_music, loops = -1)
+        KDS.Audio.PlaySound(exam_music, loops = -1)
 
         c = False
         while exam_running:
@@ -295,16 +297,16 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                 elif event.type == KEYDOWN:
                     if event.key == K_F11:
                         pygame.display.toggle_fullscreen()
-                        CM.SetSetting("Renderer/fullscreen", not CM.GetSetting("Renderer/fullscreen", False))
+                        KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.type == KEYUP:
                     if event.key == K_LEFT: 
                         last_page_index = page_index 
                         page_index = max(0, page_index -1)
-                        if last_page_index != page_index: Audio.playSound(random.choice(page_turning))
+                        if last_page_index != page_index: KDS.Audio.PlaySound(random.choice(page_turning))
                     elif event.key == K_RIGHT:
                         last_page_index = page_index
                         page_index = min(len(pages) - 1, page_index + 1)
-                        if last_page_index != page_index: Audio.playSound(random.choice(page_turning))
+                        if last_page_index != page_index: KDS.Audio.PlaySound(random.choice(page_turning))
 
             Display.blit(background, (0, 0))
             Display.blit(exam_paper, relative_position)
@@ -327,7 +329,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             if nmtime < 0:
                 exam_music.stop()
                 oldSurf = Display.copy()
-                Audio.playFromFile("Assets/Audio/effects/timeup.ogg")
+                KDS.Audio.PlayFromFile("Assets/Audio/effects/timeup.ogg")
                 for x in range(0, Display.get_width() + time_ended.get_width(), int(Display.get_width() / 100)):
                     Display.blit(oldSurf, (0, 0))
                     Display.blit(time_ended, (x - time_ended.get_width() + 10, Display.get_height() / 2 - time_ended.get_height() / 2))

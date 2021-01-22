@@ -71,7 +71,7 @@ def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dic
             rect.bottom = tile.rect.top
             collisions.bottom = True
             if movement[0] and playWalkSound:
-                KDS.Audio.playSound(random.choice(w_sounds["default"]))
+                KDS.Audio.PlaySound(random.choice(w_sounds["default"]))
         elif movement[1] < 0:
             rect.top = tile.rect.bottom
             collisions.top = True

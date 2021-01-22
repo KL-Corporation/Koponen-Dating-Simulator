@@ -109,11 +109,11 @@ class Task:
         if self.finished != self.lastFinished:
             if self.finished:
                 if PlaySound:
-                    KDS.Audio.playSound(TaskFinishSound)
+                    KDS.Audio.PlaySound(TaskFinishSound)
                 self.color.changeValues(TaskColor, TaskFinishedColor)
             else:
                 if PlaySound:
-                    KDS.Audio.playSound(TaskUnFinishSound)
+                    KDS.Audio.PlaySound(TaskUnFinishSound)
                 self.color.changeValues(TaskColor, TaskUnFinishedColor)
         self.lastFinished = self.finished
         return surface
@@ -144,7 +144,7 @@ class Mission:
         self.finishedTicks = 0
         self.trueFinished = False
         self.color = KDS.Animator.Color(MissionColor, MissionFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
-        self.playSound = True
+        self.PlaySound = True
         Missions.AddMission(self.safeName, self)
         
     def AddTask(self, safeName: str, task: Task):
@@ -169,7 +169,7 @@ class Mission:
     
     def Update(self):
         self.finished = True
-        self.playSound = False
+        self.PlaySound = False
         notFinished = 0
         taskAssigned = False
         for task in self.task_values:
@@ -182,7 +182,7 @@ class Mission:
                 taskAssigned = True
 
             if notFinished > 1:
-                self.playSound = True
+                self.PlaySound = True
                 if taskAssigned: break
         del notFinished, taskAssigned
 
@@ -198,10 +198,10 @@ class Mission:
         
         if self.lastFinished != self.finished:
             if self.finished:
-                KDS.Audio.playSound(MissionFinishSound)
+                KDS.Audio.PlaySound(MissionFinishSound)
                 self.color.changeValues(MissionColor, MissionFinishedColor)
             else:
-                KDS.Audio.playSound(MissionUnFinishSound)
+                KDS.Audio.PlaySound(MissionUnFinishSound)
                 self.color.changeValues(MissionColor, MissionUnFinishedColor)
         self.lastFinished = self.finished
     
@@ -216,7 +216,7 @@ class Mission:
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
         for i, t in enumerate(self.task_values):
-            surface.blit(t.Update(_taskWidth, _taskHeight, self.playSound), (0, HeaderHeight + (i * _taskHeight)))
+            surface.blit(t.Update(_taskWidth, _taskHeight, self.PlaySound), (0, HeaderHeight + (i * _taskHeight)))
         return surface, int(_taskWidth)
 
 class MissionHolder:
