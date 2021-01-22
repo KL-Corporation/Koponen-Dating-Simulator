@@ -6,6 +6,7 @@ from math import sin, radians
 from typing import Dict, List, Union
 from pygame.locals import *
 import KDS.Colors
+from math import floor
 from KDS.Convert import ToGrayscale
 from KDS.System import MessageBox
 
@@ -66,13 +67,16 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             self.qsurf = pygame.Surface((question_maxwidth, (len(t_rows) + 1) * t_rows[0].get_height() + len(options) * t_rows[0].get_height())).convert()
             self.qsurf.fill(KDS.Colors.White)
             b_index = 0
+            
             for index, row in enumerate(t_rows):
                 self.qsurf.blit(row, (0, index * row.get_height()))
                 if index == len(t_rows) - 1: b_index = index * row.get_height() + row.get_height()
+                
             for index, question in enumerate(option_keys_shuffled):
                 options[question]["rect"] = pygame.Rect(0, b_index + index * options[question]["surface"].get_height(), question_indent - question_indent / 5, options[question]["surface"].get_height())
                 pygame.draw.rect(self.qsurf, KDS.Colors.Black, options[question]["rect"], 1)
                 self.qsurf.blit(options[question]["surface"], (question_indent, b_index + index * options[question]["surface"].get_height()))
+                
             self.options = options
             self.qsurf.set_colorkey(KDS.Colors.White)
 
@@ -93,7 +97,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
         while counter <= 180:
             Display.fill(KDS.Colors.Black)
             _title.set_alpha(sin(radians(counter)) * 255)
-            Display.blit(_title, relative_position)
+            Display.blit(_title, (floor(relative_position[0]), floor(relative_position[1])))
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             counter += 1
