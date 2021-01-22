@@ -217,7 +217,20 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             exam_returned = pygame.mixer.Sound("Assets/Audio/effects/exam_returned.ogg")
             Audio.playSound(exam_returned)
 
+            class scoreRational(object):
+                @staticmethod
+                def closestTo(lst: list, value):
+                    return min(lst, key= lambda lst_value : abs(value - lst_value))
+                def __init__(self, value: float = 4.25):
+                    self.value = value
+                    self.rational = (value - floor(value))
+                    self.rational_mark = ""
+
+                    if self.rational <= 0.25: self.rational_mark = "+"
+                    elif pass
+
             score = checkAnswers(pages)
+            score_formatted = 0
             passLine = CM.GetGameData("Exam/passLine")
             passed_stamp = pygame.image.load("Assets/Textures/UI/passed_stamp.png").convert(); passed_stamp.set_colorkey(KDS.Colors.White)
             failed_stamp = pygame.image.load("Assets/Textures/UI/failed_stamp.png").convert(); failed_stamp.set_colorkey(KDS.Colors.White)
@@ -230,18 +243,20 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
             timer2.start()
             timer_finished = False
 
-            r = True
-            while r:
+            check_running = True
+            while check_running:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        r = False
+                        check_running = False
                         _quit = True
 
                 if round(timer2.get_time()[1]) <= 0 and not timer_finished:
                     timer_finished = True
                     timer3.start()
                     exam_returned.stop()
-                    scoreSurf = timerFont.render(f"{round(score, 3) * 100}/100", False, KDS.Colors.Red)
+                    if score < passLine: score_formatted = 4
+                    else: pass
+                    scoreSurf = timerFont.render(f"{score_formatted}", False, KDS.Colors.Red)
                     if score < passLine: 
                         Audio.playFromFile("Assets/Audio/effects/exam_failed.ogg")
                         stamp = failed_stamp   
@@ -252,7 +267,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, Audio, CM, showtitle
                 Display.blit(oldSurf, (0, 0))
 
                 if timer_finished:
-                    if timer3.get_time()[1] <= 0: r = False
+                    if timer3.get_time()[1] <= 0: check_running = False
                     Display.blit(stamp, relative_position)
                     Display.blit(scoreSurf, (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width(), relative_position[1]))
                     
