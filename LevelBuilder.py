@@ -120,7 +120,6 @@ class Undo:
     
     @staticmethod
     def register():
-        print(len(Undo.points))
         global grid, dragRect, brush, tileprops
         toSave = {
             "grid": copy.deepcopy(grid),
@@ -152,8 +151,8 @@ class Undo:
         Undo.points.clear()
         Undo.index = 0
         Undo.register()
-            
-
+        Undo.overflowCount = 0
+       
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning
     matMenRunning = False
@@ -765,6 +764,8 @@ def main():
                 elif event.key == K_DELETE:
                     Selected.Set(tileInfo.EMPTYSERIAL)
                     Selected.Update()
+                elif event.key == K_d:
+                    Selected.Set()
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                     xy = (0, 0)
                     if event.key == K_UP:
@@ -833,6 +834,7 @@ def main():
                 brushTrigger = False
         elif selectTrigger and mouse_pressed[0] and not keys_pressed[K_c]:
             if dragStartPos == None:
+                Selected.Set()
                 dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
             dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
@@ -840,6 +842,7 @@ def main():
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
+            Selected.Set(tileInfo.EMPTYSERIAL)
         if brush == "0000": brushTrigger = True
         if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
             selectTrigger = False
@@ -906,6 +909,7 @@ pygame.quit()
     E: Open Material Menu
     CTRL + Z: Undo
     CTRL + Y: Redo
+    CTRL + D: Duplicate Selection
     T: Input Console
     R: Resize Map
     P: Set Property
