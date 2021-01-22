@@ -10,7 +10,7 @@
         "KL-Corporation": false,
         "NALStudio": false
     },
-    "Mikä seuraavista ei ole KL-Corporationin tuote?": {
+    "Mikä seuraavista EI OLE KL-Corporationin tuote?": {
         "Koponen Dating Simulator": false,
         "Mastermind by KL-Corporation": false,
         "Rise and Fall": true
@@ -18,16 +18,37 @@
     "Minä vuonna Rise and Fall julkaistiin NALStudio Game Launcher:issa?": {
         "2019": false,
         "2020": true,
-        "2021": false
+        "2021": false,
+        "2077": false
+    },
+    "Minä päivämääränä \"NALStudio Game Launcher\" -pelien jakelupalvelun ensimmäinen versio julkaistiin?": {
+        "6.1.2021": false,
+        "25.12.2020": false,
+        "1.1.2021": true,
+        "6.9.2077": false
+    },
+    "Minä päivämääränä \"Koponen Dating Simulator\" -pelin ensimmäinen julkinen versio julkaistiin?": {
+        "31.10.2020": true,
+        "6.9.420": false,
+        "9.11.2020": false,
+        "7.11.2020": false
     },
     "Kenellä miehellä on väitetysti maailman suurin penis?": {
         "Saddam Hussein": false,
         "Roberto Esquivel Cabrera": true,
-        "Donald Trump": false
+        "Donald Trump": false,
+        "Niko Leinonen": true
     },
-    "Mika näista koodikielistä on vanhin?": {
+    "Mikä näista koodikielistä on vanhin?": {
         "Python": true,
         "C#": false,
+        "JavaScript": false,
+        "Scratch": false
+    },
+    "Mikä näistä koodikielistä on huonoin?": {
+        "Python": false,
+        "C#": false,
+        "JavaScript": true,
         "Scratch": false
     },
     "Minä vuonna sähkö löydettiin?": {
@@ -123,14 +144,12 @@
         "Jussi Halla-aho": false,
         "Juha Sipilä": false
     },
-    
     "Mistä maasta ruokalaji \"Pączki\" on kotoisin?": {
         "Puolasta": true,
         "Suomesta": false,
         "Virosta": false,
         "Romaniasta": false
     },
-
     "Kuka hallitsija tuli tunnetuksi Gulageistaan?": {
         "Donald Trump": false,
         "Vladimir Putin": false,
@@ -142,12 +161,18 @@
         "Mies kutsuu koskenlaskijaa tuomaan kiväärit": true,
         "Mies tilaa kiväärit AliExpressistä": true
     },
-    "Mikä väri on #FF0000?": {
+    "Mikä väri on \"#FF0000\"?": {
         "Punainen": true,
         "Sininen": false,
         "Vihreä": false
     },
-    "Mikä on hienoin asia, joka löytyy Turusta?" : {
+    "Mikä luku on \"01000101\"?": {
+        "32": false,
+        "64": false,
+        "69": true,
+        "420": false
+    },
+    "Mikä on hienoin asia, joka löytyy Turusta?": {
         "Joku kirkko": false,
         "Turkulainen murre": false,
         "Moottoritie Tampereelle": true,
@@ -158,10 +183,6 @@
         "Sanna Marin": false,
         "Juha Sipilä": false,
         "Jussi Halla-aho": false
-    },
-    "Aiheuttaako äidinkielen opettaja tarpeetonta stressiä oppilaille?": {
-        "Kyllä": true,
-        "Ei": false
     },
     "Mikä on drumliinin jäätikön puoleinen osa?": {
         "proksimaaliosa": true,
@@ -201,5 +222,11 @@
         "Venäjän federaatio": true,
         "Kiina": false,
         "Pohjois-Korean demokraattinen kansantasavalta": false
+    },
+    "Mikä seuraavista pelin jakelupalveluista on paras?": {
+        "Steam": false,
+        "Epic Games Store": false,
+        "NALStudio Game Launcher": true,
+        "Apple App Store": false
     }
 }

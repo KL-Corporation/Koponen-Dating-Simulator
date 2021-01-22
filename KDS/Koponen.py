@@ -306,7 +306,7 @@ class Talk:
             if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0:
                 if Talk.audioChannel == None or Talk.audioChannel.get_sound() != Talk.soundPlaying:
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
-                    Talk.audioChannel = KDS.Audio.playSound(Talk.soundPlaying)
+                    Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying)
                 Talk.lines.append(Talk.scheduled.pop(0))
                 Talk.Conversation.newAnimation = True
                 deleteCount = 0

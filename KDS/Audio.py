@@ -15,7 +15,7 @@ def init(_mixer):
         
 class Music:
     @staticmethod
-    def play(path: str, loops: int = -1):
+    def Play(path: str, loops: int = -1):
         global MusicMixer, MusicVolume
         if MusicMixer.get_busy(): MusicMixer.stop()
         if path != None: MusicMixer.load(path)
@@ -23,32 +23,32 @@ class Music:
         MusicMixer.set_volume(MusicVolume)
         
     @staticmethod
-    def stop():
+    def Stop():
         global MusicMixer, MusicVolume
         MusicMixer.stop()
         
     @staticmethod
-    def pause():
+    def Pause():
         global MusicMixer, MusicVolume
         MusicMixer.pause()
         
     @staticmethod
-    def unpause():
+    def Unpause():
         global MusicMixer, MusicVolume
         MusicMixer.unpause()
         
     @staticmethod
-    def unload():
+    def Unload():
         global MusicMixer, MusicVolume
         MusicMixer.unload()
         
     @staticmethod
-    def rewind():
+    def Rewind():
         global MusicMixer, MusicVolume
         MusicMixer.rewind()
   
     @staticmethod
-    def setVolume(volume: float):
+    def SetVolume(volume: float):
         global MusicVolume, MusicMixer
         MusicVolume = volume
         MusicMixer.set_volume(MusicVolume)
@@ -57,7 +57,7 @@ def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()
 
-def playSound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+def PlaySound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0):
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     if volume == -1: volume = EffectVolume
     play_channel = SoundMixer.find_channel(True)
@@ -65,22 +65,22 @@ def playSound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0):
     play_channel.set_volume(volume)
     return play_channel
 
-def stopAllSounds():
+def StopAllSounds():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     for i in range(len(EffectChannels)):
         EffectChannels[i].stop()
 
-def pauseAllSounds():
+def PauseAllSounds():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     for i in range(len(EffectChannels)):
         EffectChannels[i].pause()
 
-def unpauseAllSounds():
+def UnpauseAllSounds():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     for i in range(len(EffectChannels)):
         EffectChannels[i].unpause()
 
-def getBusyChannels():
+def GetBusyChannels():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     busyChannels = []
     for i in range(len(EffectChannels)):
@@ -88,12 +88,12 @@ def getBusyChannels():
             busyChannels.append(EffectChannels[i])
     return busyChannels
 
-def setVolume(volume: float):
+def SetVolume(volume: float):
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     EffectVolume = volume
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
 
-def playFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+def PlayFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0):
     sound = SoundMixer.Sound(path)
-    playSound(sound, volume, loops, fade_ms)
+    PlaySound(sound, volume, loops, fade_ms)

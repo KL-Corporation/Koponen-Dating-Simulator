@@ -284,7 +284,7 @@ class HostileEnemy:
                     self.animation.active.tick = 0
             else:
                 if self.playSightSound:
-                    KDS.Audio.playSound(self.sight_sound)
+                    KDS.Audio.PlaySound(self.sight_sound)
                     self.playSightSound = False
                 self.rect, self.c = move(self.rect, self.movement, tiles)
                 if self.c["right"] or self.c["left"]:
@@ -296,7 +296,7 @@ class HostileEnemy:
             self.animation.trigger("idle")
         elif self.health < 1:
             if self.playDeathSound:
-                KDS.Audio.playSound(self.death_sound)
+                KDS.Audio.PlaySound(self.death_sound)
                 items = self.onDeath()
                 for item in items:
                     if item:
@@ -335,7 +335,7 @@ class Imp(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         impAttack.set_volume(dist)
-        KDS.Audio.playSound(impAttack)
+        KDS.Audio.PlaySound(impAttack)
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
     
     def onDeath(self):
@@ -374,7 +374,7 @@ class SergeantZombie(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         shotgunShot.set_volume(dist)
-        KDS.Audio.playSound(shotgunShot)
+        KDS.Audio.PlaySound(shotgunShot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 35), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
@@ -418,7 +418,7 @@ class DrugDealer(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         pistol_shot.set_volume(dist)
-        KDS.Audio.playSound(pistol_shot)
+        KDS.Audio.PlaySound(pistol_shot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
@@ -464,7 +464,7 @@ class TurboShotgunner(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         double_barrel_fire.set_volume(dist)
-        KDS.Audio.playSound(double_barrel_fire)
+        KDS.Audio.PlaySound(double_barrel_fire)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction)+(3-fd)*1.5 ) for fd in range(6)]
 
@@ -507,7 +507,7 @@ class MafiaMan(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         basicGunshot.set_volume(dist)
-        KDS.Audio.playSound(basicGunshot)
+        KDS.Audio.PlaySound(basicGunshot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
@@ -550,7 +550,7 @@ class MethMaker(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         basicGunshot.set_volume(dist)
-        KDS.Audio.playSound(basicGunshot)
+        KDS.Audio.PlaySound(basicGunshot)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
@@ -595,7 +595,7 @@ class CaveMonster(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         cavemonster_gun.set_volume(dist)
-        KDS.Audio.playSound(cavemonster_gun)
+        KDS.Audio.PlaySound(cavemonster_gun)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
@@ -630,7 +630,7 @@ class Mummy(HostileEnemy):
         self.manualAttackHandling = True
 
     def attack(self, slope, env_obstacles, target, *args):
-        KDS.Audio.playSound(random.choice(Mummy.soundboard_hits))
+        KDS.Audio.PlaySound(random.choice(Mummy.soundboard_hits))
         return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
@@ -674,7 +674,7 @@ class Mummy(HostileEnemy):
             dist = KDS.Math.getDistance(self.rect.center, args[1].center)
             if dist < 40 and not self.attackRunning:
                 self.attackRunning = True
-            if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.playSound(random.choice(Mummy.soundboard_scream[1:]))
+            if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
                 
 
 class Projectile:
