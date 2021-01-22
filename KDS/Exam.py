@@ -2,16 +2,15 @@ import random
 import pygame
 from time import perf_counter
 from json import loads
-from math import sin, radians
+from math import sin, radians, ceil, floor
 from typing import Dict, List, Union
-from pygame import surface
 from pygame.locals import *
 import KDS.Colors
 import KDS.Audio
 import KDS.ConfigManager
-from math import floor
 from KDS.Convert import ToGrayscale
 from KDS.System import MessageBox
+from KDS.Math import Remap
 
 class Timer:
     def __init__(self, start_time = 60):
@@ -220,16 +219,30 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             KDS.Audio.PlaySound(exam_returned)
 
             class scoreRational(object):
+
+                rational_spares = [0.25, 0.5, 0.75, 1]
+                rational_marks = {0.25: "+", 0.5: "½", 0.75: "-"}
+
                 @staticmethod
                 def closestTo(lst: list, value):
                     return min(lst, key= lambda lst_value : abs(value - lst_value))
+
                 def __init__(self, value: float = 4.25):
                     self.value = value
+                    self.raw_value = value
                     self.rational = (value - floor(value))
                     self.rational_mark = ""
 
-                    if self.rational <= 0.25: self.rational_mark = "+"
-                    elif pass
+                    closest_1f = scoreRational.closestTo(scoreRational.rational_spares, self.rational)
+                    self.raw_value = floor(self.raw_value) + closest_1f
+                    if closest_1f == 1 or closest_1f == 0.75: 
+                        self.value = ceil(self.value)
+                        self.rational_mark = "-" if closest_1f else ""
+                    else:
+                        self.rational_mark = scoreRational.rational_marks[closest_1f]
+                
+                def __str__(self):
+                    return f"{self.value}{self.rational_mark}"
 
             score = checkAnswers(pages)
             score_formatted = 0
@@ -257,7 +270,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                     timer3.start()
                     exam_returned.stop()
                     if score < passLine: score_formatted = 4
-                    else: pass
+                    else: score_formatted = scoreRational(Remap(score - passLine, passLine, 1, 4, 10))
                     scoreSurf = timerFont.render(f"{score_formatted}", False, KDS.Colors.Red)
                     if score < passLine: 
                         KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg")
