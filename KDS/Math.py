@@ -13,7 +13,7 @@ EPSILON = sys.float_info.epsilon
 INFINITY = float("inf")
 NEGATIVEINFINITY = float("-inf")
 DEG2RAD = (PI * 2) / 360
-RAD2DEG = 360 / (PI * 2)
+RAD2DEG = 1 / DEG2RAD
 #endregion
 
 #region Default Math Functions
