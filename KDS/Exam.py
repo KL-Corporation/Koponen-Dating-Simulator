@@ -237,7 +237,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                     closest_1f = scoreRational.closestTo(scoreRational.rational_spares, self.rational)
                     self.raw_value = KDS.Math.Floor(self.raw_value) + closest_1f
                     if closest_1f == 1 or closest_1f == 0.75: 
-                        self.value = ceil(self.value)
+                        self.value = KDS.Math.Ceil(self.value)
                         self.rational_mark = "-" if closest_1f == 0.75 else ""
                     else:
                         self.rational_mark = scoreRational.rational_marks[closest_1f]
@@ -290,9 +290,9 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
 
                 if timer_finished:
                     if timer3.get_time()[1] <= 0: check_running = False
-                    gradePos[0] += floor((gradePos[0] - gradeDestination[1]) / 30)
-                    gradePos[1] += floor((gradePos[1] - gradeDestination[1]) / 30)
-                    scaling_factor = (floor(gradePos[1] - gradeDestination[1] + 1) + floor(gradePos[0] - gradeDestination[0] + 1)) / 2
+                    gradePos[0] += KDS.Math.Floor((gradePos[0] - gradeDestination[1]) / 30)
+                    gradePos[1] += KDS.Math.Floor((gradePos[1] - gradeDestination[1]) / 30)
+                    scaling_factor = (KDS.Math.Floor(gradePos[1] - gradeDestination[1] + 1) + KDS.Math.Floor(gradePos[0] - gradeDestination[0] + 1)) / 2
                     print(scaling_factor)
                     surface = pygame.transform.scale(scoreSurf, (round(scoreSurf.get_width() * scaling_factor), round(scoreSurf.get_height() * scaling_factor)))
                     Display.blit(scoreSurf, gradeDestination)
