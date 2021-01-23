@@ -38,7 +38,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     titleFont = pygame.font.SysFont("Arial", 100)
     timerFont = pygame.font.SysFont("Arial", 40)
     examTestFont = pygame.font.SysFont("Calibri", 20)
-    gradeFont = pygame.font.Font("Assets/Fonts/schoolhandwriting.ttf", 75)
+    gradeFont = pygame.font.Font("Assets/Fonts/schoolhandwriting.ttf", 45)
     titleSurf = titleFont.render(title, False, KDS.Colors.White)
 
     x_texture = examTestFont.render("X", False, KDS.Colors.Black)
@@ -240,6 +240,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                         self.value = KDS.Math.Ceil(self.value)
                         self.rational_mark = "-" if closest_1f == 0.75 else ""
                     else:
+                        self.value = KDS.Math.Floor(self.value)
                         self.rational_mark = scoreRational.rational_marks[closest_1f]
                 
                 def __str__(self):
@@ -280,8 +281,10 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                         f_score = 4 + grade_slope * (score - passLine)
                         score_formatted = scoreRational(f_score)
                         exam_score = score_formatted.raw_value
+
                     scoreSurf = gradeFont.render(f"{score_formatted}", False, KDS.Colors.Red)
-                    gradePos = [relative_position[0] + exam_paper.get_width(), relative_position[1] + exam_paper.get_height()]
+
+                    gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
                     if score < passLine: KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg")
                     else: KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_passed.ogg")
@@ -290,12 +293,9 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
 
                 if timer_finished:
                     if timer3.get_time()[1] <= 0: check_running = False
-                    gradePos[0] += KDS.Math.Floor((gradePos[0] - gradeDestination[1]) / 30)
-                    gradePos[1] += KDS.Math.Floor((gradePos[1] - gradeDestination[1]) / 30)
-                    scaling_factor = (KDS.Math.Floor(gradePos[1] - gradeDestination[1] + 1) + KDS.Math.Floor(gradePos[0] - gradeDestination[0] + 1)) / 2
-                    print(scaling_factor)
-                    surface = pygame.transform.scale(scoreSurf, (round(scoreSurf.get_width() * scaling_factor), round(scoreSurf.get_height() * scaling_factor)))
-                    Display.blit(scoreSurf, gradeDestination)
+                    gradePos[0] += KDS.Math.Floor((gradeDestination[0] - gradePos[0]) / 10)
+                    gradePos[1] += KDS.Math.Floor((gradeDestination[1] - gradePos[1]) / 10)
+                    Display.blit(scoreSurf, gradePos)
                     
                 pygame.display.flip()
             exam_running = False
