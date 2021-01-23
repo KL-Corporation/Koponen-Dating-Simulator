@@ -167,7 +167,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
         KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
         if showtitle: showTitle(titleSurf)
         pygame.mouse.set_visible(True)
-        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=random.randint(10, 13))
+        question_amount = random.randint(10, 13)
+        questions = loadQuestions("Assets/Data/examQuestions.kdf", amount=question_amount)
 
         page_index = 0
         pages = []
@@ -320,7 +321,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                                          KDS.Convert.ToGrayscale(pg_button2),
                                          pg_button2)
 
-        timer = Timer(random.randint(75, 95))
+        timer = Timer(10 * question_amount )
         timer.start()
         KDS.Audio.PlaySound(exam_music, loops = -1)
 
