@@ -11,6 +11,6 @@
         }
     },
     "Exam": {
-        "passLine": 0.65
+        "passLine": 0.5
     }
 }
