@@ -38,6 +38,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     titleFont = pygame.font.SysFont("Arial", 100)
     timerFont = pygame.font.SysFont("Arial", 40)
     examTestFont = pygame.font.SysFont("Calibri", 20)
+    gradeFont = pygame.font.Font("Assets/Fonts/schoolhandwriting.ttf", 75)
     titleSurf = titleFont.render(title, False, KDS.Colors.White)
 
     x_texture = examTestFont.render("X", False, KDS.Colors.Black)
@@ -45,6 +46,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
 
     question_maxwidth = exam_paper.get_width() - 18
     exam_paper_height = exam_paper.get_height()
+    exam_score = 0.00
     question_indent = 20
 
     class Question:
@@ -211,7 +213,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             KDS.Audio.PlaySound(random.choice(page_turning))
 
         def return_exam():
-            nonlocal exam_running, _quit
+            nonlocal exam_running, _quit, exam_score
             oldSurf = Display.copy()
             exam_music.stop()
             exam_returned = pygame.mixer.Sound("Assets/Audio/effects/exam_returned.ogg")
@@ -219,14 +221,14 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
 
             class scoreRational(object):
 
-                rational_spares = [0.25, 0.5, 0.75, 1]
-                rational_marks = {0.25: "+", 0.5: "½", 0.75: "-"}
+                rational_spares = [0, 0.25, 0.5, 0.75, 1]
+                rational_marks = {0: "", 0.25: "+", 0.5: "½", 0.75: "-"}
 
                 @staticmethod
                 def closestTo(lst: list, value):
                     return min(lst, key= lambda lst_value : abs(value - lst_value))
 
-                def __init__(self, value: float = 4.25):
+                def __init__(self, value: float):
                     self.value = value
                     self.raw_value = value
                     self.rational = (value - KDS.Math.Floor(value))
@@ -236,7 +238,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                     self.raw_value = KDS.Math.Floor(self.raw_value) + closest_1f
                     if closest_1f == 1 or closest_1f == 0.75: 
                         self.value = KDS.Math.Ceil(self.value)
-                        self.rational_mark = "-" if closest_1f else ""
+                        self.rational_mark = "-" if closest_1f == 0.75 else ""
                     else:
                         self.rational_mark = scoreRational.rational_marks[closest_1f]
                 
@@ -252,10 +254,14 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             scoreSurf = None
             stamp_size = (270, 125)
             passed_stamp = pygame.transform.scale(passed_stamp, stamp_size); failed_stamp = pygame.transform.scale(failed_stamp, stamp_size)
+            #Ethän vielä poista noita stamp rivejä, jos satut tänne tekemään jotain
             timer2 = Timer(7.5)
             timer3 = Timer(6)
             timer2.start()
             timer_finished = False
+
+            gradePos = None
+            gradeDestination = None
 
             check_running = True
             while check_running:
@@ -268,22 +274,28 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                     timer_finished = True
                     timer3.start()
                     exam_returned.stop()
-                    if score < passLine: score_formatted = 4
-                    else: score_formatted = scoreRational(KDS.Math.Remap(score - passLine, passLine, 1, 4, 10))
-                    scoreSurf = timerFont.render(f"{score_formatted}", False, KDS.Colors.Red)
-                    if score < passLine: 
-                        KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg")
-                        stamp = failed_stamp   
-                    else: 
-                        KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_passed.ogg")
-                        stamp = passed_stamp
+                    if score < passLine: score_formatted = scoreRational(4)
+                    else:
+                        grade_slope = (10 - 4) / (1 - passLine)
+                        f_score = 4 + grade_slope * (score - passLine)
+                        score_formatted = scoreRational(f_score)
+                        exam_score = score_formatted.raw_value
+                    scoreSurf = gradeFont.render(f"{score_formatted}", False, KDS.Colors.Red)
+                    gradePos = [relative_position[0] + exam_paper.get_width(), relative_position[1] + exam_paper.get_height()]
+                    gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
+                    if score < passLine: KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg")
+                    else: KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_passed.ogg")
 
                 Display.blit(oldSurf, (0, 0))
 
                 if timer_finished:
                     if timer3.get_time()[1] <= 0: check_running = False
-                    Display.blit(stamp, relative_position)
-                    Display.blit(scoreSurf, (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width(), relative_position[1]))
+                    gradePos[0] += KDS.Math.Floor((gradePos[0] - gradeDestination[1]) / 30)
+                    gradePos[1] += KDS.Math.Floor((gradePos[1] - gradeDestination[1]) / 30)
+                    scaling_factor = (KDS.Math.Floor(gradePos[1] - gradeDestination[1] + 1) + KDS.Math.Floor(gradePos[0] - gradeDestination[0] + 1)) / 2
+                    print(scaling_factor)
+                    surface = pygame.transform.scale(scoreSurf, (round(scoreSurf.get_width() * scaling_factor), round(scoreSurf.get_height() * scaling_factor)))
+                    Display.blit(scoreSurf, gradeDestination)
                     
                 pygame.display.flip()
             exam_running = False
@@ -373,4 +385,4 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             
     
     exam()
-    return _quit
+    return _quit, exam_score
