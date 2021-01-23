@@ -1,6 +1,6 @@
 import math
 import sys
-from typing import SupportsFloat, Tuple, TypeVar
+from typing import SupportsFloat, Tuple, TypeVar, Union
 
 T = TypeVar("T")
 Value = TypeVar("Value", int, float)
@@ -13,7 +13,7 @@ EPSILON = sys.float_info.epsilon
 INFINITY = float("inf")
 NEGATIVEINFINITY = float("-inf")
 DEG2RAD = (PI * 2) / 360
-RAD2DEG = 360 / (PI * 2)
+RAD2DEG = 1 / DEG2RAD
 #endregion
 
 #region Default Math Functions
@@ -33,6 +33,8 @@ def Floor(f: SupportsFloat) -> int: return math.floor(f)
 def Sqrt(f: SupportsFloat) -> float: return math.sqrt(f)
 def Pow(f: SupportsFloat, p: SupportsFloat) -> float: return math.pow(f, p)
 def Log(f: SupportsFloat) -> float: return math.log(f)
+
+def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
 #endregion
 
 #region Value Comparison
@@ -71,6 +73,13 @@ def Remap01(value: Value, from1: Value, from2: Value) -> Value:
     Converts a value to another value within the given arguments.
     """
     return (value - from1) / (0 - from1) * (1 - from2) + from2
+
+def Repeat(t: Value, length: Value) -> Value:
+    """Loops the value t, so that it is never larger than length and never smaller than 0.
+
+    This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
+    """
+    return Clamp(t - Floor(t / length) * length, 0, length)
 #endregion
 
 #region Distance
@@ -165,6 +174,15 @@ def LerpUnclamped(a: float, b: float, t: float) -> float:
     """
     return a + (b - a) * t
 
+def LerpAngle(a: float, b: float, t: float) -> float:
+    """Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.
+    
+    The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be in degrees.
+    """
+    delta = Repeat(b - a, 360)
+    if (delta > 180): delta -= 360
+    return a + delta * Clamp01(t)
+
 def SmoothStep(a: float, b: float, t: float) -> float:
     """Smoothly interpolates between a and b by t.
     
@@ -173,4 +191,30 @@ def SmoothStep(a: float, b: float, t: float) -> float:
     t = Clamp01(t)
     t = -2.0 * t * t * t + 3.0 * t * t
     return b * t + a * (1 - t)
+
+def MoveTowards(current: float, target: float, maxDelta: float) -> float:
+    """Moves a value current towards target.
+    This is essentially the same as KDS.Math.Lerp but instead the function will ensure that the speed never exceeds maxDelta. Negative values of maxDelta pushes the value away from target.
+
+    Args:
+        current (float): The current value.
+        target (float): The value to move towards.
+        maxDelta (float): The maximum change that should be applied to the value.
+    """
+    if (abs(target - current) <= maxDelta): return target
+    return current + Sign(target - current) * maxDelta
+
+def MoveTowardsAngle(current: float, target: float, maxDelta: float) -> float:
+    """Same as MoveTowards but makes sure the values interpolate correctly when they wrap around 360 degrees.
+    Variables current and target are assumed to be in degrees. For optimization reasons, negative values of maxDelta are not supported and may cause oscillation. To push current away from a target angle, add 180 to that angle instead.
+    """
+    
+    deltaAngle = DeltaAngle(current, target)
+    if (-maxDelta < deltaAngle and deltaAngle < maxDelta): return target
+    target = current + deltaAngle
+    return MoveTowards(current, target, maxDelta)
+
+def PingPong(t: float, length: float) -> float:
+    t = Repeat(t, length * 2)
+    return length - abs(t - length)
 #endregion

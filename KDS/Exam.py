@@ -1,16 +1,15 @@
-import random
+from typing import Dict, List
 import pygame
-from time import perf_counter
-from json import loads
-from math import sin, radians, ceil, floor
-from typing import Dict, List, Union
 from pygame.locals import *
+import random
+from time import perf_counter
+import json
 import KDS.Colors
 import KDS.Audio
 import KDS.ConfigManager
-from KDS.Convert import ToGrayscale
-from KDS.System import MessageBox
-from KDS.Math import Remap
+import KDS.Convert
+import KDS.System
+import KDS.Math
 
 class Timer:
     def __init__(self, start_time = 60):
@@ -118,8 +117,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
         relative_position = (1200 / 2 - _title.get_width() / 2, 800 / 2 - _title.get_height() / 2)
         while counter <= 180:
             Display.fill(KDS.Colors.Black)
-            _title.set_alpha(sin(radians(counter)) * 255)
-            Display.blit(_title, (floor(relative_position[0]), floor(relative_position[1])))
+            _title.set_alpha(KDS.Math.Sin(counter * KDS.Math.DEG2RAD) * 255)
+            Display.blit(_title, (KDS.Math.Floor(relative_position[0]), KDS.Math.Floor(relative_position[1])))
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             counter += 1
@@ -151,7 +150,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
         rawData: Dict[str, Dict[str, bool]] = {}
         with open(path, "r", encoding="utf-8") as qfile:
             tmp = qfile.read()
-            rawData = loads(tmp)
+            rawData = json.loads(tmp)
 
         while len(qs) < amount:
             temp_qs = random.choice(list(rawData.keys()))
@@ -232,11 +231,11 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                 def __init__(self, value: float):
                     self.value = value
                     self.raw_value = value
-                    self.rational = (value - floor(value))
+                    self.rational = (value - KDS.Math.Floor(value))
                     self.rational_mark = ""
 
                     closest_1f = scoreRational.closestTo(scoreRational.rational_spares, self.rational)
-                    self.raw_value = floor(self.raw_value) + closest_1f
+                    self.raw_value = KDS.Math.Floor(self.raw_value) + closest_1f
                     if closest_1f == 1 or closest_1f == 0.75: 
                         self.value = ceil(self.value)
                         self.rational_mark = "-" if closest_1f == 0.75 else ""
@@ -308,17 +307,17 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
 
         page_return_button = pageButton((relative_position[0] + 5, relative_position[1] + exam_paper.get_height() - 55),
                                          page_return, 
-                                         pygame.transform.flip(ToGrayscale(pg_button1), True, False),
+                                         pygame.transform.flip(KDS.Convert.ToGrayscale(pg_button1), True, False),
                                          pygame.transform.flip(pg_button1, True, False))
 
         page_next_button = pageButton((relative_position[0] + exam_paper.get_width() - 5 - pg_button1.get_width(), relative_position[1] + exam_paper.get_height() - 55),
                                          page_next, 
-                                         ToGrayscale(pg_button1),
+                                         KDS.Convert.ToGrayscale(pg_button1),
                                          pg_button1)
 
         exam_return_button = pageButton((relative_position[0] + exam_paper.get_width() / 2 - pg_button2.get_width() / 2, relative_position[1] + exam_paper.get_height() - 55),
                                          return_exam, 
-                                         ToGrayscale(pg_button2),
+                                         KDS.Convert.ToGrayscale(pg_button2),
                                          pg_button2)
 
         timer = Timer(random.randint(75, 95))
@@ -329,7 +328,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
         while exam_running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    if MessageBox.Show("Quit?", "Are you sure you want to quit?", MessageBox.Buttons.YESNO, MessageBox.Icon.WARNING) == MessageBox.Responses.YES:
+                    if KDS.System.MessageBox.Show("Quit?", "Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
                         _quit = True
                         return
                 elif event.type == MOUSEBUTTONDOWN:
