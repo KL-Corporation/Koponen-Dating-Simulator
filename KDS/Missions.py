@@ -393,9 +393,6 @@ def InitialiseMissions(index):
         if index == 1:
             Presets.Tutorial()
             Presets.LevelExit()
-        elif index == 2:
-            InitialiseMission("koponen_talk", "Puhu Koposelle")
-            InitialiseTask("koponen_talk", "talk", "Puhu Koposelle", (Listeners.KoponenTalk, 1.0))
         else:
             Presets.LevelExit()
 #endregion
