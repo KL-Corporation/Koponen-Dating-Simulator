@@ -170,7 +170,7 @@ class tileInfo:
     placedOnTile = None
     EMPTYSERIAL = "0000 0000 0000 0000 / "
     
-    def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
+    def __init__(self, position: Tuple[int, int], serialNumber = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
        
