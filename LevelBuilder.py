@@ -37,6 +37,7 @@ pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilder
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
 
 consoleBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
@@ -157,6 +158,8 @@ class Undo:
        
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning
+    if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
+        return
     matMenRunning = False
     btn_menu = False
     mainRunning = False
@@ -441,12 +444,17 @@ def saveMapName():
         saveMap(grid, savePath)
         currentSaveName = savePath
 
-def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
+def loadMap(path: str):
     global currentSaveName, gridSize, grid, tileprops
-    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
+    if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
+        if not currentSaveName:
+            saveMapName()
+        else:
+            saveMap(grid, currentSaveName)
+            
     temporaryGrid = None
-    if fileName:
-        with open(fileName, 'r') as f:
+    if path:
+        with open(path, 'r') as f:
             contents = f.read().split("\n")
             while len(contents[-1]) < 1: contents = contents[:-1]
             
@@ -466,15 +474,20 @@ def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
         #        unit.serialNumber = tUnit + " /"
         
         #return tempGrid
-        currentSaveName = fileName
+        currentSaveName = path
 
         grid = temporaryGrid
-        fpath = os.path.join(os.path.dirname(fileName), "tileprops.kdf")
+        fpath = os.path.join(os.path.dirname(path), "tileprops.kdf")
         if os.path.isfile(fpath):
             with open(fpath, 'r') as f:
                 tileprops = json.loads(f.read())
                 
         Undo.clear()
+    
+def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
+    global currentSaveName, gridSize, grid, tileprops
+    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
+    loadMap(fileName)
 
 commandTree = {
     "set": {
@@ -565,7 +578,7 @@ def materialMenu(previousMaterial: str) -> str:
     while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == QUIT:
                 LB_Quit()
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
@@ -661,20 +674,25 @@ def menu():
     openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    
     while btn_menu:
         clicked = False
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == QUIT:
                 LB_Quit()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
+            elif event.type == DROPFILE:
+                loadMap(event.file)
+                btn_menu = False
         display.fill(KDS.Colors.Gray)
         mouse_pos = pygame.mouse.get_pos()
         newMap_btn.update(display, mouse_pos, clicked)
         openMap_btn.update(display, mouse_pos, clicked, True)
         genProp_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
+        
         pygame.display.flip()
 
 class Selected:
@@ -749,11 +767,8 @@ def main():
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
-            if event.type == pygame.QUIT:
-                if Undo.index + Undo.overflowCount > 0:
-                    if KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
-                        LB_Quit()
-                else: LB_Quit()
+            if event.type == QUIT:
+                LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if brush != "0000":
@@ -813,6 +828,8 @@ def main():
                 else:
                     scroll[1] -= event.y
                 scroll[0] += event.x
+            elif event.type == DROPFILE:
+                loadMap(event.file)
             
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
