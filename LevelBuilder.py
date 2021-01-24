@@ -19,7 +19,7 @@ import KDS.Math
 import KDS.UI
 import KDS.Console
 import tkinter 
-from tkinter import Grid, filedialog
+from tkinter import filedialog
 import json
 import copy
 
@@ -127,6 +127,9 @@ class Undo:
             "brush": brush,
             "tileprops": copy.deepcopy(tileprops)
         }
+        if Undo.index == len(Undo.points) - 1 and toSave == Undo.points[Undo.index]:
+            return
+        Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
         del Undo.points[Undo.index + 1:]
         Undo.points.append(toSave)
         while len(Undo.points) > 64:
@@ -136,7 +139,6 @@ class Undo:
     
     @staticmethod
     def request(redo: bool = False):
-        print(len(Undo.points))
         Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
         
         global grid, dragRect, brush, tileprops
@@ -171,6 +173,16 @@ class tileInfo:
     def __init__(self, position: Tuple[int, int], serialNumber = "0000 0000 0000 0000 / "):
         self.pos = position
         self.serialNumber = serialNumber
+       
+    def __eq__(self, other) -> bool:
+        """ == operator """
+        if isinstance(other, tileInfo):
+            return self.pos == other.pos and self.serialNumber == other.serialNumber
+        else: return False
+
+    def __ne__(self, other) -> bool:
+        """ != operator """
+        return not self.__eq__(other)
         
     def copy(self) -> tileInfo:
         return tileInfo(self.pos, serialNumber=self.serialNumber)
@@ -669,12 +681,18 @@ class Selected:
     units: List[tileInfo] = []
     
     @staticmethod
-    def Set(serialOverride: str = None):
-        global grid, brush
-        Undo.register()
+    def Set(serialOverride: str = None, registerUndo: bool = True):
+        global grid
+        if registerUndo: Undo.register()
         for unit in Selected.units:
             grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
-    
+
+    @staticmethod
+    def SetCustomGrid(grid: List[List[tileInfo]], serialOverride: str = None, registerUndo: bool = True):
+        if registerUndo: Undo.register()
+        for unit in Selected.units:
+            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+            
     @staticmethod         
     def Update():
         Selected.units = []
@@ -682,6 +700,11 @@ class Selected:
         for row in grid[dragRect.y:dragRect.y + dragRect.height]:
             for unit in row[dragRect.x:dragRect.x + dragRect.width]:
                 Selected.units.append(unit.copy())
+                
+    @staticmethod
+    def Get():
+        Selected.Update()
+        Selected.Set(serialOverride=tileInfo.EMPTYSERIAL, registerUndo=False)
 
 def main():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
@@ -733,7 +756,8 @@ def main():
                 else: LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    Undo.register()
+                    if brush != "0000":
+                        Undo.register()
                     selectTrigger = True
                 elif event.button == 3:
                     Undo.register()
@@ -765,7 +789,8 @@ def main():
                     Selected.Set(tileInfo.EMPTYSERIAL)
                     Selected.Update()
                 elif event.key == K_d:
-                    Selected.Set()
+                    if keys_pressed[K_LCTRL]:
+                        Selected.Set()
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                     xy = (0, 0)
                     if event.key == K_UP:
@@ -842,7 +867,7 @@ def main():
         elif dragStartPos != None:
             selectTrigger = False
             dragStartPos = None
-            Selected.Set(tileInfo.EMPTYSERIAL)
+            Selected.Get()
         if brush == "0000": brushTrigger = True
         if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
             selectTrigger = False
