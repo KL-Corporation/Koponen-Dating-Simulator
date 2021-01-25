@@ -16,6 +16,8 @@ import KDS.Math
 import KDS.Missions
 import KDS.UI
 
+from KDS.AI import move
+
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
 text_color = KDS.Colors.MidnightBlue
@@ -428,3 +430,44 @@ class Talk:
             clock.tick_busy_loop(60)
         
         pygame.mouse.set_visible(False)
+
+class KoponenEntity:
+
+    def __init__(self, position: Tuple[int, int], size: Tuple[int, int]):
+        self.rect = pygame.Rect(position[0], position[1], size[0], size[1])
+        self.animations = KDS.Animator.MultiAnimation(
+            idle = KDS.Animator.Animation("koponen_idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop),
+            walk = KDS.Animator.Animation("koponen_walk", 2, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        )
+        self.speed = KDS.ConfigManager.GetGameData("Physics/Koponen/speed")
+        self.movement = [self.speed, 4]
+        self.collisions = None
+
+        self._move = True
+        self.enabled = True
+
+    def update(self, tiles):
+        if self._move:
+            self.rect, self.collisions = move(self.rect, self.movement, tiles)
+            if self.collisions["left"] or self.collisions["right"]: self.movement[0] *= -1
+
+        if self.movement[0] != 0 and self._move: self.animations.trigger("walk")
+        else: self.animations.trigger("idle")
+
+    def render(self, Surface: pygame.Surface, scroll: list, debugMode: bool = False):
+        if debugMode: pygame.draw.rect(Surface, KDS.Colors.Cyan, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
+        self.animations.update()
+        Surface.blit(self.animations.get_frame(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+    def reset(self) -> None:
+        pass
+
+    def stopMoving(self) -> None:
+        self._move = False
+        #Mä tuun vielä ihan varmasti lisäämään näihin kahteen jotain, että jumalauta jos joku koskee näihin funktioihin ja muuttaa koodia niin että näitä funktioita ei ole
+
+    def continueMoving(self) -> None:
+        self._move = True
+
+    def setEnabled(self, state: bool = True) -> None:
+        self.enabled = state

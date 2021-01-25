@@ -1,16 +1,19 @@
 {
+    "Exam": {
+        "passLine": 0.4
+    },
     "Physics": {
         "Items": {
             "fallMaxVelocity": 8,
             "fallSpeed": 1
+        },
+        "Koponen": {
+            "speed": 1
         },
         "Player": {
             "fallMaxVelocity": 8,
             "fallMultiplier": 2.5,
             "fallSpeed": 0.4
         }
-    },
-    "Exam": {
-        "passLine": 0.4
     }
 }

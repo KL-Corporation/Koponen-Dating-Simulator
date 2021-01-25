@@ -8,9 +8,10 @@
     "Entities": {
         "Koponen": {
             "startPos": [
-                2346,
-                -34
-            ]
+                500,
+                0
+            ],
+            "Enabled": true
         },
         "Player": {
             "startPos": [

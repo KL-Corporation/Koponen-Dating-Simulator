@@ -1,5 +1,7 @@
 ﻿#region Importing
 import os
+
+from KDS.Koponen import KoponenEntity
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -349,9 +351,8 @@ true_scroll = [0, 0]
 stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
-koponen_rect = pygame.Rect(200, 200, 24, 64)
-koponen_movement = [1, 6]
-koponen_movingx = 0
+
+Koponen = None
 
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, KDS.Colors.White)
 
@@ -466,6 +467,11 @@ class WorldData():
         
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Koponen/startPos", (200, 200))
+        KoponenEnabled = KDS.ConfigManager.GetLevelProp("Entities/Koponen/Enabled", False)
+
+        global Koponen
+        Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
+        Koponen.setEnabled(KoponenEnabled)
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
@@ -2661,7 +2667,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     wdata = WorldData.LoadMap(mapPath, loadEntities)
     if not wdata:
         return 1
-    Player.rect.topleft, koponen_rect.topleft = wdata
+    Player.rect.topleft, Temp_value = wdata
 
     #region Set Game Data
     global level_finished
@@ -3477,6 +3483,19 @@ while main_running:
                         del tempItem
 
     Player.update()
+
+    #region Koponen
+    if Koponen.enabled:
+        if Koponen.rect.colliderect(Player.rect) and KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            Koponen.stopMoving()
+            screen.blit(koponen_talk_tip, (Koponen.rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
+            if KDS.Keys.functionKey.pressed:
+                KDS.Keys.Reset()
+                KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
+        else: Koponen.continueMoving()
+
+        Koponen.update(tiles)
+    #endregion
     Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
     if not isinstance(Player.inventory.getHandItem(), Lantern) and any(isinstance(item, Lantern) for item in Player.inventory.storage):
@@ -3534,15 +3553,11 @@ while main_running:
     if ambient_light:
         ambient_tint.fill(ambient_light_tint)
         screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
-    
-    #Player ja Koponen
-    if DebugMode:
-        pygame.draw.rect(screen, KDS.Colors.Magenta, pygame.Rect(koponen_rect.x - scroll[0], koponen_rect.y - scroll[1], koponen_rect.width, koponen_rect.height))
-    screen.blit(koponen_animations.update(), (koponen_rect.x - scroll[0], koponen_rect.y - scroll[1]))
 
     if DebugMode:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
     screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
+    if Koponen.enabled: Koponen.render(screen, scroll, DebugMode)
     
     #dark = False if Player.rect.x > 500 else 1
     if dark:
@@ -3587,30 +3602,6 @@ while main_running:
     ##################################################################################################################################################################
     ##################################################################################################################################################################
 
-#endregion
-#region AI
-    koponen_rect, k_collisions = KDS.World.move_entity(koponen_rect, koponen_movement, tiles)
-    if k_collisions.left:
-        koponen_movingx = -koponen_movingx
-    elif k_collisions.right:
-        koponen_movingx = -koponen_movingx
-#endregion
-#region Koponen Movement
-    if koponen_movement[0] != 0:
-        koponen_animations.trigger("walk")
-    else:
-        koponen_animations.trigger("idle")
-#endregion
-#region Koponen Tip
-    if koponen_rect.colliderect(Player.rect) and KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-        screen.blit(
-            koponen_talk_tip, (koponen_rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, koponen_rect.top - scroll[1] - 20))
-        koponen_movement[0] = 0
-        if KDS.Keys.functionKey.pressed:
-            KDS.Keys.Reset()
-            KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
-    else:
-        koponen_movement[0] = koponen_movingx
 #endregion
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
