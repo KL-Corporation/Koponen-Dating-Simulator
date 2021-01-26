@@ -37,6 +37,14 @@ def Log(f: SupportsFloat) -> float: return math.log(f)
 def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
 #endregion
 
+#region Bitwise
+def Double(f: int) -> int:
+    return f << 1
+
+def Halve(f: int) -> int:
+    return f >> 1
+#endregion
+
 #region Value Comparison
 def Round(f: float) -> int:
     """Rounds a value correctly, fuck you Python.
