@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 import pygame
 from pygame.locals import *
 import random
@@ -50,7 +50,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     question_indent = 20
 
     class Question:
-        def __init__(self, question: str, options: Dict[str, bool]):
+        def __init__(self, question: str, _options: Dict[str, bool]):
 
             def splitToRows(string_value, max_width):
                 _t_rows = []
@@ -68,11 +68,13 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             
             t_rows = splitToRows(question, question_maxwidth)
 
-            option_keys_shuffled = list(options.keys())
+            options: Dict[str, Dict[str, Any]] = {}
+
+            option_keys_shuffled = list(_options.keys())
             random.shuffle(option_keys_shuffled)
             for option in option_keys_shuffled:
                 o_trows = splitToRows(option, question_maxwidth - question_indent)
-                s_bool = options[option]
+                s_bool = _options[option]
                 options[option] = {"surface": pygame.Surface((question_maxwidth, (len(o_trows) - 1) * o_trows[0].get_height())),
                                     "s_bool": s_bool,
                                     "selected": False,
