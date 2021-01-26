@@ -1,7 +1,6 @@
 import os
 import random
-from inspect import currentframe
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -297,7 +296,7 @@ class Talk:
         newAnimation = False
         
         @staticmethod
-        def schedule(text, prefix: Prefixes):
+        def schedule(text, prefix: Union[Prefixes, str]):
             prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
             for _text in lineSplit: Talk.scheduled.append(prefix + _text)
