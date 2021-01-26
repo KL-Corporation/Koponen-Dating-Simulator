@@ -1,6 +1,6 @@
 import math
 import random
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy
 import pygame
@@ -51,10 +51,10 @@ class Collisions:
         self.right = False
         self.left = False
 
-def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
+def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
     collisions = Collisions()
     
-    rect.x += movement[0]
+    rect.x += int(movement[0])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0:
@@ -64,7 +64,7 @@ def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dic
             rect.left = tile.rect.right
             collisions.left = True
 
-    rect.y += movement[1]
+    rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
@@ -84,8 +84,8 @@ class Lighting:
         class LightShape:
             def __init__(self, texture: pygame.Surface) -> None:
                 self.texture = texture
-                self.rendered: Dict[dict] = {}
-                
+                self.rendered: Dict[int, Dict[Union[int, str], pygame.Surface]] = {}
+  
             def get(self, radius: int, color: int, conv_a = False):
                 """Returns a light shape from memory
 
@@ -169,19 +169,19 @@ class Lighting:
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
         
-        def update(particle, Surface: pygame.Surface, scroll: List[int]):
-            particle.rect.y -= particle.speed
-            particle.rect.x += random.randint(-1, 1)
-            particle.size -= particle.dying_speed
+        def update(self, Surface: pygame.Surface, scroll: List[int]):
+            self.rect.y -= self.speed
+            self.rect.x += random.randint(-1, 1)
+            self.size -= self.dying_speed
 
-            if particle.size < 0: return None
+            if self.size < 0: return None
             
-            particle.bsurf = pygame.transform.scale(particle.bsurf, (round(particle.size), round(particle.size)))
-            Surface.blit(particle.bsurf, (particle.rect.x - scroll[0], particle.rect.y - scroll[1]))
+            self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
+            Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size * 2), round(particle.size * 2)))
+            self.tsurf = pygame.transform.scale(self.tsurf, (round(self.size * 2), round(self.size * 2)))
 
-            return particle.tsurf
+            return self.tsurf
 
     class Sparkparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (200, 221, 5), direction = 1, slope = 1):
@@ -374,23 +374,23 @@ class BallisticProjectile:
 class itemTools:
     class rk62:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class plasmarifle:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class pistol:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class shotgun:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class ppsh41:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
 
     class awm:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
 
     class Grenade:
         def __init__(self, slope, force):
@@ -399,7 +399,7 @@ class itemTools:
 
     class Knife:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
 
 class Explosion:
     def __init__(self, animation: KDS.Animator.Animation, pos: Tuple[int, int]):

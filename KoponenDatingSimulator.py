@@ -36,7 +36,7 @@ from typing import Any, Dict, List, Tuple, Union
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
-    AppData = os.path.join(os.getenv('APPDATA'), "KL Corporation", "Koponen Dating Simulator")
+    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
     Cache = os.path.join(AppData, "cache")
     Saves = os.path.join(AppData, "saves")
     Logs = os.path.join(AppData, "logs")
@@ -463,7 +463,7 @@ class WorldData():
         darkness = (dval, dval, dval)
         ambient_light = KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/enabled", False)
         ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/tint", (255, 255, 255)))
-        Player.light: bool = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/playerLight", True)
+        Player.light = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/playerLight", True)
         
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Koponen/startPos", (200, 200))
@@ -1096,7 +1096,7 @@ class Candle(Tile):
             self.light_scale = random.randint(20, 60)
         if random.randint(0, 50) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale / 2, self.rect.y - self.light_scale / 2), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 2000)))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale // 2, self.rect.y - self.light_scale // 2), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 2000)))
         return self.texture.update()
 
 class Teleport(Tile):
@@ -1126,7 +1126,7 @@ class Teleport(Tile):
                 Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
                 Teleport.last_teleported = True
                 #Reseting scroll
-                true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] / 2))
+                true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] // 2))
                 true_scroll[1] += (Player.rect.y - true_scroll[1] - 220)
         if not self.rect.colliderect(Player.rect) or self.serialNumber == 2: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
@@ -1746,7 +1746,7 @@ class Plasmarifle(Item):
                 temp = 100
             else:
                 temp = -80
-            Lights.append(KDS.World.Lighting.Light((Player.rect.centerx - temp / 1.4, Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
+            Lights.append(KDS.World.Lighting.Light((int(Player.rect.centerx - temp / 1.4), Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - temp, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
             return plasmarifle_animation.update()
         else:
