@@ -1,7 +1,17 @@
-from typing import Dict, List, Sequence, Tuple
-import pygame, numpy, math, random
+import math
+import random
+from typing import Dict, List, Sequence, Tuple, Union
+
+import numpy
+import pygame
 from pygame.locals import *
-import KDS.Convert, KDS.Math, KDS.Animator, KDS.Logging, KDS.Audio
+
+import KDS.Animator
+import KDS.Audio
+import KDS.Colors
+import KDS.Convert
+import KDS.Logging
+import KDS.Math
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -23,8 +33,8 @@ def collision_test(rect, Tile_list):
 
     max_x = len(Tile_list[0]) - 1
     max_y = len(Tile_list) - 1
-    x = KDS.Math.Clamp(int((rect.x / 34) - 3), 0, max_x)
-    y = KDS.Math.Clamp(int((rect.y / 34) - 3), 0, max_y)
+    x = KDS.Math.Clamp(int(rect.x / 34 - 3), 0, max_x)
+    y = KDS.Math.Clamp(int(rect.y / 34 - 3), 0, max_y)
     end_x = KDS.Math.Clamp(x + 6, 0, max_x)
     end_y = KDS.Math.Clamp(y + 6, 0, max_y)
 
@@ -41,10 +51,10 @@ class Collisions:
         self.right = False
         self.left = False
 
-def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
+def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
     collisions = Collisions()
     
-    rect.x += movement[0]
+    rect.x += int(movement[0])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[0] > 0:
@@ -54,14 +64,14 @@ def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dic
             rect.left = tile.rect.right
             collisions.left = True
 
-    rect.y += movement[1]
+    rect.y += int(movement[1])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.rect.top
             collisions.bottom = True
             if movement[0] and playWalkSound:
-                KDS.Audio.playSound(random.choice(w_sounds["default"]))
+                KDS.Audio.PlaySound(random.choice(w_sounds["default"]))
         elif movement[1] < 0:
             rect.top = tile.rect.bottom
             collisions.top = True
@@ -70,11 +80,12 @@ def move_entity(rect: pygame.Rect, movement: Sequence[int], tiles, w_sounds: dic
 class Lighting:
 
     class Shapes:
+        
         class LightShape:
             def __init__(self, texture: pygame.Surface) -> None:
                 self.texture = texture
-                self.rendered: Dict[dict] = {}
-                
+                self.rendered: Dict[int, Dict[Union[int, str], pygame.Surface]] = {}
+  
             def get(self, radius: int, color: int, conv_a = False):
                 """Returns a light shape from memory
 
@@ -85,15 +96,21 @@ class Lighting:
                 Returns:
                     Surface: The surface that contains the light texture
                 """
-                if radius not in self.rendered: self.rendered[radius] = { "default": pygame.transform.scale(self.texture, (radius, radius)).convert_alpha() }
+                if radius not in self.rendered: self.rendered[radius] = { "default": pygame.transform.smoothscale(self.texture, (radius, radius)) }
 
                 corRad = self.rendered[radius]
                 if color not in corRad:
-                    tmp_tex: pygame.Surface = corRad["default"].copy().convert_alpha()
+                    tmp_tex: pygame.Surface = corRad["default"].copy()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
                 return corRad[color]
+        
+        @staticmethod
+        def clear():
+            for v in Lighting.Shapes.__dict__.values():
+                if isinstance(v, Lighting.Shapes.LightShape):
+                    v.rendered = {}
         
         circle_softest: LightShape = None
         circle_soft: LightShape = None
@@ -152,19 +169,19 @@ class Lighting:
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
         
-        def update(particle, Surface: pygame.Surface, scroll: List[int]):
-            particle.rect.y -= particle.speed
-            particle.rect.x += random.randint(-1, 1)
-            particle.size -= particle.dying_speed
+        def update(self, Surface: pygame.Surface, scroll: List[int]):
+            self.rect.y -= self.speed
+            self.rect.x += random.randint(-1, 1)
+            self.size -= self.dying_speed
 
-            if particle.size < 0: return None
+            if self.size < 0: return None
             
-            particle.bsurf = pygame.transform.scale(particle.bsurf, (round(particle.size), round(particle.size)))
-            Surface.blit(particle.bsurf, (particle.rect.x - scroll[0], particle.rect.y - scroll[1]))
+            self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
+            Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-            particle.tsurf = pygame.transform.scale(particle.tsurf, (round(particle.size * 2), round(particle.size * 2)))
+            self.tsurf = pygame.transform.scale(self.tsurf, (round(self.size * 2), round(self.size * 2)))
 
-            return particle.tsurf
+            return self.tsurf
 
     class Sparkparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (200, 221, 5), direction = 1, slope = 1):
@@ -199,10 +216,11 @@ class Lighting:
 
 
 class Bullet:
-    def __init__(self, rect, direction: bool, speed:int, environment_obstacles, damage, texture = None, maxDistance = 2000, slope =0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect, direction: bool, speed: int, environment_obstacles, damage, texture: pygame.Surface = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
+        self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
         self.speed = speed
         self.texture = texture
         self.maxDistance = maxDistance
@@ -212,18 +230,19 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self,Surface:pygame.Surface, scroll: List[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
+    def update(self, Surface: pygame.Surface, scroll: List[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
+        if debugMode:
+            pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
+            pygame.draw.line(Surface, KDS.Colors.Black, (self.rect.x - (self.movedDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] - (self.slope * self.movedDistance)), (self.rect.x + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] + (self.slope * self.maxDistance)))
+            
         if self.speed == -1:
-            for _ in range(int(self.maxDistance/18)):
-                if debugMode:
-                    pygame.draw.rect(Surface, (255, 255, 255), (self.rect.x-scroll[0], self.rect.y-scroll[1], self.rect.width, self.rect.height))
-                if self.direction:
-                    self.rect.x -= 18                  
-                else:
-                    self.rect.x += 18
+            for _ in range(round(self.maxDistance / 18)):
+
+                self.rect.x += 18 * self.direction_multiplier
+                self.movedDistance += 18
 
                 self.slopeBuffer += self.slope
                 self.rect.y = self.slopeBuffer
@@ -252,15 +271,11 @@ class Bullet:
 
             return "air", targets, plr_htlt, HitTargets, Particles
         else:
-            if self.direction:
-                self.rect.x -= self.speed
-                self.movedDistance += self.speed             
-            else:
-                self.rect.x += self.speed
-                self.movedDistance += self.speed
-            
-            self.slopeBuffer += self.slope*self.speed
-            self.rect.y = self.slopeBuffer
+            self.rect.x += self.speed * self.direction_multiplier
+            self.movedDistance += self.speed
+
+            self.slopeBuffer += self.slope * self.speed
+            self.rect.y = round(self.slopeBuffer)
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
 
@@ -292,11 +307,11 @@ class HitTarget:
         self.hitted = False
 
 class BallisticProjectile:
-    def __init__(self, position, width, height, slope, force, direction, gravitational_factor = 0.1, flight_time = 240, texture=None):
-        self.rect = pygame.Rect(position[0], position[1], width, height)
+    def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: pygame.Surface = None):
+        self.rect = rect
         self.sl = slope
-        self.force = force*KDS.Convert.ToMultiplier(direction)
-        self.upforce = -int(force*slope)
+        self.force = force * KDS.Convert.ToMultiplier(direction)
+        self.upforce = -int(force * slope)
         self.texture = texture
         self.flight_time = flight_time
         self.counter = 0
@@ -333,7 +348,7 @@ class BallisticProjectile:
                 self.rect.bottom = c1.rect.top
                 c_types['bottom'] = True
             elif self.upforce < 0:
-                self.rect.top = c1.bottom
+                self.rect.top = c1.rect.bottom
                 c_types['top'] = True
 
 
@@ -355,42 +370,27 @@ class BallisticProjectile:
         if self.texture:
             Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
         return self.counter > self.flight_time
-    
-    def toSave(self):
-        """Converts all textures to strings
-        """
-        if not isinstance(self.texture, list):
-            self.texture = (pygame.surfarray.array2d(self.texture).tolist(), self.texture.get_colorkey())
-        
-    def fromSave(self):
-        """Converts all strings back to textures
-        """
-        if isinstance(self.texture, list):
-            colorkey = self.texture[1]
-            self.texture = pygame.surfarray.make_surface(self.texture[0]).convert()
-            if colorkey != None:
-                self.texture.set_colorkey(colorkey)
 
 class itemTools:
     class rk62:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class plasmarifle:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class pistol:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class shotgun:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
     class ppsh41:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
 
     class awm:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
 
     class Grenade:
         def __init__(self, slope, force):
@@ -399,28 +399,16 @@ class itemTools:
 
     class Knife:
         def __init__(self, arg = 0):
-            self.counter = arg
+            self.counter: int = arg
 
 class Explosion:
     def __init__(self, animation: KDS.Animator.Animation, pos: Tuple[int, int]):
         self.animation = animation
-        self.xpos = pos[0]
-        self.ypos = pos[1]
+        self.pos = pos
 
     def update(self, Surface: pygame.Surface, scroll: List[int]):
-        txtre = self.animation.update()
-        Surface.blit(txtre, (self.xpos-scroll[0],self.ypos-scroll[1]))
+        Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
-    
-    def toSave(self):
-        """Converts all textures to strings
-        """
-        self.animation.toSave()
-        
-    def fromSave(self):
-        """Converts all strings back to textures
-        """
-        self.animation.fromSave()
     
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)

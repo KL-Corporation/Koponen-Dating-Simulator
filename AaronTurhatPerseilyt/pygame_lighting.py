@@ -54,5 +54,5 @@ while True:
                 sys.exit()
 
     # Update ------------------------------------------------- #
-    pygame.display.update()
-    mainClock.tick(4)
+    pygame.display.flip()
+    mainClock.tick_busy_loop(4)

@@ -1,9 +1,11 @@
 from typing import Callable, Tuple
+
+import pygame
+
+import KDS.Colors
 import KDS.Logging
 import KDS.Math
-import KDS.Colors
-import pygame
-import math
+
 
 class OnAnimationEnd:
     Stop = "stop"
@@ -15,14 +17,16 @@ class Animation:
         """Initialises an animation.
 
         Args:
-            animation_name (str): The name of the animation. Will load the corresponding files from the Animations folder. Name will be converted to [animation_name]_[animation_index].
+            animation_name (str): The name of the animation. Will load the corresponding files from the Animations folder. Name will be converted to {animation_name}_{animation_index}.
             number_of_images (int): The frame count of your animation.
-            duration (int): The duration of every frame in ticks.
-            colorkey (tuple): The color that will be converted to alpha in every frame.
-            _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
+            duration (int): The duration of evert frame in ticks.
+            colorkey (tuple, optional): The color that will be converted to alpha in every frame. Defaults to (255, 255, 255).
+            _OnAnimationEnd (OnAnimationEnd, optional): What will the animator do when the animation has finished. Defaults to OnAnimationEnd.Stop.
+            filetype (str, optional): Specifies the loaded file's filetype. Defaults to ".png".
+            animation_dir (str, optional): The directory of the Textures directory this script is going to search for the animation images. Defaults to "Animations".
         """
         if number_of_images < 1 or duration < 1:
-            KDS.Logging.AutoError("Number of images or duration cannot be less than 1!")
+            KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
         self.images = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
@@ -32,19 +36,18 @@ class Animation:
         self.PingPong = False
         self.done = False
 
-        KDS.Logging.Log(KDS.Logging.LogType.debug, "Initialising {} Animation Images...".format(number_of_images), False)
+        KDS.Logging.debug(f"Initialising {number_of_images} Animation Images...")
         for i in range(number_of_images):
             converted_animation_name = animation_name + "_" + str(i) + filetype
             path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
-            KDS.Logging.Log(KDS.Logging.LogType.debug, f"Initialised Animation Image: {animation_dir}/{converted_animation_name}", False)
+            KDS.Logging.debug(f"Initialised Animation Image: {animation_dir}/{converted_animation_name}")
 
             for _ in range(duration):
                 self.images.append(image)
         
         self.size = self.images[0].get_size()
-
                 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
@@ -92,22 +95,14 @@ class Animation:
         """
         return self.images[self.tick]
     
-    def toSave(self):
-        for i in range(len(self.images)):
-            if not isinstance(self.images[i], list):
-                self.images[i] = pygame.surfarray.array2d(self.images[i]).tolist()
-                
-    def fromSave(self):
-        for i in range(len(self.images)):
-            if isinstance(self.images[i], list):
-                self.images[i] = pygame.surfarray.make_surface(self.images[i]).convert()
-                self.images[i].set_colorkey(self.colorkey)
+    def change_colorkey(self, colorkey: Tuple[int, int, int]):
+        for image in self.images:
+            image.set_colorkey(colorkey)
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
         self.animations = animations
         self.active = None
-        self.tick = 0
         for key in animations:
             if self.active == None:
                 self.active = animations[key]
@@ -129,19 +124,11 @@ class MultiAnimation:
     def reset(self):
         for anim in self.animations:
             self.animations[anim].tick = 0
-    
-    def toSave(self) -> None:
-        for anim in self.animations:
-            self.animations[anim].toSave()
-                
-    def fromSave(self) -> None:
-        for anim in self.animations:
-            self.animations[anim].fromSave()
 
 class AnimationType:
     Linear = lambda t: t
-    EaseIn = lambda t: 1.0 - math.cos(t * math.pi * 0.5)
-    EaseOut = lambda t: math.sin(t * math.pi * 0.5)
+    EaseIn = lambda t: 1.0 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
+    EaseOut = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
     Exponential = lambda t: t * t
     SmoothStep = lambda t: t * t * (3.0 - (2.0 * t))
     SmootherStep = lambda t: t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)

@@ -1,20 +1,22 @@
-from inspect import currentframe
 import os
 import random
+from inspect import currentframe
 from typing import List, Tuple
+
 import pygame
 from pygame.locals import *
-import math
-import sys
-import KDS.Colors
-import KDS.Convert
+
 import KDS.Animator
 import KDS.Audio
-import KDS.UI
+import KDS.Colors
+import KDS.ConfigManager
+import KDS.Convert
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
-import KDS.ConfigManager
+import KDS.UI
+
+from KDS.AI import move
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
@@ -221,7 +223,7 @@ def koponen_talk():
         c = False
         window.blit(pygame.transform.scale(display, (int(display_size[0] * Fullscreen.scaling), int(
             display_size[1] * Fullscreen.scaling))), (Fullscreen.offset[0], Fullscreen.offset[1]))
-        pygame.display.update()
+        pygame.display.flip()
         window.fill((0, 0, 0))
     pygame.mouse.set_visible(False)
 """
@@ -279,7 +281,7 @@ class Talk:
     mask = pygame.mask.Mask(conversation_rect.size, True)
     display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
     display_size = display.get_size()
-    lineCount = math.floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
+    lineCount = KDS.Math.Floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     audioChannel = None
     soundPlaying = None
     
@@ -306,7 +308,7 @@ class Talk:
             if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0:
                 if Talk.audioChannel == None or Talk.audioChannel.get_sound() != Talk.soundPlaying:
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
-                    Talk.audioChannel = KDS.Audio.playSound(Talk.soundPlaying)
+                    Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying)
                 Talk.lines.append(Talk.scheduled.pop(0))
                 Talk.Conversation.newAnimation = True
                 deleteCount = 0
@@ -353,7 +355,7 @@ class Talk:
                 Talk.Conversation.animationProgress = -1
             if Talk.Conversation.animationProgress != -1:
                 Talk.Conversation.animationWidth = max(Talk.Conversation.animationWidth - line_reveal_speed, 0)
-                Talk.Conversation.animationProgress = KDS.Math.Remap(Talk.Conversation.animationWidth, animationRectTarget.width, 0, 0, 1)
+                Talk.Conversation.animationProgress = KDS.Math.Remap01(Talk.Conversation.animationWidth, animationRectTarget.width, 0)
                 if lastIncluded:
                     pygame.draw.rect(Talk.display, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
             
@@ -372,7 +374,7 @@ class Talk:
         Talk.running = False
 
     @staticmethod
-    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock, fps: int):
+    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock):
         pygame.mouse.set_visible(True)
         global talk_ad, old_ads
         loopStopper = 0
@@ -423,8 +425,49 @@ class Talk:
             return_mission_button.update(display, mouse_pos, c, player_inventory)
             date_button.update(display, mouse_pos, c)
 
-            pygame.display.update()
+            pygame.display.flip()
             display.fill(KDS.Colors.Black)
-            clock.tick(fps)
+            clock.tick_busy_loop(60)
         
         pygame.mouse.set_visible(False)
+
+class KoponenEntity:
+
+    def __init__(self, position: Tuple[int, int], size: Tuple[int, int]):
+        self.rect = pygame.Rect(position[0], position[1], size[0], size[1])
+        self.animations = KDS.Animator.MultiAnimation(
+            idle = KDS.Animator.Animation("koponen_idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop),
+            walk = KDS.Animator.Animation("koponen_walk", 2, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        )
+        self.speed = KDS.ConfigManager.GetGameData("Physics/Koponen/speed")
+        self.movement = [self.speed, 4]
+        self.collisions = None
+
+        self._move = True
+        self.enabled = True
+
+    def update(self, tiles):
+        if self._move:
+            self.rect, self.collisions = move(self.rect, self.movement, tiles)
+            if self.collisions["left"] or self.collisions["right"]: self.movement[0] *= -1
+
+        if self.movement[0] != 0 and self._move: self.animations.trigger("walk")
+        else: self.animations.trigger("idle")
+
+    def render(self, Surface: pygame.Surface, scroll: list, debugMode: bool = False):
+        if debugMode: pygame.draw.rect(Surface, KDS.Colors.Cyan, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
+        self.animations.update()
+        Surface.blit(self.animations.get_frame(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+    def reset(self) -> None:
+        pass
+
+    def stopMoving(self) -> None:
+        self._move = False
+        #Mä tuun vielä ihan varmasti lisäämään näihin kahteen jotain, että jumalauta jos joku koskee näihin funktioihin ja muuttaa koodia niin että näitä funktioita ei ole
+
+    def continueMoving(self) -> None:
+        self._move = True
+
+    def setEnabled(self, state: bool = True) -> None:
+        self.enabled = state

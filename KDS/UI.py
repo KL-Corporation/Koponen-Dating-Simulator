@@ -1,13 +1,15 @@
 from shutil import move
 from turtle import position
-from typing import Callable, Tuple
-import KDS.Animator
-import KDS.ConfigManager
-import KDS.Convert
-import KDS.Colors
-import KDS.Math
+from typing import Any, Callable, Tuple, Union
+
 import pygame
 from pygame.locals import *
+
+import KDS.Animator
+import KDS.Colors
+import KDS.ConfigManager
+import KDS.Convert
+import KDS.Math
 
 slider_dragged = None
 
@@ -89,7 +91,7 @@ class Slider:
 
 class Button:
 
-    def __init__(self, rect: pygame.Rect, function, overlay: pygame.Surface or str = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
+    def __init__(self, rect: pygame.Rect, function, overlay: Union[pygame.Surface, str] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
         """Instantiates a new Button
 
         Args:
@@ -114,7 +116,6 @@ class Button:
         self.button_color_fade = KDS.Animator.Float(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
         self.enabled = enabled
         
-    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args):
         """Updates and draws the button onto a surface.
 
         Args:
@@ -123,12 +124,27 @@ class Button:
             clicked (bool): Determines if the button's function should be executed.
             args (any): Any arguments for the button's function.
         """
+    def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args: Any, **kwargs: Any) -> bool:
+        """Updates and draws the button onto a surface.
 
+        Args:
+            surface (Surface): The surface the button will be drawn onto.
+            mouse_pos (Tuple[int, int]): The position of the mouse.
+            clicked (bool): Determines if the button's function should be executed.
+            args (Any): Any arguments for the button's function.
+            kwargs (Any): Any arguments for the button's function.
+
+        Returns:
+            bool: Has the button executed it's function.
+        """
+
+        executed = False
         button_color = self.button_disabled_color
         if self.enabled:
             if self.rect.collidepoint(mouse_pos):
                 if clicked:
-                    self.function(*args)
+                    self.function(*args, **kwargs)
+                    executed = True
                 button_color = self.button_highlighted_color
                 if pygame.mouse.get_pressed()[0]:
                     button_color = self.button_pressed_color
@@ -146,7 +162,9 @@ class Button:
         pygame.draw.rect(surface, draw_color, self.rect)
 
         if self.overlay != None:
-            surface.blit(self.overlay, (int(self.rect.center[0] - (self.overlay.get_width() / 2)), int(self.rect.center[1] - (self.overlay.get_height() / 2))))
+            surface.blit(self.overlay, (self.rect.center[0] - self.overlay.get_width() // 2, self.rect.center[1] - self.overlay.get_height() // 2))
+        
+        return executed
 
 class Switch:
     """
@@ -163,7 +181,7 @@ class Switch:
     def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: bool = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 3, move_lerp_duration: int = 15, custom_path: str = None):
         self.safe_name = safe_name
         self.switch_rect = switch_rect
-        self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(f"UI/Switches{self.safe_name}", default_value))
+        self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(f"UI/Switches/{self.safe_name}", default_value))
         self.range = (switch_rect.left + switch_move_area_padding[0] - (handle_size[0] / 2), switch_rect.right + switch_move_area_padding[1] - (handle_size[0] / 2))
         self.switch_move_area_padding = switch_move_area_padding
         self.switch_off_color = switch_off_color
@@ -216,7 +234,7 @@ class Switch:
         switch_color = (KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move), KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move), KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move))
         pygame.draw.rect(surface, switch_color, self.switch_rect)
         pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
-        KDS.ConfigManager.SetSetting(f"UI/Switches{self.safe_name}", self.state)
+        KDS.ConfigManager.SetSetting(f"UI/Switches/{self.safe_name}", self.state)
         if self.custom_path != None:
             KDS.ConfigManager.SetSetting(self.custom_path, self.state)
         return self.state

@@ -5,6 +5,7 @@ class Modes:
     """
     Story = 0
     Campaign = 1
+    CustomCampaign = 2
 
 gamemode = Modes.Story
 

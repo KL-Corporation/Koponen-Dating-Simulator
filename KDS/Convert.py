@@ -1,13 +1,15 @@
-from typing import Tuple
+from typing import Any, Tuple, Union
+
 import pygame
-import math
-import KDS.Logging
-import KDS.Colors
-import KDS.Math
 from PIL import Image as PIL_Image
 from PIL import ImageFilter as PIL_ImageFilter
 
-def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -> bool:
+import KDS.Colors
+import KDS.Logging
+import KDS.Math
+
+
+def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]
@@ -28,15 +30,31 @@ def ToBool(value, fallbackValue: bool = False, hideErrorMessage: bool = False) -
         elif not hideErrorMessage:
             KDS.Logging.AutoError(f"Cannot convert {value} to bool.")
             return fallbackValue
-    elif isinstance(value, int):
+    elif isinstance(value, int) or isinstance(value, float):
         if value > 0: return True
-        else: return False
-    elif isinstance(value, float):
-        if value > 0.0: return True
         else: return False
     elif isinstance(value, bool): return value
     if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.")
     return fallbackValue
+
+def AutoType(value: str, fallbackValue: Any = None) -> Union[int, float, bool, Any]:
+    try:
+        r = int(value)
+        return r
+    except ValueError:
+        pass
+    try:
+        r = float(value)
+        return r
+    except ValueError:
+        pass
+    r = ToBool(value, None, True)
+    if r != None:
+        return r
+    return fallbackValue
+
+def AutoType2(value: str):
+    return AutoType(value, value)
 
 def ToGrayscale(image: pygame.Surface):
     """Converts an image to grayscale.
@@ -52,9 +70,8 @@ def ToGrayscale(image: pygame.Surface):
     return pygame.surfarray.make_surface(arr)
 
 def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False):
-    mode = "RGB"
-    if alpha:
-        mode = "RGBA"
+    mode = "RGB" if not alpha else "RGBA"
+    
     toBlur = pygame.image.tostring(image, mode)
     blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
     blurredString = blurredImage.tobytes("raw", mode)
@@ -89,15 +106,15 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     if tmp_internal <= 66:
         red = 255
     else:
-        tmp_red = 329.698727446 * math.pow(tmp_internal - 60, -0.1332047592)
+        tmp_red = 329.698727446 * KDS.Math.Pow(tmp_internal - 60, -0.1332047592)
         red = round(KDS.Math.Clamp(tmp_red, 0, 255))
     
     # green
     if tmp_internal <= 66:
-        tmp_green = 99.4708025861 * math.log(tmp_internal) - 161.1195681661
+        tmp_green = 99.4708025861 * KDS.Math.Log(tmp_internal) - 161.1195681661
         green = round(KDS.Math.Clamp(tmp_green, 0, 255))
     else:
-        tmp_green = 288.1221695283 * math.pow(tmp_internal - 60, -0.0755148492)
+        tmp_green = 288.1221695283 * KDS.Math.Pow(tmp_internal - 60, -0.0755148492)
         green = round(KDS.Math.Clamp(tmp_green, 0, 255))
     
     # blue
@@ -106,12 +123,12 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     elif tmp_internal <= 19:
         blue = 0
     else:
-        tmp_blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
+        tmp_blue = 138.5177312231 * KDS.Math.Log(tmp_internal - 10) - 305.0447927307
         blue = round(KDS.Math.Clamp(tmp_blue, 0, 255))
     
     return red, green, blue
 
-def ToLines(text: str, font: pygame.font.Font, max_width: int or float):
+def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
     if font.size(text)[0] > max_width:
         text_split = [wrd + " " for wrd in text.split(" ")]
         text_split[len(text_split) - 1] = text_split[len(text_split) - 1].strip()

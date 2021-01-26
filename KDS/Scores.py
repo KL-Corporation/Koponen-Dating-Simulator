@@ -1,11 +1,13 @@
 import time
 from typing import Tuple
+
 import pygame
+
 import KDS.Animator
 import KDS.Audio
-import KDS.Math
 import KDS.ConfigManager
 import KDS.Logging
+import KDS.Math
 
 waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait before updating the next animation
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
@@ -39,7 +41,7 @@ class GameTime:
         
     @staticmethod
     def unpause():
-        GameTime.cumulativePauseTime += time.perf_counter() + GameTime.startTime
+        GameTime.cumulativePauseTime += time.perf_counter() - GameTime.pauseStartTime
         GameTime.pauseStartTime = -1
     
     @staticmethod
@@ -78,7 +80,7 @@ class ScoreCounter:
             tb_start = 1
             tb_end = 2
         gameTime: float = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
-        timeBonusIndex: float = KDS.Math.Remap(gameTime, tb_start, tb_end, 0, 1)
+        timeBonusIndex: float = KDS.Math.Remap01(gameTime, tb_start, tb_end)
         timeBonus: int = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
         
         totalScore: int = score + koponen_happiness + timeBonus
@@ -118,7 +120,7 @@ class ScoreAnimation:
                 if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                     ScoreAnimation.finished = True
             elif ScoreAnimation.soundCooldown > 2: 
-                KDS.Audio.playSound(pointSound)
+                KDS.Audio.PlaySound(pointSound)
                 ScoreAnimation.soundCooldown = 0
             ScoreAnimation.soundCooldown += 1
                         

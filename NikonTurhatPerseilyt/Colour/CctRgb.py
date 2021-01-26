@@ -1,4 +1,5 @@
 import math
+from typing import Union
 
 #region Stolen
 def convert_K_to_RGB(colour_temperature):
@@ -61,7 +62,7 @@ def convert_K_to_RGB(colour_temperature):
     return red, green, blue
 #endregion
 #region Mine
-def Clamp(value: int or float, _min: int or float, _max: int or float) -> int or float:
+def Clamp(value: Union[int, float], _min: Union[int, float], _max: Union[int, float]) -> Union[int, float]:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
     Args:

@@ -1,8 +1,10 @@
-import subprocess
+import ctypes
 import os
 import shutil
+import subprocess
+
 import KDS.Logging
-import ctypes
+
 
 def hide(path: str):
     """Hides the file or directory specified by path. [WINDOWS ONLY]

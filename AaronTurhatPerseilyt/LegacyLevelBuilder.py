@@ -164,7 +164,7 @@ def material_selector(prev_material):
 
     #region bs
     x = len(tile_textures) + len(item_textures)
-    x = int(x/4)
+    x = x // 4
     for _ in range(x+1):
         material_list.append([])
         selector_rects.append([])
@@ -235,8 +235,8 @@ def material_selector(prev_material):
                 x += 1
             y += 1
 
-        pygame.display.update()
-        clock.tick(45)
+        pygame.display.flip()
+        clock.tick_busy_loop(45)
 
 while main:
 
@@ -385,8 +385,8 @@ while main:
 
     main_display.blit(toplayer,(0,0))
 
-    pygame.display.update()
-    clock.tick(45)
+    pygame.display.flip()
+    clock.tick_busy_loop(45)
 
 pygame.display.quit()
 pygame.quit()

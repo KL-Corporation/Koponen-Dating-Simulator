@@ -1,13 +1,16 @@
 import re
 import sys
-from typing import List, Tuple
+from typing import Any, Callable, List, Tuple, Union
+
+import pygame
+from pygame.locals import *
+
+import KDS.Animator
 import KDS.Colors
 import KDS.Convert
 import KDS.Logging
-import KDS.Animator
 import KDS.Math
-import pygame
-from pygame.locals import *
+
 pygame.init()
 pygame.key.stop_text_input()
 #region Settings
@@ -31,7 +34,7 @@ feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
-def init(_window, _display, _clock, _Offset: Tuple[int, int] = None, _KDS_Quit = None):
+def init(_window: pygame.Surface, _display: pygame.Surface, _clock: pygame.time.Clock, _Offset: Tuple[int, int] = None, _KDS_Quit: Callable[[], None] = None):
     global window, display, display_size, clock, defaultBackground, KDS_Quit, rndrOffset
     window = _window
     display = _display
@@ -92,7 +95,7 @@ Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None):
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Union[str, int, float, tuple, bool, Any]:
     global Escaped, Feed, OldCommands
     if commands != None:
         commandsFound = commands
@@ -122,7 +125,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     match: List[str] = []
     oldIndex = -1
     
-    if (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
+    if checkType != None and (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
     
     def addText(text: str):
         nonlocal cursor_index, cmd
@@ -454,10 +457,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         suggestionsRendered = False 
         lastCmd = cmd
         window.blit(pygame.transform.scale(display, (display_size[0], display_size[1])), (0, 0))
-        pygame.display.update()
+        pygame.display.flip()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)
-        clock.tick(60)
+        clock.tick_busy_loop(60)
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)

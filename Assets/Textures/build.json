@@ -84,13 +84,33 @@
         "082": "steel_ladder.png",
         "083": "metal_platform.png",
         "084": "flicker_trigger.png",
-        "085": "impaled_corpse.png"
+        "085": "impaled_corpse.png",
+        "086": "car.png",
+        "087": "barrier.png",
+        "088": "tractor.png",
+        "089": "tall_tree.png",
+        "090": "dirt_0.png",
+        "091": "grass1.png",
+        "092": "bed.png",
+        "093": "ground_fire_0.png",
+        "094": "lamp0_chain.png",
+        "095": "sand.png",
+        "096": "dead_tree.png",
+        "097": "sandwall.png",
+        "098": "barricade.png",
+        "099": "old_car.png",
+        "100": "old_vase.png",
+        "101": "tent.png",
+        "102": "glass_pane.png",
+        "103": "painting0.png",
+        "104": "painting1.png",
+        "105": "painting2.png"
     },
-
+    
     "tile_sounds" : {
         "008" : "grass.ogg"
     },
-
+    
     "special_tiles": [
         15,
         16,
@@ -122,16 +142,43 @@
         78,
         82,
         84,
-        85
+        85,
+        87,
+        93,
+        94,
+        102
     ],
-    "checkCollisionFalse": [
+    "noCollision": [
         10,
         44,
         45,
         46,
         56,
         57,
-        75
+        75,
+        86,
+        88,
+        89,
+        92,
+        96,
+        99,
+        101,
+        103,
+        104,
+        105
+    ],
+    "trueScale": [
+        86,
+        88,
+        89,
+        92,
+        96,
+        99,
+        100,
+        101,
+        103,
+        104,
+        105
     ],
     "item_textures": {
         "000": "empty.png",
