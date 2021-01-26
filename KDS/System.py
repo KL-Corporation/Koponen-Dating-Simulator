@@ -2,6 +2,7 @@ import ctypes
 import os
 import shutil
 import subprocess
+from typing import Union
 
 import KDS.Logging
 
@@ -76,7 +77,7 @@ class MessageBox:
         YES = 6
     
     @staticmethod
-    def Show(title: str, text: str, buttons: Buttons and int = None, icon: Icon and int = None, *args: int):
+    def Show(title: str, text: str, buttons: int = None, icon: int = None, *args: int):
         argVal = buttons if buttons != None else 0
         argVal += icon if icon != None else 0
         for arg in args: argVal += arg

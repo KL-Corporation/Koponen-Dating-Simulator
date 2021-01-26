@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable, List, Tuple, Union
 
 import pygame
 
@@ -13,7 +13,7 @@ class OnAnimationEnd:
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
         """Initialises an animation.
 
         Args:
@@ -134,14 +134,14 @@ class AnimationType:
     SmootherStep = lambda t: t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)
 
 class Float:
-    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: float, To: float, Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
         Args:
             From (float): The starting point of the float animation.
             To (float): The ending point of the float animation.
             Duration (int): The amount of ticks it takes to finish the entire float animation.
-            Type (AnimationType): The type of float animation you want.
+            _AnimationType (AnimationType): The type of float animation you want.
             _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         self.From = From
@@ -150,7 +150,7 @@ class Float:
         self.ticks = Duration
         self.tick = 0
         self.onAnimationEnd = _OnAnimationEnd
-        self.type = Type
+        self.type = _AnimationType
         self.PingPong = False
         self.value = From
 
@@ -204,10 +204,10 @@ class Float:
         else: return self.To
 
 class Color:
-    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:
-        self.int0 = Float(From[0], To[0], Duration, Type, _OnAnimationEnd)
-        self.int1 = Float(From[1], To[1], Duration, Type, _OnAnimationEnd)
-        self.int2 = Float(From[2], To[2], Duration, Type, _OnAnimationEnd)
+    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
+        self.int0 = Float(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
+        self.int1 = Float(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
+        self.int2 = Float(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
         
     def get_value(self) -> Tuple[int, int, int]:
         return (round(self.int0.get_value()), round(self.int1.get_value()), round(self.int2.get_value()))
@@ -224,7 +224,7 @@ class Color:
         self.int2.To = To[2]
     
     def getValues(self):
-        return ((self.int0.From, self.int1.From, self.int2.From), (self.int0.From, self.int1.From, self.int2.From))
+        return (self.int0.From, self.int1.From, self.int2.From), (self.int0.From, self.int1.From, self.int2.From)
     
     def getFinished(self):
         return True if self.int0.Finished and self.int1.Finished and self.int2.Finished else False  
