@@ -346,13 +346,13 @@ lightsUpdating = 0
 Items = numpy.array([])
 Enemies = numpy.array([])
 
-true_scroll = [0, 0]
+true_scroll = [0.0, 0.0]
 
 stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
 
-Koponen = None
+Koponen = KDS.Koponen.KoponenEntity((0, 0), (0, 0))
 
 koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, KDS.Colors.White)
 
@@ -2677,7 +2677,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     pygame.mouse.set_visible(False)
     main_menu_running = False
     KDS.Scores.ScoreCounter.start()
-    if reset_scroll: true_scroll = [Player.rect.x - 301, Player.rect.y - 221]
+    if reset_scroll: true_scroll = [Player.rect.x - 301.0, Player.rect.y - 221.0]
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
@@ -3583,8 +3583,10 @@ while main_running:
         screen.blit(score_font.render(f"""HEALTH: {KDS.Math.Ceil(Player.health) if Player.health != float("inf") else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
         screen.blit(score_font.render(f"STAMINA: {KDS.Math.Ceil(Player.stamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
-        if hasattr(ui_hand_item, "ammunition"):
-            tmpAmmo = ui_hand_item.ammunition if isinstance(ui_hand_item.ammunition, int) else KDS.Math.Ceil(ui_hand_item.ammunition * 10) / 10
+        
+        tmpAmmo = getattr(ui_hand_item, "ammunition", None)
+        if tmpAmmo != None:
+            tmpAmmo = tmpAmmo if isinstance(tmpAmmo, int) else KDS.Math.Ceil(tmpAmmo * 10) / 10
             screen.blit(harbinger_font.render(f"AMMO: {tmpAmmo}", True, KDS.Colors.White), (10, 360))
 
         if Player.keys["red"]:

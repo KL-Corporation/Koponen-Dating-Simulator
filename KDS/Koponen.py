@@ -15,8 +15,7 @@ import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.UI
-
-from KDS.AI import move
+import KDS.AI
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
@@ -448,7 +447,7 @@ class KoponenEntity:
 
     def update(self, tiles):
         if self._move:
-            self.rect, self.collisions = move(self.rect, self.movement, tiles)
+            self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
             if self.collisions["left"] or self.collisions["right"]: self.movement[0] *= -1
 
         if self.movement[0] != 0 and self._move: self.animations.trigger("walk")

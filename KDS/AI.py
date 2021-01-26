@@ -251,7 +251,8 @@ class HostileEnemy:
     def onDeath(self):
         return []
     
-    def attack(self):
+    def attack(self, slope, env_obstacles, target, *args):
+        KDS.Logging.AutoError("This code should not execute.")
         return []
 
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
@@ -278,7 +279,7 @@ class HostileEnemy:
                 if self.animation.active.done:
                     df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
                     if df:
-                        enemyProjectiles = self.attack((sl2*-1)*3, tiles, targetRect)
+                        enemyProjectiles = self.attack((sl2 * -1) * 3, tiles, targetRect)
                     self.attakF = False
                     self.attackRunning = False
                     self.animation.active.tick = 0

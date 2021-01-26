@@ -336,6 +336,9 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         if commands != None:
             if not tabbed and len(cmd) < 1: showSuggestions = False
             
+            previousCommandsFound = {}
+            commandsFound = {}
+            
             cmdSplit = cmd.split(" ")
             if not suggestionsOverride:
                 commandsFound = commands
