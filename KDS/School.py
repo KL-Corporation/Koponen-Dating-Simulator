@@ -10,6 +10,7 @@ import KDS.ConfigManager
 import KDS.Convert
 import KDS.System
 import KDS.Math
+import datetime
 
 class Timer:
     def __init__(self, start_time = 60):
@@ -390,4 +391,30 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     return _quit, exam_score
 
 def Certificate(display: pygame.Surface, clock: pygame.time.Clock):
-    pass
+    certificateFont = pygame.font.SysFont("Arial", 100, bold=1)
+    surname = "Koponen" # Oisko liian paha, jos ne ois menny naimisiin pelin lopussa?
+    forename = KDS.ConfigManager.Save.Active.Story.playerName
+    
+    def randomBirthday():
+        start_date = datetime.date(2020, 1, 1)
+        end_date = datetime.date(2020, 2, 1)
+
+        time_between_dates = end_date - start_date
+        days_between_dates = time_between_dates.days
+        random_number_of_days = random.randrange(days_between_dates)
+        random_date = start_date + datetime.timedelta(days=random_number_of_days)
+        return f"{random_date.day}.{random_date.month}.{random_date.year}" # Teki niin mieli laittaa 6.9.2005
+    def randomGrade():
+        if "exam_grade" not in KDS.ConfigManager.Save.Active.Story.attributes:
+            return -1
+
+        examGrade: int = KDS.ConfigManager.Save.Active.Story.attributes["exam_grade"]
+        subjectGrade = random.choices(
+            population=(examGrade - 2, examGrade - 1, examGrade, examGrade + 1, examGrade + 2),
+            weights=(1, 2, 2, 2, 1)
+        )
+        return subjectGrade
+    
+    birthday = randomBirthday()
+    
+    grades = [randomGrade() for _ in range(10)]

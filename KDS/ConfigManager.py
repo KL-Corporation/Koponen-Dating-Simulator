@@ -2,7 +2,7 @@
 import json
 import os
 import shutil
-from typing import Any, Union
+from typing import Any, Dict, Union
 
 import KDS.AI
 import KDS.Animator
@@ -130,8 +130,9 @@ class Save:
     
     class StoryData:
         def __init__(self) -> None:
-            self.index = 1
-            self.attributes = {}
+            self.playerName: str = "Sinä"
+            self.index: int = 1
+            self.attributes: Dict[str, Any] = {}
     
     def __init__(self, index: int) -> None:
         Save.Active = self
@@ -142,11 +143,12 @@ class Save:
                 data = json.loads(f.read())
             self.Story.index = data["index"]
             self.Story.attributes = data["attributes"]
+            self.Story.playerName = data["player_name"]
         else: self.save()
 
     def save(self):
         path = Save.ToPath(self.index)
-        data = { "index": self.Story.index, "attributes": self.Story.attributes }
+        data = { "index": self.Story.index, "player_name": self.Story.playerName, "attributes": self.Story.attributes }
         with open(path, "w") as f:
             f.write(json.dumps(data))
 

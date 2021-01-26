@@ -2130,7 +2130,6 @@ KDS.Logging.debug("Game Initialisation Complete.")
 class PlayerClass:
     def __init__(self) -> None:
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name: str = "Sinä"
         self.health: float = 100.0
         self.lastHealth: float = self.health
         self.stamina: float = 100.0
@@ -2167,7 +2166,6 @@ class PlayerClass:
 
     def reset(self, clear_inventory: bool = True):
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.name: str = "Sinä"
         self.health: float = 100.0
         self.lastHealth: float = self.health
         self.stamina: float = 100.0
