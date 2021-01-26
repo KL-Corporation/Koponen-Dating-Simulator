@@ -98,7 +98,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
         Tuple[int, int, int]: [description]
     """
     
-    kelvin = KDS.Math.Clamp(kelvin, 1000, 40000)
+    kelvin = KDS.Math.Clamp(kelvin, 1000.0, 40000.0)
     
     tmp_internal = kelvin / 100.0
     
@@ -107,15 +107,15 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
         red = 255
     else:
         tmp_red = 329.698727446 * KDS.Math.Pow(tmp_internal - 60, -0.1332047592)
-        red = round(KDS.Math.Clamp(tmp_red, 0, 255))
+        red = round(KDS.Math.Clamp(tmp_red, 0.0, 255.0))
     
     # green
     if tmp_internal <= 66:
         tmp_green = 99.4708025861 * KDS.Math.Log(tmp_internal) - 161.1195681661
-        green = round(KDS.Math.Clamp(tmp_green, 0, 255))
+        green = round(KDS.Math.Clamp(tmp_green, 0.0, 255.0))
     else:
         tmp_green = 288.1221695283 * KDS.Math.Pow(tmp_internal - 60, -0.0755148492)
-        green = round(KDS.Math.Clamp(tmp_green, 0, 255))
+        green = round(KDS.Math.Clamp(tmp_green, 0.0, 255.0))
     
     # blue
     if tmp_internal >= 66:
@@ -124,7 +124,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
         blue = 0
     else:
         tmp_blue = 138.5177312231 * KDS.Math.Log(tmp_internal - 10) - 305.0447927307
-        blue = round(KDS.Math.Clamp(tmp_blue, 0, 255))
+        blue = round(KDS.Math.Clamp(tmp_blue, 0.0, 255.0))
     
     return red, green, blue
 

@@ -340,7 +340,7 @@ walk_sound_delay = 0
 ambient_light_tint = (255, 255, 255)
 ambient_light = False
 level_background = False
-level_background_img = None
+level_background_img = Any
 lightsUpdating = 0
 
 Items = numpy.array([])
@@ -577,7 +577,7 @@ class Inventory:
     doubleItem = "doubleItem"
 
     def __init__(self, size: int):
-        self.storage: List[Item] = [Inventory.emptySlot for _ in range(size)]
+        self.storage: List[Item or str] = [Inventory.emptySlot for _ in range(size)]
         self.size: int = size
         self.SIndex: int = 0
 
@@ -2358,7 +2358,7 @@ class PlayerClass:
 Player = PlayerClass()
 #endregion
 #region Console
-def console(oldSurf: pygame.Rect):
+def console(oldSurf: pygame.Surface):
     global level_finished, go_to_console, Player
     go_to_console = False
 
@@ -3343,10 +3343,9 @@ while main_running:
                 Player.inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
                 if Player.inventory.getHandItem() != Inventory.emptySlot and Player.inventory.getHandItem() != Inventory.doubleItem:
-                    temp = Player.inventory.dropItem()
+                    temp: Any = Player.inventory.dropItem()
                     temp.rect.center = Player.rect.center
                     temp.physics = True
-                    # Set momentum as player momentum?
                     temp.momentum = 0
                     Items = numpy.append(Items, temp)
             elif event.key == K_f:
@@ -3520,11 +3519,11 @@ while main_running:
             for x in range(8):
                 x = -x
                 x /= 8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 1, -1, tiles, 25, maxDistance=82, slope=x))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), True, -1, tiles, 25, maxDistance=82, slope=x))
             for x in range(8):
                 x = -x
                 x /= 8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), 0, -1, tiles, 25, maxDistance=82, slope=x))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), False, -1, tiles, 25, maxDistance=82, slope=x))
 
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x - 60, B_Object.rect.y - 55)))
