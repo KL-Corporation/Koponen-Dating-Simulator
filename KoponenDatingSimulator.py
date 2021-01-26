@@ -32,7 +32,7 @@ import json
 import zipfile
 import datetime
 from pygame.locals import *
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -1434,7 +1434,7 @@ class Item:
                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Tuple[int, int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
+    def checkCollisions(Item_list: Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Sequence[int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
         index = 0
         showItemTip = True
         collision = False
