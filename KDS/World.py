@@ -112,16 +112,16 @@ class Lighting:
                 if isinstance(v, Lighting.Shapes.LightShape):
                     v.rendered = {}
         
-        circle_softest: LightShape = None
-        circle_soft: LightShape = None
-        circle_softer: LightShape = None
-        circle: LightShape = None
-        circle_harder: LightShape = None
-        circle_hard: LightShape = None
-        circle_hardest: LightShape = None
-        cone_hard: LightShape = None
-        cone_small_hard: LightShape = None
-        splatter: LightShape = None
+        circle_softest: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle_soft: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle_softer: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle_harder: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle_hard: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle_hardest: LightShape = LightShape(pygame.Surface((0, 0)))
+        cone_hard: LightShape = LightShape(pygame.Surface((0, 0)))
+        cone_small_hard: LightShape = LightShape(pygame.Surface((0, 0)))
+        splatter: LightShape = LightShape(pygame.Surface((0, 0)))
 
     @staticmethod
     def circle_surface(radius, color):

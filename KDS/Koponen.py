@@ -1,6 +1,6 @@
 import os
 import random
-from typing import List, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -80,7 +80,7 @@ class Date:
         pass
 
 class Mission:
-    Task = None
+    Task = Any
     
     @staticmethod
     def Return(player_inventory):
