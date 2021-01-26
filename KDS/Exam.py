@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 import pygame
 from pygame.locals import *
 import random
@@ -50,7 +50,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     question_indent = 20
 
     class Question:
-        def __init__(self, question: str, options: Dict[str, bool]):
+        def __init__(self, question: str, options: Dict[str, Any]):
 
             def splitToRows(string_value, max_width):
                 _t_rows = []
@@ -253,7 +253,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             passed_stamp = pygame.image.load("Assets/Textures/UI/passed_stamp.png").convert(); passed_stamp.set_colorkey(KDS.Colors.White)
             failed_stamp = pygame.image.load("Assets/Textures/UI/failed_stamp.png").convert(); failed_stamp.set_colorkey(KDS.Colors.White)
             stamp = None
-            scoreSurf = None
+            scoreSurf = pygame.Surface((0, 0))
             stamp_size = (270, 125)
             passed_stamp = pygame.transform.scale(passed_stamp, stamp_size); failed_stamp = pygame.transform.scale(failed_stamp, stamp_size)
             #Ethän vielä poista noita stamp rivejä, jos satut tänne tekemään jotain
@@ -262,8 +262,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             timer2.start()
             timer_finished = False
 
-            gradePos = None
-            gradeDestination = None
+            gradePos = []
+            gradeDestination = []
 
             check_running = True
             while check_running:
