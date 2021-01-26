@@ -98,7 +98,7 @@ class Animation:
     def change_colorkey(self, colorkey: Tuple[int, int, int]):
         for image in self.images:
             image.set_colorkey(colorkey)
-
+            
 class MultiAnimation:
     def __init__(self, **animations: Animation):
         self.animations = animations

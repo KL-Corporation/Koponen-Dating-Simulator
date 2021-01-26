@@ -179,7 +179,7 @@ def LerpAngle(a: float, b: float, t: float) -> float:
     
     The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be in degrees.
     """
-    delta = Repeat(b - a, 360)
+    delta = Repeat(b - a, length=int(360))
     if (delta > 180): delta -= 360
     return a + delta * Clamp01(t)
 
