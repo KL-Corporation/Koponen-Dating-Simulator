@@ -297,7 +297,7 @@ class Talk:
         newAnimation = False
         
         @staticmethod
-        def schedule(text, prefix: Prefixes and str):
+        def schedule(text, prefix: Prefixes):
             prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
             for _text in lineSplit: Talk.scheduled.append(prefix + _text)
