@@ -23,8 +23,8 @@ class Circle:
 
     ld_thread = None
     circleMask = None
-    loadingBackground: pygame.Surface = None
-    scaledLoadingBackground: pygame.Surface = None
+    loadingBackground: pygame.Surface = pygame.Surface((0, 0))
+    scaledLoadingBackground: pygame.Surface = pygame.Surface((0, 0))
     debugFont = None
 
     @staticmethod

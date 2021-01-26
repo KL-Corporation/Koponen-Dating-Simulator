@@ -9,7 +9,7 @@ class Modes:
 
 gamemode = Modes.Story
 
-def SetGamemode(Gamemode: Modes and int, LevelIndex=0):
+def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
     """Sets the gamemode in the first argument.
 
     Args:
