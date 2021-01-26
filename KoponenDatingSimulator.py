@@ -23,7 +23,7 @@ import KDS.Scores
 import KDS.System
 import KDS.UI
 import KDS.World
-import KDS.Exam
+import KDS.School
 import numpy
 import random
 import sys
@@ -3376,7 +3376,7 @@ while main_running:
                     Player.health = 0
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
-                quit_temp, exam_score = KDS.Exam.Exam(display, clock)
+                quit_temp, exam_score = KDS.School.Exam(display, clock)
                 pygame.mouse.set_visible(False)
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:

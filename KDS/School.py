@@ -25,7 +25,6 @@ class Timer:
         time = divmod(int(self.time), 60)
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
-
 def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     _quit = False
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
@@ -389,3 +388,6 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     
     exam()
     return _quit, exam_score
+
+def Certificate(display: pygame.Surface, clock: pygame.time.Clock):
+    pass
