@@ -1,9 +1,9 @@
 ﻿#region Importing
 import os
-
-from KDS.Koponen import KoponenEntity
+#region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
+#endregion
 import pygame
 import KDS.AI
 import KDS.Animator
