@@ -128,6 +128,24 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     
     return red, green, blue
 
+def HSVToRGB(hue, saturation, value):
+    i = KDS.Math.Floor(hue * 6)
+    f = hue * 6 - i
+    p = value * (1 - saturation)
+    q = value * (1 - f * saturation)
+    t = value * (1 - (1 - f) * saturation)
+
+    r, g, b = [
+        (value, t, p),
+        (q, value, p),
+        (p, value, t),
+        (p, q, value),
+        (t, p, value),
+        (value, p, q),
+    ][int(i % 6)]
+
+    return r, g, b
+
 def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
     if font.size(text)[0] > max_width:
         text_split = [wrd + " " for wrd in text.split(" ")]

@@ -80,7 +80,7 @@ screen = pygame.Surface(screen_size)
 
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
 display.fill(CompanyLogo.get_at((0, 0)))
-display.blit(pygame.transform.scale(CompanyLogo, (500, 500)), (display_size[0] / 2 - 250, display_size[1] / 2 - 250))
+display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
 pygame.display.flip()
 
 KDS.Audio.init(pygame.mixer)

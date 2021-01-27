@@ -6,7 +6,6 @@ from typing import Union
 
 import KDS.Logging
 
-
 def hide(path: str):
     """Hides the file or directory specified by path. [WINDOWS ONLY]
 
