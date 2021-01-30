@@ -79,7 +79,7 @@ def Profiler(enabled: bool = True):
             ps = pstats.Stats(profile, stream=log_stream)
             ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
             ps.print_stats()
-            log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I")
+            log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n")
             log_stream.close()
         except IOError as e: AutoError(f"IO Error! Details: {e}")
         

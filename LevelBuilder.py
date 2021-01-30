@@ -263,6 +263,7 @@ class tileInfo:
             row: List[tileInfo]
             for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
+                unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
@@ -277,23 +278,22 @@ class tileInfo:
                             try:
                                 unitTexture = Atextures[number[0]][number]
                             except KeyError:
-                                    KDS.Logging.warning(f"Cannot render unit because texture is not added: {srlist}", True)
+                                    KDS.Logging.warning(f"Cannot render unit because texture is not added: {number}", True)
 
-                        if number[0] == "3":
-                            if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
-                                t_ind = str(int(number[1:]))
-                                tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
-                                if keys_pressed[K_p]:
-                                    temp_serial = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
-                                    if len(temp_serial) > 0:
-                                        temp_serial = f"3{int(temp_serial):03d}"
-                                        unit.setSerialToSlot(temp_serial, index)
-                                    #keys_pressed[K_p] = False
+                        if number[0] == "3" and unitRect.collidepoint(mpos_scaled):
+                            t_ind = str(int(number[1:]))
+                            tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
+                            if keys_pressed[K_p]:
+                                temp_serial: str = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
+                                if len(temp_serial) > 0:
+                                    temp_serial = f"3{int(temp_serial):03d}"
+                                    unit.setSerialToSlot(temp_serial, index)
 
                         if unitTexture != None:
-                            scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier)))
+                            unitTextureSize = unitTexture.get_size()
+                            scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTextureSize[0] * scaleMultiplier), int(unitTextureSize[1] * scaleMultiplier)))
                             if number in trueScale:
-                                Surface.blit(scaledUnitTexture, (blitPos[0] - (unitTexture.get_width() * scaleMultiplier - scalesize), blitPos[1] - (scaledUnitTexture.get_height() - scalesize)))
+                                Surface.blit(scaledUnitTexture, (blitPos[0] - (unitTextureSize[0] * scaleMultiplier - scalesize), blitPos[1] - (scaledUnitTexture.get_height() - scalesize)))
                             else:
                                 Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                             if number[0] == "3":
@@ -312,7 +312,7 @@ class tileInfo:
                     tilepropsOverlay.set_alpha(128)
                     Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
 
-                if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
+                if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
                         setPropKey: str = KDS.Console.Start("Enter Property Key:")
                         if len(setPropKey) > 0:
@@ -833,6 +833,7 @@ def main():
                     updateTiles = False
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
+                    KDS.Logging.Profiler(DebugMode)
                 elif event.key == K_DELETE:
                     Selected.Set(tileInfo.EMPTYSERIAL)
                     Selected.Update()

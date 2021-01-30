@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, TypeVar, Union
 
 import pygame
 from pygame.locals import *
@@ -49,29 +49,32 @@ def init(_window: pygame.Surface, _display: pygame.Surface, _clock: pygame.time.
 class CheckTypes:
     @staticmethod
     def Int(_min: int = None, _max: int = None):
-        #min and max are both inclusive
+        """Both min and max are inclusive."""
         return {
             "type": "int",
             "min":_min,
             "max": _max }
     @staticmethod
     def Float(_min: int = None, _max: int = None):
+        """Both min and max are inclusive."""
         return {
             "type": "float",
             "min":_min,
             "max": _max }
     @staticmethod
     def Tuple(size: int, _min: int = None, _max: int = None, perfWarning: int = None, requireIncrease: bool = False):
+        """All min, max and perfWarning are inclusive."""
         return {
             "type": "tuple",
             "size": size,
             "min":_min,
             "max": _max,
-            "perfWarning": perfWarning, #inclusive
+            "perfWarning": perfWarning,
             "requireIncrease": requireIncrease
             }
     @staticmethod
     def Rect(minPos: int = None, maxPos: int = None, minSize: int = None, maxSize: int = None):
+        """All mins and maxs are inclusive."""
         return {
             "type": "rect",
             "minPos": minPos,
@@ -95,7 +98,7 @@ Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Union[str, int, float, tuple, bool, Any]:
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Any:
     global Escaped, Feed, OldCommands
     if commands != None:
         commandsFound = commands
