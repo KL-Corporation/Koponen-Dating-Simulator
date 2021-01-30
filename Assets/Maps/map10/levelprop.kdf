@@ -7,7 +7,6 @@
     },
     "Entities": {
         "Koponen": {
-            "enabled": false,
             "startPos": [
                 200,
                 234
