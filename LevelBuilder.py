@@ -121,19 +121,17 @@ class Undo:
     @staticmethod
     def register():
         global grid, dragRect, brush, tileprops
+        if Undo.index == len(Undo.points) - 1 and Undo.points[Undo.index] == { "grid": grid, "dragRect": dragRect, "brush": brush, "tileprops": tileprops }:
+            return
+        
         toSave = {
-            # deepcopy replacement*
-            "grid": [[t.copy() for t in r] for r in grid],
+            "grid": [[t.copy() for t in r] for r in grid], # deepcopy replacement
             "dragRect": dragRect.copy() if dragRect != None else dragRect,
             "brush": brush,
-            # deepcopy replacement*
-            "tileprops": {k: {ik: iv for ik, iv in v.items()} for k, v in tileprops.items()}
+            "tileprops": {k: {ik: iv for ik, iv in v.items()} for k, v in tileprops.items()} # deepcopy replacement. Dictionary replacement keys do not need to be deepcopied, because they are strings.
             #                     ^^ Value doesn't need to be deepcopied, because it can only be str, float, int or bool.
-            
-            # *deepcopy replacement keys do not need to be deepcopied, because they are strings.
         }
-        if Undo.index == len(Undo.points) - 1 and toSave == Undo.points[Undo.index]:
-            return
+        
         Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
         del Undo.points[Undo.index + 1:]
         Undo.points.append(toSave)
