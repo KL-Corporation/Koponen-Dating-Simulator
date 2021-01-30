@@ -21,7 +21,6 @@ import KDS.Console
 import tkinter 
 from tkinter import filedialog
 import json
-import copy
 
 root = tkinter.Tk()
 root.withdraw()
@@ -123,10 +122,15 @@ class Undo:
     def register():
         global grid, dragRect, brush, tileprops
         toSave = {
-            "grid": copy.deepcopy(grid),
+            # deepcopy replacement*
+            "grid": [[t.copy() for t in grid[i]] for i in range(len(grid))],
             "dragRect": dragRect.copy() if dragRect != None else dragRect,
             "brush": brush,
-            "tileprops": copy.deepcopy(tileprops)
+            # deepcopy replacement*
+            "tileprops": {k: {ik: iv for ik, iv in v.items()} for k, v in tileprops.items()}
+            #                     ^^ Value doesn't need to be deepcopied, because it can only be str, float, int or bool.
+            
+            # *deepcopy replacement keys do not need to be deepcopied, because they are strings.
         }
         if Undo.index == len(Undo.points) - 1 and toSave == Undo.points[Undo.index]:
             return
@@ -188,7 +192,7 @@ class tileInfo:
         return not self.__eq__(other)
         
     def copy(self) -> tileInfo:
-        return tileInfo(self.pos, serialNumber=self.serialNumber)
+        return tileInfo(position=self.pos, serialNumber=self.serialNumber)
 
     def setSerial(self, srlNumber: str):
         self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
