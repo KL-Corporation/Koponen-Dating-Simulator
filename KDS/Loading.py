@@ -8,7 +8,7 @@ import KDS.Audio
 import KDS.Colors
 import KDS.Convert
 import KDS.Math
-import KDS.ThreadHandler
+import KDS.Threading
 
 pygame.init()
 
@@ -84,9 +84,9 @@ class Circle:
         Circle.scaledLoadingBackground = KDS.Convert.AspectScale(Circle.loadingBackground, surface_size)
         surface.blit(Circle.scaledLoadingBackground, (surface_size[0] // 2 - Circle.scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - Circle.scaledLoadingBackground.get_height() // 2))
         pygame.display.flip()
-        Circle.ld_thread = KDS.ThreadHandler.KL_Thread(Circle.rendering, "loading-screen", True, True, surface, clock, debug)
+        Circle.ld_thread = KDS.Threading.StoppableThread(Circle.rendering, "loading-screen", True, True, surface, clock, debug)
 
     @staticmethod
     def Stop():
         global running
-        Circle.ld_thread.stop()
+        Circle.ld_thread.Stop()
