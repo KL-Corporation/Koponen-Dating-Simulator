@@ -1131,10 +1131,10 @@ class Teleport(Tile):
         if not self.rect.colliderect(Player.rect) or self.serialNumber == 2: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
-        if self.serialNumber == 1:
-            return pygame.Surface((0, 0))
-        elif self.serialNumber == 2:
+        if self.serialNumber == 2:
             return Teleport.door_textures[0]
+        else:
+            return pygame.Surface((0, 0))
 
     teleportT_IDS = {}
 

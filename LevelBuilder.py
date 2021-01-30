@@ -18,6 +18,7 @@ import KDS.System
 import KDS.Math
 import KDS.UI
 import KDS.Console
+import KDS.Logging
 import tkinter 
 from tkinter import filedialog
 import json
@@ -30,9 +31,14 @@ scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
-display: pygame.Surface = pygame.display.set_mode(display_size)
+display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | DOUBLEBUF | SCALED)
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
+
+APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
+LOGPATH = os.path.join(APPDATA, "logs")
+os.makedirs(LOGPATH, exist_ok=True)
+KDS.Logging.init(APPDATA, LOGPATH)
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
@@ -90,7 +96,7 @@ teleports = {
     "3002" : pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 }
 
-Atextures = {
+Atextures: Dict[str, Dict[str, pygame.Surface]] = {
     "0": t_textures,
     "1": i_textures,
     "2": e_textures,
@@ -214,10 +220,10 @@ class tileInfo:
                 if srlNumber not in srlist:
                     if srlNumber not in t_textures or not self.hasTile():
                         self.setSerialToSlot(srlNumber, index)
-                    else: print(f"Tile already in {self.pos}!")
-                else: print(f"Serial {srlNumber} already in {self.pos}!")
+                    else: KDS.Logging.info(f"Tile already in {self.pos}!", True)
+                else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
-        print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
+        KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
         
     def removeSerial(self):
         srlist = self.getSerials()
@@ -261,13 +267,17 @@ class tileInfo:
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
-                        if number[0] == '3':
-                            unitTexture = Atextures["3"]["3001"]
+                        if number[0] == "3":
+                            teleportTextureCheck = int(number[1:])
+                            if teleportTextureCheck == 1:
+                                unitTexture = Atextures["3"]["3001"]
+                            elif teleportTextureCheck == 2:
+                                unitTexture = Atextures["3"]["3002"]
                         else:
                             try:
                                 unitTexture = Atextures[number[0]][number]
                             except KeyError:
-                                    print(f"Cannot render unit because texture is not added: {srlist}")
+                                    KDS.Logging.warning(f"Cannot render unit because texture is not added: {srlist}", True)
 
                         if number[0] == "3":
                             if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
@@ -281,10 +291,15 @@ class tileInfo:
                                     #keys_pressed[K_p] = False
 
                         if unitTexture != None:
+                            scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier)))
                             if number in trueScale:
-                                Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0] - (unitTexture.get_width() * scaleMultiplier - scalesize), blitPos[1] - (unitTexture.get_height() * scaleMultiplier - scalesize)))
+                                Surface.blit(scaledUnitTexture, (blitPos[0] - (unitTexture.get_width() * scaleMultiplier - scalesize), blitPos[1] - (scaledUnitTexture.get_height() - scalesize)))
                             else:
-                                Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - unitTexture.get_height() * scaleMultiplier + scalesize))
+                                Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                            if number[0] == "3":
+                                teleportOverlay = pygame.transform.scale(Atextures["3"]["3001"], (scalesize, scalesize))
+                                teleportOverlay.set_alpha(100)
+                                Surface.blit(teleportOverlay, (blitPos[0], blitPos[1] - teleportOverlay.get_height() + scalesize))
                             
                 tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
                 if tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
@@ -298,7 +313,7 @@ class tileInfo:
                     Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
 
                 if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
-                    if keys_pressed[K_p]:
+                    if keys_pressed[K_f]:
                         setPropKey: str = KDS.Console.Start("Enter Property Key:")
                         if len(setPropKey) > 0:
                             tmp = KDS.Console.Start("Enter Property Value:")
@@ -307,7 +322,7 @@ class tileInfo:
                                 if tilepropsPath not in tileprops:
                                     tileprops[tilepropsPath] = {}
                                 tileprops[tilepropsPath][setPropKey] = setPropVal
-                            else: print(f"Value {tmp} could not be parsed into any type.")
+                            else: KDS.Logging.warning(f"Value {tmp} could not be parsed into any type.", True)
                     
                     srlist = unit.getSerials()
                     fld_srls = 0
@@ -558,11 +573,15 @@ def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
     matMenRunning = True
     rscroll = 0
-    blocksize = 70
+    BLOCKSIZE = 70
+    SPACING = (100, 90)
+    COLUMNS = 12
+    OFFSET = (display_size[0] // 2 - SPACING[0] * COLUMNS // 2 - BLOCKSIZE // 2, 40)
 
     class selectorRect:
-        def __init__(self, rect: pygame.Rect, serialNumber: str):
-            self.rect: pygame.Rect = rect
+        def __init__(self, pos: Tuple[int, int], serialNumber: str):
+            self.pos = pos
+            self.rect: pygame.Rect = pygame.Rect(pos[0] * SPACING[0] + OFFSET[0], pos[1] * SPACING[1] + OFFSET[1], BLOCKSIZE, BLOCKSIZE)
             self.serialNumber: str = serialNumber
 
     selectorRects: List[selectorRect] = []
@@ -570,12 +589,19 @@ def materialMenu(previousMaterial: str) -> str:
     y = 0
     x = 0
     for collection in Atextures:
-        for item in Atextures[collection]:
-            selectorRects.append(selectorRect(pygame.Rect(x*100 + 100, y*90 + 40, blocksize, blocksize), item))
+        for key in Atextures[collection]:
+            selectorRects.append(selectorRect((x, y), key))
             x += 1
-            if x > 6:
+            if x > COLUMNS:
                 x = 0
                 y += 1
+        
+        y += 1
+        if x > 0:
+            x = 0
+            y += 1
+                
+    selectorSize = (COLUMNS, y)
 
     while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
@@ -586,6 +612,8 @@ def materialMenu(previousMaterial: str) -> str:
                 if event.key == K_ESCAPE or event.key == K_e:
                     matMenRunning = False
                     return previousMaterial
+                elif event.key == K_F11:
+                    pygame.display.toggle_fullscreen()
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
                 else: rscroll = min(rscroll + 1, sys.maxsize)
@@ -597,9 +625,9 @@ def materialMenu(previousMaterial: str) -> str:
         for selection in selectorRects:
             selection: selectorRect
             sorting = selection.serialNumber[0]
-            display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
-            if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
-                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
+            display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (BLOCKSIZE, BLOCKSIZE)), (selection.rect.x, selection.rect.y - rscroll * 30))
+            if selection.rect.collidepoint(mpos[0], mpos[1] + rscroll * 30):
+                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, BLOCKSIZE, BLOCKSIZE), 3)
                 tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
                     return selection.serialNumber
@@ -685,6 +713,9 @@ def menu():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
+            elif event.type == KEYDOWN:
+                if event.key == K_F11:
+                    pygame.display.toggle_fullscreen()
             elif event.type == DROPFILE:
                 loadMap(event.file)
                 btn_menu = False
@@ -739,7 +770,7 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
-        scalesize = KDS.Math.Clamp(scalesize + add, 1, 272)
+        scalesize = KDS.Math.Clamp(scalesize + add, 1, 256)
         scaleMultiplier = scalesize / gamesize
         mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
@@ -822,6 +853,8 @@ def main():
                         unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
                     dragRect.x += xy[0]
                     dragRect.y += xy[1]
+                elif event.key == K_F11:
+                    pygame.display.toggle_fullscreen()
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -851,7 +884,7 @@ def main():
         if keys_pressed[K_o] and keys_pressed[K_LCTRL]:
             openMap()
             if grid == None:
-                print("Map opening cancelled.")
+                KDS.Logging.info("Map opening cancelled.", True)
 
         if inputConsole_output != None:
             consoleHandler(inputConsole_output)
@@ -907,7 +940,7 @@ def main():
                         try:
                             blitTex = Atextures[number[0]][number]
                         except KeyError:
-                                print(f"Cannot render unit because texture is not added: {srlist}")
+                                KDS.Logging.warning(f"Cannot render unit because texture is not added: {srlist}", True)
                     if blitTex != None:
                         if number in trueScale:
                             display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
@@ -935,14 +968,17 @@ def main():
         pygame.display.flip()
         clock.tick_busy_loop()
 
-mainRunning = True   
-main()
+mainRunning = True
+try:
+    main()
+except Exception as e:
+    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below.\n{e}")
+    KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Read the log file for more information.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
 
 pygame.quit()
 
 """ KEYMAP
     [Normal]
-    P: Set teleport index
     Middle Mouse: Get Serial
     Left Mouse: Set Serial
     Left Mouse + SHIFT: Add Serial
@@ -956,7 +992,8 @@ pygame.quit()
     CTRL + D: Duplicate Selection
     T: Input Console
     R: Resize Map
-    P: Set Property
+    F: Set Property
+    P: Set teleport index
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As
     CTRL + O: Open Project
