@@ -454,7 +454,7 @@ class WorldData():
         
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
-        KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/Enabled", False)
+        KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/enabled", False)
 
         global Koponen
         Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))

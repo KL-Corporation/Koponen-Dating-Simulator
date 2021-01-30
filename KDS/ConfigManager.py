@@ -63,7 +63,7 @@ class JSON:
             return None
         
     @staticmethod
-    def Get(filePath: str, jsonPath: str, defaultValue: Any, warnMissing: bool = False) -> Any:
+    def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False) -> Any:
         config = {}
         if os.path.isfile(filePath):
             try:
@@ -78,14 +78,14 @@ class JSON:
             for i in range(len(path)):
                 p = path[i]
                 if p not in tmpConfig:
-                    if warnMissing: KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}. Value of {jsonPath} has been set as default to: {defaultValue}", True)
-                    JSON.Set(filePath, jsonPath, defaultValue)
+                    if warnMissing: KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}." + (f"Value of {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
+                    if writeMissing: JSON.Set(filePath, jsonPath, defaultValue)
                     return defaultValue
                 if i < len(path) - 1: tmpConfig = tmpConfig[p]
                 else: return tmpConfig[p]
         else:
-            if warnMissing: KDS.Logging.warning(f"No file found in path: {filePath}. Value of the file's {jsonPath} has been set as default to: {defaultValue}", True)
-            JSON.Set(filePath, jsonPath, defaultValue)
+            if warnMissing: KDS.Logging.warning(f"No file found in path: {filePath}." + (f"Value of the file's {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
+            if writeMissing: JSON.Set(filePath, jsonPath, defaultValue)
             return defaultValue
         KDS.Logging.AutoError("Unknown Error! This code should never execute.")
         return defaultValue
@@ -126,7 +126,7 @@ class LevelProp:
     
     @staticmethod
     def Get(path: str, DefaultValue: Any, listToTuple: bool = True) -> Any:
-        val = JSON.Get(os.path.join(LevelProp.mapPath, "levelprop.kdf"), path, DefaultValue)
+        val = JSON.Get(os.path.join(LevelProp.mapPath, "levelprop.kdf"), path, DefaultValue, writeMissing=False)
         return tuple(val) if isinstance(val, list) and listToTuple else val
 
 class Save:
