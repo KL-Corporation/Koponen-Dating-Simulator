@@ -432,6 +432,7 @@ class WorldData():
                 else:
                     KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
         
+        pygame.event.pump()
         with open(os.path.join(MapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
 
@@ -439,10 +440,13 @@ class WorldData():
         WorldData.MapSize = (max_map_width, len(map_data))
 
         #region Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä. Tämä tehdään toisessa threadissa, jotta meidän koko peli ei raiskaisi itseään.
+        pygame.event.pump()
         emptyWorldFunc = lambda: numpy.array([[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
         mapGenerator = KDS.Threading.ReturnThread(emptyWorldFunc, True)
+        pygame.event.pump()
         #endregion
         
+        pygame.event.pump()
         global dark, darkness, ambient_light, ambient_light_tint
         KDS.ConfigManager.LevelProp.init(MapPath)
         dark = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False)
@@ -455,6 +459,7 @@ class WorldData():
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
         KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/enabled", False)
+        pygame.event.pump()
 
         global Koponen
         Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
@@ -471,8 +476,11 @@ class WorldData():
             8: KDS.AI.Mummy
         }
 
+        pygame.event.pump()
         tiles = mapGenerator.GetResult()
         mapGenerator.Dispose()
+        pygame.event.pump()
+        
         y = 0
         for row in map_data:
             pygame.event.pump()
