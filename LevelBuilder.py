@@ -123,7 +123,7 @@ class Undo:
         global grid, dragRect, brush, tileprops
         toSave = {
             # deepcopy replacement*
-            "grid": [[t.copy() for t in grid[i]] for i in range(len(grid))],
+            "grid": [[t.copy() for t in r] for r in grid],
             "dragRect": dragRect.copy() if dragRect != None else dragRect,
             "brush": brush,
             # deepcopy replacement*
