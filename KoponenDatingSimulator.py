@@ -21,6 +21,7 @@ import KDS.Math
 import KDS.Missions
 import KDS.Scores
 import KDS.System
+import KDS.Threading
 import KDS.UI
 import KDS.World
 import KDS.School
@@ -391,8 +392,7 @@ class WorldData():
     @staticmethod
     def LoadMap(MapPath: str, loadEntities: bool = True):
         global Items, tiles, Enemies, Projectiles
-        PersistentMapPath = os.path.join(PersistentPaths.Cache, "map")
-        if not os.path.isfile(MapPath + ".map") and not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
+        if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
     Map Directory: {os.path.isdir(MapPath)}
@@ -404,19 +404,7 @@ class WorldData():
         Inventory File (optional): {os.path.isfile(os.path.join(MapPath, "inventory.kdf"))}
     ##### MAP FILE ERROR #####""")
             #endregion
-            KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
-            KDS.Loading.Circle.Stop()
-            return None
-        if os.path.isdir(PersistentMapPath):
-            shutil.rmtree(PersistentMapPath)
-        if os.path.isdir(MapPath):
-            shutil.copytree(MapPath, PersistentMapPath)
-        elif os.path.isfile(MapPath + ".map"):
-            with zipfile.ZipFile(MapPath + ".map", "r") as mapZip:
-                mapZip.extractall(PersistentMapPath)
-        else:
-            KDS.Logging.AutoError("Map file is not a valid format.")
-            KDS.System.MessageBox.Show("Map Error", "This map is unplayable currently. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
+            KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             KDS.Loading.Circle.Stop()
             return None
         
@@ -426,7 +414,7 @@ class WorldData():
         global level_background, level_background_img
         if os.path.isfile(os.path.join(MapPath, "background.png")):
             level_background = True
-            level_background_img = pygame.image.load( os.path.join(MapPath, "background.png")).convert()
+            level_background_img = pygame.image.load(os.path.join(MapPath, "background.png")).convert()
         else: level_background = False
         if os.path.isfile(os.path.join(MapPath, "inventory.kdf")):
             data: Dict[str, int] = {}
@@ -444,41 +432,34 @@ class WorldData():
                 else:
                     KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
         
-        for fname in os.listdir(PersistentMapPath):
-            fpath = os.path.join(PersistentMapPath, fname)
-            if os.path.isdir(fpath):
-                for _fname in os.listdir(fpath):
-                    _fpath = os.path.join(fpath, _fname)
-                    if os.path.isfile(_fpath):
-                        shutil.copy(_fpath, PersistentMapPath)
-                    else:
-                        KDS.Logging.AutoError("Map file is not a valid format.")
-                shutil.rmtree(fpath)
-        with open(os.path.join(PersistentMapPath, "level.dat"), "r") as map_file:
+        with open(os.path.join(MapPath, "level.dat"), "r") as map_file:
             map_data = map_file.read().split("\n")
-
-        global dark, darkness, ambient_light, ambient_light_tint
-        dark = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/enabled", False)
-        dval: int = 255 - KDS.ConfigManager.GetLevelProp("Rendering/Darkness/strength", 0)
-        darkness = (dval, dval, dval)
-        ambient_light = KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/enabled", False)
-        ambient_light_tint = tuple(KDS.ConfigManager.GetLevelProp("Rendering/AmbientLight/tint", (255, 255, 255)))
-        Player.light = KDS.ConfigManager.GetLevelProp("Rendering/Darkness/playerLight", True)
-        
-        p_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
-        k_start_pos: Tuple[int, int] = KDS.ConfigManager.GetLevelProp("Entities/Koponen/startPos", (200, 200))
-        KoponenEnabled = KDS.ConfigManager.GetLevelProp("Entities/Koponen/Enabled", False)
-
-        global Koponen
-        Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
-        Koponen.setEnabled(KoponenEnabled)
 
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
-        # Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä
-        tiles = numpy.array([[Tile((x * 34, y * 34), 0) for x in range(
-            WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
+        #region Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä. Tämä tehdään toisessa threadissa, jotta meidän koko peli ei raiskaisi itseään.
+        emptyWorldFunc = lambda: numpy.array([[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
+        mapGenerator = KDS.Threading.ReturnThread(emptyWorldFunc, True)
+        #endregion
+        
+        global dark, darkness, ambient_light, ambient_light_tint
+        KDS.ConfigManager.LevelProp.init(MapPath)
+        dark = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False)
+        dval: int = 255 - KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0)
+        darkness = (dval, dval, dval)
+        ambient_light = KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/enabled", False)
+        ambient_light_tint = tuple(KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/tint", (255, 255, 255)))
+        Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
+        
+        p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
+        k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
+        KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/Enabled", False)
+
+        global Koponen
+        Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
+        Koponen.setEnabled(KoponenEnabled)
+    
         enemySerialNumbers = {
             1: KDS.AI.Imp,
             2: KDS.AI.SergeantZombie,
@@ -490,8 +471,11 @@ class WorldData():
             8: KDS.AI.Mummy
         }
 
+        tiles = mapGenerator.GetResult()
+        mapGenerator.Dispose()
         y = 0
         for row in map_data:
+            pygame.event.pump()
             x = 0
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
@@ -527,11 +511,12 @@ class WorldData():
             y += 1
 
         for row in tiles:
+            pygame.event.pump()
             for tile in row:
                 if hasattr(tile, "lateInit"):
                     tile.lateInit()
 
-        KDS.Audio.Music.Play(os.path.join(PersistentMapPath, "music.ogg"))
+        KDS.Audio.Music.Play(os.path.join(MapPath, "music.ogg"))
         return p_start_pos, k_start_pos
 #endregion
 #region Data
@@ -2753,7 +2738,7 @@ def respawn_function():
     Player.reset(clear_inventory=False)
     level_finished = False
     if RespawnAnchor.active != None: Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
-    else: Player.rect.topleft = KDS.ConfigManager.GetLevelProp("Entities/Player/startPos", (100, 100))
+    else: Player.rect.topleft = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
     KDS.Audio.Music.Stop()
 #endregion
 #region Menus

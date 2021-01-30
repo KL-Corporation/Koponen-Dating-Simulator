@@ -117,9 +117,17 @@ def SetSetting(path: str, value: Any) -> Any:
 def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None)
 
-def GetLevelProp(path: str, DefaultValue: Any, listToTuple: bool = True) -> Any:
-    val = JSON.Get(os.path.join(CachePath, "map", "levelprop.kdf"), path, DefaultValue)
-    return tuple(val) if isinstance(val, list) and listToTuple else val
+class LevelProp:
+    mapPath: str = ""
+    
+    @staticmethod
+    def init(MapPath: str):
+        LevelProp.mapPath = MapPath
+    
+    @staticmethod
+    def Get(path: str, DefaultValue: Any, listToTuple: bool = True) -> Any:
+        val = JSON.Get(os.path.join(LevelProp.mapPath, "levelprop.kdf"), path, DefaultValue)
+        return tuple(val) if isinstance(val, list) and listToTuple else val
 
 class Save:
     Active = None
