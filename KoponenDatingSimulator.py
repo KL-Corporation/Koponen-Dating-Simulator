@@ -2993,7 +2993,7 @@ def main_menu():
     #Main menu variables:
     framecounter = 0
     current_frame = 0
-    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.AnimationType.SmoothStep, KDS.Animator.OnAnimationEnd.Stop)
+    framechange_lerp = KDS.Animator.Float(0.0, 255.0, 100, KDS.Animator.AnimationType.EaseInOutSine, KDS.Animator.OnAnimationEnd.Stop)
     framechange_lerp.tick = framechange_lerp.ticks
 
     main_menu_play_button = KDS.UI.Button(pygame.Rect(450, 180, 300, 60), menu_mode_selector, "PLAY")
