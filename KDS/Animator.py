@@ -156,7 +156,7 @@ class AnimationType:
     EaseOutBack = lambda t: 1 + 2.70158 * pow(t - 1, 3) + 1.70158 * pow(t - 1, 2)
     EaseInOutBack = lambda t: (pow(2 * t, 2) * ((2.5949095 + 1) * 2 * t - 2.5949095)) * 0.5 if t < 0.5 else (pow(2 * t - 2, 2) * ((2.5949095 + 1) * (t * 2 - 2) + 2.5949095) + 2) * 0.5
     EaseInBounce = lambda t: 1 - EaseOutBounce(1 - t)
-    EaseOutBounce = lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t - 2.625 / 2.75) * t + 0.984375))
+    EaseOutBounce = lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375))
     EaseInOutBounce = lambda t: (1 - EaseOutBounce(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + EaseOutBounce(2 * t - 1)) * 0.5
 
 class Float:
