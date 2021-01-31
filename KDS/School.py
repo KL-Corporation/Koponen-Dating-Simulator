@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 import pygame
 from pygame.locals import *
 import random
@@ -222,35 +222,15 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             exam_returned = pygame.mixer.Sound("Assets/Audio/effects/exam_returned.ogg")
             KDS.Audio.PlaySound(exam_returned)
 
-            class scoreRational(object):
-
-                rational_spares = [0, 0.25, 0.5, 0.75, 1]
-                rational_marks = {0: "", 0.25: "+", 0.5: "½", 0.75: "-"}
-
-                @staticmethod
-                def closestTo(lst: list, value):
-                    return min(lst, key= lambda lst_value : abs(value - lst_value))
-
+            class scoreRational:
                 def __init__(self, value: float):
-                    self.value = value
                     self.raw_value = value
-                    self.rational = (value - KDS.Math.Floor(value))
-                    self.rational_mark = ""
-
-                    closest_1f = scoreRational.closestTo(scoreRational.rational_spares, self.rational)
-                    self.raw_value = KDS.Math.Floor(self.raw_value) + closest_1f
-                    if closest_1f == 1 or closest_1f == 0.75: 
-                        self.value = KDS.Math.Ceil(self.value)
-                        self.rational_mark = "-" if closest_1f == 0.75 else ""
-                    else:
-                        self.value = KDS.Math.Floor(self.value)
-                        self.rational_mark = scoreRational.rational_marks[closest_1f]
-                
-                def __str__(self):
-                    return f"{self.value}{self.rational_mark}"
+                    base = KDS.Math.Floor(value)
+                    self.value = base + KDS.Math.Closest(value - base, [0.0, 0.25, 0.5, 0.75, 1.0])
+                    self.formatted_value = KDS.Convert.ToRational(self.value)
 
             score = checkAnswers(pages)
-            score_formatted = 0
+            score_formatted = None
             passLine = KDS.ConfigManager.GetGameData("Exam/passLine")
             passed_stamp = pygame.image.load("Assets/Textures/UI/passed_stamp.png").convert(); passed_stamp.set_colorkey(KDS.Colors.White)
             failed_stamp = pygame.image.load("Assets/Textures/UI/failed_stamp.png").convert(); failed_stamp.set_colorkey(KDS.Colors.White)
@@ -283,9 +263,9 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                         grade_slope = (10 - 4) / (1 - passLine)
                         f_score = 4 + grade_slope * (score - passLine)
                         score_formatted = scoreRational(f_score)
-                        exam_score = score_formatted.raw_value
+                        exam_score = score_formatted.value
 
-                    scoreSurf = gradeFont.render(f"{score_formatted}", False, KDS.Colors.Red)
+                    scoreSurf = gradeFont.render(f"""{score_formatted.formatted_value if score_formatted != None else "<score_error>"}""", False, KDS.Colors.Red)
 
                     gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
@@ -385,36 +365,96 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
             c = False
 
         exam_music.stop()
+        pygame.mouse.set_visible(False)
             
     
     exam()
     return _quit, exam_score
 
 def Certificate(display: pygame.Surface, clock: pygame.time.Clock):
-    certificateFont = pygame.font.SysFont("Arial", 100, bold=1)
-    surname = "Koponen" # Oisko liian paha, jos ne ois menny naimisiin pelin lopussa?
-    forename = KDS.ConfigManager.Save.Active.Story.playerName
+    pygame.key.set_repeat(500, 31) #temp
+    displaySize = display.get_size()
     
-    def randomBirthday():
-        start_date = datetime.date(2020, 1, 1)
-        end_date = datetime.date(2020, 2, 1)
+    #region Settings
+    PeOverride = True
+    AlignOverride = False
+    GlobalRefrenceOverride = 10
+    #endregion
+    
+    class Fonts:
+        INFO = pygame.font.SysFont("ArialBD", 27)
+        GRADE = pygame.font.SysFont("Arial", 18, bold=0)
+    certificateFont = pygame.font.SysFont("Arial", 100, bold=1)
+    surname = "Koponen" if not AlignOverride else "[ALIGN Surname]" # Oisko liian paha, jos ne ois menny naimisiin pelin lopussa?
+    forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name>") if not AlignOverride else "[ALIGN Forename]"
+    name = f"{surname} {forename}"
+    
+    def randomBirthday() -> str:
+        start_date = datetime.date(2005, 1, 1)
+        end_date = datetime.date(2005, 12, 31)
 
         time_between_dates = end_date - start_date
         days_between_dates = time_between_dates.days
         random_number_of_days = random.randrange(days_between_dates)
         random_date = start_date + datetime.timedelta(days=random_number_of_days)
-        return f"{random_date.day}.{random_date.month}.{random_date.year}" # Teki niin mieli laittaa 6.9.2005
-    def randomGrade():
-        if "exam_grade" not in KDS.ConfigManager.Save.Active.Story.attributes:
+        return f"{random_date.day}.{random_date.month}.{random_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]" # Teki niin mieli laittaa 6.9.2005
+    def randomGrade(refrenceOverride: float = None) -> int:
+        if (KDS.ConfigManager.Save.Active == None or "exam_grade" not in KDS.ConfigManager.Save.Active.Story.attributes) and not (4 <= GlobalRefrenceOverride <= 10):
             return -1
-
-        examGrade: int = KDS.ConfigManager.Save.Active.Story.attributes["exam_grade"]
+        elif 4 <= GlobalRefrenceOverride <= 10 and refrenceOverride == None: refrenceOverride = GlobalRefrenceOverride
+        
+        ref = round(KDS.ConfigManager.Save.Active.Story.attributes["exam_grade"] if refrenceOverride == None else refrenceOverride)
         subjectGrade = random.choices(
-            population=(examGrade - 2, examGrade - 1, examGrade, examGrade + 1, examGrade + 2),
-            weights=(1, 2, 2, 2, 1)
+            population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
+            weights=(1, 3, 5, 4, 1),
+            k=1
         )
-        return subjectGrade
+        realGrade = subjectGrade if isinstance(subjectGrade, int) else subjectGrade[0]
+        return KDS.Math.Clamp(realGrade, 4, 10)
     
     birthday = randomBirthday()
     
-    grades = [randomGrade() for _ in range(10)]
+    grades = [randomGrade() for _ in range(12 if not PeOverride else 11)]
+    average = sum(grades) / len(grades)
+    
+    # PE Override
+    if PeOverride: grades.append(randomGrade(KDS.Math.Remap(average, 4, 10, 10, 4)))
+    
+    certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
+    certificateSize = certificate.get_size()
+    if not AlignOverride:
+        pygame.draw.rect(certificate, KDS.Colors.White, (60, 170, 500, 90))
+        pygame.draw.rect(certificate, KDS.Colors.White, (700, 300, 150, certificateSize[1] - 300))
+    certificate.blit(Fonts.INFO.render(name, True, KDS.Colors.Black), (67, 175))
+    certificate.blit(Fonts.INFO.render(birthday, True, KDS.Colors.Black), (67, 210))
+    
+    posList = [
+        305,
+        353,
+        401,
+        450,
+        479,
+        508,
+        537,
+        566,
+        595,
+        624,
+        653,
+        682
+    ]
+    for i in range(len(grades)):
+        gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", True, KDS.Colors.Black)
+        certificate.blit(gradeRender, (738, posList[i]))
+    
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+            if event.type == KEYDOWN:
+                if event.key == K_F5:
+                    return
+ 
+        display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, 50))
+        pygame.display.flip()
+        display.fill(KDS.Colors.Black)
+        clock.tick_busy_loop(60)

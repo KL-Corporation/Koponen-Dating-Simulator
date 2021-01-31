@@ -8,7 +8,6 @@ import KDS.Colors
 import KDS.Logging
 import KDS.Math
 
-
 def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
@@ -165,3 +164,13 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
         if len(new_split[-1]) < 1: del(new_split[-1])
         return tuple(["".join(new_split[i]) for i in range(len(new_split))])
     else: return tuple([text])
+
+def ToRational(value: float) -> str:
+    Base = KDS.Math.Floor(value)
+    Rational = value - Base
+    Marks = {0.0: "", 0.25: "+", 0.5: "½", 0.75: "-"}
+    closest = KDS.Math.Closest(Rational, Marks.keys())
+    mark = Marks[closest]
+    modBase = Base + 1 if KDS.Math.Approximately(Rational, 0.75) else Base
+    return f"{modBase}{mark}"
+

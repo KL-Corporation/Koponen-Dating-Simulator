@@ -160,6 +160,7 @@ play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
 KDS.Logging.debug("Settings Loaded.")
 #endregion
 KDS.Logging.debug("Loading Assets...")
+pygame.event.pump()
 #region Fonts
 KDS.Logging.debug("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
@@ -171,6 +172,7 @@ ArialFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
 ArialTitleFont = pygame.font.SysFont("Arial", 72, bold=0, italic=0)
 KDS.Logging.debug("Font Loading Complete.")
 #endregion
+pygame.event.pump()
 #region Building Textures
 KDS.Logging.debug("Loading Building Textures...")
 door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
@@ -180,6 +182,7 @@ blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
 blh.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Building Texture Loading Complete.")
 #endregion
+pygame.event.pump()
 #region Item Textures
 KDS.Logging.debug("Loading Item Textures...")
 red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
@@ -203,6 +206,7 @@ ppsh41_f_texture.set_colorkey(KDS.Colors.White)
 awm_f_texture.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Item Texture Loading Complete.")
 #endregion
+pygame.event.pump()
 #region Menu Textures
 KDS.Logging.debug("Loading Menu Textures...")
 gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_1.png").convert()
@@ -220,6 +224,7 @@ main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.pn
 main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Menu Texture Loading Complete.")
 #endregion
+pygame.event.pump()
 #region Audio
 KDS.Logging.debug("Loading Audio Files...")
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
@@ -267,6 +272,7 @@ rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.8)
 KDS.Logging.debug("Audio File Loading Complete.")
 #endregion
+pygame.event.pump()
 KDS.Logging.debug("Asset Loading Complete.")
 #endregion
 #region Variable Initialisation
@@ -2580,12 +2586,9 @@ def console(oldSurf: pygame.Surface):
             KDS.Console.Feed.append("Invalid Command.")
 #endregion
 #region Terms and Conditions
-def agr(tcagr: bool):
+def agr():
     global tcagr_running
-    if tcagr == False:
-        tcagr_running = True
-    else:
-        tcagr_running = False
+    tcagr_running = True
 
     global main_running
     c = False
@@ -3061,6 +3064,10 @@ def main_menu():
                         MenuMode = Mode.MainMenu
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
+                elif event.key == K_F5:
+                    KDS.Audio.MusicMixer.pause()
+                    KDS.School.Certificate(display, clock)
+                    KDS.Audio.MusicMixer.unpause()
             elif event.type == QUIT:
                 KDS_Quit()
 
@@ -3298,12 +3305,12 @@ def level_finished_menu(oldSurf: pygame.Surface):
         clock.tick_busy_loop(60)
 #endregion
 #region Check Terms
-agr(tcagr)
-tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
+pygame.event.clear()
+if not tcagr:
+    agr()
+    tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 if tcagr:
     main_menu()
-else:
-    agr(tcagr)
 #endregion
 #region Main Running
 while main_running:
@@ -3367,7 +3374,6 @@ while main_running:
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
                 quit_temp, exam_score = KDS.School.Exam(display, clock)
-                pygame.mouse.set_visible(False)
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
                     KDS_Quit()

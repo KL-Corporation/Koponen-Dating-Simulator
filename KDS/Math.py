@@ -1,6 +1,6 @@
 import math
 import sys
-from typing import SupportsFloat, Tuple, TypeVar, Union
+from typing import Iterable, SupportsFloat, Tuple, TypeVar, Union
 
 T = TypeVar("T")
 Value = TypeVar("Value", int, float)
@@ -35,6 +35,8 @@ def Pow(f: SupportsFloat, p: SupportsFloat) -> float: return math.pow(f, p)
 def Log(f: SupportsFloat) -> float: return math.log(f)
 
 def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
+
+def Approximately(a: float, b: float): return math.isclose(a, b)
 #endregion
 
 #region Bitwise
@@ -43,14 +45,6 @@ def Double(f: int) -> int:
 
 def Halve(f: int) -> int:
     return f >> 1
-#endregion
-
-#region Value Comparison
-def Round(f: float) -> int:
-    """Rounds a value correctly, fuck you Python.
-    """
-    if (f != math.floor(f) + 0.5): return round(f)
-    else: return math.ceil(f)
 #endregion
 
 #region Value Manipulation
@@ -70,19 +64,19 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
 def Clamp01(value: Value) -> Value:
     return max(0, min(value, 1))
 
-def Remap(value: Value, from1: Value, to1: Value, from2: Value, to2: Value) -> Value:
+def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
     return (value - from1) / (to1 - from1) * (to2 - from2) + from2
 
-def Remap01(value: Value, from1: Value, from2: Value) -> Value:
+def Remap01(value: float, from1: float, from2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
     return (value - from1) / (0 - from1) * (1 - from2) + from2
 
-def Repeat(t: Value, length: Value) -> Value:
+def Repeat(t: float, length: float) -> float:
     """Loops the value t, so that it is never larger than length and never smaller than 0.
 
     This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
@@ -225,4 +219,16 @@ def MoveTowardsAngle(current: float, target: float, maxDelta: float) -> float:
 def PingPong(t: float, length: float) -> float:
     t = Repeat(t, length * 2)
     return length - abs(t - length)
+#endregion
+
+#region Iterables
+def Closest(value: float, iterable: Iterable[Value]) -> Value:
+    COMPARISONFUNCTION = lambda k: abs(k - value)
+    # key means that instead of finding the smallest value it will run the function "comparisonFunction"
+    # and return the value that was associated with the smallest return value from the function
+    return min(iterable, key=COMPARISONFUNCTION)
+
+def Furthest(value: float, iterable: Iterable[Value]) -> Value:
+    COMPARISONFUNCTION = lambda k: abs(k - value)
+    return max(iterable, key=COMPARISONFUNCTION)
 #endregion
