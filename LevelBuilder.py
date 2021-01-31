@@ -526,15 +526,25 @@ def consoleHandler(commandlist):
     Undo.register()
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
+            if len(commandlist) < 3:
+                KDS.Console.Feed.append("Invalid set command.")
+                return
             if commandlist[2] in brushNames:
                 brush = brushNames[commandlist[2]]
                 KDS.Console.Feed.append(f"Brush set: [{brushNames[commandlist[2]]}: {commandlist[2]}]")
+            elif commandlist[2] in brushNames.values():
+                brush = commandlist[2]
+                KDS.Console.Feed.append(f"Brush set: [{commandlist[2]}: {list(brushNames.keys())[list(brushNames.values()).index(commandlist[2])]}]")
             else: KDS.Console.Feed.append("Invalid brush.")
         elif dragRect != None:
             if commandlist[1] in brushNames:
                 Selected.Set(tileInfo.toSerialString(brushNames[commandlist[1]]))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{brushNames[commandlist[1]]}: {commandlist[1]}]")
+            elif commandlist[1] in brushNames.values():
+                Selected.Set(tileInfo.toSerialString(commandlist[2]))
+                Selected.Update()
+                KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{commandlist[2]}: {list(brushNames.keys())[list(brushNames.values()).index(commandlist[2])]}]")
         else: KDS.Console.Feed.append("Invalid set command.")
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
@@ -974,7 +984,13 @@ try:
     main()
 except Exception as e:
     KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below.\n{e}")
-    KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Read the log file for more information.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
+    if KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Do you want to try to save your project?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.ERROR) == KDS.System.MessageBox.Responses.YES:
+        try:
+            saveMapName()
+            KDS.System.MessageBox.Show("Success!", "Your project was saved successfully.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
+        except Exception:
+            KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
+            
 
 pygame.quit()
 
