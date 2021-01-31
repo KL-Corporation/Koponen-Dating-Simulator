@@ -2697,7 +2697,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
     
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
     story_surf = pygame.Surface(display.get_size(), SRCALPHA)
     
     savingText = ArialFont.render("Saving...", True, KDS.Colors.White)
@@ -2778,7 +2778,7 @@ def esc_menu_f(oldSurf: pygame.Surface):
     settings_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 120, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
     main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 80, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
 
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
 
     while esc_menu:
         display.blit(pygame.transform.scale(normal_background, display_size), (0, 0))
@@ -3066,7 +3066,8 @@ def main_menu():
                         menu_mode_selector(Mode.ModeSelectionMenu)
                 elif event.key == K_F5:
                     KDS.Audio.MusicMixer.pause()
-                    KDS.School.Certificate(display, clock)
+                    certQuit = KDS.School.Certificate(display, clock)
+                    if certQuit: KDS_Quit()
                     KDS.Audio.MusicMixer.unpause()
             elif event.type == QUIT:
                 KDS_Quit()
@@ -3206,7 +3207,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
     KDS.Audio.Music.Play("Assets/Audio/Music/level_cleared.ogg")
     
     KDS.Scores.ScoreAnimation.init()
-    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOut, KDS.Animator.OnAnimationEnd.Stop)
+    anim_lerp_x = KDS.Animator.Float(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
     level_f_surf = pygame.Surface(display_size, SRCALPHA)
     normal_background = pygame.transform.scale(oldSurf.copy(), display_size)
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)

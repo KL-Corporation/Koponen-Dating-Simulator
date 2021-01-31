@@ -4,6 +4,7 @@ from pygame.locals import *
 import random
 from time import perf_counter
 import json
+import KDS.Animator
 import KDS.Colors
 import KDS.Audio
 import KDS.ConfigManager
@@ -371,7 +372,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, clock: pygame.time.Clock):
+def Certificate(display: pygame.Surface, clock: pygame.time.Clock) -> bool:
     pygame.key.set_repeat(500, 31) #temp
     displaySize = display.get_size()
     
@@ -446,15 +447,20 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock):
         gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", True, KDS.Colors.Black)
         certificate.blit(gradeRender, (738, posList[i]))
     
+    animY = KDS.Animator.Float(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
+    
+    KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
     while True:
+        display.fill(KDS.Colors.Black)
         for event in pygame.event.get():
             if event.type == QUIT:
-                exit()
+                return True
             if event.type == KEYDOWN:
                 if event.key == K_F5:
                     return
  
-        display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, 50))
+        display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
         pygame.display.flip()
-        display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
+    
+    return False
