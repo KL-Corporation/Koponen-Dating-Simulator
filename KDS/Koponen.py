@@ -261,6 +261,8 @@ class KoponenEntity:
         self.speed = KDS.ConfigManager.GetGameData("Physics/Koponen/speed")
         self.movement = [self.speed, 4]
         self.collisions = None
+        self.air_time = 0
+        self.y_velocity = 0
 
         self._move = True
         self.enabled = True
@@ -269,6 +271,17 @@ class KoponenEntity:
         if self._move:
             self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
             if self.collisions["left"] or self.collisions["right"]: self.movement[0] *= -1
+        else:
+            self.rect, self.collisions = KDS.AI.move(self.rect, [0, self.movement[1]], tiles)
+
+        if self.collisions["bottom"]: 
+            self.air_time = 0
+            self.y_velocity = 0
+        else: self.air_time += 1
+
+        self.y_velocity += 0.5
+        self.y_velocity = min(8.0, self.y_velocity)
+        self.movement[1] = self.y_velocity
 
         if self.movement[0] != 0 and self._move: self.animations.trigger("walk")
         else: self.animations.trigger("idle")

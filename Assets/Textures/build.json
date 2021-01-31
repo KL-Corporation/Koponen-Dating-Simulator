@@ -104,7 +104,9 @@
         "102": "glass_pane.png",
         "103": "painting0.png",
         "104": "painting1.png",
-        "105": "painting2.png"
+        "105": "painting2.png",
+        "106": "painting3.png",
+        "107": "painting4.png"
     },
     
     "tile_sounds" : {
@@ -165,7 +167,9 @@
         101,
         103,
         104,
-        105
+        105,
+        106,
+        107
     ],
     "trueScale": [
         86,
@@ -178,7 +182,9 @@
         101,
         103,
         104,
-        105
+        105,
+        106,
+        107
     ],
     "item_textures": {
         "000": "empty.png",
