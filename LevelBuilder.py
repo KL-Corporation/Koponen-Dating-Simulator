@@ -22,6 +22,7 @@ import KDS.Logging
 import tkinter 
 from tkinter import filedialog
 import json
+import traceback
 
 root = tkinter.Tk()
 root.withdraw()
@@ -392,7 +393,7 @@ class tileInfo:
         
         return renderList, brushtemp
 
-def loadGrid(size):
+def loadGrid(size: Tuple[int, int]):
     rlist = []
     for y in range(size[1]):
         row = []
@@ -403,7 +404,7 @@ def loadGrid(size):
     gridSize = size
     return rlist
 
-def resizeGrid(size, grid: list):
+def resizeGrid(size: Tuple[int, int], grid: list):
     grid_size = (len(grid[0]), len(grid))
     size_difference = (size[0] - grid_size[0], size[1] - grid_size[1])
     if size_difference[1] > 0:
@@ -700,7 +701,7 @@ def generateLevelProp():
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
-    grid = None
+    grid = []
     def button_handler(_openMap: bool = False):
         global btn_menu
         if _openMap:
@@ -983,7 +984,7 @@ mainRunning = True
 try:
     main()
 except Exception as e:
-    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below.\n{e}")
+    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below.\n{traceback.format_exc()}")
     if KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Do you want to try to save your project?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.ERROR) == KDS.System.MessageBox.Responses.YES:
         try:
             saveMapName()

@@ -52,29 +52,16 @@ os.makedirs(PersistentPaths.Logs, exist_ok=True)
 os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
 os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
 
-KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
-KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
-
 pygame.mixer.init()
 pygame.init()
 
-cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", 0)
-cursorData = {
-    1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
-    2: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"),
-    3: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor3.xbm", "Assets/Textures/UI/Cursors/cursor3.xbm"),
-    4: pygame.cursors.arrow,
-    5: pygame.cursors.tri_left
-}
-if cursorIndex in cursorData: pygame.mouse.set_cursor(*cursorData[cursorIndex])
-else: pygame.mouse.set_system_cursor(SYSTEM_CURSOR_ARROW)
-del cursorData
+pygame.mouse.set_system_cursor(SYSTEM_CURSOR_ARROW)
 
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
-display = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | DOUBLEBUF | SCALED)
+display = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | HWACCEL | DOUBLEBUF | SCALED)
 display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
@@ -83,8 +70,6 @@ CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.pn
 display.fill(CompanyLogo.get_at((0, 0)))
 display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
 pygame.display.flip()
-
-KDS.Audio.init(pygame.mixer)
 
 clock = pygame.time.Clock()
 profiler_enabled = False
@@ -109,6 +94,8 @@ def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool 
         level_finished_running = False
 #endregion
 #region Initialisation
+KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
+KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
 KDS.Logging.debug("Initialising Game...")
 KDS.Logging.debug("Initialising Display Driver...")
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False): pygame.display.toggle_fullscreen()
@@ -140,6 +127,7 @@ I=====[ DEBUG INFO ]=====I
    - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
+KDS.Audio.init(pygame.mixer)
 KDS.AI.init()
 KDS.World.init()
 KDS.Missions.init()
@@ -147,6 +135,17 @@ KDS.Scores.init()
 KDS.Koponen.init("Sinä")
 KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
+
+cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", 0)
+cursorData = {
+    1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
+    2: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"),
+    3: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor3.xbm", "Assets/Textures/UI/Cursors/cursor3.xbm"),
+    4: pygame.cursors.arrow,
+    5: pygame.cursors.tri_left
+}
+if cursorIndex in cursorData: pygame.mouse.set_cursor(*cursorData[cursorIndex])
+del cursorData
 #endregion
 #region Loading
 #region Settings
@@ -714,6 +713,7 @@ class Tile:
                         Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))        
 
     def update(self):
+        KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
         return self.texture
     """
     def textureUpdate(self):
