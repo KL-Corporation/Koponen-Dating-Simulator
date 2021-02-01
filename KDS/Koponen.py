@@ -291,7 +291,7 @@ class KoponenEntity:
                     self._aut_idle_time = 0
                     self.movement[0] = abs(self.speed) * random.choice([-1, 1])
                 self._aut_moving_time += 1
-                if self._aut_moving_time >= KOPONEN_MIN_AUT_MOVE_TIME:
+                if self._aut_moving_time >= KOPONEN_MIN_AUT_MOVE_TIME: # This comment has no usage
                     if KDS.Math.randChance(KOPONEN_IDLE_CHANCE):
                         self._aut_moving = False
                         self._aut_idle = True
