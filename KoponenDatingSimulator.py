@@ -1,4 +1,5 @@
 ﻿#region Importing
+from __future__ import annotations
 import os
 #region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,6 @@ import KDS.Threading
 import KDS.UI
 import KDS.World
 import KDS.School
-import numpy
 import random
 import sys
 import shutil
@@ -340,7 +340,7 @@ level_finished = False
 Particles = []
 HitTargets = {}
 enemy_difficulty = 1
-tiles = numpy.array([])
+tiles = []
 LightScroll = [0, 0]
 renderUI = True
 walk_sound_delay = 0
@@ -350,8 +350,8 @@ level_background = False
 level_background_img = Any
 lightsUpdating = 0
 
-Items = numpy.array([])
-Enemies = numpy.array([])
+Items = []
+Enemies = []
 
 true_scroll = [0.0, 0.0]
 
@@ -445,12 +445,7 @@ class WorldData():
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
-        #region Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä. Tämä tehdään toisessa threadissa, jotta meidän koko peli ei raiskaisi itseään.
-        pygame.event.pump()
-        emptyWorldFunc = lambda: numpy.array([[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
-        mapGenerator = KDS.Threading.ReturnableThread(emptyWorldFunc, "map-generation", True)
-        pygame.event.pump()
-        #endregion
+        tiles = [[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         
         pygame.event.pump()
         global dark, darkness, ambient_light, ambient_light_tint
@@ -481,11 +476,6 @@ class WorldData():
             7: KDS.AI.CaveMonster,
             8: KDS.AI.Mummy
         }
-
-        pygame.event.pump()
-        tiles = mapGenerator.GetResult()
-        mapGenerator.Dispose()
-        pygame.event.pump()
         
         y = 0
         for row in map_data:
@@ -509,10 +499,10 @@ class WorldData():
                                     if tiles[y][x].checkCollisionDefault and not tiles[y][x].checkCollision: tiles[y][x].renderDark = True
                         elif pointer == 1:
                             if loadEntities:
-                                Items = numpy.append(Items, Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
+                                Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
                         elif pointer == 2:
                             if loadEntities:
-                                Enemies = numpy.append(Enemies, enemySerialNumbers[serialNumber]((x*34,y*34)))
+                                Enemies.append(enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif pointer == 3:
                             temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
                             if serialNumber not in Teleport.teleportT_IDS:
@@ -697,7 +687,7 @@ class Tile:
         self.renderDark = False
 
     @staticmethod
-    # Tile_list is a 2d numpy array
+    # Tile_list is a list in a list... Also known as a 2D array.
     def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
@@ -1417,7 +1407,7 @@ class Item:
         self.momentum = 0
 
     @staticmethod
-    # Item_list is a 2d numpy array
+    # Item_list is a list
     def renderUpdate(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
@@ -1433,7 +1423,7 @@ class Item:
                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: Any, collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Sequence[int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
+    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Sequence[int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
         index = 0
         showItemTip = True
         collision = False
@@ -1453,12 +1443,12 @@ class Item:
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item
                                 KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
-                            Item_list = numpy.delete(Item_list, index)
+                            Item_list.pop(index)
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
                             try:
                                 item.pickup()
-                                Item_list = numpy.delete(Item_list, index)
+                                Item_list.pop(index)
                                 showItemTip = False
                             except IndexError as e:
                                 KDS.Logging.AutoError(f"A non-inventory item was tried to pick up and caused an error: {e}")
@@ -1468,7 +1458,7 @@ class Item:
                                 item.pickup()
                                 inventory.storage[inventory.SIndex] = item
                                 inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
-                                Item_list = numpy.delete(Item_list, index)
+                                Item_list.pop(index)
                                 showItemTip = False
             index += 1
         
@@ -2544,12 +2534,12 @@ def console(oldSurf: pygame.Surface):
         elif command_list[0] == "summon":
             if len(command_list) > 1:
                 summonEntity = {
-                    "imp": lambda e : numpy.append(e, KDS.AI.Imp(Player.rect.topright)),
-                    "sergeantzombie": lambda e : numpy.append(e, KDS.AI.SergeantZombie(Player.rect.topright)),
-                    "drugdealer": lambda e : numpy.append(e, KDS.AI.DrugDealer(Player.rect.topright)),
-                    "turboshotgunner": lambda e : numpy.append(e, KDS.AI.TurboShotgunner(Player.rect.topright)),
-                    "methmaker": lambda e : numpy.append(e, KDS.AI.MethMaker(Player.rect.topright)),
-                    "cavemonster": lambda e : numpy.append(e, KDS.AI.CaveMonster(Player.rect.topright))
+                    "imp": lambda e : e.append(KDS.AI.Imp(Player.rect.topright)),
+                    "sergeantzombie": lambda e : e.append(KDS.AI.SergeantZombie(Player.rect.topright)),
+                    "drugdealer": lambda e : e.append(KDS.AI.DrugDealer(Player.rect.topright)),
+                    "turboshotgunner": lambda e : e.append(KDS.AI.TurboShotgunner(Player.rect.topright)),
+                    "methmaker": lambda e : e.append(KDS.AI.MethMaker(Player.rect.topright)),
+                    "cavemonster": lambda e : e.append(KDS.AI.CaveMonster(Player.rect.topright))
                 }
                 try:
                     global Enemies
@@ -2650,8 +2640,8 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     
     #region World Data
     global Items, Enemies, Explosions, BallisticObjects
-    Items = numpy.array([])
-    Enemies = numpy.array([])
+    Items = []
+    Enemies = []
     Explosions = []
     BallisticObjects = []
     #endregion
@@ -3344,7 +3334,7 @@ while main_running:
                     temp.rect.center = Player.rect.center
                     temp.physics = True
                     temp.momentum = 0
-                    Items = numpy.append(Items, temp)
+                    Items.append(temp)
             elif event.key == K_f:
                 if Player.stamina == 100:
                     Player.stamina = -1000.0
@@ -3474,7 +3464,7 @@ while main_running:
                             counter += 1
                             if counter > 250:
                                 break
-                        Items = numpy.append(Items, tempItem)
+                        Items.append(tempItem)
                         del tempItem
 
     Player.update()
