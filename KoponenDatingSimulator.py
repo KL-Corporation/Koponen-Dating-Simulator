@@ -3066,7 +3066,7 @@ def main_menu():
                         menu_mode_selector(Mode.ModeSelectionMenu)
                 elif event.key == K_F5:
                     KDS.Audio.MusicMixer.pause()
-                    certQuit = KDS.School.Certificate(display, clock)
+                    certQuit = KDS.School.Certificate(display, clock, DebugMode=DebugMode)
                     if certQuit: KDS_Quit()
                     KDS.Audio.MusicMixer.unpause()
             elif event.type == QUIT:
@@ -3177,10 +3177,8 @@ def main_menu():
             display.blit(debugSurf, (0, 0))
             
             fps_text = "FPS: " + str(round(clock.get_fps()))
-            fps_text = score_font.render(
-                fps_text, True, KDS.Colors.White)
-            display.blit(pygame.transform.scale(fps_text, (int(
-                fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+            fps_text = score_font.render(fps_text, True, KDS.Colors.White)
+            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
         if renderUI:
@@ -3374,7 +3372,7 @@ while main_running:
                     Player.health = 0
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
-                quit_temp, exam_score = KDS.School.Exam(display, clock)
+                quit_temp, exam_score = KDS.School.Exam(display, clock, DebugMode=DebugMode)
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
                     KDS_Quit()

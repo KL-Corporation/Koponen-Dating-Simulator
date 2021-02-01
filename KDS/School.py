@@ -27,7 +27,7 @@ class Timer:
         time = divmod(int(self.time), 60)
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
-def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
+def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, DebugMode: bool = False):
     _quit = False
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
@@ -361,6 +361,16 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
                 return_exam()
             Display.blit(timerFont.render(strtime, False, KDS.Colors.Red), (10, 10))
 
+            if DebugMode:
+                debugSurf = pygame.Surface((200, 40))
+                debugSurf.fill(KDS.Colors.DarkGray)
+                debugSurf.set_alpha(128)
+                Display.blit(debugSurf, (0, 0))
+                
+                fps_text = "FPS: " + str(round(Clock.get_fps()))
+                fps_text = examTestFont.render(fps_text, True, KDS.Colors.White)
+                Display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             c = False
@@ -372,14 +382,14 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True):
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, clock: pygame.time.Clock) -> bool:
+def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bool = False) -> bool:
     pygame.key.set_repeat(500, 31) #temp
     displaySize = display.get_size()
     
     #region Settings
-    PeOverride = True
+    GradeExtras = True
     AlignOverride = False
-    GlobalRefrenceOverride = 10
+    GlobalRefrenceOverride = 9
     #endregion
     
     class Fonts:
@@ -387,7 +397,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock) -> bool:
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
     certificateFont = pygame.font.SysFont("Arial", 100, bold=1)
     surname = "Koponen" if not AlignOverride else "[ALIGN Surname]" # Oisko liian paha, jos ne ois menny naimisiin pelin lopussa?
-    forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name>") if not AlignOverride else "[ALIGN Forename]"
+    forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name-error>") if not AlignOverride else "[ALIGN Forename]"
     name = f"{surname} {forename}"
     
     def randomBirthday() -> str:
@@ -405,21 +415,27 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock) -> bool:
         elif 4 <= GlobalRefrenceOverride <= 10 and refrenceOverride == None: refrenceOverride = GlobalRefrenceOverride
         
         ref = round(KDS.ConfigManager.Save.Active.Story.attributes["exam_grade"] if refrenceOverride == None else refrenceOverride)
-        subjectGrade = random.choices(
+        gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
             weights=(1, 3, 5, 4, 1),
             k=1
         )
-        realGrade = subjectGrade if isinstance(subjectGrade, int) else subjectGrade[0]
-        return KDS.Math.Clamp(realGrade, 4, 10)
+        return KDS.Math.Clamp(gradeList[0], 4, 10)
     
     birthday = randomBirthday()
     
-    grades = [randomGrade() for _ in range(12 if not PeOverride else 11)]
+    grades = [randomGrade() for _ in range(12)]
     average = sum(grades) / len(grades)
     
-    # PE Override
-    if PeOverride: grades.append(randomGrade(KDS.Math.Remap(average, 4, 10, 10, 4)))
+    if GradeExtras:
+        # PE grade lowers depending on average.
+        grades[11] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
+        # Physics grade will always be equal or higher than chemistry.
+        if grades[7] > grades[6]:
+            #Swaps the values around.
+            tmp = grades[6]
+            grades[6] = grades[7]
+            grades[7] = tmp
     
     certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
     certificateSize = certificate.get_size()
@@ -460,6 +476,16 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock) -> bool:
                     return
  
         display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
+        
+        if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+            
+            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = Fonts.GRADE.render(fps_text, True, KDS.Colors.White)
+            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()
         clock.tick_busy_loop(60)
     
