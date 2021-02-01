@@ -1,5 +1,6 @@
 import math
 import sys
+import random
 from typing import Iterable, SupportsFloat, Tuple, TypeVar, Union
 
 T = TypeVar("T")
@@ -231,4 +232,8 @@ def Closest(value: float, iterable: Iterable[Value]) -> Value:
 def Furthest(value: float, iterable: Iterable[Value]) -> Value:
     COMPARISONFUNCTION = lambda k: abs(k - value)
     return max(iterable, key=COMPARISONFUNCTION)
+#endregion
+#region random
+def randChance(value: int = 1):
+    return random.uniform(0, 1) <= 1 / value
 #endregion

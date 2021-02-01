@@ -43,6 +43,13 @@ class text_padding:
     bottom = 5
 #endregion
 
+#region Koponen Variables
+KOPONEN_MIN_AUT_IDLE_TIME = 150 #ticks (1 / 60 seconds)
+KOPONEN_MIN_AUT_MOVE_TIME = 300
+KOPONEN_IDLE_CHANCE = 120
+KOPONEN_WALK_CHANCE = 120
+#endregion
+
 pygame.init()
 pygame.key.stop_text_input()
 
@@ -267,8 +274,38 @@ class KoponenEntity:
         self._move = True
         self.enabled = True
 
+        self._aut_moving = True
+        self._aut_moving_time = 0
+        self._aut_idle = True
+        self._aut_idle_time = 0
+        self._path_finder_on = False
+
     def update(self, tiles):
         if self._move:
+
+            #region Handling randomisation
+            if self._path_finder_on:
+                pass #The pathfinding thing
+            elif self._aut_moving: #Handling AI movements
+                if self._aut_idle_time >= KOPONEN_MIN_AUT_IDLE_TIME:
+                    self._aut_idle_time = 0
+                    self.movement[0] = abs(self.speed) * random.choice([-1, 1])
+                self._aut_moving_time += 1
+                if self._aut_moving_time >= KOPONEN_MIN_AUT_MOVE_TIME:
+                    print("Penis")
+                    if KDS.Math.randChance(KOPONEN_IDLE_CHANCE):
+                        self._aut_moving = False
+                        self._aut_idle = True
+            elif self._aut_idle:
+                if self._aut_moving_time >= KOPONEN_MIN_AUT_MOVE_TIME:
+                    self._aut_moving_time = 0
+                    self.movement[0] = 0
+                self._aut_idle_time += 1
+                if self._aut_idle_time >= KOPONEN_MIN_AUT_IDLE_TIME:
+                    if KDS.Math.randChance(KOPONEN_WALK_CHANCE):
+                        self._aut_idle = False
+                        self._aut_moving = True
+            #endregion
             self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
             if self.collisions["left"] or self.collisions["right"]: self.movement[0] *= -1
         else:
@@ -294,11 +331,11 @@ class KoponenEntity:
     def reset(self) -> None:
         pass
 
-    def stopMoving(self) -> None:
+    def stopAutoMove(self) -> None:
         self._move = False
         #Mä tuun vielä ihan varmasti lisäämään näihin kahteen jotain, että jumalauta jos joku koskee näihin funktioihin ja muuttaa koodia niin että näitä funktioita ei ole
 
-    def continueMoving(self) -> None:
+    def continueAutoMove(self) -> None:
         self._move = True
 
     def setEnabled(self, state: bool = True) -> None:
