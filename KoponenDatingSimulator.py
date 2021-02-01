@@ -448,7 +448,7 @@ class WorldData():
         #region Luodaan valmiiksi koko kentän kokoinen numpy array täynnä ilma rectejä. Tämä tehdään toisessa threadissa, jotta meidän koko peli ei raiskaisi itseään.
         pygame.event.pump()
         emptyWorldFunc = lambda: numpy.array([[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)])
-        mapGenerator = KDS.Threading.ReturnThread(emptyWorldFunc, True)
+        mapGenerator = KDS.Threading.ReturnableThread(emptyWorldFunc, "map-generation", True)
         pygame.event.pump()
         #endregion
         

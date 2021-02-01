@@ -129,5 +129,6 @@ class ScoreAnimation:
     @staticmethod
     def skip():
         for animation in ScoreAnimation.animationList:
-            animation.tick = animation.ticks
+            animation: KDS.Animator.Float
+            animation.tick = animation.ticks + 1
             animation.update()

@@ -59,12 +59,12 @@ class Thread:
             self.currentlyRunning = True
             self.thread.start()
             
-class ReturnThread:
-    def __init__(self, target, startThread: bool = False, *thread_args: Any) -> None:
+class ReturnableThread:
+    def __init__(self, target, thread_id: str = None, startThread: bool = False, *thread_args: Any) -> None:
         self.currentlyRunning = False
         self.started = False
         
-        self.executor = concurrent.futures.ThreadPoolExecutor()
+        self.executor = concurrent.futures.ThreadPoolExecutor() if thread_id == None else concurrent.futures.ThreadPoolExecutor(thread_name_prefix=thread_id)
         self.thread = None
         self.target = target
         self.args = thread_args
