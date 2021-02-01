@@ -409,6 +409,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         random_number_of_days = random.randrange(days_between_dates)
         random_date = start_date + datetime.timedelta(days=random_number_of_days)
         return f"{random_date.day}.{random_date.month}.{random_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]" # Teki niin mieli laittaa 6.9.2005
+
     def randomGrade(refrenceOverride: float = None) -> int:
         if (KDS.ConfigManager.Save.Active == None or "exam_grade" not in KDS.ConfigManager.Save.Active.Story.attributes) and not (4 <= GlobalRefrenceOverride <= 10):
             return -1
@@ -476,7 +477,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
                 return True
             if event.type == KEYDOWN:
                 if event.key == K_F5:
-                    return
+                    return False
  
         display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
         

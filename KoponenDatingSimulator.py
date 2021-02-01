@@ -3481,13 +3481,13 @@ while main_running:
 
     #region Koponen
     if Koponen.enabled:
-        if Koponen.rect.colliderect(Player.rect) and KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            Koponen.stopMoving()
+        if Koponen.rect.colliderect(Player.rect):
+            Koponen.stopAutoMove()
             screen.blit(koponen_talk_tip, (Koponen.rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
             if KDS.Keys.functionKey.pressed:
                 KDS.Keys.Reset()
                 KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
-        else: Koponen.continueMoving()
+        else: Koponen.continueAutoMove()
 
         Koponen.update(tiles)
     #endregion

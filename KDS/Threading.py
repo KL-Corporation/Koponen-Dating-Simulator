@@ -91,4 +91,4 @@ class ReturnableThread:
     def Dispose(self):
         self.thread.cancel()
         self.executor.shutdown()
-        del self
+        del self #<- This does basically nothing but deletes the self-reference
