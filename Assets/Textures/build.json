@@ -106,7 +106,11 @@
         "104": "painting1.png",
         "105": "painting2.png",
         "106": "painting3.png",
-        "107": "painting4.png"
+        "107": "painting4.png",
+        "108": "roof_planks.png",
+        "109": "roof_planks_end.png",
+        "110": "roof_planks_flip.png",
+        "111": "roof_planks_end_flip.png"
     },
     
     "tile_sounds" : {

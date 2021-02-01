@@ -436,6 +436,9 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
             tmp = grades[6]
             grades[6] = grades[7]
             grades[7] = tmp
+        
+        #Swedish will always be one worse than it would've normally been
+        grades[2] -= 1 if grades[2] > 4 else 0
     
     certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
     certificateSize = certificate.get_size()
