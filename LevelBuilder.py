@@ -295,10 +295,10 @@ class tileInfo:
                             unitTextureSize = unitTexture.get_size()
                             scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTextureSize[0] * scaleMultiplier), int(unitTextureSize[1] * scaleMultiplier)))
                             if number in trueScale:
-                                Surface.blit(scaledUnitTexture, (blitPos[0] - (unitTextureSize[0] * scaleMultiplier - scalesize), blitPos[1] - (scaledUnitTexture.get_height() - scalesize)))
+                                Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_height() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                             else:
                                 if number[0] == "0" and tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
-                                    tilepropsOverlay = scaledUnitTexture.copy().convert_alpha()
+                                    tilepropsOverlay = scaledUnitTexture.convert_alpha()
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                                     if not tileprops[tilepropsPath]["checkCollision"]:
                                         tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)

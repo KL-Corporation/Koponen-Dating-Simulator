@@ -496,9 +496,8 @@ class WorldData():
                                 for k, v in tileprops[identifier].items():
                                     setattr(tiles[y][x], k, v)
                                     if k == "checkCollision" and not v:
-                                        tex = tiles[y][x].texture.copy().convert_alpha()
+                                        tex = tiles[y][x].texture.convert_alpha()
                                         tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                        tex.convert()
                                         tiles[y][x].darkOverlay = tex
                                         
                         elif pointer == 1:
