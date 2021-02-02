@@ -266,6 +266,7 @@ class tileInfo:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
+                tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
@@ -294,24 +295,23 @@ class tileInfo:
                             unitTextureSize = unitTexture.get_size()
                             scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTextureSize[0] * scaleMultiplier), int(unitTextureSize[1] * scaleMultiplier)))
                             if number in trueScale:
-                                Surface.blit(scaledUnitTexture, (blitPos[0] - (unitTextureSize[0] * scaleMultiplier - scalesize), blitPos[1] - (scaledUnitTexture.get_height() - scalesize)))
+                                Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_height() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                             else:
-                                Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                if number[0] == "0" and tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
+                                    tilepropsOverlay = scaledUnitTexture.convert_alpha()
+                                    Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                    if not tileprops[tilepropsPath]["checkCollision"]:
+                                        tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                        Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
+                                    else:
+                                        KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
+                                else:  
+                                    Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                        
                             if number[0] == "3":
                                 teleportOverlay = pygame.transform.scale(Atextures["3"]["3001"], (scalesize, scalesize))
                                 teleportOverlay.set_alpha(100)
                                 Surface.blit(teleportOverlay, (blitPos[0], blitPos[1] - teleportOverlay.get_height() + scalesize))
-                            
-                tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
-                if tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
-                    if not tileprops[tilepropsPath]["checkCollision"]:
-                        tilepropsOverlayColor = KDS.Colors.Black
-                    else:
-                        tilepropsOverlayColor = KDS.Colors.White
-                    tilepropsOverlay = pygame.Surface((scalesize, scalesize)).convert()
-                    tilepropsOverlay.fill(tilepropsOverlayColor)
-                    tilepropsOverlay.set_alpha(128)
-                    Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
 
                 if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
