@@ -1,7 +1,7 @@
 import math
 import sys
 import random
-from typing import Iterable, SupportsFloat, Tuple, TypeVar, Union
+from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union
 
 T = TypeVar("T")
 Value = TypeVar("Value", int, float)
@@ -82,9 +82,13 @@ def Repeat(t: float, length: float) -> float:
 
     This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
     """
-    return Clamp(t - Floor(t / length) * length, 0, length)
+    return Clamp(t - Floor(t / length) * length, 0.0, length)
 #endregion
 
+#region Area
+def triangleArea(triangle: List[Tuple[int, int]]):
+    return abs((triangle[0][0] * (triangle[1][1] - triangle[2][1]) + triangle[1][0] * (triangle[2][1] - triangle[0][1])  + triangle[2][0] * (triangle[0][1] - triangle[1][1])) / 2.0) 
+#endregion
 #region Distance
 def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
     """
@@ -232,6 +236,14 @@ def Closest(value: float, iterable: Iterable[Value]) -> Value:
 def Furthest(value: float, iterable: Iterable[Value]) -> Value:
     COMPARISONFUNCTION = lambda k: abs(k - value)
     return max(iterable, key=COMPARISONFUNCTION)
+
+def trianglePointIntersect(triangle: List[Tuple[int, int]], point: Tuple[int, int]) -> bool:
+    A = triangleArea(triangle)
+    A1 = triangleArea([point, triangle[1], triangle[2]])
+    A2 = triangleArea([triangle[0], point, triangle[2]])
+    A3 = triangleArea([triangle[0], triangle[1], point])
+    return True if sum((A1, A2, A3)) == A else False
+
 #endregion
 #region random
 def randChance(value: int = 1):
