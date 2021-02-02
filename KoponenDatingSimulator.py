@@ -1351,6 +1351,37 @@ class GlassPane(Tile):
     def update(self):
         return self.texture
 
+class Ramp(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.checkCollision = False
+        self.direction = True if serialNumber == 108 else False
+
+        self.triangle: List[Tuple[int, int]]
+        if self.direction:
+            self.triangle = [
+                            (position[0], position[1] + self.texture.get_height()),
+                            (position[0] + self.texture.get_width(), position[1]),
+                            (position[0] + self.texture.get_width(), position[1] + self.texture.get_height())
+                            ]
+        else:
+            self.triangle = [
+                            (position[0], position[1]),
+                            (position[0] + self.texture.get_width(), position[1] + self.texture.get_height()),
+                            (position[0], position[1] + self.texture.get_height())
+                            ]
+
+        self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1])
+
+    def update(self):
+        if Player.movement[1] < 0 and Player.rect.colliderect(self.rect) and Player.rect.bottom > self.rect.bottom:
+            Player.rect.top = self.rect.bottom
+        elif Player.rect.colliderect(self.rect):
+            markPoint = Player.rect.bottomright if serialNumber else False
+            #Player.rect.bottom = 
+        return self.texture
+        
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1386,7 +1417,9 @@ specialTilesD = {
     87: Barrier,
     93: GroundFire,
     94: LampChain,
-    102: GlassPane
+    102: GlassPane,
+    108: Ramp,
+    110: Ramp
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
