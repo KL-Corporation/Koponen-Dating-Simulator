@@ -503,8 +503,7 @@ class WorldData():
                                             tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                             tiles[y][x].darkOverlay = tex
                                     elif k == "overlay":
-                                        if v == tiles[y][x].serialNumber:
-                                            overlays.append(tiles[y].pop(x))
+                                        overlays.append(Tile(tiles[y][x].rect.topleft, int(v)))
                                     else: setattr(tiles[y][x], k, v)
                                         
                         elif pointer == 1:
@@ -697,7 +696,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.
-    def renderUpdate(Tile_list, Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
+    def renderUpdate(Tile_list: List[List[Tile]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
         x = max(x, 0)
@@ -720,8 +719,6 @@ class Tile:
                             Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                     else:
                         Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-        for ov in overlays:
-            Surface.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
 
     def update(self):
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
@@ -3588,6 +3585,10 @@ while main_running:
             Explosions.remove(unit)
         elif etick < 10:
             Lights.append(KDS.World.Lighting.Light((unit.pos[0] - 80, unit.pos[1] - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
+
+    #Overlayt
+    for ov in overlays:
+        screen.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
 
     #Partikkelit
     #Particles.append(KDS.World.Lighting.Sparkparticle((Player.rect.x, Player.rect.y - 20), random.randint(1, 20), random.randint(1, 20), random.randint(1, 9)))

@@ -214,7 +214,7 @@ class tileInfo:
     def getSerials(self):
         return tuple(self.serialNumber.replace(" / ", "").split())
 
-    def addSerial(self, srlNumber, ignoreTileCheck: bool = False):
+    def addSerial(self, srlNumber):
         srlist = self.getSerials()
         for index, number in enumerate(srlist):
             if int(number) == 0:
@@ -222,7 +222,7 @@ class tileInfo:
                     if srlNumber not in t_textures:
                         KDS.Logging.warning(f"Cannot add unit because texture is not added: {srlNumber}")
                         return
-                    if not self.hasTile() or ignoreTileCheck:
+                    if not self.hasTile():
                         self.setSerialToSlot(srlNumber, index)
                     else: KDS.Logging.info(f"Tile already in {self.pos}!", True)
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
@@ -267,15 +267,15 @@ class tileInfo:
         tip_renders = []
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
-        pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) if len(renderList) > 0 else 0 - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
+        pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (gridSize[0] - scroll[0]) * scalesize, (gridSize[1] - scroll[1]) * scalesize))
         for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
             row: List[tileInfo]
             for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
-                overlay = None
                 tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
+                overlay = Atextures[tileprops[tilepropsPath]["overlay"][0]][tileprops[tilepropsPath]["overlay"]] if tilepropsPath in tileprops and "overlay" in tileprops[tilepropsPath] else None
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
                         unitTexture = None
@@ -315,8 +315,6 @@ class tileInfo:
                                             Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                                         else:
                                             KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
-                                    elif "overlay" in tileprops[tilepropsPath] and tileprops[tilepropsPath]["overlay"] == number:
-                                        overlay = scaledUnitTexture
                                 else:  
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                                         
@@ -326,23 +324,25 @@ class tileInfo:
                                 Surface.blit(teleportOverlay, (blitPos[0], blitPos[1] - teleportOverlay.get_height() + scalesize))
 
                 if overlay != None:
+                    overlay = pygame.transform.scale(overlay, (int(overlay.get_width() * scaleMultiplier), int(overlay.get_height() * scaleMultiplier)))
                     Surface.blit(overlay, (blitPos[0], blitPos[1] - overlay.get_height() + scalesize))
 
                 if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
                         setPropKey: str = KDS.Console.Start("Enter Property Key:")
                         if len(setPropKey) > 0:
-                            tmp = KDS.Console.Start("Enter Property Value:")
-                            setPropVal = KDS.Convert.AutoType(tmp)
+                            setPropValUnformatted = KDS.Console.Start("Enter Property Value:")
+                            setPropVal = KDS.Convert.AutoType(setPropValUnformatted)
                             if setPropVal != None:
                                 if tilepropsPath not in tileprops:
                                     tileprops[tilepropsPath] = {}
-                                tileprops[tilepropsPath][setPropKey] = setPropVal
                                 if setPropKey == "overlay":
                                     # It will be possible to break the system by changing the overlay without 
                                     # removing the old overlay, but hopefully our users aren't that stupid...
-                                    unit.addSerial(tmp, ignoreTileCheck=True)
-                            else: KDS.Logging.warning(f"Value {tmp} could not be parsed into any type.", True)
+                                    tileprops[tilepropsPath][setPropKey] = setPropValUnformatted
+                                else:
+                                    tileprops[tilepropsPath][setPropKey] = setPropVal
+                            else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
                     
                     srlist = unit.getSerials()
                     fld_srls = 0
@@ -886,6 +886,10 @@ def main():
                     dragRect.y += xy[1]
                 elif event.key == K_F11:
                     pygame.display.toggle_fullscreen()
+                elif event.key == K_a:
+                    if keys_pressed[K_LCTRL]:
+                        dragRect = pygame.Rect(0, 0, gridSize[0], gridSize[1])
+                        Selected.Update()
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -1031,6 +1035,7 @@ pygame.quit()
     R: Resize Map
     F: Set Property
     P: Set teleport index
+    CTRL + A: Select All
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As
     CTRL + O: Open Project
