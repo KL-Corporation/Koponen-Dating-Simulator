@@ -495,7 +495,12 @@ class WorldData():
                             if identifier in tileprops:
                                 for k, v in tileprops[identifier].items():
                                     setattr(tiles[y][x], k, v)
-                                    if tiles[y][x].checkCollisionDefault and not tiles[y][x].checkCollision: tiles[y][x].renderDark = True
+                                    if k == "checkCollision" and not v:
+                                        tex = tiles[y][x].texture.copy().convert_alpha()
+                                        tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                        tex.convert()
+                                        tiles[y][x].darkOverlay = tex
+                                        
                         elif pointer == 1:
                             if loadEntities:
                                 Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
@@ -516,8 +521,7 @@ class WorldData():
         for row in tiles:
             pygame.event.pump()
             for tile in row:
-                if hasattr(tile, "lateInit"):
-                    tile.lateInit()
+                tile.lateInit()
 
         KDS.Audio.Music.Play(os.path.join(MapPath, "music.ogg"))
         return p_start_pos, k_start_pos
@@ -683,7 +687,7 @@ class Tile:
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
-        self.renderDark = False
+        self.darkOverlay: Union[pygame.Surface, None] = None
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.
@@ -698,8 +702,6 @@ class Tile:
         end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
-        darkSurface = pygame.Surface((34, 34)).convert()
-        darkSurface.set_alpha(64)
         for row in Tile_list[y:end_y]:
             for renderable in row[x:end_x]:
                 renderable: Tile
@@ -708,13 +710,17 @@ class Tile:
                         pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                     if not renderable.specialTileFlag:
                         Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                        if renderable.renderDark: Surface.blit(darkSurface, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                        if renderable.darkOverlay != None:
+                            Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                     else:
                         Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))        
 
     def update(self):
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
         return self.texture
+    
+    def lateInit(self):
+        pass
     """
     def textureUpdate(self):
         temp_surface = pygame.Surface(self.texture.get_size()).convert()
