@@ -121,7 +121,7 @@ gridSize = (0, 0)
 dragRect = None
 
 class Undo:
-    points = []
+    points: List[Dict[str, Any]] = []
     index = 0
     overflowCount = 0
     
@@ -130,17 +130,18 @@ class Undo:
         global grid, dragRect, brush, tileprops
         if Undo.index == len(Undo.points) - 1 and Undo.points[Undo.index] == { "grid": grid, "dragRect": dragRect, "brush": brush, "tileprops": tileprops }:
             return
-        
+
         toSave = {
             "grid": [[t.copy() for t in r] for r in grid], # deepcopy replacement
             "dragRect": dragRect.copy() if dragRect != None else dragRect,
-            "brush": brush,
             "tileprops": {k: {ik: iv for ik, iv in v.items()} for k, v in tileprops.items()} # deepcopy replacement. Dictionary replacement keys do not need to be deepcopied, because they are strings.
             #                     ^^ Value doesn't need to be deepcopied, because it can only be str, float, int or bool.
         }
         
         Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
+        removedCount = len(Undo.points[Undo.index + 1:])
         del Undo.points[Undo.index + 1:]
+        if Undo.index == 0 and len(Undo.points) == 1 and removedCount > 0: del Undo.points[0]
         Undo.points.append(toSave)
         while len(Undo.points) > 64:
             del Undo.points[0]
@@ -155,7 +156,6 @@ class Undo:
         data = Undo.points[Undo.index]
         grid = data["grid"]
         dragRect = data["dragRect"]
-        brush = data["brush"]
         tileprops = data["tileprops"]
     
     @staticmethod
@@ -214,12 +214,15 @@ class tileInfo:
     def getSerials(self):
         return tuple(self.serialNumber.replace(" / ", "").split())
 
-    def addSerial(self, srlNumber):
+    def addSerial(self, srlNumber, ignoreTileCheck: bool = False):
         srlist = self.getSerials()
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist:
-                    if srlNumber not in t_textures or not self.hasTile():
+                    if srlNumber not in t_textures:
+                        KDS.Logging.warning(f"Cannot add unit because texture is not added: {srlNumber}")
+                        return
+                    if not self.hasTile() or ignoreTileCheck:
                         self.setSerialToSlot(srlNumber, index)
                     else: KDS.Logging.info(f"Tile already in {self.pos}!", True)
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
@@ -227,10 +230,15 @@ class tileInfo:
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
         
     def removeSerial(self):
+        global tileprops
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
                 self.setSerialToSlot("0000", index)
+                
+                tpp = f"{self.pos[0]}-{self.pos[1]}"
+                if tpp in tileprops and "overlay" in tileprops[tpp] and tileprops[tpp]["overlay"] == number:
+                    tileprops[tpp].pop("overlay")
                 return
 
     def hasTile(self):
@@ -259,13 +267,14 @@ class tileInfo:
         tip_renders = []
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
-        pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
+        pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) if len(renderList) > 0 else 0 - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
         for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
             row: List[tileInfo]
             for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
+                overlay = None
                 tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
                 for index, number in enumerate(srlist):
                     if int(number) != 0:
@@ -297,14 +306,17 @@ class tileInfo:
                             if number in trueScale:
                                 Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_height() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                             else:
-                                if number[0] == "0" and tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
+                                if number[0] == "0" and tilepropsPath in tileprops:
                                     tilepropsOverlay = scaledUnitTexture.convert_alpha()
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
-                                    if not tileprops[tilepropsPath]["checkCollision"]:
-                                        tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                        Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
-                                    else:
-                                        KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
+                                    if "checkCollision" in tileprops[tilepropsPath]:
+                                        if not tileprops[tilepropsPath]["checkCollision"]:
+                                            tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                            Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                        else:
+                                            KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
+                                    elif "overlay" in tileprops[tilepropsPath] and tileprops[tilepropsPath]["overlay"] == number:
+                                        overlay = scaledUnitTexture
                                 else:  
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                                         
@@ -312,6 +324,9 @@ class tileInfo:
                                 teleportOverlay = pygame.transform.scale(Atextures["3"]["3001"], (scalesize, scalesize))
                                 teleportOverlay.set_alpha(100)
                                 Surface.blit(teleportOverlay, (blitPos[0], blitPos[1] - teleportOverlay.get_height() + scalesize))
+
+                if overlay != None:
+                    Surface.blit(overlay, (blitPos[0], blitPos[1] - overlay.get_height() + scalesize))
 
                 if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
@@ -323,6 +338,10 @@ class tileInfo:
                                 if tilepropsPath not in tileprops:
                                     tileprops[tilepropsPath] = {}
                                 tileprops[tilepropsPath][setPropKey] = setPropVal
+                                if setPropKey == "overlay":
+                                    # It will be possible to break the system by changing the overlay without 
+                                    # removing the old overlay, but hopefully our users aren't that stupid...
+                                    unit.addSerial(tmp, ignoreTileCheck=True)
                             else: KDS.Logging.warning(f"Value {tmp} could not be parsed into any type.", True)
                     
                     srlist = unit.getSerials()

@@ -339,7 +339,8 @@ level_finished = False
 Particles = []
 HitTargets = {}
 enemy_difficulty = 1
-tiles = []
+tiles: List[List[Tile]] = []
+overlays: List[Tile] = []
 LightScroll = [0, 0]
 renderUI = True
 walk_sound_delay = 0
@@ -445,6 +446,7 @@ class WorldData():
         WorldData.MapSize = (max_map_width, len(map_data))
 
         tiles = [[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
+        overlays = []
         
         pygame.event.pump()
         global dark, darkness, ambient_light, ambient_light_tint
@@ -494,11 +496,16 @@ class WorldData():
                             identifier = f"{x}-{y}"
                             if identifier in tileprops:
                                 for k, v in tileprops[identifier].items():
-                                    setattr(tiles[y][x], k, v)
-                                    if k == "checkCollision" and not v:
-                                        tex = tiles[y][x].texture.convert_alpha()
-                                        tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                        tiles[y][x].darkOverlay = tex
+                                    if k == "checkCollision":
+                                        tiles[y][x].checkCollision = v
+                                        if not v:
+                                            tex = tiles[y][x].texture.convert_alpha()
+                                            tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                            tiles[y][x].darkOverlay = tex
+                                    elif k == "overlay":
+                                        if v == tiles[y][x].serialNumber:
+                                            overlays.append(tiles[y].pop(x))
+                                    else: setattr(tiles[y][x], k, v)
                                         
                         elif pointer == 1:
                             if loadEntities:
@@ -712,7 +719,9 @@ class Tile:
                         if renderable.darkOverlay != None:
                             Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                     else:
-                        Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))        
+                        Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+        for ov in overlays:
+            Surface.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
 
     def update(self):
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
@@ -1356,6 +1365,19 @@ class GlassPane(Tile):
     def update(self):
         return self.texture
 
+class RoofPlanks(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        w, h = t_textures[serialNumber].get_size()
+        w34 = 34 - w
+        h34 = 34 - h
+        self.rect = pygame.Rect(position[0] + w34, position[1] + h34, w, h)
+        self.checkCollision = True,
+        self.texture = t_textures[serialNumber]
+        
+    def update(self):
+        return self.texture
+
 specialTilesD = {
     15: Toilet,
     16: Trashcan,
@@ -1391,7 +1413,11 @@ specialTilesD = {
     87: Barrier,
     93: GroundFire,
     94: LampChain,
-    102: GlassPane
+    102: GlassPane,
+    108: RoofPlanks,
+    109: RoofPlanks,
+    110: RoofPlanks,
+    111: RoofPlanks
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

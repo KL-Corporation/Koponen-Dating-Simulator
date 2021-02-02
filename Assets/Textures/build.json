@@ -108,8 +108,8 @@
         "106": "painting3.png",
         "107": "painting4.png",
         "108": "roof_planks.png",
-        "109": "roof_planks_end.png",
-        "110": "roof_planks_flip.png",
+        "109": "roof_planks_flip.png",
+        "110": "roof_planks_end.png",
         "111": "roof_planks_end_flip.png"
     },
     
@@ -152,7 +152,11 @@
         87,
         93,
         94,
-        102
+        102,
+        108,
+        109,
+        110,
+        111
     ],
     "noCollision": [
         10,
