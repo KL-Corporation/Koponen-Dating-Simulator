@@ -1376,14 +1376,16 @@ class Ramp(Tile):
                             (position[0], position[1] + self.texture.get_height())
                             ]
 
-        self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1])
+        self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1]) * -1
+        print(self.triangle[0], self.triangle[1])
+        print(self.slope)
 
     def update(self):
         if Player.movement[1] < 0 and Player.rect.colliderect(self.rect) and Player.rect.bottom > self.rect.bottom:
             Player.rect.top = self.rect.bottom
         elif Player.rect.colliderect(self.rect):
-            markPoint = Player.rect.bottomright if serialNumber else False
-            #Player.rect.bottom = 
+            markPoint = Player.rect.bottomright if self.serialNumber == 108 else Player.rect.bottomleft
+            Player.rect.bottom = self.rect.y + self.rect.height - round(self.slope * (markPoint[0] - self.rect.x))
         return self.texture
         
 
