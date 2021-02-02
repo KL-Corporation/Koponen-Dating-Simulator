@@ -1377,6 +1377,40 @@ class RoofPlanks(Tile):
         
     def update(self):
         return self.texture
+    
+class Ramp(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.checkCollision = False
+        self.direction = True if serialNumber == 108 else False
+
+        self.triangle: List[Tuple[int, int]]
+        if self.direction:
+            self.triangle = [
+                            (position[0], position[1] + self.texture.get_height()),
+                            (position[0] + self.texture.get_width(), position[1]),
+                            (position[0] + self.texture.get_width(), position[1] + self.texture.get_height())
+                            ]
+        else:
+            self.triangle = [
+                            (position[0], position[1]),
+                            (position[0] + self.texture.get_width(), position[1] + self.texture.get_height()),
+                            (position[0], position[1] + self.texture.get_height())
+                            ]
+
+        self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1]) * -1
+        print(self.triangle[0], self.triangle[1])
+        print(self.slope)
+
+    def update(self):
+        markPoint = Player.rect.bottomright if self.serialNumber == 108 else Player.rect.bottomleft
+        
+        if Player.movement[1] < 0 and Player.rect.colliderect(self.rect) and Player.rect.bottom > self.rect.bottom:
+            Player.rect.top = self.rect.bottom
+        elif KDS.Math.trianglePointIntersect(self.triangle, markPoint):
+            Player.rect.bottom = self.rect.y + self.rect.height - round(self.slope * (markPoint[0] - self.rect.x))
+            #Player.rect.bottom = 
+        return self.texture
 
 specialTilesD = {
     15: Toilet,
