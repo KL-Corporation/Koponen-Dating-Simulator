@@ -697,7 +697,7 @@ class Tile:
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
-        self.darkOverlay: Union[pygame.Surface, None] = None
+        self.darkOverlay = None
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.
