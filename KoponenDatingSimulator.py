@@ -177,6 +177,8 @@ KDS.Logging.debug("Loading Building Textures...")
 door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 exit_door_open = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
 respawn_anchor_on = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
+patja_kaatunut = pygame.image.load("Assets/Textures/Tiles/patja_kaatunut.png").convert()
+patja_kaatunut.set_colorkey(KDS.Colors.White)
 blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
 blh.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Building Texture Loading Complete.")
@@ -258,6 +260,7 @@ grenade_throw = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
 lantern_pickup = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
 camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
 flicker_trigger_sound = pygame.mixer.Sound("Assets/Audio/Tiles/flicker_trigger.ogg")
+patja_kaatuminen = pygame.mixer.Sound("Assets/Audio/Tiles/patja_kaatuminen.ogg")
 respawn_anchor_sounds = [
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_0.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
@@ -1373,10 +1376,34 @@ class RoofPlanks(Tile):
         w34 = 34 - w
         h34 = 34 - h
         self.rect = pygame.Rect(position[0] + w34, position[1] + h34, w, h)
-        self.checkCollision = True,
+        self.checkCollision = True
         
     def update(self):
         return self.texture
+
+class Patja(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.kaatunutTexture = patja_kaatunut
+        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
+        self.checkCollision = False
+        self.kaatunut = False
+        self.kaatumisTrigger = False
+        self.kaatumisCounter = 0
+        self.kaatumisDelay = 300
+        
+    def update(self):
+        if self.rect.colliderect(Player.rect):
+            self.kaatumisTrigger = True
+        if self.kaatumisTrigger and not self.kaatunut:
+            self.kaatumisCounter += 1
+            if self.kaatumisCounter > self.kaatumisDelay:
+                self.kaatunut = True
+                KDS.Audio.PlaySound(patja_kaatuminen)
+                if self.rect.colliderect(Player.rect):
+                    Player.health -= random.randint(20, 60)
+        return self.texture if not self.kaatunut else self.kaatunutTexture
 
 # 
 # class Ramp(Tile):
@@ -1453,7 +1480,8 @@ specialTilesD = {
     108: RoofPlanks,
     109: RoofPlanks,
     110: RoofPlanks,
-    111: RoofPlanks
+    111: RoofPlanks,
+    113: Patja
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

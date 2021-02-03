@@ -111,7 +111,8 @@
         "109": "roof_planks_flip.png",
         "110": "roof_planks_end.png",
         "111": "roof_planks_end_flip.png",
-        "112": "pillar.png"
+        "112": "pillar.png",
+        "113": "patja.png"
     },
     
     "tile_sounds" : {
@@ -157,7 +158,8 @@
         108,
         109,
         110,
-        111
+        111,
+        113
     ],
     "noCollision": [
         10,

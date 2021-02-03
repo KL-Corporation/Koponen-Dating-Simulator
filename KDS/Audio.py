@@ -1,3 +1,4 @@
+import pygame
 import KDS.ConfigManager
 
 def init(_mixer):
@@ -57,7 +58,7 @@ def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()
 
-def PlaySound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+def PlaySound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     if volume == -1: volume = EffectVolume
     play_channel = SoundMixer.find_channel(True)
@@ -94,6 +95,6 @@ def SetVolume(volume: float):
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
 
-def PlayFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+def PlayFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     sound = SoundMixer.Sound(path)
-    PlaySound(sound, volume, loops, fade_ms)
+    return PlaySound(sound, volume, loops, fade_ms)
