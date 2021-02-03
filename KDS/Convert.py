@@ -128,7 +128,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     return red, green, blue
     
 def HSVToRGB(hue: float, saturation: float, value: float) -> Tuple[float, float, float]:
-    """Converts an HSV color to RGB. This method does not automatically convert hue to the range of 0-1.
+    """Converts an HSV color to RGB. This method automatically converts the hue to the range of 0-1.
 
     Args:
         hue (float): The hue of the color.
@@ -141,7 +141,7 @@ def HSVToRGB(hue: float, saturation: float, value: float) -> Tuple[float, float,
     return HSVToRGB2(hue / 360.0, saturation, value)
 
 def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float, float]:
-    """Converts an HSV color to RGB. This method does not automatically convert hue to the range of 0-1.
+    """Converts an HSV color to RGB. This method does not automatically convert the hue to the range of 0-1.
 
     Args:
         hue (float): The hue of the color.
