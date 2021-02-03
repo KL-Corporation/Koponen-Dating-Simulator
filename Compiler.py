@@ -14,7 +14,7 @@ CachePath = os.path.join(AppDataPath, "cache")
 if os.path.isdir(CachePath): shutil.rmtree(CachePath)
 
 questions = [
-    inquirer.Checkbox("toBuild", "Which KDS Modules you want to build?", ("Koponen Dating Simulator", "Level Builder"), "Koponen Dating Simulator")
+    inquirer.Checkbox("toBuild", "Which KDS Modules you want to build?", ("Koponen Dating Simulator", "Level Builder"), ("Koponen Dating Simulator", "Level Builder"))
 ]
 
 answers = inquirer.prompt(questions)
