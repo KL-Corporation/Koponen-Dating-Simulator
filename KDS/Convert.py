@@ -8,8 +8,6 @@ import KDS.Colors
 import KDS.Logging
 import KDS.Math
 
-import colorsys
-
 def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
