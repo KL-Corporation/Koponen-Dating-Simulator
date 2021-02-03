@@ -8,6 +8,8 @@ import KDS.Colors
 import KDS.Logging
 import KDS.Math
 
+import colorsys
+
 def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
@@ -126,24 +128,36 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
         blue = round(KDS.Math.Clamp(tmp_blue, 0.0, 255.0))
     
     return red, green, blue
+    
+def HSVToRGB(hue: float, saturation: float, value: float) -> Tuple[float, float, float]:
+    return HSVToRGB2(hue / 360.0, saturation, value)
 
-def HSVToRGB(hue, saturation, value):
-    i = KDS.Math.Floor(hue * 6)
-    f = hue * 6 - i
-    p = value * (1 - saturation)
-    q = value * (1 - f * saturation)
-    t = value * (1 - (1 - f) * saturation)
-
-    r, g, b = [
-        (value, t, p),
-        (q, value, p),
-        (p, value, t),
-        (p, q, value),
-        (t, p, value),
-        (value, p, q),
-    ][int(i % 6)]
-
-    return r, g, b
+def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float, float]:
+    # I have no idea what's happening here... I just stole this.
+    
+    if saturation == 0.0:
+        value *= 255
+        return (value, value, value)
+    i = int(hue*6.)
+    f = (hue*6.)-i
+    p, q, t = int(255*(value*(1.-saturation))), int(255*(value * (1.-saturation*f))), int(255*(value*(1.-saturation*(1.-f))))
+    value *= 255
+    i %= 6
+    if i == 0:
+        return (value, t, p)
+    if i == 1:
+        return (q, value, p)
+    if i == 2:
+        return (p, value, t)
+    if i == 3:
+        return (p, q, value)
+    if i == 4:
+        return (t, p, value)
+    if i == 5:
+        return (value, p, q)
+    else:
+        KDS.Logging.AutoError("Invalid HSV => RGB Conversion color.")
+        return (0, 0, 0)
 
 def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
     if font.size(text)[0] > max_width:

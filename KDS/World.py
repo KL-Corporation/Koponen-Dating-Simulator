@@ -2,7 +2,6 @@ import math
 import random
 from typing import Dict, List, Sequence, Tuple, Union
 
-import numpy
 import pygame
 from pygame.locals import *
 
@@ -84,9 +83,14 @@ class Lighting:
         class LightShape:
             def __init__(self, texture: pygame.Surface) -> None:
                 self.texture = texture
-                self.rendered: Dict[int, Dict[Union[int, str], pygame.Surface]] = {}
-  
-            def get(self, radius: int, color: int, conv_a = False):
+                self.rendered: Dict[int, Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]] = {}
+                
+            def getRadius(self, radius: int) -> Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]:
+                if radius not in self.rendered:
+                    self.rendered[radius] = { "default": pygame.transform.smoothscale(self.texture, (radius, radius)) }
+                return self.rendered[radius]
+            
+            def get(self, radius: int, color: int):
                 """Returns a light shape from memory
 
                 Args:
@@ -96,13 +100,23 @@ class Lighting:
                 Returns:
                     Surface: The surface that contains the light texture
                 """
-                if radius not in self.rendered: self.rendered[radius] = { "default": pygame.transform.smoothscale(self.texture, (radius, radius)) }
+                corRad = self.getRadius(radius)
 
-                corRad = self.rendered[radius]
                 if color not in corRad:
                     tmp_tex: pygame.Surface = corRad["default"].copy()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
+                    corRad[color] = tmp_tex
+                return corRad[color]
+            
+            def getColor(self, radius: int, hue: float, saturation: float, value: float):
+                corRad = self.getRadius(radius)
+                color = (hue, saturation, value)
+                
+                if color not in corRad:
+                    tmp_tex: pygame.Surface = corRad["default"].copy()
+                    convCol = KDS.Convert.HSVToRGB(hue, saturation, value)
+                    tmp_tex.fill((int(convCol[0]), int(convCol[1]), int(convCol[2]), 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
                 return corRad[color]
         
@@ -148,7 +162,7 @@ class Lighting:
             """
             self.surf = shape
             if not positionFromCenter: self.position = position
-            else: self.position = (position[0] - shape.get_width() / 2, position[1] - shape.get_height() / 2)
+            else: self.position = (position[0] - shape.get_width() // 2, position[1] - shape.get_height() // 2)
 
     class Particle:
         def __init__(self, position, size):

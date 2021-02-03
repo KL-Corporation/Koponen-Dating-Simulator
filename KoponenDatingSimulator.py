@@ -1240,7 +1240,7 @@ class AllahmasSpruce(Tile):
         self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0] - 10, position[1] - 40, 63, 75)
         self.checkCollision = False
-        self.spruce_kColors = (1000, 2500, 40000)
+        self.spruce_colors = (0.0, 60.0, 120.0, 240.0)
         self.colorIndex = 0
         self.colorTicks = 60
         self.colorTick = 0
@@ -1250,8 +1250,8 @@ class AllahmasSpruce(Tile):
         if self.colorTick > self.colorTicks:
             self.colorTick = 0
             self.colorIndex += 1
-            self.colorIndex = 0 if self.colorIndex >= len(self.spruce_kColors) else self.colorIndex
-        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.get(150, self.spruce_kColors[self.colorIndex]), True))
+            self.colorIndex = 0 if self.colorIndex >= len(self.spruce_colors) else self.colorIndex
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.splatter.getColor(150, self.spruce_colors[self.colorIndex], 1.0, 1.0), True))
         return self.texture
 
 class Methtable(Tile):
