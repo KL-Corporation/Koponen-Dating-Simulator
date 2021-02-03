@@ -395,7 +395,6 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     class Fonts:
         INFO = pygame.font.SysFont("ArialBD", 27)
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
-    certificateFont = pygame.font.SysFont("Arial", 100, bold=1)
     surname = "Koponen" if not AlignOverride else "[ALIGN Surname]" # Oisko liian paha, jos ne ois menny naimisiin pelin lopussa?
     forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name-error>") if not AlignOverride else "[ALIGN Forename]"
     name = f"{surname} {forename}"

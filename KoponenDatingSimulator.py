@@ -494,8 +494,6 @@ class WorldData():
                                 overlays.append(Tile(tiles[y][x].rect.topleft, int(v)))
                     
                     if len(datapoint) == 4 and int(datapoint) != 0:
-                        if int(datapoint) == 0:
-                            continue
                         serialNumber = int(datapoint[1:])
                         pointer = int(datapoint[0])
                         if pointer == 0:
@@ -543,12 +541,12 @@ with open("Assets/Textures/build.json", "r") as f:
     data = f.read()
 buildData = json.loads(data)
 
-t_textures = {}
+t_textures: Dict[int, pygame.Surface] = {}
 for t in buildData["tile_textures"]:
     t_textures[int(t)] = pygame.image.load("Assets/Textures/Tiles/" + buildData["tile_textures"][t]).convert()
     t_textures[int(t)].set_colorkey(KDS.Colors.White)
 
-i_textures = {}
+i_textures: Dict[int, pygame.Surface] = {}
 for i in buildData["item_textures"]:
     i_textures[int(i)] = pygame.image.load("Assets/Textures/Items/" + buildData["item_textures"][i]).convert()
     i_textures[int(i)].set_colorkey(KDS.Colors.White)
@@ -1370,12 +1368,12 @@ class GlassPane(Tile):
 class RoofPlanks(Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
-        w, h = t_textures[serialNumber].get_size()
+        self.texture = t_textures[serialNumber]
+        w, h = self.texture.get_size()
         w34 = 34 - w
         h34 = 34 - h
         self.rect = pygame.Rect(position[0] + w34, position[1] + h34, w, h)
         self.checkCollision = True,
-        self.texture = t_textures[serialNumber]
         
     def update(self):
         return self.texture
