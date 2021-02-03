@@ -396,8 +396,8 @@ ambient_light_tint: Tuple[int, int, int] = (0, 0, 0)
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
-    def LoadMap(MapPath: str, loadEntities: bool = True):
-        global Items, tiles, Enemies, Projectiles
+    def LoadMap(MapPath: str):
+        global Items, tiles, Enemies, Projectiles, overlays
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
@@ -485,7 +485,15 @@ class WorldData():
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
                 if datapoint != "/":
+                    identifier = f"{x}-{y}"
+                    if identifier in tileprops:
+                        for k, v in tileprops[identifier].items():
+                            if k == "overlay":
+                                overlays.append(Tile(tiles[y][x].rect.topleft, int(v)))
+                    
                     if len(datapoint) == 4 and int(datapoint) != 0:
+                        if int(datapoint) == 0:
+                            continue
                         serialNumber = int(datapoint[1:])
                         pointer = int(datapoint[0])
                         if pointer == 0:
@@ -493,7 +501,6 @@ class WorldData():
                                 tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
                             else:
                                 tiles[y][x] = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                            identifier = f"{x}-{y}"
                             if identifier in tileprops:
                                 for k, v in tileprops[identifier].items():
                                     if k == "checkCollision":
@@ -502,16 +509,12 @@ class WorldData():
                                             tex = tiles[y][x].texture.convert_alpha()
                                             tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                             tiles[y][x].darkOverlay = tex
-                                    elif k == "overlay":
-                                        overlays.append(Tile(tiles[y][x].rect.topleft, int(v)))
                                     else: setattr(tiles[y][x], k, v)
                                         
                         elif pointer == 1:
-                            if loadEntities:
-                                Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
+                            Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
                         elif pointer == 2:
-                            if loadEntities:
-                                Enemies.append(enemySerialNumbers[serialNumber]((x*34,y*34)))
+                            Enemies.append(enemySerialNumbers[serialNumber]((x*34,y*34)))
                         elif pointer == 3:
                             temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
                             if serialNumber not in Teleport.teleportT_IDS:
@@ -2679,7 +2682,7 @@ def agr():
     return True
 #endregion
 #region Game Functions
-def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, loadEntities: bool = True):
+def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True):
     KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
@@ -2710,7 +2713,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     
     LoadGameSettings()
 
-    wdata = WorldData.LoadMap(mapPath, loadEntities)
+    wdata = WorldData.LoadMap(mapPath)
     if not wdata:
         return 1
     Player.rect.topleft, Temp_value = wdata
@@ -2791,8 +2794,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
         pygame.mixer.music.pause()
         KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
         doAnimation(False)
-    pygame.time.wait(1800)
-    if playAnimation:
+        pygame.time.wait(1800)
         doAnimation(True)
         pygame.mixer.music.unpause()
 
@@ -3586,10 +3588,6 @@ while main_running:
         elif etick < 10:
             Lights.append(KDS.World.Lighting.Light((unit.pos[0] - 80, unit.pos[1] - 80), KDS.World.Lighting.Shapes.circle_hard.get(300, 5500)))
 
-    #Overlayt
-    for ov in overlays:
-        screen.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
-
     #Partikkelit
     #Particles.append(KDS.World.Lighting.Sparkparticle((Player.rect.x, Player.rect.y - 20), random.randint(1, 20), random.randint(1, 20), random.randint(1, 9)))
     while len(Particles) > maxParticles:
@@ -3599,18 +3597,22 @@ while main_running:
         if isinstance(result, pygame.Surface): Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
         else: Particles.remove(particle)
 
-    #Valojen käsittely
-    lightsUpdating = 0
-    if ambient_light:
-        ambient_tint.fill(ambient_light_tint)
-        screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
-
     if DebugMode:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
     screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
     if Koponen.enabled: Koponen.render(screen, scroll, DebugMode)
+
+    #Overlayt
+    for ov in overlays:
+        screen.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
     
+    if ambient_light:
+        ambient_tint.fill(ambient_light_tint)
+        screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
+    #Valojen käsittely
     #dark = False if Player.rect.x > 500 else 1
+    #^^ Bruh miks tää on olemassa?
+    lightsUpdating = 0
     if dark:
         black_tint.fill(darkness)
         for light in Lights:

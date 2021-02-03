@@ -110,7 +110,8 @@
         "108": "roof_planks.png",
         "109": "roof_planks_flip.png",
         "110": "roof_planks_end.png",
-        "111": "roof_planks_end_flip.png"
+        "111": "roof_planks_end_flip.png",
+        "112": "pillar.png"
     },
     
     "tile_sounds" : {
