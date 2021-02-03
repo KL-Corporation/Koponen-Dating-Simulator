@@ -461,11 +461,13 @@ class WorldData():
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
         KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/enabled", False)
+        TalkEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
         pygame.event.pump()
 
         global Koponen
         Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
         Koponen.setEnabled(KoponenEnabled)
+        Koponen.allow_talk = TalkEnabled
     
         enemySerialNumbers = {
             1: KDS.AI.Imp,
@@ -1377,40 +1379,42 @@ class RoofPlanks(Tile):
         
     def update(self):
         return self.texture
-    
-class Ramp(Tile):
-    def __init__(self, position, serialNumber) -> None:
-        super().__init__(position, serialNumber)
-        self.checkCollision = False
-        self.direction = True if serialNumber == 108 else False
 
-        self.triangle: List[Tuple[int, int]]
-        if self.direction:
-            self.triangle = [
-                            (position[0], position[1] + self.texture.get_height()),
-                            (position[0] + self.texture.get_width(), position[1]),
-                            (position[0] + self.texture.get_width(), position[1] + self.texture.get_height())
-                            ]
-        else:
-            self.triangle = [
-                            (position[0], position[1]),
-                            (position[0] + self.texture.get_width(), position[1] + self.texture.get_height()),
-                            (position[0], position[1] + self.texture.get_height())
-                            ]
-
-        self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1]) * -1
-        print(self.triangle[0], self.triangle[1])
-        print(self.slope)
-
-    def update(self):
-        markPoint = Player.rect.bottomright if self.serialNumber == 108 else Player.rect.bottomleft
-        
-        if Player.movement[1] < 0 and Player.rect.colliderect(self.rect) and Player.rect.bottom > self.rect.bottom:
-            Player.rect.top = self.rect.bottom
-        elif KDS.Math.trianglePointIntersect(self.triangle, markPoint):
-            Player.rect.bottom = self.rect.y + self.rect.height - round(self.slope * (markPoint[0] - self.rect.x))
-            #Player.rect.bottom = 
-        return self.texture
+# 
+# class Ramp(Tile):
+#     def __init__(self, position, serialNumber) -> None:
+#         super().__init__(position, serialNumber)
+#         self.checkCollision = False
+#         self.direction = True if serialNumber == 108 else False
+# 
+#         self.triangle: List[Tuple[int, int]]
+#         if self.direction:
+#             self.triangle = [
+#                             (position[0], position[1] + self.texture.get_height()),
+#                             (position[0] + self.texture.get_width(), position[1]),
+#                             (position[0] + self.texture.get_width(), position[1] + self.texture.get_height())
+#                             ]
+#         else:
+#             self.triangle = [
+#                             (position[0], position[1]),
+#                             (position[0] + self.texture.get_width(), position[1] + self.texture.get_height()),
+#                             (position[0], position[1] + self.texture.get_height())
+#                             ]
+# 
+#         self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1]) * -1
+#         print(self.triangle[0], self.triangle[1])
+#         print(self.slope)
+# 
+#     def update(self):
+#         markPoint = Player.rect.bottomright if self.serialNumber == 108 else Player.rect.bottomleft
+#         
+#         if Player.movement[1] < 0 and Player.rect.colliderect(self.rect) and Player.rect.bottom > self.rect.bottom:
+#             Player.rect.top = self.rect.bottom
+#         elif KDS.Math.trianglePointIntersect(self.triangle, markPoint):
+#             Player.rect.bottom = self.rect.y + self.rect.height - round(self.slope * (markPoint[0] - self.rect.x))
+#             #Player.rect.bottom = 
+#         return self.texture
+# 
 
 specialTilesD = {
     15: Toilet,
@@ -3537,10 +3541,11 @@ while main_running:
     if Koponen.enabled:
         if Koponen.rect.colliderect(Player.rect):
             Koponen.stopAutoMove()
-            screen.blit(koponen_talk_tip, (Koponen.rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
-            if KDS.Keys.functionKey.pressed:
-                KDS.Keys.Reset()
-                KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
+            if Koponen.allow_talk:
+                screen.blit(koponen_talk_tip, (Koponen.rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
+                if KDS.Keys.functionKey.pressed:
+                    KDS.Keys.Reset()
+                    KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
         else: Koponen.continueAutoMove()
 
         Koponen.update(tiles)

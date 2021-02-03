@@ -280,6 +280,8 @@ class KoponenEntity:
         self._aut_idle_time = 0
         self._path_finder_on = False
 
+        self.allow_talk = False
+
     def update(self, tiles):
         if self._move:
 
