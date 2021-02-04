@@ -28,7 +28,7 @@ class JSON:
     
     @staticmethod
     def ToKeyList(jsonPath: str):
-        return re.sub(jsonPath.strip("/"), r"\/+", "/").split("/")
+        return re.sub(r"\/+", "/", jsonPath.strip("/")).split("/")
     
     @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True) ->  Union[Any, None]:
