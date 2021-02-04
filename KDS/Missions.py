@@ -278,7 +278,7 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
         if isinstance(data[0], Listener):
             data[0].Add(MissionName, SafeName, data[1])
         elif isinstance(data[0], ItemListener):
-            data[0].Add(data[1], MissionName, SafeName, data[1])
+            data[0].Add(data[1], MissionName, SafeName, data[2])
         else: raise TypeError("Listener is not a valid type!")
         
 def InitialiseMission(SafeName: str, Text: str):
@@ -375,7 +375,7 @@ def InitialiseMissions(index):
         if index == 1:
             Presets.Tutorial()
             InitialiseMission("enter_school", "Mene Kouluun")
-            InitialiseTask("enter_school", "side_door", "Kävele Kouluun Sivuovesta", (Listeners.LevelEnder, 1.0))
+            InitialiseTask("enter_school", "enter", "Kävele Kouluun", (Listeners.LevelEnder, 1.0))
             
         elif index == 2:
             Presets.KoponenIntroduction()
@@ -387,8 +387,8 @@ def InitialiseMissions(index):
             InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
             
         elif index == 3:
-            InitialiseMission("biology_test", "Biologian Tunti")
-            InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")
+            InitialiseMission("biology_exam", "Biologian Tunti")
+            InitialiseTask("biology_exam", "go_to_biology", "Mene Biologian Tunnille")
     else:
         if index == 1:
             Presets.Tutorial()
