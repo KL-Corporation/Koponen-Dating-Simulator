@@ -1,6 +1,6 @@
 #region Importing
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 import pygame
 
@@ -119,15 +119,15 @@ class Task:
         return surface
 
 class KoponenTask(Task):
-    def __init__(self, missionName: str, safeName: str, text: str, itemID: int, itemPrompt: str) -> None:
+    def __init__(self, missionName: str, safeName: str, text: str, itemIDs: Iterable[int], itemsCallName: str, itemsCallVariation: str) -> None:
         super().__init__(missionName, safeName, text)
         koponenTaskCount = 0
         for task in Missions.GetMission(missionName).GetTaskList():
             if isinstance(task, KoponenTask): koponenTaskCount += 1
         if koponenTaskCount > 1: KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
-        self.item = itemID
-        self.itemPrompt = itemPrompt
-        if itemID not in buildData["inventory_items"]: KDS.Logging.AutoError("Item cannot be returned, since it cannot be picked up into inventory!")
+        self.items = itemIDs
+        self.callName = itemsCallName
+        self.callVariation = itemsCallVariation
 
 class Mission:
     def __init__(self, safeName: str, text: str) -> None:
@@ -280,7 +280,10 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
         elif isinstance(data[0], ItemListener):
             data[0].Add(data[1], MissionName, SafeName, data[2])
         else: raise TypeError("Listener is not a valid type!")
-        
+
+def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, ItemsCallName: str, ItemsCallNameVariation: str, *itemIDs: int):
+    KoponenTask(MissionName, SafeName, Text, itemIDs, ItemsCallName, ItemsCallNameVariation)
+
 def InitialiseMission(SafeName: str, Text: str):
     """Initialises a mission.
 

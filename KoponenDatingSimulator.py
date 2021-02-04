@@ -579,7 +579,7 @@ class Inventory:
     doubleItem = "doubleItem"
 
     def __init__(self, size: int):
-        self.storage: List[Item or str] = [Inventory.emptySlot for _ in range(size)]
+        self.storage: List[Union[Item, str]] = [Inventory.emptySlot for _ in range(size)]
         self.size: int = size
         self.SIndex: int = 0
 
@@ -589,7 +589,8 @@ class Inventory:
     def render(self, Surface: pygame.Surface):
         pygame.draw.rect(Surface, (192, 192, 192), (10, 75, self.size*34, 34), 3)
 
-        if not isinstance(self.storage[self.SIndex], str) and self.storage[self.SIndex].serialNumber in inventoryDobulesSerialNumbers:
+        item = self.storage[self.SIndex]
+        if not isinstance(item, str) and item.serialNumber in inventoryDobulesSerialNumbers:
             slotwidth = 68
         else:
             slotwidth = 34

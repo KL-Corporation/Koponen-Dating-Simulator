@@ -87,20 +87,31 @@ class Date:
         pass
 
 class Mission:
-    Task = Any
+    # Will be automatically assigned by KDS.Missions
+    Task: Union[KDS.Missions.KoponenTask, None] = None
+    
+    @staticmethod
+    def Request():
+        if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONREQUEST:
+            Talk.scheduled.pop(0)
+        else:
+            Talk.Conversation.schedule("Nyt on kyllä ideat lopussa... Minulla ei ole hajuakaan mitä tekemistä keksisin sinulle.", Prefixes.koponen)
     
     @staticmethod
     def Return(player_inventory):
         if Mission.Task != None:
-            if Mission.Task.item in player_inventory.storage:
-                Mission.Task.Progress(1.0)
-                Mission.Task = None
-            else: Talk.Conversation.schedule("Olen pahoillani, en löydä pyytämääni esinettä pöksyistäsi. Pyysin sinua tuomaan minulle {}.", Prefixes.koponen)
+            for item in Mission.Task.items:
+                if item in player_inventory.storage:
+                    Mission.Task.Progress(1.0)
+                    Mission.Task = None
+                    player_inventory.storage.pop(player_inventory.storage.index(item))
+                    if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
+                        Talk.scheduled.pop(0)
+                    return
+            # callVariation tarkoittaa esimerkiksi sitä, että sana "juusto" on taivutettu sanaksi "juustoa" tai sana "terotin" on taivutettu sanaksi "terotinta".
+            Talk.Conversation.schedule(f"Olen pahoillani, en löydä {Mission.Task.callVariation} pöksyistäsi.")
         else:
-            Talk.Conversation.schedule("Sinulla ei ole palautettavaa tehtävää.", Prefixes.koponen)
-    @staticmethod
-    def Request():
-        pass
+            Talk.Conversation.schedule("Sinulla ei ole mitään palautettavaa tehtävää.", Prefixes.koponen)
 
 class Talk:
     running = False
@@ -115,6 +126,8 @@ class Talk:
     scheduled: List[str] = []
         
     class Conversation:
+        WAITFORMISSIONREQUEST = "<wait-for-mission-request>"
+        WAITFORMISSIONRETURN = "<wait-for-mission-return>"
         @staticmethod
         def scrollToBottom():
             Talk.Conversation.scroll = max(len(Talk.lines) - Talk.lineCount, 0)
@@ -124,14 +137,16 @@ class Talk:
         newAnimation = False
         
         @staticmethod
-        def schedule(text, prefix: str = Prefixes.player):
+        def schedule(text: str, prefix: str = Prefixes.player):
+            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
+                Talk.scheduled.append(text)
             prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
             for _text in lineSplit: Talk.scheduled.append(prefix + _text)
         
         @staticmethod
         def update():
-            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0:
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and not (Mission.Task != None and Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)):
                 if Talk.audioChannel == None or Talk.audioChannel.get_sound() != Talk.soundPlaying:
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
                     Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying)
@@ -143,7 +158,7 @@ class Talk:
                     deleteCount += 1
                 if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index: Talk.Conversation.scrollToBottom()
                 else: Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
-            elif len(Talk.scheduled) <= 0:
+            elif len(Talk.scheduled) <= 0 or (Mission.Task != None and Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)):
                 for audio in ambientTalkAudios: audio.stop()
                 Talk.audioChannel = None
         
@@ -241,7 +256,7 @@ class Talk:
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True
-                elif event.type == pygame.QUIT:
+                elif event.type == QUIT:
                     KDS_Quit()
             
             Talk.renderMenu(display, mouse_pos, c)
