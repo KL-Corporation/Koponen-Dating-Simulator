@@ -2,6 +2,7 @@
 import json
 import os
 import shutil
+import re
 from typing import Any, Dict, Union
 
 import KDS.AI
@@ -27,7 +28,7 @@ class JSON:
     
     @staticmethod
     def ToKeyList(jsonPath: str):
-        return jsonPath.strip("/").split("/")
+        return re.sub(jsonPath.strip("/"), r"\/+", "/").split("/")
     
     @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True) ->  Union[Any, None]:
