@@ -141,6 +141,7 @@ class Save:
             self.playerName: str = "Sinä"
             self.index: int = 1
             self.examGrade: int = -1
+            self.principalName: str = "<principal name error>"
     
     def __init__(self, index: int) -> None:
         Save.Active = self
