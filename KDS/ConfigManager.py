@@ -149,15 +149,14 @@ class Save:
         self.Story = Save.StoryData()
         if os.path.isfile(Save.ToPath(self.index)):
             with open(Save.ToPath(self.index), "r") as f:
-                data = json.loads(f.read())
-            self.Story.index = data["index"]
-            self.Story.attributes = data["attributes"]
-            self.Story.playerName = data["player_name"]
+                data: Dict[str, Any] = json.loads(f.read())
+                for k, v in data.items():
+                    setattr(self, k, v)
         else: self.save()
 
     def save(self):
         path = Save.ToPath(self.index)
-        data = { "index": self.Story.index, "player_name": self.Story.playerName, "attributes": self.Story.attributes }
+        data = self.Story.__dict__
         with open(path, "w") as f:
             f.write(json.dumps(data))
 
