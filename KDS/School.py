@@ -388,6 +388,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     
     #region Settings
     GradeExtras = True
+    StoryExtras = True
     AlignOverride = False
     GlobalRefrenceOverride = 9
     #endregion
@@ -430,15 +431,9 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     if GradeExtras:
         # PE grade lowers depending on average.
         grades[11] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
-        # Physics grade will always be equal or higher than chemistry.
-        if grades[7] > grades[6]:
-            #Swaps the values around.
-            tmp = grades[6]
-            grades[6] = grades[7]
-            grades[7] = tmp
         
-        #Swedish will always be one worse than it would've normally been
-        grades[2] -= 1 if grades[2] > 4 else 0
+    if StoryExtras:
+        grades[4] = 11
     
     certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
     certificateSize = certificate.get_size()
