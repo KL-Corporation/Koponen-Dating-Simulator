@@ -2763,7 +2763,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True):
     if (show_loading): KDS.Loading.Circle.Stop()
     return 0
 
-def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = True, oldSurf: pygame.Surface = None):
+def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
     map_names = {}
     def load_map_names():
         nonlocal map_names
@@ -2819,7 +2819,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
     map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
     
     pygame.mixer.music.stop()
-    play_function(KDS.Gamemode.Modes.Story, True, show_loading=True)
+    play_function(KDS.Gamemode.Modes.Story, True, show_loading=show_loading)
     if playAnimation:
         pygame.mixer.music.pause()
         KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))

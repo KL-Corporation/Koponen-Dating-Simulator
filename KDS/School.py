@@ -411,11 +411,11 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         return f"{random_date.day}.{random_date.month}.{random_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]" # Teki niin mieli laittaa 6.9.2005
 
     def randomGrade(refrenceOverride: float = None) -> int:
-        if (KDS.ConfigManager.Save.Active == None or "exam_grade" not in KDS.ConfigManager.Save.Active.Story.attributes) and not (4 <= GlobalRefrenceOverride <= 10):
+        if (KDS.ConfigManager.Save.Active == None or KDS.ConfigManager.Save.Active.Story.examGrade < 0) and not (4 <= GlobalRefrenceOverride <= 10):
             return -1
         elif 4 <= GlobalRefrenceOverride <= 10 and refrenceOverride == None: refrenceOverride = GlobalRefrenceOverride
         
-        ref = round(KDS.ConfigManager.Save.Active.Story.attributes["exam_grade"] if refrenceOverride == None else refrenceOverride)
+        ref = round(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride)
         gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
             weights=(1, 3, 5, 4, 1),
