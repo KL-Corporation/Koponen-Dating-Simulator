@@ -1391,7 +1391,7 @@ class Patja(Tile):
         self.kaatunut = False
         self.kaatumisTrigger = False
         self.kaatumisCounter = 0
-        self.kaatumisDelay = 300
+        self.kaatumisDelay = 180
         
     def update(self):
         if self.rect.colliderect(Player.rect):
