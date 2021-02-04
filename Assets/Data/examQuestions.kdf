@@ -1,5 +1,5 @@
 {
-    "Mikä on KL-Corporationin lippulaivatuote?": {
+    "Mikä näistä on KL-Corporationin lippulaivatuote?": {
         "KDS Level Builder": false,
         "Mastermind by KL-Corporation": false,
         "KDS Compiler": false,
@@ -77,9 +77,9 @@
         "Hard": true
     },
     "Miikalla on viisi banaania. Miikan kaverilla on herpes. Laske auringon massa.": {
-        "2 000 000 000 000 000 000 000 000kg": false,
-        "1 980 000 000 000 000 000 000 000 000 000kg": true,
-        "3 094 000 000 000 000 000 000 000 000 000kg": false
+        "2 000 000 000 000 000 000 000 000 000g": false,
+        "1 980 000 000 000 000 000 000 000 000 000 000g": true,
+        "3 094 000 000 000 000 000 000 000 000 000 000g": false
     },
     "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä nyt on?": {
         "69 karkkia": false,
@@ -111,11 +111,6 @@
         "Yksi flamingo": false,
         "Ruumis ja kolme flamingoa": true,
         "Yksi flamingo ja masennus": false
-    },
-    "Seppo Virtanen omistaa koiran. Hänen koiransa haluaa ruokaa, mutta Seppo haluaa kaljaa. Sepolla on 15€ ja koiranruoka maksaa 10€. Sixpack kaljaa maksaa 8€. Miten Seppo toimii seuraavaksi? Hän...": {
-        "Vetää kunnon kännit eikä huoli koirastaan": false,
-        "Ostaa koiranruokaa ja ruokkii koiran": false,
-        "Ostaa kaljaa ja juottaa koirankin": true
     },
     "Kuka kirjoitti Kommunistisen Manifestin?": {
         "Josif Stalin": false,
@@ -153,7 +148,8 @@
     "Kuka hallitsija tuli tunnetuksi Gulageistaan?": {
         "Donald Trump": false,
         "Vladimir Putin": false,
-        "Josif Vissarionovitš Džugašvili": true
+        "Josif Vissarionovitš Džugašvili": true,
+        "Vladimir Iljitš Lenin": false
     },
     "20-vuotiaalla maalaismiehellä on ongelma. Hänen tarvitsee saada viiden päivän kuluessa toimitettua 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Miten hän hankkii loput rynnäkkökiväärit?": {
         "Mies ostaa kiväärit Lidlistä": false,
@@ -202,7 +198,7 @@
         "Syyriassa": false,
         "Neuvostoliitossa": false
     },
-    "Mikä seuraavista valtioista ei kerää tuloveroa?": {
+    "Mikä seuraavista valtioista EI KERÄÄ tuloveroa?": {
         "Yhdistyneet Arabiemiirikunnat": true,
         "Vanuatu": true,
         "Etelä-Afrikka": false,
@@ -217,10 +213,14 @@
         "Kyllä": false,
         "Ei": true
     },
+    "Ovatko iPuhelimet huonoja?": {
+        "Kyllä": true,
+        "Ei": false
+    },
     "Mikä on pinta-alaltaan maailman suurimman valtion virallinen nimi?": {
         "Venäjä": false,
         "Venäjän federaatio": true,
-        "Kiina": false,
+        "Kiinan kansantasavalta": false,
         "Pohjois-Korean demokraattinen kansantasavalta": false
     },
     "Mikä seuraavista pelin jakelupalveluista on paras?": {
@@ -228,5 +228,52 @@
         "Epic Games Store": false,
         "NALStudio Game Launcher": true,
         "Apple App Store": false
+    },
+    "Kuinka monta spermasiittiötä tarvitaan, jotta niiden tallennustila saavuttaisi yhden teratavun?": {
+        "n. 26 000": false,
+        "n. 28 000": true,
+        "n. 30 000": false,
+        "n. 36 000": false
+    },
+    "Kuinka paljon tallennustilaa yhdessä siemensyöksyssä on keskimäärin?": {
+        "n. 15 000 Tb": false,
+        "n. 15 000 Tt": false,
+        "n. 11 250 Tb": false,
+        "n. 11 250 Tt": true
+    },
+    "Mikä on maailman myydyin peli?": {
+        "Tetris": false,
+        "Grand Theft Auto V": false,
+        "Minecraft": true,
+        "Wii Sports": false
+    },
+    "Mikä on Australian pääkaupunki?": {
+        "Melbourne": false,
+        "Sydney": false,
+        "Canberra": true,
+        "Perth": false
+    },
+    "Missä sijaitsevat kenguruiden kivekset?": {
+        "Peniksen alapuolella": false,
+        "Peniksen yläpuolella": true,
+        "Otsassa": false
+    },
+    "Kuinka monta vaginaa kengurulla on?": {
+        "1": false,
+        "2": false,
+        "3": true,
+        "4": false
+    },
+    "Mistä tulee lyhenne FBI?": {
+        "Federal Boob Inspectors": false,
+        "Federal Bureau of Investigation": true,
+        "Federal Investigation Bureau": false,
+        "Federal Bureau Intelligence": false
+    },
+    "Mikä on piin (π) 69. desimaali?": {
+        "1": true,
+        "2": false,
+        "3": false,
+        "8": false
     }
 }
