@@ -222,9 +222,7 @@ class tileInfo:
                     if srlNumber not in t_textures:
                         KDS.Logging.warning(f"Cannot add unit because texture is not added: {srlNumber}")
                         return
-                    if not self.hasTile():
-                        self.setSerialToSlot(srlNumber, index)
-                    else: KDS.Logging.info(f"Tile already in {self.pos}!", True)
+                    self.setSerialToSlot(srlNumber, index)
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)

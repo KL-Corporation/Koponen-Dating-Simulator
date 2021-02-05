@@ -341,7 +341,7 @@ level_finished = False
 Particles = []
 HitTargets = {}
 enemy_difficulty = 1
-tiles: List[List[Tile]] = []
+tiles: List[List[List[Tile]]] = []
 overlays: List[Tile] = []
 LightScroll = [0, 0]
 renderUI = True
@@ -447,7 +447,7 @@ class WorldData():
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
-        tiles = [[Tile((x * 34, y * 34), 0) for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
+        tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
         
         pygame.event.pump()
@@ -500,18 +500,18 @@ class WorldData():
                         pointer = int(datapoint[0])
                         if pointer == 0:
                             if serialNumber not in specialTilesSerialNumbers:
-                                tiles[y][x] = Tile((x * 34, y * 34), serialNumber=serialNumber)
+                                tiles[y][x].append( Tile((x * 34, y * 34), serialNumber=serialNumber) )
                             else:
-                                tiles[y][x] = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                                tiles[y][x].append( specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber) )
                             if identifier in tileprops:
                                 for k, v in tileprops[identifier].items():
                                     if k == "checkCollision":
-                                        tiles[y][x].checkCollision = v
+                                        tiles[y][x][-1].checkCollision = v
                                         if not v:
-                                            tex = tiles[y][x].texture.convert_alpha()
+                                            tex = tiles[y][x][-1].texture.convert_alpha()
                                             tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                            tiles[y][x].darkOverlay = tex
-                                    else: setattr(tiles[y][x], k, v)
+                                            tiles[y][x][-1].darkOverlay = tex
+                                    else: setattr(tiles[y][x][-1], k, v)
                                         
                         elif pointer == 1:
                             Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
@@ -522,7 +522,7 @@ class WorldData():
                             if serialNumber not in Teleport.teleportT_IDS:
                                 Teleport.teleportT_IDS[serialNumber] = []
                             Teleport.teleportT_IDS[serialNumber].append(temp_teleport)                               
-                            tiles[y][x] = temp_teleport
+                            tiles[y][x].append( temp_teleport )
                             del temp_teleport
                 else:
                     x += 1
@@ -530,8 +530,9 @@ class WorldData():
 
         for row in tiles:
             pygame.event.pump()
-            for tile in row:
-                tile.lateInit()
+            for unit in row:
+                for tile in unit:
+                    tile.lateInit()
 
         KDS.Audio.Music.Play(os.path.join(MapPath, "music.ogg"))
         return p_start_pos, k_start_pos
@@ -702,7 +703,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.
-    def renderUpdate(Tile_list: List[List[Tile]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
+    def renderUpdate(Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
         x = max(x, 0)
@@ -714,17 +715,18 @@ class Tile:
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
         for row in Tile_list[y:end_y]:
-            for renderable in row[x:end_x]:
-                renderable: Tile
-                if not renderable.air:
-                    if DebugMode:
-                        pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-                    if not renderable.specialTileFlag:
-                        Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                        if renderable.darkOverlay != None:
-                            Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                    else:
-                        Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+            for unit in row[x:end_x]:
+                for renderable in unit:
+                    renderable: Tile
+                    if not renderable.air:
+                        if DebugMode:
+                            pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
+                        if not renderable.specialTileFlag:
+                            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                            if renderable.darkOverlay != None:
+                                Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                        else:
+                            Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
     def update(self):
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
@@ -931,10 +933,11 @@ class Lamp(Tile):
         while r:
             y += 33
             for row in tiles:
-                for tile in row:
-                    if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
-                        y = y - (self.rect.y + self.rect.height + y - tile.rect.y) + 8
-                        r = False
+                for unit in row:
+                    for tile in unit:
+                        if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
+                            y = y - (self.rect.y + self.rect.height + y - tile.rect.y) + 8
+                            r = False
             if y > 154:
                 r = False
         self.coneheight = y

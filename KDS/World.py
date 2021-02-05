@@ -38,9 +38,10 @@ def collision_test(rect, Tile_list):
     end_y = KDS.Math.Clamp(y + 6, 0, max_y)
 
     for row in Tile_list[y:end_y]:
-        for tile in row[x:end_x]:
-            if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
-                hit_list.append(tile)
+        for unit in row[x:end_x]:
+            for tile in unit:
+                if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
+                    hit_list.append(tile)
     return hit_list
 
 class Collisions:

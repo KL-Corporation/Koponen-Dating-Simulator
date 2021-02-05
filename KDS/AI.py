@@ -31,9 +31,10 @@ def ai_collision_test(rect, Tile_list):
     end_y = KDS.Math.Clamp(y + 6, 0, max_y)
 
     for row in Tile_list[y:end_y]:
-        for tile in row[x:end_x]:
-            if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
-                hit_list.append(tile.rect)
+        for unit in row[x:end_x]:
+            for tile in unit:
+                if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
+                    hit_list.append(tile.rect)
     return hit_list
 
 def move(rect, movement, tiles):
