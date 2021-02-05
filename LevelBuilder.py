@@ -19,7 +19,7 @@ import KDS.Math
 import KDS.UI
 import KDS.Console
 import KDS.Logging
-import tkinter 
+import tkinter
 from tkinter import filedialog
 import json
 import traceback
