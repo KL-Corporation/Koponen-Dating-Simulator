@@ -120,14 +120,15 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         if end_y > max_y:
             end_y = max_y
         for row in obstacles[y:end_y]:
-            for tile in row[x:end_x]:
-                if KDS.Logging.profiler_running:
-                    pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
-                if not tile.air:
-                    if tile.checkCollision:
-                        return False, 0
-                if tile.rect.colliderect(targetRect):
-                    return True, slope
+            for unit in row[x:end_x]:
+                for tile in unit:
+                    if KDS.Logging.profiler_running:
+                        pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                    if not tile.air:
+                        if tile.checkCollision:
+                            return False, 0
+                    if tile.rect.colliderect(targetRect):
+                        return True, slope
     return False, 0
 
 class Bulldog:

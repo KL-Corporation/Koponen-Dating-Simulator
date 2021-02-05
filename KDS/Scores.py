@@ -79,7 +79,7 @@ class ScoreCounter:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})")
             tb_start = 1
             tb_end = 2
-        gameTime: float = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
+        gameTime = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
         timeBonusIndex: float = KDS.Math.Remap01(gameTime, tb_start, tb_end)
         timeBonus: int = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
         
