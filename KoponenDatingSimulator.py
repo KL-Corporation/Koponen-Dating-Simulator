@@ -493,7 +493,7 @@ class WorldData():
                     if identifier in tileprops:
                         for k, v in tileprops[identifier].items():
                             if k == "overlay":
-                                overlays.append(Tile(tiles[y][x].rect.topleft, int(v)))
+                                overlays.append(Tile((x * 34, y * 34), int(v)))
                     
                     if len(datapoint) == 4 and int(datapoint) != 0:
                         serialNumber = int(datapoint[1:])
