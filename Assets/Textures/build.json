@@ -112,7 +112,14 @@
         "110": "roof_planks_end.png",
         "111": "roof_planks_end_flip.png",
         "112": "pillar.png",
-        "113": "patja.png"
+        "113": "patja.png",
+        "114": "naulakko.png",
+        "115": "plant.png",
+        "116": "blue_bench.png",
+        "117": "red_bench.png",
+        "118": "gray_door.png",
+        "119": "white_concrete.png",
+        "120": "painting5.png"
     },
     
     "tile_sounds" : {
@@ -180,7 +187,9 @@
         104,
         105,
         106,
-        107
+        107,
+        115,
+        120
     ],
     "trueScale": [
         86,
@@ -195,7 +204,13 @@
         104,
         105,
         106,
-        107
+        107,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120
     ],
     "item_textures": {
         "000": "empty.png",
