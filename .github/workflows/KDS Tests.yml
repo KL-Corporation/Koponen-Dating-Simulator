@@ -25,6 +25,26 @@ jobs:
       run: |
         pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KoponenDatingSimulator.py
         pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame LevelBuilder.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/AI.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Animator.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Audio.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Colors.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/ConfigManager.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Console.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Convert.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Events.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Gamemode.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Keys.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Koponen.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Loading.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Math.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Missions.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/School.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Scores.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/System.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/Threading.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/UI.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=numpy --extension-pkg-whitelist=pygame KDS/World.py
     - name: Lint with Flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
