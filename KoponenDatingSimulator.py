@@ -400,13 +400,13 @@ class WorldData():
     @staticmethod
     def LoadMap(MapPath: str):
         global Items, tiles, Enemies, Projectiles, overlays
-        if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) and os.path.isfile(os.path.join(MapPath, "music.ogg"))):
+        if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
     Map Directory: {os.path.isdir(MapPath)}
         Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
         LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
-        Level Music File: {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+        Level Music File (optional): {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
         TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
         Level Background File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
         Inventory File (optional): {os.path.isfile(os.path.join(MapPath, "inventory.kdf"))}
@@ -534,7 +534,7 @@ class WorldData():
                 for tile in unit:
                     tile.lateInit()
 
-        KDS.Audio.Music.Play(os.path.join(MapPath, "music.ogg"))
+        if os.path.isfile(os.path.join(MapPath, "music.ogg")): KDS.Audio.Music.Play(os.path.join(MapPath, "music.ogg"))
         return p_start_pos, k_start_pos
 #endregion
 #region Data

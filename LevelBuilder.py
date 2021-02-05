@@ -337,7 +337,7 @@ class tileInfo:
                                 if setPropKey == "overlay":
                                     # It will be possible to break the system by changing the overlay without 
                                     # removing the old overlay, but hopefully our users aren't that stupid...
-                                    tileprops[tilepropsPath][setPropKey] = setPropValUnformatted
+                                    tileprops[tilepropsPath][setPropKey] = setPropValUnformatted 
                                 else:
                                     tileprops[tilepropsPath][setPropKey] = setPropVal
                             else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
