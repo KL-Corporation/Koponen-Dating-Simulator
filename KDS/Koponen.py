@@ -88,7 +88,7 @@ class Date:
 
 class Mission:
     # Will be automatically assigned by KDS.Missions
-    Task: Union[KDS.Missions.KoponenTask, None] = None
+    Task = None
     
     @staticmethod
     def Request():
