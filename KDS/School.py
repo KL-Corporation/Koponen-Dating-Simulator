@@ -115,12 +115,13 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                         pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
                         pygame.draw.rect(self.qsurf, KDS.Colors.Black, self.options[option]["rect"], 1)
 
-    def showTitle(_title):
+    def showTitle(_title: pygame.Surface):
         counter = 0
         relative_position = (1200 / 2 - _title.get_width() / 2, 800 / 2 - _title.get_height() / 2)
         while counter <= 180:
             Display.fill(KDS.Colors.Black)
-            _title.set_alpha(KDS.Math.Sin(counter * KDS.Math.DEG2RAD) * 255)
+            val = KDS.Math.Sin(counter * KDS.Math.DEG2RAD)
+            if val < 1.0: _title.set_alpha(int(val * 255))
             Display.blit(_title, (KDS.Math.Floor(relative_position[0]), KDS.Math.Floor(relative_position[1])))
             pygame.display.flip()
             Clock.tick_busy_loop(60)
