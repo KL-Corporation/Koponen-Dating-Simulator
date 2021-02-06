@@ -3515,9 +3515,8 @@ while main_running:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveRight()
             else:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveLeft()
-        elif event.type == WINDOWEVENT:
-            if event.event == WINDOWEVENT_FOCUS_LOST:
-                if pauseOnFocusLoss: esc_menu = True
+        elif event.type == WINDOWFOCUSLOST:
+            if pauseOnFocusLoss: esc_menu = True
         elif event.type == QUIT:
             KDS_Quit(confirm=True)
 #endregion
