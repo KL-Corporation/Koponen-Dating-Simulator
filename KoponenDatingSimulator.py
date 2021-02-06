@@ -35,28 +35,14 @@ from pygame.locals import *
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
-class PersistentPaths:
-    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
-    Cache = os.path.join(AppData, "cache")
-    Saves = os.path.join(AppData, "saves")
-    Logs = os.path.join(AppData, "logs")
-    Screenshots = os.path.join(AppData, "screenshots")
-    CustomMaps = os.path.join(AppData, "custom_maps")
-os.makedirs(PersistentPaths.AppData, exist_ok=True)
-os.makedirs(PersistentPaths.Cache, exist_ok=True)
-KDS.System.emptdir(PersistentPaths.Cache)
-KDS.System.hide(PersistentPaths.Cache)
-os.makedirs(PersistentPaths.Saves, exist_ok=True)
-os.makedirs(PersistentPaths.Logs, exist_ok=True)
-os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
-os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
-
-pygame.mixer.init()
 pygame.init()
+pygame.mixer.init()
 
-pygame.mouse.set_system_cursor(SYSTEM_CURSOR_ARROW)
+pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
 
 game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
+CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
+
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
@@ -65,7 +51,7 @@ display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
-CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png").convert()
+CompanyLogo = CompanyLogo.convert()
 display.fill(CompanyLogo.get_at((0, 0)))
 display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
 pygame.display.flip()
@@ -73,10 +59,16 @@ pygame.display.flip()
 clock = pygame.time.Clock()
 profiler_enabled = False
 
-text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
-text_icon.set_colorkey(KDS.Colors.White)
-level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
-level_cleared_icon.set_colorkey(KDS.Colors.White)
+pygame.event.set_allowed((
+    KEYDOWN,
+    MOUSEBUTTONDOWN,
+    MOUSEBUTTONUP,
+    KEYDOWN,
+    KEYUP,
+    MOUSEWHEEL,
+    QUIT,
+    WINDOWFOCUSLOST
+))
 #endregion
 #region Quit Handling
 def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool = False):
@@ -93,6 +85,22 @@ def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool 
         level_finished_running = False
 #endregion
 #region Initialisation
+class PersistentPaths:
+    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
+    Cache = os.path.join(AppData, "cache")
+    Saves = os.path.join(AppData, "saves")
+    Logs = os.path.join(AppData, "logs")
+    Screenshots = os.path.join(AppData, "screenshots")
+    CustomMaps = os.path.join(AppData, "custom_maps")
+os.makedirs(PersistentPaths.AppData, exist_ok=True)
+os.makedirs(PersistentPaths.Cache, exist_ok=True)
+KDS.System.emptdir(PersistentPaths.Cache)
+KDS.System.hide(PersistentPaths.Cache)
+os.makedirs(PersistentPaths.Saves, exist_ok=True)
+os.makedirs(PersistentPaths.Logs, exist_ok=True)
+os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
+os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
+
 KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
 KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
 KDS.Logging.debug("Initialising Game...")
@@ -169,6 +177,13 @@ harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, ital
 ArialFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
 ArialTitleFont = pygame.font.SysFont("Arial", 72, bold=0, italic=0)
 KDS.Logging.debug("Font Loading Complete.")
+#endregion
+pygame.event.pump()
+#region UI Textures
+text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
+text_icon.set_colorkey(KDS.Colors.White)
+level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
+level_cleared_icon.set_colorkey(KDS.Colors.White)
 #endregion
 pygame.event.pump()
 #region Building Textures
@@ -3525,9 +3540,8 @@ while main_running:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveRight()
             else:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveLeft()
-        elif event.type == WINDOWEVENT:
-            if event.event == WINDOWEVENT_FOCUS_LOST:
-                if pauseOnFocusLoss: esc_menu = True
+        elif event.type == WINDOWFOCUSLOST:
+            if pauseOnFocusLoss: esc_menu = True
         elif event.type == QUIT:
             KDS_Quit(confirm=True)
 #endregion
