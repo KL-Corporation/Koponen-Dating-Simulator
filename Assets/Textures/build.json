@@ -121,7 +121,8 @@
         "119": "white_concrete.png",
         "120": "painting5.png",
         "121": "gray_concrete.png",
-        "122": "lockers.png"
+        "122": "lockers.png",
+        "123": "crackhead.png"
     },
     
     "tile_sounds" : {
@@ -168,7 +169,8 @@
         109,
         110,
         111,
-        113
+        113,
+        123
     ],
     "noCollision": [
         10,
@@ -214,7 +216,8 @@
         118,
         120,
         121,
-        122
+        122,
+        123
     ],
     "item_textures": {
         "000": "empty.png",

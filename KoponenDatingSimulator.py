@@ -1413,6 +1413,15 @@ class Patja(Tile):
                     Player.health -= random.randint(20, 60)
         return self.texture if not self.kaatunut else self.kaatunutTexture
 
+class Crackhead(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("crackhead_smoking", 3, 14, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.checkCollision = False
+        
+    def update(self):
+        return self.animation.update()
+
 # 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
@@ -1489,7 +1498,8 @@ specialTilesD = {
     109: RoofPlanks,
     110: RoofPlanks,
     111: RoofPlanks,
-    113: Patja
+    113: Patja,
+    123: Crackhead
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
