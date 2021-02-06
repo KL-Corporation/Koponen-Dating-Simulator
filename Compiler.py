@@ -6,7 +6,7 @@ import inquirer.themes
 import termcolor
 from datetime import datetime
 
-AppDataPath = os.path.join(os.getenv('APPDATA'), "KL Corporation", "KDS Compiler")
+AppDataPath = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Compiler")
 BuildsPath = os.path.join(AppDataPath, "Builds")
 os.makedirs(BuildsPath, exist_ok=True)
 WorkPath = os.path.join(AppDataPath, "cache", "work")
