@@ -88,7 +88,8 @@ class Mission:
     @staticmethod
     def Request():
         if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONREQUEST:
-            if Mission.Task != None:
+            if Mission.Task == None:
+                KDS.Missions.Listeners.KoponenRequestMission.Trigger()
                 Talk.scheduled.pop(0)
 #            else:
 #                Talk.Conversation.schedulePriority("Äläs nyt kiirehdi... Sinulla on vielä tehtävä kesken.", Prefixes.koponen)
@@ -100,10 +101,11 @@ class Mission:
         if Mission.Task != None:
             for item in Mission.Task.items:
                 if item in player_inventory.storage:
-                    Mission.Task.Progress(1.0)
+                    KDS.Missions.SetProgress(Mission.Task.missionName, Mission.Task.safeName, 1.0)
                     Mission.Task = None
                     player_inventory.storage.pop(player_inventory.storage.index(item))
                     if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
+                        KDS.Missions.Listeners.KoponenReturnMission.Trigger()
                         Talk.scheduled.pop(0)
                     return
             # callVariation tarkoittaa esimerkiksi sitä, että sana "juusto" on taivutettu sanaksi "juustoa" tai sana "terotin" on taivutettu sanaksi "terotinta".

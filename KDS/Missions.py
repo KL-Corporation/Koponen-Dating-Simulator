@@ -70,8 +70,8 @@ class Listeners:
     InventorySlotSwitching = Listener()
     Movement = Listener()
     KoponenTalk = Listener()
-    KoponenAskDate = Listener()
     KoponenRequestMission = Listener()
+    KoponenReturnMission = Listener()
     LevelEnder = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
@@ -81,6 +81,7 @@ class Task:
     def __init__(self, missionName: str, safeName: str, text: str) -> None:
         global Missions
         self.safeName = safeName
+        self.missionName = missionName
         self.text = text
         self.renderedText = TaskFont.render(self.text, True, KDS.Colors.White)
         self.renderedTextSize = self.renderedText.get_size()
@@ -181,7 +182,7 @@ class Mission:
                 KDS.Koponen.Mission.Task = task
                 taskAssigned = True
 
-            if notFinished > 1:
+            if notFinished > 0:
                 self.PlaySound = True
                 if taskAssigned: break
         del notFinished, taskAssigned
