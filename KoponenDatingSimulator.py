@@ -35,22 +35,6 @@ from pygame.locals import *
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
-class PersistentPaths:
-    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
-    Cache = os.path.join(AppData, "cache")
-    Saves = os.path.join(AppData, "saves")
-    Logs = os.path.join(AppData, "logs")
-    Screenshots = os.path.join(AppData, "screenshots")
-    CustomMaps = os.path.join(AppData, "custom_maps")
-os.makedirs(PersistentPaths.AppData, exist_ok=True)
-os.makedirs(PersistentPaths.Cache, exist_ok=True)
-KDS.System.emptdir(PersistentPaths.Cache)
-KDS.System.hide(PersistentPaths.Cache)
-os.makedirs(PersistentPaths.Saves, exist_ok=True)
-os.makedirs(PersistentPaths.Logs, exist_ok=True)
-os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
-os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
-
 pygame.mixer.init()
 pygame.init()
 
@@ -77,6 +61,17 @@ text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
 text_icon.set_colorkey(KDS.Colors.White)
 level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
 level_cleared_icon.set_colorkey(KDS.Colors.White)
+
+pygame.event.set_allowed((
+    KEYDOWN,
+    MOUSEBUTTONDOWN,
+    MOUSEBUTTONUP,
+    KEYDOWN,
+    KEYUP,
+    MOUSEWHEEL,
+    QUIT,
+    WINDOWFOCUSLOST
+))
 #endregion
 #region Quit Handling
 def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool = False):
@@ -93,6 +88,22 @@ def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool 
         level_finished_running = False
 #endregion
 #region Initialisation
+class PersistentPaths:
+    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
+    Cache = os.path.join(AppData, "cache")
+    Saves = os.path.join(AppData, "saves")
+    Logs = os.path.join(AppData, "logs")
+    Screenshots = os.path.join(AppData, "screenshots")
+    CustomMaps = os.path.join(AppData, "custom_maps")
+os.makedirs(PersistentPaths.AppData, exist_ok=True)
+os.makedirs(PersistentPaths.Cache, exist_ok=True)
+KDS.System.emptdir(PersistentPaths.Cache)
+KDS.System.hide(PersistentPaths.Cache)
+os.makedirs(PersistentPaths.Saves, exist_ok=True)
+os.makedirs(PersistentPaths.Logs, exist_ok=True)
+os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
+os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
+
 KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
 KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
 KDS.Logging.debug("Initialising Game...")
