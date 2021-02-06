@@ -32,7 +32,7 @@ import shutil
 import json
 import datetime
 from pygame.locals import *
-from typing import Any, Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
 class PersistentPaths:
@@ -1500,6 +1500,8 @@ KDS.Logging.debug("Loading Items...")
 class Item:
 
     serialNumbers = {}
+    
+    tipItem = None
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
         self.texture = texture if texture != None else i_textures[serialNumber]
@@ -1511,7 +1513,7 @@ class Item:
 
     @staticmethod
     # Item_list is a list
-    def renderUpdate(Item_list, Surface: pygame.Surface, scroll: list, DebugMode = False):
+    def renderUpdate(Item_list, Surface: pygame.Surface, scroll: Sequence[int], DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
@@ -1526,18 +1528,18 @@ class Item:
                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, Surface: pygame.Surface, scroll: Sequence[int], functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
+    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
         index = 0
         showItemTip = True
         collision = False
-        shortest_index = 0
+        shortest_item = None
         shortest_distance = sys.maxsize
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 collision = True
                 distance = KDS.Math.getDistance(item.rect.midbottom, collidingRect.midbottom)
                 if distance < shortest_distance:
-                    shortest_index = index
+                    shortest_item = item
                     shortest_distance = distance
                 if functionKey:
                     if item.serialNumber not in inventoryDobulesSerialNumbers:
@@ -1553,8 +1555,8 @@ class Item:
                                 item.pickup()
                                 Item_list.pop(index)
                                 showItemTip = False
-                            except IndexError as e:
-                                KDS.Logging.AutoError(f"A non-inventory item was tried to pick up and caused an error: {e}")
+                            except Exception as e:
+                                KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
                     else:
                         if inventory.SIndex < inventory.size - 1:
                             if inventory.storage[inventory.SIndex] == Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
@@ -1565,8 +1567,7 @@ class Item:
                                 showItemTip = False
             index += 1
         
-        if collision and showItemTip:
-            Surface.blit(itemTip, (Item_list[shortest_index].rect.centerx - itemTip.get_width() // 2 - scroll[0], Item_list[shortest_index].rect.bottom - 45 - scroll[1]))
+        Item.tipItem = shortest_item if collision and showItemTip else None
 
         return Item_list, inventory
 
@@ -3546,7 +3547,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Items, Player.inventory = Item.checkCollisions(Items, Player.rect, screen, scroll, KDS.Keys.functionKey.pressed, Player.inventory)
+    Items, Player.inventory = Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
     for enemy in Enemies:
         if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200:
@@ -3646,6 +3647,11 @@ while main_running:
     for ov in overlays:
         screen.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
     
+    #Item Tip
+    if Item.tipItem != None:
+        screen.blit(itemTip, (Item.tipItem.rect.centerx - itemTip.get_width() // 2 - scroll[0], Item.tipItem.rect.bottom - 45 - scroll[1]))
+    
+    #Ambient Light
     if ambient_light:
         ambient_tint.fill(ambient_light_tint)
         screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
