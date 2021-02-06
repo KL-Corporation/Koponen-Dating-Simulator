@@ -1083,10 +1083,11 @@ class LevelEnderDoor(Tile):
         self.checkCollision = False
         self.opened = False
         self.locked = False
+        self.showTip = False
 
-    def update(self, showTip: bool = False):
+    def update(self):
         if self.rect.colliderect(Player.rect):
-            if showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if self.showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 if not self.locked:
                     KDS.Missions.Listeners.LevelEnder.Trigger()
@@ -2776,7 +2777,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
         nonlocal map_names
         map_names = {}
         try:
-            with open("Assets/Maps/StoryMode/names.kdf", "r", encoding="utf-8") as file:
+            with open("Assets/Maps/StoryMode/names.dat", "r", encoding="utf-8") as file:
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
@@ -3034,7 +3035,7 @@ def main_menu():
         map_names = {}
         custom_maps_names = {}
         try:
-            with open("Assets/Maps/names.kdf", "r") as file:
+            with open("Assets/Maps/names.dat", "r") as file:
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
