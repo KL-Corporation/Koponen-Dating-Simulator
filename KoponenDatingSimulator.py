@@ -634,18 +634,18 @@ class Inventory:
                 self.SIndex = index
 
     def dropItem(self):
-        if self.storage[self.SIndex] != Inventory.emptySlot:
-            KDS.Missions.Listeners.ItemDrop.Trigger(self.storage[self.SIndex].serialNumber)
+        temp = self.storage[self.SIndex]
+        if not isinstance(temp, str):
+            KDS.Missions.Listeners.ItemDrop.Trigger(temp.serialNumber)
             if self.SIndex < self.size - 1:
                 if self.storage[self.SIndex + 1] == Inventory.doubleItem:
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
-            temp = self.storage[self.SIndex]
             self.storage[self.SIndex] = Inventory.emptySlot
             return temp
 
     def useItemAtIndex(self, index: int, surface: pygame.Surface, *args):
         item = self.storage[index]
-        if item not in (Inventory.emptySlot, Inventory.doubleItem):
+        if not isinstance(item, str):
             dumpVals = item.use(args, surface)
             if Player.direction: renderOffset = -dumpVals.get_width()
             else: renderOffset = Player.rect.width + 2
