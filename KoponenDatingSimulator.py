@@ -463,6 +463,7 @@ class WorldData():
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
         KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/enabled", False)
+        KoponenForceIdle = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceIdle", False)
         TalkEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
         pygame.event.pump()
 
@@ -470,6 +471,7 @@ class WorldData():
         Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
         Koponen.setEnabled(KoponenEnabled)
         Koponen.allow_talk = TalkEnabled
+        Koponen.forceIdle = KoponenForceIdle
     
         enemySerialNumbers = {
             1: KDS.AI.Imp,

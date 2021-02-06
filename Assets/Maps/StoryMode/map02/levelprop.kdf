@@ -8,10 +8,12 @@
     "Entities": {
         "Koponen": {
             "startPos": [
-                500,
-                0
+                2686,
+                714
             ],
-            "Enabled": true
+            "enabled": true,
+            "forceIdle": true,
+            "talk": true
         },
         "Player": {
             "startPos": [

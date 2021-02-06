@@ -287,6 +287,7 @@ class KoponenEntity:
         self.y_velocity = 0
 
         self._move = True
+        self.forceIdle = False
         self.enabled = True
 
         self._aut_moving = True
@@ -298,7 +299,7 @@ class KoponenEntity:
         self.allow_talk = False
 
     def update(self, tiles):
-        if self._move:
+        if self._move and not self.forceIdle:
 
             #region Handling randomisation
             if self._path_finder_on:
