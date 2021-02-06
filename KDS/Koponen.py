@@ -81,11 +81,6 @@ def init(playerName: str):
     ]
     random.shuffle(ambientTalkAudios)
 
-class Date:
-    @staticmethod
-    def start(display: pygame.Surface, KDS_Quit, clock: pygame.time.Clock, fps: int):
-        pass
-
 class Mission:
     # Will be automatically assigned by KDS.Missions
     Task = None
@@ -93,9 +88,12 @@ class Mission:
     @staticmethod
     def Request():
         if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONREQUEST:
-            Talk.scheduled.pop(0)
-        else:
-            Talk.Conversation.schedule("Nyt on kyllä ideat lopussa... Minulla ei ole hajuakaan mitä tekemistä keksisin sinulle.", Prefixes.koponen)
+            if Mission.Task != None:
+                Talk.scheduled.pop(0)
+#            else:
+#                Talk.Conversation.schedulePriority("Äläs nyt kiirehdi... Sinulla on vielä tehtävä kesken.", Prefixes.koponen)
+#        else:
+#            Talk.Conversation.schedulePriority("Nyt on kyllä ideat lopussa... Minulla ei ole hajuakaan mitä tekemistä keksisin sinulle.", Prefixes.koponen)
     
     @staticmethod
     def Return(player_inventory):
@@ -109,9 +107,9 @@ class Mission:
                         Talk.scheduled.pop(0)
                     return
             # callVariation tarkoittaa esimerkiksi sitä, että sana "juusto" on taivutettu sanaksi "juustoa" tai sana "terotin" on taivutettu sanaksi "terotinta".
-            Talk.Conversation.schedule(f"Olen pahoillani, en löydä {Mission.Task.callVariation} pöksyistäsi.")
-        else:
-            Talk.Conversation.schedule("Sinulla ei ole mitään palautettavaa tehtävää.", Prefixes.koponen)
+#            Talk.Conversation.schedulePriority(f"Olen pahoillani, en löydä {Mission.Task.callVariation} pöksyistäsi.")
+#        else:
+#            Talk.Conversation.schedulePriority("Sinulla ei ole mitään palautettavaa tehtävää.", Prefixes.koponen)
 
 class Talk:
     running = False
@@ -143,10 +141,17 @@ class Talk:
             prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
             for _text in lineSplit: Talk.scheduled.append(prefix + _text)
+            
+        @staticmethod
+        def schedulePriority(text: str, prefix: str = Prefixes.player):
+            prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
+            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
+            for _text in reversed(lineSplit): Talk.scheduled.insert(0, prefix + _text)
+            #                                                   ^ Not thread-safe
         
         @staticmethod
         def update():
-            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and not (Mission.Task != None and Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)):
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
                 if Talk.audioChannel == None or Talk.audioChannel.get_sound() != Talk.soundPlaying:
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
                     Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying)
@@ -232,7 +237,6 @@ class Talk:
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
         request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
         return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, "RETURN MISSION")
-        date_button = KDS.UI.Button(pygame.Rect(50, 610, 450, 80), Date.start, "ASK FOR A DATE")
         
         while Talk.running:
             mouse_pos = pygame.mouse.get_pos()
@@ -264,7 +268,6 @@ class Talk:
             exit_button.update(display, mouse_pos, c)
             request_mission_button.update(display, mouse_pos, c)
             return_mission_button.update(display, mouse_pos, c, player_inventory)
-            date_button.update(display, mouse_pos, c)
 
             pygame.display.flip()
             display.fill(KDS.Colors.Black)

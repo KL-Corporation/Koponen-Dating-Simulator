@@ -399,7 +399,7 @@ class WorldData():
     MapSize = (0, 0)
     @staticmethod
     def LoadMap(MapPath: str):
-        global Items, tiles, Enemies, Projectiles, overlays
+        global Items, tiles, Enemies, Projectiles, overlays, Player
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
@@ -459,6 +459,8 @@ class WorldData():
         ambient_light = KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/enabled", False)
         ambient_light_tint = tuple(KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/tint", (255, 255, 255)))
         Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
+        
+        Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
         
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
@@ -1082,9 +1084,9 @@ class LevelEnderDoor(Tile):
         self.opened = False
         self.locked = False
 
-    def update(self):
+    def update(self, showTip: bool = False):
         if self.rect.colliderect(Player.rect):
-            screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 if not self.locked:
                     KDS.Missions.Listeners.LevelEnder.Trigger()
@@ -2768,17 +2770,17 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True):
     if (show_loading): KDS.Loading.Circle.Stop()
     return 0
 
-def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
+def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
     map_names = {}
     def load_map_names():
         nonlocal map_names
         map_names = {}
         try:
-            with open("Assets/Maps/StoryMode/names.kdf", "r") as file:
+            with open("Assets/Maps/StoryMode/names.kdf", "r", encoding="utf-8") as file:
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
-                    for u in tmp_split: u.strip()
+                    for i in range(len(tmp_split)): tmp_split[i] = tmp_split[i].strip()
                     map_names[int(tmp_split[0])] = tmp_split[1]
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
@@ -2821,11 +2823,12 @@ def play_story(saveIndex: int = -1, newSave: bool = True, playAnimation: bool = 
                     _break = True
             clock.tick_busy_loop(60)
     
-    map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
-    
     pygame.mixer.music.stop()
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=show_loading)
+    
+    playAnimation = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
     if playAnimation:
+        map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
         pygame.mixer.music.pause()
         KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
         doAnimation(False)
@@ -3035,7 +3038,7 @@ def main_menu():
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
-                    for u in tmp_split: u.strip()
+                    for i in range(len(tmp_split)): tmp_split[i] = tmp_split[i].strip()
                     map_names[int(tmp_split[0])] = tmp_split[1]
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")

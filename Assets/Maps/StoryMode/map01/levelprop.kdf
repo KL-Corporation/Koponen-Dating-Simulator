@@ -17,7 +17,8 @@
             "startPos": [
                 5134,
                 1156
-            ]
+            ],
+            "spawnInverted": true
         }
     },
     "Rendering": {
