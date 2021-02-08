@@ -276,23 +276,22 @@
         "3": false,
         "8": false
     },
-"Mikä on pelaajan hyppykorkeus normaalisti Minecraftin 1.8 -versiossa": {
-"1,249m": true,
-"69,420mm": false,
-"1,25m": false,
-"1,252m": false
-},
-"Mitkä hormonit aiheuttavat ihmiskehon pituuskasvun?": {
-"Somatotropiini": true,
-"Somatropiini": true,
-"Tyroksiini": false,
-"Pippeliini": false
-},
-"Mikä näistä EI OLE syy väestönkasvuun?":
-{
-"Kondomien hajoaminen": false,
-"Lisääntyminen": false,
-"Seksi": false,
-"GameStop:in osakkeiden ostaminen": true
-}
+    "Mikä on pelaajan hyppykorkeus normaalisti Minecraftin 1.8 -versiossa": {
+        "1,249m": true,
+        "69,420mm": false,
+        "1,25m": false,
+        "1,252m": false
+    },
+    "Mitkä hormonit aiheuttavat ihmiskehon pituuskasvun?": {
+        "Somatotropiini": true,
+        "Somatropiini": true,
+        "Tyroksiini": false,
+        "Pippeliini": false
+    },
+    "Mikä näistä EI OLE syy väestönkasvuun?": {
+        "Kondomien hajoaminen": false,
+        "Lisääntyminen": false,
+        "Seksi": false,
+        "GameStop:in osakkeiden ostaminen": true
+    }
 }
