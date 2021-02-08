@@ -151,7 +151,7 @@
         "Josif Vissarionovitš Džugašvili": true,
         "Vladimir Iljitš Lenin": false
     },
-    "20-vuotiaalla maalaismiehellä on ongelma. Hänen tarvitsee saada viiden päivän kuluessa toimitettua 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Miten hän hankkii loput rynnäkkökiväärit?": {
+    "20-vuotiaalla maalaismiehellä on ongelma. Hänen täytyy toimittaa viiden päivän kuluessa 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Mitä eri tapoja hänellä on hankkia loput rynnäkkökiväärit?": {
         "Mies ostaa kiväärit Lidlistä": false,
         "Mies varastaa kiväärit Lidlistä": false,
         "Mies kutsuu koskenlaskijaa tuomaan kiväärit": true,
@@ -275,5 +275,17 @@
         "2": false,
         "3": false,
         "8": false
-    }
+    },
+"Mikä on pelaajan hyppykorkeus normaalisti Minecraftin 1.8 -versiossa": {
+"1,249m": true,
+"69,420mm": false,
+"1,25m": false,
+"1,252m": false
+},
+"Mitkä hormonit aiheuttavat ihmiskehon pituuskasvun?": {
+"Somatotropiini": true,
+"Somatropiini": true,
+"Tyroksiini": false,
+"Pippeliini": false
+}
 }
