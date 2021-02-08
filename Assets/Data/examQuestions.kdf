@@ -81,7 +81,7 @@
         "1 980 000 000 000 000 000 000 000 000 000 000g": true,
         "3 094 000 000 000 000 000 000 000 000 000 000g": false
     },
-    "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä nyt on?": {
+    "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä on nyt?": {
         "69 karkkia": false,
         "Diabetes": true,
         "351 karkkia": true
@@ -287,5 +287,12 @@
 "Somatropiini": true,
 "Tyroksiini": false,
 "Pippeliini": false
+},
+"Mikä näistä EI OLE syy väestönkasvuun?":
+{
+"Kondomien hajoaminen": false,
+"Lisääntyminen": false,
+"Seksi": false,
+"GameStop:in osakkeiden ostaminen": true
 }
 }
