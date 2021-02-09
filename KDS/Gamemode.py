@@ -49,6 +49,7 @@ def SetGamemode(Gamemode: int, LevelIndex: int = 0):
     index = LevelIndex
     
     KDS.Missions.Clear()
+    KDS.Koponen.Talk.Conversation.clear()
     if gamemode == Modes.Story:
         if index == 1:
             Presets.Tutorial()
@@ -61,9 +62,9 @@ def SetGamemode(Gamemode: int, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule("Hei! Siinä sinä oletkin. Halusinkin kertoa sinulle uudesta tavasta nostaa num... Hetkinen, ethän sinä ole tyttö... tai edes oppilaani. No jaa, näytät kuitenkin ihan fiksulta kaverilta.", KDS.Koponen.Prefixes.koponen)
             KDS.Koponen.Talk.Conversation.schedule("Voit nostaa numeroasi suorittamalla tehtäviä. Voisit aloittaa pyytämällä tehtävää.", KDS.Koponen.Prefixes.koponen)
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST)
-            KDS.Koponen.Talk.Conversation.schedule("Kahvikuppini taitaa olla hukassa... Olisitko kiltti ja etsisit sen?")
+            KDS.Koponen.Talk.Conversation.schedule("Kahvikuppini taitaa olla hukassa... Olisitko kiltti ja etsisit sen?", KDS.Koponen.Prefixes.koponen)
             
-            KDS.Missions.InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
+            KDS.Missions.InitialiseMission("coffee_mission", "Kuumaa Kamaa")
             KDS.Missions.InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi", (KDS.Missions.Listeners.ItemPickup, 3, 1.0))
             KDS.Missions.InitialiseKoponenTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi", "kahvikuppi", "kahvikupin", 3)
             

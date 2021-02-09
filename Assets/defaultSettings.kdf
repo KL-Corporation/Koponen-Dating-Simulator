@@ -13,7 +13,7 @@
             "music": 0.25,
             "effect": 0.75
         },
-        "walkSound": true
+        "walkSound": false
     },
     "Renderer": {
         "fullscreen": false,
@@ -43,13 +43,6 @@
         "maxMap": "99"
     },
     "UI": {
-        "cursor": 0,
-
-        "Sliders": {
-
-        },
-        "Switches": {
-
-        }
+        "cursor": 0
     }
 }

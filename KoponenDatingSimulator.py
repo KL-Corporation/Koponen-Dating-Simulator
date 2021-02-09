@@ -2534,175 +2534,178 @@ def console(oldSurf: pygame.Surface):
         if command_list == None:
             consoleRunning = False
             break
-
-        if command_list[0] == "give":
-            if command_list[1] != "key":
-                if command_list[1] in itemDict:
-                    consoleItemSerial = int(itemDict[command_list[1]])
-                    if consoleItemSerial in inventoryDobulesSerialNumbers:
-                        if Player.inventory.SIndex >= Player.inventory.size:
-                            Player.inventory.SIndex = Player.inventory.size - 2
-                        Player.inventory.storage[Player.inventory.SIndex + 1] = Inventory.doubleItem
-                    Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial)
-                    KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
-                else: KDS.Console.Feed.append(f"Item not found.")
-            else:
-                if len(command_list) > 2:
+        try:
+            if command_list[0] == "give":
+                if command_list[1] != "key":
+                    if command_list[1] in itemDict:
+                        consoleItemSerial = int(itemDict[command_list[1]])
+                        if consoleItemSerial in inventoryDobulesSerialNumbers:
+                            if Player.inventory.SIndex >= Player.inventory.size:
+                                Player.inventory.SIndex = Player.inventory.size - 2
+                            Player.inventory.storage[Player.inventory.SIndex + 1] = Inventory.doubleItem
+                        Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial)
+                        KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
+                    else: KDS.Console.Feed.append(f"Item not found.")
+                else:
+                    if len(command_list) > 2:
+                        if command_list[2] in Player.keys:
+                            Player.keys[command_list[2]] = True
+                            KDS.Console.Feed.append(f"Item was given: {command_list[1]} {command_list[2]}")
+                        else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
+                    else: KDS.Console.Feed.append("No key specified!")
+            elif command_list[0] == "remove":
+                if command_list[1] == "item":
+                    if Player.inventory.storage[Player.inventory.SIndex] != Inventory.emptySlot:
+                        KDS.Console.Feed.append(f"Item was removed: {Player.inventory.storage[Player.inventory.SIndex]}")
+                        Player.inventory.storage[Player.inventory.SIndex] = Inventory.emptySlot
+                    else: KDS.Console.Feed.append("Selected inventory slot is already empty!")
+                elif command_list[1] == "key":
                     if command_list[2] in Player.keys:
-                        Player.keys[command_list[2]] = True
-                        KDS.Console.Feed.append(f"Item was given: {command_list[1]} {command_list[2]}")
+                        if Player.keys[command_list[2]] == True:
+                            Player.keys[command_list[2]] = False
+                            KDS.Console.Feed.append(f"Item was removed: {command_list[1]} {command_list[2]}")
+                        else: KDS.Console.Feed.append("You don't have that item!")
                     else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
-                else: KDS.Console.Feed.append("No key specified!")
-        elif command_list[0] == "remove":
-            if command_list[1] == "item":
-                if Player.inventory.storage[Player.inventory.SIndex] != Inventory.emptySlot:
-                    KDS.Console.Feed.append(f"Item was removed: {Player.inventory.storage[Player.inventory.SIndex]}")
-                    Player.inventory.storage[Player.inventory.SIndex] = Inventory.emptySlot
-                else: KDS.Console.Feed.append("Selected inventory slot is already empty!")
-            elif command_list[1] == "key":
-                if command_list[2] in Player.keys:
-                    if Player.keys[command_list[2]] == True:
-                        Player.keys[command_list[2]] = False
-                        KDS.Console.Feed.append(f"Item was removed: {command_list[1]} {command_list[2]}")
-                    else: KDS.Console.Feed.append("You don't have that item!")
-                else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
-            else: KDS.Console.Feed.append("Not a valid remove command.")
-        elif command_list[0] == "playboy":
-            KDS.Scores.koponen_happiness = 1000
-            KDS.Console.Feed.append("You are now a playboy")
-            KDS.Console.Feed.append(f"Koponen happines: {KDS.Scores.koponen_happiness}")
-        elif command_list[0] == "kill" or command_list[0] == "stop":
-            KDS.Console.Feed.append("Stopping Game...")
-            KDS.Logging.info("Stop command issued through console.", True)
-            KDS_Quit()
-        elif command_list[0] == "killme":
-            KDS.Console.Feed.append("Player Killed.")
-            KDS.Logging.info("Player kill command issued through console.", True)
-            Player.health = 0
-        elif command_list[0] == "terms":
-            setTerms = False
-            if len(command_list) == 2:
-                setTerms = KDS.Convert.ToBool(command_list[1], None)
-                if setTerms != None:
-                    KDS.ConfigManager.SetSetting("Data/Terms/accepted", setTerms)
-                    KDS.Console.Feed.append(f"Terms status set to: {setTerms}")
+                else: KDS.Console.Feed.append("Not a valid remove command.")
+            elif command_list[0] == "playboy":
+                KDS.Scores.koponen_happiness = 1000
+                KDS.Console.Feed.append("You are now a playboy")
+                KDS.Console.Feed.append(f"Koponen happines: {KDS.Scores.koponen_happiness}")
+            elif command_list[0] == "kill" or command_list[0] == "stop":
+                KDS.Console.Feed.append("Stopping Game...")
+                KDS.Logging.info("Stop command issued through console.", True)
+                KDS_Quit()
+            elif command_list[0] == "killme":
+                KDS.Console.Feed.append("Player Killed.")
+                KDS.Logging.info("Player kill command issued through console.", True)
+                Player.health = 0
+            elif command_list[0] == "terms":
+                setTerms = False
+                if len(command_list) == 2:
+                    setTerms = KDS.Convert.ToBool(command_list[1], None)
+                    if setTerms != None:
+                        KDS.ConfigManager.SetSetting("Data/Terms/accepted", setTerms)
+                        KDS.Console.Feed.append(f"Terms status set to: {setTerms}")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
-            else:
-                KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
-        elif command_list[0] == "woof":
-            if len(command_list) == 2:
-                woofState = KDS.Convert.ToBool(command_list[1], None)
-                if woofState != None:
-                    KDS.Console.Feed.append("Woof state assignment has not been implemented for the new AI system yet.")
+            elif command_list[0] == "woof":
+                if len(command_list) == 2:
+                    woofState = KDS.Convert.ToBool(command_list[1], None)
+                    if woofState != None:
+                        KDS.Console.Feed.append("Woof state assignment has not been implemented for the new AI system yet.")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper state for woof")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for woof")
-            else:
-                KDS.Console.Feed.append("Please provide a proper state for woof")
-        elif command_list[0] == "infinite":
-            if len(command_list) == 3:
-                if command_list[1] == "health":
-                    h_state = KDS.Convert.ToBool(command_list[2], None)
-                    if h_state != None:
-                        Player.infiniteHealth = h_state
-                        KDS.Console.Feed.append(f"infinite health state has been set to: {Player.infiniteHealth}")
+            elif command_list[0] == "infinite":
+                if len(command_list) == 3:
+                    if command_list[1] == "health":
+                        h_state = KDS.Convert.ToBool(command_list[2], None)
+                        if h_state != None:
+                            Player.infiniteHealth = h_state
+                            KDS.Console.Feed.append(f"infinite health state has been set to: {Player.infiniteHealth}")
+                        else:
+                            KDS.Console.Feed.append("Please provide a proper state for infinite health.")
+                    elif command_list[1] == "ammo":
+                        a_state = KDS.Convert.ToBool(command_list[2], None)
+                        if a_state != None:
+                            Player.infiniteAmmo = a_state
+                            KDS.Console.Feed.append(f"infinite ammo state has been set to: {Player.infiniteAmmo}")
+                        else:
+                            KDS.Console.Feed.append("Please provide a proper state for infinite ammo.")
                     else:
-                        KDS.Console.Feed.append("Please provide a proper state for infinite health.")
-                elif command_list[1] == "ammo":
-                    a_state = KDS.Convert.ToBool(command_list[2], None)
-                    if a_state != None:
-                        Player.infiniteAmmo = a_state
-                        KDS.Console.Feed.append(f"infinite ammo state has been set to: {Player.infiniteAmmo}")
-                    else:
-                        KDS.Console.Feed.append("Please provide a proper state for infinite ammo.")
+                        KDS.Console.Feed.append("Not a valid infinite command.")
                 else:
                     KDS.Console.Feed.append("Not a valid infinite command.")
-            else:
-                KDS.Console.Feed.append("Not a valid infinite command.")
-        elif command_list[0] == "finish":
-            if len(command_list) > 1 and command_list[1] == "missions":
-                KDS.Console.Feed.append("Missions Finished.")
-                KDS.Logging.info("Mission finish issued through console.", True)
-                KDS.Missions.Finish()
-            elif len(command_list) == 1:
-                KDS.Console.Feed.append("Level Finished.")
-                KDS.Logging.info("Level finish issued through console.", True)
-                level_finished = True
-            else:
-                KDS.Console.Feed.append("Please provide a proper finish type.")
-        elif command_list[0] == "teleport":
-            if len(command_list) == 3:
-                if command_list[1][0] == "~":
-                    if len(command_list[1]) < 2: command_list[1] += "0"
-                    xt = command_list[1][1:]
-                    try: xt = Player.rect.x + int(xt)
-                    except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+            elif command_list[0] == "finish":
+                if len(command_list) > 1 and command_list[1] == "missions":
+                    KDS.Console.Feed.append("Missions Finished.")
+                    KDS.Logging.info("Mission finish issued through console.", True)
+                    KDS.Missions.Finish()
+                elif len(command_list) == 1:
+                    KDS.Console.Feed.append("Level Finished.")
+                    KDS.Logging.info("Level finish issued through console.", True)
+                    level_finished = True
                 else:
-                    xt = command_list[1]
-                    try: xt = int(xt)
-                    except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+                    KDS.Console.Feed.append("Please provide a proper finish type.")
+            elif command_list[0] == "teleport":
+                if len(command_list) == 3:
+                    if command_list[1][0] == "~":
+                        if len(command_list[1]) < 2: command_list[1] += "0"
+                        xt = command_list[1][1:]
+                        try: xt = Player.rect.x + int(xt)
+                        except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+                    else:
+                        xt = command_list[1]
+                        try: xt = int(xt)
+                        except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
 
-                if command_list[2][0] == "~":
-                    if len(command_list[2]) < 2: command_list[2] += "0"
-                    yt = command_list[2][1:]
-                    try: yt = Player.rect.y + int(yt)
-                    except ValueError:
-                        if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
-                        else: KDS.Console.Feed.append("Y-coordinate invalid.")
-                else:
-                    yt = command_list[2]
-                    try: yt = int(yt)
-                    except ValueError:
-                        if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
-                        else: KDS.Console.Feed.append("Y-coordinate invalid.")
-                
-                if isinstance(xt, int) and isinstance(yt, int):
-                    Player.rect.topleft = (xt, yt)
-                    KDS.Console.Feed.append(f"Teleported player to {xt}, {yt}")
-            else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
-        elif command_list[0] == "summon":
-            if len(command_list) > 1:
-                summonEntity = {
-                    "imp": lambda e : e.append(KDS.AI.Imp(Player.rect.topright)),
-                    "sergeantzombie": lambda e : e.append(KDS.AI.SergeantZombie(Player.rect.topright)),
-                    "drugdealer": lambda e : e.append(KDS.AI.DrugDealer(Player.rect.topright)),
-                    "turboshotgunner": lambda e : e.append(KDS.AI.TurboShotgunner(Player.rect.topright)),
-                    "methmaker": lambda e : e.append(KDS.AI.MethMaker(Player.rect.topright)),
-                    "cavemonster": lambda e : e.append(KDS.AI.CaveMonster(Player.rect.topright))
-                }
-                try:
-                    global Enemies
-                    Enemies = summonEntity[command_list[1]](Enemies)
-                except KeyError:
-                    KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
-        elif command_list[0] == "fly":
-            if len(command_list) == 2:
-                flyState = KDS.Convert.ToBool(command_list[1], None)
-                if flyState != None:
-                    Player.fly = flyState
-                    KDS.Console.Feed.append(f"Fly state has been set to: {Player.fly}")
+                    if command_list[2][0] == "~":
+                        if len(command_list[2]) < 2: command_list[2] += "0"
+                        yt = command_list[2][1:]
+                        try: yt = Player.rect.y + int(yt)
+                        except ValueError:
+                            if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
+                            else: KDS.Console.Feed.append("Y-coordinate invalid.")
+                    else:
+                        yt = command_list[2]
+                        try: yt = int(yt)
+                        except ValueError:
+                            if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
+                            else: KDS.Console.Feed.append("Y-coordinate invalid.")
+                    
+                    if isinstance(xt, int) and isinstance(yt, int):
+                        Player.rect.topleft = (xt, yt)
+                        KDS.Console.Feed.append(f"Teleported player to {xt}, {yt}")
+                else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
+            elif command_list[0] == "summon":
+                if len(command_list) > 1:
+                    summonEntity = {
+                        "imp": lambda e : e.append(KDS.AI.Imp(Player.rect.topright)),
+                        "sergeantzombie": lambda e : e.append(KDS.AI.SergeantZombie(Player.rect.topright)),
+                        "drugdealer": lambda e : e.append(KDS.AI.DrugDealer(Player.rect.topright)),
+                        "turboshotgunner": lambda e : e.append(KDS.AI.TurboShotgunner(Player.rect.topright)),
+                        "methmaker": lambda e : e.append(KDS.AI.MethMaker(Player.rect.topright)),
+                        "cavemonster": lambda e : e.append(KDS.AI.CaveMonster(Player.rect.topright))
+                    }
+                    try:
+                        global Enemies
+                        Enemies = summonEntity[command_list[1]](Enemies)
+                    except KeyError:
+                        KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
+            elif command_list[0] == "fly":
+                if len(command_list) == 2:
+                    flyState = KDS.Convert.ToBool(command_list[1], None)
+                    if flyState != None:
+                        Player.fly = flyState
+                        KDS.Console.Feed.append(f"Fly state has been set to: {Player.fly}")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper state for fly")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for fly")
+            elif command_list[0] == "help":
+                KDS.Console.Feed.append("""
+        Console Help:
+            - give => Adds the specified item to your inventory.
+            - playboy => Sets Koponen's happiness to unseen levels.
+            - kill | stop => Stops the game.
+            - killme => Kills the player.
+            - terms => Sets Terms and Conditions accepted to the specified value.
+            - woof => Sets all bulldogs anger to the specified value.
+            - finish => Finishes level or missions.
+            - infinite => Sets the specified infinite type to the specified value.
+            - teleport => Teleports player either to static coordinates or relative coordinates.
+            - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
+            - fly => Sets fly mode to the specified value.
+            - help => Shows the list of commands.
+        """)
             else:
-                KDS.Console.Feed.append("Please provide a proper state for fly")
-        elif command_list[0] == "help":
-            KDS.Console.Feed.append("""
-    Console Help:
-        - give => Adds the specified item to your inventory.
-        - playboy => Sets Koponen's happiness to unseen levels.
-        - kill | stop => Stops the game.
-        - killme => Kills the player.
-        - terms => Sets Terms and Conditions accepted to the specified value.
-        - woof => Sets all bulldogs anger to the specified value.
-        - finish => Finishes level or missions.
-        - infinite => Sets the specified infinite type to the specified value.
-        - teleport => Teleports player either to static coordinates or relative coordinates.
-        - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
-        - fly => Sets fly mode to the specified value.
-        - help => Shows the list of commands.
-    """)
-        else:
-            KDS.Console.Feed.append("Invalid Command.")
+                KDS.Console.Feed.append("Invalid Command.")
+        except Exception as e:
+            KDS.Logging.AutoError(f"An exception occured while running console. Exception below:\n{e}")
+            KDS.Console.Feed.append("An exception occured!")
 #endregion
 #region Terms and Conditions
 def agr():
@@ -2969,7 +2972,7 @@ def settings_menu():
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
-    walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), True, custom_path="Mixer/walkSound")
+    walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), False, custom_path="Mixer/walkSound")
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))

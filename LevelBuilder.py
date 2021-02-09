@@ -275,7 +275,8 @@ class tileInfo:
                 tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
                 overlay = Atextures[tileprops[tilepropsPath]["overlay"][0]][tileprops[tilepropsPath]["overlay"]] if tilepropsPath in tileprops and "overlay" in tileprops[tilepropsPath] else None
                 for index, number in enumerate(srlist):
-                    if int(number) != 0:
+                    intNumber = int(number)
+                    if intNumber != 0:
                         unitTexture = None
                         if number[0] == "3":
                             teleportTextureCheck = int(number[1:])
@@ -303,6 +304,8 @@ class tileInfo:
                             scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTextureSize[0] * scaleMultiplier), int(unitTextureSize[1] * scaleMultiplier)))
                             if number in trueScale:
                                 Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_height() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                            elif intNumber in (23, 24, 25, 26):
+                                Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1]))
                             else:
                                 if number[0] == "0" and tilepropsPath in tileprops:
                                     tilepropsOverlay = scaledUnitTexture.convert_alpha()

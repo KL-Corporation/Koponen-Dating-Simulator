@@ -17,7 +17,7 @@ import KDS.UI
 import KDS.AI
 
 #region Settings
-text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 30, bold=0, italic=0)
+text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 20, bold=0, italic=0)
 text_color = KDS.Colors.MidnightBlue
 background_color = KDS.Colors.CloudWhite
 background_outline_color = KDS.Colors.MidnightBlue
@@ -98,15 +98,20 @@ class Mission:
     
     @staticmethod
     def Return(player_inventory):
-        if Mission.Task != None:
+        if Mission.Task != None and Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
             for item in Mission.Task.items:
-                if item in player_inventory.storage:
+                inInv = None
+                for invItem in player_inventory.storage:
+                    if invItem.serialNumber == item:
+                        inInv = invItem
+                        break
+                    
+                if inInv != None:
                     KDS.Missions.SetProgress(Mission.Task.missionName, Mission.Task.safeName, 1.0)
                     Mission.Task = None
-                    player_inventory.storage.pop(player_inventory.storage.index(item))
-                    if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
-                        KDS.Missions.Listeners.KoponenReturnMission.Trigger()
-                        Talk.scheduled.pop(0)
+                    player_inventory.storage.pop(player_inventory.storage.index(inInv))
+                    KDS.Missions.Listeners.KoponenReturnMission.Trigger()
+                    Talk.scheduled.pop(0)
                     return
             # callVariation tarkoittaa esimerkiksi sitä, että sana "juusto" on taivutettu sanaksi "juustoa" tai sana "terotin" on taivutettu sanaksi "terotinta".
 #            Talk.Conversation.schedulePriority(f"Olen pahoillani, en löydä {Mission.Task.callVariation} pöksyistäsi.")
@@ -165,7 +170,7 @@ class Talk:
                     deleteCount += 1
                 if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index: Talk.Conversation.scrollToBottom()
                 else: Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
-            elif len(Talk.scheduled) <= 0 or (Mission.Task != None and Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)):
+            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)) and Talk.Conversation.animationProgress == -1:
                 for audio in ambientTalkAudios: audio.stop()
                 Talk.audioChannel = None
         
@@ -209,6 +214,11 @@ class Talk:
             
             pygame.draw.rect(Talk.display, background_outline_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), conversation_outline_width, conversation_border_radius)
             return Talk.display
+        
+        @staticmethod
+        def clear():
+            Talk.lines.clear()
+            Talk.scheduled.clear()
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool):
@@ -239,6 +249,8 @@ class Talk:
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
         request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
         return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, "RETURN MISSION")
+        
+        KDS.Missions.Listeners.KoponenTalk.Trigger()
         
         while Talk.running:
             mouse_pos = pygame.mouse.get_pos()

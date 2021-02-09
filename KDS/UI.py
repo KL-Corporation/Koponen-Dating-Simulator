@@ -32,7 +32,7 @@ class Slider:
     def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: float = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 3, custom_path: str = None):
         self.safe_name = safe_name
         self.slider_rect = slider_rect
-        tmpVal = float(KDS.ConfigManager.GetSetting(f"UI/Sliders/{self.safe_name}", default_value)) if custom_path == None else float(KDS.ConfigManager.GetSetting(custom_path, default_value))
+        tmpVal = float(KDS.ConfigManager.GetSetting(f"UI/Sliders/{self.safe_name}", default_value) if custom_path == None else KDS.ConfigManager.GetSetting(custom_path, default_value))
         self.handle_rect = pygame.Rect(self.slider_rect.midleft[0] + (tmpVal * self.slider_rect.width) - (handle_size[0] / 2), slider_rect.centery - (handle_size[1] / 2), handle_size[0], handle_size[1])
         self.handle_move_area_padding = handle_move_area_padding
         self.slider_default_color = slider_default_color
@@ -85,8 +85,8 @@ class Slider:
         pygame.draw.rect(surface, self.slider_fill_color, pygame.Rect(self.slider_rect.x, self.slider_rect.y, self.handle_rect.centerx - self.slider_rect.x, self.slider_rect.height))
         pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
         value = (self.handle_rect.centerx - self.slider_rect.midleft[0]) / (self.slider_rect.midright[0] - self.slider_rect.midleft[0] - self.handle_move_area_padding[0])
-        KDS.ConfigManager.SetSetting(f"UI/Sliders/{self.safe_name}", value)
-        if self.custom_path != None: KDS.ConfigManager.SetSetting(self.custom_path, value)
+        if self.custom_path == None: KDS.ConfigManager.SetSetting(f"UI/Sliders/{self.safe_name}", value)
+        else: KDS.ConfigManager.SetSetting(self.custom_path, value)
         return value
 
 class Button:
@@ -181,7 +181,7 @@ class Switch:
     def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: bool = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 3, move_lerp_duration: int = 15, custom_path: str = None):
         self.safe_name = safe_name
         self.switch_rect = switch_rect
-        self.state = KDS.Convert.ToBool(KDS.ConfigManager.GetSetting(f"UI/Switches/{self.safe_name}", default_value))
+        self.state: bool = KDS.ConfigManager.GetSetting(f"UI/Switches/{self.safe_name}", default_value) if custom_path == None else KDS.ConfigManager.GetSetting(custom_path, default_value)
         self.range = (switch_rect.left + switch_move_area_padding[0] - (handle_size[0] / 2), switch_rect.right + switch_move_area_padding[1] - (handle_size[0] / 2))
         self.switch_move_area_padding = switch_move_area_padding
         self.switch_off_color = switch_off_color
@@ -234,7 +234,6 @@ class Switch:
         switch_color = (KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move), KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move), KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move))
         pygame.draw.rect(surface, switch_color, self.switch_rect)
         pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
-        KDS.ConfigManager.SetSetting(f"UI/Switches/{self.safe_name}", self.state)
-        if self.custom_path != None:
-            KDS.ConfigManager.SetSetting(self.custom_path, self.state)
+        if self.custom_path == None: KDS.ConfigManager.SetSetting(f"UI/Switches/{self.safe_name}", self.state)
+        else: KDS.ConfigManager.SetSetting(self.custom_path, self.state)
         return self.state

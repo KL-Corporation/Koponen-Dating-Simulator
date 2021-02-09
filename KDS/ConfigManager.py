@@ -152,7 +152,7 @@ class Save:
             with open(Save.ToPath(self.index), "r") as f:
                 data: Dict[str, Any] = json.loads(f.read())
                 for k, v in data.items():
-                    setattr(self, k, v)
+                    setattr(self.Story, k, v)
         else: self.save()
 
     def save(self):
