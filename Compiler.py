@@ -1,8 +1,6 @@
 import shutil
 import PyInstaller.__main__
 import os
-import inquirer
-import inquirer.themes
 import termcolor
 from datetime import datetime
 
@@ -13,25 +11,27 @@ WorkPath = os.path.join(AppDataPath, "cache", "work")
 CachePath = os.path.join(AppDataPath, "cache")
 if os.path.isdir(CachePath): shutil.rmtree(CachePath)
 
-questions = [
-    inquirer.Checkbox("toBuild", "Which KDS Modules you want to build?", ("Koponen Dating Simulator", "Level Builder"), ("Koponen Dating Simulator", "Level Builder"))
-]
-
-answers = inquirer.prompt(questions)
-
 parentDir = os.path.dirname(os.path.abspath(__file__))
 
 BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 EditorTexturesPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Textures", "Editor")
-BuiltNames = []
-for buildType in answers["toBuild"]:
-    if buildType == "Koponen Dating Simulator":
-        fileName = "KoponenDatingSimulator.py"
-        iconName = "gameIcon.ico"
-    else:
-        fileName = "LevelBuilder.py"
-        iconName = "levelBuilderIcon.ico"
-        
+toBuild = {
+    "Koponen Dating Simulator": {
+        "filename": "KoponenDatingSimulator.py",
+        "iconname": "gameIcon.ico",
+        "keepEditor": False
+    },
+    "Level Builder": {
+        "filename": "LevelBuilder.py",
+        "iconname": "levelBuilderIcon.ico",
+        "keepEditor": True
+    }
+}
+
+for buildType in toBuild.items():
+    filename = buildType[1]["filename"]
+    iconname = buildType[1]["iconname"]
+    
     PyInstaller.__main__.run([
         "--noconfirm",
         "--distpath",
@@ -42,22 +42,21 @@ for buildType in answers["toBuild"]:
         CachePath,
         "--windowed",
         "--icon",
-        f"{parentDir}/Assets/Textures/Branding/{iconName}",
+        f"{parentDir}/Assets/Textures/Branding/{iconname}",
         "--add-data",
         f"{parentDir}/Assets;Assets/",
         "--paths",
         f"{parentDir}/KDS",
-        f"{parentDir}/{fileName}"
+        f"{parentDir}/{filename}"
     ])
-    if os.path.isdir(EditorTexturesPath):
+    if not buildType[1]["keepEditor"] and os.path.isdir(EditorTexturesPath):
         shutil.rmtree(EditorTexturesPath)
         print(f"Deleted Editor Textures directory at {EditorTexturesPath}")
-    BuiltNames.append((buildType, os.path.splitext(fileName)[0]))
 
-if len(answers["toBuild"]) < 1:
-    print(termcolor.colored("Nothing was built.", "red"))
-else:
-    for name in BuiltNames:
-        print(termcolor.colored(f"Built {name[0]} at " + os.path.join(BuildPath, name[1], name[1] + ".exe"), "green"))
+if os.path.isdir(os.path.join(AppDataPath, "cache")):
+    print("Clearing cache...")
+    shutil.rmtree(os.path.join(AppDataPath, "cache"))
 
-if os.path.isdir(os.path.join(AppDataPath, "cache")): shutil.rmtree(os.path.join(AppDataPath, "cache"))
+for buildType in toBuild.items():
+    cutName = os.path.splitext(buildType[1]["filename"])[0]
+    print(termcolor.colored(f"Built {buildType[0]} at " + os.path.join(BuildPath, cutName, cutName + ".exe"), "green"))
