@@ -9,7 +9,8 @@ from typing import Any
 
 running = False
 profiler_running = False
-profile = None
+profile = cProfile.Profile()
+
 def init(_AppDataPath: str, _LogPath: str):
     global running, AppDataPath, LogPath, logFileName
     running = True
