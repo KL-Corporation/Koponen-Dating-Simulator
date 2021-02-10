@@ -3,12 +3,11 @@ import inspect
 import logging
 import os
 import pstats
-import traceback
+import KDS.System
 from datetime import datetime
 from typing import Any
 
 from pygame.draw import line
-from termcolor import colored
 
 running = False
 profiler_running = False
@@ -35,7 +34,7 @@ def __log(message: str, consoleVisible: bool, stack_info: bool, logLevel: int, c
         logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
         if stack_info:
             message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
-        if consoleVisible: print(colored(message, color))
+        if consoleVisible: print(KDS.System.Console.Colored(message, color))
         return
     print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
 

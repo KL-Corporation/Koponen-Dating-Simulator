@@ -2827,6 +2827,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
     def doAnimation(reverse: bool):
         _break = False
         while not _break:
+            display.fill(KDS.Colors.Black)
             if oldSurf != None: display.blit(oldSurf, (0, 0))
             story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
             story_surf.blit(savingText, (story_surf.get_width() - savingText.get_width() - 10, story_surf.get_height() - savingText.get_height() - 10))
@@ -2844,7 +2845,6 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
                 display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
             
             pygame.display.flip()
-            display.fill(KDS.Colors.Black)
             if not reverse:
                 if anim_lerp_x.get_value() >= 1.0:
                     _break = True
