@@ -7,8 +7,6 @@ import KDS.System
 from datetime import datetime
 from typing import Any
 
-from pygame.draw import line
-
 running = False
 profiler_running = False
 profile = None
