@@ -127,7 +127,7 @@ class MultiAnimation:
 
 class AnimationType:
     # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
-    Linear = lambda t: t
+    Linear = lambda t: t #What in the fff is the purpose of this?
     EaseInSine = lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
     EaseOutSine = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
     EaseInOutSine = lambda t: -(KDS.Math.Cos(KDS.Math.PI * t) - 1) * 0.5
