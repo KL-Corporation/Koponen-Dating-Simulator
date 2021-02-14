@@ -280,9 +280,9 @@ class tileInfo:
                         unitTexture = None
                         if number[0] == "3":
                             teleportTextureCheck = int(number[1:])
-                            if teleportTextureCheck == 1:
+                            if teleportTextureCheck < 500:
                                 unitTexture = Atextures["3"]["3001"]
-                            elif teleportTextureCheck == 2:
+                            elif teleportTextureCheck > 499:
                                 unitTexture = Atextures["3"]["3002"]
                         else:
                             try:
@@ -1044,4 +1044,10 @@ pygame.quit()
     [Material Menu]
     Escape: Close Material Menu
     E: Close Material Menu
+"""
+
+""" FOR THOSE OF YOU WHO ARE GOING TO USE TELEPORTS:
+        Indexes 0 - 499 are reserved for invisible teleports and
+        indexes 500 - 999 are reserved for teleport-doors
+
 """

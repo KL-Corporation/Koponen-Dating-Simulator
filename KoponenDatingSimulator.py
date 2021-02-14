@@ -1133,9 +1133,9 @@ class Teleport(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):        
         super().__init__(position, 1)
         self.texture = None
-        if serialNumber == 1:
+        if serialNumber < 500:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        elif serialNumber == 2:
+        elif serialNumber > 499:
             self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         self.checkCollision = False
         self.specialTileFlag = True
@@ -1148,7 +1148,7 @@ class Teleport(Tile):
         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
             index = 0
         if self.rect.colliderect(Player.rect) and Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
-            if self.serialNumber == 1 or KDS.Keys.functionKey.clicked:
+            if self.serialNumber < 500 or KDS.Keys.functionKey.clicked:
                 #Executing teleporting process
                 if self.serialNumber == 2: KDS.Audio.PlaySound(door_opening)
                 Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
@@ -1157,7 +1157,7 @@ class Teleport(Tile):
                 #Reseting scroll
                 true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] // 2))
                 true_scroll[1] += (Player.rect.y - true_scroll[1] - 220)
-        if not self.rect.colliderect(Player.rect) or self.serialNumber == 2: #Checking if it is possible to release teleport from teleport-lock
+        if not self.rect.colliderect(Player.rect) or self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
         if self.serialNumber == 2:
