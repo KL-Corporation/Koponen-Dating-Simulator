@@ -122,7 +122,9 @@
         "120": "painting5.png",
         "121": "gray_concrete.png",
         "122": "lockers.png",
-        "123": "crackhead.png"
+        "123": "crackhead.png",
+        "124": "black.png",
+        "125": "table1.png"
     },
     
     "tile_sounds" : {
@@ -217,7 +219,8 @@
         120,
         121,
         122,
-        123
+        123,
+        125
     ],
     "item_textures": {
         "000": "empty.png",

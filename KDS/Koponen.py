@@ -354,7 +354,7 @@ class KoponenEntity:
         self.y_velocity = min(8.0, self.y_velocity)
         self.movement[1] = self.y_velocity
 
-        if self.movement[0] != 0 and self._move: self.animations.trigger("walk")
+        if self.movement[0] != 0 and self._move and not self.forceIdle: self.animations.trigger("walk")
         else: self.animations.trigger("idle")
 
     def render(self, Surface: pygame.Surface, scroll: list, debugMode: bool = False):
