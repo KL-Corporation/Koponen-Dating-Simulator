@@ -1,6 +1,7 @@
 import math
 import sys
 import random
+import enum
 from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union
 
 T = TypeVar("T")
@@ -83,6 +84,30 @@ def Repeat(t: float, length: float) -> float:
     This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
     """
     return Clamp(t - Floor(t / length) * length, 0.0, length)
+
+class MidpointRounding(enum.Enum):
+    ToEven = 0
+    AwayFromZero = 1
+
+def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = MidpointRounding.AwayFromZero):
+    if math.isnan(value) or math.isinf(value):
+        return value
+    power10 = 10 ** digits
+    value *= power10
+    fraction, value = math.modf(value)
+    if mode == MidpointRounding.AwayFromZero:
+        if abs(fraction) >= 0.5:
+            value += Sign(fraction)
+    elif mode == MidpointRounding.ToEven:
+        if abs(fraction) > 0.5:
+            value += Sign(fraction)
+    else:
+        raise ValueError("Invalid midpoint rounding mode!")
+    value /= power10
+    return value
+
+def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.AwayFromZero):
+    return int(RoundCustom(value, 0, mode))
 #endregion
 
 #region Area
