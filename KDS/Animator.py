@@ -127,7 +127,7 @@ class MultiAnimation:
 
 class AnimationType:
     # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
-    Linear = lambda t: t #What in the fff is the purpose of this?
+    Linear = lambda t: t #What in the fff is the purpose of this? #It exists so that I don't need to make a null check in the Value (Previously known as Float) animation.
     EaseInSine = lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
     EaseOutSine = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
     EaseInOutSine = lambda t: -(KDS.Math.Cos(KDS.Math.PI * t) - 1) * 0.5
@@ -159,7 +159,7 @@ class AnimationType:
     EaseOutBounce = lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375))
     EaseInOutBounce = lambda t: (1 - AnimationType.EaseOutBounce(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + AnimationType.EaseOutBounce(2 * t - 1)) * 0.5
 
-class Float:
+class Value:
     def __init__(self, From: float, To: float, Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
@@ -231,9 +231,9 @@ class Float:
 
 class Color:
     def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
-        self.int0 = Float(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
-        self.int1 = Float(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
-        self.int2 = Float(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
+        self.int0 = Value(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
+        self.int1 = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
+        self.int2 = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
         
     def get_value(self) -> Tuple[int, int, int]:
         return (round(self.int0.get_value()), round(self.int1.get_value()), round(self.int2.get_value()))
