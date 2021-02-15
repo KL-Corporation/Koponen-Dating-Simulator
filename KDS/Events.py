@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable, Union, overload
+from typing import Any, Callable, Iterable, Union, overload
 
 new = list()
 
@@ -22,7 +22,7 @@ class Event:
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
         
-    def __iadd__(self, value: Union[Callable[[]], Event]) -> Event:
+    def __iadd__(self, value: Union[Callable, Event]) -> Event:
         if callable(value):
             if value not in self.listeners:
                 self.listeners.append(value)
@@ -51,7 +51,7 @@ class Event:
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
         
-    def __isub__(self, value: Union[Callable[[]], Event]):
+    def __isub__(self, value: Union[Callable, Event]):
         if callable(value):
             while value in self.listeners:
                 self.listeners.remove(value)

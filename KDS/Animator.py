@@ -1,5 +1,7 @@
 from typing import Callable, List, Sequence, Tuple, Union
 
+from enum import Enum
+
 import pygame
 
 import KDS.Colors
@@ -7,13 +9,13 @@ import KDS.Logging
 import KDS.Math
 
 
-class OnAnimationEnd:
+class OnAnimationEnd(Enum):
     Stop = "stop"
     Loop = "loop"
     PingPong = "pingpong"
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
         """Initialises an animation.
 
         Args:
@@ -160,7 +162,7 @@ class AnimationType:
     EaseInOutBounce = lambda t: (1 - AnimationType.EaseOutBounce(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + AnimationType.EaseOutBounce(2 * t - 1)) * 0.5
 
 class Value:
-    def __init__(self, From: float, To: float, Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: float, To: float, Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
         Args:
@@ -230,7 +232,7 @@ class Value:
         else: return self.To
 
 class Color:
-    def __init__(self, From: Sequence[int], To: Sequence[int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
+    def __init__(self, From: Sequence[int], To: Sequence[int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
         self._animationType = _AnimationType
         self._onAnimationEnd = _OnAnimationEnd
         self._duration = Duration

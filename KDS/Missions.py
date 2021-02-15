@@ -1,6 +1,6 @@
 #region Importing
-import json
 from typing import Dict, Iterable, List, Tuple, Union
+import json
 
 import pygame
 
