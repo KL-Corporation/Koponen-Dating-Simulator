@@ -33,7 +33,7 @@ class NPC:
         self.air_time = 0
         self.y_velocity = 0
 
-        self.collisions = Dict[str, bool]
+        self.collisions = {"right": False, "left": False, "top": False, "bottom": False}
         
         self.resources = {}
         self.animation: KDS.Animator.MultiAnimation
@@ -69,6 +69,16 @@ class NPC:
 
     def update(self, tiles: list):
         if self.call_unique_update: self.unique_update()
+
+        if self.collisions["bottom"]: # Pylance complains about this, because pylance is completely useless piece of shit
+            self.air_time = 0
+            self.y_velocity = 0
+        else: self.air_time += 1
+
+        self.y_velocity += 0.5
+        self.y_velocity = min(8.0, self.y_velocity)
+        self.movement[1] = self.y_velocity
+
         self.rect, self.collisions = move_entity(self.rect, self.movement, tiles)
 
     def render(self, Surface: pygame.Surface, scroll: Tuple[int, int], debugMode: bool = False):
@@ -76,7 +86,7 @@ class NPC:
         Surface.blit(self.animation.update(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
     def unique_update(self): #Koska python on mitä on, toi ei vaan voi olla virtual void unique_update() = 0;
-        pass 
+        pass
 
 class StudentNPC(NPC):
     def __init__(self, datapath: str, position: Tuple[int, int]):
