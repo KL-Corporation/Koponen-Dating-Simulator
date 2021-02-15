@@ -33,7 +33,6 @@ def Ceil(f: SupportsFloat) -> int: return math.ceil(f)
 def Floor(f: SupportsFloat) -> int: return math.floor(f)
 
 def Sqrt(f: SupportsFloat) -> float: return math.sqrt(f)
-def Pow(f: SupportsFloat, p: SupportsFloat) -> float: return math.pow(f, p)
 def Log(f: SupportsFloat) -> float: return math.log(f)
 
 def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
@@ -92,7 +91,7 @@ class MidpointRounding(enum.Enum):
 def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = MidpointRounding.AwayFromZero):
     if math.isnan(value) or math.isinf(value):
         return value
-    power10 = 10 ** digits
+    power10 = pow(10, digits)
     value *= power10
     fraction, value = math.modf(value)
     if mode == MidpointRounding.AwayFromZero:
