@@ -101,10 +101,10 @@ class ScoreAnimation:
         ScoreAnimation.animationIndex = 0
         ScoreAnimation.finished = False
         
-        score_animation = KDS.Animator.Float(0, score, min(round(abs(score) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        koponen_happiness_animation = KDS.Animator.Float(0, koponen_happiness, min(round(abs(koponen_happiness) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        timeBonus_animation = KDS.Animator.Float(0, timeBonus, min(round(abs(timeBonus) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        totalScore_animation = KDS.Animator.Float(0, totalScore, min(round(abs(totalScore) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        score_animation = KDS.Animator.Value(0, score, min(round(abs(score) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        koponen_happiness_animation = KDS.Animator.Value(0, koponen_happiness, min(round(abs(koponen_happiness) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        timeBonus_animation = KDS.Animator.Value(0, timeBonus, min(round(abs(timeBonus) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        totalScore_animation = KDS.Animator.Value(0, totalScore, min(round(abs(totalScore) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
         
         ScoreAnimation.animationList = (score_animation, koponen_happiness_animation, timeBonus_animation, totalScore_animation)
         ScoreAnimation.valueList = (score, koponen_happiness, timeBonus, totalScore)
@@ -129,6 +129,6 @@ class ScoreAnimation:
     @staticmethod
     def skip():
         for animation in ScoreAnimation.animationList:
-            animation: KDS.Animator.Float
+            animation: KDS.Animator.Value
             animation.tick = animation.ticks + 1
             animation.update()

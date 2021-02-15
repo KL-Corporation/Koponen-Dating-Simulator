@@ -117,7 +117,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     pygame.key.start_text_input()
     textInput = True
     cursor_index = len(cmd)
-    cursor_animation = KDS.Animator.Float(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+    cursor_animation = KDS.Animator.Value(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
     invalid = False
     warning = False
     warnText = console_font_small.render("[PERFORMANCE WARNING]", True, text_color)

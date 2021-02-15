@@ -464,7 +464,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", True, KDS.Colors.Black)
         certificate.blit(gradeRender, (738, posList[i]))
     
-    animY = KDS.Animator.Float(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
+    animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
     
     KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
     while True:

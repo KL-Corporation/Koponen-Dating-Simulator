@@ -1,4 +1,4 @@
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Sequence, Tuple, Union
 
 import pygame
 
@@ -127,7 +127,7 @@ class MultiAnimation:
 
 class AnimationType:
     # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
-    Linear = lambda t: t #What in the fff is the purpose of this?
+    Linear = lambda t: t #What in the fff is the purpose of this? #It exists so that I don't need to make a null check in the Value (Previously known as Float) animation.
     EaseInSine = lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
     EaseOutSine = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
     EaseInOutSine = lambda t: -(KDS.Math.Cos(KDS.Math.PI * t) - 1) * 0.5
@@ -159,7 +159,7 @@ class AnimationType:
     EaseOutBounce = lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375))
     EaseInOutBounce = lambda t: (1 - AnimationType.EaseOutBounce(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + AnimationType.EaseOutBounce(2 * t - 1)) * 0.5
 
-class Float:
+class Value:
     def __init__(self, From: float, To: float, Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
@@ -230,27 +230,41 @@ class Float:
         else: return self.To
 
 class Color:
-    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
-        self.int0 = Float(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
-        self.int1 = Float(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
-        self.int2 = Float(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
+    def __init__(self, From: Sequence[int], To: Sequence[int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: str = OnAnimationEnd.Stop) -> None:
+        self._animationType = _AnimationType
+        self._onAnimationEnd = _OnAnimationEnd
+        self._duration = Duration
+        self._r = Value(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
+        self._g = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
+        self._b = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
+        self._a = Value(From[3], To[3], Duration, _AnimationType, _OnAnimationEnd) if len(From) >= 4 and len(To) >= 4 else None
         
     def get_value(self) -> Tuple[int, int, int]:
-        return (round(self.int0.get_value()), round(self.int1.get_value()), round(self.int2.get_value()))
+        return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()))
+    
+    def get_value_alpha(self) -> Tuple[int, int, int, int]:
+        return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()), round(self._a.get_value() if self._a != None else 1))
     
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
-        return (round(self.int0.update(reverse)), round(self.int1.update(reverse)), round(self.int2.update(reverse)))
+        if self._a != None: self._a.update(reverse)
+        return (round(self._r.update(reverse)), round(self._r.update(reverse)), round(self._r.update(reverse)))
     
-    def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
-        self.int0.From = From[0]
-        self.int0.To = To[0]
-        self.int1.From = From[1]
-        self.int1.To = To[1]
-        self.int2.From = From[2]
-        self.int2.To = To[2]
+    def update_alpha(self, reverse: bool = False) -> Tuple[int, int, int, int]:
+        return (round(self._r.update(reverse)), round(self._r.update(reverse)), round(self._r.update(reverse)), round(self._a.get_value() if self._a != None else 1))
     
-    def getValues(self):
-        return (self.int0.From, self.int1.From, self.int2.From), (self.int0.From, self.int1.From, self.int2.From)
+    def changeValues(self, From: Sequence[int], To: Sequence[int]):
+        self._r.From = From[0]
+        self._r.To = To[0]
+        self._g.From = From[1]
+        self._g.To = To[1]
+        self._b.From = From[2]
+        self._b.To = To[2]
+        if len(From) >= 4 and len(To) >= 4:
+            if self._a == None:
+                self._a = Value(From[3], To[3], self._duration, self._animationType, self._onAnimationEnd)
+            else:
+                self._a.From = From[3]
+                self._a.To = To[3]
     
     def getFinished(self):
-        return True if self.int0.Finished and self.int1.Finished and self.int2.Finished else False  
+        return self._r.Finished and self._g.Finished and self._b.Finished if self._a == None else self._r.Finished and self._g.Finished and self._b.Finished and self._a.Finished
