@@ -718,6 +718,7 @@ class Tile:
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
+        self.lateRender = False
         self.darkOverlay = None
 
     @staticmethod
@@ -733,9 +734,15 @@ class Tile:
         end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
         end_x = min(end_x, max_x)
         end_y = min(end_y, max_y)
+        
+        lateRender = []
         for row in Tile_list[y:end_y]:
             for unit in row[x:end_x]:
                 for renderable in unit:
+                    if renderable.lateRender:
+                        lateRender.append(renderable)
+                        continue
+                    
                     renderable: Tile
                     if not renderable.air:
                         if DebugMode:
@@ -747,12 +754,20 @@ class Tile:
                         if renderable.darkOverlay != None:
                             Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
+        for renderable in lateRender:
+            if not renderable.specialTileFlag:
+                Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+            else:
+                Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+            if renderable.darkOverlay != None:
+                Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+
     def update(self):
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
         return self.texture
     
     def lateInit(self):
-        return None
+        return self
     """
     def textureUpdate(self):
         temp_surface = pygame.Surface(self.texture.get_size()).convert()
@@ -874,12 +889,13 @@ class Door(Tile):
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
         self.rect = pygame.Rect(position[0], position[1], 5, 68)
-        self.checkCollision = True
         self.open = False
         self.maxClosingCounter = closingCounter
         self.closingCounter = 0
+        self.lateRender = True
     
     def update(self):
+        self.checkCollision = not self.open
         if self.open:
             if self.maxClosingCounter > 0:
                 self.closingCounter += 1
@@ -887,7 +903,6 @@ class Door(Tile):
             if self.closingCounter > self.maxClosingCounter:
                 KDS.Audio.PlaySound(door_opening)
                 self.open = False
-                self.checkCollision = True
                 self.closingCounter = 0
         if KDS.Math.getDistance(Player.rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.functionKey.clicked:
             if self.serialNumber == 23 or Player.keys[Door.keys[self.serialNumber]]:
@@ -897,7 +912,6 @@ class Door(Tile):
                 if not self.open:
                     if self.rect.centerx - Player.rect.centerx > 0: Player.rect.right = self.rect.left
                     else: Player.rect.left = self.rect.right
-                self.checkCollision = not self.checkCollision
         return self.texture if not self.open else self.opentexture
 
 class Landmine(Tile):
@@ -3633,6 +3647,8 @@ while main_running:
 
     #Overlayt
     for ov in overlays:
+        if DebugMode:
+            pygame.draw.rect(screen, KDS.Colors.Blue, (ov.rect.x - scroll[0], ov.rect.y - scroll[1], 34, 34))
         screen.blit(ov.texture, (ov.rect.x - scroll[0], ov.rect.y - scroll[1]))
     
     #Item Tip

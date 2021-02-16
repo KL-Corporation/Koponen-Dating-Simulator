@@ -131,7 +131,7 @@ class Story:
         KDS.Audio.Music.Pause()
         KDS.Audio.PlayFromFile("Assets/Audio/Effects/storystart_MAIN.wav")
         doAnimation(False)
-        pygame.time.wait(1800)
+        pygame.time.wait(3600)
         doAnimation(True)
         KDS.Audio.Music.Unpause()
     

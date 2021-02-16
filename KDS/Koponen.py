@@ -61,23 +61,24 @@ talk_ad = talk_ads[0]
 class Prefixes:
     player = "p:"
     koponen = "k:"
-    class Rendered:
-        player = text_font.render("ERROR: ", True, text_color)
-        koponen = text_font.render("Koponen: ", True, text_color)
+    
+_renderedPrefixes = {
+    Prefixes.player: text_font.render("ERROR: ", True, text_color),
+    Prefixes.koponen: text_font.render("Koponen: ", True, text_color)
+}
 
 def init(playerName: str):
-    global talk_background, talk_ads, talk_ad, scrollArrow, scrollToBottomButton, ambientTalkAudios
+    global talk_background, talk_ads, talk_ad, scrollArrow, ambientTalkAudios # , scrollToBottomButton
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
     scrollArrow = pygame.transform.scale(pygame.transform.rotate(pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha(), -90), (scroll_to_bottom_rect.width - scroll_arrow_padding * 2, scroll_to_bottom_rect.height - scroll_arrow_padding * 2))
-    scrollToBottomButton = KDS.UI.Button(scroll_to_bottom_rect, Talk.Conversation.scrollToBottom, scrollArrow, scroll_to_bottom_colors["default"], scroll_to_bottom_colors["highlighted"], scroll_to_bottom_colors["pressed"])
+    # scrollToBottomButton = KDS.UI.Button(scroll_to_bottom_rect, Talk.Conversation.scrollToBottom, scrollArrow, scroll_to_bottom_colors["default"], scroll_to_bottom_colors["highlighted"], scroll_to_bottom_colors["pressed"])
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"): talk_ads.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_ads)
-    Prefixes.Rendered.player = text_font.render(f"{playerName}: ", True, text_color)
+    _renderedPrefixes[Prefixes.player] = text_font.render(f"{playerName}: ", True, text_color)
     ambientTalkAudios = [
         pygame.mixer.Sound("Assets/Audio/Koponen/talk_0.ogg"),
         pygame.mixer.Sound("Assets/Audio/Koponen/talk_1.ogg"),
-        pygame.mixer.Sound("Assets/Audio/Koponen/talk_2.ogg"),
-        pygame.mixer.Sound("Assets/Audio/Koponen/talk_3.ogg")
+        pygame.mixer.Sound("Assets/Audio/Koponen/talk_2.ogg")
     ]
     random.shuffle(ambientTalkAudios)
 
@@ -142,37 +143,36 @@ class Talk:
         newAnimation = False
         
         @staticmethod
-        def schedule(text: str, prefix: str = Prefixes.player):
+        def schedule(text: str, prefix: str = Prefixes.player, forcePrefix: bool = False):
             if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
                 Talk.scheduled.append(text)
-            prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
+                return
+            prefixWidth = _renderedPrefixes[prefix].get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
-            for _text in lineSplit: Talk.scheduled.append(prefix + _text)
-            
-        @staticmethod
-        def schedulePriority(text: str, prefix: str = Prefixes.player):
-            prefixWidth = Prefixes.Rendered.player.get_width() if prefix == Prefixes.player else Prefixes.Rendered.koponen.get_width()
-            lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
-            for _text in reversed(lineSplit): Talk.scheduled.insert(0, prefix + _text)
-            #                                                   ^ Not thread-safe
+            for i in range(len(lineSplit)):
+                if i == 0 and forcePrefix:
+                    Talk.scheduled.append("!" + prefix + lineSplit[i])
+                else:
+                    Talk.scheduled.append(prefix + lineSplit[i])
         
         @staticmethod
         def update():
             if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
-                if Talk.audioChannel == None or Talk.audioChannel.get_sound() != Talk.soundPlaying:
+                if Talk.audioChannel == None or not Talk.audioChannel.get_busy() or Talk.audioChannel.get_sound() != Talk.soundPlaying:
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
-                    Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying)
+                    Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying, volume=KDS.Audio.EffectVolume / 4)
                 Talk.lines.append(Talk.scheduled.pop(0))
                 Talk.Conversation.newAnimation = True
                 deleteCount = 0
-                while len(Talk.lines) > 1000:
+                while len(Talk.lines) > 50:
                     del Talk.lines[0]
                     deleteCount += 1
                 if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index: Talk.Conversation.scrollToBottom()
                 else: Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
             elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)) and Talk.Conversation.animationProgress == -1:
-                for audio in ambientTalkAudios: audio.stop()
                 Talk.audioChannel = None
+                for audio in ambientTalkAudios:
+                    audio.stop()
         
         @staticmethod
         def render(mouse_pos: Tuple[int, int], clicked: bool):
@@ -182,21 +182,27 @@ class Talk:
             lastIncluded = False
             for i in range(Talk.Conversation.scroll, min(Talk.Conversation.scroll + Talk.lineCount + 1, len(Talk.lines))):
                 text = Talk.lines[i]
-                if text[:2] == Prefixes.player: prefix = Prefixes.Rendered.player
-                else: prefix = Prefixes.Rendered.koponen
+                forcePrefix = False
+                if text[0] == "!":
+                    forcePrefix = True
+                    text = text[1:]
+                prefix = _renderedPrefixes[text[:2]]
                 offsetX = text_padding.left + prefix.get_width()
                 offsetY = text_padding.top + (i - Talk.Conversation.scroll) * line_spacing
                 Talk.display.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
-                if i - 1 < 0 or text[:2] != Talk.lines[i - 1][:2]: 
+                if i <= 0 or forcePrefix or text[:2] != Talk.lines[i - 1].removeprefix("!")[:2]:
                     Talk.display.blit(prefix, (text_padding.left, offsetY))
                 
-                if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.display, mouse_pos, clicked)
+                # if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.display, mouse_pos, clicked)
                 
                 if i == len(Talk.lines) - 1: lastIncluded = True
 
             if len(Talk.lines) > 0:
-                animationRectTarget = pygame.Rect(text_padding.left + (Prefixes.Rendered.player if Talk.lines[-1][:2] == Prefixes.player else Prefixes.Rendered.koponen).get_width(),
-                                                text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(Talk.lines[-1][2:])[0], text_font.get_height())
+                lastLine = Talk.lines[-1]
+                if lastLine.startswith("!"):
+                    lastLine = lastLine.removeprefix("!")
+                animationRectTarget = pygame.Rect(text_padding.left + _renderedPrefixes[lastLine[:2]].get_width(),
+                                                text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(lastLine[2:])[0], text_font.get_height())
             else: animationRectTarget = pygame.Rect(0, 0, 0, 0)
                 
             if Talk.Conversation.newAnimation:
@@ -230,6 +236,9 @@ class Talk:
     @staticmethod
     def stop():
         Talk.running = False
+        Talk.audioChannel = None
+        for audio in ambientTalkAudios:
+            audio.stop()
 
     @staticmethod
     def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock):
@@ -265,7 +274,7 @@ class Talk:
                         if pygame.key.get_pressed()[K_LALT]:
                             KDS_Quit()
                     elif event.key == K_ESCAPE:
-                        Talk.running = False
+                        Talk.stop()
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 4:
                         Talk.Conversation.scroll = max(Talk.Conversation.scroll - line_scroll_speed, 0)
