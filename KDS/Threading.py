@@ -26,6 +26,7 @@ class StoppableThread:
 
     def Stop(self):
         self.stopThread = True
+        self.thread.join()
 
     def GetRunning(self) -> bool:
         if self.currently_running and not self.thread.is_alive():
