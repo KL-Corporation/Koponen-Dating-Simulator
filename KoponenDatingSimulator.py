@@ -2815,7 +2815,9 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
     load_map_names()
-            
+    
+    showOldSurf = True    
+    
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
     
@@ -2826,11 +2828,14 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
     
     def doAnimation(reverse: bool):
         _break = False
+        
+        story_surf.fill(KDS.Colors.Black)
+        story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
+        story_surf.blit(savingText, (story_surf.get_width() - savingText.get_width() - 10, story_surf.get_height() - savingText.get_height() - 10))
+        
         while not _break:
             display.fill(KDS.Colors.Black)
-            if oldSurf != None: display.blit(oldSurf, (0, 0))
-            story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
-            story_surf.blit(savingText, (story_surf.get_width() - savingText.get_width() - 10, story_surf.get_height() - savingText.get_height() - 10))
+            if showOldSurf and oldSurf != None and not reverse: display.blit(pygame.transform.scale(oldSurf, story_surf.get_size()), (0, 0))
             story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update(reverse))))
             display.blit(story_surf, (0, 0))
             

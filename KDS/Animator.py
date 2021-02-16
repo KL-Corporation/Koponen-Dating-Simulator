@@ -1,6 +1,6 @@
 from typing import Callable, List, Sequence, Tuple, Union
 
-from enum import Enum
+from enum import Enum, auto
 
 import pygame
 
@@ -127,42 +127,75 @@ class MultiAnimation:
         for anim in self.animations:
             self.animations[anim].tick = 0
 
-class AnimationType:
-    # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
-    Linear = lambda t: t #What in the fff is the purpose of this? #It exists so that I don't need to make a null check in the Value (Previously known as Float) animation.
-    EaseInSine = lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
-    EaseOutSine = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
-    EaseInOutSine = lambda t: -(KDS.Math.Cos(KDS.Math.PI * t) - 1) * 0.5
-    EaseInCubic = lambda t: t * t * t
-    EaseOutCubic = lambda t: 1 - pow(1 - t, 3)
-    EaseInOutCubic = lambda t: 4 * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 3) * 0.5
-    EaseInQuint = lambda t: t * t * t * t * t
-    EaseOutQuint = lambda t: 1 - pow(1 - t, 5)
-    EaseInOutQuint = lambda t: 16 * t * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 5) * 0.5
-    EaseInCirc = lambda t: 1 - KDS.Math.Sqrt(1 - pow(t, 2))
-    EaseOutCirc = lambda t: KDS.Math.Sqrt(1 - pow(t - 1, 2))
-    EaseInOutCirc = lambda t: (1 - KDS.Math.Sqrt(1 - pow(2 * t, 2))) * 0.5 if t < 0.5 else (KDS.Math.Sqrt(1 - pow(-2 * t + 2, 2)) + 1) * 0.5
-    EaseInElastic = lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else -pow(2, 10 * t - 10) * KDS.Math.Sin((t * 10 - 10.75) * ((2 * KDS.Math.PI) / 3)))
-    EaseOutElastic = lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else pow(2, -10 * t) * KDS.Math.Sin((t * 10 - 0.75) * ((2 * KDS.Math.PI) / 3)) + 1)
-    EaseInOutElastic = lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else (-(pow(2, 20 * t - 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 if t < 0.5 else (pow(2, -20 * t + 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 + 1)) #Yeah... I have no idea what's happening here...
-    EaseInQuad = lambda t: t * t
-    EaseOutQuad = lambda t: 1 - (1 - t) * (1 - t)
-    EaseInOutQuad = lambda t: 2 * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 2) * 0.5
-    EaseInQuart = lambda t: t * t * t * t
-    EaseOutQuart = lambda t: 1 - pow(1 - t, 4)
-    EaseInOutQuart = lambda t: 8 * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 4) * 0.5
-    EaseInExpo = lambda t: 0 if KDS.Math.Approximately(t, 0) else pow(2, 10 * t - 10)
-    EaseOutExpo = lambda t: 1 if KDS.Math.Approximately(t, 1) else 1 - pow(2, -10 * t)
-    EaseInOutExpo = lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else (pow(2, 20 * t - 10) * 0.5 if t < 0.5 else (2 - pow(2, -20 * t + 10)) * 0.5))
-    EaseInBack = lambda t: 2.70158 * t * t * t - 1.70158 * t * t
-    EaseOutBack = lambda t: 1 + 2.70158 * pow(t - 1, 3) + 1.70158 * pow(t - 1, 2)
-    EaseInOutBack = lambda t: (pow(2 * t, 2) * ((2.5949095 + 1) * 2 * t - 2.5949095)) * 0.5 if t < 0.5 else (pow(2 * t - 2, 2) * ((2.5949095 + 1) * (t * 2 - 2) + 2.5949095) + 2) * 0.5
-    EaseInBounce = lambda t: 1 - AnimationType.EaseOutBounce(1 - t)
-    EaseOutBounce = lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375))
-    EaseInOutBounce = lambda t: (1 - AnimationType.EaseOutBounce(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + AnimationType.EaseOutBounce(2 * t - 1)) * 0.5
+class AnimationType(Enum):
+    Linear = auto()
+    EaseInSine = auto()
+    EaseOutSine = auto()
+    EaseInOutSine = auto()
+    EaseInCubic = auto()
+    EaseOutCubic = auto()
+    EaseInOutCubic = auto()
+    EaseInQuint = auto()
+    EaseOutQuint = auto()
+    EaseInOutQuint = auto()
+    EaseInCirc = auto()
+    EaseOutCirc = auto()
+    EaseInOutCirc = auto()
+    EaseInElastic = auto()
+    EaseOutElastic = auto()
+    EaseInOutElastic = auto()
+    EaseInQuad = auto()
+    EaseOutQuad = auto()
+    EaseInOutQuad = auto()
+    EaseInQuart = auto()
+    EaseOutQuart = auto()
+    EaseInOutQuart = auto()
+    EaseInExpo = auto()
+    EaseOutExpo = auto()
+    EaseInOutExpo = auto()
+    EaseInBack = auto()
+    EaseOutBack = auto()
+    EaseInOutBack = auto()
+    EaseInBounce = auto()
+    EaseOutBounce = auto()
+    EaseInOutBounce = auto()
 
 class Value:
-    def __init__(self, From: float, To: float, Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
+    _animT = {
+        # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
+        AnimationType.EaseInSine: lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5),
+        AnimationType.EaseOutSine: lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5),
+        AnimationType.EaseInOutSine: lambda t: -(KDS.Math.Cos(KDS.Math.PI * t) - 1) * 0.5,
+        AnimationType.EaseInCubic: lambda t: t * t * t,
+        AnimationType.EaseOutCubic: lambda t: 1 - pow(1 - t, 3),
+        AnimationType.EaseInOutCubic: lambda t: 4 * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 3) * 0.5,
+        AnimationType.EaseInQuint: lambda t: t * t * t * t * t,
+        AnimationType.EaseOutQuint: lambda t: 1 - pow(1 - t, 5),
+        AnimationType.EaseInOutQuint: lambda t: 16 * t * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 5) * 0.5,
+        AnimationType.EaseInCirc: lambda t: 1 - KDS.Math.Sqrt(1 - pow(t, 2)),
+        AnimationType.EaseOutCirc: lambda t: KDS.Math.Sqrt(1 - pow(t - 1, 2)),
+        AnimationType.EaseInOutCirc: lambda t: (1 - KDS.Math.Sqrt(1 - pow(2 * t, 2))) * 0.5 if t < 0.5 else (KDS.Math.Sqrt(1 - pow(-2 * t + 2, 2)) + 1) * 0.5,
+        AnimationType.EaseInElastic: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else -pow(2, 10 * t - 10) * KDS.Math.Sin((t * 10 - 10.75) * ((2 * KDS.Math.PI) / 3))),
+        AnimationType.EaseOutElastic: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else pow(2, -10 * t) * KDS.Math.Sin((t * 10 - 0.75) * ((2 * KDS.Math.PI) / 3)) + 1),
+        AnimationType.EaseInOutElastic: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else (-(pow(2, 20 * t - 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 if t < 0.5 else (pow(2, -20 * t + 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 + 1)), #Yeah... I have no idea what's happening here...
+        AnimationType.EaseInQuad: lambda t: t * t,
+        AnimationType.EaseOutQuad: lambda t: 1 - (1 - t) * (1 - t),
+        AnimationType.EaseInOutQuad: lambda t: 2 * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 2) * 0.5,
+        AnimationType.EaseInQuart: lambda t: t * t * t * t,
+        AnimationType.EaseOutQuart: lambda t: 1 - pow(1 - t, 4),
+        AnimationType.EaseInOutQuart: lambda t: 8 * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 4) * 0.5,
+        AnimationType.EaseInExpo: lambda t: 0 if KDS.Math.Approximately(t, 0) else pow(2, 10 * t - 10),
+        AnimationType.EaseOutExpo: lambda t: 1 if KDS.Math.Approximately(t, 1) else 1 - pow(2, -10 * t),
+        AnimationType.EaseInOutExpo: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else (pow(2, 20 * t - 10) * 0.5 if t < 0.5 else (2 - pow(2, -20 * t + 10)) * 0.5)),
+        AnimationType.EaseInBack: lambda t: 2.70158 * t * t * t - 1.70158 * t * t,
+        AnimationType.EaseOutBack: lambda t: 1 + 2.70158 * pow(t - 1, 3) + 1.70158 * pow(t - 1, 2),
+        AnimationType.EaseInOutBack: lambda t: (pow(2 * t, 2) * ((2.5949095 + 1) * 2 * t - 2.5949095)) * 0.5 if t < 0.5 else (pow(2 * t - 2, 2) * ((2.5949095 + 1) * (t * 2 - 2) + 2.5949095) + 2) * 0.5,
+        AnimationType.EaseOutBounce: lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)),
+        AnimationType.EaseInBounce: lambda t: 1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - t),
+        AnimationType.EaseInOutBounce: lambda t: (1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(2 * t - 1)) * 0.5
+    }
+    
+    def __init__(self, From: float, To: float, Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
         Args:
@@ -178,7 +211,7 @@ class Value:
         self.ticks = Duration
         self.tick = 0
         self.onAnimationEnd = _OnAnimationEnd
-        self.type = _AnimationType
+        self.type = Value._animT[_AnimationType] if _AnimationType in Value._animT else None
         self.PingPong = False
         self.value = From
 
@@ -228,45 +261,34 @@ class Value:
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
         
-        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
+        t = self.tick / self.ticks
+        if self.type != None: t = self.type(t)
+        
+        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, t)
         else: return self.To
 
 class Color:
-    def __init__(self, From: Sequence[int], To: Sequence[int], Duration: int, _AnimationType: Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
-        self._animationType = _AnimationType
-        self._onAnimationEnd = _OnAnimationEnd
-        self._duration = Duration
+    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
         self._r = Value(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
         self._g = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
         self._b = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
-        self._a = Value(From[3], To[3], Duration, _AnimationType, _OnAnimationEnd) if len(From) >= 4 and len(To) >= 4 else None
         
     def get_value(self) -> Tuple[int, int, int]:
         return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()))
     
-    def get_value_alpha(self) -> Tuple[int, int, int, int]:
-        return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()), round(self._a.get_value() if self._a != None else 1))
-    
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
-        if self._a != None: self._a.update(reverse)
-        return (round(self._r.update(reverse)), round(self._r.update(reverse)), round(self._r.update(reverse)))
+        return (round(self._r.update(reverse)), round(self._g.update(reverse)), round(self._b.update(reverse)))
     
-    def update_alpha(self, reverse: bool = False) -> Tuple[int, int, int, int]:
-        return (round(self._r.update(reverse)), round(self._r.update(reverse)), round(self._r.update(reverse)), round(self._a.get_value() if self._a != None else 1))
-    
-    def changeValues(self, From: Sequence[int], To: Sequence[int]):
+    def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
         self._r.From = From[0]
         self._r.To = To[0]
         self._g.From = From[1]
         self._g.To = To[1]
         self._b.From = From[2]
         self._b.To = To[2]
-        if len(From) >= 4 and len(To) >= 4:
-            if self._a == None:
-                self._a = Value(From[3], To[3], self._duration, self._animationType, self._onAnimationEnd)
-            else:
-                self._a.From = From[3]
-                self._a.To = To[3]
+    
+    def getValues(self):
+        return (self._r.From, self._g.From, self._b.From), (self._r.From, self._g.From, self._b.From)
     
     def getFinished(self):
-        return self._r.Finished and self._g.Finished and self._b.Finished if self._a == None else self._r.Finished and self._g.Finished and self._b.Finished and self._a.Finished
+        return True if self._r.Finished and self._g.Finished and self._b.Finished else False  
