@@ -722,7 +722,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.
-    def renderUpdate(Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int], *args):
+    def renderUpdate(Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int]):
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
         x = max(x, 0)
@@ -752,7 +752,7 @@ class Tile:
         return self.texture
     
     def lateInit(self):
-        pass
+        return None
     """
     def textureUpdate(self):
         temp_surface = pygame.Surface(self.texture.get_size()).convert()
@@ -2797,7 +2797,7 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True):
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
-    if (show_loading): KDS.Loading.Circle.Stop()
+    if show_loading: KDS.Loading.Circle.Stop()
     return 0
 
 def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
@@ -2816,60 +2816,16 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
     load_map_names()
     
-    showOldSurf = True    
-    
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
     
-    anim_lerp_x = KDS.Animator.Value(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
-    story_surf = pygame.Surface(display.get_size(), SRCALPHA)
-    
-    savingText = ArialFont.render("Saving...", True, KDS.Colors.White)
-    
-    def doAnimation(reverse: bool):
-        _break = False
-        
-        story_surf.fill(KDS.Colors.Black)
-        story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
-        story_surf.blit(savingText, (story_surf.get_width() - savingText.get_width() - 10, story_surf.get_height() - savingText.get_height() - 10))
-        
-        while not _break:
-            display.fill(KDS.Colors.Black)
-            if showOldSurf and oldSurf != None and not reverse: display.blit(pygame.transform.scale(oldSurf, story_surf.get_size()), (0, 0))
-            story_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_lerp_x.update(reverse))))
-            display.blit(story_surf, (0, 0))
-            
-            if DebugMode:
-                debugSurf = pygame.Surface((200, 40))
-                debugSurf.fill(KDS.Colors.DarkGray)
-                debugSurf.set_alpha(128)
-                display.blit(debugSurf, (0, 0))
-                
-                fps_text = "FPS: " + str(round(clock.get_fps()))
-                fps_text = score_font.render(fps_text, True, KDS.Colors.White)
-                display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
-            
-            pygame.display.flip()
-            if not reverse:
-                if anim_lerp_x.get_value() >= 1.0:
-                    _break = True
-            else:
-                if anim_lerp_x.get_value() <= 0.0:
-                    _break = True
-            clock.tick_busy_loop(60)
-    
     pygame.mixer.music.stop()
-    play_function(KDS.Gamemode.Modes.Story, True, show_loading=show_loading)
     
-    playAnimation = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
-    if playAnimation:
-        map_name = ArialTitleFont.render(map_names[KDS.ConfigManager.Save.Active.Story.index], True, KDS.Colors.White)
-        pygame.mixer.music.pause()
-        KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav"))
-        doAnimation(False)
-        pygame.time.wait(1800)
-        doAnimation(True)
-        pygame.mixer.music.unpause()
+    animationOverride = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
+    if animationOverride and show_loading:
+        KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], clock, ArialTitleFont, ArialFont)
+    play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride)
+    KDS.Loading.Story.WaitForExit()
 
 def respawn_function():
     global level_finished

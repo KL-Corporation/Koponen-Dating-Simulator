@@ -2,44 +2,10 @@ import concurrent.futures  # Tätä tarvitaan toivottavasti tulevaisuudessa. (Ha
 import threading
 from typing import Any, List, Union
 
-class KLThreadException(Exception):
+class ThreadException(Exception):
     def __init__(self, message) -> None:
         self.message = message
         super().__init__(self.message)
-
-class StoppableThread:
-    """
-        Thread Handler for handling python-threads more easily.
-        
-        Every thread function should have a stop-argument as it's last argument for stop-lambda.
-    """
-    def __init__(self, target, thread_id: str = None, daemon: bool = True, startThread: bool = False, *thread_args: Any, run_f = None):
-        self.stopThread = False
-        self.currently_running = False
-        
-        t_args: List[Any] = list(thread_args)
-        t_args.append(lambda : self.stopThread)
-        self.thread = threading.Thread(target=target, name=thread_id, daemon=daemon, args=t_args)
-        
-        if run_f != None: self.thread.run = run_f
-        if startThread: self.Start()
-
-    def Stop(self):
-        self.stopThread = True
-        self.thread.join()
-
-    def GetRunning(self) -> bool:
-        if self.currently_running and not self.thread.is_alive():
-            self.currently_running = False
-        return self.currently_running
-    
-    def GetFinished(self) -> bool:
-        return not self.GetRunning()
-
-    def Start(self):
-        if not self.currently_running:
-            self.currently_running = True
-            self.thread.start()
         
 class Thread:
     def __init__(self, target, thread_id: str = None, daemon: bool = True, startThread: bool = False, *thread_args: Any, run_f = None) -> None:
@@ -53,12 +19,35 @@ class Thread:
         if self.currentlyRunning and not self.thread.is_alive():
             self.currentlyRunning = False
         return self.currentlyRunning
-            
+    
+    def GetFinished(self) -> bool:
+        return not self.GetRunning()
     
     def Start(self):
         if not self.currentlyRunning:
             self.currentlyRunning = True
             self.thread.start()
+
+    def WaitForExit(self, timeout: int = None):
+        if self.thread.is_alive():
+            self.thread.join()
+            
+class StoppableThread(Thread):
+    """
+        Thread Handler for handling python-threads more easily.
+        
+        Every thread function should have a stop-argument as it's last argument for stop-lambda.
+    """
+    def __init__(self, target, thread_id: str = None, daemon: bool = True, startThread: bool = False, *thread_args: Any, run_f = None):
+        self.stopThread = False
+        
+        t_args: List[Any] = list(thread_args)
+        t_args.append(lambda : self.stopThread)
+        super().__init__(target, thread_id, daemon, startThread, *t_args, run_f=run_f)
+
+    def Stop(self):
+        self.stopThread = True
+        self.WaitForExit()
             
 class ReturnableThread:
     def __init__(self, target, thread_id: str = None, startThread: bool = False, *thread_args: Any) -> None:
@@ -87,7 +76,7 @@ class ReturnableThread:
         if self.started:
             return self.thread.result(timeout)
         else:
-            raise KLThreadException("Thread has to be started before fetching results!")
+            raise ThreadException("Thread has to be started before fetching results!")
         
     def Dispose(self):
         self.thread.cancel()
