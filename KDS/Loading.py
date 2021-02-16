@@ -133,7 +133,7 @@ class Story:
         doAnimation(False)
         pygame.time.wait(1800)
         doAnimation(True)
-        KDS.Audio.Music.Pause()
+        KDS.Audio.Music.Unpause()
     
     @staticmethod
     def Start(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, clock: pygame.time.Clock, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
