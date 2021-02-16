@@ -742,10 +742,10 @@ class Tile:
                             pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                         if not renderable.specialTileFlag:
                             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                            if renderable.darkOverlay != None:
-                                Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                         else:
                             Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                        if renderable.darkOverlay != None:
+                            Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
     def update(self):
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
