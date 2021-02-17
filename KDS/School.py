@@ -402,7 +402,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     username = KDS.System.GetUserName()
     surnames = []
     try:
-        with open("Assets/Data/surnames.txt", encoding="utf-16") as f:
+        with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
             surnames = f.read().splitlines()
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")

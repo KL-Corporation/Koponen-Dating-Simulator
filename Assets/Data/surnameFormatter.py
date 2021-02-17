@@ -22,7 +22,5 @@ for s in df["Sukunimi"].values:
     else:
         print(f"Skipped \"{s}\" because it has whitespace.")
         
-with open("surnames.txt", "w", encoding="utf-16") as f:
+with open("surnames.txt", "w", encoding="utf-8") as f:
     f.writelines(newSukunimet)
-    
-os.remove(file)
