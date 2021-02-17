@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, SupportsFloat, Tuple
 import pygame
 from pygame.locals import *
 import random
@@ -14,14 +14,14 @@ import KDS.Math
 import datetime
 
 class Timer:
-    def __init__(self, start_time = 60):
-        self.time = start_time
+    def __init__(self, start_time: SupportsFloat = 60) -> None:
+        self.time = float(start_time)
         self.start_time = 0
 
-    def start(self):
+    def start(self) -> None:
         self.start_time = perf_counter()
     
-    def get_time(self):
+    def get_time(self) -> Tuple[str, float]:
         self.time -= perf_counter() - self.start_time
         self.start_time = perf_counter()
         time = divmod(int(self.time), 60)
@@ -227,8 +227,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
             class scoreRational:
                 def __init__(self, value: float):
                     self.raw_value = value
-                    base = KDS.Math.Floor(value)
-                    self.value = base + KDS.Math.Closest(value - base, [0.0, 0.25, 0.5, 0.75, 1.0])
+                    fraction, base = KDS.Math.SplitFloat(value)
+                    self.value = base + KDS.Math.Closest(fraction, [0.0, 0.25, 0.5, 0.75, 1.0])
                     self.formatted_value = KDS.Convert.ToRational(self.value)
 
             score = checkAnswers(pages)

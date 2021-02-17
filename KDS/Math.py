@@ -1,8 +1,8 @@
+from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union
 import math
 import sys
 import random
 import enum
-from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union
 
 T = TypeVar("T")
 Value = TypeVar("Value", int, float)
@@ -49,6 +49,27 @@ def Halve(f: int) -> int:
 #endregion
 
 #region Value Manipulation
+def SplitFloat(f: float) -> Tuple[float, float]:
+    """Returns the fractional and integer parts of \"f\" in a two-item tuple.
+
+    Args:
+        f (float): The value to split.
+
+    Returns:
+        Tuple[float, float]: (fraction, integer parts)
+    """
+    return math.modf(f)
+def GetFraction(f: float) -> float:
+    """Returns the fractional part of \"f\".
+
+    Args:
+        f (float): The value to get the fractional.
+
+    Returns:
+        float: The extracted fractional. Will be negative if \"f\" is negative.
+    """
+    return math.modf(f)[0]
+
 def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
 
@@ -83,36 +104,46 @@ def Repeat(t: float, length: float) -> float:
     This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
     """
     return Clamp(t - Floor(t / length) * length, 0.0, length)
+#endregion
 
+#region Rounding
 class MidpointRounding(enum.Enum):
     ToEven = 0
     AwayFromZero = 1
+    ToZero = 2
+    ToNegativeInfinity = 3
+    ToPositiveInfinity = 4
 
-def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = MidpointRounding.AwayFromZero):
+def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = MidpointRounding.ToEven) -> float:
+    """
+    Round a number to a given precision in decimal digits and rounding mode.
+
+    The return value is an integer if \"digits\" is 0. Otherwise the return value will be float. \"digits\" may be negative.
+    """
     if math.isnan(value) or math.isinf(value):
         return value
     power10 = pow(10, digits)
     value *= power10
-    fraction, value = math.modf(value)
     if mode == MidpointRounding.AwayFromZero:
+        fraction, value = math.modf(value)
         if abs(fraction) >= 0.5:
             value += Sign(fraction)
     elif mode == MidpointRounding.ToEven:
-        if abs(fraction) > 0.5:
-            value += Sign(fraction)
+        value = round(value)
     else:
         raise ValueError("Invalid midpoint rounding mode!")
     value /= power10
     return value
 
-def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.AwayFromZero):
-    return int(RoundCustom(value, 0, mode))
+def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEven):
+    return int(RoundCustom(value=value, digits=0, mode=mode))
 #endregion
 
 #region Area
 def triangleArea(triangle: List[Tuple[int, int]]):
     return abs((triangle[0][0] * (triangle[1][1] - triangle[2][1]) + triangle[1][0] * (triangle[2][1] - triangle[0][1])  + triangle[2][0] * (triangle[0][1] - triangle[1][1])) / 2.0) 
 #endregion
+
 #region Distance
 def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
     """
@@ -260,16 +291,13 @@ def Closest(value: float, iterable: Iterable[Value]) -> Value:
 def Furthest(value: float, iterable: Iterable[Value]) -> Value:
     COMPARISONFUNCTION = lambda k: abs(k - value)
     return max(iterable, key=COMPARISONFUNCTION)
+#endregion
 
+#region Misc
 def trianglePointIntersect(triangle: List[Tuple[int, int]], point: Tuple[int, int]) -> bool:
     A = triangleArea(triangle)
     A1 = triangleArea([point, triangle[1], triangle[2]])
     A2 = triangleArea([triangle[0], point, triangle[2]])
     A3 = triangleArea([triangle[0], triangle[1], point])
     return True if sum((A1, A2, A3)) == A else False
-
-#endregion
-#region random
-def randChance(value: int = 1):
-    return random.uniform(0, 1) <= 1 / value
 #endregion

@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Union, overload
+from typing import Any, Callable, Iterable, Union
 
 new = list()
 
 class Event:
-    @overload
-    def __init__(self) -> None:
-        self.listeners = []
-    @overload
-    def __init__(self, values: Iterable) -> None:
+    def __init__(self, values: Iterable = []) -> None:
         self.listeners = [v for v in values]
         
     def __add__(self, value: Event) -> Event:

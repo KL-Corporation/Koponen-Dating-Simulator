@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Any, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -57,6 +57,8 @@ talk_background = pygame.Surface((0, 0))
 talk_ads = [pygame.Surface((0, 0), SRCALPHA)]
 old_ads = [-69 for _ in range(5)]
 talk_ad = talk_ads[0]
+
+randChance: Callable[[int], bool] = lambda v: random.uniform(0, 1) <= 1 / v
 
 class Prefixes:
     player = "p:"
@@ -336,7 +338,7 @@ class KoponenEntity:
                     self.movement[0] = abs(self.speed) * random.choice([-1, 1])
                 self._aut_moving_time += 1
                 if self._aut_moving_time >= KOPONEN_MIN_AUT_MOVE_TIME: # This comment has no usage
-                    if KDS.Math.randChance(KOPONEN_IDLE_CHANCE):
+                    if randChance(KOPONEN_IDLE_CHANCE):
                         self._aut_moving = False
                         self._aut_idle = True
             elif self._aut_idle:
@@ -345,7 +347,7 @@ class KoponenEntity:
                     self.movement[0] = 0
                 self._aut_idle_time += 1
                 if self._aut_idle_time >= KOPONEN_MIN_AUT_IDLE_TIME:
-                    if KDS.Math.randChance(KOPONEN_WALK_CHANCE):
+                    if randChance(KOPONEN_WALK_CHANCE):
                         self._aut_idle = False
                         self._aut_moving = True
             #endregion
