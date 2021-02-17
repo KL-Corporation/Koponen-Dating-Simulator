@@ -11,6 +11,7 @@ import KDS.ConfigManager
 import KDS.Convert
 import KDS.System
 import KDS.Math
+import KDS.Logging
 import datetime
 
 class Timer:
@@ -397,7 +398,23 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     class Fonts:
         INFO = pygame.font.SysFont("ArialBD", 27)
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
-    surname = "Koponen" if not AlignOverride else "[ALIGN Surname]" # Oisko liian paha, jos ne ois menny naimisiin pelin lopussa?
+    
+    username = KDS.System.GetUserName()
+    surnames = []
+    try:
+        with open("Assets/Data/surnames.txt", encoding="utf-16") as f:
+            surnames = f.read().splitlines()
+    except Exception as e:
+        KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
+    
+    checkSurname = max(username.split(), key=len)
+    surname = "Koponen"
+    if checkSurname in surnames:
+        surname = checkSurname
+        
+    if AlignOverride:
+        surname = "[ALIGN Surname]"
+    
     forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name-error>") if not AlignOverride else "[ALIGN Forename]"
     name = f"{surname} {forename}"
     
