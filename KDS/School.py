@@ -416,7 +416,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     surname = "Koponen"
     if surnames != None and checkSurname in surnames:
         surname = checkSurname
-        
+
     if AlignOverride:
         surname = "[ALIGN Surname]"
     
