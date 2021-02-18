@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, SupportsFloat, Tuple
+from typing import Any, Dict, List, Set, SupportsFloat, Tuple
 import pygame
 from pygame.locals import *
 import random
@@ -399,14 +399,14 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         INFO = pygame.font.SysFont("ArialBD", 27)
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
     
-    username = KDS.System.GetUserName()
-    surnames = []
+    surnames = None
     try:
         with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
             surnames = f.read().splitlines()
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
     
+    username = KDS.System.GetUserName()
     usernameParts = username.split(" ")
     usernameParts.reverse()
     # Reversed so that if the length of surname and first name is equal,
@@ -414,7 +414,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     # This will minimize the risk of it taking the forename by accident.
     checkSurname = max(usernameParts, key=len)
     surname = "Koponen"
-    if checkSurname in surnames:
+    if surnames != None and checkSurname in surnames:
         surname = checkSurname
         
     if AlignOverride:
