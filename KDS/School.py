@@ -21,7 +21,7 @@ class Timer:
 
     def start(self) -> None:
         self.start_time = perf_counter()
-    
+
     def get_time(self) -> Tuple[str, float]:
         self.time -= perf_counter() - self.start_time
         self.start_time = perf_counter()
@@ -67,7 +67,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                             break
                         c -= 1
                 return _t_rows
-            
+
             t_rows = splitToRows(question, question_maxwidth)
 
             options: Dict[str, Dict[str, Any]] = {}
@@ -100,18 +100,18 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                 options[question]["rect"] = pygame.Rect(0, b_index + index * surface_height, question_indent - question_indent / 5, surface_height)
                 pygame.draw.rect(self.qsurf, KDS.Colors.Black, options[question]["rect"], 1)
                 self.qsurf.blit(options[question]["surface"], (question_indent, b_index + index * surface_height))
-                
+
             self.options = options
             self.qsurf.set_colorkey(KDS.Colors.White)
 
         def update(self, relative_mouse_position, clicked):
             for option in self.options.keys():
-                if self.options[option]["rect"].collidepoint(relative_mouse_position) and clicked: 
+                if self.options[option]["rect"].collidepoint(relative_mouse_position) and clicked:
                     if not self.options[option]["selected"]:
                         KDS.Audio.PlaySound(random.choice(pencil_scribbles))
                         self.options[option]["selected"] = True
-                        self.qsurf.blit(pygame.transform.scale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)                 
-                    else: 
+                        self.qsurf.blit(pygame.transform.scale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)
+                    else:
                         self.options[option]["selected"] = False
                         pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
                         pygame.draw.rect(self.qsurf, KDS.Colors.Black, self.options[option]["rect"], 1)
@@ -127,7 +127,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             counter += 1
-    
+
     def checkAnswers(lstc: List[List[Question]]) -> float:
         questions_correct = 0
         questions_amount = 0
@@ -145,7 +145,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                         totalTrueQuestions += 1
                         if question.options[option]["selected"]: totalTrueQuestionsRight += 1
                 if point: questions_correct += totalTrueQuestionsRight / totalTrueQuestions
-        
+
         return questions_correct / questions_amount
 
 
@@ -282,7 +282,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                     gradePos[0] += KDS.Math.Floor((gradeDestination[0] - gradePos[0]) / 10)
                     gradePos[1] += KDS.Math.Floor((gradeDestination[1] - gradePos[1]) / 10)
                     Display.blit(scoreSurf, gradePos)
-                    
+
                 pygame.display.flip()
             exam_running = False
 
@@ -292,17 +292,17 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
         pg_button2 = pygame.transform.scale(pg_button2, (round(pg_button2.get_width() / 2), round(pg_button2.get_height() / 2)))
 
         page_return_button = pageButton((relative_position[0] + 5, relative_position[1] + exam_paper.get_height() - 55),
-                                         page_return, 
+                                         page_return,
                                          pygame.transform.flip(KDS.Convert.ToGrayscale(pg_button1), True, False),
                                          pygame.transform.flip(pg_button1, True, False))
 
         page_next_button = pageButton((relative_position[0] + exam_paper.get_width() - 5 - pg_button1.get_width(), relative_position[1] + exam_paper.get_height() - 55),
-                                         page_next, 
+                                         page_next,
                                          KDS.Convert.ToGrayscale(pg_button1),
                                          pg_button1)
 
         exam_return_button = pageButton((relative_position[0] + exam_paper.get_width() / 2 - pg_button2.get_width() / 2, relative_position[1] + exam_paper.get_height() - 55),
-                                         return_exam, 
+                                         return_exam,
                                          KDS.Convert.ToGrayscale(pg_button2),
                                          pg_button2)
 
@@ -324,8 +324,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                         pygame.display.toggle_fullscreen()
                         KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
                 elif event.type == KEYUP:
-                    if event.key == K_LEFT: 
-                        last_page_index = page_index 
+                    if event.key == K_LEFT:
+                        last_page_index = page_index
                         page_index = max(0, page_index -1)
                         if last_page_index != page_index: KDS.Audio.PlaySound(random.choice(page_turning))
                     elif event.key == K_RIGHT:
@@ -335,7 +335,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
 
             Display.blit(background, (0, 0))
             Display.blit(exam_paper, relative_position)
-            
+
             lastYoffset = 0
             for question in pages[page_index]:
                 rel_mpos = list(pygame.mouse.get_pos())
@@ -368,7 +368,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                 debugSurf.fill(KDS.Colors.DarkGray)
                 debugSurf.set_alpha(128)
                 Display.blit(debugSurf, (0, 0))
-                
+
                 fps_text = "FPS: " + str(round(Clock.get_fps()))
                 fps_text = examTestFont.render(fps_text, True, KDS.Colors.White)
                 Display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
@@ -379,33 +379,33 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
 
         exam_music.stop()
         pygame.mouse.set_visible(False)
-            
-    
+
+
     exam()
     return _quit, exam_score
 
 def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bool = False) -> bool:
     pygame.key.set_repeat(500, 31) #temp
     displaySize = display.get_size()
-    
+
     #region Settings
     GradeExtras = True
     StoryExtras = True
     AlignOverride = False
     GlobalRefrenceOverride = 9
     #endregion
-    
+
     class Fonts:
         INFO = pygame.font.SysFont("ArialBD", 27)
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
-    
+
     surnames = None
     try:
         with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
             surnames = f.read().splitlines()
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
-    
+
     username = KDS.System.GetUserName()
     usernameParts = username.split(" ")
     usernameParts.reverse()
@@ -419,10 +419,10 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
 
     if AlignOverride:
         surname = "[ALIGN Surname]"
-    
+
     forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name-error>") if not AlignOverride else "[ALIGN Forename]"
     name = f"{surname} {forename}"
-    
+
     def randomBirthday() -> str:
         start_date = datetime.date(2005, 1, 1)
         end_date = datetime.date(2005, 12, 31)
@@ -437,7 +437,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         if (KDS.ConfigManager.Save.Active == None or KDS.ConfigManager.Save.Active.Story.examGrade < 0) and not (4 <= GlobalRefrenceOverride <= 10):
             return -1
         elif 4 <= GlobalRefrenceOverride <= 10 and refrenceOverride == None: refrenceOverride = GlobalRefrenceOverride
-        
+
         ref = round(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride)
         gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
@@ -445,21 +445,21 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
             k=1
         )
         return KDS.Math.Clamp(gradeList[0], 4, 10)
-    
+
     birthday = randomBirthday()
-    
+
     grades = [randomGrade() for _ in range(12)]
     average = sum(grades) / len(grades)
-    
+
     if GradeExtras:
         # PE grade lowers depending on average.
         grades[11] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
-        
+
     if StoryExtras:
         # Because of KDS Story Mode,
         # this will ensure that the maths grade is always 11.
         grades[4] = 11
-    
+
     certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
     certificateSize = certificate.get_size()
     if not AlignOverride:
@@ -467,7 +467,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         pygame.draw.rect(certificate, KDS.Colors.White, (700, 300, 150, certificateSize[1] - 300))
     certificate.blit(Fonts.INFO.render(name, True, KDS.Colors.Black), (67, 175))
     certificate.blit(Fonts.INFO.render(birthday, True, KDS.Colors.Black), (67, 210))
-    
+
     posList = [
         305,
         353,
@@ -485,9 +485,9 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     for i in range(len(grades)):
         gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", True, KDS.Colors.Black)
         certificate.blit(gradeRender, (738, posList[i]))
-    
+
     animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
-    
+
     KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
     while True:
         display.fill(KDS.Colors.Black)
@@ -497,19 +497,19 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
             if event.type == KEYDOWN:
                 if event.key == K_F5:
                     return False
- 
+
         display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
-        
+
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
             debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
-            
+
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = Fonts.GRADE.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()
         clock.tick_busy_loop(60)
-    
+
     return False

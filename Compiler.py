@@ -31,7 +31,7 @@ toBuild = {
 for buildType in toBuild.items():
     filename = buildType[1]["filename"]
     iconname = buildType[1]["iconname"]
-    
+
     PyInstaller.__main__.run([
         "--noconfirm",
         "--distpath",

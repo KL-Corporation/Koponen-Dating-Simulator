@@ -127,9 +127,9 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     tabAdd = False
     match: List[str] = []
     oldIndex = -1
-    
+
     if checkType != None and (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
-    
+
     def addText(text: str):
         nonlocal cursor_index, cmd
         cmd = cmd[:cursor_index] + text + cmd[cursor_index:]
@@ -168,7 +168,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         rmv = cmd[cursor_index:].lstrip(matchChars)
                         found = [i.start() for i in re.finditer(f"[{matchChars}][{matchChars}]*", rmv)]
                         if len(found) > 0: cmd = cmd[:cursor_index] + cmd[cursor_index + found[0] + (len(cmd[cursor_index:]) - len(rmv)):]
-                        else: cmd = cmd[:cursor_index]     
+                        else: cmd = cmd[:cursor_index]
                 elif event.key == K_RETURN:
                     if not invalid:
                         pygame.key.stop_text_input()
@@ -178,7 +178,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         cmd = ""
                         running = False
                 elif event.key == K_ESCAPE and allowEscape:
-                    cmd = ""                 
+                    cmd = ""
                     running = False
                     Escaped = True
                 elif event.key == K_LEFT:
@@ -225,7 +225,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     textInput = False
                     running = False
                 if KDS_Quit != None: KDS_Quit()
-        
+
         while console_font.size(cmd)[0] + cursor_width >= text_rect.width: cmd = cmd[:-1]
 
         if lastCmd != cmd:
@@ -234,7 +234,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             tabAdd = False
             if tabbedCmd != cmd:
                 tabbedCmd = ""
-        
+
         display.blit(defaultBackground if background == None else background, (0, 0))
         pygame.draw.rect(display, KDS.Colors.Black, text_input_rect)
 
@@ -249,7 +249,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             renderFeed = Feed.copy()
             renderFeed.reverse()
             for y_i in range(len(renderFeed)): display.blit(console_font.render(renderFeed[y_i], True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - y_i * console_font.get_height()))
-                
+
         #endregion
 
         #region Type Checking
@@ -268,9 +268,9 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         if _max != None:
                             if max(_max, cmdInt) != _max: invalid = True
                 else: invalid = True
-            
+
             elif _type == "float":
-                
+
                 if re.fullmatch(r"^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$", cmd) != None:
                     cmdFloat = float(cmd)
                     if cmdFloat > sys.maxsize: invalid = True
@@ -281,16 +281,16 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     if _max != None:
                         if max(_max, cmdFloat) != _max: invalid = True
                 else: invalid = True
-            
+
             elif _type == "bool":
                 if KDS.Convert.ToBool(cmd, None, True) == None: invalid = True
-                   
+
             elif _type in ("tuple", "rect"):
                 cmdSplit = re.sub(r"\)$", "", re.sub(r"^\(", "", cmd)).split(",")
                 for i in range(1, len(cmdSplit)): cmdSplit[i] = re.sub(r"^\s", "", cmdSplit[i])
-                for i, s in enumerate(cmdSplit): 
+                for i, s in enumerate(cmdSplit):
                     if len(s) > 0:
-                        if re.fullmatch(r"^[+-]?\d+$", s) == None: 
+                        if re.fullmatch(r"^[+-]?\d+$", s) == None:
                             invalid = True
                             break
                         elif int(s) > sys.maxsize:
@@ -305,7 +305,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     else:
                         invalid = True
                         break
-                        
+
                 if not invalid:
                     cmdIntSplit = [int(v) for v in cmdSplit]
                     if checkType["type"] == "tuple":
@@ -320,7 +320,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                                 _warn = checkType["perfWarning"]
                                 if _warn != None:
                                     if max(_warn, max(cmdIntSplit)) != _warn: warning = True
-                        
+
                     if checkType["type"] == "rect":
                         _range = (checkType["minPos"], checkType["maxPos"])
                         if _range[0] != None:
@@ -334,14 +334,14 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                             if max(_size[1], max(cmdIntSplit[2:])) != _size[1]: invalid = True
             elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!")
         #endregion
-        
+
         #region Commands and Suggestions
         if commands != None:
             if not tabbed and len(cmd) < 1: showSuggestions = False
-            
+
             previousCommandsFound = {}
             commandsFound = {}
-            
+
             cmdSplit = cmd.split(" ")
             if not suggestionsOverride:
                 commandsFound = commands
@@ -359,7 +359,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                         suggestionPathIndex += 1
                     else:
                         break
-              
+
                 if isinstance(commandsFound, dict):
                     match: List[str] = []
                     if len(cmdSplit) - 1 == suggestionPathIndex:
@@ -368,10 +368,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                             if found == 0: match.append(k)
                     else:
                         for k in commandsFound: match.append(k)
-                
+
             if suggestionIndex < 0: suggestionIndex = len(match) - 1
             elif suggestionIndex >= len(match): suggestionIndex = 0
-            
+
             if showSuggestions and (len(cmdSplit) > 0 or len(cmdSplit) - 1 == suggestionPathIndex) and (tabbedCmd == cmd or cmdSplit[-1] not in previousCommandsFound):
                 renderIndex = max(suggestionCount, suggestionIndex + 1)
                 y = (suggestionSpacing + console_font.get_height()) * min(len(match), suggestionCount)
@@ -410,7 +410,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     rndrd = console_font.render(r, True, rndrCol)
                     suggestions.append(rndrd)
                     w = max(w, rndrd.get_width())
-                
+
                 suggestionsRendered = True
                 suggestionSurf = pygame.Surface((w, y))
                 suggestionSurf.fill(suggestionBackgroundColor)
@@ -419,7 +419,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 for r in suggestions:
                     display.blit(r, (0, text_input_rect.top - y))
                     y -= suggestionSpacing + console_font.get_height()
-                    
+
             if enableOld and (len(cmd) <= 0 or cmd in OldCommands) and ((len(OldCommands) > oldIndex and oldIndex != -1 or len(OldCommands) > oldIndex + 1 and oldIndex == -1)) and (Key_Up or Key_Down):
                 if Key_Up:
                     oldIndex += 1
@@ -430,10 +430,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                     if oldIndex < -1: oldIndex = -1
                     cmd = OldCommands[len(OldCommands) - 1 - oldIndex] if oldIndex > -1 else ""
                 cursor_index = len(cmd)
-  
+
         if not suggestionsRendered: display.blit(promptRender, (text_input_rect.left, text_input_rect.top - promptRender.get_height()))
         #endregion
-        
+
         #region Text Rendering
         text_render_color = text_color
         if warning and not invalid:
@@ -444,7 +444,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
         display.blit(renderedCmd, (text_rect.left, text_y))
         if textInput and cursor_animation.update() >= 1.0:
             pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:cursor_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
-        
+
         """
         overlayColor = KDS.Colors.White
         if invalid:
@@ -459,8 +459,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             display.blit(overlaySurf, (text_rect.left, text_y))
         """
         #endregion
-        
-        suggestionsRendered = False 
+
+        suggestionsRendered = False
         lastCmd = cmd
         window.blit(pygame.transform.scale(display, (display_size[0], display_size[1])), (0, 0))
         pygame.display.flip()
@@ -471,7 +471,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
     if enableOld and len(cmd) > 0: OldCommands.append(cmd)
-    
+
     #region Formatting
     if autoFormat:
         if len(cmd) > 0:
@@ -491,5 +491,5 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
             else: KDS.Logging.AutoError("Invalid type for automatic formatting!")
         return None
     #endregion
-    
+
     return cmd

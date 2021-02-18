@@ -22,7 +22,7 @@ pygame.key.stop_text_input()
 
 def ai_collision_test(rect, Tile_list):
     hit_list = []
-    
+
     max_x = len(Tile_list[0]) - 1
     max_y = len(Tile_list) - 1
     x = KDS.Math.Clamp(int(rect.x / 34 - 3), 0, max_x)
@@ -95,7 +95,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
     else:
         if targetRect.x < searchRect.x:
             return False, 0
-            
+
     angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), targetRect.topleft)
     if abs(angle) < maxAngle:
         return False, 0
@@ -107,14 +107,14 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
     dirVar = KDS.Convert.ToMultiplier(direction)
     searchPointers = [(searchRect.centerx + x * 30 *dirVar, searchRect.centery + x * 30 * dirVar*slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
-        
+
         x = int(pointer[0] / 34)
         y = int(pointer[1] / 34)
         end_y = y + 1
         end_x = x + 1
         max_x = len(obstacles[0]) - 1
         max_y = len(obstacles) - 1
-        
+
         if end_x > max_x:
             end_x = max_x
         if end_y > max_y:
@@ -233,7 +233,7 @@ class HostileEnemy:
         self.health = health
         self.sleep = sleep
         self.direction = direction
-        
+
         self.animation = KDS.Animator.MultiAnimation(walk = w, attack = a, death = d, idle = i)
 
         self.a_propability = attackPropability
@@ -252,7 +252,7 @@ class HostileEnemy:
 
     def onDeath(self):
         return []
-    
+
     def attack(self, slope, env_obstacles, target, *args):
         KDS.Logging.AutoError("This code should not execute.")
         return []
@@ -330,7 +330,7 @@ class Imp(HostileEnemy):
         d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
-    
+
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
         dist = min(1200, dist)
@@ -340,7 +340,7 @@ class Imp(HostileEnemy):
         impAttack.set_volume(dist)
         KDS.Audio.PlaySound(impAttack)
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, 6, env_obstacles, random.randint(20, 50), texture=imp_fireball, maxDistance=2000, slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
-    
+
     def onDeath(self):
         return [0]
 
@@ -411,7 +411,7 @@ class DrugDealer(HostileEnemy):
         a_anim.ticks = len(a_anim.images)-1
         del af
         #endregion
-        
+
         super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
 
     def attack(self, slope, env_obstacles, target, *args):
@@ -611,7 +611,7 @@ class Mummy(HostileEnemy):
                         pygame.mixer.Sound("Assets/Audio/Entities/hit1.ogg"),
                         pygame.mixer.Sound("Assets/Audio/Entities/hit2.ogg"),
                         pygame.mixer.Sound("Assets/Audio/Entities/hit3.ogg"))
-    
+
     soundboard_scream = (pygame.mixer.Sound("Assets/Audio/Entities/monster_scream.ogg"),
                         pygame.mixer.Sound("Assets/Audio/Entities/monster_growl.ogg"),
                         pygame.mixer.Sound("Assets/Audio/Entities/monster_growl2.ogg"),
@@ -678,7 +678,7 @@ class Mummy(HostileEnemy):
             if dist < 40 and not self.attackRunning:
                 self.attackRunning = True
             if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
-                
+
 
 class Projectile:
     pass

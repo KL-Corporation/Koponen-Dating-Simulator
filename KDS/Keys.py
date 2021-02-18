@@ -15,7 +15,7 @@ class Key:
         self.holdClicked = False
         self.ticksHeld = 0
         keyList.append(self)
-        
+
     def update(self):
         self.clicked = False
         self.holdClicked = False
@@ -24,7 +24,7 @@ class Key:
             if self.ticksHeld > holdTicks:
                 self.held = True
                 if self.ticksHeld == sys.maxsize: self.ticksHeld -= 1
-                
+
     def SetState(self, pressed: bool):
         if not pressed:
             if self.pressed: self.clicked = True
@@ -33,7 +33,7 @@ class Key:
                 self.held = False
             self.ticksHeld = 0
         self.pressed = pressed
-        
+
     def GetHeldCustom(self, holdTicks: int):
         return True if self.ticksHeld > holdTicks else False
 
@@ -50,9 +50,9 @@ altUp = Key()
 altDown = Key()
 altLeft = Key()
 altRight = Key()
-        
+
 def Update():
     for key in keyList: key.update()
-        
+
 def Reset():
     for key in keyList: key.SetState(False)

@@ -44,10 +44,10 @@ class Padding:
 class Listener:
     def __init__(self) -> None:
         self.listenerList: List[Tuple[str, str, float]] = []
-        
+
     def Add(self, MissionName: str, TaskName: str, AddValue: float):
         self.listenerList.append((MissionName, TaskName, AddValue))
-        
+
     def Trigger(self):
         for listnr in self.listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
@@ -55,12 +55,12 @@ class Listener:
 class ItemListener:
     def __init__(self) -> None:
         self.listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
-           
+
     def Add(self, itemSerial: int, MissionName: str, TaskName: str, AddValue: float):
         if itemSerial not in self.listenerDict:
             self.listenerDict[itemSerial] = []
         self.listenerDict[itemSerial].append((MissionName, TaskName, AddValue))
-        
+
     def Trigger(self, itemSerial: int):
         if itemSerial in self.listenerDict:
             for v in self.listenerDict[itemSerial]:
@@ -91,17 +91,17 @@ class Task:
         self.lastFinished = False
         self.color = KDS.Animator.Color(TaskColor, TaskFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
         Missions.GetMission(missionName).AddTask(safeName, self)
-        
+
     def Progress(self, Value: float, Add: bool = False):
         self.progress = (self.progress + Value if Add else Value)
         if self.progress >= 1.0:
             self.finished = True
             self.progress = 1.0
-        else: 
+        else:
             self.finished = False
             if self.progress < 0.0: self.progress = 0.0
         self.progressScaled = KDS.Math.Floor(self.progress * 100)
-        
+
     def Update(self, Width: int, Height: int, PlaySound: bool = True):
         surface = pygame.Surface((Width, Height))
         surface.fill(self.color.update(not self.finished))
@@ -147,27 +147,27 @@ class Mission:
         self.color = KDS.Animator.Color(MissionColor, MissionFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
         self.PlaySound = True
         Missions.AddMission(self.safeName, self)
-        
+
     def AddTask(self, safeName: str, task: Task):
         if safeName not in self.tasks:
             self.tasks[safeName] = task
             self.task_keys = safeName
             self.task_values.append(self.tasks[safeName])
         else: KDS.Logging.AutoError("SafeName is already occupied!")
-        
+
     def GetTask(self, safeName: str):
         if safeName in self.tasks: return self.tasks[safeName]
         else: return None
-    
+
     def GetTaskList(self):
         return self.task_values
-    
+
     def GetKeyList(self):
         return self.task_keys
-    
+
     def GetTaskByValue(self, value):
         return self.tasks[self.task_keys[self.task_values.index(value)]]
-    
+
     def Update(self):
         self.finished = True
         self.PlaySound = False
@@ -192,11 +192,11 @@ class Mission:
         else:
             self.trueFinished = False
             self.finishedTicks = 0
-            
+
         if self.finishedTicks > MissionWaitTicks:
             self.trueFinished = True
             self.finishedTicks = MissionWaitTicks
-        
+
         if self.lastFinished != self.finished:
             if self.finished:
                 KDS.Audio.PlaySound(MissionFinishSound)
@@ -205,7 +205,7 @@ class Mission:
                 KDS.Audio.PlaySound(MissionUnFinishSound)
                 self.color.changeValues(MissionColor, MissionUnFinishedColor)
         self.lastFinished = self.finished
-    
+
     def Render(self) -> Tuple[pygame.Surface, int]:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
         _taskWidth = 0
@@ -226,20 +226,20 @@ class MissionHolder:
         self.mission_keys: List[str] = []
         self.mission_values: List[Mission] = []
         self.finished = False
-        
+
     def GetMission(self, safeName: str):
         if safeName in self.missions: return self.missions[safeName]
         else: return None
-    
+
     def GetMissionList(self):
         return self.mission_values
-    
+
     def GetKeyList(self):
         return self.mission_keys
-    
+
     def GetMissionByValue(self, value):
         return self.missions[self.mission_keys[self.mission_values.index(value)]]
-    
+
     def AddMission(self, safeName: str, mission: Mission):
         if safeName not in self.missions:
             self.missions[safeName] = mission
@@ -247,7 +247,7 @@ class MissionHolder:
             self.mission_values.append(self.missions[safeName])
         else: KDS.Logging.AutoError("SafeName is already occupied!")
 
-Missions = MissionHolder()     
+Missions = MissionHolder()
 #endregion
 #region init
 Active_Mission: str
@@ -319,10 +319,10 @@ def SetProgress(MissionName: str, TaskName: str, SetValue: float):
         Set_Value (float): The value that will be set to your task's progress.
     """
     var = Missions.GetMission(MissionName)
-    if var != None: 
+    if var != None:
         var = var.GetTask(TaskName)
         if var != None: var.Progress(SetValue)
-    
+
 def AddProgress(MissionName: str, TaskName: str, AddValue: float):
     """Adds a specified amount of progress to a task.
 

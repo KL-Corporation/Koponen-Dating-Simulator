@@ -25,11 +25,11 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
 class JSON:
     NULLPATH = "[config_manager_null_path]"
     EMPTY = "[config_manager_empty_json]"
-    
+
     @staticmethod
     def ToKeyList(jsonPath: str):
         return re.sub(r"\/+", "/", jsonPath.strip("/")).split("/")
-    
+
     @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True) ->  Union[Any, None]:
         config = {}
@@ -39,7 +39,7 @@ class JSON:
                     try: config = json.loads(f.read())
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-        
+
         if jsonPath != JSON.NULLPATH:
             path = JSON.ToKeyList(jsonPath)
             tmpConfig = config
@@ -55,14 +55,14 @@ class JSON:
                 value = {}
             config = value
         else: return value
-        
+
         try:
             with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys = sortKeys, indent = 4))
             return value
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
             return None
-        
+
     @staticmethod
     def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False) -> Any:
         config = {}
@@ -120,11 +120,11 @@ def GetGameData(path: str):
 
 class LevelProp:
     mapPath: str = ""
-    
+
     @staticmethod
     def init(MapPath: str):
         LevelProp.mapPath = MapPath
-    
+
     @staticmethod
     def Get(path: str, DefaultValue: Any, listToTuple: bool = True) -> Any:
         val = JSON.Get(os.path.join(LevelProp.mapPath, "levelprop.kdf"), path, DefaultValue, writeMissing=False)
@@ -132,18 +132,18 @@ class LevelProp:
 
 class Save:
     Active = None
-    
+
     @staticmethod
     def ToPath(index: int):
         return os.path.join(SaveDirPath, f"{index}.kds")
-    
+
     class StoryData:
         def __init__(self) -> None:
             self.playerName: str = "Sinä"
             self.index: int = 1
             self.examGrade: int = -1
             self.principalName: str = "<principal name error>"
-    
+
     def __init__(self, index: int) -> None:
         Save.Active = self
         self.index = index
@@ -165,8 +165,8 @@ class Save:
         path = Save.ToPath(self.index)
         if os.path.isfile(path):
             os.remove(path)
-            
-        
+
+
 
 #region Fuck off
 #class Save:
@@ -235,19 +235,19 @@ class Save:
 #        KDS.Logging.AutoError(f"Game settings are incorrect! Gamemode: {KDS.Gamemode.gamemode}, SaveIndex: {Save.SaveIndex}.")
 #        return True
 #        #decodes and loads a save file to cache
-#     
+#
 #    @staticmethod
 #    def GetExistence(index: int):
 #        return True if os.path.isfile(os.path.join(SaveDirPath, f"save_{index}.kds")) else False
-#    
-#    @staticmethod            
+#
+#    @staticmethod
 #    def SetData(path: str, item: Any):
 #        JSON.Set(Save.PlayerFileCache, path, item)
-#     
+#
 #    @staticmethod
 #    def GetData(path: str, default: Any):
 #        return JSON.Get(Save.PlayerFileCache, path, default, True)
-#    
+#
 #    ignoreTypes = [
 #        pygame.Surface,
 #        pygame.mixer.Sound,
@@ -255,7 +255,7 @@ class Save:
 #        KDS.Animator.MultiAnimation
 #        #Inventory is automatically appended here by main
 #    ]
-#    
+#
 #    @staticmethod
 #    def SetClass(item: Any, filePathFromSaveCache: str, *identificationAttributes: str, identifier: str = None):
 #        # Älä haasta meitä oikeuteen omena, pliis.
@@ -283,7 +283,7 @@ class Save:
 #            if i > 0: itemIdentifier += "-"
 #            itemIdentifier += str(getattr(item, identificationAttributes[i]))
 #        JSON.Set(os.path.join(SaveCachePath, filePathFromSaveCache), itemIdentifier, sVars)
-#    
+#
 #    @staticmethod
 #    def GetClass(Class, filePathFromSaveCache: str, identifier: str, classArgs: List[Any] = []):
 #        attrs = JSON.Get(os.path.join(SaveCachePath, filePathFromSaveCache), identifier, None, True)
@@ -300,7 +300,7 @@ class Save:
 #                    setattr(instance, k, tuple(v["values"]))
 #            else: setattr(instance, k, v)
 #        return instance
-#    
+#
 #    @staticmethod
 #    def SetTiles(tiles, specialTilesD, RespawnAnchorClass):
 #        tiles = tiles.copy()
@@ -309,7 +309,7 @@ class Save:
 #                if tile.serialNumber in specialTilesD:
 #                    Save.SetClass(tile, os.path.join(SaveCachePath, "tiles.kdf"), "rect", "serialNumber")
 #        JSON.Set(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", f"{RespawnAnchorClass.active.rect.left}-{RespawnAnchorClass.active.rect.top}-{RespawnAnchorClass.active.serialNumber}" if RespawnAnchorClass.active != None else None)
-#    
+#
 #    @staticmethod
 #    def GetTiles(tiles, RespawnAnchorClass):
 #        savedSpecials = JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), JSON.NULLPATH, JSON.EMPTY)
@@ -323,7 +323,7 @@ class Save:
 #                        else: setattr(tile, k, v)
 #                if f"{tile.rect.left}-{tile.rect.top}-{tile.serialNumber}" == JSON.Get(os.path.join(SaveCachePath, "tiles.kdf"), "Data/RespawnAnchor/active", None):
 #                    RespawnAnchorClass.active = tile
-#                        
+#
 #    @staticmethod
 #    def SetItems(items: Iterable[Any]):
 #        itemsPath = os.path.join(SaveCachePath, "items.kdf")
@@ -345,7 +345,7 @@ class Save:
 #            srlNum = int(key.split("-")[0])
 #            instanceList.append(Save.GetClass(ItemClass.serialNumbers[srlNum], "items.kdf", key, ((0, 0), srlNum)))
 #        return instanceList
-#    
+#
 #    @staticmethod
 #    def SetEnemies(enemies):
 #        enemiesPath = os.path.join(SaveCachePath, "enemies.kdf")
@@ -354,7 +354,7 @@ class Save:
 #                Save.SetClass(v, enemiesPath, identifier=f"{type(v)}-{i}")
 #        else:
 #            JSON.Set(enemiesPath, JSON.NULLPATH, JSON.EMPTY)
-#        
+#
 #    @staticmethod
 #    def GetEnemies():
 #        eList: Dict[str, Any] = JSON.Get(os.path.join(SaveCachePath, "enemies.kdf"), JSON.NULLPATH, None, True)
@@ -366,7 +366,7 @@ class Save:
 #            typeKey = key.split("-")[0][15:-2]
 #            instanceList.append(Save.GetClass(getattr(KDS.AI, typeKey), "enemies.kdf", key, [(0, 0)]))
 #        return instanceList
-#    
+#
 #    @staticmethod
 #    def SetBallistic(ballistic_objects):
 #        ballisticPath = os.path.join(SaveCachePath, "ballistic_objects.kdf")
@@ -375,7 +375,7 @@ class Save:
 #                Save.SetClass(v, ballisticPath, identifier=f"{type(v)}-{i}")
 #        else:
 #            JSON.Set(ballisticPath, JSON.NULLPATH, JSON.EMPTY)
-#            
+#
 #    @staticmethod
 #    def GetBallistic():
 #        bList: Dict[str, Any] = JSON.Get(os.path.join(SaveCachePath, "ballistic_objects.kdf"), JSON.NULLPATH, None, True)
@@ -394,7 +394,7 @@ class Save:
 #            missionDict = {}
 #            for task in mission:
 #                pass #Yeah fuck this
-#        
+#
 #
 #    @staticmethod
 #    def SetExplosions(explosions):
@@ -404,7 +404,7 @@ class Save:
 #                Save.SetClass(v, explosionsPath, identifier=f"{type(v)}-{i}")
 #        else:
 #            JSON.Set(explosionsPath, JSON.NULLPATH, JSON.EMPTY)
-#            
+#
 #    @staticmethod
 #    def GetExplosions():
 #        eList: Dict[str, Any] = JSON.Get(os.path.join(SaveCachePath, "explosions.kdf"), JSON.NULLPATH, None, True)

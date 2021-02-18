@@ -21,7 +21,7 @@ for s in df["Sukunimi"].values:
     if " " not in s:
         newSukunimet += f"{s}\n"
     else:
-        print(f"Skipped \"{s}\" because it has whitespace.")    
+        print(f"Skipped \"{s}\" because it has whitespace.")
 
 def addCustom(customSurname: str):
     global newSukunimet
@@ -33,7 +33,7 @@ def addCustom(customSurname: str):
 #region Custom Surnames
     # Currently there is no need to add any
 #endregion
-#region File Saving 
+#region File Saving
 with open("surnames.txt", "w", encoding="utf-8") as f:
     f.write(newSukunimet.strip("\n"))
 #endregion

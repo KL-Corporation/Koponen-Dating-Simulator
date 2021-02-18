@@ -141,7 +141,7 @@ def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEve
 
 #region Area
 def triangleArea(triangle: List[Tuple[int, int]]):
-    return abs((triangle[0][0] * (triangle[1][1] - triangle[2][1]) + triangle[1][0] * (triangle[2][1] - triangle[0][1])  + triangle[2][0] * (triangle[0][1] - triangle[1][1])) / 2.0) 
+    return abs((triangle[0][0] * (triangle[1][1] - triangle[2][1]) + triangle[1][0] * (triangle[2][1] - triangle[0][1])  + triangle[2][0] * (triangle[0][1] - triangle[1][1])) / 2.0)
 #endregion
 
 #region Distance
@@ -170,7 +170,7 @@ def getSlope2(angle: float) -> float: #Angle in degrees
     """
     Calculates slope of straight from angle
     """
-    return Tan(angle * DEG2RAD) 
+    return Tan(angle * DEG2RAD)
 #endregion
 
 #region Angles
@@ -238,7 +238,7 @@ def LerpUnclamped(a: float, b: float, t: float) -> float:
 
 def LerpAngle(a: float, b: float, t: float) -> float:
     """Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.
-    
+
     The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be in degrees.
     """
     delta = Repeat(b - a, 360.0)
@@ -247,7 +247,7 @@ def LerpAngle(a: float, b: float, t: float) -> float:
 
 def SmoothStep(a: float, b: float, t: float) -> float:
     """Smoothly interpolates between a and b by t.
-    
+
     The parameter t is clamped to the range [0, 1].
     """
     t = Clamp01(t)
@@ -270,7 +270,7 @@ def MoveTowardsAngle(current: float, target: float, maxDelta: float) -> float:
     """Same as MoveTowards but makes sure the values interpolate correctly when they wrap around 360 degrees.
     Variables current and target are assumed to be in degrees. For optimization reasons, negative values of maxDelta are not supported and may cause oscillation. To push current away from a target angle, add 180 to that angle instead.
     """
-    
+
     deltaAngle = DeltaAngle(current, target)
     if (-maxDelta < deltaAngle and deltaAngle < maxDelta): return target
     target = current + deltaAngle

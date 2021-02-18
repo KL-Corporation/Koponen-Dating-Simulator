@@ -75,7 +75,7 @@ for element in buildData["tile_textures"]:
 i_textures = {}
 for element in buildData["item_textures"]:
     srl = f"1{element}"
-    
+
     elmt = buildData["item_textures"][element]
     i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + elmt).convert()
     i_textures[srl].set_colorkey(KDS.Colors.White)
@@ -124,7 +124,7 @@ class Undo:
     points: List[Dict[str, Any]] = []
     index = 0
     overflowCount = 0
-    
+
     @staticmethod
     def register():
         global grid, dragRect, brush, tileprops
@@ -137,7 +137,7 @@ class Undo:
             "tileprops": {k: {ik: iv for ik, iv in v.items()} for k, v in tileprops.items()} # deepcopy replacement. Dictionary replacement keys do not need to be deepcopied, because they are strings.
             #                     ^^ Value doesn't need to be deepcopied, because it can only be str, float, int or bool.
         }
-        
+
         Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
         removedCount = len(Undo.points[Undo.index + 1:])
         del Undo.points[Undo.index + 1:]
@@ -147,24 +147,24 @@ class Undo:
             del Undo.points[0]
             Undo.overflowCount += 1
         Undo.index = len(Undo.points) - 1
-    
+
     @staticmethod
     def request(redo: bool = False):
         Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
-        
+
         global grid, dragRect, brush, tileprops
         data = Undo.points[Undo.index]
         grid = data["grid"]
         dragRect = data["dragRect"]
         tileprops = data["tileprops"]
-    
+
     @staticmethod
     def clear():
         Undo.points.clear()
         Undo.index = 0
         Undo.register()
         Undo.overflowCount = 0
-       
+
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
@@ -181,11 +181,11 @@ class tileInfo:
     releasedButtons = { 0: True, 2: True }
     placedOnTile = None
     EMPTYSERIAL = "0000 0000 0000 0000 / "
-    
+
     def __init__(self, position: Tuple[int, int], serialNumber = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
-       
+
     def __eq__(self, other) -> bool:
         """ == operator """
         if isinstance(other, tileInfo):
@@ -195,13 +195,13 @@ class tileInfo:
     def __ne__(self, other) -> bool:
         """ != operator """
         return not self.__eq__(other)
-        
+
     def copy(self) -> tileInfo:
         return tileInfo(position=self.pos, serialNumber=self.serialNumber)
 
     def setSerial(self, srlNumber: str):
         self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
-    
+
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
@@ -226,14 +226,14 @@ class tileInfo:
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
-        
+
     def removeSerial(self):
         global tileprops
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
                 self.setSerialToSlot("0000", index)
-                
+
                 tpp = f"{self.pos[0]}-{self.pos[1]}"
                 if tpp in tileprops and "overlay" in tileprops[tpp] and tileprops[tpp]["overlay"] == number:
                     tileprops[tpp].pop("overlay")
@@ -261,7 +261,7 @@ class tileInfo:
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
         bpos = (0, 0)
-        
+
         tip_renders = []
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
@@ -316,9 +316,9 @@ class tileInfo:
                                             Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                                         else:
                                             KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
-                                else:  
+                                else:
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
-                                        
+
                             if number[0] == "3":
                                 teleportOverlay = pygame.transform.scale(Atextures["3"]["3001"], (scalesize, scalesize))
                                 teleportOverlay.set_alpha(100)
@@ -338,13 +338,13 @@ class tileInfo:
                                 if tilepropsPath not in tileprops:
                                     tileprops[tilepropsPath] = {}
                                 if setPropKey == "overlay":
-                                    # It will be possible to break the system by changing the overlay without 
+                                    # It will be possible to break the system by changing the overlay without
                                     # removing the old overlay, but hopefully our users aren't that stupid...
-                                    tileprops[tilepropsPath][setPropKey] = setPropValUnformatted 
+                                    tileprops[tilepropsPath][setPropKey] = setPropValUnformatted
                                 else:
                                     tileprops[tilepropsPath][setPropKey] = setPropVal
                             else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
-                    
+
                     srlist = unit.getSerials()
                     fld_srls = 0
                     for sr in srlist:
@@ -352,7 +352,7 @@ class tileInfo:
                         else: break
                     if fld_srls > 1:
                         for i in range(fld_srls): tip_renders.append(harbinger_font_small.render(srlist[i], True, KDS.Colors.RiverBlue))
-                    
+
                     if mouse_pressed[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerial(0)
                     pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
@@ -385,12 +385,12 @@ class tileInfo:
                             del tileprops[tpP]["checkCollision"]
                             if len(tileprops[tpP]) < 1: del tileprops[tpP]
                     tileInfo.placedOnTile = unit
-                
+
                     if tilepropsPath in tileprops:
                         for k, v in tileprops[tilepropsPath].items():
                             if k != "checkCollision":
                                 tip_renders.append(harbinger_font_small.render(f"{k}: {v}", True, KDS.Colors.EmeraldGreen))
-        
+
         if len(tip_renders) > 0:
             totHeight = 0
             maxWidth = 0
@@ -404,13 +404,13 @@ class tileInfo:
                 pygame.draw.rect(display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
-        
+
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
-        
+
         tileInfo.releasedButtons[0] = False if mouse_pressed[0] else True
         tileInfo.releasedButtons[2] = False if mouse_pressed[2] else True
-        
+
         return renderList, brushtemp
 
 def loadGrid(size: Tuple[int, int]):
@@ -474,7 +474,7 @@ def saveMap(grd, name: str):
                 f.write(json.dumps(tileprops))
     #endregion
     Undo.clear()
-        
+
 def saveMapName():
     global currentSaveName, grid
     savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
@@ -489,13 +489,13 @@ def loadMap(path: str):
             saveMapName()
         else:
             saveMap(grid, currentSaveName)
-            
+
     temporaryGrid = None
     if path:
         with open(path, 'r') as f:
             contents = f.read().split("\n")
             while len(contents[-1]) < 1: contents = contents[:-1]
-            
+
         maxW = 0
         for i in range(len(contents)):
             maxW = max(maxW, len(contents[i][:-2].split("/")))
@@ -510,7 +510,7 @@ def loadMap(path: str):
         #    for unit, tUnit in zip(row, tRow.split("/")):
         #        tUnit = tUnit.strip()
         #        unit.serialNumber = tUnit + " /"
-        
+
         #return tempGrid
         currentSaveName = path
 
@@ -519,9 +519,9 @@ def loadMap(path: str):
         if os.path.isfile(fpath):
             with open(fpath, 'r') as f:
                 tileprops = json.loads(f.read())
-                
+
         Undo.clear()
-    
+
 def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
     global currentSaveName, gridSize, grid, tileprops
     fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
@@ -626,12 +626,12 @@ def materialMenu(previousMaterial: str) -> str:
             if x > COLUMNS:
                 x = 0
                 y += 1
-        
+
         y += 1
         if x > 0:
             x = 0
             y += 1
-                
+
     selectorSize = (COLUMNS, y)
 
     while matMenRunning:
@@ -648,9 +648,9 @@ def materialMenu(previousMaterial: str) -> str:
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
                 else: rscroll = min(rscroll + 1, sys.maxsize)
-        
+
         tip_renders = []
-        
+
         mpos = pygame.mouse.get_pos()
         display.fill((20,20,20))
         for selection in selectorRects:
@@ -662,10 +662,10 @@ def materialMenu(previousMaterial: str) -> str:
                 tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
                     return selection.serialNumber
-                
+
         if mouse_pressed[0]:
             return "0000"
-        
+
         if len(tip_renders) > 0:
             totHeight = 0
             maxWidth = 0
@@ -680,7 +680,7 @@ def materialMenu(previousMaterial: str) -> str:
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
         pygame.display.flip()
-        
+
     return previousMaterial
 
 def generateLevelProp():
@@ -694,17 +694,17 @@ def generateLevelProp():
     else:
         darkness = 0
         player_light = False
-    
+
     ambient_light = KDS.Console.Start("Ambient Light Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
     if ambient_light: ambient_light_tint = KDS.Console.Start("Ambient Light Tint: (int, int, int)", False, KDS.Console.CheckTypes.Tuple(3, 0, 255), autoFormat=True)
     else: ambient_light_tint = (0, 0, 0)
-    
+
     p_start_pos = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100", autoFormat=True)
-    
+
     k_start_pos = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200", autoFormat=True)
-    
+
     tb_start, tb_end = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0, requireIncrease=True), autoFormat=True)
-    
+
     savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
     if len(savePath) > 0:
         if os.path.isfile(savePath): os.remove(savePath)
@@ -728,14 +728,14 @@ def menu():
             openMap()
             if grid != None:
                 btn_menu = False
-            else: 
+            else:
                 btn_menu = True
         else: btn_menu = False
     newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    
+
     while btn_menu:
         clicked = False
         for event in pygame.event.get():
@@ -756,12 +756,12 @@ def menu():
         openMap_btn.update(display, mouse_pos, clicked, True)
         genProp_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
-        
+
         pygame.display.flip()
 
 class Selected:
     units: List[tileInfo] = []
-    
+
     @staticmethod
     def Set(serialOverride: str = None, registerUndo: bool = True):
         global grid
@@ -774,15 +774,15 @@ class Selected:
         if registerUndo: Undo.register()
         for unit in Selected.units:
             grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
-            
-    @staticmethod         
+
+    @staticmethod
     def Update():
         Selected.units = []
         if dragRect == None: return
         for row in grid[dragRect.y:dragRect.y + dragRect.height]:
             for unit in row[dragRect.x:dragRect.x + dragRect.width]:
                 Selected.units.append(unit.copy())
-                
+
     @staticmethod
     def Get():
         Selected.Update()
@@ -795,7 +795,7 @@ def main():
     if not mainRunning: return
 
     display.fill(KDS.Colors.Black)
-    
+
     def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
         global scalesize, scaleMultiplier
         mouse_pos = pygame.mouse.get_pos()
@@ -809,7 +809,7 @@ def main():
 
     if grid == None:
         g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000)).replace(" ", "").split(",")
-            
+
         gridSize = (int(g[0]), int(g[1]))
         grid = loadGrid(gridSize)
 
@@ -901,14 +901,14 @@ def main():
                 scroll[0] += event.x
             elif event.type == DROPFILE:
                 loadMap(event.file)
-            
+
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
             mid_scroll_y = (mouse_pos_beforeMove[1] - mouse_pos[1]) // scalesize
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
                 scroll[0] = scroll_beforeMove[0] + mid_scroll_x
                 scroll[1] = scroll_beforeMove[1] + mid_scroll_y
-        
+
         if keys_pressed[K_s] and keys_pressed[K_LCTRL]:
             if not currentSaveName:
                 saveMapName()
@@ -982,7 +982,7 @@ def main():
                             display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
                         else:
                             display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - blitTex.get_height() * scaleMultiplier + scalesize))
-        
+
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
             selectDraw = pygame.Surface(selectDrawRect.size)
@@ -990,17 +990,17 @@ def main():
             pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), scalesize // 8)
             selectDraw.set_alpha(64)
             display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
-        
+
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
             debugSurf.fill(KDS.Colors.DarkGray)
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
-        
+
             fps_text = "FPS: " + str(round(clock.get_fps()))
             fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
             display.blit(fps_text, (10, 10))
-        
+
         pygame.display.flip()
         clock.tick_busy_loop()
 
@@ -1015,7 +1015,7 @@ except Exception as e:
             KDS.System.MessageBox.Show("Success!", "Your project was saved successfully.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
         except Exception:
             KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
-            
+
 
 pygame.quit()
 
@@ -1040,7 +1040,7 @@ pygame.quit()
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As
     CTRL + O: Open Project
-    
+
     [Material Menu]
     Escape: Close Material Menu
     E: Close Material Menu

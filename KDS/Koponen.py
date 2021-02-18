@@ -63,7 +63,7 @@ randChance: Callable[[int], bool] = lambda v: random.uniform(0, 1) <= 1 / v
 class Prefixes:
     player = "p:"
     koponen = "k:"
-    
+
 _renderedPrefixes = {
     Prefixes.player: text_font.render("ERROR: ", True, text_color),
     Prefixes.koponen: text_font.render("Koponen: ", True, text_color)
@@ -87,7 +87,7 @@ def init(playerName: str):
 class Mission:
     # Will be automatically assigned by KDS.Missions
     Task = None
-    
+
     @staticmethod
     def Request():
         if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONREQUEST:
@@ -98,7 +98,7 @@ class Mission:
 #                Talk.Conversation.schedulePriority("Äläs nyt kiirehdi... Sinulla on vielä tehtävä kesken.", Prefixes.koponen)
 #        else:
 #            Talk.Conversation.schedulePriority("Nyt on kyllä ideat lopussa... Minulla ei ole hajuakaan mitä tekemistä keksisin sinulle.", Prefixes.koponen)
-    
+
     @staticmethod
     def Return(player_inventory):
         if Mission.Task != None and Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
@@ -108,7 +108,7 @@ class Mission:
                     if invItem.serialNumber == item:
                         inInv = invItem
                         break
-                    
+
                 if inInv != None:
                     KDS.Missions.SetProgress(Mission.Task.missionName, Mission.Task.safeName, 1.0)
                     Mission.Task = None
@@ -129,10 +129,10 @@ class Talk:
     lineCount = KDS.Math.Floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     audioChannel = None
     soundPlaying = None
-    
+
     lines: List[str] = []
     scheduled: List[str] = []
-        
+
     class Conversation:
         WAITFORMISSIONREQUEST = "<wait-for-mission-request>"
         WAITFORMISSIONRETURN = "<wait-for-mission-return>"
@@ -143,7 +143,7 @@ class Talk:
         animationProgress = -1
         animationWidth = 0
         newAnimation = False
-        
+
         @staticmethod
         def schedule(text: str, prefix: str = Prefixes.player, forcePrefix: bool = False):
             if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
@@ -156,7 +156,7 @@ class Talk:
                     Talk.scheduled.append("!" + prefix + lineSplit[i])
                 else:
                     Talk.scheduled.append(prefix + lineSplit[i])
-        
+
         @staticmethod
         def update():
             if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
@@ -175,12 +175,12 @@ class Talk:
                 Talk.audioChannel = None
                 for audio in ambientTalkAudios:
                     audio.stop()
-        
+
         @staticmethod
         def render(mouse_pos: Tuple[int, int], clicked: bool):
             Talk.display.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.display, background_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), 0, conversation_border_radius)
-            
+
             lastIncluded = False
             for i in range(Talk.Conversation.scroll, min(Talk.Conversation.scroll + Talk.lineCount + 1, len(Talk.lines))):
                 text = Talk.lines[i]
@@ -194,9 +194,9 @@ class Talk:
                 Talk.display.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
                 if i <= 0 or forcePrefix or text[:2] != Talk.lines[i - 1].removeprefix("!")[:2]:
                     Talk.display.blit(prefix, (text_padding.left, offsetY))
-                
+
                 # if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.display, mouse_pos, clicked)
-                
+
                 if i == len(Talk.lines) - 1: lastIncluded = True
 
             if len(Talk.lines) > 0:
@@ -206,12 +206,12 @@ class Talk:
                 animationRectTarget = pygame.Rect(text_padding.left + _renderedPrefixes[lastLine[:2]].get_width(),
                                                 text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(lastLine[2:])[0], text_font.get_height())
             else: animationRectTarget = pygame.Rect(0, 0, 0, 0)
-                
+
             if Talk.Conversation.newAnimation:
                 Talk.Conversation.newAnimation = False
                 Talk.Conversation.animationProgress = 0.0
                 Talk.Conversation.animationWidth = animationRectTarget.width
-                
+
             if Talk.Conversation.animationProgress >= 1.0:
                 Talk.Conversation.animationProgress = -1
             if Talk.Conversation.animationProgress != -1:
@@ -219,10 +219,10 @@ class Talk:
                 Talk.Conversation.animationProgress = KDS.Math.Remap01(Talk.Conversation.animationWidth, animationRectTarget.width, 0)
                 if lastIncluded:
                     pygame.draw.rect(Talk.display, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
-            
+
             pygame.draw.rect(Talk.display, background_outline_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), conversation_outline_width, conversation_border_radius)
             return Talk.display
-        
+
         @staticmethod
         def clear():
             Talk.lines.clear()
@@ -256,13 +256,13 @@ class Talk:
         talk_ad = talk_ads[ad_index]
         display_size = display.get_size()
         Talk.running = True
-        
+
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
         request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
         return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, "RETURN MISSION")
-        
+
         KDS.Missions.Listeners.KoponenTalk.Trigger()
-        
+
         while Talk.running:
             mouse_pos = pygame.mouse.get_pos()
             conversation_mouse_pos = (mouse_pos[0] - conversation_rect.left, mouse_pos[0] - conversation_rect.top)
@@ -287,9 +287,9 @@ class Talk:
                         c = True
                 elif event.type == QUIT:
                     KDS_Quit()
-            
+
             Talk.renderMenu(display, mouse_pos, c)
-            
+
             exit_button.update(display, mouse_pos, c)
             request_mission_button.update(display, mouse_pos, c)
             return_mission_button.update(display, mouse_pos, c, player_inventory)
@@ -297,7 +297,7 @@ class Talk:
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
             clock.tick_busy_loop(60)
-        
+
         pygame.mouse.set_visible(False)
 
 class KoponenEntity:
@@ -356,7 +356,7 @@ class KoponenEntity:
         else:
             self.rect, self.collisions = KDS.AI.move(self.rect, [0, self.movement[1]], tiles)
 
-        if self.collisions["bottom"]: 
+        if self.collisions["bottom"]:
             self.air_time = 0
             self.y_velocity = 0
         else: self.air_time += 1

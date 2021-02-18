@@ -48,9 +48,9 @@ class Animation:
 
             for _ in range(duration):
                 self.images.append(image)
-        
+
         self.size = self.images[0].get_size()
-                
+
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
 
@@ -96,11 +96,11 @@ class Animation:
             pygame.Surface: Currently active frame.
         """
         return self.images[self.tick]
-    
+
     def change_colorkey(self, colorkey: Tuple[int, int, int]):
         for image in self.images:
             image.set_colorkey(colorkey)
-            
+
 class MultiAnimation:
     def __init__(self, **animations: Animation):
         self.animations = animations
@@ -110,19 +110,19 @@ class MultiAnimation:
                 self.active = animations[key]
             else:
                 break
-    
+
     def trigger(self, animation_trigger):
         if animation_trigger in self.animations:
             self.active = self.animations[animation_trigger]
         else:
             KDS.Logging.AutoError("MultiAnimation trigger invalid.")
-            
+
     def update(self, reverse: bool = False):
         return self.active.update(reverse)
-    
+
     def get_frame(self):
         return self.active.get_frame()
-    
+
     def reset(self):
         for anim in self.animations:
             self.animations[anim].tick = 0
@@ -194,7 +194,7 @@ class Value:
         AnimationType.EaseInBounce: lambda t: 1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - t),
         AnimationType.EaseInOutBounce: lambda t: (1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(2 * t - 1)) * 0.5
     }
-    
+
     def __init__(self, From: float, To: float, Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
         """Initialises a float animation.
 
@@ -223,7 +223,7 @@ class Value:
         """
         if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
         else: return self.To
-    
+
     def update(self, reverse: bool = False) -> float:
         """Updates the float animation
 
@@ -260,10 +260,10 @@ class Value:
                     self.PingPong = False
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
-        
+
         t = self.tick / self.ticks
         if self.type != None: t = self.type(t)
-        
+
         if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, t)
         else: return self.To
 
@@ -272,13 +272,13 @@ class Color:
         self._r = Value(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
         self._g = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
         self._b = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
-        
+
     def get_value(self) -> Tuple[int, int, int]:
         return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()))
-    
+
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
         return (round(self._r.update(reverse)), round(self._g.update(reverse)), round(self._b.update(reverse)))
-    
+
     def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
         self._r.From = From[0]
         self._r.To = To[0]
@@ -286,9 +286,9 @@ class Color:
         self._g.To = To[1]
         self._b.From = From[2]
         self._b.To = To[2]
-    
+
     def getValues(self):
         return (self._r.From, self._g.From, self._b.From), (self._r.From, self._g.From, self._b.From)
-    
+
     def getFinished(self):
-        return True if self._r.Finished and self._g.Finished and self._b.Finished else False  
+        return True if self._r.Finished and self._g.Finished and self._b.Finished else False

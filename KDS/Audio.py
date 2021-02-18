@@ -5,7 +5,7 @@ def init(_mixer):
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels, SoundMixer
     MusicMixer = _mixer.music
     SoundMixer = _mixer
-    
+
     _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 32))
 
     MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", 0.25)
@@ -13,7 +13,7 @@ def init(_mixer):
     EffectChannels = []
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))
-        
+
 class Music:
     @staticmethod
     def Play(path: str, loops: int = -1):
@@ -22,38 +22,38 @@ class Music:
         if path != None: MusicMixer.load(path)
         MusicMixer.play(loops)
         MusicMixer.set_volume(MusicVolume)
-        
+
     @staticmethod
     def Stop():
         global MusicMixer, MusicVolume
         MusicMixer.stop()
-        
+
     @staticmethod
     def Pause():
         global MusicMixer, MusicVolume
         MusicMixer.pause()
-        
+
     @staticmethod
     def Unpause():
         global MusicMixer, MusicVolume
         MusicMixer.unpause()
-        
+
     @staticmethod
     def Unload():
         global MusicMixer, MusicVolume
         MusicMixer.unload()
-        
+
     @staticmethod
     def Rewind():
         global MusicMixer, MusicVolume
         MusicMixer.rewind()
-  
+
     @staticmethod
     def SetVolume(volume: float):
         global MusicVolume, MusicMixer
         MusicVolume = volume
         MusicMixer.set_volume(MusicVolume)
- 
+
 def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()

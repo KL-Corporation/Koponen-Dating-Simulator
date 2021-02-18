@@ -7,7 +7,7 @@ new = list()
 class Event:
     def __init__(self, values: Iterable = []) -> None:
         self.listeners = [v for v in values]
-        
+
     def __add__(self, value: Event) -> Event:
         if (isinstance(value, Event)):
             if not any(v in value.listeners for v in self.listeners):
@@ -17,7 +17,7 @@ class Event:
                 raise ValueError("Events have overlapping values!")
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
-        
+
     def __iadd__(self, value: Union[Callable, Event]) -> Event:
         if callable(value):
             if value not in self.listeners:
@@ -33,7 +33,7 @@ class Event:
                 raise ValueError("Events have overlapping values!")
         else:
             raise TypeError(f"Value of type {type(value)} is not callable and also not an event!")
-    
+
     def __sub__(self, value: Event) -> Event:
         if isinstance(value, Event):
             newVals = []
@@ -46,7 +46,7 @@ class Event:
             return Event(newVals)
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
-        
+
     def __isub__(self, value: Union[Callable, Event]):
         if callable(value):
             while value in self.listeners:
@@ -58,27 +58,27 @@ class Event:
             return self
         else:
             raise TypeError(f"Value of type {type(value)} is not callable and also not an event!")
-        
+
     def __eq__(self, target: Event) -> bool:
         if isinstance(target, Event):
             return self.listeners == target.listeners
         else:
             raise TypeError(f"Value of type {type(target)} is not an Event!")
-    
+
     def __ne__(self, target: Event) -> bool:
         if isinstance(target, Event):
             return self.listeners != target.listeners
         else:
             raise TypeError(f"Value of type {type(target)} is not an Event!")
-    
+
     def __contains__(self, value: Event) -> bool:
         if isinstance(value, Event):
             return value in self.listeners
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
-        
+
     def __len__(self) -> int:
         return len(self.listeners)
-    
+
     def Invoke(self, *args, **kwargs):
         for listener in self.listeners: listener(*args, **kwargs)

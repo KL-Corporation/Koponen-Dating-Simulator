@@ -39,13 +39,13 @@ def __log(message: str, consoleVisible: bool, stack_info: bool, logLevel: int, c
 
 def debug(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
-    
+
 def info(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.INFO, "blue")
-    
+
 def warning(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
-    
+
 def error(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
@@ -80,7 +80,7 @@ def Profiler(enabled: bool = True):
             log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n")
             log_stream.close()
         except IOError as e: AutoError(f"IO Error! Details: {e}")
-        
+
 def quit():
     global running
     running = False

@@ -15,7 +15,7 @@ def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) ->
         3. Float: [0.0 > True] [0.0 <= False]
         4. Bool: [True = True] [False = False]
         Will return fallbackValue if requirements are not met.
-        
+
     Args:
         value: The value you want to convert.
 
@@ -70,7 +70,7 @@ def ToGrayscale(image: pygame.Surface):
 
 def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False):
     mode = "RGB" if not alpha else "RGBA"
-    
+
     toBlur = pygame.image.tostring(image, mode)
     blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
     blurredString = blurredImage.tobytes("raw", mode)
@@ -96,18 +96,18 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     Returns:
         Tuple[int, int, int]: [description]
     """
-    
+
     kelvin = KDS.Math.Clamp(kelvin, 1000.0, 40000.0)
-    
+
     tmp_internal = kelvin / 100.0
-    
-    # red 
+
+    # red
     if tmp_internal <= 66:
         red = 255
     else:
         tmp_red = 329.698727446 * pow(tmp_internal - 60, -0.1332047592)
         red = round(KDS.Math.Clamp(tmp_red, 0.0, 255.0))
-    
+
     # green
     if tmp_internal <= 66:
         tmp_green = 99.4708025861 * KDS.Math.Log(tmp_internal) - 161.1195681661
@@ -115,7 +115,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     else:
         tmp_green = 288.1221695283 * pow(tmp_internal - 60, -0.0755148492)
         green = round(KDS.Math.Clamp(tmp_green, 0.0, 255.0))
-    
+
     # blue
     if tmp_internal >= 66:
         blue = 255
@@ -124,9 +124,9 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
     else:
         tmp_blue = 138.5177312231 * KDS.Math.Log(tmp_internal - 10) - 305.0447927307
         blue = round(KDS.Math.Clamp(tmp_blue, 0.0, 255.0))
-    
+
     return red, green, blue
-    
+
 def HSVToRGB(hue: float, saturation: float, value: float) -> Tuple[float, float, float]:
     """Converts an HSV color to RGB. This method automatically converts the hue to the range of 0-1.
 
@@ -152,7 +152,7 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
         Tuple[float, float, float]: The converted RGB color.
     """
     # I have no idea what's happening here... I just stole this.
-    
+
     if saturation == 0.0:
         value *= 255
         return (value, value, value)
@@ -190,7 +190,7 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
                 if i >= len(toTest):
                     break
             i -= 1
-                    
+
             new_split.append(toTest[i:])
             new_split[-2] = toTest[:i]
         if len(new_split[-1]) < 1: del(new_split[-1])

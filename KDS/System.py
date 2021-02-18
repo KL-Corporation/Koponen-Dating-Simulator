@@ -12,7 +12,7 @@ def hide(path: str):
         path (str): The path to the file or directory to be hidden.
     """
     subprocess.call(["attrib", "+H", path])
-    
+
 def unhide(path: str):
     """Unhides the file or directory specified by path. [WINDOWS ONLY]
 
@@ -20,7 +20,7 @@ def unhide(path: str):
         path (str): The path to the file or directory to be unhidden.
     """
     subprocess.call(["attrib", "-H", path])
-    
+
 def emptdir(dirpath: str):
     """Removes all children from the specified directory.
 
@@ -35,7 +35,7 @@ def emptdir(dirpath: str):
             shutil.rmtree(itemPath)
         else:
             KDS.Logging.AutoError("Cannot determine child type.")
-            
+
 class MessageBox:
     class Buttons:
         ABORTRETRYIGNORE = 2
@@ -46,7 +46,7 @@ class MessageBox:
         RETRYCANCEL = 5
         YESNO = 4
         YESNOCANCEL = 3
-        
+
     class Icon:
         EXCLAMATION = 48
         WARNING = 48
@@ -56,13 +56,13 @@ class MessageBox:
         STOP = 16
         ERROR = 16
         HAND = 16
-        
+
     class DefaultButton:
         BUTTON1 = 0
         BUTTON2 = 256
         BUTTON3 = 512
         BUTTON4 = 768
-        
+
     class Responses:
         ABORT = 3
         CANCEL = 2
@@ -73,7 +73,7 @@ class MessageBox:
         RETRY = 4
         TRYAGAIN = 10
         YES = 6
-    
+
     @staticmethod
     def Show(title: str, text: str, buttons: int = None, icon: int = None, *args: int):
         argVal = buttons if buttons != None else 0
@@ -126,7 +126,7 @@ class Console:
                 ))
             )
     RESET = '\033[0m'
-    
+
     @staticmethod
     def Colored(text, color=None, on_color=None, attrs=None):
         """Colorize text.
@@ -162,10 +162,10 @@ class Console:
 def GetUserName() -> str:
     GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
     NameDisplay = 3
-    
+
     size = ctypes.pointer(ctypes.c_ulong(0))
     GetUserNameEx(NameDisplay, None, size)
-    
+
     nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
     GetUserNameEx(NameDisplay, nameBuffer, size)
     return nameBuffer.value

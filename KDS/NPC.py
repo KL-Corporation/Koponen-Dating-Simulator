@@ -34,12 +34,12 @@ class NPC:
         self.y_velocity = 0
 
         self.collisions = {"right": False, "left": False, "top": False, "bottom": False}
-        
+
         self.resources = {}
         self.animation: KDS.Animator.MultiAnimation
         self.loadResources(datapath)
         self.animation.trigger("idle")
-        
+
         rect_size = KDS.ConfigManager.JSON.Get(property_json, "rect_size", self.animation.get_frame().get_size())
         self.rect = pygame.Rect(position[0], position[1], rect_size[0], rect_size[1])
 
@@ -51,13 +51,13 @@ class NPC:
         npc_walk = []
         npc_death = []
         for texture_resource in texture_resources:
-            if "npc-idle" in texture_resource: 
+            if "npc-idle" in texture_resource:
                 self.resources["idle_animation"] = True
                 npc_idle.append(texture_resource)
-            if "npc-walk" in texture_resource: 
+            if "npc-walk" in texture_resource:
                 self.resources["walk_animation"] = True
                 npc_walk.append(texture_resource)
-            if "npc-death" in texture_resource: 
+            if "npc-death" in texture_resource:
                 self.resources["death_animation"] = True
                 npc_death.append(texture_resource)
 

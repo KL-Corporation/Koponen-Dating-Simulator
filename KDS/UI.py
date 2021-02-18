@@ -115,7 +115,7 @@ class Button:
         self.button_old_color = button_default_color if enabled else button_disabled_color
         self.button_color_fade = KDS.Animator.Value(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
         self.enabled = enabled
-        
+
         """Updates and draws the button onto a surface.
 
         Args:
@@ -163,7 +163,7 @@ class Button:
 
         if self.overlay != None:
             surface.blit(self.overlay, (self.rect.center[0] - self.overlay.get_width() // 2, self.rect.center[1] - self.overlay.get_height() // 2))
-        
+
         return executed
 
 class Switch:
@@ -215,7 +215,7 @@ class Switch:
                 handle_color = self.handle_pressed_color
         else:
             handle_color = self.handle_default_color
-            
+
         if handle_color != self.handle_old_color:
             fade = self.handle_color_fade.update()
             if fade == 1.0:

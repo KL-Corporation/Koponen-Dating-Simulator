@@ -53,7 +53,7 @@ class Collisions:
 
 def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
     collisions = Collisions()
-    
+
     rect.x += int(movement[0])
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
@@ -80,17 +80,17 @@ def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles, w_sounds: d
 class Lighting:
 
     class Shapes:
-        
+
         class LightShape:
             def __init__(self, texture: pygame.Surface) -> None:
                 self.texture = texture
                 self.rendered: Dict[int, Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]] = {}
-                
+
             def getRadius(self, radius: int) -> Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]:
                 if radius not in self.rendered:
                     self.rendered[radius] = { "default": pygame.transform.smoothscale(self.texture, (radius, radius)) }
                 return self.rendered[radius]
-            
+
             def get(self, radius: int, color: int):
                 """Returns a light shape from memory
 
@@ -109,24 +109,24 @@ class Lighting:
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
                 return corRad[color]
-            
+
             def getColor(self, radius: int, hue: float, saturation: float, value: float):
                 corRad = self.getRadius(radius)
                 color = (hue, saturation, value)
-                
+
                 if color not in corRad:
                     tmp_tex: pygame.Surface = corRad["default"].copy()
                     convCol = KDS.Convert.HSVToRGB(hue, saturation, value)
                     tmp_tex.fill((int(convCol[0]), int(convCol[1]), int(convCol[2]), 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
                 return corRad[color]
-        
+
         @staticmethod
         def clear():
             for v in Lighting.Shapes.__dict__.values():
                 if isinstance(v, Lighting.Shapes.LightShape):
                     v.rendered = {}
-        
+
         circle_softest: LightShape = LightShape(pygame.Surface((0, 0)))
         circle_soft: LightShape = LightShape(pygame.Surface((0, 0)))
         circle_softer: LightShape = LightShape(pygame.Surface((0, 0)))
@@ -151,7 +151,7 @@ class Lighting:
         pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0), (bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)])
         surf.set_colorkey((0, 0, 0))
         return surf
-    
+
     class Light:
         def __init__(self, position: Tuple[int, int], shape: pygame.Surface, positionFromCenter: bool = False):
             """Instantiates a new light.
@@ -172,9 +172,9 @@ class Lighting:
             self.pos = position
 
         def update(self, Surface, scroll):
-            
+
             return "null"
-        
+
     class Fireparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
             super().__init__(position, size)
@@ -183,14 +183,14 @@ class Lighting:
             self.dying_speed = size / lifetime
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
-        
+
         def update(self, Surface: pygame.Surface, scroll: List[int]):
             self.rect.y -= self.speed
             self.rect.x += random.randint(-1, 1)
             self.size -= self.dying_speed
 
             if self.size < 0: return None
-            
+
             self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
             Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
@@ -252,7 +252,7 @@ class Bullet:
         if debugMode:
             pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
             pygame.draw.line(Surface, KDS.Colors.Black, (self.rect.x - (self.movedDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] - (self.slope * self.movedDistance)), (self.rect.x + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] + (self.slope * self.maxDistance)))
-            
+
         if self.speed == -1:
             for _ in range(round(self.maxDistance / 18)):
 
@@ -275,7 +275,7 @@ class Bullet:
                         target.sleep = False
                         Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
                         return "wall", targets, plr_htlt, HitTargets, Particles
-                
+
                 if plr_rct.colliderect(self.rect):
                     plr_htlt -= self.damage
                     if plr_htlt < 0:
@@ -375,7 +375,7 @@ class BallisticProjectile:
             self.upforce = -self.upforce
             if s:
                 self.upforce *= 0.1
-                
+
         if c_types["right"] or c_types["left"]:
             self.force *= 0.60
             self.force = -self.force
@@ -424,7 +424,7 @@ class Explosion:
     def update(self, Surface: pygame.Surface, scroll: List[int]):
         Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
-    
+
 rk62_C = itemTools.rk62(100)
 plasmarifle_C = itemTools.plasmarifle(100)
 pistol_C = itemTools.pistol(100)
