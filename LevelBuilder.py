@@ -282,7 +282,7 @@ class tileInfo:
                             teleportTextureCheck = int(number[1:])
                             if teleportTextureCheck < 500:
                                 unitTexture = Atextures["3"]["3001"]
-                            elif teleportTextureCheck > 499:
+                            else:
                                 unitTexture = Atextures["3"]["3002"]
                         else:
                             try:

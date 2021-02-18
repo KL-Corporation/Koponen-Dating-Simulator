@@ -1,6 +1,17 @@
 {
     "Exam": {
-        "passLine": 0.4
+        "passLine": 0.2
+    },
+    "Certificate": {
+        "Grading": {
+            "weights": {
+                "-2": 1,
+                "-1": 4,
+                "0": 6,
+                "+1": 5,
+                "+2": 1
+            }
+        }
     },
     "Physics": {
         "Items": {

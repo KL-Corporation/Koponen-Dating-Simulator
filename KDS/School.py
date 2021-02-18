@@ -436,7 +436,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         ref = round(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride)
         gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
-            weights=(1, 3, 5, 4, 1),
+            weights=tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values()),
             k=1
         )
         return KDS.Math.Clamp(gradeList[0], 4, 10)

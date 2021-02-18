@@ -124,7 +124,8 @@
         "122": "lockers.png",
         "123": "crackhead.png",
         "124": "black.png",
-        "125": "table1.png"
+        "125": "table1.png",
+        "126": "door_front.png"
     },
     
     "tile_sounds" : {
@@ -172,7 +173,8 @@
         110,
         111,
         113,
-        123
+        123,
+        126
     ],
     "noCollision": [
         10,

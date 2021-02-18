@@ -1450,6 +1450,28 @@ class Crackhead(Tile):
         
     def update(self):
         return self.animation.update()
+    
+class DoorFront(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        self.opentexture = exit_door_open
+        self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
+        self.checkCollision = False
+        self.opened = False
+        self.locked = False
+        self.showTip = False
+
+    def update(self):
+        if self.rect.colliderect(Player.rect):
+            if self.showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if KDS.Keys.functionKey.clicked:
+                if not self.locked:
+                    KDS.Audio.PlaySound(door_opening)
+                    self.opened = not self.opened
+                else:
+                    KDS.Audio.PlaySound(door_locked)
+        return t_textures[self.serialNumber] if not self.opened else self.opentexture
 
 # 
 # class Ramp(Tile):
@@ -1528,7 +1550,8 @@ specialTilesD = {
     110: RoofPlanks,
     111: RoofPlanks,
     113: Patja,
-    123: Crackhead
+    123: Crackhead,
+    126: DoorFront
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

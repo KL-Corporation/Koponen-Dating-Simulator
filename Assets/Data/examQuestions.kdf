@@ -186,11 +186,12 @@
         "ideaaliosa": false,
         "tantaaliosa": false
     },
-    "Mikä aatesuunta pyrkii luomaan tuotantovälineiden yhteisomistukseen perustuvan yhteiskuntajärjestyksen": {
+    "Mikä aatesuunta pyrkii luomaan tuotantovälineiden yhteisomistukseen perustuvan yhteiskuntajärjestyksen?": {
         "Kapitalismi": false,
         "Sosialismi": true,
         "Demokratia": false,
-        "Fasismi": false
+        "Fasismi": false,
+        "Masokismi": false
     },
     "Missä valtiossa sijaitsee \"Jerusalemi\"?": {
         "Israelissa": false,
@@ -198,7 +199,7 @@
         "Syyriassa": false,
         "Neuvostoliitossa": false
     },
-    "Mikä seuraavista valtioista EI KERÄÄ tuloveroa?": {
+    "Mitkä seuraavista valtioista EI KERÄÄ tuloveroa?": {
         "Yhdistyneet Arabiemiirikunnat": true,
         "Vanuatu": true,
         "Etelä-Afrikka": false,
@@ -293,5 +294,57 @@
         "Lisääntyminen": false,
         "Seksi": false,
         "GameStop:in osakkeiden ostaminen": true
+    },
+    "Mitkä näistä kaupungeista ovat megakaupunkeja?": {
+        "Tokio": true,
+        "Shanghai": true,
+        "Delhi": true,
+        "Dhaka": true,
+        "Berliini": false,
+        "Helsinki": false
+    },
+    "Mikä megalopoli sijaitsee Yhdysvaltojen itärannikolla?": {
+        "BosWas": false,
+        "BoshWash": false,
+        "BosWash": true,
+        "BoshWas": false
+    },
+    "Mitkä näistä vähentävät väkilukua?": {
+        "Syntyvyys": false,
+        "Kuolleisuus": true,
+        "Maahanmuutto": false,
+        "Maastamuutto": true
+    },
+    "Ihminen, joka on muuttanut vainon takia pois kotimaastaan.": {
+        "Siirtolainen": false,
+        "Pakolainen": true,
+        "Turvapaikanhakija": false,
+        "Juutalainen": false
+    },
+    "Ihminen, joka on muuttanut paremman elintason toivossa maasta toiseen.": {
+        "Siirtolainen": true,
+        "Pakolainen": false,
+        "Turvapaikanhakija": false,
+        "Juutalainen": false
+    },
+    "Mikä on suomen yleisin kivilaji?": {
+        "Graniitti": true,
+        "Basaltti": false,
+        "Gneissi": false,
+        "Termiitti": false
+    },
+    "Mikä on kuivan kangasmetsän pääpuulaji?": {
+        "Mänty": true,
+        "Jäkälä": false,
+        "Kuusi": false,
+        "Koivu": false,
+        "Palmu": false
+    },
+    "Mikä on tuoreen kangasmetsän pääpuulaji?": {
+        "Mänty": false,
+        "Jäkälä": false,
+        "Kuusi": true,
+        "Koivu": false,
+        "Palmu": false
     }
 }

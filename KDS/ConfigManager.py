@@ -116,7 +116,7 @@ def SetSetting(path: str, value: Any) -> Any:
     return JSON.Set(SettingsPath, path, value, False)
 
 def GetGameData(path: str):
-    return JSON.Get("Assets/GameData.kdf", path, None)
+    return JSON.Get("Assets/GameData.kdf", path, None, False, True)
 
 class LevelProp:
     mapPath: str = ""
