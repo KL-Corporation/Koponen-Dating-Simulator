@@ -409,7 +409,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     
     usernameParts = username.split(" ")
     usernameParts.reverse()
-    # Reversed so that if surname and first name is equal,
+    # Reversed so that if the length of surname and first name is equal,
     # it will pick the first (last before reversing) one of the ties.
     # This will minimize the risk of it taking the forename by accident.
     checkSurname = max(usernameParts, key=len)
