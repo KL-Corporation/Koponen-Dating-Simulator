@@ -59,6 +59,7 @@ def SplitFloat(f: float) -> Tuple[float, float]:
         Tuple[float, float]: (fraction, integer parts)
     """
     return math.modf(f)
+
 def GetFraction(f: float) -> float:
     """Returns the fractional part of \"f\".
 

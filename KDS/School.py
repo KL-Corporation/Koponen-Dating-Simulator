@@ -306,7 +306,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                                          KDS.Convert.ToGrayscale(pg_button2),
                                          pg_button2)
 
-        timer = Timer(10 * question_amount )
+        timer = Timer(10 * question_amount)
         timer.start()
         KDS.Audio.PlaySound(exam_music, loops = -1)
 

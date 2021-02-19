@@ -199,6 +199,7 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
 
 def ToRational(value: float) -> str:
     rational, base = KDS.Math.SplitFloat(value)
+    base = int(base)
     marks = {0.0: "", 0.25: "+", 0.5: "½", 0.75: "-", 1.0: ""}
     closest = KDS.Math.Closest(rational, marks.keys())
     mark = marks[closest]
