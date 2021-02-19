@@ -1164,7 +1164,7 @@ class Teleport(Tile):
         if self.rect.colliderect(Player.rect) and Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
             if self.serialNumber < 500 or KDS.Keys.functionKey.clicked:
                 #Executing teleporting process
-                if self.serialNumber == 2: KDS.Audio.PlaySound(door_opening)
+                if self.serialNumber > 499: KDS.Audio.PlaySound(door_opening)
                 Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
                 Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
                 Teleport.last_teleported = True
@@ -1174,7 +1174,7 @@ class Teleport(Tile):
         if not self.rect.colliderect(Player.rect) or self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
-        if self.serialNumber == 2:
+        if self.serialNumber > 499:
             return Teleport.door_textures[0]
         else:
             return pygame.Surface((0, 0))
