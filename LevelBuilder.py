@@ -1008,7 +1008,7 @@ mainRunning = True
 try:
     main()
 except Exception as e:
-    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below.\n{traceback.format_exc()}")
+    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below:\n{traceback.format_exc()}")
     if KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Do you want to try to save your project?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.ERROR) == KDS.System.MessageBox.Responses.YES:
         try:
             saveMapName()
