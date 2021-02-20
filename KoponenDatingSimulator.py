@@ -2545,11 +2545,11 @@ def console(oldSurf: pygame.Surface):
         },
         "summon": {
             "imp": "break",
-            "sergeant": "break",
+            "sergeantzombie": "break",
             "drugdealer": "break",
-            "supershotgunner": "break",
+            "turboshotgunner": "break",
             "methmaker": "break",
-            "fucker69": "break"
+            "cavemonster": "break"
         },
         "fly": trueFalseTree
     }
@@ -2700,16 +2700,16 @@ def console(oldSurf: pygame.Surface):
             elif command_list[0] == "summon":
                 if len(command_list) > 1:
                     summonEntity = {
-                        "imp": lambda e : e.append(KDS.AI.Imp(Player.rect.topright)),
-                        "sergeantzombie": lambda e : e.append(KDS.AI.SergeantZombie(Player.rect.topright)),
-                        "drugdealer": lambda e : e.append(KDS.AI.DrugDealer(Player.rect.topright)),
-                        "turboshotgunner": lambda e : e.append(KDS.AI.TurboShotgunner(Player.rect.topright)),
-                        "methmaker": lambda e : e.append(KDS.AI.MethMaker(Player.rect.topright)),
-                        "cavemonster": lambda e : e.append(KDS.AI.CaveMonster(Player.rect.topright))
+                        "imp": KDS.AI.Imp(Player.rect.topright),
+                        "sergeantzombie": KDS.AI.SergeantZombie(Player.rect.topright),
+                        "drugdealer": KDS.AI.DrugDealer(Player.rect.topright),
+                        "turboshotgunner": KDS.AI.TurboShotgunner(Player.rect.topright),
+                        "methmaker": KDS.AI.MethMaker(Player.rect.topright),
+                        "cavemonster": KDS.AI.CaveMonster(Player.rect.topright)
                     }
                     try:
                         global Enemies
-                        Enemies = summonEntity[command_list[1]](Enemies)
+                        Enemies.append(summonEntity[command_list[1]])
                     except KeyError:
                         KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
             elif command_list[0] == "fly":
@@ -3501,7 +3501,7 @@ while main_running:
                 KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
             elif event.key == K_F12:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
-                KDS.Audio.PlaySound(camera_shutter, 1)
+                KDS.Audio.PlaySound(camera_shutter)
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 KDS.Keys.mainKey.SetState(True)

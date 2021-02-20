@@ -245,13 +245,14 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self, Surface: pygame.Surface, scroll: List[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
             Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if debugMode:
             pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
-            pygame.draw.line(Surface, KDS.Colors.Black, (self.rect.x - (self.movedDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] - (self.slope * self.movedDistance)), (self.rect.x + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.y - scroll[1] + (self.slope * self.maxDistance)))
+            debugStartPos = (self.rect.x - (self.movedDistance * self.direction_multiplier), self.rect.y - (self.slope * self.movedDistance))
+            pygame.draw.line(Surface, KDS.Colors.Black, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))
 
         if self.speed == -1:
             for _ in range(round(self.maxDistance / 18)):
