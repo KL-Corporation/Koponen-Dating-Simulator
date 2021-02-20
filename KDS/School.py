@@ -40,7 +40,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
     titleFont = pygame.font.SysFont("Arial", 100)
     timerFont = pygame.font.SysFont("Arial", 40)
     examTestFont = pygame.font.SysFont("Calibri", 20)
-    gradeFont = pygame.font.Font("Assets/Fonts/schoolhandwriting.ttf", 45)
+    gradeFont = pygame.font.SysFont("Comic Sans MS", 45)
     titleSurf = titleFont.render(title, False, KDS.Colors.White)
 
     x_texture = examTestFont.render("X", False, KDS.Colors.Black)
