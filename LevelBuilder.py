@@ -303,7 +303,7 @@ class tileInfo:
                             unitTextureSize = unitTexture.get_size()
                             scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTextureSize[0] * scaleMultiplier), int(unitTextureSize[1] * scaleMultiplier)))
                             if number in trueScale:
-                                Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_height() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_width() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
                             elif intNumber in (23, 24, 25, 26):
                                 Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1]))
                             else:

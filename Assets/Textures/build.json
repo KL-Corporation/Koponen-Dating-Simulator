@@ -125,13 +125,14 @@
         "123": "crackhead.png",
         "124": "black.png",
         "125": "table1.png",
-        "126": "door_front.png"
+        "126": "door_front.png",
+        "127": "patja.png"
     },
-    
+
     "tile_sounds" : {
         "008" : "grass.ogg"
     },
-    
+
     "special_tiles": [
         15,
         16,
@@ -197,7 +198,8 @@
         106,
         107,
         115,
-        120
+        120,
+        127
     ],
     "trueScale": [
         86,
@@ -222,7 +224,8 @@
         121,
         122,
         123,
-        125
+        125,
+        127
     ],
     "item_textures": {
         "000": "empty.png",
