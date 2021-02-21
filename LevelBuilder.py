@@ -482,8 +482,14 @@ def saveMapName():
         saveMap(grid, savePath)
         currentSaveName = savePath
 
-def loadMap(path: str):
+def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
     global currentSaveName, gridSize, grid, tileprops
+    if path == None or len(path) < 1:
+        KDS.Logging.info(f"Path \"{path}\" of map file is not valid.", True)
+        return False
+    if not path.endswith(".dat"):
+        KDS.Logging.info(f"Map file at path \"{path}\" is not a valid type.", True)
+        return False
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
         if not currentSaveName:
             saveMapName()
@@ -491,41 +497,37 @@ def loadMap(path: str):
             saveMap(grid, currentSaveName)
 
     temporaryGrid = None
-    if path:
-        with open(path, 'r') as f:
-            contents = f.read().split("\n")
-            while len(contents[-1]) < 1: contents = contents[:-1]
+    with open(path, 'r') as f:
+        contents = f.read().split("\n")
+        while len(contents[-1]) < 1: contents = contents[:-1]
 
-        maxW = 0
-        for i in range(len(contents)):
-            maxW = max(maxW, len(contents[i][:-2].split("/")))
-        temporaryGrid = loadGrid((maxW, len(contents)))
+    maxW = 0
+    for i in range(len(contents)):
+        maxW = max(maxW, len(contents[i][:-2].split("/")))
+    temporaryGrid = loadGrid((maxW, len(contents)))
 
-        for row, rRow in zip(contents, temporaryGrid):
-            for unit, rUnit in zip(row[:-2].split("/"), rRow):
-                unit = unit.strip() + " / "
-                rUnit.serialNumber = unit
+    for row, rRow in zip(contents, temporaryGrid):
+        for unit, rUnit in zip(row[:-2].split("/"), rRow):
+            unit = unit.strip() + " / "
+            rUnit.serialNumber = unit
 
-        #for row, tRow in zip(tempGrid, contents):
-        #    for unit, tUnit in zip(row, tRow.split("/")):
-        #        tUnit = tUnit.strip()
-        #        unit.serialNumber = tUnit + " /"
+    currentSaveName = path
 
-        #return tempGrid
-        currentSaveName = path
+    grid = temporaryGrid
+    fpath = os.path.join(os.path.dirname(path), "tileprops.kdf")
+    if os.path.isfile(fpath):
+        with open(fpath, 'r') as f:
+            tileprops = json.loads(f.read())
 
-        grid = temporaryGrid
-        fpath = os.path.join(os.path.dirname(path), "tileprops.kdf")
-        if os.path.isfile(fpath):
-            with open(fpath, 'r') as f:
-                tileprops = json.loads(f.read())
+    Undo.clear()
+    return True
 
-        Undo.clear()
-
-def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
+def openMap() -> bool: #Returns True if the operation was succesful
     global currentSaveName, gridSize, grid, tileprops
     fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
-    loadMap(fileName)
+    if fileName == None or len(fileName) < 1:
+        return False
+    return loadMap(fileName)
 
 commandTree = {
     "set": {
@@ -725,11 +727,8 @@ def menu():
     def button_handler(_openMap: bool = False):
         global btn_menu
         if _openMap:
-            openMap()
-            if grid != None:
-                btn_menu = False
-            else:
-                btn_menu = True
+            # Button menu is turned off if openMap was succesful
+            btn_menu = not openMap()
         else: btn_menu = False
     newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
@@ -748,8 +747,8 @@ def menu():
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
             elif event.type == DROPFILE:
-                loadMap(event.file)
-                btn_menu = False
+                # Button menu is turned off if loadMap was succesful
+                btn_menu = not loadMap(event.file)
         display.fill(KDS.Colors.Gray)
         mouse_pos = pygame.mouse.get_pos()
         newMap_btn.update(display, mouse_pos, clicked)
@@ -918,8 +917,8 @@ def main():
             saveMapName()
 
         if keys_pressed[K_o] and keys_pressed[K_LCTRL]:
-            openMap()
-            if grid == None:
+            openMapSuccess = openMap()
+            if not openMapSuccess:
                 KDS.Logging.info("Map opening cancelled.", True)
 
         if inputConsole_output != None:
@@ -1046,8 +1045,7 @@ pygame.quit()
     E: Close Material Menu
 """
 
-""" FOR THOSE OF YOU WHO ARE GOING TO USE TELEPORTS:
-        Indexes 0 - 499 are reserved for invisible teleports and
-        indexes 500 - 999 are reserved for teleport-doors
-
+""" Reserved indexes for teleports:
+        [0 - 499]: Invisible teleports
+        [500 - 999] Teleport-doors
 """
