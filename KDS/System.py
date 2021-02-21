@@ -159,13 +159,15 @@ class Console:
             text += Console.RESET
         return text
 
-def GetUserName() -> str:
-    GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
-    NameDisplay = 3
+class User:
+    @staticmethod
+    def GetDisplayName() -> str:
+        GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
+        NameDisplay = 3
 
-    size = ctypes.pointer(ctypes.c_ulong(0))
-    GetUserNameEx(NameDisplay, None, size)
+        size = ctypes.pointer(ctypes.c_ulong(0))
+        GetUserNameEx(NameDisplay, None, size)
 
-    nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
-    GetUserNameEx(NameDisplay, nameBuffer, size)
-    return nameBuffer.value
+        nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
+        GetUserNameEx(NameDisplay, nameBuffer, size)
+        return nameBuffer.value

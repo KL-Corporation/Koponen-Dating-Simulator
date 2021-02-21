@@ -406,7 +406,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
 
-    username = KDS.System.GetUserName()
+    username = KDS.System.User.GetDisplayName()
     usernameParts = username.split(" ")
     usernameParts.reverse()
     # Reversed so that if the length of surname and first name is equal,
