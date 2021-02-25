@@ -54,11 +54,9 @@ screen = pygame.Surface(screen_size)
 
 CompanyLogo = CompanyLogo.convert()
 
-def DrawCompanyLogoToDisplay():
-    display.fill(CompanyLogo.get_at((0, 0)))
-    display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
-    pygame.display.flip()
-DrawCompanyLogoToDisplay()
+display.fill(CompanyLogo.get_at((0, 0)))
+display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
+pygame.display.flip()
 
 clock = pygame.time.Clock()
 
@@ -108,10 +106,11 @@ KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
 KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
 KDS.Logging.debug("Initialising Game...")
 KDS.Logging.debug("Initialising Display Driver...")
+
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False):
     pygame.display.toggle_fullscreen()
-    DrawCompanyLogoToDisplay()
-KDS.Logging.debug(f"""Display Driver initialised.
+
+KDS.Logging.debug(f"""
 I=====[ DEBUG INFO ]=====I
    [Version Info]
    - PyGame Version: {pygame.version.ver}
