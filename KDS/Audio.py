@@ -70,6 +70,11 @@ class Music:
         MusicVolume = volume
         MusicMixer.set_volume(MusicVolume)
 
+    @staticmethod
+    def GetPlaying():
+        global MusicMixer
+        return MusicMixer.get_busy()
+
 def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()

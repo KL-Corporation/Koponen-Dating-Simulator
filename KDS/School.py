@@ -12,6 +12,7 @@ import KDS.Convert
 import KDS.System
 import KDS.Math
 import KDS.Logging
+import KDS.UI
 import datetime
 
 class Timer:
@@ -384,7 +385,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bool = False) -> bool:
+def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bool = False, BackgroundColor: Tuple[int, int, int] = None) -> bool:
     pygame.key.set_repeat(500, 31) #temp
     displaySize = display.get_size()
 
@@ -487,18 +488,36 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         certificate.blit(gradeRender, (738, posList[i]))
 
     animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
+    if BackgroundColor == None: BackgroundColor = KDS.Colors.Black
+
+    exitV = False
+
+    def exitFunc():
+        nonlocal exitV
+        exitV = True
+
+    exitButton = KDS.UI.Button(pygame.Rect(displaySize[0] // 2 - 100, 25, 200, 50), exitFunc, "EXIT")
 
     KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
     while True:
-        display.fill(KDS.Colors.Black)
+        display.fill(BackgroundColor)
+        c = False
+        mousePos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == QUIT:
                 return True
-            if event.type == KEYDOWN:
-                if event.key == K_F5:
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
                     return False
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    c = True
+
+        if exitV:
+            return False
 
         display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
+        exitButton.update(display, mousePos, c)
 
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
@@ -512,4 +531,5 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         pygame.display.flip()
         clock.tick_busy_loop(60)
 
+    KDS.Logging.AutoError("This code should not be reachable!")
     return False

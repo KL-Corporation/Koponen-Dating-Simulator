@@ -1,160 +1,159 @@
 # Koponen Dating Simulator
 
-<br />
+<br/>
 
 ## KL Corporation
-<br />
 
-**CEO & Chairman** <br />
+**CEO & Chairman** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**CEO** <br />
+**CEO** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Executive Vice President of Production** <br />
+**Executive Vice President of Production** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Vice President of Product Development** <br />
+**Vice President of Product Development** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Executive Producer** <br />
+**Executive Producer** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Producer** <br />
+**Producer** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Senior Production Coordinator** <br />
+**Senior Production Coordinator** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Senior Manager of 1st Party Relations** <br />
+**Senior Manager of 1st Party Relations** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Vice President of Marketing** <br />
+**Vice President of Marketing** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Senior Brand Manager** <br />
+**Senior Brand Manager** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Associate Brand Manager** <br />
+**Associate Brand Manager** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Graphic Designer** <br />
+**Graphic Designer** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Audio/Video Specialist** <br />
+**Audio/Video Specialist** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Vice President of Human Resources** <br />
+**Vice President of Human Resources** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Vice President of Legal Affairs** <br />
+**Vice President of Legal Affairs** <br/>
 You can apply for this position at KL Corporation's website.
-<br />
-<br />
+<br/>
+<br/>
 
-**Voice Actor** <br />
+**Voice Actor** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Story by** <br />
-Aaro Koljonen <br />
+**Story by** <br/>
+Aaro Koljonen <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Narrative Designer** <br />
+**Narrative Designer** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Art Director** <br />
+**Art Director** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Lead Environment Artist** <br />
+**Lead Environment Artist** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**UI Artist** <br />
+**UI Artist** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Writers** <br />
-Aaro Koljonen <br />
+**Writers** <br/>
+Aaro Koljonen <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Lead Level Designer** <br />
+**Lead Level Designer** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Level Designers** <br />
+**Level Designers** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Cinematic Lead** <br />
+**Cinematic Lead** <br/>
 Niko Leinonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Technical Director** <br />
+**Technical Director** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Sound Designer** <br />
+**Sound Designer** <br/>
 Aaro Koljonen
-<br />
-<br />
+<br/>
+<br/>
 
-**Play Testers** <br />
-Aarne Autio <br />
-Matias Broman <br />
-Otto Heikkilä <br />
+**Play Testers** <br/>
+Aarne Autio <br/>
+Matias Broman <br/>
+Otto Heikkilä <br/>
 *Add later!*
-<br />
-<br />
+<br/>
+<br/>
 
-**Special Thanks:** <br />
+**Special Thanks:** <br/>
 Matias Broman
 
-<br />
-<br />
-<br />
+<br/>
+<br/>
+<br/>
 
 Made With: Pygame
