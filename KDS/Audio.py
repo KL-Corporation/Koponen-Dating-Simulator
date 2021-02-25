@@ -1,5 +1,6 @@
 import pygame
 import KDS.ConfigManager
+import KDS.Logging
 
 def init(_mixer):
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels, SoundMixer
@@ -15,13 +16,18 @@ def init(_mixer):
         EffectChannels.append(SoundMixer.Channel(c_i))
 
 class Music:
+    Loaded = None
+
     @staticmethod
-    def Play(path: str, loops: int = -1):
+    def Play(path: str = None, loops: int = -1):
         global MusicMixer, MusicVolume
-        if MusicMixer.get_busy(): MusicMixer.stop()
-        if path != None: MusicMixer.load(path)
-        MusicMixer.play(loops)
-        MusicMixer.set_volume(MusicVolume)
+        if path != None and len(path) > 0:
+            Music.Load(path=path)
+        if Music.Loaded != None:
+            MusicMixer.play(loops)
+            MusicMixer.set_volume(MusicVolume)
+        else:
+            KDS.Logging.AutoError("No music track has been loaded to play!")
 
     @staticmethod
     def Stop():
@@ -39,9 +45,19 @@ class Music:
         MusicMixer.unpause()
 
     @staticmethod
+    def Load(path: str):
+        global MusicMixer, MusicVolume
+        if MusicMixer.get_busy(): MusicMixer.stop()
+        if path == None:
+            raise ValueError("Audio file path cannot be null!")
+        MusicMixer.load(path)
+        Music.Loaded = path
+
+    @staticmethod
     def Unload():
         global MusicMixer, MusicVolume
         MusicMixer.unload()
+        Music.Loaded = None
 
     @staticmethod
     def Rewind():

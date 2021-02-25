@@ -53,12 +53,14 @@ screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
 
 CompanyLogo = CompanyLogo.convert()
-display.fill(CompanyLogo.get_at((0, 0)))
-display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
-pygame.display.flip()
+
+def DrawCompanyLogoToDisplay():
+    display.fill(CompanyLogo.get_at((0, 0)))
+    display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
+    pygame.display.flip()
+DrawCompanyLogoToDisplay()
 
 clock = pygame.time.Clock()
-profiler_enabled = False
 
 pygame.event.set_allowed((
     KEYDOWN,
@@ -106,7 +108,9 @@ KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
 KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
 KDS.Logging.debug("Initialising Game...")
 KDS.Logging.debug("Initialising Display Driver...")
-if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False): pygame.display.toggle_fullscreen()
+if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False):
+    pygame.display.toggle_fullscreen()
+    DrawCompanyLogoToDisplay()
 KDS.Logging.debug(f"""Display Driver initialised.
 I=====[ DEBUG INFO ]=====I
    [Version Info]
@@ -554,7 +558,10 @@ class WorldData():
                 for tile in unit:
                     tile.lateInit()
 
-        if os.path.isfile(os.path.join(MapPath, "music.ogg")): KDS.Audio.Music.Play(os.path.join(MapPath, "music.ogg"))
+        if os.path.isfile(os.path.join(MapPath, "music.ogg")):
+            KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
+        else:
+            KDS.Audio.Music.Unload()
         return p_start_pos, k_start_pos
 #endregion
 #region Data
@@ -2787,7 +2794,7 @@ def agr():
     return True
 #endregion
 #region Game Functions
-def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True):
+def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
     KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, true_scroll, selectedSave
     if show_loading:
@@ -2836,6 +2843,8 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True):
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
     if show_loading: KDS.Loading.Circle.Stop()
+    #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
+    if auto_play_music and KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
     return 0
 
 def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
@@ -2862,8 +2871,9 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
     animationOverride = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
     if animationOverride and show_loading:
         KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], clock, ArialTitleFont, ArialFont)
-    play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride)
+    play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride, auto_play_music=False)
     KDS.Loading.Story.WaitForExit()
+    if KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
 
 def respawn_function():
     global level_finished
