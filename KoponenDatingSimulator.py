@@ -21,6 +21,7 @@ import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.Scores
+import KDS.Story
 import KDS.System
 import KDS.Threading
 import KDS.UI
@@ -3187,6 +3188,11 @@ def main_menu():
                 elif event.key == K_F5:
                     KDS.Audio.MusicMixer.pause()
                     certQuit = KDS.School.Certificate(display, clock, DebugMode=DebugMode)
+                    if certQuit: KDS_Quit()
+                    KDS.Audio.MusicMixer.unpause()
+                elif event.key == K_F6:
+                    KDS.Audio.MusicMixer.pause()
+                    certQuit = KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
                     if certQuit: KDS_Quit()
                     KDS.Audio.MusicMixer.unpause()
             elif event.type == QUIT:
