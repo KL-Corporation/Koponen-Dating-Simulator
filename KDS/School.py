@@ -457,8 +457,8 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
 
     if StoryExtras:
         # Because of KDS Story Mode,
-        # this will ensure that the maths grade is always 10.
-        grades[4] = 10
+        # this will ensure that the maths grade is always 11.
+        grades[4] = 11
 
     certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
     certificateSize = certificate.get_size()

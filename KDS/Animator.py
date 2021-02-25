@@ -1,6 +1,6 @@
 from typing import Callable, List, Sequence, Tuple, Union
 
-from enum import IntEnum, auto
+from enum import Enum, auto
 
 import pygame
 
@@ -9,10 +9,10 @@ import KDS.Logging
 import KDS.Math
 
 
-class OnAnimationEnd(IntEnum):
-    Stop = auto()
-    Loop = auto()
-    PingPong = auto()
+class OnAnimationEnd(Enum):
+    Stop = "stop"
+    Loop = "loop"
+    PingPong = "pingpong"
 
 class Animation:
     def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
@@ -127,7 +127,7 @@ class MultiAnimation:
         for anim in self.animations:
             self.animations[anim].tick = 0
 
-class AnimationType(IntEnum):
+class AnimationType(Enum):
     Linear = auto()
     EaseInSine = auto()
     EaseOutSine = auto()
@@ -175,23 +175,23 @@ class Value:
         AnimationType.EaseInCirc: lambda t: 1 - KDS.Math.Sqrt(1 - pow(t, 2)),
         AnimationType.EaseOutCirc: lambda t: KDS.Math.Sqrt(1 - pow(t - 1, 2)),
         AnimationType.EaseInOutCirc: lambda t: (1 - KDS.Math.Sqrt(1 - pow(2 * t, 2))) * 0.5 if t < 0.5 else (KDS.Math.Sqrt(1 - pow(-2 * t + 2, 2)) + 1) * 0.5,
-        AnimationType.EaseInElastic: lambda t: 0 if t == 0 else (1 if t == 1 else -pow(2, 10 * t - 10) * KDS.Math.Sin((t * 10 - 10.75) * ((2 * KDS.Math.PI) / 3))),
-        AnimationType.EaseOutElastic: lambda t: 0 if t == 0 else (1 if t == 1 else pow(2, -10 * t) * KDS.Math.Sin((t * 10 - 0.75) * ((2 * KDS.Math.PI) / 3)) + 1),
-        AnimationType.EaseInOutElastic: lambda t: 0 if t == 0 else (1 if t == 1 else (-(pow(2, 20 * t - 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 if t < 0.5 else (pow(2, -20 * t + 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 + 1)), #Yeah... I have no idea what's happening here...
+        AnimationType.EaseInElastic: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else -pow(2, 10 * t - 10) * KDS.Math.Sin((t * 10 - 10.75) * ((2 * KDS.Math.PI) / 3))),
+        AnimationType.EaseOutElastic: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else pow(2, -10 * t) * KDS.Math.Sin((t * 10 - 0.75) * ((2 * KDS.Math.PI) / 3)) + 1),
+        AnimationType.EaseInOutElastic: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else (-(pow(2, 20 * t - 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 if t < 0.5 else (pow(2, -20 * t + 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 + 1)), #Yeah... I have no idea what's happening here...
         AnimationType.EaseInQuad: lambda t: t * t,
         AnimationType.EaseOutQuad: lambda t: 1 - (1 - t) * (1 - t),
         AnimationType.EaseInOutQuad: lambda t: 2 * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 2) * 0.5,
         AnimationType.EaseInQuart: lambda t: t * t * t * t,
         AnimationType.EaseOutQuart: lambda t: 1 - pow(1 - t, 4),
         AnimationType.EaseInOutQuart: lambda t: 8 * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 4) * 0.5,
-        AnimationType.EaseInExpo: lambda t: 0 if t == 0 else pow(2, 10 * t - 10),
-        AnimationType.EaseOutExpo: lambda t: 1 if t == 1 else 1 - pow(2, -10 * t),
-        AnimationType.EaseInOutExpo: lambda t: 0 if t == 0 else (1 if t == 1 else (pow(2, 20 * t - 10) * 0.5 if t < 0.5 else (2 - pow(2, -20 * t + 10)) * 0.5)),
+        AnimationType.EaseInExpo: lambda t: 0 if KDS.Math.Approximately(t, 0) else pow(2, 10 * t - 10),
+        AnimationType.EaseOutExpo: lambda t: 1 if KDS.Math.Approximately(t, 1) else 1 - pow(2, -10 * t),
+        AnimationType.EaseInOutExpo: lambda t: 0 if KDS.Math.Approximately(t, 0) else (1 if KDS.Math.Approximately(t, 1) else (pow(2, 20 * t - 10) * 0.5 if t < 0.5 else (2 - pow(2, -20 * t + 10)) * 0.5)),
         AnimationType.EaseInBack: lambda t: 2.70158 * t * t * t - 1.70158 * t * t,
         AnimationType.EaseOutBack: lambda t: 1 + 2.70158 * pow(t - 1, 3) + 1.70158 * pow(t - 1, 2),
         AnimationType.EaseInOutBack: lambda t: (pow(2 * t, 2) * ((2.5949095 + 1) * 2 * t - 2.5949095)) * 0.5 if t < 0.5 else (pow(2 * t - 2, 2) * ((2.5949095 + 1) * (t * 2 - 2) + 2.5949095) + 2) * 0.5,
-        AnimationType.EaseInBounce: lambda t: 1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - t),
         AnimationType.EaseOutBounce: lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)),
+        AnimationType.EaseInBounce: lambda t: 1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - t),
         AnimationType.EaseInOutBounce: lambda t: (1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(2 * t - 1)) * 0.5
     }
 
