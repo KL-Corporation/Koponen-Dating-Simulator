@@ -760,32 +760,60 @@ def menu():
 
 class Selected:
     units: List[tileInfo] = []
+    tilepropunits: Dict[str, Dict[str, Any]] = {}
 
     @staticmethod
-    def Set(serialOverride: str = None, registerUndo: bool = True):
+    def Set(serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
         global grid
-        if registerUndo: Undo.register()
-        for unit in Selected.units:
-            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, tilepropsOverride=tilepropsOverride, registerUndo=registerUndo)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[tileInfo]], serialOverride: str = None, registerUndo: bool = True):
+    def SetCustomGrid(grid: List[List[tileInfo]], serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
+        global tileprops
         if registerUndo: Undo.register()
         for unit in Selected.units:
             grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+        for k in Selected.tilepropunits:
+            if tilepropsOverride != None:
+                if len(tilepropsOverride) > 0:
+                    tileprops[k] = tilepropsOverride
+                else:
+                    tileprops.pop(k)
+            else:
+                tileprops[k] = Selected.tilepropunits[k]
+
+    @staticmethod
+    def Move(x: int, y: int):
+        global dragRect
+        for u in Selected.units:
+            u.pos = (u.pos[0] + x, u.pos[1] + y)
+        movedTileprops: Dict[str, Dict[str, Any]] = {}
+        for k in Selected.tilepropunits:
+            tmp = k.split("-")
+            new_tpp = f"{int(tmp[0]) + x}-{int(tmp[1]) + y}"
+            movedTileprops[new_tpp] = Selected.tilepropunits[k]
+        Selected.tilepropunits = movedTileprops
+        dragRect.x += x
+        dragRect.y += y
 
     @staticmethod
     def Update():
         Selected.units = []
+        Selected.tilepropunits = {}
         if dragRect == None: return
         for row in grid[dragRect.y:dragRect.y + dragRect.height]:
             for unit in row[dragRect.x:dragRect.x + dragRect.width]:
                 Selected.units.append(unit.copy())
+        for y in range(dragRect.y, dragRect.height + 1):
+            for x in range(dragRect.x, dragRect.width + 1):
+                tpp = f"{x}-{y}"
+                if tpp in tileprops:
+                    Selected.tilepropunits[tpp] = tileprops[tpp]
 
     @staticmethod
     def Get():
         Selected.Update()
-        Selected.Set(serialOverride=tileInfo.EMPTYSERIAL, registerUndo=False)
+        Selected.Set(serialOverride=tileInfo.EMPTYSERIAL, tilepropsOverride={}, registerUndo=False)
 
 def main():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
@@ -871,25 +899,23 @@ def main():
                     if keys_pressed[K_LCTRL]:
                         Selected.Set()
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
-                    xy = (0, 0)
+                    x = 0
+                    y = 0
                     if event.key == K_UP:
-                        xy = (0, -1)
+                        y += -1
                     elif event.key == K_DOWN:
-                        xy = (0, 1)
+                        y += 1
                     elif event.key == K_LEFT:
-                        xy = (-1, 0)
+                        x += -1
                     elif event.key == K_RIGHT:
-                        xy = (1, 0)
-                    for unit in Selected.units:
-                        unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
-                    dragRect.x += xy[0]
-                    dragRect.y += xy[1]
+                        x += 1
+                    Selected.Move(x, y)
                 elif event.key == K_F11:
                     pygame.display.toggle_fullscreen()
                 elif event.key == K_a:
                     if keys_pressed[K_LCTRL]:
                         dragRect = pygame.Rect(0, 0, gridSize[0], gridSize[1])
-                        Selected.Update()
+                        Selected.Get()
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
