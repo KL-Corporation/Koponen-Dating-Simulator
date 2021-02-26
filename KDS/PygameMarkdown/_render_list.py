@@ -25,6 +25,7 @@ def render_list(self, block: str, block_type: str, y: int, ordered) -> int:
     bold_flag = False
     italic_flag = False
     position = None
+    prev_text_height = 0 # Fixes Flake8 error
     for i, item in enumerate(block.split('\n')):
         if ordered:
             item = u'    ' + str(i + 1) + '. ' + item
