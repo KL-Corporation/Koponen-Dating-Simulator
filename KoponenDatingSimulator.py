@@ -2565,14 +2565,6 @@ def console(oldSurf: pygame.Surface):
 
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
 
-    #command_input = input("command: ")
-    """
-    command_input = inputConsole("Command >>> ")
-    if not command_input:
-        return None
-    command_input = command_input.lower()
-    command_list = command_input.split()
-    """
     while consoleRunning:
         command_list: list = KDS.Console.Start(prompt="Enter Command:", allowEscape=True, checkType=KDS.Console.CheckTypes.Commands(), background=blurred_background, commands=commandTree, autoFormat=True, enableOld=True, showFeed=True)
         if command_list == None:
