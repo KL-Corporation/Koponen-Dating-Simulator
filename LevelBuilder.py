@@ -94,7 +94,7 @@ e_textures = {
 
 teleports = {
     "3001" : pygame.image.load("Assets/Textures/Editor/telep.png").convert(),
-    "3002" : pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
+    "3501" : pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 }
 
 Atextures: Dict[str, Dict[str, pygame.Surface]] = {
@@ -104,7 +104,7 @@ Atextures: Dict[str, Dict[str, pygame.Surface]] = {
     "3": teleports
 }
 
-trueScale = [f"0{e}" for e in buildData["trueScale"]]
+trueScale = [f"0{e:03d}" for e in buildData["trueScale"]]
 ### GLOBAL VARIABLES ###
 
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
@@ -138,7 +138,7 @@ class Undo:
             #                     ^^ Value doesn't need to be deepcopied, because it can only be str, float, int or bool.
         }
 
-        Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
+        Selected.SetCustomGrid(toSave["grid"], toSave["tileprops"], registerUndo=False)
         removedCount = len(Undo.points[Undo.index + 1:])
         del Undo.points[Undo.index + 1:]
         if Undo.index == 0 and len(Undo.points) == 1 and removedCount > 0: del Undo.points[0]
@@ -283,7 +283,7 @@ class tileInfo:
                             if teleportTextureCheck < 500:
                                 unitTexture = Atextures["3"]["3001"]
                             else:
-                                unitTexture = Atextures["3"]["3002"]
+                                unitTexture = Atextures["3"]["3501"]
                         else:
                             try:
                                 unitTexture = Atextures[number[0]][number]
@@ -764,15 +764,18 @@ class Selected:
 
     @staticmethod
     def Set(serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
-        global grid
-        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, tilepropsOverride=tilepropsOverride, registerUndo=registerUndo)
+        global grid, tileprops
+        Selected.SetCustomGrid(grid=grid, tileprops=tileprops, serialOverride=serialOverride, tilepropsOverride=tilepropsOverride, registerUndo=registerUndo)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[tileInfo]], serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
-        global tileprops
+    def SetCustomGrid(grid: List[List[tileInfo]], tileprops: Dict[str, Dict[str, Any]], serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
         if registerUndo: Undo.register()
         for unit in Selected.units:
-            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+            try:
+                grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+            except IndexError:
+                warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(0, 0)"
+                KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}")
         for k in Selected.tilepropunits:
             if tilepropsOverride != None:
                 if len(tilepropsOverride) > 0:

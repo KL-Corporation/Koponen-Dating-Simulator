@@ -452,7 +452,6 @@ class WorldData():
                 KDS.Logging.AutoError(f"IO Error! Details: {e}")
             except json.decoder.JSONDecodeError as e:
                 KDS.Logging.AutoError(f"JSON Decode Error! Details: {e}")
-            global Player
             for k, v in data.items():
                 if k.isnumeric() and 0 <= int(k) < len(Player.inventory.storage) and v in Item.serialNumbers:
                     Player.inventory.storage[int(k)] = Item.serialNumbers[v]((0, 0), v)
@@ -478,7 +477,7 @@ class WorldData():
         ambient_light = KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/enabled", False)
         ambient_light_tint = tuple(KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/tint", (255, 255, 255)))
         Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
-
+        Player.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
         Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
 
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
@@ -1150,14 +1149,14 @@ class Candle(Tile):
         return self.texture.update()
 
 class Teleport(Tile):
-    door_textures = (pygame.image.load("Assets/Textures/Tiles/door_front.png").convert(), pygame.image.load("Assets/Textures/Tiles/door_open.png").convert())
+    door_texture = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, 1)
         self.texture = None
-        if serialNumber < 500:
-            self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        elif serialNumber > 499:
+        if serialNumber > 499:
             self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
+        else:
+            self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
         self.specialTileFlag = True
         self.teleportReady = True
@@ -1176,13 +1175,15 @@ class Teleport(Tile):
                 Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
                 Teleport.last_teleported = True
                 #Reseting scroll
-                true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] // 2))
-                true_scroll[1] += (Player.rect.y - true_scroll[1] - 220)
+                true_scroll[0] += Player.rect.x - true_scroll[0] - (screen_size[0] // 2)
+                true_scroll[1] += Player.rect.y - true_scroll[1] - 220
+                #Triggering Listener
+                KDS.Missions.Listeners.Teleport.Trigger()
         if not self.rect.colliderect(Player.rect) or self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
         if self.serialNumber > 499:
-            return Teleport.door_textures[0]
+            return Teleport.door_texture
         else:
             return pygame.Surface((0, 0))
 
@@ -2313,6 +2314,7 @@ class PlayerClass:
         self.walk_sound_delay: float = 9999
         self.vertical_momentum: float = 0
         self.onLadder: bool = False
+        self.disableSprint: bool = False
         self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
@@ -2349,6 +2351,7 @@ class PlayerClass:
         self.walk_sound_delay: float = 9999
         self.vertical_momentum: float = 0
         self.onLadder: bool = False
+        self.disableSprint: bool = False
         self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
@@ -2389,14 +2392,14 @@ class PlayerClass:
             if KDS.Keys.moveRight.pressed:
                 if not self.crouching: self.movement[0] += 4
                 else: self.movement[0] += 2
-                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
+                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching and not self.disableSprint:
                     self.movement[0] += 4
                 elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
 
             if KDS.Keys.moveLeft.pressed:
                 if not self.crouching: self.movement[0] -= 4
                 else: self.movement[0] -= 2
-                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching:
+                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching and not self.disableSprint:
                     self.movement[0] -= 4
                 elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
 
@@ -2799,7 +2802,6 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     else:
         mapPath = os.path.join("Assets", "Maps", f"map{current_map}")
 
-    KDS.Audio.Music.Unload()
     KDS.Gamemode.SetGamemode(gamemode, int(current_map) if gamemode != KDS.Gamemode.Modes.Story else KDS.ConfigManager.Save.Active.Story.index)
     KDS.World.Lighting.Shapes.clear()
 
