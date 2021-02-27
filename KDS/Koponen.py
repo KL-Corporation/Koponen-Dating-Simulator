@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -8,6 +8,7 @@ from pygame.locals import *
 import KDS.Animator
 import KDS.Audio
 import KDS.Colors
+import KDS.Console
 import KDS.ConfigManager
 import KDS.Convert
 import KDS.Logging
@@ -15,6 +16,8 @@ import KDS.Math
 import KDS.Missions
 import KDS.UI
 import KDS.AI
+
+import re
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 20, bold=0, italic=0)
@@ -25,7 +28,7 @@ conversation_rect = pygame.Rect(40, 40, 700, 400)
 conversation_outline_width = 3
 conversation_border_radius = 10
 line_spacing = 25
-line_reveal_speed = 5
+line_reveal_speed = 3
 line_scroll_speed = 1
 min_time_before_scroll = 120 #ticks
 auto_scroll_offset_index = 10
@@ -69,20 +72,24 @@ _renderedPrefixes = {
     Prefixes.koponen: text_font.render("Koponen: ", True, text_color)
 }
 
-def init(playerName: str):
+def init():
     global talk_background, talk_ads, talk_ad, scrollArrow, ambientTalkAudios # , scrollToBottomButton
     talk_background = pygame.image.load("Assets/Textures/KoponenTalk/background.png").convert()
     scrollArrow = pygame.transform.scale(pygame.transform.rotate(pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha(), -90), (scroll_to_bottom_rect.width - scroll_arrow_padding * 2, scroll_to_bottom_rect.height - scroll_arrow_padding * 2))
     # scrollToBottomButton = KDS.UI.Button(scroll_to_bottom_rect, Talk.Conversation.scrollToBottom, scrollArrow, scroll_to_bottom_colors["default"], scroll_to_bottom_colors["highlighted"], scroll_to_bottom_colors["pressed"])
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"): talk_ads.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_ads)
-    _renderedPrefixes[Prefixes.player] = text_font.render(f"{playerName}: ", True, text_color)
     ambientTalkAudios = [
-        pygame.mixer.Sound("Assets/Audio/Koponen/talk_0.ogg"),
-        pygame.mixer.Sound("Assets/Audio/Koponen/talk_1.ogg"),
-        pygame.mixer.Sound("Assets/Audio/Koponen/talk_2.ogg")
+        # No ambient talk audios because it distracts the player and we want them to live in the moment.
+        # pygame.mixer.Sound("Assets/Audio/Koponen/talk_0.ogg"),
+        # pygame.mixer.Sound("Assets/Audio/Koponen/talk_1.ogg"),
+        # pygame.mixer.Sound("Assets/Audio/Koponen/talk_2.ogg")
     ]
     random.shuffle(ambientTalkAudios)
+
+def setPlayerPrefix(prefix: str):
+    global _renderedPrefixes
+    _renderedPrefixes[Prefixes.player] = text_font.render(f"{prefix}: ", True, text_color)
 
 class Mission:
     # Will be automatically assigned by KDS.Missions
@@ -90,7 +97,7 @@ class Mission:
 
     @staticmethod
     def Request():
-        if Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONREQUEST:
+        if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONREQUEST:
             if Mission.Task == None:
                 KDS.Missions.Listeners.KoponenRequestMission.Trigger()
                 Talk.scheduled.pop(0)
@@ -101,7 +108,7 @@ class Mission:
 
     @staticmethod
     def Return(player_inventory):
-        if Mission.Task != None and Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
+        if player_inventory != None and Mission.Task != None and len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.WAITFORMISSIONRETURN:
             for item in Mission.Task.items:
                 inInv = None
                 for invItem in player_inventory.storage:
@@ -129,13 +136,17 @@ class Talk:
     lineCount = KDS.Math.Floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     audioChannel = None
     soundPlaying = None
+    autoExit = False
+    storyTrigger = False
 
     lines: List[str] = []
     scheduled: List[str] = []
+    scheduledTokens: List[Dict[int, str]] = []
 
     class Conversation:
         WAITFORMISSIONREQUEST = "<wait-for-mission-request>"
         WAITFORMISSIONRETURN = "<wait-for-mission-return>"
+        PRINCIPALNAMEINPUT = "<rehtori-name-input>"
         @staticmethod
         def scrollToBottom():
             Talk.Conversation.scroll = max(len(Talk.lines) - Talk.lineCount, 0)
@@ -146,7 +157,7 @@ class Talk:
 
         @staticmethod
         def schedule(text: str, prefix: str = Prefixes.player, forcePrefix: bool = False):
-            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
+            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT):
                 Talk.scheduled.append(text)
                 return
             prefixWidth = _renderedPrefixes[prefix].get_width()
@@ -158,12 +169,15 @@ class Talk:
                     Talk.scheduled.append(prefix + lineSplit[i])
 
         @staticmethod
-        def update():
-            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN):
-                if Talk.audioChannel == None or not Talk.audioChannel.get_busy() or Talk.audioChannel.get_sound() != Talk.soundPlaying:
+        def update(surfSize: Tuple[int, int]):
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT):
+                if len(ambientTalkAudios) > 0 and (Talk.audioChannel == None or not Talk.audioChannel.get_busy() or Talk.audioChannel.get_sound() != Talk.soundPlaying):
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
                     Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying, volume=KDS.Audio.EffectVolume / 4)
-                Talk.lines.append(Talk.scheduled.pop(0))
+                toShow = Talk.scheduled.pop(0)
+                for token in re.findall(r"\{.+?\}", toShow):
+                    toShow = toShow.replace(token, getattr(KDS.ConfigManager.Save.Active.Story, token[1:-1], f"<story_attribute_error ({token[1:-1]})>"))
+                Talk.lines.append(toShow)
                 Talk.Conversation.newAnimation = True
                 deleteCount = 0
                 while len(Talk.lines) > 50:
@@ -171,10 +185,22 @@ class Talk:
                     deleteCount += 1
                 if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index: Talk.Conversation.scrollToBottom()
                 else: Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
-            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN)) and Talk.Conversation.animationProgress == -1:
-                Talk.audioChannel = None
-                for audio in ambientTalkAudios:
-                    audio.stop()
+            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT)) and Talk.Conversation.animationProgress == -1:
+                if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
+                    pygame.time.delay(500)
+                    Talk.scheduled.pop(0)
+                    tmpSurf = pygame.Surface(surfSize)
+                    Talk.renderMenu(tmpSurf, (0, 0), False, updateConversation=False)
+                    nameSuggestion: str = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<principal-name-error>")), background=tmpSurf)
+                    if nameSuggestion[0].islower: nameSuggestion = nameSuggestion[0].upper() + nameSuggestion[1:]
+                    KDS.ConfigManager.Save.Active.Story.principalName = nameSuggestion
+                    Talk.storyTrigger = True
+                else:
+                    Talk.audioChannel = None
+                    for audio in ambientTalkAudios:
+                        audio.stop()
+                    if Talk.autoExit:
+                        Talk.stop(forceExit=True)
 
         @staticmethod
         def render(mouse_pos: Tuple[int, int], clicked: bool):
@@ -229,22 +255,25 @@ class Talk:
             Talk.scheduled.clear()
 
     @staticmethod
-    def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool):
+    def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, updateConversation: bool = True):
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_ad, (40, 474))
-        Talk.Conversation.update()
+        if updateConversation:
+            Talk.Conversation.update(surface.get_size())
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
 
     @staticmethod
-    def stop():
-        Talk.running = False
-        Talk.audioChannel = None
-        for audio in ambientTalkAudios:
-            audio.stop()
+    def stop(forceExit: bool = False):
+        if not Talk.autoExit or forceExit:
+            Talk.running = False
+            Talk.audioChannel = None
+            for audio in ambientTalkAudios:
+                audio.stop()
 
     @staticmethod
-    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock):
+    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
         pygame.mouse.set_visible(True)
+        Talk.storyTrigger = False
         global talk_ad, old_ads
         loopStopper = 0
         ad_index = -1
@@ -256,6 +285,7 @@ class Talk:
         talk_ad = talk_ads[ad_index]
         display_size = display.get_size()
         Talk.running = True
+        Talk.autoExit = autoExit
 
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
         request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
@@ -299,6 +329,7 @@ class Talk:
             clock.tick_busy_loop(60)
 
         pygame.mouse.set_visible(False)
+        return Talk.storyTrigger
 
 class KoponenEntity:
 
@@ -325,10 +356,10 @@ class KoponenEntity:
         self._path_finder_on = False
 
         self.allow_talk = False
+        self.force_talk = False
 
-    def update(self, tiles):
+    def update(self, tiles, display, quitHandler, clock):
         if self._move and not self.forceIdle:
-
             #region Handling randomisation
             if self._path_finder_on:
                 pass #The pathfinding thing

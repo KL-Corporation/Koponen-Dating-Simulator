@@ -1,4 +1,5 @@
 import KDS.Missions
+import KDS.ConfigManager
 import KDS.Koponen
 
 class Modes:
@@ -74,6 +75,17 @@ def SetGamemode(Gamemode: int, LevelIndex: int = 0):
             KDS.Missions.InitialiseMission("sauna_and_exit", "Suuret Haaveet")
             KDS.Missions.InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 2:
+            KDS.Koponen.Talk.Conversation.schedule("Heh, minulla on sinulle mahtavia uutisia.", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule("Koulumme sai juuri uuden rehtorin, jolle voimme keksiä pilanimen...", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule("Mitä ehdottaisit?", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.PRINCIPALNAMEINPUT)
+            KDS.Koponen.Talk.Conversation.schedule("Kävisikö {principalName}?", KDS.Koponen.Prefixes.player)
+            KDS.Koponen.Talk.Conversation.schedule("Hahaha, tuo on täydellinen.", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule("Pitää alkaa kutsumaan häntä tuolla nimellä.", KDS.Koponen.Prefixes.koponen)
+
+            KDS.Missions.InitialiseMission("principal_name", "Rehtoripilailua")
+            KDS.Missions.InitialiseTask("principal_name", "name_it", "Keksi rehtorille pilanimi")
+        elif index == 3:
             KDS.Missions.InitialiseMission("biology_exam", "Biologian Tunti")
             KDS.Missions.InitialiseTask("biology_exam", "go_to_biology", "Mene Biologian Tunnille")
 

@@ -178,6 +178,7 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
         return (0, 0, 0)
 
 def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
+    # Freezes if word is longer than max_width...
     if font.size(text)[0] > max_width:
         text_split = [wrd + " " for wrd in text.split(" ")]
         text_split[len(text_split) - 1] = text_split[len(text_split) - 1].strip()

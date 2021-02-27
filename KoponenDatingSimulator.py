@@ -144,7 +144,7 @@ KDS.AI.init()
 KDS.World.init()
 KDS.Missions.init()
 KDS.Scores.init()
-KDS.Koponen.init("Sinä")
+KDS.Koponen.init()
 KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 
@@ -483,16 +483,13 @@ class WorldData():
 
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
-        KoponenEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/enabled", False)
-        KoponenForceIdle = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceIdle", False)
-        TalkEnabled = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
-        pygame.event.pump()
-
         global Koponen
         Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
-        Koponen.setEnabled(KoponenEnabled)
-        Koponen.allow_talk = TalkEnabled
-        Koponen.forceIdle = KoponenForceIdle
+        Koponen.setEnabled(KDS.ConfigManager.LevelProp.Get("Entities/Koponen/enabled", False))
+        Koponen.forceIdle = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceIdle", False)
+        Koponen.allow_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
+        Koponen.force_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceTalk", False)
+        pygame.event.pump()
 
         enemySerialNumbers = {
             1: KDS.AI.Imp,
@@ -2795,6 +2792,9 @@ def agr():
 def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
     KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, true_scroll, selectedSave
+
+    pygame.mouse.set_visible(False)
+
     if show_loading:
         KDS.Loading.Circle.Start(display, clock, DebugMode)
 
@@ -2832,7 +2832,6 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     level_finished = False
     #endregion
 
-    pygame.mouse.set_visible(False)
     main_menu_running = False
     KDS.Scores.ScoreCounter.start()
     if reset_scroll: true_scroll = [Player.rect.x - 301.0, Player.rect.y - 221.0]
@@ -2845,6 +2844,8 @@ def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, 
     return 0
 
 def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
+    pygame.mouse.set_visible(False)
+
     map_names = {}
     def load_map_names():
         nonlocal map_names
@@ -2863,11 +2864,15 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
 
+    if KDS.ConfigManager.Save.Active.Story.playerName == "<name-error>":
+        KDS.ConfigManager.Save.Active.Story.playerName = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>")))
+
     pygame.mixer.music.stop()
 
     animationOverride = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
     if animationOverride and show_loading:
         KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], clock, ArialTitleFont, ArialFont)
+    KDS.Koponen.setPlayerPrefix(KDS.ConfigManager.Save.Active.Story.playerName)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride, auto_play_music=False)
     KDS.Loading.Story.WaitForExit()
     if KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
@@ -3561,6 +3566,7 @@ while main_running:
 #endregion
 #region Data
     display.fill((20, 25, 20))
+    screen_overlay = None
 
     Lights.clear()
 
@@ -3613,16 +3619,24 @@ while main_running:
 
     #region Koponen
     if Koponen.enabled:
+        talk = Koponen.force_talk
         if Koponen.rect.colliderect(Player.rect):
             Koponen.stopAutoMove()
             if Koponen.allow_talk:
                 screen.blit(koponen_talk_tip, (Koponen.rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
                 if KDS.Keys.functionKey.pressed:
                     KDS.Keys.Reset()
-                    KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock)
+                    talk = True
+        if talk:
+            result = KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock, autoExit=Koponen.force_talk)
+            if result:
+                KDS.Missions.ForceFinish()
+                tmp = pygame.Surface(display_size)
+                KDS.Koponen.Talk.renderMenu(tmp, (0, 0), False, updateConversation=False)
+                screen_overlay = pygame.transform.scale(tmp, screen_size)
         else: Koponen.continueAutoMove()
 
-        Koponen.update(tiles)
+        Koponen.update(tiles, display, KDS_Quit, clock)
     #endregion
     Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen, KDS.Keys.mainKey.pressed, weapon_fire)
@@ -3766,7 +3780,12 @@ while main_running:
         colorInvert = False
 
     display.fill(KDS.Colors.Black)
+
+    if screen_overlay != None:
+        screen.blit(screen_overlay, (0, 0))
+
     display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+
 
     pygame.display.flip()
 #endregion

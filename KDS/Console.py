@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import Any, Callable, List, Tuple, TypeVar, Union
+from typing import Any, Callable, List, Sequence, Tuple, TypeVar, Union
 
 import pygame
 from pygame.locals import *
@@ -93,12 +93,20 @@ class CheckTypes:
         return {
             "type": "commands"
         }
+    @staticmethod
+    def String(maxLength: int = None, invalidChars: str = None, invalidStrings: Sequence[str] = None):
+        return {
+            "type": "string",
+            "maxLength": maxLength,
+            "invalidChars": list(invalidChars) if invalidChars != None else invalidChars,
+            "invalidStrings": invalidStrings
+        }
 
 Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: CheckTypes and dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Any:
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Any:
     global Escaped, Feed, OldCommands
     if commands != None:
         commandsFound = commands
@@ -332,6 +340,20 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                             if min(_size[0], min(cmdIntSplit[2:])) != _size[0]: invalid = True
                         if _size[1] != None:
                             if max(_size[1], max(cmdIntSplit[2:])) != _size[1]: invalid = True
+            elif _type == "string":
+                if checkType["invalidChars"] != None:
+                    for char in checkType["invalidChars"]:
+                        if char in cmd:
+                            invalid = True
+                            break
+                if checkType["invalidStrings"] != None:
+                    for word in checkType["invalidStrings"]:
+                        if word == cmd:
+                            invalid = True
+                            break
+                if checkType["maxLength"] != None:
+                    if checkType["maxLength"] < len(cmd):
+                        invalid = True
             elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!")
         #endregion
 
@@ -488,6 +510,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: C
                 if _type == "rect": return pygame.Rect(*tmpVals)
                 else: return tuple(tmpVals)
             elif _type == "commands": return cmd.lower().split()
+            elif _type == "string": return cmd
             else: KDS.Logging.AutoError("Invalid type for automatic formatting!")
         return None
     #endregion

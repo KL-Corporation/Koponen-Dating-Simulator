@@ -139,10 +139,10 @@ class Save:
 
     class StoryData:
         def __init__(self) -> None:
-            self.playerName: str = "Sinä"
+            self.playerName: str = "<name-error>"
             self.index: int = 1
             self.examGrade: int = -1
-            self.principalName: str = "<principal name error>"
+            self.principalName: str = "<principal-name-error>"
 
     def __init__(self, index: int) -> None:
         Save.Active = self

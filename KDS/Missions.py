@@ -352,4 +352,13 @@ def Finish():
     for _mission in Missions.GetMissionList():
         for _task in _mission.GetTaskList():
             _task.Progress(100)
+def ForceFinish():
+    global Missions
+    for _mission in Missions.GetMissionList():
+        for _task in _mission.GetTaskList():
+            _task.Progress(100)
+            _task.lastFinished = True
+        _mission.finished = True
+        _mission.trueFinished = True
+        _mission.lastFinished = True
 #endregion

@@ -723,7 +723,7 @@ def generateLevelProp():
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
-    grid = [[tileInfo((0, 0))]]
+    grid = None
     def button_handler(_openMap: bool = False):
         global btn_menu
         if _openMap:
