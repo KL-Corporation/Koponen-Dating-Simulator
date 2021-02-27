@@ -34,9 +34,9 @@ def All(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> bool
             return False
     return True
 
-def Average(source: Iterable[TSource], predicate: Callable[[TSource], Union[int, float]]) -> float:
+def Average(source: Iterable[TValue], predicate: Callable[[TValue], TValue]) -> float:
     r = 0
-    i = -1
+    i = 0
     for i, v in enumerate(source):
         r += predicate(v)
     return (r / i if i > 0 else -1)
@@ -88,7 +88,7 @@ def Sum(source: Iterable[TValue], selector: Callable[[TValue], TValue]) -> TValu
         r += selector(v)
     return r
 
-def Where(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Iterable[TSource]:
+def Where(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Iterable[TSource]: # User can convert this to tuple by using "tuple()"
     """Filters an iterable of values based on a predicate.
 
     Args:
@@ -148,7 +148,7 @@ def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) 
         Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
     r = None
-    for v in source:
+    for v in source: # Iterable cannot be reversed... Fuck.
         if predicate(v) == True:
             r = v
     return r
