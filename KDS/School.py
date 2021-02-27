@@ -408,15 +408,14 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
 
     username = KDS.System.User.GetDisplayName()
-    usernameParts = username.split(" ")
-    usernameParts.reverse()
-    # Reversed so that if the length of surname and first name is equal,
-    # it will pick the first (last before reversing) one of the ties.
-    # This will minimize the risk of it taking the forename by accident.
-    checkSurname = max(usernameParts, key=len)
+
     surname = "Koponen"
-    if surnames != None and checkSurname in surnames:
-        surname = checkSurname
+    if surnames != None:
+        for check in reversed(username.split(" ")):
+            # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
+            if check in surnames:
+                surname = check
+                break
 
     if AlignOverride:
         surname = "[ALIGN Surname]"
