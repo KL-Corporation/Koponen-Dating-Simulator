@@ -33,6 +33,7 @@ import shutil
 import json
 import datetime
 from pygame.locals import *
+from enum import IntEnum
 from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
@@ -712,6 +713,7 @@ KDS.Logging.debug("Loading Tiles...")
 class Tile:
     noCollision = buildData["noCollision"]
     trueScale = buildData["trueScale"]
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.serialNumber = serialNumber
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -1150,6 +1152,7 @@ class Candle(Tile):
 
 class Teleport(Tile):
     door_texture = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
+    empty_texture = pygame.Surface((0, 0)).convert()
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, 1)
         self.texture = None
@@ -1185,7 +1188,7 @@ class Teleport(Tile):
         if self.serialNumber > 499:
             return Teleport.door_texture
         else:
-            return pygame.Surface((0, 0))
+            return Teleport.empty_texture
 
     teleportT_IDS = {}
 
@@ -1332,6 +1335,7 @@ class FlickerTrigger(Tile):
         self.stopAnim = False
         self.readyToTrigger = True
         self.globalUpdate = globalUpdate
+        self.texture = pygame.Surface((0, 0)).convert()
         FlickerTrigger.triggerList.append(self)
 
     def update(self, forceNormal: bool = False):
@@ -1366,7 +1370,7 @@ class FlickerTrigger(Tile):
             for t in FlickerTrigger.triggerList:
                 t.update(True)
 
-        return pygame.Surface((0, 0))
+        return self.texture
 
 class ImpaledBody(Tile):
     def __init__(self, position, serialNumber) -> None:
@@ -3042,7 +3046,7 @@ def settings_menu():
 def main_menu():
     global current_map, DebugMode, current_map_name
 
-    class Mode:
+    class Mode(IntEnum):
         MainMenu = 0
         ModeSelectionMenu = 1
         StoryMenu = 2
@@ -3108,7 +3112,7 @@ def main_menu():
             KDS.ConfigManager.SetSetting("Player/currentMap", current_map)
     level_pick.pick(level_pick.direction.none)
 
-    def menu_mode_selector(mode):
+    def menu_mode_selector(mode: Mode):
         nonlocal MenuMode
         MenuMode = mode
 
@@ -3194,10 +3198,10 @@ def main_menu():
                     if certQuit: KDS_Quit()
                     KDS.Audio.MusicMixer.unpause()
                 elif event.key == K_F6:
-                    KDS.Audio.MusicMixer.pause()
+                    KDS.Audio.Music.Stop()
                     certQuit = KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
                     if certQuit: KDS_Quit()
-                    KDS.Audio.MusicMixer.unpause()
+                    KDS.Audio.Music.Play("Assets/Audio/music/lobbymusic.ogg")
             elif event.type == QUIT:
                 KDS_Quit()
 

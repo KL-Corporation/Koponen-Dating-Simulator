@@ -38,7 +38,7 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
             if event.type == QUIT:
                 return True
             elif event.type == KEYDOWN:
-                if event.key == K_F6:
+                if event.key == K_ESCAPE:
                     running = False
         display.blit(mdSurf, (mdHorizontalPadding[0], display.get_height() - mdScroll.update() * mdSurf.get_height()))
         if mdScroll.Finished and KDS.Audio.Music.GetPlaying():
@@ -47,4 +47,5 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
             running = False
         pygame.display.flip()
         clock.tick_busy_loop(60)
+    KDS.Audio.Music.Stop()
     return False
