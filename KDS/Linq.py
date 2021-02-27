@@ -2,7 +2,7 @@ from typing import Callable, Iterable, TypeVar, Union, cast
 
 
 TSource = TypeVar("TSource", bound=object)
-TValue = TypeVar("TValue", int, float)
+TSelector = TypeVar("TSelector", int, float)
 
 def Any(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> bool:
     """Determines whether any element of an iterable satisfies a condition.
@@ -34,11 +34,12 @@ def All(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> bool
             return False
     return True
 
-def Average(source: Iterable[TValue], predicate: Callable[[TValue], TValue]) -> float:
+def Average(source: Iterable[TSource], predicate: Callable[[TSource], Union[int, float]]) -> float:
     r = 0
     i = 0
-    for i, v in enumerate(source):
+    for v in source:
         r += predicate(v)
+        i += 1
     return (r / i if i > 0 else -1)
 
 def Contains(source: Iterable[TSource], value: TSource, comparer: Callable[[TSource, TSource], bool]) -> bool:
@@ -73,7 +74,7 @@ def Count(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> in
             c += 1
     return c
 
-def Sum(source: Iterable[TValue], selector: Callable[[TValue], TValue]) -> TValue:
+def Sum(source: Iterable[TSource], selector: Callable[[TSource], TSelector]) -> TSelector:
     """Computes the sum of the iterable of values that are obtained by invoking a transform function on each element of the input iterable.
 
     Args:
@@ -83,7 +84,7 @@ def Sum(source: Iterable[TValue], selector: Callable[[TValue], TValue]) -> TValu
     Returns:
         TValue: The sum of the projected values.
     """
-    r = cast(TValue, 0)
+    r = cast(TSelector, 0)
     for v in source:
         r += selector(v)
     return r
