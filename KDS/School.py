@@ -13,6 +13,7 @@ import KDS.System
 import KDS.Math
 import KDS.Logging
 import KDS.UI
+import KDS.Linq
 import datetime
 
 class Timer:
@@ -400,22 +401,23 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         INFO = pygame.font.SysFont("ArialBD", 27)
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
 
-    surnames = None
+    Surnames = None
     try:
         with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
-            surnames = f.read().splitlines()
+            Surnames = f.read().splitlines()
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
 
-    username = KDS.System.User.GetDisplayName()
-
-    surname = "Koponen"
-    if surnames != None:
-        for check in reversed(username.split(" ")):
-            # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
-            if check in surnames:
+    surname = None
+    if Surnames != None:
+        for check in reversed(KDS.System.GetUserNameEx(KDS.System.EXTENDED_NAME_FORMAT.NameDisplay).split(" ")): # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
+            if check in Surnames: # Will be case sensitive, but case insensitivity would be too demanding to process.
                 surname = check
                 break
+        if surname == None:
+            surname = random.choice(Surnames[0:40])
+    else:
+        surname = "<surname-loading-failed>"
 
     if AlignOverride:
         surname = "[ALIGN Surname]"

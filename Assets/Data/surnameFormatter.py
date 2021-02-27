@@ -1,4 +1,5 @@
 # Put a surname Excel file (https://www.avoindata.fi/data/fi/dataset/none) in this Data folder and run this script.
+# Current statistics are from 5.2.2021. The date is marked correctly with day before month.
 
 import os
 import pandas

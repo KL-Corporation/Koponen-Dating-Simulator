@@ -5,6 +5,8 @@ import subprocess
 
 import KDS.Logging
 
+from enum import IntEnum
+
 def hide(path: str):
     """Hides the file or directory specified by path. [WINDOWS ONLY]
 
@@ -159,15 +161,24 @@ class Console:
             text += Console.RESET
         return text
 
-class User:
-    @staticmethod
-    def GetDisplayName() -> str:
-        GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
-        NameDisplay = 3
+class EXTENDED_NAME_FORMAT(IntEnum):
+    NameUnknown = 0,
+    NameFullyQualifiedDN = 1,
+    NameSamCompatible = 2,
+    NameDisplay = 3,
+    NameUniqueId = 6,
+    NameCanonical = 7,
+    NameUserPrincipal = 8,
+    NameCanonicalEx = 9,
+    NameServicePrincipal = 10,
+    NameDnsDomain = 12
 
-        size = ctypes.pointer(ctypes.c_ulong(0))
-        GetUserNameEx(NameDisplay, None, size)
+def GetUserNameEx(NameDisplay: EXTENDED_NAME_FORMAT):
+    GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
 
-        nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
-        GetUserNameEx(NameDisplay, nameBuffer, size)
-        return nameBuffer.value
+    size = ctypes.pointer(ctypes.c_ulong(0))
+    GetUserNameEx(NameDisplay.value, None, size)
+
+    nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
+    GetUserNameEx(NameDisplay.value, nameBuffer, size)
+    return nameBuffer.value
