@@ -130,7 +130,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     cursor_animation = KDS.Animator.Value(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
     invalid = False
     warning = False
-    warnText = console_font_small.render("[PERFORMANCE WARNING]", True, text_color) if checkType["type"] != "string" else console_font_small.render("Haha, funny. Fuck you.", True, text_color)
+    warnText = console_font_small.render("[PERFORMANCE WARNING]" if checkType["type"] != "string" else "Haha, funny. Fuck you.", True, text_color)
     pygame.key.set_repeat(500, 31)
     promptRender = console_font.render(prompt, True, text_color)
     text_y = text_rect.y + text_rect.height / 2 - console_font.get_height() / 2
