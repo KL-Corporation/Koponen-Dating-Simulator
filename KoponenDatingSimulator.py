@@ -312,6 +312,7 @@ decorative_head_tip: pygame.Surface = tip_font.render("Activate Head [Hold: E]",
 respawn_anchor_tip: pygame.Surface = tip_font.render("Set Respawn Point [E]", True, KDS.Colors.White)
 level_ender_tip: pygame.Surface = tip_font.render("Finish level [E]", True, KDS.Colors.White)
 itemTip: pygame.Surface = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
+tentTip: pygame.Surface = tip_font.render("Toggle Sleep [E]", True, KDS.Colors.White)
 
 renderPadding: int = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
 pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
@@ -1131,7 +1132,7 @@ class LevelEnderDoor(Tile):
                     self.opened = True
                 else:
                     KDS.Audio.PlaySound(door_locked)
-        return t_textures[self.serialNumber] if not self.opened else self.opentexture
+        return self.texture if not self.opened else self.opentexture
 
 class Candle(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -1475,14 +1476,34 @@ class DoorFront(Tile):
 
     def update(self):
         if self.rect.colliderect(Player.rect):
-            if self.showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if self.showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 if not self.locked:
                     KDS.Audio.PlaySound(door_opening)
                     self.opened = not self.opened
                 else:
                     KDS.Audio.PlaySound(door_locked)
-        return t_textures[self.serialNumber] if not self.opened else self.opentexture
+        return self.texture if not self.opened else self.opentexture
+
+class Tent(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        #Rect will be set automatically with trueScale.
+        self.checkCollision = False
+        self.inTent = False
+
+    def update(self):
+        if self.rect.colliderect(Player.rect):
+            screen.blit(tentTip, (self.rect.centerx - tentTip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if KDS.Keys.functionKey.clicked:
+                self.inTent = not self.inTent
+                if self.inTent:
+                    KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
+                Player.visible = not Player.visible
+                Player.lockMovement = not Player.lockMovement
+                KDS.Missions.Listeners.TentSleep.Trigger()
+        return self.texture
 
 #
 # class Ramp(Tile):
@@ -1555,6 +1576,7 @@ specialTilesD = {
     87: Barrier,
     93: GroundFire,
     94: LampChain,
+    101: Tent,
     102: GlassPane,
     108: RoofPlanks,
     109: RoofPlanks,
@@ -2321,6 +2343,8 @@ class PlayerClass:
         self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
+        self.visible: bool = True
+        self.lockMovement: bool = False
         self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
             idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
@@ -2358,6 +2382,8 @@ class PlayerClass:
         self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
+        self.visible: bool = True
+        self.lockMovement: bool = False
         self.animations.reset()
         self.deathSound.stop()
 
@@ -2439,7 +2465,7 @@ class PlayerClass:
             elif not crouch_collisions:
                 crouch(False)
 
-            self.rect, collisions = KDS.World.move_entity(self.rect, self.movement, tiles, w_sounds=path_sounds, playWalkSound=s)
+            self.rect, collisions = KDS.World.move_entity(self.rect, self.movement if not self.lockMovement else (0, 0), tiles, w_sounds=path_sounds, playWalkSound=s)
 
             if collisions.bottom:
                 self.air_timer = 0
@@ -3735,7 +3761,8 @@ while main_running:
 
     if DebugMode:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
-    screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
+    if Player.visible:
+        screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
     if Koponen.enabled: Koponen.render(screen, scroll, DebugMode)
 
     #Overlayt

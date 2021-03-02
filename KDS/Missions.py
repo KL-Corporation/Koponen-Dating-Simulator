@@ -74,6 +74,7 @@ class Listeners:
     KoponenReturnMission = Listener()
     LevelEnder = Listener()
     Teleport = Listener()
+    TentSleep = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
 #endregion
