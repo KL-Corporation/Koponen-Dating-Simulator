@@ -94,12 +94,13 @@ class CheckTypes:
             "type": "commands"
         }
     @staticmethod
-    def String(maxLength: int = None, invalidChars: str = None, invalidStrings: Sequence[str] = None):
+    def String(maxLength: int = None, invalidChars: str = None, invalidStrings: Sequence[str] = None, noSpace: bool = False):
         return {
             "type": "string",
             "maxLength": maxLength,
             "invalidChars": list(invalidChars) if invalidChars != None else invalidChars,
-            "invalidStrings": invalidStrings
+            "invalidStrings": invalidStrings,
+            "noSpace": noSpace
         }
 
 Escaped = False
@@ -353,6 +354,9 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                             break
                 if checkType["maxLength"] != None:
                     if checkType["maxLength"] < len(cmd):
+                        invalid = True
+                if checkType["noSpace"] == True:
+                    if " " in cmd:
                         invalid = True
             elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!")
         #endregion

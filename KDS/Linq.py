@@ -1,6 +1,5 @@
 from typing import Callable, Iterable, TypeVar, Union, cast
 
-
 TSource = TypeVar("TSource", bound=object)
 TSelector = TypeVar("TSelector", int, float)
 

@@ -2865,7 +2865,7 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
     else: KDS.ConfigManager.Save.Active.save()
 
     if KDS.ConfigManager.Save.Active.Story.playerName == "<name-error>":
-        KDS.ConfigManager.Save.Active.Story.playerName = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>")))
+        KDS.ConfigManager.Save.Active.Story.playerName = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), noSpace=True))
 
     pygame.mixer.music.stop()
 
