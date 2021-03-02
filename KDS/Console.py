@@ -14,8 +14,8 @@ import KDS.Math
 pygame.init()
 pygame.key.stop_text_input()
 #region Settings
-console_font = pygame.font.SysFont("Consolas", 25, bold=0, italic=0)
-console_font_small = pygame.font.SysFont("Consolas", 15, bold=0, italic=0)
+console_font = pygame.font.SysFont("Consolas", 25, bold=False, italic=False)
+console_font_small = pygame.font.SysFont("Consolas", 15, bold=False, italic=False)
 text_input_rect = pygame.Rect(0, 750, 1200, 50)
 text_rect = pygame.Rect(10, 762, 1180, 25)
 text_color = KDS.Colors.LightGray
@@ -94,12 +94,13 @@ class CheckTypes:
             "type": "commands"
         }
     @staticmethod
-    def String(maxLength: int = None, invalidChars: str = None, invalidStrings: Sequence[str] = None, noSpace: bool = False):
+    def String(maxLength: int = None, invalidChars: str = None, invalidStrings: Sequence[str] = None, funnyStrings: Sequence[str] = None, noSpace: bool = False):
         return {
             "type": "string",
             "maxLength": maxLength,
             "invalidChars": list(invalidChars) if invalidChars != None else invalidChars,
             "invalidStrings": invalidStrings,
+            "funnyStrings": funnyStrings,
             "noSpace": noSpace
         }
 
@@ -129,7 +130,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     cursor_animation = KDS.Animator.Value(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
     invalid = False
     warning = False
-    warnText = console_font_small.render("[PERFORMANCE WARNING]", True, text_color)
+    warnText = console_font_small.render("[PERFORMANCE WARNING]", True, text_color) if checkType["type"] != "string" else console_font_small.render("Haha, funny. Fuck you.", True, text_color)
     pygame.key.set_repeat(500, 31)
     promptRender = console_font.render(prompt, True, text_color)
     text_y = text_rect.y + text_rect.height / 2 - console_font.get_height() / 2
@@ -351,6 +352,11 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     for word in checkType["invalidStrings"]:
                         if word == cmd:
                             invalid = True
+                            break
+                if checkType["funnyStrings"] != None:
+                    for word in checkType["funnyStrings"]:
+                        if word == cmd:
+                            warning = True
                             break
                 if checkType["maxLength"] != None:
                     if checkType["maxLength"] < len(cmd):

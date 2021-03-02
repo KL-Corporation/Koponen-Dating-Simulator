@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import re
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 import KDS.AI
 import KDS.Animator
@@ -136,6 +136,21 @@ class Save:
     @staticmethod
     def ToPath(index: int):
         return os.path.join(SaveDirPath, f"{index}.kds")
+
+    @staticmethod
+    def GetMenuData():
+        retu: List[Dict[str, Any]] = []
+        for i in range(3):
+            path = Save.ToPath(i)
+            if os.path.isfile(path):
+                retu.append({
+                    "name": JSON.Get(path, "playerName", "<name-error>", False, True),
+                    "progress": ((JSON.Get(path, "index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
+                    "grade": JSON.Get(path, "examGrade", -1, False, True)
+                })
+            else:
+                retu.append(None)
+        return tuple(retu)
 
     class StoryData:
         def __init__(self) -> None:

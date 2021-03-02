@@ -22,18 +22,21 @@ def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) ->
     Returns:
         bool: The converted bool.
     """
-    if isinstance(value, str):
-        value = value.lower()
-        if value in ("t", "true"): return True
-        elif value in ("f", "false"): return False
-        elif not hideErrorMessage:
-            KDS.Logging.AutoError(f"Cannot convert {value} to bool.")
-            return fallbackValue
-    elif isinstance(value, int) or isinstance(value, float):
-        if value > 0: return True
-        else: return False
-    elif isinstance(value, bool): return value
-    if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.")
+    try:
+        if isinstance(value, str):
+            value = value.lower()
+            if value in ("t", "true"): return True
+            elif value in ("f", "false"): return False
+            elif not hideErrorMessage:
+                KDS.Logging.AutoError(f"Cannot convert {value} to bool.")
+                return fallbackValue
+        elif isinstance(value, int) or isinstance(value, float):
+            if value > 0: return True
+            else: return False
+        elif isinstance(value, bool): return value
+        if not hideErrorMessage: KDS.Logging.AutoError(f"Value {value} is not a valid type.")
+    except Exception as e:
+        KDS.Logging.AutoError(f"Encountered an error when converting to bool. Exception: {e}")
     return fallbackValue
 
 def AutoType(value: str, fallbackValue: Any = None) -> Union[int, float, bool, Any]:

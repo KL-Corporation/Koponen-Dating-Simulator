@@ -97,7 +97,11 @@ def Remap01(value: float, from1: float, from2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
-    return (value - from1) / (0 - from1) * (1 - from2) + from2
+    try:
+        return (value - from1) / (0 - from1) * (1 - from2) + from2
+    except ZeroDivisionError:
+        KDS.Logging.AutoError("Division by zero!")
+        return float("nan")
 
 def Repeat(t: float, length: float) -> float:
     """Loops the value t, so that it is never larger than length and never smaller than 0.

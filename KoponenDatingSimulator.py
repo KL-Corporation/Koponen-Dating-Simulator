@@ -917,6 +917,8 @@ class Door(Tile):
                 if not self.open:
                     if self.rect.centerx - Player.rect.centerx > 0: Player.rect.right = self.rect.left
                     else: Player.rect.left = self.rect.right
+            else:
+                KDS.Audio.PlaySound(door_locked)
         return self.texture if not self.open else self.opentexture
 
 class Landmine(Tile):
@@ -2864,8 +2866,14 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
     if newSave: KDS.ConfigManager.Save(saveIndex)
     else: KDS.ConfigManager.Save.Active.save()
 
+    if KDS.ConfigManager.Save.Active.Story.index > KDS.ConfigManager.GetGameData("Story/levelCount"):
+        KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
+        main_menu()
+        return
+
     if KDS.ConfigManager.Save.Active.Story.playerName == "<name-error>":
-        KDS.ConfigManager.Save.Active.Story.playerName = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), noSpace=True))
+        KDS.ConfigManager.Save.Active.Story.playerName = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=("Name", "name"), noSpace=True)) #Name is invalid because fuck the player. They took "Enter Name" literally.
+        KDS.ConfigManager.Save.Active.save()
 
     pygame.mixer.music.stop()
 
@@ -3152,24 +3160,35 @@ def main_menu():
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
     #endregion
+    return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
+    return_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 150, 300, 100), menu_mode_selector, return_text)
     #region Story Menu
-    story_save_button_0_rect = pygame.Rect(14, 14, 378, 500)
-    story_save_button_1_rect = pygame.Rect(410, 14, 378, 500)
-    story_save_button_2_rect = pygame.Rect(806, 14, 378, 500)
-    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, play_story)
-    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, play_story)
-    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, play_story)
-    story_new_save = button_font1.render("Start New Save", True, KDS.Colors.White)
+    story_new_save_override = False
+    def newSave():
+        nonlocal story_new_save_override
+        story_new_save_override = not story_new_save_override
+
+    def storyStartMiddleman(index: int):
+        nonlocal story_new_save_override
+        if story_new_save_override:
+            KDS.ConfigManager.Save(index).delete()
+        play_story(index)
+
+    story_save_button_0_rect = pygame.Rect(14, 14, 378, 400)
+    story_save_button_1_rect = pygame.Rect(410, 14, 378, 400)
+    story_save_button_2_rect = pygame.Rect(806, 14, 378, 400)
+    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, storyStartMiddleman)
+    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, storyStartMiddleman)
+    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, storyStartMiddleman)
+    story_new_save_text = button_font1.render("NEW SAVE", True, KDS.Colors.EmeraldGreen)
+    story_new_save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 175, display_size[1] - 325, 350, 125), newSave, story_new_save_text)
     #endregion
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
-    campaign_return_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 150, 300, 100)
-    campaign_play_text = button_font1.render("START", True, (KDS.Colors.EmeraldGreen))
-    campaign_return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
+    campaign_play_text = button_font1.render("START", True, KDS.Colors.EmeraldGreen)
     campaign_play_button = KDS.UI.Button(campaign_play_button_rect, play_function, campaign_play_text)
-    campaign_return_button = KDS.UI.Button(campaign_return_button_rect, menu_mode_selector, campaign_return_text)
     campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left, pygame.transform.flip(arrow_button, True, False))
     campaign_right_button = KDS.UI.Button(campaign_right_button_rect, level_pick.right, arrow_button)
 
@@ -3270,6 +3289,14 @@ def main_menu():
                         display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
+            font = harbinger_font
+            fontHeight = font.get_height()
+
+            text_offset = (10, 10)
+            line_offset = 25
+
+            story_menu_data = KDS.ConfigManager.Save.GetMenuData()
+
             pygame.draw.rect(
                 display, KDS.Colors.DarkGray, story_save_button_0_rect, 10)
             pygame.draw.rect(
@@ -3281,7 +3308,23 @@ def main_menu():
             story_save_button_1.update(display, mouse_pos, c, 1)
             story_save_button_2.update(display, mouse_pos, c, 2)
 
-            #Äh, teen joskus
+            story_new_save_button.update(display, mouse_pos, c)
+            return_button.update(display, mouse_pos, c, Mode.MainMenu)
+
+            for index, data in enumerate(story_menu_data):
+                rect = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)[index]
+                if not story_new_save_override:
+                    if data != None:
+                        lines = [data["name"], "Progress: " + str(data["progress"] * 100) + "%", data["grade"] if data["grade"] > 0 else None]
+                        for i, line in enumerate(lines):
+                            rendered = font.render(line, True, KDS.Colors.White)
+                            display.blit(rendered, (text_offset[0] + rect.x, (i * (fontHeight + line_offset)) + text_offset[1] + rect.y))
+                    else:
+                        rendered = font.render("EMPTY SLOT", True, KDS.Colors.White)
+                        display.blit(rendered, ((rect.width // 2 - rendered.get_width() // 2) + rect.x, (rect.height // 3 - rendered.get_height() // 2) + rect.y))
+                else:
+                    rendered = font.render("PICK SLOT", True, KDS.Colors.White)
+                    display.blit(rendered, ((rect.width // 2 - rendered.get_width() // 2) + rect.x, (rect.height // 3 - rendered.get_height() // 2) + rect.y))
 
         elif MenuMode == Mode.CampaignMenu:
             if len(os.listdir(PersistentPaths.CustomMaps)) != len(custom_maps_names):
@@ -3303,7 +3346,7 @@ def main_menu():
             display.blit(level_text, (125, 209))
 
             renderUI = not campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
-            campaign_return_button.update(display, mouse_pos, c, Mode.MainMenu)
+            return_button.update(display, mouse_pos, c, Mode.MainMenu)
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
 
