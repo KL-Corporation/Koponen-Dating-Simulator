@@ -1,5 +1,4 @@
 from __future__ import annotations
-from io import UnsupportedOperation
 
 from pygame import mouse
 #region Import Error
@@ -10,7 +9,7 @@ if __name__ != "__main__":
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union, cast
 import sys
 import pygame
 from pygame.locals import *
@@ -194,6 +193,8 @@ class UnitData:
     releasedButtons = { 0: True, 2: True }
     placedOnTile = None
     EMPTYSERIAL = "0000 0000 0000 0000 / "
+    EMPTY = "0000"
+    SLOTCOUNT = 4
 
     def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
@@ -224,6 +225,8 @@ class UnitData:
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
         #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        if slot >= UnitData.SLOTCOUNT:
+            raise ValueError(f"Slot {slot} is an invalid index!")
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
 
     def getSerial(self, slot: int):
@@ -246,18 +249,38 @@ class UnitData:
                 return
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
+    def insertSerial(self, srlNumber):
+        srlist = self.getSerials()
+        for fakeIndex, number in enumerate(reversed(srlist)):
+            if fakeIndex == 0:
+                if int(number) != 0:
+                    KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
+                    return
+            else:
+                self.setSerialToSlot(number, len(srlist) - fakeIndex) # The second argument will be one higher than the real index.
+        self.setSerialToSlot(srlNumber, 0)
+
     def removeSerial(self):
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
-                self.setSerialToSlot("0000", index)
+                self.setSerialToSlot(UnitData.EMPTY, index)
                 self.properties.RemoveUnused()
                 return
+
+    def removeSerialFromStart(self):
+        srlist = self.getSerials()
+        for fakeIndex, number in enumerate(reversed(srlist)):
+            index = len(srlist) - fakeIndex - 1
+            if index > 0:
+                self.setSerialToSlot(number, index - 1)
+            if fakeIndex == 0:
+                self.setSerialToSlot(UnitData.EMPTY, index)
 
     def hasTile(self):
         split: List[str] = self.serialNumber.split(" ")
         for s in split:
-            if len(s) > 0 and s[0] == "0" and s != "0000":
+            if len(s) > 0 and s[0] == "0" and s != UnitData.EMPTY:
                 return True
         return False
 
@@ -270,7 +293,7 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000 / "
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
+    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brsh: str = "0000", updttiles: bool = True):
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
             UnitType.Item: KDS.Colors.RiverBlue,
@@ -290,17 +313,20 @@ class UnitData:
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (gridSize[0] - scroll[0]) * scalesize, (gridSize[1] - scroll[1]) * scalesize))
+        doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
+        overlayRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
             row: List[UnitData]
             for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
-                blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
+                normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
                 overlayTileprops = str(unit.properties.Get(UnitType.Unspecified, "overlay", "None"))
                 if overlayTileprops != "None":
-                    overlay = Atextures[overlayTileprops[0]][overlayTileprops]
-                else:
-                    overlay = None
+                    unscaledOverlayTex = Atextures[overlayTileprops[0]][overlayTileprops]
+                    unscaledOverlayTexSize = unscaledOverlayTex.get_size()
+                    overlayTex = pygame.transform.scale(unscaledOverlayTex, (int(unscaledOverlayTexSize[0] * scaleMultiplier), int(unscaledOverlayTexSize[1] * scaleMultiplier)))
+                    overlayRenders.append((overlayTex, (normalBlitPos[0], normalBlitPos[1] - overlayTex.get_height() + scalesize))) # Will render some tiles incorrectly
                 for index, number in enumerate(srlist):
                     intNumber = int(number)
                     if intNumber != 0:
@@ -329,36 +355,36 @@ class UnitData:
                         if unitTexture != None:
                             unitTextureSize = unitTexture.get_size()
                             scaledUnitTexture = pygame.transform.scale(unitTexture, (int(unitTextureSize[0] * scaleMultiplier), int(unitTextureSize[1] * scaleMultiplier)))
+                            blitPos = (normalBlitPos[0], normalBlitPos[1] - scaledUnitTexture.get_height() + scalesize)
                             if number in trueScale:
-                                Surface.blit(scaledUnitTexture, (blitPos[0] - scaledUnitTexture.get_width() + scalesize, blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                Surface.blit(scaledUnitTexture, (normalBlitPos[0] - scaledUnitTexture.get_width() + scalesize, blitPos[1]))
                             elif intNumber in (23, 24, 25, 26):
-                                Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1]))
+                                doorRenders.append((scaledUnitTexture, blitPos))
                             else:
                                 checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
                                 if number[0] == "0" and isinstance(checkCollision, bool):
                                     tilepropsOverlay = scaledUnitTexture.convert_alpha()
-                                    Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                    Surface.blit(scaledUnitTexture, blitPos) # Will render some tiles incorrectly
                                     if not checkCollision:
                                         tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                        Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                        Surface.blit(tilepropsOverlay, blitPos)
                                     else:
                                         KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
                                 else:
-                                    Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                    Surface.blit(scaledUnitTexture, blitPos) # Will render some tiles incorrectly
 
                             if number[0] == "3":
                                 teleportOverlay = pygame.transform.scale(Atextures["3"]["3001"], (scalesize, scalesize))
                                 teleportOverlay.set_alpha(100)
-                                Surface.blit(teleportOverlay, (blitPos[0], blitPos[1] - teleportOverlay.get_height() + scalesize))
-
-                if overlay != None:
-                    overlay = pygame.transform.scale(overlay, (int(overlay.get_width() * scaleMultiplier), int(overlay.get_height() * scaleMultiplier)))
-                    Surface.blit(overlay, (blitPos[0], blitPos[1] - overlay.get_height() + scalesize))
+                                Surface.blit(teleportOverlay, normalBlitPos)
 
                 if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
-                        setPropType: str = KDS.Console.Start("Enter Property Type:")
-                        propType = getattr(UnitType, setPropType, None)
+                        autoFill = {}
+                        for t in UnitType:
+                            autoFill[t.name] = "break"
+                        setPropType = str(KDS.Console.Start("Enter Property Type:", True, KDS.Console.CheckTypes.Commands(), commands=autoFill)).lower()
+                        propType = KDS.Linq.FirstOrNone(UnitType, lambda t: t.name.lower() == setPropType)
                         if len(setPropType) > 0 and propType != None:
                             setPropKey: str = KDS.Console.Start("Enter Property Key:")
                             if len(setPropKey) > 0:
@@ -371,11 +397,13 @@ class UnitData:
                                     unit.properties.Set(propType, setPropKey, setPropVal)
                                 else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
                         elif len(setPropType) > 0:
-                            KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!")
+                            KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
                     elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
-                        overlayId = str(KDS.Console.Start("Enter Overlay Identifier"))
-                        if overlayId[0] in Atextures and overlayId in Atextures[overlayId[0]]:
+                        overlayId = materialMenu(UnitData.EMPTY)
+                        if overlayId != UnitData.EMPTY and overlayId[0] in Atextures and overlayId in Atextures[overlayId[0]]:
                             unit.properties.Set(UnitType.Unspecified, "overlay", overlayId)
+                        elif overlayId == UnitData.EMPTY:
+                            unit.properties.Remove(UnitType.Unspecified, "overlay")
                         else:
                             print(f"Overlay identifier \"{overlayId}\" is invalid.")
 
@@ -390,14 +418,18 @@ class UnitData:
 
                     if mouse_pressed[1] and not keys_pressed[K_LSHIFT]:
                         brushtemp = unit.getSerial(0)
-                    pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
+                    pygame.draw.rect(Surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
                     if mouse_pressed[0] and updttiles:
-                        if brsh != "0000":
+                        if brsh != UnitData.EMPTY:
                             if not keys_pressed[K_c]:
-                                if not keys_pressed[K_LSHIFT]:
+                                if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
                                     unit.setSerial(brsh)
-                                elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit: unit.addSerial(brsh)
+                                elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
+                                    if keys_pressed[K_LSHIFT]:
+                                        unit.addSerial(brsh)
+                                    else: # At this point only CTRL can be pressed.
+                                        unit.insertSerial(brsh)
                             elif unit.hasTile():
                                 setVal = False
                                 if keys_pressed[K_LALT]:
@@ -412,9 +444,13 @@ class UnitData:
                     elif mouse_pressed[2]:
                         tpP = f"{unit.pos[0]}-{unit.pos[1]}"
                         if not keys_pressed[K_c]:
-                            if not keys_pressed[K_LSHIFT]:
+                            if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
                                 unit.resetSerial()
-                            elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit: unit.removeSerial()
+                            elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit:
+                                if keys_pressed[K_LSHIFT]:
+                                    unit.removeSerial()
+                                else: # At this point only CTRL can be pressed.
+                                    unit.removeSerialFromStart()
                         else:
                             unit.properties.Remove(UnitType.Tile, "checkCollision")
                     UnitData.placedOnTile = unit
@@ -427,6 +463,12 @@ class UnitData:
                                 continue
                             rendered_tip = harbinger_font_small.render(f"{k}: {v}", True, color)
                             tip_renders.append(rendered_tip)
+
+        for doorTex, doorPos in doorRenders:
+            Surface.blit(doorTex, doorPos)
+
+        for ovs, ovp in overlayRenders:
+            Surface.blit(ovs, ovp)
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -499,7 +541,7 @@ class UnitProperties:
             self.values = {}
 
         splitValues = self.parent.getSerials()
-        for _type in self.values:
+        for _type in self.values.copy():
             if not KDS.Linq.Any(splitValues, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
@@ -731,7 +773,7 @@ def consoleHandler(commandlist):
                     unit: UnitData
                     srlist = unit.getSerials()
                     for i in range(1, len(srlist)):
-                        unit.setSerialToSlot("0000", i)
+                        unit.setSerialToSlot(UnitData.EMPTY, i)
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
 
@@ -787,7 +829,7 @@ def materialMenu(previousMaterial: str) -> str:
         tip_renders = []
 
         mpos = pygame.mouse.get_pos()
-        display.fill((20,20,20))
+        display.fill((20, 20, 20))
         for selection in selectorRects:
             selection: selectorRect
             sorting = selection.serialNumber[0]
@@ -799,7 +841,7 @@ def materialMenu(previousMaterial: str) -> str:
                     return selection.serialNumber
 
         if mouse_pressed[0]:
-            return "0000"
+            return UnitData.EMPTY
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -1114,7 +1156,7 @@ def main():
             elif 100 >= undoTotal >= 50: _color = KDS.Colors.Orange
             else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
-        if brush != "0000":
+        if brush != UnitData.EMPTY:
             tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
             if brushTrigger:
@@ -1134,7 +1176,7 @@ def main():
             selectTrigger = False
             dragStartPos = None
             Selected.Get()
-        if brush == "0000": brushTrigger = True
+        if brush == UnitData.EMPTY: brushTrigger = True
         if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
             selectTrigger = False
             dragStartPos = None
@@ -1150,16 +1192,16 @@ def main():
                     blitTex = None
                     if number[0] == '3':
                         blitTex = Atextures["3"]["3001"]
-                    elif number != "0000":
+                    elif number != UnitData.EMPTY:
                         try:
                             blitTex = Atextures[number[0]][number]
                         except KeyError:
                                 KDS.Logging.warning(f"Cannot render unit because texture is not added: {srlist}", True)
                     if blitTex != None:
                         if number in trueScale:
-                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
+                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - blitTex.get_width() * scaleMultiplier - scalesize, blitPos[1] - blitTex.get_height() * scaleMultiplier - scalesize))
                         else:
-                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - blitTex.get_height() * scaleMultiplier + scalesize))
+                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), blitPos)
 
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
@@ -1201,7 +1243,11 @@ pygame.quit()
     [Normal]
     Middle Mouse: Get Serial
     Left Mouse: Set Serial
-    Left Mouse + SHIFT: Add Serial
+    Left Mouse + SHIFT: Add Serial At Top
+    Left Mouse + CTRL: Insert Serial At Bottom
+    Right Mouse: Reset Serial
+    Right Mouse + SHIFT: Remove Serial From Top
+    Right Mouse + CTRL: Remove Serial From Bottom
     Left Mouse + C: No Collision
     Left Mouse + ALT + C: Force Collision
     Right Mouse + C: Remove Collision Attribute
