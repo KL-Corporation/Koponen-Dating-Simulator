@@ -250,6 +250,8 @@ class HostileEnemy:
         self.clearlagcounter = 0
         self.c = None
 
+        self.enabled = True
+
     def onDeath(self):
         return []
 

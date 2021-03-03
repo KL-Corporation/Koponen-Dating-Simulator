@@ -3663,7 +3663,7 @@ while main_running:
     Items, Player.inventory = Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
     for enemy in Enemies:
-        if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200:
+        if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
             result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
             if result[0]:
                 #print(len(result[0]))
