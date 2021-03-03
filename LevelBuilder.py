@@ -233,8 +233,12 @@ class UnitData:
         slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
 
-    def getSerials(self):
+    def getSerials(self) -> Tuple[str]:
         return tuple(self.serialNumber.replace(" / ", "").split(" "))
+
+    def getFilledSerials(self):
+        serials = self.getSerials()
+        return tuple(KDS.Linq.Where(serials, lambda s: s != UnitData.EMPTY))
 
     def addSerial(self, srlNumber):
         srlist = self.getSerials()
@@ -272,8 +276,10 @@ class UnitData:
         srlist = self.getSerials()
         for fakeIndex, number in enumerate(reversed(srlist)):
             index = len(srlist) - fakeIndex - 1
-            if index > 0:
-                self.setSerialToSlot(number, index - 1)
+            if index <= 0: # If it's the last tile, the process is complete.
+                return
+
+            self.setSerialToSlot(number, index - 1)
             if fakeIndex == 0:
                 self.setSerialToSlot(UnitData.EMPTY, index)
 
@@ -293,7 +299,7 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000 / "
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brsh: str = "0000", allowTilePlacement: bool = True):
+    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brush: str = "0000", allowTilePlacement: bool = True, middleMouseOnDown: bool = False):
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
             UnitType.Item: KDS.Colors.RiverBlue,
@@ -304,7 +310,7 @@ class UnitData:
 
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
-        brushtemp = brsh
+        brushtemp = brush
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
         bpos = (0, 0)
@@ -416,21 +422,25 @@ class UnitData:
                     if fld_srls > 1:
                         for i in range(fld_srls): tip_renders.append(harbinger_font_small.render(srlist[i], True, KDS.Colors.RiverBlue))
 
-                    if mouse_pressed[1] and not keys_pressed[K_LSHIFT]:
-                        brushtemp = unit.getSerial(0)
+                    if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
+                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.getFilledSerials(), lambda s: s != brush)
+                        if tempbrushtemp == None:
+                            tempbrushtemp = unit.getSerial(0)
+                        brushtemp = tempbrushtemp
+
                     pygame.draw.rect(Surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
                     if allowTilePlacement:
                         if mouse_pressed[0]:
-                            if brsh != UnitData.EMPTY or keys_pressed[K_c]:
+                            if brush != UnitData.EMPTY or keys_pressed[K_c]:
                                 if not keys_pressed[K_c]:
                                     if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
-                                        unit.setSerial(brsh)
+                                        unit.setSerial(brush)
                                     elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
                                         if keys_pressed[K_LSHIFT]:
-                                            unit.addSerial(brsh)
+                                            unit.addSerial(brush)
                                         else: # At this point only CTRL can be pressed.
-                                            unit.insertSerial(brsh)
+                                            unit.insertSerial(brush)
                                 elif unit.hasTile():
                                     setVal = False
                                     if keys_pressed[K_LALT]:
@@ -1046,6 +1056,7 @@ def main():
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
     while mainRunning:
+        middleMouseOnDown = False
         pygame.key.set_repeat(500, 31)
         mouse_pos = pygame.mouse.get_pos()
         keys_pressed = pygame.key.get_pressed()
@@ -1062,6 +1073,7 @@ def main():
                 elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
+                    middleMouseOnDown = True
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     allowTilePlacement = True
@@ -1144,7 +1156,7 @@ def main():
             inputConsole_output = None
 
         display.fill((30,20,60))
-        grid, brush = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement)
+        grid, brush = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement, middleMouseOnDown)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
