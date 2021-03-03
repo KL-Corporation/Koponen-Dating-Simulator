@@ -14,6 +14,7 @@ import KDS.Colors
 import KDS.Convert
 import KDS.Logging
 import KDS.Math
+import KDS.Missions
 import KDS.World
 
 pygame.mixer.init()
@@ -228,7 +229,7 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
-    def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
+    def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False, listener: str = None):
         self.rect = rect
         self.health = health
         self.sleep = sleep
@@ -251,6 +252,13 @@ class HostileEnemy:
         self.c = None
 
         self.enabled = True
+
+        # Currently there is no way to assign a listener.
+        if listener != None:
+            self.enabled = False
+            listenerInstance = getattr(KDS.Missions.Listeners, listener, None)
+            if listenerInstance != None and isinstance(listenerInstance, KDS.Missions.ItemListener):
+                listenerInstance.OnTrigger += lambda: setattr(self, "enabled", True) # Have to do it like this, because = does not work in lamda.
 
     def onDeath(self):
         return []

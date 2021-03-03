@@ -9,6 +9,7 @@ import KDS.Audio
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Events
 import KDS.Gamemode
 import KDS.Koponen
 import KDS.Logging
@@ -43,28 +44,32 @@ class Padding:
 #region Listeners
 class Listener:
     def __init__(self) -> None:
-        self.listenerList: List[Tuple[str, str, float]] = []
+        self._listenerList: List[Tuple[str, str, float]] = []
+        self.OnTrigger = KDS.Events.Event()
 
     def Add(self, MissionName: str, TaskName: str, AddValue: float):
-        self.listenerList.append((MissionName, TaskName, AddValue))
+        self._listenerList.append((MissionName, TaskName, AddValue))
 
     def Trigger(self):
-        for listnr in self.listenerList:
+        for listnr in self._listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
+        self.OnTrigger.Invoke()
 
 class ItemListener:
     def __init__(self) -> None:
-        self.listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
+        self._listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
+        self.OnTrigger = KDS.Events.Event()
 
     def Add(self, itemSerial: int, MissionName: str, TaskName: str, AddValue: float):
-        if itemSerial not in self.listenerDict:
-            self.listenerDict[itemSerial] = []
-        self.listenerDict[itemSerial].append((MissionName, TaskName, AddValue))
+        if itemSerial not in self._listenerDict:
+            self._listenerDict[itemSerial] = []
+        self._listenerDict[itemSerial].append((MissionName, TaskName, AddValue))
 
     def Trigger(self, itemSerial: int):
-        if itemSerial in self.listenerDict:
-            for v in self.listenerDict[itemSerial]:
+        if itemSerial in self._listenerDict:
+            for v in self._listenerDict[itemSerial]:
                 AddProgress(v[0], v[1], v[2])
+        self.OnTrigger.Invoke(itemSerial)
 
 class Listeners:
     InventorySlotSwitching = Listener()
