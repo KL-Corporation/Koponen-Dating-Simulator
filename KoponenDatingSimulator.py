@@ -543,7 +543,6 @@ class WorldData():
                             idPropCheck = str(pointer)
                             if idPropCheck in idProp:
                                 for k, v in idProp[idPropCheck].items():
-                                    toSet = None
                                     if pointer == 0:
                                         if k == "checkCollision":
                                             tiles[y][x][-1].checkCollision = bool(v)
@@ -552,16 +551,13 @@ class WorldData():
                                                 tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                                 tiles[y][x][-1].darkOverlay = tex
                                             else:
-                                                toSet = tiles[y][x][-1]
+                                                setattr(tiles[y][x][-1], k, v)
                                     elif pointer == 1:
-                                        toSet = Items[-1]
+                                        setattr(Items[-1], k, v)
                                     elif pointer == 2:
-                                        toSet = Enemies[-1]
+                                        setattr(Enemies[-1], k, v)
                                     elif pointer == 3:
-                                        toSet = tiles[y][x][-1]
-
-                                    if toSet != None:
-                                        setattr(toSet, k, v)
+                                        setattr(tiles[y][x][-1], k, v)
 
                 else:
                     x += 1
