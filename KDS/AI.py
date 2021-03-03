@@ -268,8 +268,7 @@ class HostileEnemy:
         if s:
             self.sleep = False
 
-        if hasattr(self, "P_update"):
-            self.P_update(tiles, targetRect, debug, scroll, Surface)
+        self.lateUpdate(tiles, targetRect, debug, scroll, Surface)
 
         if self.health > 0 and not self.sleep:
             if s:
@@ -315,6 +314,9 @@ class HostileEnemy:
             pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
+
+    def lateUpdate(self):
+        pass
 
     def dmg(self, dmgAmount):
         self.health -= dmgAmount
@@ -640,7 +642,7 @@ class Mummy(HostileEnemy):
         items = []
         return items
 
-    def P_update(self, *args):
+    def lateUpdate(self, *args):
         if not self.sleep and self.health > 0:
             s = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
             s1 = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
