@@ -315,7 +315,7 @@ class HostileEnemy:
         Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
 
-    def lateUpdate(self):
+    def lateUpdate(self, *args):
         pass
 
     def dmg(self, dmgAmount):
