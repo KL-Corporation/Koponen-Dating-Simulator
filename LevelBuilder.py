@@ -293,7 +293,7 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000 / "
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brsh: str = "0000", updttiles: bool = True):
+    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brsh: str = "0000", allowTilePlacement: bool = True):
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
             UnitType.Item: KDS.Colors.RiverBlue,
@@ -420,39 +420,33 @@ class UnitData:
                         brushtemp = unit.getSerial(0)
                     pygame.draw.rect(Surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
-                    if mouse_pressed[0] and updttiles:
-                        if brsh != UnitData.EMPTY:
+                    if allowTilePlacement:
+                        if mouse_pressed[0]:
+                            if brsh != UnitData.EMPTY or keys_pressed[K_c]:
+                                if not keys_pressed[K_c]:
+                                    if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
+                                        unit.setSerial(brsh)
+                                    elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
+                                        if keys_pressed[K_LSHIFT]:
+                                            unit.addSerial(brsh)
+                                        else: # At this point only CTRL can be pressed.
+                                            unit.insertSerial(brsh)
+                                elif unit.hasTile():
+                                    setVal = False
+                                    if keys_pressed[K_LALT]:
+                                        setVal = True
+                                    unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
+                        elif mouse_pressed[2]:
                             if not keys_pressed[K_c]:
                                 if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
-                                    unit.setSerial(brsh)
-                                elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
+                                    unit.resetSerial()
+                                elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit:
                                     if keys_pressed[K_LSHIFT]:
-                                        unit.addSerial(brsh)
+                                        unit.removeSerial()
                                     else: # At this point only CTRL can be pressed.
-                                        unit.insertSerial(brsh)
-                            elif unit.hasTile():
-                                setVal = False
-                                if keys_pressed[K_LALT]:
-                                    setVal = True
-                                unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
-
-                        elif keys_pressed[K_c]:
-                            setVal = False
-                            if keys_pressed[K_LALT]:
-                                setVal = True
-                            unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
-                    elif mouse_pressed[2]:
-                        tpP = f"{unit.pos[0]}-{unit.pos[1]}"
-                        if not keys_pressed[K_c]:
-                            if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
-                                unit.resetSerial()
-                            elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit:
-                                if keys_pressed[K_LSHIFT]:
-                                    unit.removeSerial()
-                                else: # At this point only CTRL can be pressed.
-                                    unit.removeSerialFromStart()
-                        else:
-                            unit.properties.Remove(UnitType.Tile, "checkCollision")
+                                        unit.removeSerialFromStart()
+                            else:
+                                unit.properties.Remove(UnitType.Tile, "checkCollision")
                     UnitData.placedOnTile = unit
 
                     tipProps = unit.properties.GetAll()
@@ -566,7 +560,7 @@ class UnitProperties:
                 pString = str(unit.properties)
                 if len(pString) > 0:
                     strings.append(pString)
-        if len(strings) < 1: # If there is nothing to save, return None.
+        if len(strings) < 1: # If there is nothing to save, return empty.
             return ""
         result = "{\n" + "".join(f"{s},\n" for s in strings).removesuffix(",\n") + "\n}"
         return result
@@ -1040,7 +1034,7 @@ def main():
         grid = loadGrid(gridSize)
 
     inputConsole_output = None
-    updateTiles = True
+    allowTilePlacement = True
 
     DebugMode = False
 
@@ -1070,7 +1064,7 @@ def main():
                     scroll_beforeMove = scroll.copy()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
-                    updateTiles = True
+                    allowTilePlacement = True
             elif event.type == KEYDOWN:
                 if event.key == K_z or event.key == K_y:
                     if keys_pressed[K_LCTRL]:
@@ -1086,7 +1080,7 @@ def main():
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     brush = materialMenu(brush)
-                    updateTiles = False
+                    allowTilePlacement = False
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
                     KDS.Logging.Profiler(DebugMode)
@@ -1150,7 +1144,7 @@ def main():
             inputConsole_output = None
 
         display.fill((30,20,60))
-        grid, brush = UnitData.renderUpdate(display, scroll, grid, brush, updateTiles)
+        grid, brush = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
