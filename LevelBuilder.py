@@ -552,14 +552,27 @@ class UnitProperties:
 
     def __str__(self) -> Optional[str]:
         self.RemoveUnused()
-        if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1):
+        if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1): # The dictionary should be empty, but let's check just in case.
             return ""
         key = f"{self.parent.pos[0]}-{self.parent.pos[1]}"
-        value = json.dumps(self.values) # Instead of converting the type to integer-like string, it will convert to a string with the name of the enum value
+        value = json.dumps(self.values, separators=(',', ':')) # Separators ensure that there are no useless spaces in the file.
         return f"\"{key}\":{value}" # Switches int to string, because JSON is stupid
 
     @staticmethod
-    def Deserialize(jsonString: str, grid: List[List[UnitData]]):
+    def Serialize(grid: List[List[UnitData]]) -> str:
+        strings: List[str] = []
+        for row in grid:
+            for unit in row:
+                pString = str(unit.properties)
+                if len(pString) > 0:
+                    strings.append(pString)
+        if len(strings) < 1: # If there is nothing to save, return None.
+            return ""
+        result = "{\n" + "".join(f"{s},\n" for s in strings).removesuffix(",\n") + "\n}"
+        return result
+
+    @staticmethod
+    def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
         deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
         for row in grid:
             for unit in row:
@@ -607,24 +620,18 @@ def resizeGrid(size: Tuple[int, int], grid: list):
 
 def saveMap(grid: List[List[UnitData]], name: str):
     outputString = ''
-    units: List[UnitData] = []
     for row in grid:
         for unit in row:
             outputString += str(unit)
-            units.append(unit)
         outputString += "\n"
     with open(name, 'w', encoding="utf-8") as f:
         f.write(outputString)
     #region Tile Props
-    propertiesStrings: List[str] = []
-    for u in units:
-        uStr = str(u.properties)
-        if len(uStr) > 0:
-            propertiesStrings.append(uStr)
-
     propertiesPath = os.path.join(os.path.dirname(name), "properties.kdf")
+    propertiesString = UnitProperties.Serialize(grid)
     saveProps = False
-    if len(propertiesStrings) > 0:
+
+    if len(propertiesString) > 0:
         if os.path.isfile(propertiesPath):
             saveProps = True
         else:
@@ -641,12 +648,8 @@ def saveMap(grid: List[List[UnitData]], name: str):
             saveProps = True
 
     if saveProps:
-        stringBuild = "{"
-        for s in propertiesStrings:
-            stringBuild += f"{s},"
-        stringBuild = stringBuild.removesuffix(",") + "}" # Removes last , and adds a closing bracket to complete the JSON
         with open(propertiesPath, "w", encoding="utf-8") as f:
-            f.write(stringBuild)
+            f.write(propertiesString)
     #endregion
     Undo.clear()
 
