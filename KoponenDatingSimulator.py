@@ -34,7 +34,7 @@ import json
 import datetime
 from pygame.locals import *
 from enum import IntEnum
-from typing import Any, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -428,7 +428,7 @@ class WorldData():
         Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
         LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
         Level Music File (optional): {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
-        TileProps File (optional): {os.path.isfile(os.path.join(MapPath, "tileprops.kdf"))}
+        Properties File (optional): {os.path.isfile(os.path.join(MapPath, "properties.kdf"))}
         Level Background File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
         Inventory File (optional): {os.path.isfile(os.path.join(MapPath, "inventory.kdf"))}
     ##### MAP FILE ERROR #####""")
@@ -436,10 +436,10 @@ class WorldData():
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             KDS.Loading.Circle.Stop()
             return None
-
-        tileprops: Dict[str, Any] = {}
-        if os.path.isfile(os.path.join(MapPath, "tileprops.kdf")):
-            tileprops = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "tileprops.kdf"), KDS.ConfigManager.JSON.NULLPATH, {})
+                        #pos,     type,      key,  value
+        properties: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = {}
+        if os.path.isfile(os.path.join(MapPath, "properties.kdf")):
+            properties = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "properties.kdf"), KDS.ConfigManager.JSON.NULLPATH, {})
         global level_background, level_background_img
         if os.path.isfile(os.path.join(MapPath, "background.png")):
             level_background = True
@@ -461,7 +461,7 @@ class WorldData():
                     KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
 
         pygame.event.pump()
-        with open(os.path.join(MapPath, "level.dat"), "r") as map_file:
+        with open(os.path.join(MapPath, "level.dat"), "r", encoding="utf-8") as map_file:
             map_data = map_file.read().split("\n")
 
         max_map_width = len(max(map_data))
@@ -511,10 +511,12 @@ class WorldData():
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
                 if datapoint != "/":
                     identifier = f"{x}-{y}"
-                    if identifier in tileprops:
-                        for k, v in tileprops[identifier].items():
-                            if k == "overlay":
-                                overlays.append(Tile((x * 34, y * 34), int(v)))
+                    if identifier in properties:
+                        idProp = properties[identifier]
+                        if "4" in idProp: # 4 is an unspecified type.
+                            tlProp = idProp["4"]
+                            if "overlay" in tlProp:
+                                overlays.append(Tile((x * 34, y * 34), int(tlProp["overlay"])))
 
                     if len(datapoint) == 4 and int(datapoint) != 0:
                         serialNumber = int(datapoint[1:])
@@ -524,20 +526,10 @@ class WorldData():
                                 tiles[y][x].append( Tile((x * 34, y * 34), serialNumber=serialNumber) )
                             else:
                                 tiles[y][x].append( specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber) )
-                            if identifier in tileprops:
-                                for k, v in tileprops[identifier].items():
-                                    if k == "checkCollision":
-                                        tiles[y][x][-1].checkCollision = v
-                                        if not v:
-                                            tex = tiles[y][x][-1].texture.convert_alpha()
-                                            tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                            tiles[y][x][-1].darkOverlay = tex
-                                    else: setattr(tiles[y][x][-1], k, v)
-
                         elif pointer == 1:
                             Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
                         elif pointer == 2:
-                            Enemies.append(enemySerialNumbers[serialNumber]((x*34,y*34)))
+                            Enemies.append(enemySerialNumbers[serialNumber]((x * 34,y * 34)))
                         elif pointer == 3:
                             temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
                             if serialNumber not in Teleport.teleportT_IDS:
@@ -545,6 +537,32 @@ class WorldData():
                             Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
                             tiles[y][x].append( temp_teleport )
                             del temp_teleport
+
+                        if identifier in properties:
+                            idProp = properties[identifier]
+                            idPropCheck = str(pointer)
+                            if idPropCheck in idProp:
+                                for k, v in idProp[idPropCheck].items():
+                                    toSet = None
+                                    if pointer == 0:
+                                        if k == "checkCollision":
+                                            tiles[y][x][-1].checkCollision = bool(v)
+                                            if not v:
+                                                tex = tiles[y][x][-1].texture.convert_alpha()
+                                                tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                                tiles[y][x][-1].darkOverlay = tex
+                                            else:
+                                                toSet = tiles[y][x][-1]
+                                    elif pointer == 1:
+                                        toSet = Items[-1]
+                                    elif pointer == 2:
+                                        toSet = Enemies[-1]
+                                    elif pointer == 3:
+                                        toSet = tiles[y][x][-1]
+
+                                    if toSet != None:
+                                        setattr(toSet, k, v)
+
                 else:
                     x += 1
             y += 1
@@ -725,7 +743,7 @@ class Tile:
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
         self.lateRender = False
-        self.darkOverlay = None
+        self.darkOverlay: Optional = None
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.

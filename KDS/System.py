@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import ctypes
 import os
 import shutil
 import subprocess
+from typing import Union
 
 import KDS.Logging
 
@@ -39,7 +42,7 @@ def emptdir(dirpath: str):
             KDS.Logging.AutoError("Cannot determine child type.")
 
 class MessageBox:
-    class Buttons:
+    class Buttons(IntEnum):
         ABORTRETRYIGNORE = 2
         CANCELTRYCONTINUE = 6
         HELP = 16384
@@ -49,7 +52,7 @@ class MessageBox:
         YESNO = 4
         YESNOCANCEL = 3
 
-    class Icon:
+    class Icon(IntEnum):
         EXCLAMATION = 48
         WARNING = 48
         INFORMATION = 64
@@ -59,13 +62,13 @@ class MessageBox:
         ERROR = 16
         HAND = 16
 
-    class DefaultButton:
+    class DefaultButton(IntEnum):
         BUTTON1 = 0
         BUTTON2 = 256
         BUTTON3 = 512
         BUTTON4 = 768
 
-    class Responses:
+    class Responses(IntEnum):
         ABORT = 3
         CANCEL = 2
         CONTINUE = 11
@@ -77,11 +80,12 @@ class MessageBox:
         YES = 6
 
     @staticmethod
-    def Show(title: str, text: str, buttons: int = None, icon: int = None, *args: int):
-        argVal = buttons if buttons != None else 0
-        argVal += icon if icon != None else 0
-        for arg in args: argVal += arg
-        return ctypes.windll.user32.MessageBoxW(0, text, title, argVal)
+    def Show(title: str, text: str, buttons: MessageBox.Buttons = None, icon: MessageBox.Icon = None, defaultButton: MessageBox.DefaultButton = None, *args: int) -> MessageBox.Responses:
+        argVal = buttons.value if buttons != None else 0
+        argVal += icon.value if icon != None else 0
+        argVal += defaultButton.value if defaultButton != None else 0
+        argVal += sum(args)
+        return MessageBox.Responses(ctypes.windll.user32.MessageBoxW(0, text, title, argVal))
 
 class Console:
     ATTRIBUTES = dict(

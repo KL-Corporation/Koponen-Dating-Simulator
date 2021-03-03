@@ -229,7 +229,7 @@ class Bulldog:
         return self.damage
 
 class HostileEnemy:
-    def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False, listener: str = None):
+    def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
         self.rect = rect
         self.health = health
         self.sleep = sleep
@@ -252,13 +252,8 @@ class HostileEnemy:
         self.c = None
 
         self.enabled = True
-
-        # Currently there is no way to assign a listener.
-        if listener != None:
-            self.enabled = False
-            listenerInstance = getattr(KDS.Missions.Listeners, listener, None)
-            if listenerInstance != None and isinstance(listenerInstance, KDS.Missions.ItemListener):
-                listenerInstance.OnTrigger += lambda: setattr(self, "enabled", True) # Have to do it like this, because = does not work in lamda.
+        self.listener = None
+        self.listenerRegistered = False
 
     def onDeath(self):
         return []
@@ -268,6 +263,13 @@ class HostileEnemy:
         return []
 
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
+        # This check might actually be quite slow, but there is no better way to do this if I'm gonna have the same functionality as tileprops
+        if self.listener != None and not self.listenerRegistered:
+            self.enabled = False
+            listenerInstance = getattr(KDS.Missions.Listeners, self.listener, None)
+            if listenerInstance != None and isinstance(listenerInstance, KDS.Missions.ItemListener):
+                listenerInstance.OnTrigger += lambda: setattr(self, "enabled", True) # Have to do it like this, because = does not work in lambda.
+
         enemyProjectiles = None
         dropItems = []
 

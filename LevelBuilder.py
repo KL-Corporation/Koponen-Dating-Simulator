@@ -1,4 +1,7 @@
 from __future__ import annotations
+from io import UnsupportedOperation
+
+from pygame import mouse
 #region Import Error
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
@@ -7,7 +10,7 @@ if __name__ != "__main__":
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, cast
 import sys
 import pygame
 from pygame.locals import *
@@ -19,10 +22,12 @@ import KDS.Math
 import KDS.UI
 import KDS.Console
 import KDS.Logging
+import KDS.Linq
 import tkinter
 from tkinter import filedialog
 import json
 import traceback
+from enum import IntEnum
 
 root = tkinter.Tk()
 root.withdraw()
@@ -114,8 +119,7 @@ brush = "0000"
 brushTex = None
 teleportTemp = "001"
 currentSaveName = ''
-grid: List[List[tileInfo]] = [[]]
-tileprops: Dict[str, Dict[str, Any]] = {}
+grid: List[List[UnitData]] = [[]]
 gridSize = (0, 0)
 
 dragRect = None
@@ -124,21 +128,24 @@ class Undo:
     points: List[Dict[str, Any]] = []
     index = 0
     overflowCount = 0
+    totalOffset = 0
 
     @staticmethod
     def register():
-        global grid, dragRect, brush, tileprops
-        if Undo.index == len(Undo.points) - 1 and Undo.points[Undo.index] == { "grid": grid, "dragRect": dragRect, "brush": brush, "tileprops": tileprops }:
-            return
+        global grid, dragRect
+        if Undo.index == len(Undo.points) - 1:
+            last = Undo.points[Undo.index]
+            if last["grid"] == grid and last["dragRect"] == dragRect:
+                if Undo.totalOffset == 0 and Undo.index == 0 and Undo.overflowCount == 0:
+                    Undo.totalOffset = 1
+                return
 
         toSave = {
-            "grid": [[t.copy() for t in r] for r in grid], # deepcopy replacement
-            "dragRect": dragRect.copy() if dragRect != None else dragRect,
-            "tileprops": {k: {ik: iv for ik, iv in v.items()} for k, v in tileprops.items()} # deepcopy replacement. Dictionary replacement keys do not need to be deepcopied, because they are strings.
-            #                     ^^ Value doesn't need to be deepcopied, because it can only be str, float, int or bool.
+            "grid": [[t.Copy() for t in r] for r in grid], # deepcopy replacement
+            "dragRect": dragRect.copy() if dragRect != None else dragRect
         }
 
-        Selected.SetCustomGrid(toSave["grid"], toSave["tileprops"], registerUndo=False)
+        Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
         removedCount = len(Undo.points[Undo.index + 1:])
         del Undo.points[Undo.index + 1:]
         if Undo.index == 0 and len(Undo.points) == 1 and removedCount > 0: del Undo.points[0]
@@ -152,11 +159,10 @@ class Undo:
     def request(redo: bool = False):
         Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
 
-        global grid, dragRect, brush, tileprops
+        global grid, dragRect, brush
         data = Undo.points[Undo.index]
         grid = data["grid"]
         dragRect = data["dragRect"]
-        tileprops = data["tileprops"]
 
     @staticmethod
     def clear():
@@ -177,27 +183,40 @@ KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), 
 
 ##################################################
 
-class tileInfo:
+class UnitType(IntEnum):
+    Tile = 0
+    Item = 1
+    Enemy = 2
+    Teleport = 3
+    Unspecified = 4
+
+class UnitData:
     releasedButtons = { 0: True, 2: True }
     placedOnTile = None
     EMPTYSERIAL = "0000 0000 0000 0000 / "
 
-    def __init__(self, position: Tuple[int, int], serialNumber = EMPTYSERIAL):
+    def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
+        self.properties = UnitProperties(self)
 
     def __eq__(self, other) -> bool:
         """ == operator """
-        if isinstance(other, tileInfo):
-            return self.pos == other.pos and self.serialNumber == other.serialNumber
-        else: return False
+        if isinstance(other, UnitData):
+            return self.pos == other.pos and self.serialNumber == other.serialNumber and self.properties == other.properties
+        return False
 
     def __ne__(self, other) -> bool:
         """ != operator """
         return not self.__eq__(other)
 
-    def copy(self) -> tileInfo:
-        return tileInfo(position=self.pos, serialNumber=self.serialNumber)
+    def __str__(self) -> str:
+        return self.serialNumber
+
+    def Copy(self) -> UnitData:
+        data = UnitData(position=self.pos, serialNumber=self.serialNumber)
+        data.properties = self.properties.Copy(parentOverride=data)
+        return data
 
     def setSerial(self, srlNumber: str):
         self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
@@ -212,7 +231,7 @@ class tileInfo:
         return self.serialNumber[slot : slot + 4]
 
     def getSerials(self):
-        return tuple(self.serialNumber.replace(" / ", "").split())
+        return tuple(self.serialNumber.replace(" / ", "").split(" "))
 
     def addSerial(self, srlNumber):
         srlist = self.getSerials()
@@ -228,15 +247,11 @@ class tileInfo:
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
     def removeSerial(self):
-        global tileprops
         srlist = self.getSerials()
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
                 self.setSerialToSlot("0000", index)
-
-                tpp = f"{self.pos[0]}-{self.pos[1]}"
-                if tpp in tileprops and "overlay" in tileprops[tpp] and tileprops[tpp]["overlay"] == number:
-                    tileprops[tpp].pop("overlay")
+                self.properties.RemoveUnused()
                 return
 
     def hasTile(self):
@@ -247,7 +262,8 @@ class tileInfo:
         return False
 
     def resetSerial(self):
-        self.serialNumber = tileInfo.EMPTYSERIAL
+        self.serialNumber = UnitData.EMPTYSERIAL
+        self.properties.RemoveUnused()
 
     @staticmethod
     def toSerialString(srlNumber: str):
@@ -255,6 +271,14 @@ class tileInfo:
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
+        _TYPECOLORS = {
+            UnitType.Tile: KDS.Colors.EmeraldGreen,
+            UnitType.Item: KDS.Colors.RiverBlue,
+            UnitType.Enemy: KDS.Colors.AviatorRed,
+            UnitType.Teleport: KDS.Colors.Yellow,
+            UnitType.Unspecified: KDS.Colors.Magenta
+        }
+
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         brushtemp = brsh
@@ -267,13 +291,16 @@ class tileInfo:
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (gridSize[0] - scroll[0]) * scalesize, (gridSize[1] - scroll[1]) * scalesize))
         for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
-            row: List[tileInfo]
+            row: List[UnitData]
             for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
                 blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
-                tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
-                overlay = Atextures[tileprops[tilepropsPath]["overlay"][0]][tileprops[tilepropsPath]["overlay"]] if tilepropsPath in tileprops and "overlay" in tileprops[tilepropsPath] else None
+                overlayTileprops = str(unit.properties.Get(UnitType.Unspecified, "overlay", "None"))
+                if overlayTileprops != "None":
+                    overlay = Atextures[overlayTileprops[0]][overlayTileprops]
+                else:
+                    overlay = None
                 for index, number in enumerate(srlist):
                     intNumber = int(number)
                     if intNumber != 0:
@@ -307,15 +334,15 @@ class tileInfo:
                             elif intNumber in (23, 24, 25, 26):
                                 Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1]))
                             else:
-                                if number[0] == "0" and tilepropsPath in tileprops:
+                                checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
+                                if number[0] == "0" and isinstance(checkCollision, bool):
                                     tilepropsOverlay = scaledUnitTexture.convert_alpha()
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
-                                    if "checkCollision" in tileprops[tilepropsPath]:
-                                        if not tileprops[tilepropsPath]["checkCollision"]:
-                                            tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                            Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
-                                        else:
-                                            KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
+                                    if not checkCollision:
+                                        tilepropsOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                        Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
+                                    else:
+                                        KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
                                 else:
                                     Surface.blit(scaledUnitTexture, (blitPos[0], blitPos[1] - scaledUnitTexture.get_height() + scalesize))
 
@@ -330,20 +357,28 @@ class tileInfo:
 
                 if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
-                        setPropKey: str = KDS.Console.Start("Enter Property Key:")
-                        if len(setPropKey) > 0:
-                            setPropValUnformatted = KDS.Console.Start("Enter Property Value:")
-                            setPropVal = KDS.Convert.AutoType(setPropValUnformatted)
-                            if setPropVal != None:
-                                if tilepropsPath not in tileprops:
-                                    tileprops[tilepropsPath] = {}
-                                if setPropKey == "overlay":
-                                    # It will be possible to break the system by changing the overlay without
-                                    # removing the old overlay, but hopefully our users aren't that stupid...
-                                    tileprops[tilepropsPath][setPropKey] = setPropValUnformatted
+                        setPropType: str = KDS.Console.Start("Enter Property Type:")
+                        propType = getattr(UnitType, setPropType, None)
+                        if len(setPropType) > 0 and propType != None:
+                            setPropKey: str = KDS.Console.Start("Enter Property Key:")
+                            if len(setPropKey) > 0:
+                                setPropValUnformatted = KDS.Console.Start("Enter Property Value:")
+                                if setPropKey in ("overlay"): # Force string for types with specified keys
+                                    setPropVal = setPropValUnformatted
                                 else:
-                                    tileprops[tilepropsPath][setPropKey] = setPropVal
-                            else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
+                                    setPropVal = KDS.Convert.AutoType(setPropValUnformatted)
+                                if setPropVal != None:
+                                    unit.properties.Set(propType, setPropKey, setPropVal)
+                                else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
+                        elif len(setPropType) > 0:
+                            KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!")
+                    elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
+                        overlayId = str(KDS.Console.Start("Enter Overlay Identifier"))
+                        if overlayId[0] in Atextures and overlayId in Atextures[overlayId[0]]:
+                            unit.properties.Set(UnitType.Unspecified, "overlay", overlayId)
+                        else:
+                            print(f"Overlay identifier \"{overlayId}\" is invalid.")
+
 
                     srlist = unit.getSerials()
                     fld_srls = 0
@@ -362,34 +397,36 @@ class tileInfo:
                             if not keys_pressed[K_c]:
                                 if not keys_pressed[K_LSHIFT]:
                                     unit.setSerial(brsh)
-                                elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
+                                elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit: unit.addSerial(brsh)
                             elif unit.hasTile():
-                                if not keys_pressed[K_LALT]:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
-                                else:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
+                                setVal = False
+                                if keys_pressed[K_LALT]:
+                                    setVal = True
+                                unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
+
                         elif keys_pressed[K_c]:
-                            if not keys_pressed[K_LALT]:
-                                tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
-                            else:
-                                tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
+                            setVal = False
+                            if keys_pressed[K_LALT]:
+                                setVal = True
+                            unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
                     elif mouse_pressed[2]:
                         tpP = f"{unit.pos[0]}-{unit.pos[1]}"
                         if not keys_pressed[K_c]:
                             if not keys_pressed[K_LSHIFT]:
                                 unit.resetSerial()
-                                if tpP in tileprops:
-                                    del tileprops[tpP]
-                            elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
-                        elif tpP in tileprops and "checkCollision" in tileprops[tpP]:
-                            del tileprops[tpP]["checkCollision"]
-                            if len(tileprops[tpP]) < 1: del tileprops[tpP]
-                    tileInfo.placedOnTile = unit
+                            elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit: unit.removeSerial()
+                        else:
+                            unit.properties.Remove(UnitType.Tile, "checkCollision")
+                    UnitData.placedOnTile = unit
 
-                    if tilepropsPath in tileprops:
-                        for k, v in tileprops[tilepropsPath].items():
-                            if k != "checkCollision":
-                                tip_renders.append(harbinger_font_small.render(f"{k}: {v}", True, KDS.Colors.EmeraldGreen))
+                    tipProps = unit.properties.GetAll()
+                    for _type in tipProps:
+                        color = _TYPECOLORS[_type]
+                        for k, v in tipProps[_type].items():
+                            if k == "checkCollision":
+                                continue
+                            rendered_tip = harbinger_font_small.render(f"{k}: {v}", True, color)
+                            tip_renders.append(rendered_tip)
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -408,17 +445,94 @@ class tileInfo:
         mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
         display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
 
-        tileInfo.releasedButtons[0] = False if mouse_pressed[0] else True
-        tileInfo.releasedButtons[2] = False if mouse_pressed[2] else True
+        UnitData.releasedButtons[0] = False if mouse_pressed[0] else True
+        UnitData.releasedButtons[2] = False if mouse_pressed[2] else True
 
         return renderList, brushtemp
+
+class UnitProperties:
+    def __init__(self, parent: UnitData) -> None:
+        self.parent = parent
+        self.values: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+
+    def __eq__(self, other) -> bool:
+        """ == operator """
+        if isinstance(other, UnitProperties):
+            return self.values == other.values # I have to hope that the parents are same, because if I check that, it will cause a stack overflow.
+        return False
+
+    def __ne__(self, other) -> bool:
+        """ != operator """
+        return not self.__eq__(other)
+
+    def Set(self, _type: UnitType, key: str, value: Union[str, int, float, bool]) -> None:
+        if _type not in self.values:
+            self.values[_type] = {}
+        self.values[_type][key] = value
+
+    def Remove(self, _type: UnitType, key: str) -> None:
+        """Removes the specified key in type if found.
+
+        Args:
+            _type (UnitType): The type specifying what the key controls.
+            key (str): The key to remove.
+        """
+        if _type in self.values and key in self.values[_type]:
+            self.values[_type].pop(key)
+            if len(self.values[_type]) < 1:
+                self.values.pop(_type)
+
+    def Get(self, _type: UnitType, key: str, default: Optional[Union[str, int, float, bool]]) -> Optional[Union[str, int, float, bool]]:
+        if _type not in self.values or key not in self.values[_type]:
+            return default
+        return self.values[_type][key]
+
+    def GetAll(self) -> Dict[UnitType, Dict[str, Union[str, int, float, bool]]]:
+        return {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()}
+
+    def RemoveUnused(self):
+        try:
+            if int(self.parent.serialNumber.removesuffix(" / ").replace(" ", "")) == 0:
+                self.values = {}
+        except Exception as e:
+            KDS.Logging.AutoError(f"Exception occured. Exception: {e}")
+            self.values = {}
+
+        splitValues = self.parent.getSerials()
+        for _type in self.values:
+            if not KDS.Linq.Any(splitValues, lambda v: int(v[0]) == _type.value and int(v) != 0):
+                self.values.pop(_type)
+
+    def Copy(self, parentOverride: UnitData = None) -> UnitProperties:
+        new = UnitProperties(parentOverride if parentOverride != None else self.parent)
+        new.values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
+        return new
+
+    def __str__(self) -> Optional[str]:
+        self.RemoveUnused()
+        if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1):
+            return ""
+        key = f"{self.parent.pos[0]}-{self.parent.pos[1]}"
+        value = json.dumps(self.values) # Instead of converting the type to integer-like string, it will convert to a string with the name of the enum value
+        return f"\"{key}\":{value}" # Switches int to string, because JSON is stupid
+
+    @staticmethod
+    def Deserialize(jsonString: str, grid: List[List[UnitData]]):
+        deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
+        for row in grid:
+            for unit in row:
+                key = f"{unit.pos[0]}-{unit.pos[1]}"
+                if key in deserialized:
+                    unitProp = UnitProperties(unit)
+                    unitProp.values = {UnitType(int(k)): v for k, v in deserialized[key].items()}
+                    unit.properties = unitProp
 
 def loadGrid(size: Tuple[int, int]):
     rlist = []
     for y in range(size[1]):
         row = []
         for x in range(size[0]):
-            row.append(tileInfo((x, y)))
+            row.append(UnitData((x, y)))
         rlist.append(row)
     global gridSize
     gridSize = size
@@ -431,7 +545,7 @@ def resizeGrid(size: Tuple[int, int], grid: list):
         for y in range(grid_size[1], size[1]):
             row = []
             for x in range(grid_size[0]):
-                row.append(tileInfo((x, y)))
+                row.append(UnitData((x, y)))
             grid.append(row)
     else:
         for y in range(abs(size_difference[1])):
@@ -440,7 +554,7 @@ def resizeGrid(size: Tuple[int, int], grid: list):
         for y in range(len(grid)):
             row = grid[y]
             while len(row) < size[0]:
-                row.append(tileInfo(((len(row)), y)))
+                row.append(UnitData(((len(row)), y)))
     else:
         for row in grid:
             while len(row) > size[0]:
@@ -449,29 +563,48 @@ def resizeGrid(size: Tuple[int, int], grid: list):
     gridSize = size
     return grid
 
-def saveMap(grd, name: str):
+def saveMap(grid: List[List[UnitData]], name: str):
     outputString = ''
-    for row in grd:
+    units: List[UnitData] = []
+    for row in grid:
         for unit in row:
-            outputString += unit.serialNumber
+            outputString += str(unit)
+            units.append(unit)
         outputString += "\n"
-    with open(name, 'w') as f:
+    with open(name, 'w', encoding="utf-8") as f:
         f.write(outputString)
     #region Tile Props
-    global tileprops
-    tilepropsPath = os.path.join(os.path.dirname(name), "tileprops.kdf")
-    if len(tileprops) > 0:
-        if os.path.isfile(tilepropsPath) or KDS.System.MessageBox.Show("No Tileprops!", "Your project does not have a tileprops file even though it is required. Do you want to add one?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
-            with open(tilepropsPath, "w") as f:
-                f.write(json.dumps(tileprops))
+    propertiesStrings: List[str] = []
+    for u in units:
+        uStr = str(u.properties)
+        if len(uStr) > 0:
+            propertiesStrings.append(uStr)
+
+    propertiesPath = os.path.join(os.path.dirname(name), "properties.kdf")
+    saveProps = False
+    if len(propertiesStrings) > 0:
+        if os.path.isfile(propertiesPath):
+            saveProps = True
         else:
-            KDS.System.MessageBox.Show("Tileprops Ignored", "Tileprops generation ignored. You might lose level data.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
-    elif os.path.isfile(tilepropsPath):
-        if KDS.System.MessageBox.Show("Useless Tileprops!", "We have detected a tileprops file in your project, but this file is no longer needed. Do you want to remove it?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
-            os.remove(tilepropsPath)
+            while not saveProps:
+                if KDS.System.MessageBox.Show("No Properties File!", "Your project does not have a properties file even though it is required. Do you want to add one?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+                    saveProps = True
+                    break
+                if KDS.System.MessageBox.Show("Properties Ignored", "Properties generation ignored. You might lose level data.", KDS.System.MessageBox.Buttons.OKCANCEL, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.OK:
+                    break
+    elif os.path.isfile(propertiesPath):
+        if KDS.System.MessageBox.Show("Unused Properties!", "We have detected a properties file in your project, but this file is no longer required. Do you want to remove it?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            os.remove(propertiesPath)
         else:
-            with open(tilepropsPath, "w") as f:
-                f.write(json.dumps(tileprops))
+            saveProps = True
+
+    if saveProps:
+        stringBuild = "{"
+        for s in propertiesStrings:
+            stringBuild += f"{s},"
+        stringBuild = stringBuild.removesuffix(",") + "}" # Removes last , and adds a closing bracket to complete the JSON
+        with open(propertiesPath, "w", encoding="utf-8") as f:
+            f.write(stringBuild)
     #endregion
     Undo.clear()
 
@@ -483,7 +616,7 @@ def saveMapName():
         currentSaveName = savePath
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
-    global currentSaveName, gridSize, grid, tileprops
+    global currentSaveName, gridSize, grid
     if path == None or len(path) < 1:
         KDS.Logging.info(f"Path \"{path}\" of map file is not valid.", True)
         return False
@@ -514,16 +647,16 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
     currentSaveName = path
 
     grid = temporaryGrid
-    fpath = os.path.join(os.path.dirname(path), "tileprops.kdf")
+    fpath = os.path.join(os.path.dirname(path), "properties.kdf")
     if os.path.isfile(fpath):
-        with open(fpath, 'r') as f:
-            tileprops = json.loads(f.read())
+        with open(fpath, 'r', encoding="utf-8") as f:
+            UnitProperties.Deserialize(f.read(), grid)
 
     Undo.clear()
     return True
 
 def openMap() -> bool: #Returns True if the operation was succesful
-    global currentSaveName, gridSize, grid, tileprops
+    global currentSaveName, gridSize, grid
     fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
     if fileName == None or len(fileName) < 1:
         return False
@@ -561,11 +694,11 @@ def consoleHandler(commandlist):
             else: KDS.Console.Feed.append("Invalid brush.")
         elif dragRect != None:
             if commandlist[1] in brushNames:
-                Selected.Set(tileInfo.toSerialString(brushNames[commandlist[1]]))
+                Selected.Set(UnitData.toSerialString(brushNames[commandlist[1]]))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{brushNames[commandlist[1]]}: {commandlist[1]}]")
             elif commandlist[1] in brushNames.values():
-                Selected.Set(tileInfo.toSerialString(commandlist[2]))
+                Selected.Set(UnitData.toSerialString(commandlist[2]))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{commandlist[2]}: {list(brushNames.keys())[list(brushNames.values()).index(commandlist[2])]}]")
         else: KDS.Console.Feed.append("Invalid set command.")
@@ -595,7 +728,7 @@ def consoleHandler(commandlist):
         elif commandlist[1] == "stacks":
             for row in grid:
                 for unit in row:
-                    unit: tileInfo
+                    unit: UnitData
                     srlist = unit.getSerials()
                     for i in range(1, len(srlist)):
                         unit.setSerialToSlot("0000", i)
@@ -720,6 +853,36 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
 
+def upgradeTileProp():
+    filename = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")))
+    if filename == None or len(filename) < 1:
+        return
+    try:
+        with open(filename, "r") as f:
+            data: Dict[str, Dict[str, Any]] = json.loads(f.read())
+        newData: Dict[str, Dict[int, Dict[str, Any]]] = {}
+
+        for k, v in data.items():
+            newData[k] = {UnitType.Tile.value: {}}
+            for k2, v2 in v.items():
+                if k2 != "overlay":
+                    newData[k][UnitType.Tile.value][k2] = v2
+                else:
+                    if UnitType.Unspecified.value not in newData[k]:
+                        newData[k][UnitType.Unspecified.value] = {}
+                    newData[k][UnitType.Unspecified.value][k2] = v2
+            if len(newData[k][UnitType.Tile.value]) < 1: # Checking this because we might have moved the only key in this tile to overlay which is an unspecified type.
+                newData[k].pop(UnitType.Tile.value)
+
+        with open(os.path.join(os.path.dirname(filename), "properties.kdf"), "w", encoding="utf-8") as f:
+            f.write(json.dumps(newData))
+
+        if KDS.System.MessageBox.Show("Success!", "Tileprops was converted to properties succesfully. Do you want to delete the old tileprops file?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            os.remove(filename)
+    except:
+        KDS.System.MessageBox.Show("Failure!", "Tileprops conversion failed.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
+
+
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
@@ -730,10 +893,12 @@ def menu():
             # Button menu is turned off if openMap was succesful
             btn_menu = not openMap()
         else: btn_menu = False
-    newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+
+    newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 450,       125, 400, 200), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       125, 400, 200), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 450, 425, 400, 100), upgradeTileProp, harbinger_font.render("Upgrade Legacy tileprops", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       425, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.Button(pygame.Rect(650, 650, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
 
     while btn_menu:
         clicked = False
@@ -753,49 +918,40 @@ def menu():
         mouse_pos = pygame.mouse.get_pos()
         newMap_btn.update(display, mouse_pos, clicked)
         openMap_btn.update(display, mouse_pos, clicked, True)
+        upgradeProps_btn.update(display, mouse_pos, clicked)
         genProp_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
 
         pygame.display.flip()
 
 class Selected:
-    units: List[tileInfo] = []
-    tilepropunits: Dict[str, Dict[str, Any]] = {}
+    units: List[UnitData] = []
 
     @staticmethod
-    def Set(serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
-        global grid, tileprops
-        Selected.SetCustomGrid(grid=grid, tileprops=tileprops, serialOverride=serialOverride, tilepropsOverride=tilepropsOverride, registerUndo=registerUndo)
+    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, registerUndo: bool = True):
+        global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
+        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, registerUndo=registerUndo)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[tileInfo]], tileprops: Dict[str, Dict[str, Any]], serialOverride: str = None, tilepropsOverride: Dict[str, Any] = None, registerUndo: bool = True):
+    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, registerUndo: bool = True):
         if registerUndo: Undo.register()
         for unit in Selected.units:
+            unitCopy = unit.Copy()
+            if serialOverride != None:
+                unit.serialNumber = serialOverride
+            if propertiesOverride != None:
+                unit.properties.values = propertiesOverride
             try:
-                grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+                grid[unit.pos[1]][unit.pos[0]] = unitCopy
             except IndexError:
-                warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(0, 0)"
+                warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(<invalid-grid-size>, <invalid-grid-size>)"
                 KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}")
-        for k in Selected.tilepropunits:
-            if tilepropsOverride != None:
-                if len(tilepropsOverride) > 0:
-                    tileprops[k] = tilepropsOverride
-                else:
-                    tileprops.pop(k)
-            else:
-                tileprops[k] = Selected.tilepropunits[k]
 
     @staticmethod
     def Move(x: int, y: int):
         global dragRect
         for u in Selected.units:
             u.pos = (u.pos[0] + x, u.pos[1] + y)
-        movedTileprops: Dict[str, Dict[str, Any]] = {}
-        for k in Selected.tilepropunits:
-            tmp = k.split("-")
-            new_tpp = f"{int(tmp[0]) + x}-{int(tmp[1]) + y}"
-            movedTileprops[new_tpp] = Selected.tilepropunits[k]
-        Selected.tilepropunits = movedTileprops
         dragRect.x += x
         dragRect.y += y
 
@@ -806,17 +962,12 @@ class Selected:
         if dragRect == None: return
         for row in grid[dragRect.y:dragRect.y + dragRect.height]:
             for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                Selected.units.append(unit.copy())
-        for y in range(dragRect.y, dragRect.height + 1):
-            for x in range(dragRect.x, dragRect.width + 1):
-                tpp = f"{x}-{y}"
-                if tpp in tileprops:
-                    Selected.tilepropunits[tpp] = tileprops[tpp]
+                Selected.units.append(unit.Copy())
 
     @staticmethod
     def Get():
         Selected.Update()
-        Selected.Set(serialOverride=tileInfo.EMPTYSERIAL, tilepropsOverride={}, registerUndo=False)
+        Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, registerUndo=False)
 
 def main():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
@@ -826,7 +977,7 @@ def main():
 
     display.fill(KDS.Colors.Black)
 
-    def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
+    def zoom(add: int, scroll: List[int], grid: List[List[UnitData]]):
         global scalesize, scaleMultiplier
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
@@ -865,8 +1016,7 @@ def main():
                 LB_Quit()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if brush != "0000":
-                        Undo.register()
+                    Undo.register()
                     selectTrigger = True
                 elif event.button == 3:
                     Undo.register()
@@ -896,7 +1046,7 @@ def main():
                     DebugMode = not DebugMode
                     KDS.Logging.Profiler(DebugMode)
                 elif event.key == K_DELETE:
-                    Selected.Set(tileInfo.EMPTYSERIAL)
+                    Selected.Set(UnitData.EMPTYSERIAL)
                     Selected.Update()
                 elif event.key == K_d:
                     if keys_pressed[K_LCTRL]:
@@ -955,7 +1105,7 @@ def main():
             inputConsole_output = None
 
         display.fill((30,20,60))
-        grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
+        grid, brush = UnitData.renderUpdate(display, scroll, grid, brush, updateTiles)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
@@ -1064,6 +1214,7 @@ pygame.quit()
     R: Resize Map
     F: Set Property
     P: Set teleport index
+    O: Set Overlay
     CTRL + A: Select All
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As

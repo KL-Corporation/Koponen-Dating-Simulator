@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import re
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import KDS.AI
 import KDS.Animator
@@ -139,7 +139,7 @@ class Save:
 
     @staticmethod
     def GetMenuData():
-        retu: List[Dict[str, Any]] = []
+        retu: List[Optional[Dict[str, Any]]] = []
         for i in range(3):
             path = Save.ToPath(i)
             if os.path.isfile(path):
