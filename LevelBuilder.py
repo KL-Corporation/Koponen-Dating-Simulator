@@ -365,7 +365,7 @@ class UnitData:
                             if number in trueScale:
                                 Surface.blit(scaledUnitTexture, (normalBlitPos[0] - scaledUnitTexture.get_width() + scalesize, blitPos[1]))
                             elif intNumber in (23, 24, 25, 26):
-                                doorRenders.append((scaledUnitTexture, blitPos))
+                                doorRenders.append((scaledUnitTexture, normalBlitPos))
                             else:
                                 checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
                                 if number[0] == "0" and isinstance(checkCollision, bool):
@@ -537,15 +537,11 @@ class UnitProperties:
         return {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()}
 
     def RemoveUnused(self):
-        try:
-            if int(self.parent.serialNumber.removesuffix(" / ").replace(" ", "")) == 0:
-                self.values = {}
-        except Exception as e:
-            KDS.Logging.AutoError(f"Exception occured. Exception: {e}")
-            self.values = {}
-
         splitValues = self.parent.getSerials()
         for _type in self.values.copy():
+            if _type == UnitType.Unspecified:
+                continue
+
             if not KDS.Linq.Any(splitValues, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
@@ -556,11 +552,11 @@ class UnitProperties:
 
     def __str__(self) -> Optional[str]:
         self.RemoveUnused()
-        if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1): # The dictionary should be empty, but let's check just in case.
+        if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1): # The dictionary should be empty if there are no values, but let's check just in case.
             return ""
         key = f"{self.parent.pos[0]}-{self.parent.pos[1]}"
         value = json.dumps(self.values, separators=(',', ':')) # Separators ensure that there are no useless spaces in the file.
-        return f"\"{key}\":{value}" # Switches int to string, because JSON is stupid
+        return f"\"{key}\":{value}"
 
     @staticmethod
     def Serialize(grid: List[List[UnitData]]) -> str:
