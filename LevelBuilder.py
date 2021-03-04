@@ -624,7 +624,7 @@ def saveMap(grid: List[List[UnitData]], name: str):
     for row in grid:
         for unit in row:
             outputString += str(unit) + " / "
-        outputString = outputString.rstrip(" / ") + "\n"
+        outputString += "\n"
     with open(name, 'w', encoding="utf-8") as f:
         f.write(outputString)
     #region Tile Props
