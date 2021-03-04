@@ -39,8 +39,8 @@ def SetGamemode(Gamemode: int, LevelIndex: int = 0):
         @staticmethod
         def KoponenMissionRequest():
             KDS.Missions.InitialiseMission("koponen_mission_request", "Tehtävä Koposelta")
-            KDS.Missions.InitialiseTask("koponen_mission_request", "talk", "Puhu Koposelle")
-            KDS.Missions.InitialiseTask("koponen_mission_request", "mission", "Pyydä Tehtävää Koposelta")
+            KDS.Missions.InitialiseTask("koponen_mission_request", "talk", "Puhu Koposelle", (KDS.Missions.Listeners.KoponenTalk, 1.0))
+            KDS.Missions.InitialiseTask("koponen_mission_request", "mission", "Pyydä Tehtävää Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 1.0))
 
         @staticmethod
         def LevelExit():
@@ -83,7 +83,7 @@ def SetGamemode(Gamemode: int, LevelIndex: int = 0):
 
             KDS.Missions.InitialiseMission("wait", "Odota")
             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
-            KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun")
+            KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 3:
             KDS.Missions.InitialiseMission("biology_exam", "Biologian Tunti")
             KDS.Missions.InitialiseTask("biology_exam", "go_to_biology", "Mene Biologian Tunnille")
