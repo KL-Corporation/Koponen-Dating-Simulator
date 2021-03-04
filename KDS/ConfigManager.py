@@ -91,13 +91,6 @@ class JSON:
         KDS.Logging.AutoError("Unknown Error! This code should never execute.")
         return defaultValue
 
-    @staticmethod
-    def Serializable(value: Any) -> bool:
-        try:
-            json.dumps(value)
-            return True
-        except Exception: return False
-
 def GetSetting(path: str, default: Any):
     """
     1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.

@@ -915,25 +915,25 @@ def upgradeTileProp():
         newData: Dict[str, Dict[int, Dict[str, Any]]] = {}
 
         for k, v in data.items():
-            newData[k] = {UnitType.Tile.value: {}}
+            newData[k] = {}
             for k2, v2 in v.items():
                 if k2 != "overlay":
+                    if UnitType.Tile.value not in newData[k]: # Adding it if needed, because due to overlays being a different type, this might be empty.
+                        newData[k][UnitType.Tile.value] = {}
                     newData[k][UnitType.Tile.value][k2] = v2
                 else:
                     if UnitType.Unspecified.value not in newData[k]:
                         newData[k][UnitType.Unspecified.value] = {}
                     newData[k][UnitType.Unspecified.value][k2] = v2
-            if len(newData[k][UnitType.Tile.value]) < 1: # Checking this because we might have moved the only key in this tile to overlay which is an unspecified type.
-                newData[k].pop(UnitType.Tile.value)
 
         with open(os.path.join(os.path.dirname(filename), "properties.kdf"), "w", encoding="utf-8") as f:
-            f.write(json.dumps(newData))
+            f.write(json.dumps(newData, separators=(',', ':'))) # Separators specified to remove useless spaces.
 
         if KDS.System.MessageBox.Show("Success!", "Tileprops was converted to properties succesfully. Do you want to delete the old tileprops file?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
             os.remove(filename)
-    except:
+    except Exception as e:
         KDS.System.MessageBox.Show("Failure!", "Tileprops conversion failed.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
-
+        KDS.Logging.AutoError(str(e)) # Number probably means a key error
 
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning

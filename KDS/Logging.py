@@ -49,7 +49,7 @@ def warning(message: str, consoleVisible: bool = False, stack_info: bool = False
 def error(message: str, consoleVisible: bool = False, stack_info: bool = False):
     __log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
-def AutoError(message, **kwargs: Any):
+def AutoError(message: str, **kwargs: Any):
     """Generates an automatic error message.
 
     Args:
