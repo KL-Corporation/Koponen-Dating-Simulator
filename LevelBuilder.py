@@ -9,7 +9,7 @@ if __name__ != "__main__":
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union
 import sys
 import pygame
 from pygame.locals import *
@@ -803,7 +803,7 @@ def materialMenu(previousMaterial: str) -> str:
 
     y = 0
     x = 0
-    for collection in Atextures:
+    for i, collection in enumerate(Atextures):
         for key in Atextures[collection]:
             selectorRects.append(selectorRect((x, y), key))
             x += 1
@@ -811,12 +811,13 @@ def materialMenu(previousMaterial: str) -> str:
                 x = 0
                 y += 1
 
-        y += 1
-        if x > 0:
-            x = 0
+        if i < len(Atextures) - 1: # Skips the line adding for the last collection
             y += 1
+            if x > 0:
+                x = 0
+                y += 1
 
-    selectorSize = (COLUMNS, y)
+    ROWS = y
 
     while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
@@ -831,7 +832,8 @@ def materialMenu(previousMaterial: str) -> str:
                     pygame.display.toggle_fullscreen()
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
-                else: rscroll = min(rscroll + 1, sys.maxsize)
+                else: rscroll = int(min((rscroll + 1) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30)
+        yCalc = rscroll * 30
 
         tip_renders = []
 
@@ -840,9 +842,10 @@ def materialMenu(previousMaterial: str) -> str:
         for selection in selectorRects:
             selection: selectorRect
             sorting = selection.serialNumber[0]
-            display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (BLOCKSIZE, BLOCKSIZE)), (selection.rect.x, selection.rect.y - rscroll * 30))
-            if selection.rect.collidepoint(mpos[0], mpos[1] + rscroll * 30):
-                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, BLOCKSIZE, BLOCKSIZE), 3)
+            rndY = selection.rect.y - yCalc
+            display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (BLOCKSIZE, BLOCKSIZE)), (selection.rect.x, rndY))
+            if selection.rect.collidepoint(mpos[0], mpos[1] + yCalc):
+                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, rndY, BLOCKSIZE, BLOCKSIZE), 3)
                 tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
                     return selection.serialNumber
