@@ -192,7 +192,7 @@ class UnitType(IntEnum):
 class UnitData:
     releasedButtons = { 0: True, 2: True }
     placedOnTile = None
-    EMPTYSERIAL = "0000 0000 0000 0000"
+    EMPTYSERIAL = "0000 0000 0000 0000 / "
     EMPTY = "0000"
     SLOTCOUNT = 4
 
@@ -220,7 +220,7 @@ class UnitData:
         return data
 
     def setSerial(self, srlNumber: str):
-        self.serialNumber = f"{srlNumber} 0000 0000 0000"
+        self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
 
     def setSerialToSlot(self, srlNumber: str, slot: int):
         #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
@@ -234,7 +234,7 @@ class UnitData:
         return self.serialNumber[slot : slot + 4]
 
     def getSerials(self) -> Tuple[str]:
-        return tuple(self.serialNumber.split())
+        return tuple(self.serialNumber.replace(" / ", "").split(" "))
 
     def getFilledSerials(self):
         serials = self.getSerials()
@@ -296,7 +296,7 @@ class UnitData:
 
     @staticmethod
     def toSerialString(srlNumber: str):
-        return f"{srlNumber} 0000 0000 0000"
+        return f"{srlNumber} 0000 0000 0000 / "
 
     @staticmethod
     def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brush: str = "0000", allowTilePlacement: bool = True, middleMouseOnDown: bool = False):
@@ -395,12 +395,11 @@ class UnitData:
                             setPropKey: str = KDS.Console.Start("Enter Property Key:")
                             if len(setPropKey) > 0:
                                 setPropValUnformatted = KDS.Console.Start("Enter Property Value:")
-                                if propType == UnitType.Unspecified and setPropKey == "overlay": # Force string for overlay
+                                if setPropKey in ("overlay"): # Force string for types with specified keys
                                     setPropVal = setPropValUnformatted
                                 else:
                                     setPropVal = KDS.Convert.AutoType(setPropValUnformatted)
                                 if setPropVal != None:
-                                    Undo.register()
                                     unit.properties.Set(propType, setPropKey, setPropVal)
                                 else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
                         elif len(setPropType) > 0:
@@ -557,7 +556,7 @@ class UnitProperties:
             return ""
         key = f"{self.parent.pos[0]}-{self.parent.pos[1]}"
         value = json.dumps(self.values, separators=(',', ':')) # Separators ensure that there are no useless spaces in the file.
-        return f"\"{key}\":{value}" # Puts key in quotes so that it is valid JSON
+        return f"\"{key}\":{value}"
 
     @staticmethod
     def Serialize(grid: List[List[UnitData]]) -> str:
@@ -623,8 +622,8 @@ def saveMap(grid: List[List[UnitData]], name: str):
     outputString = ''
     for row in grid:
         for unit in row:
-            outputString += str(unit) + " / "
-        outputString = outputString.rstrip(" / ") + "\n"
+            outputString += str(unit)
+        outputString += "\n"
     with open(name, 'w', encoding="utf-8") as f:
         f.write(outputString)
     #region Tile Props
@@ -687,7 +686,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
 
     for row, rRow in zip(contents, temporaryGrid):
         for unit, rUnit in zip(row[:-2].split("/"), rRow):
-            unit = unit.strip()
+            unit = unit.strip() + " / "
             rUnit.serialNumber = unit
 
     currentSaveName = path
