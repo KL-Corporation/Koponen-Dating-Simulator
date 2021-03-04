@@ -268,7 +268,7 @@ class HostileEnemy:
             self.enabled = False
             listenerInstance = getattr(KDS.Missions.Listeners, self.listener, None)
             if listenerInstance != None and isinstance(listenerInstance, KDS.Missions.ItemListener):
-                listenerInstance.OnTrigger += lambda: setattr(self, "enabled", True) # Have to do it like this, because = does not work in lambda.
+                listenerInstance.OnTrigger += lambda: setattr(self, "enabled", True) # Have to do it like this, because = does not work in lambda. Annoying, because if I rename the variable I will not spot this.
 
         enemyProjectiles = None
         dropItems = []

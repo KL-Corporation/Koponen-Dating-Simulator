@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pygame import mouse
 #region Import Error
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
@@ -9,8 +8,6 @@ if __name__ != "__main__":
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import Any, Dict, List, Optional, Tuple, Union
-import sys
 import pygame
 from pygame.locals import *
 import KDS.Colors
@@ -23,10 +20,13 @@ import KDS.Console
 import KDS.Logging
 import KDS.Linq
 import tkinter
+import sys
 from tkinter import filedialog
 import json
 import traceback
 from enum import IntEnum
+
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 root = tkinter.Tk()
 root.withdraw()
@@ -465,7 +465,7 @@ class UnitData:
                         for k, v in tipProps[_type].items():
                             if k == "checkCollision":
                                 continue
-                            rendered_tip = harbinger_font_small.render(f"{k}: {v}", True, color)
+                            rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
                             tip_renders.append(rendered_tip)
 
         for doorTex, doorPos in doorRenders:

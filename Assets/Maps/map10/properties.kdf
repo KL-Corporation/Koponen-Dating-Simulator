@@ -27,6 +27,7 @@
 "17-8":{"0":{"checkCollision":false}},
 "18-8":{"0":{"checkCollision":false}},
 "19-8":{"0":{"checkCollision":false}},
+"43-8":{"0":{"fadeAnimation":true,"autoOut":true}},
 "22-9":{"0":{"checkCollision":false}},
 "12-10":{"0":{"checkCollision":false}},
 "13-10":{"0":{"checkCollision":false}},

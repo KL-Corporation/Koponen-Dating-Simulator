@@ -13,6 +13,7 @@ import KDS.Colors
 import KDS.ConfigManager
 import KDS.Console
 import KDS.Convert
+import KDS.Events
 import KDS.Gamemode
 import KDS.Keys
 import KDS.Koponen
@@ -33,7 +34,7 @@ import shutil
 import json
 import datetime
 from pygame.locals import *
-from enum import IntEnum
+from enum import IntEnum, auto
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 #endregion
 #region Priority Initialisation
@@ -114,8 +115,9 @@ if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False):
 KDS.Logging.debug(f"""
 I=====[ DEBUG INFO ]=====I
    [Version Info]
-   - PyGame Version: {pygame.version.ver}
-   - SDL Version: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+   - pygame: {pygame.version.ver}
+   - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+   - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
 
    [Driver Info]
    - SDL Video Driver: {pygame.display.get_driver()}
@@ -550,8 +552,8 @@ class WorldData():
                                                 tex = tiles[y][x][-1].texture.convert_alpha()
                                                 tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                                 tiles[y][x][-1].darkOverlay = tex
-                                            else:
-                                                setattr(tiles[y][x][-1], k, v)
+                                        else:
+                                            setattr(tiles[y][x][-1], k, v)
                                     elif pointer == 1:
                                         setattr(Items[-1], k, v)
                                     elif pointer == 2:
@@ -611,6 +613,43 @@ del path_sounds_temp, default_paths, sounds
 
 ##### CRASHAA PELIN, JOTEN DISABLOITU VÄLIAIKAISESTI
 ##### Items.init(inventoryDobulesSerialNumbers, inventory_items)
+
+class ScreenEffects:
+    triggered = []
+    OnEffectFinish = KDS.Events.Event()
+
+    class Effects(IntEnum):
+        Flicker = auto()
+        FadeInOut = auto()
+
+    data: Dict[Effects, Dict[str, Any]] = {
+        Effects.Flicker: {
+            "repeat_rate": 2,
+            "repeat_length": 12,
+            "repeat_index": 0
+        },
+        Effects.FadeInOut: {
+            "animation": KDS.Animator.Value(0.0, 255.0, 120),
+            "reversed": False,
+            "wait_index": 0,
+            "wait_length": 120,
+            "surface": pygame.Surface(screen_size).convert()
+        }
+    }
+
+    @staticmethod
+    def Trigger(effect: ScreenEffects.Effects):
+        ScreenEffects.triggered.append(effect)
+
+    @staticmethod
+    def Get(effect: ScreenEffects.Effects) -> bool:
+        return effect in ScreenEffects.triggered
+
+    @staticmethod
+    def Finish(effect: ScreenEffects.Effects):
+        while effect in ScreenEffects.triggered:
+            ScreenEffects.triggered.remove(effect)
+        ScreenEffects.OnEffectFinish.Invoke(effect)
 
 #region Inventory
 class Inventory:
@@ -739,7 +778,7 @@ class Tile:
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
         self.lateRender = False
-        self.darkOverlay: Optional = None
+        self.darkOverlay: Optional[Any] = None
 
     @staticmethod
     # Tile_list is a list in a list... Also known as a 2D array.
@@ -1334,55 +1373,35 @@ class Methtable(Tile):
         return self.animation.update()
 
 class FlickerTrigger(Tile):
-    triggerList = []
-
-    def __init__(self, position, serialNumber, repeating: bool = False, animationLength: int = 12, animationSpeed: int = 2, globalUpdate: bool = False) -> None:
+    def __init__(self, position, serialNumber, repeating: bool = False) -> None:
         super().__init__(position, serialNumber)
         self.checkCollision = False
-        self.exited = True
-        self.tick = 0
-        self.ticks = animationLength
-        self.anim = False
-        self.animTick = 0
-        self.animTicks = animationSpeed
-        self.repeating = repeating
-        self.stopAnim = False
-        self.readyToTrigger = True
-        self.globalUpdate = globalUpdate
+        self.exited: bool = True
+        self.readyToTrigger: bool = True
+        self.animation: bool = False
+        self.repeating: bool = repeating
         self.texture = pygame.Surface((0, 0)).convert()
-        FlickerTrigger.triggerList.append(self)
 
-    def update(self, forceNormal: bool = False):
-        if not self.globalUpdate or forceNormal:
-            if self.rect.colliderect(Player.rect):
-                if self.exited and self.readyToTrigger:
-                    self.readyToTrigger = False
-                    self.anim = True
-                    self.exited = False
-                    self.tick = 0
-                    KDS.Audio.PauseAllSounds()
-                    KDS.Audio.PlaySound(flicker_trigger_sound)
-            else:
-                self.exited = True
-            if self.tick < self.ticks and self.anim:
-                    self.tick += 1
-                    if self.animTick >= self.animTicks: self.animTick = 0
-                    global colorInvert
-                    if self.animTick == 0: colorInvert = True
-                    self.animTick += 1
-            else:
-                self.stopAnim = True
+    def flickerEnd(self, effect: ScreenEffects.Effects):
+        if effect == ScreenEffects.Effects.Flicker and self.animation:
+            ScreenEffects.OnEffectFinish -= self.flickerEnd
+            self.animation = False
+            self.readyToTrigger = True if self.repeating else False
+            flicker_trigger_sound.stop()
+            KDS.Audio.UnpauseAllSounds()
 
-            if self.stopAnim and self.anim:
-                self.readyToTrigger = True if self.repeating else False
-                self.anim = False
-                flicker_trigger_sound.stop()
-                KDS.Audio.UnpauseAllSounds()
-
-            self.stopAnim = False
+    def update(self):
+        if self.rect.colliderect(Player.rect):
+            if self.exited and self.readyToTrigger:
+                self.animation = True
+                self.readyToTrigger = False
+                self.exited = False
+                KDS.Audio.PauseAllSounds()
+                KDS.Audio.PlaySound(flicker_trigger_sound)
+                ScreenEffects.Trigger(ScreenEffects.Effects.Flicker)
+                ScreenEffects.OnEffectFinish += self.flickerEnd
         else:
-            for t in FlickerTrigger.triggerList:
-                t.update(True)
+            self.exited = True
 
         return self.texture
 
@@ -1505,18 +1524,36 @@ class Tent(Tile):
         self.texture = t_textures[serialNumber]
         #Rect will be set automatically with trueScale.
         self.checkCollision = False
-        self.inTent = False
+        self.inTent: bool = False
+        self.fadeAnimation: bool = False
+        self.autoOut: bool = False # Works only with fadeAnimation
+
+    def toggleTent(self, effect: ScreenEffects.Effects = None):
+        if effect != None:
+            if effect == ScreenEffects.Effects.FadeInOut:
+                ScreenEffects.OnEffectFinish -= self.toggleTent
+            else:
+                return
+
+        self.inTent = not self.inTent
+        if self.inTent:
+            KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
+            if self.fadeAnimation:
+                ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
+        Player.visible = not Player.visible
+        Player.lockMovement = not Player.lockMovement
+        KDS.Missions.Listeners.TentSleep.Trigger()
 
     def update(self):
         if self.rect.colliderect(Player.rect):
             screen.blit(tentTip, (self.rect.centerx - tentTip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
-                self.inTent = not self.inTent
-                if self.inTent:
-                    KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
-                Player.visible = not Player.visible
-                Player.lockMovement = not Player.lockMovement
-                KDS.Missions.Listeners.TentSleep.Trigger()
+                if self.autoOut:
+                    ScreenEffects.OnEffectFinish += self.toggleTent
+                    if not self.inTent:
+                        self.toggleTent()
+                else: self.toggleTent()
+
         return self.texture
 
 #
@@ -3857,11 +3894,35 @@ while main_running:
         screen.blit(score_font.render(f"Lights Rendering: {lightsUpdating}", True, KDS.Colors.White), (5, 45))
 #endregion
 #region Screen Rendering
-    if colorInvert:
-        invPix = pygame.surfarray.pixels2d(screen)
-        invPix ^= 2 ** 32 - 1
-        del invPix
-        colorInvert = False
+    if ScreenEffects.Get(ScreenEffects.Effects.Flicker):
+        data = ScreenEffects.data[ScreenEffects.Effects.Flicker] # Should be the same instance...
+
+        if KDS.Math.Repeat(data["repeat_index"], data["repeat_rate"]) == 0:
+            invPix = pygame.surfarray.pixels2d(screen)
+            invPix ^= 2 ** 32 - 1
+            del invPix
+            colorInvert = False
+
+        data["repeat_index"] += 1
+        if data["repeat_index"] > data["repeat_length"]:
+            data["repeat_index"] = 0
+            ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
+    elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut):
+        data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
+        anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
+        rev: bool = data["reversed"]
+        surf = data["surface"]
+        surf.set_alpha(anim.update(rev))
+        screen.blit(surf, (0, 0))
+        if anim.Finished:
+            if not rev:
+                data["wait_index"] += 1
+                if data["wait_index"] > data["wait_length"]:
+                    data["reversed"] = True
+            else:
+                data["reversed"] = False
+                data["wait_index"] = 0
+                ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
 
     display.fill(KDS.Colors.Black)
 
@@ -3869,7 +3930,6 @@ while main_running:
         screen.blit(screen_overlay, (0, 0))
 
     display.blit(pygame.transform.scale(screen, display_size), (0, 0))
-
 
     pygame.display.flip()
 #endregion
