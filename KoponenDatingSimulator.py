@@ -502,7 +502,8 @@ class WorldData():
             5: KDS.AI.MafiaMan,
             6: KDS.AI.MethMaker,
             7: KDS.AI.CaveMonster,
-            8: KDS.AI.Mummy
+            8: KDS.AI.Mummy,
+            9: KDS.AI.SecurityGuard
         }
 
         y = 0
