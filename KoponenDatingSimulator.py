@@ -512,60 +512,63 @@ class WorldData():
             x = 0
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
-                if datapoint != "/":
-                    identifier = f"{x}-{y}"
+                if len(datapoint) < 1:
+                    continue
+
+                if "/" in datapoint:
+                    x += 1
+                    continue
+
+                identifier = f"{x}-{y}"
+                if identifier in properties:
+                    idProp = properties[identifier]
+                    if "4" in idProp: # 4 is an unspecified type.
+                        tlProp = idProp["4"]
+                        if "overlay" in tlProp:
+                            overlays.append(Tile((x * 34, y * 34), int(tlProp["overlay"])))
+
+                if len(datapoint) == 4 and int(datapoint) != 0:
+                    serialNumber = int(datapoint[1:])
+                    pointer = int(datapoint[0])
+                    value = None
+                    if pointer == 0:
+                        if serialNumber not in specialTilesSerialNumbers:
+                            value = Tile((x * 34, y * 34), serialNumber=serialNumber)
+                            tiles[y][x].append(value)
+                        else:
+                            value = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                            tiles[y][x].append(value)
+                    elif pointer == 1:
+                        value = Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                        Items.append(value)
+                    elif pointer == 2:
+                        value = enemySerialNumbers[serialNumber]((x * 34,y * 34))
+                        Enemies.append(value)
+                    elif pointer == 3:
+                        temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
+                        if serialNumber not in Teleport.teleportT_IDS:
+                            Teleport.teleportT_IDS[serialNumber] = []
+                        Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
+                        value = temp_teleport
+                        tiles[y][x].append(value)
+                        del temp_teleport
+                    else:
+                        KDS.Logging.AutoError(f"Invalid pointer at ({x}, {y})")
+
                     if identifier in properties:
                         idProp = properties[identifier]
-                        if "4" in idProp: # 4 is an unspecified type.
-                            tlProp = idProp["4"]
-                            if "overlay" in tlProp:
-                                overlays.append(Tile((x * 34, y * 34), int(tlProp["overlay"])))
-
-                    if len(datapoint) == 4 and int(datapoint) != 0:
-                        serialNumber = int(datapoint[1:])
-                        pointer = int(datapoint[0])
-                        value = None
-                        if pointer == 0:
-                            if serialNumber not in specialTilesSerialNumbers:
-                                value = Tile((x * 34, y * 34), serialNumber=serialNumber)
-                                tiles[y][x].append(value)
-                            else:
-                                value = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                                tiles[y][x].append(value)
-                        elif pointer == 1:
-                            value = Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                            Items.append(value)
-                        elif pointer == 2:
-                            value = enemySerialNumbers[serialNumber]((x * 34,y * 34))
-                            Enemies.append(value)
-                        elif pointer == 3:
-                            temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
-                            if serialNumber not in Teleport.teleportT_IDS:
-                                Teleport.teleportT_IDS[serialNumber] = []
-                            Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
-                            value = temp_teleport
-                            tiles[y][x].append(value)
-                            del temp_teleport
-                        else:
-                            KDS.Logging.AutoError(f"Invalid pointer at ({x}, {y})")
-
-                        if identifier in properties:
-                            idProp = properties[identifier]
-                            idPropCheck = str(pointer)
-                            if idPropCheck in idProp:
-                                for k, v in idProp[idPropCheck].items():
-                                    if value != None:
-                                        if pointer == 0 and k == "checkCollision":
-                                                value.checkCollision = bool(v)
-                                                if not v:
-                                                    tex = value.texture.convert_alpha()
-                                                    tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                                    value.darkOverlay = tex
-                                        else:
-                                            setattr(value, k, v)
-
-                else:
-                    x += 1
+                        idPropCheck = str(pointer)
+                        if idPropCheck in idProp:
+                            for k, v in idProp[idPropCheck].items():
+                                if value != None:
+                                    if pointer == 0 and k == "checkCollision":
+                                            value.checkCollision = bool(v)
+                                            if not v:
+                                                tex = value.texture.convert_alpha()
+                                                tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                                value.darkOverlay = tex
+                                    else:
+                                        setattr(value, k, v)
             y += 1
 
         for row in tiles:
