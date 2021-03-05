@@ -3,7 +3,7 @@ import math
 import multiprocessing
 import random
 import threading
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy
 import pygame
@@ -253,7 +253,19 @@ class HostileEnemy:
 
         self.enabled = True
         self.listener = None
+        self.listenerInstance: Optional[KDS.Missions.Listener] = None
         self.listenerRegistered = False
+
+    def lateInit(self):
+        if self.listener != None and not self.listenerRegistered:
+            self.enabled = False
+            self.listenerRegistered = True
+            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            if tmpListener != None and not isinstance(tmpListener, KDS.Missions.ItemListener):
+                self.listenerInstance = tmpListener
+                self.listenerInstance.OnTrigger += self.listenerTrigger
+        if self.direction:
+            self.movement[0] = -self.movement[0]
 
     def onDeath(self):
         return []
@@ -262,14 +274,12 @@ class HostileEnemy:
         KDS.Logging.AutoError("This code should not execute.")
         return []
 
-    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
-        # This check might actually be quite slow, but there is no better way to do this if I'm gonna have the same functionality as tileprops
-        if self.listener != None and not self.listenerRegistered:
-            self.enabled = False
-            listenerInstance = getattr(KDS.Missions.Listeners, self.listener, None)
-            if listenerInstance != None and isinstance(listenerInstance, KDS.Missions.ItemListener):
-                listenerInstance.OnTrigger += lambda: setattr(self, "enabled", True) # Have to do it like this, because = does not work in lambda. Annoying, because if I rename the variable I will not spot this.
+    def listenerTrigger(self):
+        self.enabled = True
+        self.listenerInstance.OnTrigger -= self.listenerTrigger
+        self.listenerInstance = None
 
+    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
         enemyProjectiles = None
         dropItems = []
 
@@ -328,7 +338,7 @@ class HostileEnemy:
         return enemyProjectiles, dropItems
 
     def lateUpdate(self, *args):
-        pass
+        return
 
     def dmg(self, dmgAmount):
         self.health -= dmgAmount
@@ -686,8 +696,12 @@ class Mummy(HostileEnemy):
                     self = AI_pathfinder(self, args[0], "left")
 
             if s or s1:
-                if self.rect.centerx < args[1].centerx: self.movement[0] = abs(self.movement[0]); self.direction = False
-                elif self.rect.centerx > args[1].centerx: self.movement[0] = abs(self.movement[0]) * -1; self.direction = True
+                if self.rect.centerx < args[1].centerx:
+                    self.movement[0] = abs(self.movement[0])
+                    self.direction = False
+                elif self.rect.centerx > args[1].centerx:
+                    self.movement[0] = abs(self.movement[0]) * -1
+                    self.direction = True
             dist = KDS.Math.getDistance(self.rect.center, args[1].center)
             if dist < 40 and not self.attackRunning:
                 self.attackRunning = True
