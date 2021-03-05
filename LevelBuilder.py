@@ -730,7 +730,16 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
 
     for row, rRow in zip(contents, temporaryGrid):
         for unit, rUnit in zip(row[:-2].split("/"), rRow):
-            unit = unit.strip()
+            unit = unit.strip(" ")
+            #region Fixing Broken Serials
+            while len(unit) < len(UnitData.EMPTYSERIAL):
+                if not unit.endswith("0000"):
+                    unit += "0"
+                else:
+                    unit += " "
+            if len(unit) > len(UnitData.EMPTYSERIAL):
+                unit = unit[:len(UnitData.EMPTYSERIAL) - 1]
+            #endregion
             rUnit.serialNumber = unit
 
     currentSaveName = path
