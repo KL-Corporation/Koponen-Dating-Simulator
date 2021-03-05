@@ -512,7 +512,7 @@ class WorldData():
             x = 0
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
-                if len(datapoint) < 1:
+                if len(datapoint) < 1 or datapoint.isspace():
                     continue
 
                 if "/" in datapoint:
