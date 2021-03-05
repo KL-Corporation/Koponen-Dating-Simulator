@@ -3272,8 +3272,7 @@ def main_menu():
     story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, storyStartMiddleman)
     story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, storyStartMiddleman)
     story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, storyStartMiddleman)
-    story_new_save_text = button_font1.render("NEW SAVE", True, KDS.Colors.EmeraldGreen)
-    story_new_save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 175, display_size[1] - 325, 350, 125), newSave, story_new_save_text)
+    story_new_save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 175, display_size[1] - 325, 350, 125), newSave, "<error>")
     #endregion
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
@@ -3399,6 +3398,7 @@ def main_menu():
             story_save_button_1.update(display, mouse_pos, c, 1)
             story_save_button_2.update(display, mouse_pos, c, 2)
 
+            story_new_save_button.overlay = button_font1.render("NEW SAVE", True, KDS.Colors.EmeraldGreen if not story_new_save_override else KDS.Colors.AviatorRed)
             story_new_save_button.update(display, mouse_pos, c)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
 
