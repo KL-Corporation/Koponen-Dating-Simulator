@@ -1,17 +1,18 @@
 import KDS.Missions
 import KDS.ConfigManager
 import KDS.Koponen
+from enum import IntEnum
 
-class Modes:
+class Modes(IntEnum):
     """The list of gamemodes this game has.
     """
     Story = 0
     Campaign = 1
     CustomCampaign = 2
 
-gamemode = Modes.Story
+gamemode: Modes = Modes.Story
 
-def SetGamemode(Gamemode: int, LevelIndex: int = 0):
+def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
     """Sets the gamemode in the first argument.
 
     Args:

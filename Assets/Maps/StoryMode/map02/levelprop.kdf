@@ -29,7 +29,7 @@
         "Darkness": {
             "enabled": true,
             "playerLight": true,
-            "strength": 200
+            "strength": 235
         }
     }
 }
