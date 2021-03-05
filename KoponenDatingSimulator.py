@@ -632,7 +632,7 @@ class ScreenEffects:
             "animation": KDS.Animator.Value(0.0, 255.0, 120),
             "reversed": False,
             "wait_index": 0,
-            "wait_length": 120,
+            "wait_length": 240,
             "surface": pygame.Surface(screen_size).convert()
         }
     }
@@ -1529,6 +1529,7 @@ class Tent(Tile):
         self.autoOut: bool = False # Works only with fadeAnimation
 
     def toggleTent(self, effect: ScreenEffects.Effects = None):
+        global Player
         if effect != None:
             if effect == ScreenEffects.Effects.FadeInOut:
                 ScreenEffects.OnEffectFinish -= self.toggleTent
@@ -1540,6 +1541,10 @@ class Tent(Tile):
             KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
+        #region Position Player Correctly
+        Player.rect.bottomright = (self.rect.right - (34 - Player.rect.width) // 2, self.rect.bottom) # The camera will follow the player, but whatever...
+        Player.direction = False
+        #endregion
         Player.visible = not Player.visible
         Player.lockMovement = not Player.lockMovement
         KDS.Missions.Listeners.TentSleep.Trigger()
