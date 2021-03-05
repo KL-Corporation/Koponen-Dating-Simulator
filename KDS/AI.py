@@ -97,7 +97,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         if targetRect.x < searchRect.x:
             return False, 0
 
-    angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), targetRect.topleft)
+    angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
     if abs(angle) < maxAngle:
         return False, 0
     if angle > 0:
@@ -106,9 +106,9 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
         angle = -90 - angle
     slope = KDS.Math.getSlope2(angle)
     dirVar = KDS.Convert.ToMultiplier(direction)
-    searchPointers = [(searchRect.centerx + x * 30 *dirVar, searchRect.centery + x * 30 * dirVar*slope) for x in range(maxSearchUnits)]
+    searchPointers = [(searchRect.centerx + x * 30 * dirVar, searchRect.centery + x * 30 * dirVar * slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
-
+        #pygame.draw.rect(Surface, KDS.Colors.EmeraldGreen, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 3, 3))
         x = int(pointer[0] / 34)
         y = int(pointer[1] / 34)
         end_y = y + 1
@@ -122,13 +122,19 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
             end_y = max_y
         for row in obstacles[y:end_y]:
             for unit in row[x:end_x]:
-                for tile in unit:
+                if len(unit):
+                    for tile in unit:
+                        if KDS.Logging.profiler_running:
+                            pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                        if not tile.air:
+                            if tile.checkCollision:
+                                return False, 0
+                        if tile.rect.colliderect(targetRect):
+                            return True, slope
+                else:
                     if KDS.Logging.profiler_running:
-                        pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
-                    if not tile.air:
-                        if tile.checkCollision:
-                            return False, 0
-                    if tile.rect.colliderect(targetRect):
+                        pygame.draw.rect(Surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13)) 
+                    if targetRect.collidepoint( (int(pointer[0]), int(pointer[1]))):
                         return True, slope
     return False, 0
 
@@ -711,11 +717,18 @@ class Mummy(HostileEnemy):
 class SecurityGuard(HostileEnemy):
     def __init__(self, pos):
         health = 200
-        w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
-        i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
-        d_anim = KDS.Animator.Animation("undead_monster_dying", 5, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
-        rect = pygame.Rect(pos[0]-20, pos[1]-23, 54, 57)
+        sight_sounds = (
+
+        )
+        death_sounds = (
+
+        )
+
+        w_anim = KDS.Animator.Animation("security_guard_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("security_guard_idle", 2, 40, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("security_guard_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("security_guard_dying", 5, 13, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0]-20, pos[1]-23, 40, 73)
 
         #region Handling the i_anim:
         aim_im = a_anim.images[0]
@@ -740,8 +753,7 @@ class SecurityGuard(HostileEnemy):
         dist = max(0, dist)
         dist = 1200 - dist
         dist /= 1200
-        cavemonster_gun.set_volume(dist)
-        KDS.Audio.PlaySound(cavemonster_gun)
+        KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
