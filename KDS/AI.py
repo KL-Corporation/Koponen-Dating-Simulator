@@ -694,6 +694,47 @@ class Mummy(HostileEnemy):
             if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
 
 
+class SecurityGuard(HostileEnemy):
+    def __init__(self, pos):
+        health = 200
+        w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        d_anim = KDS.Animator.Animation("undead_monster_dying", 5, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0]-20, pos[1]-23, 54, 57)
+
+        #region Handling the i_anim:
+        aim_im = a_anim.images[0]
+        shoot_im = a_anim.images[1]
+        a_anim.images.clear()
+        for _ in range(40):
+            a_anim.images.append(aim_im)
+        for _ in range(2):
+            a_anim.images.append(shoot_im)
+        for _ in range(10):
+            a_anim.images.append(aim_im)
+        a_anim.ticks = 51
+        del aim_im, shoot_im
+
+        #endregion
+
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[2, 8], attackPropability=50)
+
+    def attack(self, slope, env_obstacles, target, *args):
+        dist = KDS.Math.getDistance(self.rect.center, target.center)
+        dist = min(1200, dist)
+        dist = max(0, dist)
+        dist = 1200 - dist
+        dist /= 1200
+        cavemonster_gun.set_volume(dist)
+        KDS.Audio.PlaySound(cavemonster_gun)
+        #print(KDS.Math.getSlope(self.rect.center, target.center))
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+
+    def onDeath(self):
+        items = []
+        return items
+
 class Projectile:
     pass
 
