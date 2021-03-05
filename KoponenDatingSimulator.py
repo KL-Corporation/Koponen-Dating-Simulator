@@ -3620,7 +3620,8 @@ while main_running:
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
-                go_to_console = True
+                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or sys.gettrace() != None:
+                    go_to_console = True
             elif event.key == K_F3:
                 DebugMode = not DebugMode
             elif event.key == K_F4:

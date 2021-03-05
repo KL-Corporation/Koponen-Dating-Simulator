@@ -505,7 +505,7 @@ class UnitProperties:
     def __eq__(self, other) -> bool:
         """ == operator """
         if isinstance(other, UnitProperties):
-            return self.values == other.values # I have to hope that the parents are same, because if I check that, it will cause a stack overflow.
+            return self.values == other.values # I have to hope that the parents are same, because if I check that, it will go into an infinite loop.
         return False
 
     def __ne__(self, other) -> bool:
