@@ -1542,7 +1542,7 @@ class Tent(Tile):
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
         #region Position Player Correctly
-        Player.rect.bottomright = (self.rect.right - (34 - Player.rect.width) // 2, self.rect.bottom) # The camera will follow the player, but whatever...
+        Player.rect.bottomright = (self.rect.right - (34 - Player.rect.width) // 2, self.rect.bottom) # The camera will follow the player, but whatever... This is done so that Story enemy makes it's sound correctly
         Player.direction = False
         #endregion
         Player.visible = not Player.visible
