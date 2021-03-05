@@ -524,45 +524,43 @@ class WorldData():
                     if len(datapoint) == 4 and int(datapoint) != 0:
                         serialNumber = int(datapoint[1:])
                         pointer = int(datapoint[0])
-                        value = None
                         if pointer == 0:
                             if serialNumber not in specialTilesSerialNumbers:
-                                value = Tile((x * 34, y * 34), serialNumber=serialNumber)
-                                tiles[y][x].append(value)
+                                tiles[y][x].append( Tile((x * 34, y * 34), serialNumber=serialNumber) )
                             else:
-                                value = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                                tiles[y][x].append(value)
+                                tiles[y][x].append( specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber) )
                         elif pointer == 1:
-                            value = Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                            Items.append(value)
+                            Items.append(Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber))
                         elif pointer == 2:
-                            value = enemySerialNumbers[serialNumber]((x * 34,y * 34))
-                            Enemies.append(value)
+                            Enemies.append(enemySerialNumbers[serialNumber]((x * 34,y * 34)))
                         elif pointer == 3:
                             temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
                             if serialNumber not in Teleport.teleportT_IDS:
                                 Teleport.teleportT_IDS[serialNumber] = []
                             Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
-                            value = temp_teleport
-                            tiles[y][x].append(value)
+                            tiles[y][x].append( temp_teleport )
                             del temp_teleport
-                        else:
-                            KDS.Logging.AutoError(f"Invalid pointer at ({x}, {y})")
 
                         if identifier in properties:
                             idProp = properties[identifier]
                             idPropCheck = str(pointer)
                             if idPropCheck in idProp:
                                 for k, v in idProp[idPropCheck].items():
-                                    if value != None:
-                                        if pointer == 0 and k == "checkCollision":
-                                                value.checkCollision = bool(v)
-                                                if not v:
-                                                    tex = value.texture.convert_alpha()
-                                                    tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                                    value.darkOverlay = tex
+                                    if pointer == 0:
+                                        if k == "checkCollision":
+                                            tiles[y][x][-1].checkCollision = bool(v)
+                                            if not v:
+                                                tex = tiles[y][x][-1].texture.convert_alpha()
+                                                tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                                tiles[y][x][-1].darkOverlay = tex
                                         else:
-                                            setattr(value, k, v)
+                                            setattr(tiles[y][x][-1], k, v)
+                                    elif pointer == 1:
+                                        setattr(Items[-1], k, v)
+                                    elif pointer == 2:
+                                        setattr(Enemies[-1], k, v)
+                                    elif pointer == 3:
+                                        setattr(tiles[y][x][-1], k, v)
 
                 else:
                     x += 1
@@ -573,8 +571,6 @@ class WorldData():
             for unit in row:
                 for tile in unit:
                     tile.lateInit()
-        for enemy in Enemies:
-            enemy.lateInit()
 
         if os.path.isfile(os.path.join(MapPath, "music.ogg")):
             KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
@@ -3160,7 +3156,6 @@ def main_menu():
 
     main_menu_running = True
     c = False
-    skip_render_this_frame = False
 
     KDS.Audio.Music.Play("Assets/Audio/music/lobbymusic.ogg")
 
@@ -3257,11 +3252,10 @@ def main_menu():
         story_new_save_override = not story_new_save_override
 
     def storyStartMiddleman(index: int):
-        nonlocal story_new_save_override, skip_render_this_frame
+        nonlocal story_new_save_override
         if story_new_save_override:
             KDS.ConfigManager.Save(index).delete()
         play_story(index)
-        skip_render_this_frame = True
 
     story_save_button_0_rect = pygame.Rect(14, 14, 378, 400)
     story_save_button_1_rect = pygame.Rect(410, 14, 378, 400)
@@ -3285,6 +3279,7 @@ def main_menu():
     frames = [Frame1, Frame2, Frame3, Frame4]
     #endregion
     while main_menu_running:
+        renderUI = True
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
@@ -3433,7 +3428,7 @@ def main_menu():
             level_text = button_font1.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
-            skip_render_this_frame = campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
+            renderUI = not campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
@@ -3450,10 +3445,8 @@ def main_menu():
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
         c = False
-        if not skip_render_this_frame:
+        if renderUI:
             pygame.display.flip()
-        else:
-            skip_render_this_frame = False
         display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
 

@@ -67,7 +67,7 @@ with open("Assets/Textures/build.json") as f:
     d = f.read()
 buildData = json.loads(d)
 
-t_textures: Dict[str, pygame.Surface] = {}
+t_textures = {}
 for element in buildData["tile_textures"]:
     srl = f"0{element}"
 
@@ -76,7 +76,7 @@ for element in buildData["tile_textures"]:
     t_textures[srl].set_colorkey(KDS.Colors.White)
     brushNames[os.path.splitext(elmt)[0]] = srl
 
-i_textures: Dict[str, pygame.Surface] = {}
+i_textures = {}
 for element in buildData["item_textures"]:
     srl = f"1{element}"
 
@@ -85,7 +85,7 @@ for element in buildData["item_textures"]:
     i_textures[srl].set_colorkey(KDS.Colors.White)
     brushNames[os.path.splitext(elmt)[0]] = srl
 
-e_textures: Dict[str, pygame.Surface] = {
+e_textures = {
     "2001": pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert(),
     "2002": pygame.image.load("Assets/Textures/Animations/seargeant_walking_0.png").convert(),
     "2003": pygame.image.load("Assets/Textures/Animations/drug_dealer_walking_0.png").convert(),
@@ -96,10 +96,8 @@ e_textures: Dict[str, pygame.Surface] = {
     "2008": pygame.image.load("Assets/Textures/Animations/mummy_walking_0.png").convert(),
     "2009": pygame.image.load("Assets/Textures/Animations/security_guard_walking_0.png").convert()
 }
-for tex in e_textures.values():
-    tex.set_colorkey(tex.get_at((0, 0)))
 
-teleports: Dict[str, pygame.Surface] = {
+teleports = {
     "3001" : pygame.image.load("Assets/Textures/Editor/telep.png").convert(),
     "3501" : pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 }
@@ -117,6 +115,8 @@ trueScale = [f"0{e:03d}" for e in buildData["trueScale"]]
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
+brush = "0000"
+brushTex = None
 teleportTemp = "001"
 currentSaveName = ''
 grid: List[List[UnitData]] = [[]]
@@ -159,7 +159,7 @@ class Undo:
     def request(redo: bool = False):
         Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
 
-        global grid, dragRect
+        global grid, dragRect, brush
         data = Undo.points[Undo.index]
         grid = data["grid"]
         dragRect = data["dragRect"]
@@ -220,14 +220,6 @@ class UnitData:
         data.properties = self.properties.Copy(parentOverride=data)
         return data
 
-    def setProperties(self, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
-        self.properties.SetAll(properties)
-
-    def addProperties(self, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
-        for _type, value in properties.items():
-            for k, v in value.items():
-                self.properties.Set(_type, k, v)
-
     def setSerial(self, srlNumber: str):
         self.serialNumber = f"{srlNumber} 0000 0000 0000"
 
@@ -254,6 +246,9 @@ class UnitData:
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist:
+                    if srlNumber not in t_textures:
+                        KDS.Logging.warning(f"Cannot add unit because texture is not added: {srlNumber}")
+                        return
                     self.setSerialToSlot(srlNumber, index)
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
@@ -283,7 +278,6 @@ class UnitData:
         for fakeIndex, number in enumerate(reversed(srlist)):
             index = len(srlist) - fakeIndex - 1
             if index <= 0: # If it's the last tile, the process is complete.
-                self.properties.RemoveUnused()
                 return
 
             self.setSerialToSlot(number, index - 1)
@@ -306,7 +300,7 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, allowTilePlacement: bool = True, middleMouseOnDown: bool = False) -> List[List[UnitData]]:
+    def renderUpdate(Surface: pygame.Surface, scroll: List[int], renderList: List, brush: str = "0000", allowTilePlacement: bool = True, middleMouseOnDown: bool = False):
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
             UnitType.Item: KDS.Colors.RiverBlue,
@@ -317,6 +311,7 @@ class UnitData:
 
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
+        brushtemp = brush
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
         bpos = (0, 0)
@@ -404,9 +399,11 @@ class UnitData:
                                 if propType == UnitType.Unspecified and setPropKey == "overlay": # Force string for overlay
                                     setPropVal = setPropValUnformatted
                                 else:
-                                    setPropVal = KDS.Convert.AutoType(setPropValUnformatted, setPropValUnformatted) # If cannot be parsed to int, bool or float; return string
-                                Undo.register()
-                                unit.properties.Set(propType, setPropKey, setPropVal)
+                                    setPropVal = KDS.Convert.AutoType(setPropValUnformatted)
+                                if setPropVal != None:
+                                    Undo.register()
+                                    unit.properties.Set(propType, setPropKey, setPropVal)
+                                else: KDS.Logging.warning(f"Value {setPropValUnformatted} could not be parsed into any type.", True)
                         elif len(setPropType) > 0:
                             KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
                     elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
@@ -428,27 +425,24 @@ class UnitData:
                         for i in range(fld_srls): tip_renders.append(harbinger_font_small.render(srlist[i], True, KDS.Colors.RiverBlue))
 
                     if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
-                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.getFilledSerials(), lambda s: s != brush.brush)
+                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.getFilledSerials(), lambda s: s != brush)
                         if tempbrushtemp == None:
                             tempbrushtemp = unit.getSerial(0)
-                        if not keys_pressed[K_LCTRL]:
-                            brush.SetValues(tempbrushtemp)
-                        else:
-                            brush.SetValues(tempbrushtemp, unit.properties.GetAll())
+                        brushtemp = tempbrushtemp
 
                     pygame.draw.rect(Surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
                     if allowTilePlacement:
                         if mouse_pressed[0]:
-                            if not brush.IsEmpty() or keys_pressed[K_c]:
+                            if brush != UnitData.EMPTY or keys_pressed[K_c]:
                                 if not keys_pressed[K_c]:
                                     if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
-                                        brush.SetOnUnit(unit)
+                                        unit.setSerial(brush)
                                     elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
                                         if keys_pressed[K_LSHIFT]:
-                                            brush.AddOnUnit(unit)
+                                            unit.addSerial(brush)
                                         else: # At this point only CTRL can be pressed.
-                                            brush.InsertOnUnit(unit)
+                                            unit.insertSerial(brush)
                                 elif unit.hasTile():
                                     setVal = False
                                     if keys_pressed[K_LALT]:
@@ -502,7 +496,7 @@ class UnitData:
         UnitData.releasedButtons[0] = False if mouse_pressed[0] else True
         UnitData.releasedButtons[2] = False if mouse_pressed[2] else True
 
-        return renderList
+        return renderList, brushtemp
 
 class UnitProperties:
     def __init__(self, parent: UnitData) -> None:
@@ -523,9 +517,6 @@ class UnitProperties:
         if _type not in self.values:
             self.values[_type] = {}
         self.values[_type][key] = value
-
-    def SetAll(self, data: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
-        self.values = {k: {ik: iv for ik, iv in v.items()} for k, v in data.items()}
 
     def Remove(self, _type: UnitType, key: str) -> None:
         """Removes the specified key in type if found.
@@ -592,39 +583,6 @@ class UnitProperties:
                     unitProp = UnitProperties(unit)
                     unitProp.values = {UnitType(int(k)): v for k, v in deserialized[key].items()}
                     unit.properties = unitProp
-
-class BrushData:
-    def __init__(self) -> None:
-        self.brush: str = UnitData.EMPTY
-        self.properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
-
-    def SetValues(self, brush: str = UnitData.EMPTY, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}):
-        self.brush = brush
-        self.properties = {}
-        if not self.IsEmpty():
-            correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
-            if correctType != None:
-                propValues = properties[correctType]
-                self.properties = {correctType: {ik: iv for ik, iv in propValues.items()}}
-
-    def SetOnUnit(self, unit: UnitData):
-        unit.setSerial(self.brush)
-        unit.properties.SetAll(self.properties)
-        unit.properties.RemoveUnused()
-
-    def AddOnUnit(self, unit: UnitData):
-        unit.addSerial(self.brush)
-        unit.addProperties(self.properties)
-        unit.properties.RemoveUnused()
-
-    def InsertOnUnit(self, unit: UnitData):
-        unit.insertSerial(self.brush)
-        unit.addProperties(self.properties)
-        unit.properties.RemoveUnused()
-
-    def IsEmpty(self):
-        return self.brush == UnitData.EMPTY
-brush = BrushData()
 
 def loadGrid(size: Tuple[int, int]):
     rlist = []
@@ -775,10 +733,10 @@ def consoleHandler(commandlist):
                 KDS.Console.Feed.append("Invalid set command.")
                 return
             if commandlist[2] in brushNames:
-                brush.SetValues(brushNames[commandlist[2]])
+                brush = brushNames[commandlist[2]]
                 KDS.Console.Feed.append(f"Brush set: [{brushNames[commandlist[2]]}: {commandlist[2]}]")
             elif commandlist[2] in brushNames.values():
-                brush.SetValues(commandlist[2])
+                brush = commandlist[2]
                 KDS.Console.Feed.append(f"Brush set: [{commandlist[2]}: {list(brushNames.keys())[list(brushNames.values()).index(commandlist[2])]}]")
             else: KDS.Console.Feed.append("Invalid brush.")
         elif dragRect != None:
@@ -1062,7 +1020,7 @@ class Selected:
         Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, registerUndo=False)
 
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
 
     menu()
     if not mainRunning: return
@@ -1134,7 +1092,7 @@ def main():
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
-                    brush.SetValues(materialMenu(brush.brush))
+                    brush = materialMenu(brush)
                     allowTilePlacement = False
                 elif event.key == K_F3:
                     DebugMode = not DebugMode
@@ -1199,7 +1157,7 @@ def main():
             inputConsole_output = None
 
         display.fill((30,20,60))
-        grid = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement, middleMouseOnDown)
+        grid, brush = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement, middleMouseOnDown)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
@@ -1208,8 +1166,8 @@ def main():
             elif 100 >= undoTotal >= 50: _color = KDS.Colors.Orange
             else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
-        if not brush.IsEmpty():
-            tmpScaled = KDS.Convert.AspectScale(Atextures[brush.brush[0]][brush.brush], (68, 68))
+        if brush != UnitData.EMPTY:
+            tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
             if brushTrigger:
                 selectTrigger = False
@@ -1228,7 +1186,7 @@ def main():
             selectTrigger = False
             dragStartPos = None
             Selected.Get()
-        if brush.IsEmpty(): brushTrigger = True
+        if brush == UnitData.EMPTY: brushTrigger = True
         if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
             selectTrigger = False
             dragStartPos = None
@@ -1294,8 +1252,6 @@ pygame.quit()
 """ KEYMAP
     [Normal]
     Middle Mouse: Get Serial
-    Middle Mouse + SHIFT: Move Camera
-    Middle Mouse + CTRL: Get Serial with Properties
     Left Mouse: Set Serial
     Left Mouse + SHIFT: Add Serial At Top
     Left Mouse + CTRL: Insert Serial At Bottom
