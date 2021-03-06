@@ -20,6 +20,9 @@
                 6607,
                 435
             ],
+            "Inventory": {
+                "0": 6
+            },
             "spawnInverted": true
         }
     },

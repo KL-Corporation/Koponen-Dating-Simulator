@@ -77,7 +77,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 2:
             KDS.Missions.InitialiseMission("t", "Telttailua")
-            KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleep, 1.0))
+            KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleepStart, 1.0))
 
             KDS.Missions.InitialiseMission("o", "O'ou")
             KDS.Missions.InitialiseTask("o", "kill", "Hankkiudu Eroon Vartijasta")

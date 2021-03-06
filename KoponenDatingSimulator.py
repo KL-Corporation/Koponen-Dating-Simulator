@@ -17,6 +17,7 @@ import KDS.Events
 import KDS.Gamemode
 import KDS.Keys
 import KDS.Koponen
+import KDS.Linq
 import KDS.Loading
 import KDS.Logging
 import KDS.Math
@@ -432,7 +433,6 @@ class WorldData():
         Level Music File (optional): {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
         Properties File (optional): {os.path.isfile(os.path.join(MapPath, "properties.kdf"))}
         Level Background File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
-        Inventory File (optional): {os.path.isfile(os.path.join(MapPath, "inventory.kdf"))}
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
@@ -447,20 +447,6 @@ class WorldData():
             level_background = True
             level_background_img = pygame.image.load(os.path.join(MapPath, "background.png")).convert()
         else: level_background = False
-        if os.path.isfile(os.path.join(MapPath, "inventory.kdf")):
-            data: Dict[str, int] = {}
-            try:
-                with open(os.path.join(MapPath, "inventory.kdf"), "r") as f:
-                    data = json.loads(f.read())
-            except IOError as e:
-                KDS.Logging.AutoError(f"IO Error! Details: {e}")
-            except json.decoder.JSONDecodeError as e:
-                KDS.Logging.AutoError(f"JSON Decode Error! Details: {e}")
-            for k, v in data.items():
-                if k.isnumeric() and 0 <= int(k) < len(Player.inventory.storage) and v in Item.serialNumbers:
-                    Player.inventory.storage[int(k)] = Item.serialNumbers[v]((0, 0), v)
-                else:
-                    KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
 
         pygame.event.pump()
         with open(os.path.join(MapPath, "level.dat"), "r", encoding="utf-8") as map_file:
@@ -483,6 +469,13 @@ class WorldData():
         Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
         Player.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
         Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
+
+        tmpInventory: Dict[str, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/Inventory", {})
+        for k, v in tmpInventory.items():
+            if k.isnumeric() and int(k) < len(Player.inventory) and v in Item.serialNumbers:
+                Player.inventory.storage[int(k)] = Item.serialNumbers[v]((0, 0), v)
+            else:
+                KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
 
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
@@ -669,6 +662,9 @@ class Inventory:
         self.size: int = size
         self.SIndex: int = 0
 
+    def __len__(self) -> int:
+        return len(self.storage)
+
     def empty(self):
         self.storage = [Inventory.emptySlot for _ in range(self.size)]
 
@@ -731,7 +727,8 @@ class Inventory:
             if Player.direction: renderOffset = -dumpVals.get_width()
             else: renderOffset = Player.rect.width + 2
 
-            surface.blit(pygame.transform.flip(dumpVals, Player.direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
+            if Player.visible:
+                surface.blit(pygame.transform.flip(dumpVals, Player.direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
         return None
 
     def useItem(self, surface: pygame.Surface, *args):
@@ -995,7 +992,7 @@ class Landmine(Tile):
             if KDS.Math.getDistance(Player.rect.center, self.rect.center) < 100:
                 Player.health -= 100 - KDS.Math.getDistance(Player.rect.center, self.rect.center)
             for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100:
+                if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100 and enemy.enabled:
                     enemy.health -= 120 - KDS.Math.getDistance(enemy.rect.center, self.rect.center)
             self.air = True
             KDS.Audio.PlaySound(landmine_explosion)
@@ -1546,16 +1543,18 @@ class Tent(Tile):
 
         self.inTent = not self.inTent
         if self.inTent:
+            KDS.Missions.Listeners.TentSleepStart.Trigger()
             KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
+        else:
+            KDS.Missions.Listeners.TentSleepEnd.Trigger()
         #region Position Player Correctly
         Player.rect.bottomright = (self.rect.right - (34 - Player.rect.width) // 2, self.rect.bottom) # The camera will follow the player, but whatever... This is done so that Story enemy makes it's sound correctly
         Player.direction = False
         #endregion
         Player.visible = not Player.visible
         Player.lockMovement = not Player.lockMovement
-        KDS.Missions.Listeners.TentSleep.Trigger()
 
     def update(self):
         if self.rect.colliderect(Player.rect):
@@ -1874,7 +1873,6 @@ class Medkit(Item):
         return True
 
 class Pistol(Item):
-
     ammunition = 8
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -1901,6 +1899,12 @@ class Pistol(Item):
 class PistolMag(Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+
+    def use(self, *args):
+        if args[0][0]:
+            self.pickup()
+            Player.inventory.storage[Player.inventory.storage.index(self)] = Inventory.emptySlot
+        return self.texture
 
     def pickup(self):
         Pistol.ammunition += 7
@@ -3723,7 +3727,7 @@ while main_running:
             Player.farting = False
             Player.fart_counter = 0
             for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) <= 800:
+                if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) <= 800 and enemy.enabled:
                     enemy.dmg(random.randint(500, 1000))
 #endregion
 #region Rendering

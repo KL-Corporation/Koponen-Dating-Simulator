@@ -104,21 +104,6 @@ def Where(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> It
             r.append(v)
     return r
 
-def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Union[TSource, None]:
-    """Returns the first element of the iterable that satisfies a condition or None if no such element is found.
-
-    Args:
-        source (Iterable[TSource]): The Iterable to return the first element of.
-        predicate (Callable[[TSource], bool]): A function to test each element for a condition.
-
-    Returns:
-        Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
-    """
-    for v in source:
-        if predicate(v) == True:
-            return v
-    return None
-
 def First(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSource:
     """Returns the first element of a sequence that satisfies a specified condition.
 
@@ -132,13 +117,13 @@ def First(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TS
     Returns:
         TSource: The first element in the iterable that passes the test in the specified predicate function.
     """
-    result = FirstOrNone(source, predicate)
-    if result != None:
-        return result
+    for v in source:
+        if predicate(v) == True:
+            return v
     raise LookupError("No element satisfies the condition in predicate.")
 
-def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Union[TSource, None]:
-    """Returns the last element of the iterable that satisfies a condition or None if no such element is found.
+def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Union[TSource, None]:
+    """Returns the first element of the iterable that satisfies a condition or None if no such element is found.
 
     Args:
         source (Iterable[TSource]): The Iterable to return the first element of.
@@ -147,11 +132,10 @@ def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) 
     Returns:
         Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
-    r = None
-    for v in source: # Iterable cannot be reversed... Fuck.
-        if predicate(v) == True:
-            r = v
-    return r
+    try:
+        return First(source=source, predicate=predicate)
+    except LookupError:
+        return None
 
 def Last(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSource:
     """Returns the last element of a sequence that satisfies a specified condition.
@@ -166,9 +150,24 @@ def Last(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSo
     Returns:
         TSource: The first element in the iterable that passes the test in the specified predicate function.
     """
-    result = LastOrNone(source, predicate)
-    if result != None:
-        return result
+    for v in reversed(list(source)): # This will be fucking slow, but Iterables cannot be reversed.
+        if predicate(v) == True:
+            return v
     raise LookupError("No element satisfies the condition in predicate.")
+
+def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Union[TSource, None]:
+    """Returns the last element of the iterable that satisfies a condition or None if no such element is found.
+
+    Args:
+        source (Iterable[TSource]): The Iterable to return the first element of.
+        predicate (Callable[[TSource], bool]): A function to test each element for a condition.
+
+    Returns:
+        Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
+    """
+    try:
+        return Last(source=source, predicate=predicate)
+    except LookupError:
+        return None
 
 

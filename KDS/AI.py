@@ -716,7 +716,7 @@ class Mummy(HostileEnemy):
 
 class SecurityGuard(HostileEnemy):
     def __init__(self, pos):
-        health = 200
+        health = 1000
         sight_sounds = (
 
         )
@@ -749,7 +749,7 @@ class SecurityGuard(HostileEnemy):
 
     def lateInit(self):
         super().lateInit()
-        self.lastTargetDirection = -KDS.Math.Sign(self.movement[0])
+        self.lastTargetDirection = KDS.Math.Sign(self.movement[0])
 
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect: pygame.Rect, debug: bool):
         tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
