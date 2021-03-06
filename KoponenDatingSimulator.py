@@ -2881,7 +2881,7 @@ def agr():
     return True
 #endregion
 #region Game Functions
-def play_function(gamemode: int, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
+def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
     KDS.Logging.debug("Loading Game...")
     global main_menu_running, current_map, true_scroll, selectedSave
 
@@ -3853,6 +3853,8 @@ while main_running:
     lightsUpdating = 0
     if dark:
         black_tint.fill(darkness)
+        if Player.light and Player.visible:
+            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), True))
         for light in Lights:
             lightsUpdating += 1
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
@@ -3862,8 +3864,6 @@ while main_running:
                 rectSurf.set_alpha(128)
                 screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             #black_tint.blit(KDS.World.Lighting.Shapes.circle.get(40, 40000), (20, 20))
-        if Player.light:
-            black_tint.blit(KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), (Player.rect.centerx - scroll[0] - 150, Player.rect.centery - scroll[1] - 150))
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:

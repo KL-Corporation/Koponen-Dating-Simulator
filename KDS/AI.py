@@ -133,7 +133,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
                             return True, slope
                 else:
                     if KDS.Logging.profiler_running:
-                        pygame.draw.rect(Surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13)) 
+                        pygame.draw.rect(Surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13))
                     if targetRect.collidepoint( (int(pointer[0]), int(pointer[1]))):
                         return True, slope
     return False, 0
@@ -745,7 +745,21 @@ class SecurityGuard(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[2, 8], attackPropability=50)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[4, 8], attackPropability=50)
+
+    def lateInit(self):
+        super().lateInit()
+        self.lastTargetDirection = -KDS.Math.Sign(self.movement[0])
+
+    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect: pygame.Rect, debug: bool):
+        tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
+        distance = self.rect.centerx - targetRect.centerx
+        targetDirection = KDS.Math.Sign(distance)
+        if self.lastTargetDirection != targetDirection and abs(distance) > 136: # If over four blocks away from target, turn around
+            self.direction = not self.direction
+            self.movement[0] = -self.movement[0]
+            self.lastTargetDirection = targetDirection
+        return tmp
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
