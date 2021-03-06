@@ -716,7 +716,7 @@ class Mummy(HostileEnemy):
 
 class SecurityGuard(HostileEnemy):
     def __init__(self, pos):
-        health = 1000
+        health = 2000
         sight_sounds = (
 
         )
@@ -750,15 +750,18 @@ class SecurityGuard(HostileEnemy):
     def lateInit(self):
         super().lateInit()
         self.lastTargetDirection = KDS.Math.Sign(self.movement[0])
+        self.ticksSinceSwitch = 0
 
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect: pygame.Rect, debug: bool):
         tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
         distance = self.rect.centerx - targetRect.centerx
         targetDirection = KDS.Math.Sign(distance)
-        if self.lastTargetDirection != targetDirection and abs(distance) > 136: # If over four blocks away from target, turn around
+        if self.lastTargetDirection != targetDirection and (abs(distance) > 136 or self.ticksSinceSwitch > 120): # If over four blocks away from target or hasn't turned for two seconds while player is behind, turn around
             self.direction = not self.direction
             self.movement[0] = -self.movement[0]
             self.lastTargetDirection = targetDirection
+            self.ticksSinceSwitch = 0
+        self.ticksSinceSwitch += 1
         return tmp
 
     def attack(self, slope, env_obstacles, target, *args):
