@@ -737,7 +737,6 @@ class Mummy(HostileEnemy):
                 self.attackRunning = True
             if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
 
-
 class SecurityGuard(HostileEnemy):
     sight_sounds = (
         pygame.mixer.Sound("Assets/Audio/Entities/security_guard_wakeup.ogg"),
@@ -782,7 +781,7 @@ class SecurityGuard(HostileEnemy):
         tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
         distance = self.rect.centerx - targetRect.centerx
         targetDirection = KDS.Math.Sign(distance)
-        if self.lastTargetDirection != targetDirection and (abs(distance) > 136 or self.ticksSinceSwitch > 120) and self.health > 0: # If over four blocks away from target or hasn't turned for two seconds while player is behind; turn around
+        if self.lastTargetDirection != targetDirection and (abs(distance) > 170 or self.ticksSinceSwitch > 120) and self.health > 0: # If over five blocks away from target or hasn't turned for two seconds while player is behind; turn around
             self.direction = not self.direction
             self.movement[0] = -self.movement[0]
             self.lastTargetDirection = targetDirection
