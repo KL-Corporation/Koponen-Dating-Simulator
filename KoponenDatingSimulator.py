@@ -476,6 +476,7 @@ class WorldData():
                 Player.inventory.storage[int(k)] = Item.serialNumbers[v]((0, 0), v)
             else:
                 KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
+        Item.infiniteAmmo = KDS.ConfigManager.LevelProp.Get("Data/infiniteAmmo", False)
 
         p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
@@ -652,6 +653,58 @@ class ScreenEffects:
             ScreenEffects.triggered.remove(effect)
         ScreenEffects.OnEffectFinish.Invoke(effect)
 
+#region Animations
+koponen_animations = KDS.Animator.MultiAnimation(
+    idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+    walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
+)
+menu_gasburner_animation = KDS.Animator.Animation(
+    "main_menu_bc_gasburner", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+gasburner_animation_object = KDS.Animator.Animation("gasburner_on", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+menu_toilet_animation = KDS.Animator.Animation(
+    "menu_toilet_anim", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+menu_trashcan_animation = KDS.Animator.Animation(
+    "menu_trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
+explosion_animation = KDS.Animator.Animation(
+    "explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+plasmarifle_animation = KDS.Animator.Animation(
+    "plasmarifle_firing", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+zombie_death_animation = KDS.Animator.Animation(
+    "z_death", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+zombie_walk_animation = KDS.Animator.Animation(
+    "z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+zombie_attack_animation = KDS.Animator.Animation(
+    "z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+sergeant_walk_animation = KDS.Animator.Animation(
+    "seargeant_walking", 4, 8, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+sergeant_shoot_animation = KDS.Animator.Animation(
+    "seargeant_shooting", 2, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+
+archvile_run_animation = KDS.Animator.Animation(
+    "archvile_run", 3, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+arhcvile_attack_animation = KDS.Animator.Animation(
+    "archvile_attack", 6, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+archvile_death_animation = KDS.Animator.Animation(
+    "archvile_death", 7, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+flames_animation = KDS.Animator.Animation(
+    "flames", 5, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+bulldog_run_animation = KDS.Animator.Animation(
+    "bulldog", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+
+imp_walking = KDS.Animator.Animation(
+    "imp_walking", 4, 19, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+imp_attacking = KDS.Animator.Animation(
+    "imp_attacking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+imp_dying = KDS.Animator.Animation(
+    "imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+
+knife_animation_object = KDS.Animator.Animation(
+    "knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+
+KDS.Logging.debug("Animation Loading Complete.")
+#endregion
+KDS.Logging.debug("Data Loading Complete.")
 #region Inventory
 class Inventory:
     emptySlot = "none"
@@ -761,9 +814,7 @@ class Inventory:
                 count += 1
         return count
 #endregion
-
-KDS.Logging.debug("Data Loading Complete.")
-
+#endregion
 #region Tiles
 KDS.Logging.debug("Loading Tiles...")
 class Tile:
@@ -1652,10 +1703,10 @@ specialTilesD = {
 
 KDS.Logging.debug("Tile Loading Complete.")
 #endregion
-
 #region Items
 KDS.Logging.debug("Loading Items...")
 class Item:
+    infiniteAmmo: bool = False
 
     serialNumbers = {}
 
@@ -1880,7 +1931,7 @@ class Pistol(Item):
 
     def use(self, *args):
         global tiles
-        if args[0][0] and KDS.World.pistol_C.counter > 30 and Pistol.ammunition > 0:
+        if args[0][0] and KDS.World.pistol_C.counter > 30 and (Pistol.ammunition > 0 or Item.infiniteAmmo):
             KDS.Audio.PlaySound(pistol_shot)
             KDS.World.pistol_C.counter = 0
             Pistol.ammunition -= 1
@@ -1921,7 +1972,7 @@ class rk62(Item):
 
     def use(self, *args):
         global tiles
-        if args[0][0] and KDS.World.rk62_C.counter > 4 and rk62.ammunition > 0:
+        if args[0][0] and KDS.World.rk62_C.counter > 4 and (rk62.ammunition > 0 or Item.infiniteAmmo):
             KDS.World.rk62_C.counter = 0
             rk62_shot.stop()
             KDS.Audio.PlaySound(rk62_shot)
@@ -1949,7 +2000,7 @@ class Shotgun(Item):
 
     def use(self, *args):
         global tiles
-        if args[0][1] and KDS.World.shotgun_C.counter > 50 and Shotgun.ammunition > 0:
+        if args[0][1] and KDS.World.shotgun_C.counter > 50 and (Shotgun.ammunition > 0 or Item.infiniteAmmo):
             KDS.World.shotgun_C.counter = 0
             KDS.Audio.PlaySound(shotgun_shot)
             Shotgun.ammunition -= 1
@@ -1994,7 +2045,7 @@ class Plasmarifle(Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self, *args):
-        if args[0][0] and Plasmarifle.ammunition > 0 and KDS.World.plasmarifle_C.counter > 3:
+        if args[0][0] and KDS.World.plasmarifle_C.counter > 3 and (Plasmarifle.ammunition > 0 or Item.infiniteAmmo):
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.PlaySound(plasmarifle_f_sound)
             Plasmarifle.ammunition -= 1
@@ -2065,7 +2116,7 @@ class Ppsh41(Item):
 
     def use(self, *args):
         global tiles
-        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and Ppsh41.ammunition > 0:
+        if args[0][0] and KDS.World.ppsh41_C.counter > 2 and (Ppsh41.ammunition > 0 or Item.infiniteAmmo):
             KDS.World.ppsh41_C.counter = 0
             smg_shot.stop()
             KDS.Audio.PlaySound(smg_shot)
@@ -2091,7 +2142,7 @@ class Awm(Item):
 
     def use(self, *args):
         global tiles, awm_ammo
-        if args[0][0] and KDS.World.awm_C.counter > 130 and Awm.ammunition > 0:
+        if args[0][0] and KDS.World.awm_C.counter > 130 and (Awm.ammunition > 0 or Item.infiniteAmmo):
             KDS.World.awm_C.counter = 0
             KDS.Audio.PlaySound(awm_shot)
             Awm.ammunition -= 1
@@ -2248,7 +2299,7 @@ class Chainsaw(Item):
         self.pickupCounter = 0
 
     def use(self, *args):
-        if self.pickupFinished and Chainsaw.ammunition > 0:
+        if self.pickupFinished and (Chainsaw.ammunition > 0 or Item.infiniteAmmo):
             if args[0][0]:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, tiles, damage=1, maxDistance=80))
@@ -2328,61 +2379,8 @@ Item.serialNumbers = {
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion
-
-#region Animations
-koponen_animations = KDS.Animator.MultiAnimation(
-    idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-    walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
-)
-menu_gasburner_animation = KDS.Animator.Animation(
-    "main_menu_bc_gasburner", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-gasburner_animation_object = KDS.Animator.Animation("gasburner_on", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-menu_toilet_animation = KDS.Animator.Animation(
-    "menu_toilet_anim", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-menu_trashcan_animation = KDS.Animator.Animation(
-    "menu_trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
-explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-plasmarifle_animation = KDS.Animator.Animation(
-    "plasmarifle_firing", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-
-archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-flames_animation = KDS.Animator.Animation(
-    "flames", 5, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-bulldog_run_animation = KDS.Animator.Animation(
-    "bulldog", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-
-imp_walking = KDS.Animator.Animation(
-    "imp_walking", 4, 19, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-imp_attacking = KDS.Animator.Animation(
-    "imp_attacking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-imp_dying = KDS.Animator.Animation(
-    "imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-
-knife_animation_object = KDS.Animator.Animation(
-    "knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-
-KDS.Logging.debug("Animation Loading Complete.")
-KDS.Logging.debug("Game Initialisation Complete.")
-#endregion
-#endregion
 #region Player
+KDS.Logging.debug("Loading Player...")
 class PlayerClass:
     def __init__(self) -> None:
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
@@ -2395,7 +2393,6 @@ class PlayerClass:
         self.fart_counter: int = 0
         self.light: bool = False
         self.infiniteHealth: bool = False
-        self.infiniteAmmo: bool = False
         self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
@@ -2434,7 +2431,6 @@ class PlayerClass:
         self.fart_counter: int = 0
         self.light: bool = False
         self.infiniteHealth: bool = False
-        self.infiniteAmmo: bool = False
         self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
@@ -2456,11 +2452,7 @@ class PlayerClass:
         self.deathSound.stop()
 
     def update(self):
-        if self.infiniteHealth: self.health = float("inf")
-        if self.infiniteAmmo:
-            for _class in Item.serialNumbers.values():
-                if hasattr(_class, "ammunition"):
-                    _class.ammunition = 69
+        if self.infiniteHealth: self.health = KDS.Math.INFINITY
 
         #region Movement
         #region Functions
@@ -2616,8 +2608,10 @@ class PlayerClass:
         #endregion
 
 Player = PlayerClass()
+KDS.Logging.debug("Player Loading Complete.")
 #endregion
 #region Console
+KDS.Logging.debug("Loading Console...")
 def console(oldSurf: pygame.Surface):
     global level_finished, go_to_console, Player
     go_to_console = False
@@ -2747,8 +2741,8 @@ def console(oldSurf: pygame.Surface):
                     elif command_list[1] == "ammo":
                         a_state = KDS.Convert.ToBool(command_list[2], None)
                         if a_state != None:
-                            Player.infiniteAmmo = a_state
-                            KDS.Console.Feed.append(f"infinite ammo state has been set to: {Player.infiniteAmmo}")
+                            Item.infiniteAmmo = a_state
+                            KDS.Console.Feed.append(f"infinite ammo state has been set to: {Item.infiniteAmmo}")
                         else:
                             KDS.Console.Feed.append("Please provide a proper state for infinite ammo.")
                     else:
@@ -2883,6 +2877,8 @@ def agr():
         pygame.display.flip()
         c = False
     return True
+KDS.Logging.debug("Console Loading Complete.")
+KDS.Logging.debug("Game Initialisation Complete.")
 #endregion
 #region Game Functions
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
@@ -3875,14 +3871,14 @@ while main_running:
         ui_hand_item = Player.inventory.getHandItem()
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
-        screen.blit(score_font.render(f"""HEALTH: {KDS.Math.Ceil(Player.health) if Player.health != float("inf") else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
-        screen.blit(score_font.render(f"STAMINA: {KDS.Math.Ceil(Player.stamina)}", True, KDS.Colors.White), (10, 120))
+        screen.blit(score_font.render(f"""HEALTH: {KDS.Math.CeilToInt(Player.health) if not KDS.Math.IsInfinity(Player.health) else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
+        screen.blit(score_font.render(f"STAMINA: {KDS.Math.CeilToInt(Player.stamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
 
         tmpAmmo = getattr(ui_hand_item, "ammunition", None)
         if tmpAmmo != None:
-            tmpAmmo = tmpAmmo if isinstance(tmpAmmo, int) else KDS.Math.Ceil(tmpAmmo * 10) / 10
-            screen.blit(harbinger_font.render(f"AMMO: {tmpAmmo}", True, KDS.Colors.White), (10, 360))
+            tmpAmmo = tmpAmmo if isinstance(tmpAmmo, int) else KDS.Math.Ceil(tmpAmmo, 1)
+            screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, 360))
 
         if Player.keys["red"]:
             screen.blit(red_key, (10, 20))

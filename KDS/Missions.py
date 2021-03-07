@@ -108,7 +108,7 @@ class Task:
         else:
             self.finished = False
             if self.progress < 0.0: self.progress = 0.0
-        self.progressScaled = KDS.Math.Floor(self.progress * 100)
+        self.progressScaled = KDS.Math.FloorToInt(self.progress * 100)
 
     def Update(self, Width: int, Height: int, PlaySound: bool = True):
         surface = pygame.Surface((Width, Height))

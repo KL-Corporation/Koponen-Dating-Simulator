@@ -125,7 +125,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
             Display.fill(KDS.Colors.Black)
             val = KDS.Math.Sin(counter * KDS.Math.DEG2RAD)
             if val < 1.0: _title.set_alpha(int(val * 255))
-            Display.blit(_title, (KDS.Math.Floor(relative_position[0]), KDS.Math.Floor(relative_position[1])))
+            Display.blit(_title, (KDS.Math.FloorToInt(relative_position[0]), KDS.Math.FloorToInt(relative_position[1])))
             pygame.display.flip()
             Clock.tick_busy_loop(60)
             counter += 1
@@ -281,8 +281,8 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
 
                 if timer_finished:
                     if timer3.get_time()[1] <= 0: check_running = False
-                    gradePos[0] += KDS.Math.Floor((gradeDestination[0] - gradePos[0]) / 10)
-                    gradePos[1] += KDS.Math.Floor((gradeDestination[1] - gradePos[1]) / 10)
+                    gradePos[0] += KDS.Math.FloorToInt((gradeDestination[0] - gradePos[0]) / 10)
+                    gradePos[1] += KDS.Math.FloorToInt((gradeDestination[1] - gradePos[1]) / 10)
                     Display.blit(scoreSurf, gradePos)
 
                 pygame.display.flip()

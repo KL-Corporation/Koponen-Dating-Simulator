@@ -1,4 +1,4 @@
-from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union
+from typing import Iterable, List, Tuple, TypeVar, Union
 import math
 import sys
 import random
@@ -19,25 +19,32 @@ RAD2DEG = 1 / DEG2RAD
 #endregion
 
 #region Default Math Functions
-def Tan(f: SupportsFloat) -> float: return math.tan(f)
-def Atan(f: SupportsFloat) -> float: return math.atan(f)
-def Atan2(x: SupportsFloat, y: SupportsFloat) -> float: return math.atan2(x, y)
+def Tan(f: float) -> float: return math.tan(f)
+def Atan(f: float) -> float: return math.atan(f)
+def Atan2(x: float, y: float) -> float: return math.atan2(x, y)
 
-def Sin(f: SupportsFloat) -> float: return math.sin(f)
-def Asin(f: SupportsFloat) -> float: return math.asin(f)
+def Sin(f: float) -> float: return math.sin(f)
+def Asin(f: float) -> float: return math.asin(f)
 
-def Cos(f: SupportsFloat) -> float: return math.cos(f)
-def Acos(f: SupportsFloat) -> float: return math.acos(f)
+def Cos(f: float) -> float: return math.cos(f)
+def Acos(f: float) -> float: return math.acos(f)
 
-def Ceil(f: SupportsFloat) -> int: return math.ceil(f)
-def Floor(f: SupportsFloat) -> int: return math.floor(f)
+def Ceil(f: float, digits: int = 0) -> float: power10: int = pow(10, digits); return math.ceil(f * power10) / power10
+def CeilToInt(f: float) -> int: return math.ceil(f)
+def Floor(f: float, digits: int = 0) -> float: power10: int = pow(10, digits); return math.floor(f * power10) / power10
+def FloorToInt(f: float) -> int: return math.floor(f)
 
-def Sqrt(f: SupportsFloat) -> float: return math.sqrt(f)
-def Log(f: SupportsFloat) -> float: return math.log(f)
+def Sqrt(f: float) -> float: return math.sqrt(f)
+def Log(f: float) -> float: return math.log(f)
 
 def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
 
-def Approximately(a: float, b: float): return math.isclose(a, b)
+def Approximately(a: float, b: float) -> bool: return math.isclose(a, b)
+
+def IsInfinity(f: float) -> bool: return math.isinf(f)
+def IsPositiveInfinity(f: float) -> bool: return math.isinf(f) and f > 0
+def IsNegativeInfinity(f: float) -> bool: return math.isinf(f) and f < 0
+def IsNan(f: float) -> bool: return math.isnan(f)
 #endregion
 
 #region Bitwise
@@ -127,7 +134,7 @@ def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = Midpoint
     """
     if math.isnan(value) or math.isinf(value):
         return value
-    power10 = pow(10, digits)
+    power10 = pow(10, digits) # 10 to the power of zero is one
     value *= power10
     if mode == MidpointRounding.AwayFromZero:
         fraction, value = math.modf(value)

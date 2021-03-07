@@ -3,7 +3,8 @@
         "TimeBonus": {
             "end": 2,
             "start": 1
-        }
+        },
+        "infiniteAmmo": true
     },
     "Entities": {
         "Koponen": {
@@ -16,10 +17,7 @@
             ],
             "Inventory": {
                 "0": 10,
-                "1": 7,
-                "2": 11,
-                "3": 11,
-                "4": 11
+                "1": 7
             },
             "spawnInverted": true
         }

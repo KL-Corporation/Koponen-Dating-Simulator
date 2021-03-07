@@ -271,7 +271,7 @@ class Bullet:
                         return "wall", targets, plr_htlt, HitTargets, Particles
 
                 for target in targets:
-                    if self.rect.colliderect(target.rect) and target.health > 0:
+                    if self.rect.colliderect(target.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
                         target.dmg(self.damage)
                         target.sleep = False
                         Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
@@ -301,7 +301,7 @@ class Bullet:
                     return "wall", targets, plr_htlt, HitTargets, Particles
 
             for target in targets:
-                if target.rect.colliderect(self.rect) and target.health > 0:
+                if target.rect.colliderect(self.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
                     target.sleep = False
                     target.dmg(self.damage)
                     return "wall", targets, plr_htlt, HitTargets, Particles

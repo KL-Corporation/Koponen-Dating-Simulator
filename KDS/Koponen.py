@@ -133,7 +133,7 @@ class Talk:
     mask = pygame.mask.Mask(conversation_rect.size, True)
     display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
     display_size = display.get_size()
-    lineCount = KDS.Math.Floor((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
+    lineCount = KDS.Math.FloorToInt((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
     audioChannel = None
     soundPlaying = None
     autoExit = False
