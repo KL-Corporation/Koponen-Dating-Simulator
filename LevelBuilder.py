@@ -1,4 +1,4 @@
-afrom __future__ import annotations
+from __future__ import annotations
 
 #region Import Error
 if __name__ != "__main__":
@@ -136,6 +136,7 @@ class Undo:
 
     @staticmethod
     def register():
+        """
         global grid, dragRect
         if Undo.index == len(Undo.points) - 1:
             last = Undo.points[Undo.index]
@@ -158,15 +159,20 @@ class Undo:
             del Undo.points[0]
             Undo.overflowCount += 1
         Undo.index = len(Undo.points) - 1
+        """
+        pass
 
     @staticmethod
     def request(redo: bool = False):
+        """
         Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
 
         global grid, dragRect
         data = Undo.points[Undo.index]
         grid = data["grid"]
         dragRect = data["dragRect"]
+        """
+        pass
 
     @staticmethod
     def clear():
