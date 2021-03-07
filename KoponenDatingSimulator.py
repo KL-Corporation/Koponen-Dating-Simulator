@@ -1625,10 +1625,6 @@ class AvarnCar(Tile):
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
         l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3)))
         self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)
-
-    def update(self):
-        Lights.append(self.light)
-        return self.texture
         self.hidden = False
         self.listener = None
         self.listenerInstance: Optional[KDS.Missions.Listener] = None
@@ -1647,6 +1643,7 @@ class AvarnCar(Tile):
                 self.hidden = True
 
     def update(self):
+        Lights.append(self.light)
         return self.texture if not self.hidden else self.empty_texture
 
 # class Ramp(Tile):
