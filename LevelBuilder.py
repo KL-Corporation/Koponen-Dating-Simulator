@@ -1,4 +1,4 @@
-from __future__ import annotations
+afrom __future__ import annotations
 
 #region Import Error
 if __name__ != "__main__":

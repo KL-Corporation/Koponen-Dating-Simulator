@@ -316,7 +316,7 @@
 "16-16":{"0":{"checkCollision":false}},
 "17-16":{"0":{"checkCollision":false}},
 "18-16":{"0":{"checkCollision":false}},
-"19-16":{"0":{"checkCollision":false}},
+"19-16":{"0":{"checkCollision":false,"listener":"TentSleepStart"}},
 "20-16":{"0":{"checkCollision":false}},
 "21-16":{"0":{"locked":true}},
 "22-16":{"4":{"overlay":"0112"},"0":{"locked":true}},
@@ -357,6 +357,5 @@
 "57-16":{"0":{"checkCollision":false}},
 "58-16":{"0":{"checkCollision":false}},
 "59-16":{"0":{"checkCollision":false}},
-"60-16":{"0":{"checkCollision":false},"4":{"overlay":"0112"}},
-"63-16":{"0":{"listener":"TentSleepStart"}}
+"60-16":{"0":{"checkCollision":false},"4":{"overlay":"0112"}}
 }
