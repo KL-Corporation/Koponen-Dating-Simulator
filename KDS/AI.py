@@ -715,14 +715,16 @@ class Mummy(HostileEnemy):
 
 
 class SecurityGuard(HostileEnemy):
+    sight_sounds = (
+        pygame.mixer.Sound("Assets/Audio/Entities/security_guard_wakeup.ogg"),
+        pygame.mixer.Sound("Assets/Audio/Entities/security_guard_wakeup1.ogg"),
+        pygame.mixer.Sound("Assets/Audio/Entities/security_guard_wakeup2.ogg")
+    )
+
+    death_sound = pygame.mixer.Sound("Assets/Audio/Entities/security_guard_death.ogg")
+
     def __init__(self, pos):
         health = 2000
-        sight_sounds = (
-
-        )
-        death_sounds = (
-
-        )
 
         w_anim = KDS.Animator.Animation("security_guard_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("security_guard_idle", 2, 40, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
@@ -745,7 +747,7 @@ class SecurityGuard(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[4, 8], attackPropability=50)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[2, 8], attackPropability=50)
 
     def lateInit(self):
         super().lateInit()
@@ -772,7 +774,7 @@ class SecurityGuard(HostileEnemy):
         dist /= 1200
         KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)
         #print(KDS.Math.getSlope(self.rect.center, target.center))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
