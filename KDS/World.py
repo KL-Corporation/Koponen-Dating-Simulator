@@ -25,6 +25,7 @@ def init():
     Lighting.Shapes.circle_hardest = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_hardest.png").convert_alpha())
     Lighting.Shapes.cone_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_hard.png").convert_alpha())
     Lighting.Shapes.cone_small_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_small_hard.png").convert_alpha())
+    Lighting.Shapes.cone_narrow = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_narrow.png").convert_alpha())
     Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
 
 def collision_test(rect, Tile_list):
@@ -136,6 +137,7 @@ class Lighting:
         circle_hardest: LightShape = LightShape(pygame.Surface((0, 0)))
         cone_hard: LightShape = LightShape(pygame.Surface((0, 0)))
         cone_small_hard: LightShape = LightShape(pygame.Surface((0, 0)))
+        cone_narrow: LightShape = LightShape(pygame.Surface((0, 0)))
         splatter: LightShape = LightShape(pygame.Surface((0, 0)))
 
     @staticmethod

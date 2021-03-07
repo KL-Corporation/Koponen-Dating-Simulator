@@ -1622,6 +1622,9 @@ class AvarnCar(Tile):
         self.texture.set_colorkey(KDS.Colors.Cyan)
         self.empty_texture = pygame.Surface((0, 0))
         self.checkCollision = False
+        l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
+        l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3)))
+        self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)
         self.hidden = False
         self.listener = None
         self.listenerInstance: Optional[KDS.Missions.Listener] = None
@@ -1640,13 +1643,14 @@ class AvarnCar(Tile):
                 self.hidden = True
 
     def update(self):
+        Lights.append(self.light)
         return self.texture if not self.hidden else self.empty_texture
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
 #         super().__init__(position, serialNumber)
 #         self.checkCollision = False
-#         self.direction = True if serialNumber == 108 else False
+#         self.direction = True if serialNumber == 108 else Falsed
 #
 #         self.triangle: List[Tuple[int, int]]
 #         if self.direction:
