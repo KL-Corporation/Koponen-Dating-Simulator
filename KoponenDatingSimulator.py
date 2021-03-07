@@ -1643,8 +1643,10 @@ class AvarnCar(Tile):
                 self.hidden = True
 
     def update(self):
-        Lights.append(self.light)
-        return self.texture if not self.hidden else self.empty_texture
+        if not self.hidden:
+            Lights.append(self.light)
+            return self.texture
+        return self.empty_texture
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
