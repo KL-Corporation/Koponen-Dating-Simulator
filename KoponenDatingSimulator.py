@@ -778,7 +778,7 @@ class Inventory:
             if Player.direction: renderOffset = -dumpVals.get_width()
             else: renderOffset = Player.rect.width + 2
 
-            if Player.visible:
+            if Player.visible and Player.health > 0:
                 surface.blit(pygame.transform.flip(dumpVals, Player.direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
         return None
 
@@ -1620,10 +1620,27 @@ class AvarnCar(Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
         self.texture.set_colorkey(KDS.Colors.Cyan)
+        self.empty_texture = pygame.Surface((0, 0))
         self.checkCollision = False
+        self.hidden = False
+        self.listener = None
+        self.listenerInstance: Optional[KDS.Missions.Listener] = None
+
+    def eventHandler(self):
+        self.listenerInstance.OnTrigger -= self.eventHandler
+        self.listenerInstance = None
+        self.hidden = False
+
+    def lateInit(self):
+        if self.listener != None:
+            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            if tmpListener != None:
+                self.listenerInstance = tmpListener
+                self.listenerInstance.OnTrigger += self.eventHandler
+                self.hidden = True
 
     def update(self):
-        return self.texture
+        return self.texture if not self.hidden else self.empty_texture
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:

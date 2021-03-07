@@ -357,5 +357,6 @@
 "57-16":{"0":{"checkCollision":false}},
 "58-16":{"0":{"checkCollision":false}},
 "59-16":{"0":{"checkCollision":false}},
-"60-16":{"0":{"checkCollision":false},"4":{"overlay":"0112"}}
+"60-16":{"0":{"checkCollision":false},"4":{"overlay":"0112"}},
+"63-16":{"0":{"listener":"TentSleepStart"}}
 }
