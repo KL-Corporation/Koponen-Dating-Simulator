@@ -80,7 +80,10 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleepStart, 1.0))
 
             KDS.Missions.InitialiseMission("o", "O'ou")
-            KDS.Missions.InitialiseTask("o", "kill", "Hankkiudu Eroon Vartijasta")
+            KDS.Missions.InitialiseTask("o", "kill", "Hankkiudu Eroon Vartijasta", (KDS.Missions.Listeners.EnemyDeath, 1.0))
+
+            KDS.Missions.InitialiseMission("s", "Kuin Tukki")
+            KDS.Missions.InitialiseTask("s", "sleep_again", "Nuku aamuun asti", (KDS.Missions.Listeners.TentSleepStart, 0.5))
 
             KDS.Missions.InitialiseMission("wait", "Odota")
             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")

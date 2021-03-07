@@ -711,9 +711,10 @@ class Inventory:
     doubleItem = "doubleItem"
 
     def __init__(self, size: int):
-        self.storage: List[Item | str] = [Inventory.emptySlot for _ in range(size)]
+        self.storage: List[Union[Item, str]] = [Inventory.emptySlot for _ in range(size)]
         self.size: int = size
         self.SIndex: int = 0
+        self.offset: Tuple[int, int] = (10, 75)
 
     def __len__(self) -> int:
         return len(self.storage)
@@ -722,22 +723,19 @@ class Inventory:
         self.storage = [Inventory.emptySlot for _ in range(self.size)]
 
     def render(self, Surface: pygame.Surface):
-        pygame.draw.rect(Surface, (192, 192, 192), (10, 75, self.size*34, 34), 3)
+        pygame.draw.rect(Surface, (192, 192, 192), (self.offset[0], self.offset[1], self.size * 34, 34), 3)
 
         item = self.storage[self.SIndex]
-        if not isinstance(item, str) and item.serialNumber in inventoryDobulesSerialNumbers:
-            slotwidth = 68
-        else:
-            slotwidth = 34
+        slotwidth = 34 if isinstance(item, str) or item.serialNumber not in inventoryDobulesSerialNumbers else 68
 
-        pygame.draw.rect(screen, (70, 70, 70), ((
-            (self.SIndex) * 34) + 10, 75, slotwidth, 34), 3)
+        pygame.draw.rect(Surface, (70, 70, 70), (self.SIndex * 34 + self.offset[0], self.offset[1], slotwidth, 34), 3)
 
-        index = 0
-        for i in self.storage:
-            if not isinstance(i, str) and i.serialNumber in i_textures:
-                Surface.blit(i.texture, (index * 34 + 10 + i.texture_size[0] // 4, 75 + i.texture_size[1] // 4))
-            index += 1
+        for index, item in enumerate(self.storage):
+            if not isinstance(item, str) and item.serialNumber in i_textures:
+                slotwidth = 34 if isinstance(item, str) or item.serialNumber not in inventoryDobulesSerialNumbers else 68
+                bdRect = item.texture.get_bounding_rect()
+                diff = (slotwidth - bdRect.width, 34 - bdRect.height)
+                Surface.blit(item.texture, (index * 34 + self.offset[0] + diff[0] // 2 - bdRect.x, self.offset[1] + diff[1] // 2 - bdRect.y))
 
     def moveRight(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
@@ -792,17 +790,16 @@ class Inventory:
             if isinstance(v, Class):
                 self.useItemAtIndex(i, surface, *args)
                 return
-    """
-    def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
-        dumpValues = nullLantern.use(args, Surface)
-        if direction:
-            renderOffset = -dumpValues.get_size()[0]
-        else:
-            renderOffset = Player.rect.width + 2
 
-        Surface.blit(pygame.transform.flip(dumpValues, direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
-        return None
-    """
+    # def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
+    #     dumpValues = nullLantern.use(args, Surface)
+    #     if direction:
+    #         renderOffset = -dumpValues.get_size()[0]
+    #     else:
+    #         renderOffset = Player.rect.width + 2
+    #
+    #     Surface.blit(pygame.transform.flip(dumpValues, direction, False), (Player.rect.x - scroll[0] + renderOffset, Player.rect.y + 10 -scroll[1]))
+    #     return None
 
     def getHandItem(self):
         return self.storage[self.SIndex]
@@ -837,7 +834,7 @@ class Tile:
         self.darkOverlay: Optional[Any] = None
 
     @staticmethod
-    # Tile_list is a list in a list... Also known as a 2D array.
+    # Tile_list is a list in a list in a list... Also known as a 3D array. Z axis is determined by index. Higher index means more towards the camera. Overlays are a different story
     def renderUpdate(Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int]):
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding

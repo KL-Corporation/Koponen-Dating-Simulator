@@ -81,6 +81,7 @@ class Listeners:
     Teleport = Listener()
     TentSleepStart = Listener()
     TentSleepEnd = Listener()
+    EnemyDeath = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
 #endregion

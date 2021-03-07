@@ -328,6 +328,7 @@ class HostileEnemy:
             if self.playDeathSound:
                 KDS.Audio.PlaySound(self.death_sound)
                 items = self.onDeath()
+                KDS.Missions.Listeners.EnemyDeath.Trigger()
                 for item in items:
                     if item:
                         dropItems.append(item)
@@ -724,7 +725,7 @@ class SecurityGuard(HostileEnemy):
     death_sound = pygame.mixer.Sound("Assets/Audio/Entities/security_guard_death.ogg")
 
     def __init__(self, pos):
-        health = 2000
+        health = 5000
 
         w_anim = KDS.Animator.Animation("security_guard_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("security_guard_idle", 2, 40, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
@@ -747,7 +748,7 @@ class SecurityGuard(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[2, 8], attackPropability=50)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[3, 8], attackPropability=10)
 
     def lateInit(self):
         super().lateInit()
@@ -758,7 +759,7 @@ class SecurityGuard(HostileEnemy):
         tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
         distance = self.rect.centerx - targetRect.centerx
         targetDirection = KDS.Math.Sign(distance)
-        if self.lastTargetDirection != targetDirection and (abs(distance) > 136 or self.ticksSinceSwitch > 120): # If over four blocks away from target or hasn't turned for two seconds while player is behind; turn around
+        if self.lastTargetDirection != targetDirection and (abs(distance) > 136 or self.ticksSinceSwitch > 120) and self.health > 0: # If over four blocks away from target or hasn't turned for two seconds while player is behind; turn around
             self.direction = not self.direction
             self.movement[0] = -self.movement[0]
             self.lastTargetDirection = targetDirection
