@@ -126,7 +126,8 @@
         "124": "black.png",
         "125": "table1.png",
         "126": "door_front.png",
-        "127": "patja.png"
+        "127": "patja.png",
+        "128": "avarn_car.png"
     },
 
     "tile_sounds" : {
@@ -176,7 +177,8 @@
         111,
         113,
         123,
-        126
+        126,
+        128
     ],
     "noCollision": [
         10,
@@ -224,7 +226,8 @@
         122,
         123,
         125,
-        127
+        127,
+        128
     ],
     "item_textures": {
         "000": "empty.png",

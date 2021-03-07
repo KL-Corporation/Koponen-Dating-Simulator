@@ -1619,7 +1619,15 @@ class Tent(Tile):
 
         return self.texture
 
-#
+class AvarnCar(Tile):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture.set_colorkey(KDS.Colors.Cyan)
+        self.checkCollision = False
+
+    def update(self):
+        return self.texture
+
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
 #         super().__init__(position, serialNumber)
@@ -1653,7 +1661,6 @@ class Tent(Tile):
 #             Player.rect.bottom = self.rect.y + self.rect.height - round(self.slope * (markPoint[0] - self.rect.x))
 #             #Player.rect.bottom =
 #         return self.texture
-#
 
 specialTilesD = {
     15: Toilet,
@@ -1698,7 +1705,8 @@ specialTilesD = {
     111: RoofPlanks,
     113: Patja,
     123: Crackhead,
-    126: DoorFront
+    126: DoorFront,
+    128: AvarnCar
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
