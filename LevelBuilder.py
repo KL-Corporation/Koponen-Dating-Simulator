@@ -36,9 +36,13 @@ scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
-display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | DOUBLEBUF | SCALED)
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
+def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
+    global display, display_size
+    display = pygame.display.set_mode(size, RESIZABLE | HWSURFACE | DOUBLEBUF)
+    display_size = display.get_size()
+SetDisplaySize(display_size)
 
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
@@ -327,9 +331,9 @@ class UnitData:
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (gridSize[0] - scroll[0]) * scalesize, (gridSize[1] - scroll[1]) * scalesize))
         doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         overlayRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
-        for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
+        for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize]:
             row: List[UnitData]
-            for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
+            for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
@@ -871,14 +875,12 @@ def materialMenu(previousMaterial: str) -> str:
     while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get():
-            if event.type == QUIT:
-                LB_Quit()
+            if defaultEventHandler(event):
+                continue
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
                     matMenRunning = False
                     return previousMaterial
-                elif event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 1, 0)
                 else: rscroll = int(min((rscroll + 1) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because (whatever nimittäjä is in english) is a multiple digit value.
@@ -987,7 +989,7 @@ def upgradeTileProp():
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
-    grid = None
+    grid = [[]]
     def button_handler(_openMap: bool = False):
         global btn_menu
         if _openMap:
@@ -999,19 +1001,16 @@ def menu():
     openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       125, 400, 200), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 450, 425, 400, 100), upgradeTileProp, harbinger_font.render("Upgrade Legacy tileprops", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       425, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.Button(pygame.Rect(650, 650, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 650, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
 
     while btn_menu:
         clicked = False
         for event in pygame.event.get():
-            if event.type == QUIT:
-                LB_Quit()
+            if defaultEventHandler(event, DROPFILE):
+                continue
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
-            elif event.type == KEYDOWN:
-                if event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
             elif event.type == DROPFILE:
                 # Button menu is turned off if loadMap was succesful
                 btn_menu = not loadMap(event.file)
@@ -1070,6 +1069,25 @@ class Selected:
         Selected.Update()
         Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, registerUndo=False)
 
+def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
+    if event.type == ignoreEventOfType:
+        return False
+    if event.type == QUIT:
+        LB_Quit()
+        return True # Return True if you event handling can be stopped
+    elif event.type == VIDEORESIZE:
+        SetDisplaySize((event.w, event.h))
+        return True
+    elif event.type == DROPFILE:
+        loadMap(event.file)
+        return True
+    # There are no good ways to make fullscreen in levelbuilder at the moment, because pygame.display.toggle_fullscreen crashes for some reason
+    # elif event.type == KEYDOWN:
+        # if event.key == K_F11:
+        #     SetDisplaySize(toggleFullscreen=True)
+        #     return True
+    return False
+
 def main():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect
 
@@ -1114,8 +1132,8 @@ def main():
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
-            if event.type == QUIT:
-                LB_Quit()
+            if defaultEventHandler(event):
+                continue
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     Undo.register()
@@ -1166,8 +1184,6 @@ def main():
                     elif event.key == K_RIGHT:
                         x += 1
                     Selected.Move(x, y)
-                elif event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
                 elif event.key == K_a:
                     if keys_pressed[K_LCTRL]:
                         dragRect = pygame.Rect(0, 0, gridSize[0], gridSize[1])
@@ -1180,8 +1196,6 @@ def main():
                 else:
                     scroll[1] -= event.y
                 scroll[0] += event.x
-            elif event.type == DROPFILE:
-                loadMap(event.file)
 
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
