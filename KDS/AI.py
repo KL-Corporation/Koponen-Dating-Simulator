@@ -1,6 +1,5 @@
 import concurrent.futures
 import math
-import multiprocessing
 import random
 import threading
 from typing import List, Optional, Tuple, Union
@@ -255,7 +254,7 @@ class HostileEnemy:
         self.manualAttackHandling = False
         self.movement = mv
         self.clearlagcounter = 0
-        self.c = None
+        self.c = {"right" : False, "left" : False, "top" : False, "bottom" : False}
 
         self.enabled = True
         self.listener = None
@@ -320,6 +319,8 @@ class HostileEnemy:
                 if self.c["right"] or self.c["left"]:
                     self.movement[0] = -self.movement[0]
                     self.direction = not self.direction
+                    col_type = "right" if self.c["right"] else "left"
+                    self.AI_jump(tiles, col_type, Surface, scroll)
                 self.animation.trigger("walk")
         elif self.health > 0:
             self.rect, c = move(self.rect, [0,8], tiles)
@@ -351,6 +352,28 @@ class HostileEnemy:
         self.health -= dmgAmount
         if self.health < 0:
             self.health = 0
+
+    def AI_jump(self, obstacles, collision_type : str, surface, scroll):
+        x_coor = 0
+        if collision_type == "right":
+            x_coor = (self.rect.x + self.rect.w) // 34
+        else:
+            x_coor = (self.rect.x) // 34 - 1
+        y_coor = (self.rect.y + self.rect.h) // 34 - 1
+        try:
+            jump = True
+            for y in range(math.ceil(self.rect.h / 34)):
+                for obst in obstacles[y_coor - 1 - y][x_coor]:
+                    if obst.checkCollision:
+                        jump = False
+                        break
+            if jump:
+                self.direction = not self.direction
+                self.movement[0] = -self.movement[0]
+                self.rect.y -= 35
+        except Exception as e:
+            print(str(e))
+            pass
 
 class Imp(HostileEnemy):
     def __init__(self, pos):
@@ -676,26 +699,26 @@ class Mummy(HostileEnemy):
             s = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
             s1 = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
             if self.c != None:
-                def AI_pathfinder(Mummy_o : Mummy, obstacles, collision_type : str):
+                def AI_pathfinder(self : Mummy, obstacles, collision_type : str):
                     x_coor = 0
                     if collision_type == "right":
-                        x_coor = (Mummy_o.rect.x + Mummy_o.rect.w) // 34
+                        x_coor = (self.rect.x + self.rect.w) // 34
                     else:
-                        x_coor = (Mummy_o.rect.x) // 34
-                    y_coor = (Mummy_o.rect.y) // 34
+                        x_coor = (self.rect.x) // 34
+                    y_coor = (self.rect.y) // 34
                     try:
                         jump = True
                         for y in range(3):
                             if not obstacles[y_coor - 1 + y][x_coor].air or not obstacles[y_coor - 1 + y][x_coor].checkCollision:
                                 jump = False
-                                return Mummy_o
+                                return self
                         if jump:
-                            Mummy_o.direction = not Mummy_o.direction
-                            Mummy_o.movement[0] = -Mummy_o.movement[0]
-                            Mummy_o.rect.y -= 35
-                        return Mummy_o
+                            self.direction = not self.direction
+                            self.movement[0] = -self.movement[0]
+                            self.rect.y -= 35
+                        return self
                     except IndexError:
-                        return Mummy_o
+                        return self
 
                 if self.c["right"]:
                     self = AI_pathfinder(self, args[0], "right")
@@ -748,7 +771,7 @@ class SecurityGuard(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[3, 8], attackPropability=10)
+        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[1, 8], attackPropability=40)
 
     def lateInit(self):
         super().lateInit()
