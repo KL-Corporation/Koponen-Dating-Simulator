@@ -834,7 +834,7 @@ class Tile:
         self.darkOverlay: Optional[Any] = None
 
     @staticmethod
-    # Tile_list is a list in a list... Also known as a 2D array.
+    # Tile_list is a list in a list in a list... Also known as a 3D array. Z axis is determined by index. Higher index means more towards the camera. Overlays are a different story
     def renderUpdate(Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int]):
         x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
         y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
