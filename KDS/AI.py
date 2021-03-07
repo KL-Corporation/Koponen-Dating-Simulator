@@ -756,7 +756,7 @@ class SecurityGuard(HostileEnemy):
         tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
         distance = self.rect.centerx - targetRect.centerx
         targetDirection = KDS.Math.Sign(distance)
-        if self.lastTargetDirection != targetDirection and (abs(distance) > 136 or self.ticksSinceSwitch > 120): # If over four blocks away from target or hasn't turned for two seconds while player is behind, turn around
+        if self.lastTargetDirection != targetDirection and (abs(distance) > 136 or self.ticksSinceSwitch > 120): # If over four blocks away from target or hasn't turned for two seconds while player is behind; turn around
             self.direction = not self.direction
             self.movement[0] = -self.movement[0]
             self.lastTargetDirection = targetDirection
