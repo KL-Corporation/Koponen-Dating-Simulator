@@ -142,7 +142,7 @@ class Undo:
 
         toSave = {
             "grid": [[t.Copy() for t in r] for r in grid], # deepcopy replacement
-            "dragRect": dragRect.copy() if dragRect != None else dragRect
+            "dragRect": dragRect.copy() if dragRect != None else None
         }
 
         Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
@@ -1296,7 +1296,6 @@ except Exception as e:
             KDS.System.MessageBox.Show("Success!", "Your project was saved successfully.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
         except Exception:
             KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
-
 
 pygame.quit()
 

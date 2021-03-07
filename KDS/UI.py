@@ -91,7 +91,7 @@ class Slider:
 
 class Button:
 
-    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Union[pygame.Surface, str] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True, *args):
+    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Union[pygame.Surface, str] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True):
         """Instantiates a new Button
 
         Args:
@@ -122,7 +122,6 @@ class Button:
             surface (Surface): The surface the button will be drawn onto.
             mouse_pos (Tuple[int, int]): The SCALED position of the mouse.
             clicked (bool): Determines if the button's function should be executed.
-            args (any): Any arguments for the button's function.
         """
     def update(self, surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, *args: Any, **kwargs: Any) -> bool:
         """Updates and draws the button onto a surface.
