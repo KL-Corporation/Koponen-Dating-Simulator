@@ -1077,7 +1077,7 @@ class Selected:
         Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, registerUndo=False)
 
     @staticmethod
-    def ToString() -> str:
+    def ToString(serializeProperties: bool = False) -> Union[str, Tuple[str, str]]:
         global dragRect
 
         units2d: Dict[int, Dict[int, UnitData]] = {} # Dictionaries are ordered
@@ -1089,28 +1089,35 @@ class Selected:
         for row in units2d.values():
             for u in row.values():
                 output += str(u) + " / "
-            output.removesuffix(" / ") + "\n"
-        return output
+            output = output.removesuffix(" / ") + "\n"
+        if not serializeProperties:
+            return output
+        else:
+            unitsNormalizedPositions = [[u.Copy() for u in l.values()] for l in units2d.values()]
+            for y, row in enumerate(unitsNormalizedPositions):
+                for x, u in enumerate(row):
+                    u.pos = (x, y)
+            return output, UnitProperties.Serialize(unitsNormalizedPositions)
 
     @staticmethod
-    def FromString(string: str):
+    def FromString(string: str, properties: str = None):
         global dragRect
         Selected.units: List[UnitData] = []
         contents = string.splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
-        maxW = 0
-        for c in contents:
-            maxW = max(maxW, len(c))
 
         offset = dragRect.topleft if dragRect != None else (0, 0)
-        y = 0
-        x = 0
-        for yi, row in enumerate(contents):
-            y = yi + offset[0]
-            for xi, unit in enumerate(row.split("/")):
-                x = xi + offset[1]
+        maxX = 0
+        for y, row in enumerate(contents):
+            for x, unit in enumerate(row.split("/")):
+                maxX = max(maxX, x)
                 Selected.units.append(UnitData((x, y), unit.strip(" ")))
-        dragRect = pygame.Rect(x, y, maxW, len(contents))
+        if properties != None:
+            UnitProperties.Deserialize(properties, [Selected.units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
+        for u in Selected.units:
+            u.pos = (u.pos[0] + offset[0], u.pos[1] + offset[1])
+        dragRect = pygame.Rect(offset[0], offset[1], maxX + 1, len(contents)) if maxX > 0 and len(contents) > 0 else None
+                                                    # ^^ Need to add one... I don't know why.
 
 def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
     if event.type == ignoreEventOfType:
@@ -1234,19 +1241,31 @@ def main():
                 elif event.key == K_c:
                     if keys_pressed[K_LCTRL]:
                         try:
-                            pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{Selected.ToString()}", "utf-8"))
-                        except Exception as e:
-                            KDS.Logging.AutoError(f"Copy to clipboard failed. Exception: {e}")
+                            toClipboard = Selected.ToString(serializeProperties=True)
+                            if not isinstance(toClipboard, tuple) or len(toClipboard) != 2:
+                                raise ValueError(f"Clipboard data (type: from) is an incorrect type. Tuple of length 2 expected; got: \"{toClipboard}\".")
+                            pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}", "utf-8"))
+                        except Exception:
+                            KDS.Logging.AutoError(f"Copy to clipboard failed. Exception: {traceback.format_exc()}")
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
                         try:
-                            out = pygame.scrap.get("text/plain;charset=utf-8")
-                            if out:
-                                out: str = str(out)
-                                if out.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
-                                    Selected.FromString(out.removeprefix("KDS_LevelBuilder_Clipboard_Copy_"))
-                        except Exception as e:
-                            KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {e}")
+                            fromClipboard = pygame.scrap.get("text/plain;charset=utf-8")
+                            if fromClipboard:
+                                if isinstance(fromClipboard, bytes):
+                                    fromClipboard = fromClipboard.decode("utf-8")
+                                else:
+                                    fromClipboard = str(fromClipboard)
+                                if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
+                                    fromClipboard = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
+                                    if len(fromClipboard) != 2:
+                                        raise ValueError(f"Clipboard data (type: to) is an incorrect type. Tuple of length 2 expected; got: \"{fromClipboard}\".")
+                                    if len(fromClipboard[1]) > 0 and not fromClipboard[1].isspace():
+                                        Selected.FromString(fromClipboard[0], fromClipboard[1])
+                                    else:
+                                        KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
+                        except Exception:
+                            KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -1320,8 +1339,8 @@ def main():
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
-                blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 srlist = unit.getSerials()
+                normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 for number in srlist:
                     blitTex = None
                     if number[0] == '3':
@@ -1332,10 +1351,12 @@ def main():
                         except KeyError:
                                 KDS.Logging.warning(f"Cannot render unit because texture is not added: {srlist}", True)
                     if blitTex != None:
+                        scaledBlitTex = pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier)))
+                        blitPos = (normalBlitPos[0], normalBlitPos[1] - scaledBlitTex.get_height() + scalesize)
                         if number in trueScale:
-                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - blitTex.get_width() * scaleMultiplier - scalesize, blitPos[1] - blitTex.get_height() * scaleMultiplier - scalesize))
+                            display.blit(scaledBlitTex, (normalBlitPos[0] - scaledBlitTex.get_width() + scalesize, blitPos[1]))
                         else:
-                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), blitPos)
+                            display.blit(scaledBlitTex, blitPos)
 
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
@@ -1391,6 +1412,8 @@ pygame.quit()
     CTRL + Z: Undo
     CTRL + Y: Redo
     CTRL + D: Duplicate Selection
+    CTRL + C: Copy
+    CTRL + Z: Paste if possible
     T: Input Console
     R: Resize Map
     F: Set Property
