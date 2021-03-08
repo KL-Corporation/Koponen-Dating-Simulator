@@ -1744,7 +1744,7 @@ specialTilesD = {
     110: RoofPlanks,
     111: RoofPlanks,
     113: Patja,
-    118  GenericDoor,
+    118: GenericDoor,
     123: Crackhead,
     126: DoorFront,
     128: AvarnCar,
