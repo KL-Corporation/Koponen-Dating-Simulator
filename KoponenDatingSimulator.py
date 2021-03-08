@@ -1261,7 +1261,7 @@ class Teleport(Tile):
     empty_texture = pygame.Surface((0, 0)).convert()
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, 1)
-        self.texture = None
+        self.texture = Teleport.door_texture if serialNumber > 499 else Teleport.empty_texture
         if serialNumber > 499:
             self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         else:
@@ -1270,6 +1270,7 @@ class Teleport(Tile):
         self.specialTileFlag = True
         self.teleportReady = True
         self.locked = False
+        self.message = ""
         self.serialNumber = serialNumber
 
     def update(self):
@@ -1293,11 +1294,9 @@ class Teleport(Tile):
                 KDS.Audio.PlaySound(door_locked)
         if not self.rect.colliderect(Player.rect) or self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
+        if self.rect.colliderect(Player.rect) and self.message: screen.blit(tip_font.render(self.message, True, KDS.Colors.White), (self.rect.centerx - level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
 
-        if self.serialNumber > 499:
-            return Teleport.door_texture
-        else:
-            return Teleport.empty_texture
+        return self.texture
 
     teleportT_IDS = {}
 
@@ -1653,6 +1652,22 @@ class AvarnCar(Tile):
             return self.texture
         #return pygame.Surface((0, 0))
 
+class GenericDoor(Teleport):
+    def __init__(self, position, serialNumber) -> None:
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        _rect = pygame.Rect(self.rect.x, self.rect.y - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
+        self.rect = _rect
+        self.t_index = 0
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        self.__dict__[name] = value
+        if name == "t_index":
+            self.serialNumber = self.t_index
+            if self.serialNumber not in Teleport.teleportT_IDS:
+                Teleport.teleportT_IDS[self.serialNumber] = []
+            Teleport.teleportT_IDS[self.serialNumber].append(self)
+
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
 #         super().__init__(position, serialNumber)
@@ -1729,9 +1744,11 @@ specialTilesD = {
     110: RoofPlanks,
     111: RoofPlanks,
     113: Patja,
+    118  GenericDoor,
     123: Crackhead,
     126: DoorFront,
-    128: AvarnCar
+    128: AvarnCar,
+    130: GenericDoor
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

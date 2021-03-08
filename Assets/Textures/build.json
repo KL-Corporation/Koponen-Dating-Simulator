@@ -128,7 +128,8 @@
         "126": "door_front.png",
         "127": "patja.png",
         "128": "avarn_car.png",
-        "129": "gray_wall.png"
+        "129": "gray_wall.png",
+        "130": "large_door_closed.png"
     },
 
     "tile_sounds" : {
@@ -177,9 +178,11 @@
         110,
         111,
         113,
+        118,
         123,
         126,
-        128
+        128,
+        130
     ],
     "noCollision": [
         10,
@@ -222,7 +225,6 @@
         115,
         116,
         117,
-        118,
         120,
         122,
         123,
