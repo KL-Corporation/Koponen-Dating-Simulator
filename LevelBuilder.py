@@ -31,6 +31,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 root = tkinter.Tk()
 root.withdraw()
 pygame.init()
+pygame.scrap.init()
+pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 display_size = (1600, 800)
 scalesize = 68
 gamesize = 34
@@ -337,9 +339,9 @@ class UnitData:
         pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (gridSize[0] - scroll[0]) * scalesize, (gridSize[1] - scroll[1]) * scalesize))
         doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         overlayRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
-        for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize]:
+        for row in renderList[scroll[1] : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             row: List[UnitData]
-            for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize]:
+            for unit in row[scroll[0] : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
@@ -1044,9 +1046,9 @@ class Selected:
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
-                unit.serialNumber = serialOverride
+                unitCopy.serialNumber = serialOverride
             if propertiesOverride != None:
-                unit.properties.values = propertiesOverride
+                unitCopy.properties.values = propertiesOverride
             try:
                 grid[unit.pos[1]][unit.pos[0]] = unitCopy
             except IndexError:
@@ -1064,7 +1066,6 @@ class Selected:
     @staticmethod
     def Update():
         Selected.units = []
-        Selected.tilepropunits = {}
         if dragRect == None: return
         for row in grid[dragRect.y:dragRect.y + dragRect.height]:
             for unit in row[dragRect.x:dragRect.x + dragRect.width]:
@@ -1074,6 +1075,42 @@ class Selected:
     def Get():
         Selected.Update()
         Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, registerUndo=False)
+
+    @staticmethod
+    def ToString() -> str:
+        global dragRect
+
+        units2d: Dict[int, Dict[int, UnitData]] = {} # Dictionaries are ordered
+        for u in Selected.units:
+            if u.pos[1] not in units2d:
+                units2d[u.pos[1]] = {}
+            units2d[u.pos[1]][u.pos[0]] = u
+        output = ""
+        for row in units2d.values():
+            for u in row.values():
+                output += str(u) + " / "
+            output.removesuffix(" / ") + "\n"
+        return output
+
+    @staticmethod
+    def FromString(string: str):
+        global dragRect
+        Selected.units: List[UnitData] = []
+        contents = string.splitlines()
+        while len(contents[-1]) < 1: contents = contents[:-1]
+        maxW = 0
+        for c in contents:
+            maxW = max(maxW, len(c))
+
+        offset = dragRect.topleft if dragRect != None else (0, 0)
+        y = 0
+        x = 0
+        for yi, row in enumerate(contents):
+            y = yi + offset[0]
+            for xi, unit in enumerate(row.split("/")):
+                x = xi + offset[1]
+                Selected.units.append(UnitData((x, y), unit.strip(" ")))
+        dragRect = pygame.Rect(x, y, maxW, len(contents))
 
 def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
     if event.type == ignoreEventOfType:
@@ -1194,6 +1231,22 @@ def main():
                     if keys_pressed[K_LCTRL]:
                         dragRect = pygame.Rect(0, 0, gridSize[0], gridSize[1])
                         Selected.Get()
+                elif event.key == K_c:
+                    if keys_pressed[K_LCTRL]:
+                        try:
+                            pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{Selected.ToString()}", "utf-8"))
+                        except Exception as e:
+                            KDS.Logging.AutoError(f"Copy to clipboard failed. Exception: {e}")
+                elif event.key == K_v:
+                    if keys_pressed[K_LCTRL]:
+                        try:
+                            out = pygame.scrap.get("text/plain;charset=utf-8")
+                            if out:
+                                out: str = str(out)
+                                if out.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
+                                    Selected.FromString(out.removeprefix("KDS_LevelBuilder_Clipboard_Copy_"))
+                        except Exception as e:
+                            KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {e}")
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
