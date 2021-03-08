@@ -1269,6 +1269,7 @@ class Teleport(Tile):
         self.checkCollision = False
         self.specialTileFlag = True
         self.teleportReady = True
+        self.locked = False
         self.serialNumber = serialNumber
 
     def update(self):
@@ -1277,7 +1278,7 @@ class Teleport(Tile):
         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
             index = 0
         if self.rect.colliderect(Player.rect) and Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
-            if self.serialNumber < 500 or KDS.Keys.functionKey.clicked:
+            if self.serialNumber < 500 or KDS.Keys.functionKey.clicked and not self.locked:
                 #Executing teleporting process
                 if self.serialNumber > 499: KDS.Audio.PlaySound(door_opening)
                 Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
@@ -1288,6 +1289,8 @@ class Teleport(Tile):
                 true_scroll[1] += Player.rect.y - true_scroll[1] - 220
                 #Triggering Listener
                 KDS.Missions.Listeners.Teleport.Trigger()
+            elif self.serialNumber > 499 and KDS.Keys.functionKey.clicked and self.locked:
+                KDS.Audio.PlaySound(door_locked)
         if not self.rect.colliderect(Player.rect) or self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
             Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
