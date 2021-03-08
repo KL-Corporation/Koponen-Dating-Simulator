@@ -127,7 +127,8 @@
         "125": "table1.png",
         "126": "door_front.png",
         "127": "patja.png",
-        "128": "avarn_car.png"
+        "128": "avarn_car.png",
+        "129": "gray_wall.png"
     },
 
     "tile_sounds" : {
