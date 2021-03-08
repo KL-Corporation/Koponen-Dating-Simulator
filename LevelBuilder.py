@@ -730,16 +730,16 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
 
     temporaryGrid = None
     with open(path, 'r') as f:
-        contents = f.read().split("\n")
+        contents = f.read().splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
 
     maxW = 0
-    for i in range(len(contents)):
-        maxW = max(maxW, len(contents[i][:-2].split("/")))
+    for c in contents:
+        maxW = max(maxW, len(c.split("/")))
     temporaryGrid = loadGrid((maxW, len(contents)))
 
     for row, rRow in zip(contents, temporaryGrid):
-        for unit, rUnit in zip(row[:-2].split("/"), rRow):
+        for unit, rUnit in zip(row.split("/"), rRow):
             unit = unit.strip(" ")
             #region Fixing Broken Serials
             while len(unit) < len(UnitData.EMPTYSERIAL):
