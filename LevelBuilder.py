@@ -131,13 +131,21 @@ gridSize = (0, 0)
 dragRect = None
 
 class Undo:
-    points: List[Dict[str, Any]] = []
+    changes: List[UnitData] = []
     index = 0
     overflowCount = 0
     totalOffset = 0
 
     @staticmethod
-    def register():
+    def register(unit: UnitData):
+        del Undo.changes[Undo.index + 1:]
+        if len(Undo.changes) > 0 and unit == Undo.changes[-1]:
+            return
+        Undo.changes.append(unit.Copy())
+        while len(Undo.changes) > 128:
+            del Undo.changes[0]
+            Undo.overflowCount += 1
+        Undo.index = len(Undo.changes) - 1
         """
         global grid, dragRect
         if Undo.index == len(Undo.points) - 1:
@@ -162,10 +170,21 @@ class Undo:
             Undo.overflowCount += 1
         Undo.index = len(Undo.points) - 1
         """
-        pass
 
     @staticmethod
     def request(redo: bool = False):
+        global grid
+        redoSub = KDS.Convert.ToMultiplier(redo)
+        Undo.index = KDS.Math.Clamp(Undo.index - redoSub, 0, len(Undo.changes) - 1)
+        subIndex = Undo.index - redoSub
+        if 0 <= subIndex < len(Undo.changes) and Undo.changes[subIndex].pos == Undo.changes[Undo.index].pos:
+            Undo.index = subIndex
+        change = Undo.changes[Undo.index]
+        if grid[change.pos[1]][change.pos[0]].pos != change.pos: # Scrapped finding by iterating, because too slow.
+            KDS.Logging.AutoError(f"Unit at position: {change.pos} not found in grid!")
+            return
+        grid[change.pos[1]][change.pos[0]] = change.Copy()
+
         """
         Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
 
@@ -174,13 +193,11 @@ class Undo:
         grid = data["grid"]
         dragRect = data["dragRect"]
         """
-        pass
 
     @staticmethod
     def clear():
-        Undo.points.clear()
+        Undo.changes.clear()
         Undo.index = 0
-        Undo.register()
         Undo.overflowCount = 0
 
 def LB_Quit():
@@ -241,13 +258,13 @@ class UnitData:
                 self.properties.Set(_type, k, v)
 
     def setSerial(self, srlNumber: str):
+        Undo.register(self)
         self.serialNumber = f"{srlNumber} 0000 0000 0000"
 
     def setSerialToSlot(self, srlNumber: str, slot: int):
-        #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
-        #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
-        if slot >= UnitData.SLOTCOUNT:
+        if slot >= UnitData.SLOTCOUNT or slot < 0:
             raise ValueError(f"Slot {slot} is an invalid index!")
+        Undo.register(self)
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
 
     def getSerial(self, slot: int):
@@ -287,7 +304,6 @@ class UnitData:
         for index, number in reversed(list(enumerate(srlist))):
             if int(number) != 0:
                 self.setSerialToSlot(UnitData.EMPTY, index)
-                self.properties.RemoveUnused()
                 return
 
     def removeSerialFromStart(self):
@@ -295,7 +311,6 @@ class UnitData:
         for fakeIndex, number in enumerate(reversed(srlist)):
             index = len(srlist) - fakeIndex - 1
             if index <= 0: # If it's the last tile, the process is complete.
-                self.properties.RemoveUnused()
                 return
 
             self.setSerialToSlot(number, index - 1)
@@ -303,13 +318,11 @@ class UnitData:
                 self.setSerialToSlot(UnitData.EMPTY, index)
 
     def hasTile(self):
-        split: List[str] = self.serialNumber.split(" ")
-        for s in split:
-            if len(s) > 0 and s[0] == "0" and s != UnitData.EMPTY:
-                return True
-        return False
+        split: Tuple[str] = self.getSerials()
+        return KDS.Linq.Any(split, lambda s: len(s) > 0 and s[0] == "0" and s != UnitData.EMPTY)
 
     def resetSerial(self):
+        Undo.register(self)
         self.serialNumber = UnitData.EMPTYSERIAL
         self.properties.RemoveUnused()
 
@@ -417,7 +430,6 @@ class UnitData:
                                     setPropVal = setPropValUnformatted
                                 else:
                                     setPropVal = KDS.Convert.AutoType(setPropValUnformatted, setPropValUnformatted) # If cannot be parsed to int, bool or float; return string
-                                Undo.register()
                                 unit.properties.Set(propType, setPropKey, setPropVal)
                         elif len(setPropType) > 0:
                             KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
@@ -524,7 +536,7 @@ class UnitProperties:
     def __eq__(self, other) -> bool:
         """ == operator """
         if isinstance(other, UnitProperties):
-            return self.values == other.values # I have to hope that the parents are same, because if I check that, it will go into an infinite loop.
+            return self.values == other.values # Won't check parents
         return False
 
     def __ne__(self, other) -> bool:
@@ -534,9 +546,11 @@ class UnitProperties:
     def Set(self, _type: UnitType, key: str, value: Union[str, int, float, bool]) -> None:
         if _type not in self.values:
             self.values[_type] = {}
+        Undo.register(self.parent)
         self.values[_type][key] = value
 
     def SetAll(self, data: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+        Undo.register(self.parent)
         self.values = {k: {ik: iv for ik, iv in v.items()} for k, v in data.items()}
 
     def Remove(self, _type: UnitType, key: str) -> None:
@@ -547,6 +561,7 @@ class UnitProperties:
             key (str): The key to remove.
         """
         if _type in self.values and key in self.values[_type]:
+            Undo.register(self.parent)
             self.values[_type].pop(key)
             if len(self.values[_type]) < 1:
                 self.values.pop(_type)
@@ -621,7 +636,7 @@ class BrushData:
 
     def SetOnUnit(self, unit: UnitData):
         unit.setSerial(self.brush)
-        unit.properties.SetAll(self.properties)
+        unit.setProperties(self.properties)
         unit.properties.RemoveUnused()
 
     def AddOnUnit(self, unit: UnitData):
@@ -789,7 +804,6 @@ commandTree = {
 }
 def consoleHandler(commandlist):
     global brush, grid, dragRect
-    Undo.register()
     if commandlist[0] == "set":
         if commandlist[1] == "brush":
             if len(commandlist) < 3:
@@ -1036,13 +1050,12 @@ class Selected:
     units: List[UnitData] = []
 
     @staticmethod
-    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, registerUndo: bool = True):
+    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None):
         global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
-        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, registerUndo=registerUndo)
+        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, registerUndo: bool = True):
-        if registerUndo: Undo.register()
+    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None):
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
@@ -1074,7 +1087,7 @@ class Selected:
     @staticmethod
     def Get():
         Selected.Update()
-        Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, registerUndo=False)
+        Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={})
 
     @staticmethod
     def ToString(serializeProperties: bool = False) -> Union[str, Tuple[str, str]]:
@@ -1186,10 +1199,7 @@ def main():
                 continue
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    Undo.register()
                     selectTrigger = True
-                elif event.button == 3:
-                    Undo.register()
                 elif event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
@@ -1200,14 +1210,11 @@ def main():
             elif event.type == KEYDOWN:
                 if event.key == K_z or event.key == K_y:
                     if keys_pressed[K_LCTRL]:
-                        redo = False
-                        if event.key == K_y: redo = True
-                        Undo.request(redo)
+                        Undo.request(event.key == K_y)
                         Selected.Update()
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
-                    Undo.register()
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:

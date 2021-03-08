@@ -1,4 +1,4 @@
-from typing import Any, Tuple, Union
+from typing import Any, Literal, Tuple, Union
 
 import pygame
 from PIL import Image as PIL_Image
@@ -87,7 +87,11 @@ def AspectScale(image: pygame.Surface, size: Tuple[int, int], horizontalOnly: bo
     else: scaling = size[1] / image.get_height()
     return pygame.transform.scale(image, (int(image.get_width() * scaling), int(image.get_height() * scaling)))
 
-def ToMultiplier(boolean: bool):
+def ToMultiplier(boolean: bool) -> Union[Literal[-1], Literal[1]]:
+    """
+    Returns:
+        int: -1 if boolean else 1
+    """
     return -1 if boolean else 1
 
 def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
