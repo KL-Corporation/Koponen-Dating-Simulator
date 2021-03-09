@@ -1624,7 +1624,6 @@ class AvarnCar(Tile):
         super().__init__(position, serialNumber)
         self.texture.set_colorkey(KDS.Colors.Cyan)
         self.checkCollision = False
-        self.darkOverlay = False
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
         l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3)))
         self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)
@@ -1636,6 +1635,7 @@ class AvarnCar(Tile):
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None
         self.hidden = False
+        self.darkOverlay = self.cachedDarkOverlay
 
     def lateInit(self):
         if self.listener != None:
@@ -1644,6 +1644,9 @@ class AvarnCar(Tile):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
                 self.hidden = True
+        if self.hidden:
+            self.cachedDarkOverlay = self.darkOverlay
+            self.darkOverlay = None
 
     def update(self):
         #pygame.draw.circle(screen, KDS.Colors.Red, (self.rect.x - scroll[0], self.rect.y - scroll[1]), 5)
