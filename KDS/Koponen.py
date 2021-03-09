@@ -359,6 +359,7 @@ class KoponenEntity:
         self._move = True
         self.forceIdle = False
         self.enabled = True
+        self.task_counter = 0
 
         self._aut_moving = True
         self._aut_moving_time = 0
@@ -484,8 +485,11 @@ class KoponenEntity:
         self.enabled = state
 
     def listenerTrigger_0(self):
-        self.listenerInstances["TentSleepEnd"].OnTrigger -= self.listenerTrigger_0
-        self.enabled = True
+        if self.task_counter == 1:
+            self.listenerInstances["TentSleepEnd"].OnTrigger -= self.listenerTrigger_0
+            self.enabled = True
+        else:
+            self.task_counter += 1
 
     def setListeners(self, listener_names: list = []):
         for listener in listener_names:
