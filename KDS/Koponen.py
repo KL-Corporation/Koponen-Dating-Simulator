@@ -1,5 +1,6 @@
 import os
 import random
+import math
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pygame
@@ -341,10 +342,14 @@ class KoponenEntity:
         )
         self.speed = KDS.ConfigManager.GetGameData("Physics/Koponen/speed")
         self.movement = [self.speed, 4]
-        self.collisions = None
+        self.collisions = {"right" : False, "left" : False, "top" : False, "bottom" : False}
 
         self.listeners = []
         self.listenerInstances: Dict[str,  KDS.Missions.Listener] = {}
+
+        self.ls_instructions: List[str] = []
+        self.current_instruction: int = 0
+        self.last_instruction: str = ""
 
         self.air_time = 0
         self.y_velocity = 0
@@ -387,9 +392,13 @@ class KoponenEntity:
                         self._aut_moving = True
             #endregion
             self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
-            if self.collisions["left"] or self.collisions["right"]: self.movement[0] *= -1
         else:
-            self.rect, self.collisions = KDS.AI.move(self.rect, [0, self.movement[1]], tiles)
+            if not self.forceIdle: self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
+
+        self.handleInstructions(tiles)
+        if self.collisions["left"] or self.collisions["right"]: 
+            self.movement[0] *= -1
+            self.AI_jump(tiles, "left" if self.collisions["left"] else "right")
 
         if self.collisions["bottom"]:
             self.air_time = 0
@@ -402,6 +411,37 @@ class KoponenEntity:
 
         if self.movement[0] != 0 and self._move and not self.forceIdle: self.animations.trigger("walk")
         else: self.animations.trigger("idle")
+
+    def handleInstructions(self, tiles):
+        if self.current_instruction < len(self.ls_instructions):
+            instruction = self.ls_instructions[self.current_instruction]
+            new_instruction = True if instruction != self.last_instruction else False
+            self.last_instruction = instruction
+
+            args = instruction.split(":")
+            if len(args):
+                if args[0] == "move":
+                    if new_instruction: self.stopAutoMove()
+                    if len(args) > 1:
+                        coordinates: List[int] = [] 
+                        for c in args[1].split(","):
+                            coordinates.append(int(c))
+                        if self.rect.collidepoint((coordinates[0], coordinates[1])):
+                            self.current_instruction += 1
+                            self.continueAutoMove()
+                        else:
+                            self.movement[0] = self.speed if coordinates[0] > self.rect.x else -self.speed
+                    else:
+                        self.continueAutoMove()
+                        self.current_instruction += 1
+                elif args[0] == "py_exec":
+                    if len(args) > 1:
+                        exec(args[1])
+                        self.current_instruction += 1
+                    else:
+                        self.current_instruction += 1
+            else:
+                self.current_instruction += 1
 
     def render(self, Surface: pygame.Surface, scroll: list, debugMode: bool = False):
         if debugMode: pygame.draw.rect(Surface, KDS.Colors.Cyan, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
@@ -417,6 +457,26 @@ class KoponenEntity:
 
     def continueAutoMove(self) -> None:
         self._move = True
+
+    def AI_jump(self, obstacles, collision_type : str):
+        x_coor = 0
+        if collision_type == "right":
+            x_coor = (self.rect.x + self.rect.w) // 34
+        else:
+            x_coor = (self.rect.x) // 34 - 1
+        y_coor = (self.rect.y + self.rect.h) // 34 - 1
+        try:
+            jump = True
+            for y in range(math.ceil(self.rect.h / 34)):
+                for obst in obstacles[y_coor - 1 - y][x_coor]:
+                    if obst.checkCollision:
+                        jump = False
+                        break
+            if jump:
+                self.movement[0] = -self.movement[0]
+                self.rect.y -= 35
+        except Exception as e:
+            print(str(e))
 
     def setEnabled(self, state: bool = True) -> None:
         self.enabled = state
@@ -437,5 +497,5 @@ class KoponenEntity:
             else:
                 pass
                 
-    def loadScript(self, script: str) -> None:
-        pass
+    def loadScript(self, script: list = []) -> None:
+        self.ls_instructions = script
