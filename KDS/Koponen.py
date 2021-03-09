@@ -422,9 +422,8 @@ class KoponenEntity:
         self.enabled = state
 
     def listenerTrigger_0(self):
+        self.listenerInstances["TentSleepEnd"].OnTrigger -= self.listenerTrigger_0
         self.enabled = True
-
-        return 0
 
     def setListeners(self, listener_names: list = []):
         for listener in listener_names:
@@ -436,6 +435,6 @@ class KoponenEntity:
                     self.listenerInstances[listener].OnTrigger += self.listenerTrigger_0
             else:
                 pass
-                
+
     def loadScript(self, script: str) -> None:
         pass
