@@ -17,7 +17,7 @@
                 "move:718,515",
                 "py_exec:self.forceIdle = True",
                 "py_exec:tiles[16][21][-1].locked = False",
-                "py_exec:KDS.Audio.playFromFile('Assets/Audio/Tiles/door.ogg')"
+                "py_exec:KDS.Audio.PlayFromFile('Assets/Audio/Tiles/door.ogg')"
             ],
             "listeners" : [
                 "TentSleepEnd"
