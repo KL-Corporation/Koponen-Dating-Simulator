@@ -14,7 +14,8 @@
                 517
             ],
             "lscript" : [
-                "move:(718, 515)",
+                "move:718,515",
+                "py_exec:self.forceIdle = True",
                 "py_exec:tiles[16][21][-1].locked = False",
                 "py_exec:KDS.Audio.playFromFile('Assets/Audio/Tiles/door.ogg')"
             ],

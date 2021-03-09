@@ -487,7 +487,7 @@ class WorldData():
         Koponen.allow_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
         Koponen.force_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceTalk", False)
         Koponen.setListeners(KDS.ConfigManager.LevelProp.Get("Entities/Koponen/listeners", []))
-        koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", "")
+        koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", [])
         if koponen_script:
             Koponen.loadScript(koponen_script)
         pygame.event.pump()
@@ -1996,7 +1996,7 @@ class Pistol(Item):
             KDS.World.pistol_C.counter = 0
             Pistol.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 6000))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
