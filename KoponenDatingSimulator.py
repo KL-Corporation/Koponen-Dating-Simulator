@@ -1650,7 +1650,7 @@ class AvarnCar(Tile):
         if not self.hidden:
             Lights.append(self.light)
             return self.texture
-        #return pygame.Surface((0, 0))
+        return pygame.Surface((0, 0))
 
 class GenericDoor(Teleport):
     def __init__(self, position, serialNumber) -> None:
