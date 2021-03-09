@@ -301,7 +301,7 @@
 "1-16":{"0":{"checkCollision":false}},
 "2-16":{"0":{"checkCollision":false}},
 "3-16":{"0":{"checkCollision":false},"4":{"overlay":"0112"}},
-"4-16":{"0":{"checkCollision":false,"fadeAnimation":true,"autoOut":true}},
+"4-16":{"0":{"checkCollision":false,"fadeAnimation":true,"autoOut":true,"forceTentTask":true}},
 "5-16":{"0":{"checkCollision":false}},
 "6-16":{"0":{"checkCollision":false}},
 "7-16":{"0":{"checkCollision":false}},

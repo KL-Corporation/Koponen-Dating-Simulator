@@ -14,6 +14,7 @@ import KDS.Gamemode
 import KDS.Koponen
 import KDS.Logging
 import KDS.Math
+import KDS.Linq
 
 #endregion
 #region Initialisation
@@ -49,6 +50,10 @@ class Listener:
 
     def Add(self, MissionName: str, TaskName: str, AddValue: float):
         self._listenerList.append((MissionName, TaskName, AddValue))
+
+    def ContainsActiveTask(self):
+        global Active_Mission
+        return KDS.Linq.Any(self._listenerList, lambda l: l[0] == Active_Mission and (m := Missions.GetMission(Active_Mission)) != None and m.GetTask(l[1]) != None)
 
     def Trigger(self):
         for listnr in self._listenerList:
@@ -147,8 +152,6 @@ class Mission:
         self.renderedText = MissionFont.render(self.text, True, KDS.Colors.White)
         self.textSize = self.renderedText.get_size()
         self.tasks: Dict[str, Task] = {}
-        self.task_keys: List[str] = []
-        self.task_values: List[Task] = []
         self.finished = False
         self.lastFinished = False
         self.finishedTicks = 0
@@ -160,29 +163,27 @@ class Mission:
     def AddTask(self, safeName: str, task: Task):
         if safeName not in self.tasks:
             self.tasks[safeName] = task
-            self.task_keys = safeName
-            self.task_values.append(self.tasks[safeName])
         else: KDS.Logging.AutoError("SafeName is already occupied!")
 
     def GetTask(self, safeName: str):
         if safeName in self.tasks: return self.tasks[safeName]
         else: return None
 
-    def GetTaskList(self):
-        return self.task_values
+    def GetTaskList(self) -> List[Task]:
+        return list(self.tasks.values())
 
-    def GetKeyList(self):
-        return self.task_keys
+    def GetKeyList(self) -> List[str]:
+        return list(self.tasks.keys())
 
     def GetTaskByValue(self, value):
-        return self.tasks[self.task_keys[self.task_values.index(value)]]
+        return self.tasks[tuple(self.tasks.keys())[tuple(self.tasks.values()).index(value)]]
 
     def Update(self):
         self.finished = True
         self.PlaySound = False
         notFinished = 0
         taskAssigned = False
-        for task in self.task_values:
+        for task in self.tasks.values():
             if not task.finished:
                 self.finished = False
                 notFinished += 1
@@ -218,42 +219,38 @@ class Mission:
     def Render(self) -> Tuple[pygame.Surface, int]:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
         _taskWidth = 0
-        for task in self.task_values:
+        for task in self.tasks.values():
             _taskWidth = max(_taskWidth, task.renderedTextSize[0])
         _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
-        HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.task_values))
-        surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.task_values))))
+        HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))
+        surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))))
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
-        for i, t in enumerate(self.task_values):
+        for i, t in enumerate(self.tasks.values()):
             surface.blit(t.Update(_taskWidth, _taskHeight, self.PlaySound), (0, HeaderHeight + (i * _taskHeight)))
         return surface, int(_taskWidth)
 
 class MissionHolder:
     def __init__(self) -> None:
         self.missions: Dict[str, Mission] = {}
-        self.mission_keys: List[str] = []
-        self.mission_values: List[Mission] = []
-        self.finished = False
+        self.finished: bool = False
 
-    def GetMission(self, safeName: str):
+    def GetMission(self, safeName: str) -> Union[Mission, None]:
         if safeName in self.missions: return self.missions[safeName]
         else: return None
 
-    def GetMissionList(self):
-        return self.mission_values
+    def GetMissionList(self) -> List[Mission]:
+        return list(self.missions.values())
 
-    def GetKeyList(self):
-        return self.mission_keys
+    def GetKeyList(self) -> List[str]:
+        return list(self.missions.keys())
 
-    def GetMissionByValue(self, value):
-        return self.missions[self.mission_keys[self.mission_values.index(value)]]
+    def GetMissionByValue(self, value) -> Mission:
+        return self.missions[tuple(self.missions.keys())[tuple(self.missions.values()).index(value)]]
 
     def AddMission(self, safeName: str, mission: Mission):
         if safeName not in self.missions:
             self.missions[safeName] = mission
-            self.mission_keys.append(safeName)
-            self.mission_values.append(self.missions[safeName])
         else: KDS.Logging.AutoError("SafeName is already occupied!")
 
 Missions = MissionHolder()

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -93,7 +95,7 @@ def setPlayerPrefix(prefix: str):
 
 class Mission:
     # Will be automatically assigned by KDS.Missions
-    Task = None
+    Task: Optional[KDS.Missions.KoponenTask] = None
 
     @staticmethod
     def Request():
