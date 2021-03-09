@@ -486,6 +486,10 @@ class WorldData():
         Koponen.forceIdle = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceIdle", False)
         Koponen.allow_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
         Koponen.force_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceTalk", False)
+        Koponen.setListeners(KDS.ConfigManager.LevelProp.Get("Entities/Koponen/listeners", []))
+        koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", "")
+        if koponen_script:
+            Koponen.loadScript(koponen_script)
         pygame.event.pump()
 
         enemySerialNumbers = {

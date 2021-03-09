@@ -8,7 +8,19 @@
     },
     "Entities": {
         "Koponen": {
-            "enabled": false
+            "enabled": true,
+            "startPos" : [
+                2550,
+                517
+            ],
+            "lscript" : [
+                "move:(718, 515)",
+                "py_exec:tiles[16][21][-1].locked = False",
+                "py_exec:KDS.Audio.playFromFile('Assets/Audio/Tiles/door.ogg')"
+            ],
+            "listeners" : [
+                "TentSleepEnd"
+            ]
         },
         "Player": {
             "startPos": [

@@ -71,4 +71,5 @@ class Event:
         return len(self.listeners)
 
     def Invoke(self, *args, **kwargs):
-        for listener in self.listeners: listener(*args, **kwargs)
+        for listener in self.listeners:
+            listener(*args, **kwargs)
