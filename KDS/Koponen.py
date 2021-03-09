@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -342,6 +342,10 @@ class KoponenEntity:
         self.speed = KDS.ConfigManager.GetGameData("Physics/Koponen/speed")
         self.movement = [self.speed, 4]
         self.collisions = None
+
+        self.listeners = []
+        self.listenerInstances: Dict[str,  KDS.Missions.Listener] = {}
+
         self.air_time = 0
         self.y_velocity = 0
 
@@ -416,3 +420,22 @@ class KoponenEntity:
 
     def setEnabled(self, state: bool = True) -> None:
         self.enabled = state
+
+    def listenerTrigger_0(self):
+        self.enabled = True
+
+        return 0
+
+    def setListeners(self, listener_names: list = []):
+        for listener in listener_names:
+            if listener == "TentSleepEnd":
+                self.enabled = False
+                tempListener = getattr(KDS.Missions.Listeners, listener, None)
+                if tempListener != None:
+                    self.listenerInstances[listener] = tempListener
+                    self.listenerInstances[listener].OnTrigger += self.listenerTrigger_0
+            else:
+                pass
+                
+    def loadScript(self, script: str) -> None:
+        pass

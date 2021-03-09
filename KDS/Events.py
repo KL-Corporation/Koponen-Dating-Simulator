@@ -71,4 +71,10 @@ class Event:
         return len(self.listeners)
 
     def Invoke(self, *args, **kwargs):
-        for listener in self.listeners: listener(*args, **kwargs)
+        listeners_to_remove = []
+        for listener in self.listeners:
+            if listener(*args, **kwargs) != None:
+                listeners_to_remove.append(listener)
+
+        for listener in listeners_to_remove:
+            self.listeners.remove(listener)
