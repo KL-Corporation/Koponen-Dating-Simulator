@@ -1630,12 +1630,14 @@ class AvarnCar(Tile):
         self.hidden = False
         self.listener = None
         self.listenerInstance: Optional[KDS.Missions.Listener] = None
+        self.cachedDarkOverlay = None
 
     def eventHandler(self):
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None
         self.hidden = False
-        self.darkOverlay = self.cachedDarkOverlay
+        if self.cachedDarkOverlay != None:
+            self.darkOverlay = self.cachedDarkOverlay
 
     def lateInit(self):
         if self.listener != None:
