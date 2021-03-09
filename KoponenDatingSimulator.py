@@ -862,7 +862,9 @@ class Tile:
                         if not renderable.specialTileFlag:
                             Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                         else:
-                            Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                            texture = renderable.update()
+                            if texture != None:
+                                Surface.blit(texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
                         if renderable.darkOverlay != None:
                             Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
 
@@ -1258,10 +1260,9 @@ class Candle(Tile):
 
 class Teleport(Tile):
     door_texture = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
-    empty_texture = pygame.Surface((0, 0)).convert()
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, 1)
-        self.texture = Teleport.door_texture if serialNumber > 499 else Teleport.empty_texture
+        self.texture = Teleport.door_texture if serialNumber > 499 else None
         if serialNumber > 499:
             self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         else:
@@ -1435,7 +1436,7 @@ class FlickerTrigger(Tile):
         self.readyToTrigger: bool = True
         self.animation: bool = False
         self.repeating: bool = repeating
-        self.texture = pygame.Surface((0, 0)).convert()
+        self.texture = None
 
     def flickerEnd(self, effect: ScreenEffects.Effects):
         if effect == ScreenEffects.Effects.Flicker and self.animation:
@@ -1476,7 +1477,7 @@ class Barrier(Tile):
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = True
-        self.texture = pygame.Surface((0, 0))
+        self.texture = None
 
     def update(self):
         return self.texture
@@ -1622,7 +1623,6 @@ class AvarnCar(Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
         self.texture.set_colorkey(KDS.Colors.Cyan)
-        self.empty_texture = pygame.Surface((0, 0))
         self.checkCollision = False
         self.darkOverlay = False
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
@@ -1650,7 +1650,7 @@ class AvarnCar(Tile):
         if not self.hidden:
             Lights.append(self.light)
             return self.texture
-        return pygame.Surface((0, 0))
+        return None
 
 class GenericDoor(Teleport):
     def __init__(self, position, serialNumber) -> None:
