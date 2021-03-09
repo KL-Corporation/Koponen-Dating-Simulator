@@ -56,8 +56,6 @@ harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, ital
 harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
 
-consoleBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
-
 brushNames = {
     "imp": "2001",
     "seargeant": "2002",

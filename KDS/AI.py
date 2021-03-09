@@ -281,9 +281,8 @@ class HostileEnemy:
 
     def listenerTrigger(self):
         self.enabled = True
+        self.listenerInstance.OnTrigger -= self.listenerTrigger
         self.listenerInstance = None
-        
-        return 0
 
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
         enemyProjectiles = None
