@@ -1587,6 +1587,7 @@ class Tent(Tile):
         self.inTent: bool = False
         self.fadeAnimation: bool = False
         self.autoOut: bool = False # Works only with fadeAnimation
+        self.forceTentTask: bool = False
 
     def toggleTent(self, effect: ScreenEffects.Effects = None):
         global Player
@@ -1614,7 +1615,7 @@ class Tent(Tile):
     def update(self):
         if self.rect.colliderect(Player.rect):
             screen.blit(tentTip, (self.rect.centerx - tentTip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-            if KDS.Keys.functionKey.clicked:
+            if KDS.Keys.functionKey.clicked and (not self.forceTentTask or KDS.Missions.Listeners.TentSleepStart.ContainsActiveTask()):
                 if self.autoOut:
                     ScreenEffects.OnEffectFinish += self.toggleTent
                     if not self.inTent:
@@ -3695,7 +3696,7 @@ while main_running:
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
-                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or sys.gettrace() != None:
+                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or sys.gettrace() != None: # Console is disabled in story mode if application is not run on VSCode debug mode.
                     go_to_console = True
             elif event.key == K_F3:
                 DebugMode = not DebugMode

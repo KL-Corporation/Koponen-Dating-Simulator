@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import random
 import math
@@ -94,7 +96,7 @@ def setPlayerPrefix(prefix: str):
 
 class Mission:
     # Will be automatically assigned by KDS.Missions
-    Task = None
+    Task: Optional[KDS.Missions.KoponenTask] = None
 
     @staticmethod
     def Request():
