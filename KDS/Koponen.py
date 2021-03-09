@@ -423,7 +423,8 @@ class KoponenEntity:
 
     def listenerTrigger_0(self):
         self.enabled = True
-        #self.listenerInstances["TentSleepEnd"].OnTrigger -= self.listenerTrigger_0
+
+        return 0
 
     def setListeners(self, listener_names: list = []):
         for listener in listener_names:
