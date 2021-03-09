@@ -1,4 +1,4 @@
-from typing import Any, Literal, Tuple, Union
+from typing import Any, Literal, Tuple, TypeVar, Union, cast
 
 import pygame
 from PIL import Image as PIL_Image
@@ -7,6 +7,8 @@ from PIL import ImageFilter as PIL_ImageFilter
 import KDS.Colors
 import KDS.Logging
 import KDS.Math
+
+_T = TypeVar("_T", bound=object)
 
 def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
@@ -39,7 +41,9 @@ def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) ->
         KDS.Logging.AutoError(f"Encountered an error when converting to bool. Exception: {e}")
     return fallbackValue
 
-def AutoType(value: str, fallbackValue: Any = None) -> Union[int, float, bool, Any]:
+def AutoType(value: str, fallbackValue: _T = None) -> Union[str, int, float, bool, _T]:
+    if value.startswith("\"") and value.endswith("\""):
+        return value
     try:
         r = int(value)
         return r
@@ -55,8 +59,22 @@ def AutoType(value: str, fallbackValue: Any = None) -> Union[int, float, bool, A
         return r
     return fallbackValue
 
-def AutoType2(value: str):
-    return AutoType(value, value)
+def AutoType2(value: str): # Strict type check
+    if value.startswith("\"") and value.endswith("\""):
+        return value
+    elif value == "True":
+        return True
+    elif value == "False":
+        return False
+    elif value.isnumeric():
+        return int(value)
+    else:
+        try:
+            return float(value)
+        except ValueError:
+            pass # Not a float
+    KDS.Logging.AutoError(f"Value {value} cannot be parsed to any type!")
+    return None
 
 def ToGrayscale(image: pygame.Surface):
     """Converts an image to grayscale.

@@ -15,11 +15,11 @@
             ],
             "lscript" : [
                 "move:718,515",
-                "py_exec:self.forceIdle = True",
-                "py_exec:tiles[16][21][-1].locked = False",
-                "py_exec:KDS.Audio.PlayFromFile('Assets/Audio/Tiles/door.ogg')",
-                "py_exec:tiles[16][21][-1].opened = True",
-                "py_ecec:self.enabled = False"
+                "exec:SetSelfProperty('forceIdle', True)",
+                "exec:SetTileProperty(16, 21, -1, 'locked', False)"
+                "exec:PlaySoundFromFile('Assets/Audio/Tiles/door.ogg')",
+                "exec:SetTileProperty(16, 21, -1, 'opened', True)",
+                "exec:SetSelfProperty('enabled', False)"
             ],
             "listeners" : [
                 "TentSleepEnd"

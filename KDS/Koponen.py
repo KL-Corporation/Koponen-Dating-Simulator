@@ -18,9 +18,11 @@ import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.UI
+import KDS.Linq
 import KDS.AI
 
 import re
+import shlex
 
 #region Settings
 text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 20, bold=0, italic=0)
@@ -399,7 +401,7 @@ class KoponenEntity:
             if not self.forceIdle: self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
 
         self.handleInstructions(tiles)
-        if self.collisions["left"] or self.collisions["right"]: 
+        if self.collisions["left"] or self.collisions["right"]:
             self.movement[0] *= -1
             self.AI_jump(tiles, "left" if self.collisions["left"] else "right")
 
@@ -415,18 +417,37 @@ class KoponenEntity:
         if self.movement[0] != 0 and self._move and not self.forceIdle: self.animations.trigger("walk")
         else: self.animations.trigger("idle")
 
-    def handleInstructions(self, tiles):
+    def handleInstructions(self, tiles: List[List[List]]):
+        class execFuncs:
+            @staticmethod
+            def SetTileProperty(x: int, y: int, index: int, propertyName: str, value: Any):
+                nonlocal tiles
+                setattr(tiles[y][x][index], propertyName, value)
+            @staticmethod
+            def SetSelfProperty(propertyName: str, value: Any):
+                nonlocal self
+                setattr(self, propertyName, value)
+            @staticmethod
+            def PlaySoundFromFile(filepath: str):
+                KDS.Audio.PlayFromFile(filepath)
+
+            allowedFuncs = (
+                SetTileProperty,
+                SetSelfProperty,
+                PlaySoundFromFile
+            )
+
         if self.current_instruction < len(self.ls_instructions):
             instruction = self.ls_instructions[self.current_instruction]
             new_instruction = True if instruction != self.last_instruction else False
             self.last_instruction = instruction
 
-            args = instruction.split(":")
+            args = instruction.split(":", 1)
             if len(args):
                 if args[0] == "move":
                     if new_instruction: self.stopAutoMove()
                     if len(args) > 1:
-                        coordinates: List[int] = [] 
+                        coordinates: List[int] = []
                         for c in args[1].split(","):
                             coordinates.append(int(c))
                         if self.rect.collidepoint((coordinates[0], coordinates[1])):
@@ -437,12 +458,26 @@ class KoponenEntity:
                     else:
                         self.continueAutoMove()
                         self.current_instruction += 1
-                elif args[0] == "py_exec":
-                    if len(args) > 1:
-                        exec(args[1])
-                        self.current_instruction += 1
+                elif args[0] == "exec":
+                    if re.fullmatch(r"[a-zA-Z]+\(.*\)", args[1]) != None:
+                        execFuncName, execArgs = args[1].split("(", 1)
+                        execArgs = shlex.split(execArgs.removesuffix(")"))
+                        execFunc = getattr(execFuncs, execFuncName, None)
+                        if execFunc != None and callable(execFunc):
+                            if execFunc in execFunc.allowedFuncs:
+                                execCArgs = [KDS.Convert.AutoType2(a) for a in execArgs]
+                                if None not in execCArgs:
+                                    try:
+                                        execFunc(*execArgs)
+                                    except Exception as e:
+                                        KDS.Logging.AutoError(f"Exec function failed on instruction {self.current_instruction} with message: {e}")
+                                else:
+                                    KDS.Logging.AutoError(f"Exec argument error on instruction {self.current_instruction}")
+                        else:
+                            KDS.Logging.AutoError(f"Exec function not found on instruction {self.current_instruction}")
                     else:
-                        self.current_instruction += 1
+                        KDS.Logging.AutoError(f"Exec syntax error on instruction {self.current_instruction}")
+                    self.current_instruction += 1
             else:
                 self.current_instruction += 1
 
@@ -501,6 +536,6 @@ class KoponenEntity:
                     self.listenerInstances[listener].OnTrigger += self.listenerTrigger_0
             else:
                 pass
-                
+
     def loadScript(self, script: list = []) -> None:
         self.ls_instructions = script
