@@ -16,7 +16,7 @@
             "lscript" : [
                 "move:718,515",
                 "exec:SetSelfProperty('forceIdle', True)",
-                "exec:SetTileProperty(16, 21, -1, 'locked', False)"
+                "exec:SetTileProperty(16, 21, -1, 'locked', False)",
                 "exec:PlaySoundFromFile('Assets/Audio/Tiles/door.ogg')",
                 "exec:SetTileProperty(16, 21, -1, 'opened', True)",
                 "exec:SetSelfProperty('enabled', False)"

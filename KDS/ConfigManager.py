@@ -70,7 +70,7 @@ class JSON:
             try:
                 with open(filePath, "r") as f:
                     try: config = json.loads(f.read())
-                    except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
+                    except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error with file {filePath}! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
             if jsonPath == JSON.NULLPATH:
                 return config
