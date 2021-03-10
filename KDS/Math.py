@@ -17,7 +17,7 @@ NEGATIVEINFINITY = float("-inf")
 DEG2RAD = (PI * 2) / 360
 RAD2DEG = 1 / DEG2RAD
 MAXVALUE = sys.maxsize
-MINVALUE = -MAXVALUE
+MINVALUE = -MAXVALUE - 1
 #endregion
 
 #region Default Math Functions
