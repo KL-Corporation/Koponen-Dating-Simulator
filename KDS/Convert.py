@@ -10,7 +10,7 @@ import KDS.Math
 
 _T = TypeVar("_T", bound=object)
 
-def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
+def ToBool(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]
@@ -59,7 +59,7 @@ def AutoType(value: str, fallbackValue: _T = None) -> Union[str, int, float, boo
         return r
     return fallbackValue
 
-def AutoType2(value: str): # Strict type check
+def AutoType2(value: str) -> Union[str, bool, int, float, None]: # Strict type check for auto type
     if value.startswith("\"") and value.endswith("\""):
         return value
     elif value == "True":
