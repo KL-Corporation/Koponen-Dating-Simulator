@@ -1,4 +1,3 @@
-from typing import Union
 import pygame
 import KDS.ConfigManager
 import KDS.Logging
