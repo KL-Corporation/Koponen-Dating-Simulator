@@ -1,5 +1,6 @@
 import math
 import random
+import sys
 from typing import Dict, List, Sequence, Tuple, Union
 
 import pygame
@@ -233,6 +234,8 @@ class Lighting:
 
 
 class Bullet:
+    GodMode = False
+
     def __init__(self, rect, direction: bool, speed: int, environment_obstacles, damage, texture: pygame.Surface = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
@@ -243,7 +246,7 @@ class Bullet:
         self.maxDistance = maxDistance
         self.movedDistance = 0
         self.environment_obstacles = environment_obstacles
-        self.damage = damage
+        self.damage = damage if not Bullet.GodMode else KDS.Math.MAXVALUE
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 

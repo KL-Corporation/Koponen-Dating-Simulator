@@ -270,7 +270,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
             if _type == "int":
                 if re.fullmatch(r"^[+-]?\d+$", cmd) != None:
                         cmdInt = int(cmd)
-                        if cmdInt > sys.maxsize: invalid = True
+                        if cmdInt > KDS.Math.MAXVALUE: invalid = True
                         _min = checkType["min"]
                         if _min != None:
                             if min(_min, cmdInt) != _min: invalid = True
@@ -283,7 +283,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
 
                 if re.fullmatch(r"^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$", cmd) != None:
                     cmdFloat = float(cmd)
-                    if cmdFloat > sys.maxsize: invalid = True
+                    if cmdFloat > KDS.Math.MAXVALUE: invalid = True
                     _min = checkType["min"]
                     if _min != None:
                         if min(_min, cmdFloat) != _min: invalid = True
@@ -303,7 +303,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                         if re.fullmatch(r"^[+-]?\d+$", s) == None:
                             invalid = True
                             break
-                        elif int(s) > sys.maxsize:
+                        elif int(s) > KDS.Math.MAXVALUE:
                             invalid = True
                             break
                         elif len(cmdSplit) != checkType["size"]:

@@ -1169,7 +1169,7 @@ def main():
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
 
     if grid == None:
-        g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000)).replace(" ", "").split(",")
+        g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
 
         gridSize = (int(g[0]), int(g[1]))
         grid = loadGrid(gridSize)
@@ -1213,7 +1213,7 @@ def main():
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
-                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
+                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     brush.SetValues(materialMenu(brush.brush))

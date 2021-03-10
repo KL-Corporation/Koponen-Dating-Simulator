@@ -1802,7 +1802,7 @@ class Item:
         showItemTip = True
         collision = False
         shortest_item = None
-        shortest_distance = sys.maxsize
+        shortest_distance = KDS.Math.MAXVALUE
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 collision = True
@@ -1996,7 +1996,7 @@ class Pistol(Item):
             KDS.World.pistol_C.counter = 0
             Pistol.ammunition -= 1
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 6000))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
             return pistol_f_texture
         else:
             KDS.World.pistol_C.counter += 1
@@ -2712,7 +2712,8 @@ def console(oldSurf: pygame.Surface):
             "methmaker": "break",
             "cavemonster": "break"
         },
-        "fly": trueFalseTree
+        "fly": trueFalseTree,
+        "godmode": trueFalseTree
     }
 
     consoleRunning = True
@@ -2875,6 +2876,16 @@ def console(oldSurf: pygame.Surface):
                         KDS.Console.Feed.append("Please provide a proper state for fly")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for fly")
+            elif command_list[0] == "godmode":
+                if len(command_list) == 2:
+                    godmodeState = KDS.Convert.ToBool(command_list[1], None)
+                    if godmodeState != None:
+                        KDS.World.Bullet.GodMode = godmodeState
+                        KDS.Console.Feed.append(f"Godmode state has been set to: {KDS.World.Bullet.GodMode}")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper state for godmode")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper state for godmode")
             elif command_list[0] == "help":
                 KDS.Console.Feed.append("""
         Console Help:

@@ -1,4 +1,4 @@
-import sys
+import KDS.Math
 
 from pygame.locals import *
 
@@ -20,10 +20,10 @@ class Key:
         self.clicked = False
         self.holdClicked = False
         if self.pressed:
-            self.ticksHeld += 1
+            if self.ticksHeld < KDS.Math.MAXVALUE:
+                self.ticksHeld += 1
             if self.ticksHeld > holdTicks:
                 self.held = True
-                if self.ticksHeld == sys.maxsize: self.ticksHeld -= 1
 
     def SetState(self, pressed: bool):
         if not pressed:
