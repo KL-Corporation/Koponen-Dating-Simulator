@@ -116,6 +116,6 @@ def SetVolume(volume: float):
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
 
-def PlayFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
+def PlayFromFile(path: str, volume: float = -1, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     sound = SoundMixer.Sound(path)
     return PlaySound(sound, volume, loops, fade_ms)

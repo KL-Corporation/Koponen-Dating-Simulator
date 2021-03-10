@@ -10,7 +10,7 @@ import KDS.Math
 
 _T = TypeVar("_T", bound=object)
 
-def ToBool(value, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
+def ToBool(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]
@@ -59,7 +59,7 @@ def AutoType(value: str, fallbackValue: _T = None) -> Union[str, int, float, boo
         return r
     return fallbackValue
 
-def AutoType2(value: str): # Strict type check
+def AutoType2(value: str) -> Union[str, bool, int, float, None]: # Strict type check for auto type
     if value.startswith("\"") and value.endswith("\""):
         return value
     elif value == "True":
@@ -166,7 +166,7 @@ def HSVToRGB(hue: float, saturation: float, value: float) -> Tuple[float, float,
     return HSVToRGB2(hue / 360.0, saturation, value)
 
 def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float, float]:
-    """Converts an HSV color to RGB. This method does not automatically convert the hue to the range of 0-1.
+    """Converts an HSV color to RGB. This method does NOT automatically convert the hue to the range of 0-1.
 
     Args:
         hue (float): The hue of the color.
@@ -181,9 +181,9 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
     if saturation == 0.0:
         value *= 255
         return (value, value, value)
-    i = int(hue*6.)
-    f = (hue*6.)-i
-    p, q, t = int(255*(value*(1.-saturation))), int(255*(value * (1.-saturation*f))), int(255*(value*(1.-saturation*(1.-f))))
+    i = int(hue * 6.)
+    f = (hue * 6.) - i
+    p, q, t = int(255 * (value * (1. - saturation))), int(255 * (value * (1. - saturation * f))), int(255 * (value * (1. -saturation * (1. - f))))
     value *= 255
     i %= 6
     if i == 0:
@@ -200,9 +200,9 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
         return (value, p, q)
     else:
         KDS.Logging.AutoError("Invalid HSV => RGB Conversion color.")
-        return (0, 0, 0)
+        return (0.0, 0.0, 0.0)
 
-def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]):
+def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> Tuple[str]:
     # Freezes if word is longer than max_width...
     if font.size(text)[0] > max_width:
         text_split = [wrd + " " for wrd in text.split(" ")]

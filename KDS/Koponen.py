@@ -468,7 +468,7 @@ class KoponenEntity:
                                 execCArgs = [KDS.Convert.AutoType2(a) for a in execArgs]
                                 if None not in execCArgs:
                                     try:
-                                        execFunc(*execArgs)
+                                        execFunc(*execCArgs)
                                     except Exception as e:
                                         KDS.Logging.AutoError(f"Exec function failed on instruction {self.current_instruction} with message: {e}")
                                 else:
