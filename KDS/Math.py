@@ -44,8 +44,8 @@ def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
 def Approximately(a: float, b: float) -> bool: return math.isclose(a, b)
 
 def IsInfinity(f: float) -> bool: return math.isinf(f)
-def IsPositiveInfinity(f: float) -> bool: return math.isinf(f) and f > 0
-def IsNegativeInfinity(f: float) -> bool: return math.isinf(f) and f < 0
+def IsPositiveInfinity(f: float) -> bool: return math.isinf(f) and f > 0 # faster than f == MAXVALUE
+def IsNegativeInfinity(f: float) -> bool: return math.isinf(f) and f < 0 # faster than f == MINVALUE
 def IsNan(f: float) -> bool: return math.isnan(f)
 #endregion
 

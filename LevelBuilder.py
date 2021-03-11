@@ -1011,11 +1011,15 @@ def menu():
     btn_menu = True
     grid = [[]]
     def button_handler(_openMap: bool = False):
-        global btn_menu
+        global btn_menu, grid
         if _openMap:
             # Button menu is turned off if openMap was succesful
             btn_menu = not openMap()
-        else: btn_menu = False
+        else:
+            g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
+            gridSize = (int(g[0]), int(g[1]))
+            grid = loadGrid(gridSize)
+            btn_menu = False
 
     newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 450,       125, 400, 200), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       125, 400, 200), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
@@ -1167,12 +1171,6 @@ def main():
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-
-    if grid == None:
-        g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
-
-        gridSize = (int(g[0]), int(g[1]))
-        grid = loadGrid(gridSize)
 
     inputConsole_output = None
     allowTilePlacement = True
