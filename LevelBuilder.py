@@ -314,8 +314,8 @@ class UnitData:
         slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
 
-    def getSerials(self) -> Tuple[str]:
-        return tuple(self.serialNumber.split())
+    def getSerials(self) -> List[str]:
+        return self.serialNumber.split()
 
     def getFilledSerials(self):
         serials = self.getSerials()
@@ -361,7 +361,7 @@ class UnitData:
                 self.setSerialToSlot(UnitData.EMPTY, index)
 
     def hasTile(self):
-        split: Tuple[str] = self.getSerials()
+        split = self.getSerials()
         return KDS.Linq.Any(split, lambda s: len(s) > 0 and s[0] == "0" and s != UnitData.EMPTY)
 
     def resetSerial(self):
@@ -376,7 +376,6 @@ class UnitData:
     @staticmethod
     def renderSerial(surface: pygame.Surface, serial: str, pos: Tuple[int, int], darkOverlay: bool = False):
         teleportOverlayFlag = False
-
         if serial[0] == "3":
             if int(serial[1:]) < 500:
                 serial = "3001"
@@ -396,7 +395,6 @@ class UnitData:
             if overlay != None:
                 overlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                 surface.blit(overlay, blitPos)
-
         if teleportOverlayFlag:
             teleportOverlay = Textures.GetScaledTexture("3001").copy()
             teleportOverlay.set_alpha(100)
