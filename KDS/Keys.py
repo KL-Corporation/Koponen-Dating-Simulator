@@ -1,3 +1,4 @@
+import KDS.Events
 import KDS.Math
 
 from pygame.locals import *
@@ -12,11 +13,15 @@ class Key:
         self.pressed = False
         self.held = False
         self.clicked = False
+        self.onUp = False
+        self.onDown = False
         self.holdClicked = False
         self.ticksHeld = 0
         keyList.append(self)
 
     def update(self):
+        self.onDown = False
+        self.onUp = False
         self.clicked = False
         self.holdClicked = False
         if self.pressed:
@@ -26,8 +31,13 @@ class Key:
                 self.held = True
 
     def SetState(self, pressed: bool):
-        if not pressed:
-            if self.pressed: self.clicked = True
+        if pressed:
+            if not self.pressed:
+                self.onDown = True
+        else:
+            if self.pressed:
+                self.clicked = True
+                self.onUp = True
             if self.held:
                 self.holdClicked = True
                 self.held = False

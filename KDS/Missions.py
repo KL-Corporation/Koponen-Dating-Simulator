@@ -1,5 +1,5 @@
 #region Importing
-from typing import Dict, Iterable, List, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union, cast
 import json
 
 import pygame
@@ -51,7 +51,7 @@ class Listener:
     def Add(self, MissionName: str, TaskName: str, AddValue: float):
         self._listenerList.append((MissionName, TaskName, AddValue))
 
-    def ContainsActiveTask(self):
+    def ContainsActiveTask(self) -> bool:
         global Active_Mission
         return KDS.Linq.Any(self._listenerList, lambda l: l[0] == Active_Mission and (m := Missions.GetMission(Active_Mission)) != None and m.GetTask(l[1]) != None)
 
@@ -265,7 +265,7 @@ def init():
     TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_unfinish.ogg")
     MissionFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_finish.ogg")
     MissionUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_unfinish.ogg")
-    Active_Mission = None
+    Active_Mission = ""
     Last_Active_Mission = 0
     text_height = 0
     TextOffset = int(TaskFont.size(" ")[0] * TextOffset)
@@ -285,8 +285,8 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
         if isinstance(data[0], Listener):
             data[0].Add(MissionName, SafeName, data[1])
         elif isinstance(data[0], ItemListener):
-            data[0].Add(data[1], MissionName, SafeName, data[2])
-        else: raise TypeError("Listener is not a valid type!")
+            data[0].Add(cast(int, data[1]), MissionName, SafeName, cast(float, data[2]))
+        else: raise ValueError("Invalid arguments were given.")
 
 def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, ItemsCallName: str, ItemsCallNameVariation: str, *itemIDs: int):
     KoponenTask(MissionName, SafeName, Text, itemIDs, ItemsCallName, ItemsCallNameVariation)
@@ -303,13 +303,13 @@ def InitialiseMission(SafeName: str, Text: str):
 #region Rendering
 def Render(surface: pygame.Surface):
     global Missions, Active_Mission
-    Active_Mission = None
+    Active_Mission = ""
     for mission in Missions.GetMissionList():
         mission.Update()
         if not mission.trueFinished:
             Active_Mission = mission.safeName
             break
-    if Active_Mission == None: Missions.finished = True
+    if len(Active_Mission) < 1: Missions.finished = True
     else: Missions.finished = False
     if not Missions.finished:
         rendered, offset = Missions.GetMission(Active_Mission).Render()

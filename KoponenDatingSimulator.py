@@ -399,9 +399,9 @@ KDS.Logging.debug("Variable Defining Complete.")
 #region Game Settings
 fall_speed: float = 0.4
 fall_multiplier: float = 2.5
-fall_max_velocity: float = 8
-item_fall_speed: float = 1
-item_fall_max_velocity: float = 8
+fall_max_velocity: float = 8.0
+item_fall_speed: float = 1.0
+item_fall_max_velocity: float = 8.0
 def LoadGameSettings():
     global fall_speed, fall_multiplier, fall_max_velocity, item_fall_speed, item_fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
@@ -1275,31 +1275,40 @@ class Teleport(Tile):
         self.specialTileFlag = True
         self.teleportReady = True
         self.locked = False
-        self.message = ""
+        self.message: str = ""
+        self.renderedMessage: Optional[pygame.Surface] = None
         self.serialNumber = serialNumber
+
+    def lateInit(self):
+        if self.message != None:
+            self.renderedMessage = tip_font.render(self.message, True, KDS.Colors.White)
 
     def update(self):
         #Calculating next teleport with same serial number
         index = Teleport.teleportT_IDS[self.serialNumber].index(self) + 1
         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
             index = 0
-        if self.rect.colliderect(Player.rect) and Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
-            if self.serialNumber < 500 or KDS.Keys.functionKey.clicked and not self.locked:
-                #Executing teleporting process
-                if self.serialNumber > 499: KDS.Audio.PlaySound(door_opening)
-                Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
-                Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
-                Teleport.last_teleported = True
-                #Reseting scroll
-                true_scroll[0] += Player.rect.x - true_scroll[0] - (screen_size[0] // 2)
-                true_scroll[1] += Player.rect.y - true_scroll[1] - 220
-                #Triggering Listener
-                KDS.Missions.Listeners.Teleport.Trigger()
-            elif self.serialNumber > 499 and KDS.Keys.functionKey.clicked and self.locked:
-                KDS.Audio.PlaySound(door_locked)
-        if not self.rect.colliderect(Player.rect) or self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
-            Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
-        if self.rect.colliderect(Player.rect) and self.message: screen.blit(tip_font.render(self.message, True, KDS.Colors.White), (self.rect.centerx - level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+        if self.rect.colliderect(Player.rect):
+            if Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
+                if self.serialNumber < 500 or KDS.Keys.functionKey.clicked and not self.locked:
+                    #Executing teleporting process
+                    if self.serialNumber > 499: KDS.Audio.PlaySound(door_opening)
+                    Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
+                    Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
+                    Teleport.last_teleported = True
+                    #Reseting scroll
+                    true_scroll[0] += Player.rect.x - true_scroll[0] - (screen_size[0] // 2)
+                    true_scroll[1] += Player.rect.y - true_scroll[1] - 220
+                    #Triggering Listener
+                    KDS.Missions.Listeners.Teleport.Trigger()
+                elif self.serialNumber > 499 and KDS.Keys.functionKey.clicked and self.locked:
+                    KDS.Audio.PlaySound(door_locked)
+
+            if self.renderedMessage != None:
+                screen.blit(self.renderedMessage, (self.rect.centerx - level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+        else:
+            if self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
+                Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
 
         return self.texture
 
@@ -2527,14 +2536,14 @@ class PlayerClass:
 
         def jump(ladderOverride: bool = False):
             if KDS.Keys.moveUp.pressed and not KDS.Keys.moveDown.pressed:
-                if ladderOverride or (self.air_timer < 6 and KDS.Keys.moveUp.ticksHeld == 0 and not self.onLadder):
+                if ladderOverride or (self.air_timer < 6 and KDS.Keys.moveUp.onDown and not self.onLadder):
                     self.vertical_momentum = -10
         #endregion
         #region Normal
         if self.health > 0 and not self.fly:
             self.movement = [0, 0]
-            _fall_speed = fall_speed
             jump()
+            _fall_speed = fall_speed
             if self.vertical_momentum > 0 or not KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
                 _fall_speed *= fall_multiplier
 
