@@ -167,6 +167,8 @@ Textures.AddTexture("3501", "Assets/Textures/Tiles/door_front.png", "door_telepo
 trueScale = [f"0{e:03d}" for e in buildData["trueScale"]]
 ### GLOBAL VARIABLES ###
 
+DebugMode = False
+
 dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
 light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
@@ -959,7 +961,8 @@ def materialMenu(previousMaterial: str) -> str:
         for selection in selectorRects:
             selection: selectorRect
             rndY = selection.rect.y - yCalc
-            display.blit(KDS.Convert.AspectScale(selection.data.texture, (BLOCKSIZE, BLOCKSIZE)), (selection.rect.x, rndY))
+            scaledTex = KDS.Convert.AspectScale(selection.data.texture, (BLOCKSIZE, BLOCKSIZE))
+            display.blit(scaledTex, (selection.rect.x + selection.rect.width // 2 - scaledTex.get_width() // 2, rndY + selection.rect.height // 2 - scaledTex.get_height() // 2))
             if selection.rect.collidepoint(mpos[0], mpos[1] + yCalc):
                 pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, rndY, BLOCKSIZE, BLOCKSIZE), 3)
                 tip_renders.append(harbinger_font_small.render(selection.data.name, True, KDS.Colors.AviatorRed))
@@ -983,7 +986,19 @@ def materialMenu(previousMaterial: str) -> str:
                 pygame.draw.rect(display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
+
+        if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+
+            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
+            display.blit(fps_text, (10, 10))
+
         pygame.display.flip()
+        clock.tick()
 
     return previousMaterial
 
@@ -1092,7 +1107,18 @@ def menu():
         genProp_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
 
+        if DebugMode:
+            debugSurf = pygame.Surface((200, 40))
+            debugSurf.fill(KDS.Colors.DarkGray)
+            debugSurf.set_alpha(128)
+            display.blit(debugSurf, (0, 0))
+
+            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
+            display.blit(fps_text, (10, 10))
+
         pygame.display.flip()
+        clock.tick_busy_loop(60)
 
 class Selected:
     units: List[UnitData] = []
@@ -1181,11 +1207,17 @@ class Selected:
                                                     # ^^ Need to add one... I don't know why.
 
 def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
+    global DebugMode
     if event.type == ignoreEventOfType:
         return False
     if event.type == QUIT:
         LB_Quit()
         return True # Return True if you event handling can be stopped
+    elif event.type == KEYDOWN:
+        if event.key == K_F3:
+            DebugMode = not DebugMode
+            KDS.Logging.Profiler(DebugMode)
+            return True
     elif event.type == VIDEORESIZE:
         SetDisplaySize((event.w, event.h))
         return True
@@ -1221,8 +1253,6 @@ def main():
 
     inputConsole_output = None
     allowTilePlacement = True
-
-    DebugMode = False
 
     dragStartPos = None
     dragPos = None
@@ -1263,9 +1293,6 @@ def main():
                 elif event.key == K_e:
                     brush.SetValues(materialMenu(brush.brush))
                     allowTilePlacement = False
-                elif event.key == K_F3:
-                    DebugMode = not DebugMode
-                    KDS.Logging.Profiler(DebugMode)
                 elif event.key == K_DELETE:
                     Selected.Set(UnitData.EMPTYSERIAL)
                     Selected.Update()
@@ -1413,7 +1440,7 @@ def main():
             display.blit(fps_text, (10, 10))
 
         pygame.display.flip()
-        clock.tick_busy_loop()
+        clock.tick()
 
 mainRunning = True
 try:
