@@ -1,7 +1,6 @@
-from typing import Iterable, List, Tuple, TypeVar, Union
+from typing import Iterable, List, Tuple, TypeVar, Union, cast
 import math
 import sys
-import random
 import enum
 
 T = TypeVar("T")
@@ -31,9 +30,14 @@ def Asin(f: float) -> float: return math.asin(f)
 def Cos(f: float) -> float: return math.cos(f)
 def Acos(f: float) -> float: return math.acos(f)
 
-def Ceil(f: float, digits: int = 0) -> float: power10: int = pow(10, digits); return math.ceil(f * power10) / power10
+def Ceil(f: float, digits: int = 0) -> float:
+    power10: int = pow(10, digits) # Anything to the power of zero is one.
+    return math.ceil(f * power10) / power10
 def CeilToInt(f: float) -> int: return math.ceil(f)
-def Floor(f: float, digits: int = 0) -> float: power10: int = pow(10, digits); return math.floor(f * power10) / power10
+
+def Floor(f: float, digits: int = 0) -> float:
+    power10: int = pow(10, digits) # Anything to the power of zero is one.
+    return math.floor(f * power10) / power10
 def FloorToInt(f: float) -> int: return math.floor(f)
 
 def Sqrt(f: float) -> float: return math.sqrt(f)
@@ -47,14 +51,6 @@ def IsInfinity(f: float) -> bool: return math.isinf(f)
 def IsPositiveInfinity(f: float) -> bool: return math.isinf(f) and f > 0 # faster than f == MAXVALUE
 def IsNegativeInfinity(f: float) -> bool: return math.isinf(f) and f < 0 # faster than f == MINVALUE
 def IsNan(f: float) -> bool: return math.isnan(f)
-#endregion
-
-#region Bitwise
-def Double(f: int) -> int:
-    return f << 1
-
-def Halve(f: int) -> int:
-    return f >> 1
 #endregion
 
 #region Value Manipulation
@@ -94,23 +90,23 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     return max(_min, min(value, _max))
 
 def Clamp01(value: Value) -> Value:
-    return max(0, min(value, 1))
+    return Clamp(value, cast(Value, 0), cast(Value, 1)) # Should be fine...?
 
 def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
-    return (value - from1) / (to1 - from1) * (to2 - from2) + from2
+    try:
+        return (value - from1) / (to1 - from1) * (to2 - from2) + from2
+    except ZeroDivisionError:
+        KDS.Logging.AutoError("Division by zero!")
+        return float("nan")
 
 def Remap01(value: float, from1: float, from2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
-    try:
-        return (value - from1) / (0 - from1) * (1 - from2) + from2
-    except ZeroDivisionError:
-        KDS.Logging.AutoError("Division by zero!")
-        return float("nan")
+    return Remap(value, from1, 0, from2, 1)
 
 def Repeat(t: float, length: float) -> float:
     """Loops the value t, so that it is never larger than length and never smaller than 0.

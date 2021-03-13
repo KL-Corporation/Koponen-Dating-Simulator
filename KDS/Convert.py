@@ -1,3 +1,5 @@
+from enum import IntEnum, auto
+from KDS.PygameMarkdown import PygameMarkdown
 from typing import Any, Literal, Tuple, TypeVar, Union, cast
 
 import pygame
@@ -8,7 +10,7 @@ import KDS.Colors
 import KDS.Logging
 import KDS.Math
 
-_T = TypeVar("_T", bound=object)
+_T = TypeVar("_T")
 
 def ToBool(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
@@ -41,7 +43,7 @@ def ToBool(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = Fals
         KDS.Logging.AutoError(f"Encountered an error when converting to bool. Exception: {e}")
     return fallbackValue
 
-def AutoType(value: str, fallbackValue: _T = None) -> Union[str, int, float, bool, _T]:
+def AutoType(value: str, fallbackValue: _T) -> Union[str, int, float, bool, _T]:
     if value.startswith("\"") and value.endswith("\""):
         return value
     try:
@@ -89,21 +91,42 @@ def ToGrayscale(image: pygame.Surface):
     arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
     return pygame.surfarray.make_surface(arr)
 
-def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False):
+def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False) -> pygame.Surface:
     mode = "RGB" if not alpha else "RGBA"
 
     toBlur = pygame.image.tostring(image, mode)
     blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
     blurredString = blurredImage.tobytes("raw", mode)
-    blurredSurface = pygame.image.fromstring(blurredString, image.get_size(), mode)
-    if alpha: blurredSurface.convert_alpha()
-    else: blurredSurface.convert()
+    blurredSurface: pygame.Surface = pygame.image.fromstring(blurredString, image.get_size(), mode)
+    if alpha: blurredSurface = cast(pygame.Surface, blurredSurface.convert_alpha())
+    else: blurredSurface = cast(pygame.Surface, blurredSurface.convert())
     return blurredSurface
 
-def AspectScale(image: pygame.Surface, size: Tuple[int, int], horizontalOnly: bool = False, verticalOnly: bool = False):
-    if (image.get_width() / image.get_height() > size[0] / size[1] or horizontalOnly) and not verticalOnly: scaling = size[0] / image.get_width()
-    else: scaling = size[1] / image.get_height()
-    return pygame.transform.scale(image, (int(image.get_width() * scaling), int(image.get_height() * scaling)))
+class AspectMode(IntEnum):
+    WidthControlsHeight = auto()
+    HeightControlsWidth = auto()
+    FitInTarget = auto()
+    EnvelopeTarget = auto()
+    EnvelopeTargetCrop = auto()
+
+def AspectScale(image: pygame.Surface, targetSize: Tuple[int, int], mode: AspectMode = AspectMode.FitInTarget) -> pygame.Surface:
+    imageSize = image.get_size()
+    if mode == AspectMode.FitInTarget:
+        scaling = min(targetSize[0] / imageSize[0], targetSize[1] / imageSize[1])
+    elif mode == AspectMode.EnvelopeTarget or mode == AspectMode.EnvelopeTargetCrop:
+        scaling = max(targetSize[0] / imageSize[0], targetSize[1] / imageSize[1])
+    elif mode == AspectMode.WidthControlsHeight:
+        scaling = targetSize[0] / imageSize[0]
+    elif mode == AspectMode.HeightControlsWidth:
+        scaling = targetSize[1] / imageSize[1]
+    else:
+        KDS.Logging.AutoError("Invalid mode!")
+        scaling = 1.0
+
+    scaled: pygame.Surface = pygame.transform.scale(image, (round(imageSize[0] * scaling), round(imageSize[1] * scaling)))
+    if mode == AspectMode.EnvelopeTargetCrop:
+        scaled = cast(pygame.Surface, scaled.subsurface(scaled.get_width() // 2 - targetSize[0] // 2, scaled.get_height() // 2 - targetSize[1] // 2, targetSize[0], targetSize[1]))
+    return scaled
 
 def ToMultiplier(boolean: bool) -> Union[Literal[-1], Literal[1]]:
     """

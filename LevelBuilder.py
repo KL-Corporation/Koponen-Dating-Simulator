@@ -422,7 +422,7 @@ class UnitData:
                         if len(setPropType) > 0 and propType != None:
                             setPropKey: str = KDS.Console.Start("Enter Property Key:")
                             if len(setPropKey) > 0:
-                                setPropValUnformatted = KDS.Console.Start("Enter Property Value:")
+                                setPropValUnformatted: str = KDS.Console.Start("Enter Property Value:")
                                 if propType == UnitType.Unspecified and setPropKey == "overlay": # Force string for overlay
                                     setPropVal = setPropValUnformatted
                                 else:
