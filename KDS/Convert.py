@@ -1,5 +1,4 @@
 from enum import IntEnum, auto
-from KDS.PygameMarkdown import PygameMarkdown
 from typing import Any, Literal, Tuple, TypeVar, Union, cast
 
 import pygame
