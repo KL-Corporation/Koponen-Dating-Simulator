@@ -205,17 +205,20 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
 def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> Tuple[str]:
     # Freezes if word is longer than max_width...
     if font.size(text)[0] > max_width:
-        text_split = [wrd + " " for wrd in text.split(" ")]
-        text_split[len(text_split) - 1] = text_split[len(text_split) - 1].strip()
+        text_split = [" " + wrd for wrd in text.split(" ")]
+        text_split[0] = text_split[0].lstrip()
         new_split = [text_split]
-        while font.size("".join(new_split[-1]))[0] > max_width:
-            toTest = new_split[-1]
+        while font.size( "".join(toTest := new_split[-1]) )[0] > max_width:
             i = 0
-            while font.size("".join(toTest[:i]))[0] <= max_width:
+            while font.size( "".join(toTest[:i]) )[0] <= max_width:
                 i += 1
                 if i >= len(toTest):
                     break
-            i -= 1
+
+                if i == 1 and font.size( "".join(toTest[:i]) )[0] > max_width:
+                    i += 1 # Added because minus one
+                    break # Fix for freezing if word is longer than max_width
+            i -= 1 # Fixes getting the wrong index... Or that is what I remember this does...  I should've documented this more clearly...
 
             new_split.append(toTest[i:])
             new_split[-2] = toTest[:i]

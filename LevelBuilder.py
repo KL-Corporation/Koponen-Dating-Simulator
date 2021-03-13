@@ -20,7 +20,6 @@ import KDS.Console
 import KDS.Logging
 import KDS.Linq
 import tkinter
-import sys
 from tkinter import filedialog
 import json
 import traceback
