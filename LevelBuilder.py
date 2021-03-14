@@ -64,10 +64,15 @@ class UnitType(IntEnum):
 
 class TextureHolder:
     class TextureData:
-        def __init__(self, serialNumber: str, path: str, name: str, colorkey: Union[Tuple[int, int, int], Tuple[int, int]]) -> None:
+        def __init__(self, serialNumber: str, path: Optional[str], name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]]) -> None:
             self.serialNumber = serialNumber
-            self.path: str = path
-            self.texture: pygame.Surface = pygame.image.load(path).convert()
+            if path != None:
+                self.path: str = path
+                self.texture: pygame.Surface = pygame.image.load(path).convert()
+            else:
+                self.path: str = "<error>"
+                KDS.Logging.AutoError("Texture path was None.")
+                self.texture: pygame.Surface = pygame.Surface((gamesize, gamesize))
             self.texture_size: Tuple[int, int] = self.texture.get_size()
             self.name = name
             self.directory, self.filename = os.path.split(path)
@@ -81,13 +86,15 @@ class TextureHolder:
         def rescaleTexture(self):
             self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (int(self.texture.get_width() * scaleMultiplier), int(self.texture.get_height() * scaleMultiplier)))
             self.scaledTexture_size: Tuple[int, int] = self.scaledTexture.get_size()
+            self.darkOverlay = self.scaledTexture.convert_alpha()
+            self.darkOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
 
     def __init__(self) -> None:
         self.data: Dict[UnitType, Dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
         self.serials: List[str] = []
         self.names: List[str] = []
 
-    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Union[Tuple[int, int, int], Tuple[int, int]] = KDS.Colors.White) -> None:
+    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]] = KDS.Colors.White) -> None:
         try:
             self.data[UnitType(int(serialNumber[0]))][serialNumber] = TextureHolder.TextureData(serialNumber, path, name, colorkey)
             self.serials.append(serialNumber)
@@ -95,34 +102,26 @@ class TextureHolder:
         except Exception as e:
             KDS.Logging.AutoError(f"Could not add texture \"{serialNumber}\" at path: \"{path}\"! Exception: {e}")
 
-    def GetData(self, serialNumber: str) -> Optional[TextureHolder.TextureData]:
+    def GetData(self, serialNumber: str) -> TextureHolder.TextureData:
         try:
             return self.data[UnitType(int(serialNumber[0]))][serialNumber]
         except Exception as e:
-            KDS.Logging.AutoError(f"Could not fetch texture \"{serialNumber}\"! Exception: {e}")
-            return None
+            KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! Exception: {e}")
+            return TextureHolder.TextureData("----", None, "<error>", None)
 
     def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
-        data = self.GetData(serialNumber)
-        return data.texture if data != None else pygame.Surface((gamesize, gamesize))
+        return self.GetData(serialNumber).texture
 
     def GetScaledTexture(self, serialNumber: str) -> pygame.Surface:
-        data = self.GetData(serialNumber)
-        return data.scaledTexture if data != None else pygame.Surface((scalesize, scalesize))
+        return self.GetData(serialNumber).scaledTexture
 
     def GetScaledTextureWithSize(self, serialNumber: str) -> Tuple[pygame.Surface, Tuple[int, int]]:
         data = self.GetData(serialNumber)
-        if data != None:
-            return data.scaledTexture, data.scaledTexture_size
-        else:
-            return pygame.Surface((scalesize, scalesize)), (scalesize, scalesize)
+        return data.scaledTexture, data.scaledTexture_size
 
     def GetRenderArgs(self, serialNumber: str, pos: Tuple[int, int]) -> Tuple[pygame.Surface, Tuple[int, int]]:
         data = self.GetData(serialNumber)
-        if data != None:
-            return data.scaledTexture, (pos[0], pos[1] - data.texture_size[1] + scalesize)  # Will render some tiles incorrectly
-        else:
-            return pygame.Surface((scalesize, scalesize)), (0, 0)
+        return data.scaledTexture, (pos[0], pos[1] - data.scaledTexture_size[1] + scalesize)  # Will render some tiles incorrectly
 
     def GetDataByName(self, name: str) -> Optional[TextureHolder.TextureData]:
         for t in self.data.values():
@@ -317,29 +316,34 @@ class UnitData:
     def getSerials(self) -> List[str]:
         return self.serialNumber.split()
 
-    def getFilledSerials(self):
+    def getFilledSerials(self) -> List[str]:
         serials = self.getSerials()
-        return tuple(KDS.Linq.Where(serials, lambda s: s != UnitData.EMPTY))
+        return cast(List[str], KDS.Linq.Where(serials, lambda s: s != UnitData.EMPTY)) # Should come back as a list
 
-    def addSerial(self, srlNumber):
+    def addSerial(self, srlNumber: str):
         srlist = self.getSerials()
         for index, number in enumerate(srlist):
             if int(number) == 0:
                 if srlNumber not in srlist:
-                    self.setSerialToSlot(srlNumber, index)
+                    if not srlNumber.startswith("3") or not self.hasTeleport():
+                        self.setSerialToSlot(srlNumber, index)
+                    else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
-    def insertSerial(self, srlNumber):
+    def insertSerial(self, srlNumber: str):
         srlist = self.getSerials()
         for fakeIndex, number in enumerate(reversed(srlist)):
             if fakeIndex == 0:
                 if int(number) != 0:
                     KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
                     return
-            else:
-                self.setSerialToSlot(number, len(srlist) - fakeIndex) # The second argument will be one higher than the real index.
+            elif srlNumber not in srlist:
+                if not srlNumber.startswith("3") or not self.hasTeleport():
+                    self.setSerialToSlot(number, len(srlist) - fakeIndex) # The second argument will be one higher than the real index.
+                else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
+            else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
         self.setSerialToSlot(srlNumber, 0)
 
     def removeSerial(self):
@@ -360,9 +364,19 @@ class UnitData:
             if fakeIndex == 0:
                 self.setSerialToSlot(UnitData.EMPTY, index)
 
+    def getSlot(self, serial: str) -> Optional[int]:
+        try:
+            return self.getSerials().index(serial)
+        except ValueError:
+            return None
+
     def hasTile(self):
         split = self.getSerials()
-        return KDS.Linq.Any(split, lambda s: len(s) > 0 and s[0] == "0" and s != UnitData.EMPTY)
+        return KDS.Linq.Any(split, lambda s: s.startswith("0") and s != UnitData.EMPTY)
+
+    def hasTeleport(self):
+        split = self.getSerials()
+        return KDS.Linq.Any(split, lambda s: s.startswith("3"))
 
     def resetSerial(self):
         Undo.register(self)
@@ -376,25 +390,27 @@ class UnitData:
     @staticmethod
     def renderSerial(surface: pygame.Surface, serial: str, pos: Tuple[int, int], darkOverlay: bool = False):
         teleportOverlayFlag = False
-        if serial[0] == "3":
+        if serial.startswith("3"):
             if int(serial[1:]) < 500:
                 serial = "3001"
             else:
                 serial = "3501"
                 teleportOverlayFlag = True
 
-        unitTexture, unitTextureSize = Textures.GetScaledTextureWithSize(serial)
-        blitPos = (pos[0], pos[1] - unitTextureSize[1] + scalesize)
+        unitData = Textures.GetData(serial)
+        blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize)
+
+        #region Blitting
         if serial in trueScale:
-            surface.blit(unitTexture, (pos[0] - unitTextureSize[0] + scalesize, blitPos[1]))
+            surface.blit(unitData.scaledTexture, (pos[0] - unitData.scaledTexture_size[0] + scalesize, blitPos[1]))
         else:
-            overlay = None
-            if darkOverlay:
-                overlay = unitTexture.convert_alpha()
-            surface.blit(unitTexture, blitPos) # Will render some tiles incorrectly
-            if overlay != None:
-                overlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                surface.blit(overlay, blitPos)
+            surface.blit(unitData.scaledTexture, blitPos) # Will render some tiles incorrectly
+        #endregion
+        #region Overlay
+        if darkOverlay:
+            surface.blit(unitData.darkOverlay, blitPos)
+        #endregion
+
         if teleportOverlayFlag:
             teleportOverlay = Textures.GetScaledTexture("3001").copy()
             teleportOverlay.set_alpha(100)
@@ -412,9 +428,11 @@ class UnitData:
 
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
+        #region Scroll Clamping
         scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
-        bpos = (0, 0)
+        #endregion
+        bpos = (-1, -1)
 
         tip_renders = []
         mpos = pygame.mouse.get_pos()
@@ -428,35 +446,41 @@ class UnitData:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
-                overlayTileprops = str(unit.properties.Get(UnitType.Unspecified, "overlay", "None"))
-                if overlayTileprops != "None":
+                overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
+                if isinstance(overlayTileprops, str):
                     overlayRenders.append(Textures.GetRenderArgs(overlayTileprops, normalBlitPos)) # Will render some tiles incorrectly
-                for index, number in enumerate(srlist):
-                    intNumber = int(number)
-                    if intNumber in (23, 24, 25, 26):
+                for number in srlist:
+                    if number == UnitData.EMPTY:
+                        continue
+
+                    if number in ("0023", "0024", "0025", "0026"):
                         doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
                         continue
 
-                    if number[0] == "3" and unitRect.collidepoint(mpos_scaled):
-                        t_ind = str(int(number[1:]))
+                    checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
+                    checkCollisionOverrideOverlay = False
+                    if number[0] == "0" and isinstance(checkCollision, bool):
+                        if not checkCollision:
+                            checkCollisionOverrideOverlay = True
+                        else:
+                            KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.", True)
+                    UnitData.renderSerial(surface, number, normalBlitPos, checkCollisionOverrideOverlay)
+
+                if unitRect.collidepoint(mpos_scaled):
+                    if unit.hasTeleport():
+                        teleportSerial = KDS.Linq.First(unit.getSerials(), lambda s: s.startswith("3"))
+                        t_ind = str(int(teleportSerial[1:]))
                         tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
                         if keys_pressed[K_p]:
                             temp_serial: str = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
                             if len(temp_serial) > 0:
                                 temp_serial = f"3{int(temp_serial):03d}"
-                                unit.setSerialToSlot(temp_serial, index)
+                                teleportSlot = unit.getSlot(teleportSerial)
+                                if teleportSlot != None:
+                                    unit.setSerialToSlot(temp_serial, teleportSlot)
+                                else:
+                                    KDS.Logging.AutoError("Teleport slot could not be found.")
 
-                    if intNumber != 0:
-                        checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
-                        checkCollisionOverrideOverlay = False
-                        if number[0] == "0" and isinstance(checkCollision, bool):
-                            if not checkCollision:
-                                checkCollisionOverrideOverlay = True
-                            else:
-                                KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.")
-                        UnitData.renderSerial(surface, number, normalBlitPos, checkCollisionOverrideOverlay)
-
-                if unitRect.collidepoint(mpos_scaled):
                     if keys_pressed[K_f]:
                         autoFill = {}
                         for t in UnitType:
@@ -481,17 +505,12 @@ class UnitData:
                         else:
                             unit.properties.Remove(UnitType.Unspecified, "overlay")
 
-
-                    srlist = unit.getSerials()
-                    fld_srls = 0
-                    for sr in srlist:
-                        if int(sr) != 0: fld_srls += 1
-                        else: break
-                    if fld_srls > 1:
-                        for i in range(fld_srls): tip_renders.append(harbinger_font_small.render(srlist[i], True, KDS.Colors.RiverBlue))
+                    filled_srlist = unit.getFilledSerials()
+                    if len(filled_srlist) > 1: # If more than one tile
+                        for sr in filled_srlist: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
 
                     if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
-                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.getFilledSerials(), lambda s: s != brush.brush)
+                        tempbrushtemp = KDS.Linq.FirstOrNone(filled_srlist, lambda s: s != brush.brush)
                         if tempbrushtemp == None:
                             tempbrushtemp = unit.getSerial(0)
                         if not keys_pressed[K_LCTRL]:
@@ -531,9 +550,9 @@ class UnitData:
                     UnitData.placedOnTile = unit
 
                     tipProps = unit.properties.GetAll()
-                    for _type in tipProps:
+                    for _type, properties in tipProps.items():
                         color = _TYPECOLORS[_type]
-                        for k, v in tipProps[_type].items():
+                        for k, v in properties.items():
                             if k == "checkCollision":
                                 continue
                             rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
@@ -559,11 +578,12 @@ class UnitData:
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
 
-        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
-        display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
+        if bpos != (-1, -1):
+            mousePosText = harbinger_font.render(str(bpos), True, KDS.Colors.AviatorRed)
+            display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
 
-        UnitData.releasedButtons[0] = False if mouse_pressed[0] else True
-        UnitData.releasedButtons[2] = False if mouse_pressed[2] else True
+        UnitData.releasedButtons[0] = not mouse_pressed[0]
+        UnitData.releasedButtons[2] = not mouse_pressed[2]
 
         return renderList
 
@@ -611,7 +631,7 @@ class UnitProperties:
         return self.values[_type][key]
 
     def GetAll(self) -> Dict[UnitType, Dict[str, Union[str, int, float, bool]]]:
-        return {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()}
+        return {k: v.copy() for k, v in self.values.items()}
 
     def RemoveUnused(self):
         splitValues = self.parent.getSerials()
@@ -853,7 +873,7 @@ def consoleHandler(commandlist):
                 return
             if commandlist[2] in textureNames:
                 data = Textures.GetDataByName(commandlist[2])
-                brush.SetValues(data.name)
+                brush.SetValues(data.serialNumber)
                 KDS.Console.Feed.append(f"Brush set: [{data.serialNumber}: {data.name}]")
             elif commandlist[2] in textureSerials:
                 brush.SetValues(commandlist[2])
@@ -862,7 +882,7 @@ def consoleHandler(commandlist):
         elif dragRect != None:
             if commandlist[1] in textureNames:
                 data = Textures.GetDataByName(commandlist[1])
-                Selected.Set(UnitData.toSerialString(data.name))
+                Selected.Set(UnitData.toSerialString(data.serialNumber))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{data.serialNumber}: {data.name}]")
             elif commandlist[1] in textureSerials:
