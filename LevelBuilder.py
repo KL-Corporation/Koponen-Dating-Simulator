@@ -163,7 +163,7 @@ Textures.AddTexture("3001", "Assets/Textures/Editor/telep.png", "teleport", None
 Textures.AddTexture("3501", "Assets/Textures/Tiles/door_front.png", "door_teleport")
 #endregion
 
-trueScale = [f"0{e:03d}" for e in buildData["trueScale"]]
+trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
 ### GLOBAL VARIABLES ###
 
 DebugMode = False
@@ -448,7 +448,7 @@ class UnitData:
                 srlist = unit.getSerials()
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
                 if isinstance(overlayTileprops, str):
-                    overlayRenders.append(Textures.GetRenderArgs(overlayTileprops, normalBlitPos)) # Will render some tiles incorrectly
+                    overlayRenders.append(Textures.GetRenderArgs(overlayTileprops, normalBlitPos))
                 for number in srlist:
                     if number == UnitData.EMPTY:
                         continue
@@ -457,13 +457,14 @@ class UnitData:
                         doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
                         continue
 
-                    checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
                     checkCollisionOverrideOverlay = False
-                    if number[0] == "0" and isinstance(checkCollision, bool):
-                        if not checkCollision:
-                            checkCollisionOverrideOverlay = True
-                        else:
-                            KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.", True)
+                    if number[0] == "0":
+                        checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
+                        if isinstance(checkCollision, bool):
+                            if not checkCollision:
+                                checkCollisionOverrideOverlay = True
+                            else:
+                                KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.", True)
                     UnitData.renderSerial(surface, number, normalBlitPos, checkCollisionOverrideOverlay)
 
                 if unitRect.collidepoint(mpos_scaled):
