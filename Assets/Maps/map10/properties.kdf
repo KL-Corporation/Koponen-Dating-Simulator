@@ -16,6 +16,7 @@
 "10-8":{"0":{"checkCollision":false}},
 "12-8":{"4":{"overlay":"0057"}},
 "27-8":{"0":{"message":"Auditorio - luokka 110","t_index":502,"locked":true}},
+"52-8":{"0":{"filepath":"Assets/Audio/Effects/spooky.ogg","clip_volume":0.3}},
 "12-10":{"0":{"checkCollision":false}},
 "13-10":{"0":{"checkCollision":false}},
 "14-10":{"0":{"checkCollision":false}},

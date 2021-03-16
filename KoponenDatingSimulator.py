@@ -1671,6 +1671,35 @@ class AvarnCar(Tile):
             return self.texture
         return None
 
+class Sound(Tile):
+    def __init__(self, position, serialNumber, repeating: bool = False) -> None:
+        super().__init__(position, serialNumber)
+        self.checkCollision = False
+        self.exited: bool = True
+        self.readyToTrigger: bool = True
+        self.texture = None
+        self.repeating: bool = repeating
+        self.filepath: Optional[str] = None
+        self.volume: float = -1.0
+        self.clip_volume: float = 1.0
+
+    def lateInit(self):
+        if self.filepath == None:
+            KDS.Logging.AutoError("No filepath specified for Sound tile!")
+
+    def update(self):
+        if self.rect.colliderect(Player.rect):
+            if self.exited and self.readyToTrigger:
+                self.readyToTrigger = False
+                self.exited = False
+                if self.filepath != None:
+                    KDS.Audio.PlayFromFile(self.filepath, volume=self.volume, clip_volume=self.clip_volume)
+        elif not self.exited:
+            self.readyToTrigger = True if self.repeating else False
+            self.exited = True
+
+        return self.texture
+
 class GenericDoor(Teleport):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
@@ -1686,6 +1715,7 @@ class GenericDoor(Teleport):
             if self.serialNumber not in Teleport.teleportT_IDS:
                 Teleport.teleportT_IDS[self.serialNumber] = []
             Teleport.teleportT_IDS[self.serialNumber].append(self)
+
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
@@ -1767,7 +1797,8 @@ specialTilesD = {
     123: Crackhead,
     126: DoorFront,
     128: AvarnCar,
-    130: GenericDoor
+    130: GenericDoor,
+    131: Sound
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

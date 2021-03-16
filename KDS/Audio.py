@@ -79,9 +79,9 @@ def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     MusicMixer.quit()
 
-def PlaySound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
+def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    if volume == -1: volume = EffectVolume
+    if volume == -1.0: volume = EffectVolume
     play_channel = SoundMixer.find_channel(True)
     play_channel.play(sound, loops, fade_ms)
     play_channel.set_volume(volume)
@@ -116,6 +116,8 @@ def SetVolume(volume: float):
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
 
-def PlayFromFile(path: str, volume: float = -1, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
+def PlayFromFile(path: str, volume: float = -1.0, clip_volume: float = 1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     sound = SoundMixer.Sound(path)
+    if clip_volume != 1.0:
+        sound.set_volume(clip_volume)
     return PlaySound(sound, volume, loops, fade_ms)
