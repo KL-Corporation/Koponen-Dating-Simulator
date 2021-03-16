@@ -398,13 +398,11 @@ class UnitData:
                 teleportOverlayFlag = True
 
         unitData = Textures.GetData(serial)
-        blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize)
+        blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - unitData.scaledTexture_size[0] + scalesize, pos[1] - unitData.scaledTexture_size[1] + scalesize)
+        #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
 
         #region Blitting
-        if serial in trueScale:
-            surface.blit(unitData.scaledTexture, (pos[0] - unitData.scaledTexture_size[0] + scalesize, blitPos[1]))
-        else:
-            surface.blit(unitData.scaledTexture, blitPos) # Will render some tiles incorrectly
+        surface.blit(unitData.scaledTexture, blitPos)
         #endregion
         #region Overlay
         if darkOverlay:
