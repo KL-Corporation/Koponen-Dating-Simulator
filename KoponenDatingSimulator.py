@@ -771,7 +771,8 @@ class Inventory:
             if self.SIndex < self.size - 1:
                 if self.storage[self.SIndex + 1] == Inventory.doubleItem:
                     self.storage[self.SIndex + 1] = Inventory.emptySlot
-            self.storage[self.SIndex] = Inventory.emptySlot
+            if temp.drop() == True:
+                self.storage[self.SIndex] = Inventory.emptySlot
             return temp
 
     def useItemAtIndex(self, index: int, surface: pygame.Surface):
@@ -1886,8 +1887,8 @@ class Item:
     def use(self):
         return self.texture
 
-    #def drop(self):
-    #    pass
+    def drop(self) -> bool:
+        return True
 
     def init(self):
         pass
