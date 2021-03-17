@@ -1,0 +1,6 @@
+# pip install -r .\requirements.txt --upgrade
+
+pygame
+numpy
+pillow
+markdown
