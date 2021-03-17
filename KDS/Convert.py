@@ -1,5 +1,5 @@
 from enum import IntEnum, auto
-from typing import Any, Literal, Tuple, TypeVar, Union, cast
+from typing import Any, Literal, Tuple, TypeVar, Union, cast, Optional
 
 import pygame
 from PIL import Image as PIL_Image
