@@ -9,7 +9,7 @@
         "Koponen": {
             "startPos": [
                 2686,
-                2100
+                2079
             ],
             "enabled": true,
             "forceIdle": true,
@@ -21,7 +21,7 @@
                 435
             ],
             "Inventory": {
-                "0": 6
+                "4": 6
             },
             "spawnInverted": true
         }

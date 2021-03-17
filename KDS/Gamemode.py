@@ -28,7 +28,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         def Tutorial():
             KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
             KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (KDS.Missions.Listeners.Movement, 0.005))
-            KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (KDS.Missions.Listeners.InventorySlotSwitching, 0.2))
+            KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (KDS.Missions.Listeners.InventorySlotSwitching, 0.25))
             KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (KDS.Missions.Listeners.ItemDrop, 6, 1.0), (KDS.Missions.Listeners.ItemPickup, 6, -1.0))
 
         @staticmethod
@@ -56,7 +56,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         if index == 1:
             Presets.Tutorial()
             KDS.Missions.InitialiseMission("enter_school", "Mene Kouluun")
-            KDS.Missions.InitialiseTask("enter_school", "enter", "Kävele Kouluun", (KDS.Missions.Listeners.Teleport, 1.0))
+            KDS.Missions.InitialiseTask("enter_school", "enter", "Avaa koulun ovi painamalla: E", (KDS.Missions.Listeners.Teleport, 1.0))
 
             Presets.KoponenIntroduction()
 

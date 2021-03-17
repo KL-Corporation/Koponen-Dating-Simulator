@@ -117,14 +117,14 @@ class Mission:
             for item in Mission.Task.items:
                 inInv = None
                 for invItem in player_inventory.storage:
-                    if invItem.serialNumber == item:
+                    if hasattr(invItem, "serialNumber") and invItem.serialNumber == item:
                         inInv = invItem
                         break
 
                 if inInv != None:
                     KDS.Missions.SetProgress(Mission.Task.missionName, Mission.Task.safeName, 1.0)
                     Mission.Task = None
-                    player_inventory.storage.pop(player_inventory.storage.index(inInv))
+                    player_inventory.dropItemAtIndex(player_inventory.storage.index(inInv))
                     KDS.Missions.Listeners.KoponenReturnMission.Trigger()
                     Talk.scheduled.pop(0)
                     return

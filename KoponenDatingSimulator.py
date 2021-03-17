@@ -765,16 +765,20 @@ class Inventory:
             else:
                 self.SIndex = index
 
-    def dropItem(self):
-        temp = self.storage[self.SIndex]
+    def dropItemAtIndex(self, index: int) -> Optional[Item]:
+        temp = self.storage[index]
         if not isinstance(temp, str):
             KDS.Missions.Listeners.ItemDrop.Trigger(temp.serialNumber)
-            if self.SIndex < self.size - 1:
-                if self.storage[self.SIndex + 1] == Inventory.doubleItem:
-                    self.storage[self.SIndex + 1] = Inventory.emptySlot
+            if index < self.size - 1:
+                if self.storage[index + 1] == Inventory.doubleItem:
+                    self.storage[index + 1] = Inventory.emptySlot
             if temp.drop() == True:
-                self.storage[self.SIndex] = Inventory.emptySlot
+                self.storage[index] = Inventory.emptySlot
             return temp
+        return None
+
+    def dropItem(self) -> Optional[Item]:
+        return self.dropItemAtIndex(self.SIndex)
 
     def useItemAtIndex(self, index: int, surface: pygame.Surface):
         item = self.storage[index]
@@ -1895,7 +1899,6 @@ class Item:
         return Item_list, inventory
 
     def pickup(self):
-
         return False
 
     def use(self):
@@ -3756,11 +3759,12 @@ while main_running:
                 Player.inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
                 if Player.inventory.getHandItem() != Inventory.emptySlot and Player.inventory.getHandItem() != Inventory.doubleItem:
-                    temp: Any = Player.inventory.dropItem()
-                    temp.rect.center = Player.rect.center
-                    temp.physics = True
-                    temp.momentum = 0
-                    Items.append(temp)
+                    droppedItem: Any = Player.inventory.dropItem()
+                    if droppedItem != None:
+                        droppedItem.rect.center = Player.rect.center
+                        droppedItem.physics = True
+                        droppedItem.momentum = 0
+                        Items.append(droppedItem)
             elif event.key == K_f:
                 if Player.stamina == 100:
                     Player.stamina = -1000.0

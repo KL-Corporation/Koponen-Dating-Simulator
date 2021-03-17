@@ -247,16 +247,15 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> 
     # Freezes if word is longer than max_width...
     if font.size(text)[0] > max_width:
         text_split = [" " + wrd for wrd in text.split(" ")]
-        text_split[0] = text_split[0].lstrip()
         new_split = [text_split]
-        while font.size( "".join(toTest := new_split[-1]) )[0] > max_width:
+        while font.size( "".join(toTest := new_split[-1]).lstrip() )[0] > max_width:
             i = 0
-            while font.size( "".join(toTest[:i]) )[0] <= max_width:
+            while font.size( "".join(toTest[:i]).lstrip() )[0] <= max_width:
                 i += 1
                 if i >= len(toTest):
                     break
 
-                if i == 1 and font.size( "".join(toTest[:i]) )[0] > max_width:
+                if i == 1 and font.size( "".join(toTest[:i]).lstrip() )[0] > max_width:
                     i += 1 # Added because minus one
                     break # Fix for freezing if word is longer than max_width
             i -= 1 # Fixes getting the wrong index... Or that is what I remember this does...  I should've documented this more clearly...
@@ -264,7 +263,7 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> 
             new_split.append(toTest[i:])
             new_split[-2] = toTest[:i]
         if len(new_split[-1]) < 1: del(new_split[-1])
-        return tuple(["".join(new_split[i]) for i in range(len(new_split))])
+        return tuple(["".join(new_split[i]).lstrip() for i in range(len(new_split))])
     else: return tuple([text])
 
 def ToRational(value: float) -> str:
