@@ -14,9 +14,22 @@ _T = TypeVar("_T")
 class String:
     @staticmethod
     def ToBool(string: str, fallback: Optional[bool] = None, hideError: bool = False) -> Optional[bool]:
+        """Converts a string to bool.
+
+        Args:
+            string (str): The input string to convert.
+            fallback (Optional[bool], optional): The value to be returned if string does not match. Defaults to None.
+            hideError (bool, optional): If True; no error message will be displayed if string cannot be converted. Defaults to False.
+
+        Returns:
+            Optional[bool]:
+                True: String is the start of the word \"true\". (ignores case)
+                False: String is the start of the word \"false\". (ignores case)
+                fallback: String does not match.
+        """
         s = string.lower()
-        if s in ("t", "true"): return True
-        elif s in ("f", "false"): return False
+        if "true".startswith(s): return True
+        elif "false".startswith(s): return False
         elif not hideError:
             KDS.Logging.AutoError(f"Cannot convert \"{string}\" to bool.")
         return fallback
