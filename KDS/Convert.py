@@ -13,7 +13,7 @@ _T = TypeVar("_T")
 
 class String:
     @staticmethod
-    def ToBool(string: str, fallback: Optional[str] = None, hideError: bool = False) -> Optional[str]:
+    def ToBool(string: str, fallback: Optional[bool] = None, hideError: bool = False) -> Optional[bool]:
         s = string.lower()
         if s in ("t", "true"): return True
         elif s in ("f", "false"): return False
@@ -54,21 +54,29 @@ def ToBool2(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = Fal
     return fallbackValue
 
 def AutoType(value: str, fallbackValue: _T) -> Union[str, int, float, bool, _T]:
+    #region String
     if value.startswith("\"") and value.endswith("\""):
         return value
+    #endregion
+    #region Int
     try:
         r = int(value)
         return r
     except ValueError:
         pass
+    #endregion
+    #region Float
     try:
         r = float(value)
         return r
     except ValueError:
         pass
-    r = ToBool(value, None, True)
+    #endregion
+    #region Bool
+    r = String.ToBool(value, None, True)
     if r != None:
         return r
+    #endregion
     return fallbackValue
 
 def AutoType2(value: str) -> Union[str, bool, int, float, None]: # Strict type check for auto type

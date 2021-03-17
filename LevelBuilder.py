@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sys import getdefaultencoding
 
 #region Import Error
 if __name__ != "__main__":
@@ -41,7 +42,7 @@ pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     global display, display_size
-    display = pygame.display.set_mode(size, RESIZABLE | HWSURFACE | DOUBLEBUF)
+    display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | HWSURFACE | DOUBLEBUF))
     display_size = display.get_size()
 SetDisplaySize(display_size)
 
@@ -161,6 +162,7 @@ Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0
 
 Textures.AddTexture("3001", "Assets/Textures/Editor/telep.png", "teleport", None)
 Textures.AddTexture("3501", "Assets/Textures/Tiles/door_front.png", "door_teleport")
+Textures.AddTexture("3502", "Assets/Textures/Tiles/door_front_mirrored.png", "door_teleport")
 #endregion
 
 trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
@@ -388,14 +390,22 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderSerial(surface: pygame.Surface, serial: str, pos: Tuple[int, int], darkOverlay: bool = False):
+    def renderSerial(surface: pygame.Surface, properties: UnitProperties, serial: str, pos: Tuple[int, int]):
         teleportOverlayFlag = False
+        darkOverlayFlag = False
         if serial.startswith("3"):
             if int(serial[1:]) < 500:
                 serial = "3001"
             else:
-                serial = "3501"
+                serial = "3501" if not properties.Get(UnitType.Teleport, "mirrored", None) else "3502"
                 teleportOverlayFlag = True
+        elif serial.startswith("0"):
+            checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
+            if isinstance(checkCollision, bool):
+                if not checkCollision:
+                    darkOverlayFlag = True
+                else:
+                    KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
 
         unitData = Textures.GetData(serial)
         blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - unitData.scaledTexture_size[0] + scalesize, pos[1] - unitData.scaledTexture_size[1] + scalesize)
@@ -405,7 +415,7 @@ class UnitData:
         surface.blit(unitData.scaledTexture, blitPos)
         #endregion
         #region Overlay
-        if darkOverlay:
+        if darkOverlayFlag:
             surface.blit(unitData.darkOverlay, blitPos)
         #endregion
 
@@ -455,15 +465,7 @@ class UnitData:
                         doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
                         continue
 
-                    checkCollisionOverrideOverlay = False
-                    if number[0] == "0":
-                        checkCollision = unit.properties.Get(UnitType.Tile, "checkCollision", None)
-                        if isinstance(checkCollision, bool):
-                            if not checkCollision:
-                                checkCollisionOverrideOverlay = True
-                            else:
-                                KDS.Logging.warning(f"checkCollision forced on at: {unit.pos}. This is generally not recommended.", True)
-                    UnitData.renderSerial(surface, number, normalBlitPos, checkCollisionOverrideOverlay)
+                    UnitData.renderSerial(surface, unit.properties, number, normalBlitPos)
 
                 if unitRect.collidepoint(mpos_scaled):
                     if unit.hasTeleport():
@@ -510,12 +512,21 @@ class UnitData:
 
                     if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
                         tempbrushtemp = KDS.Linq.FirstOrNone(filled_srlist, lambda s: s != brush.brush)
+                        teleportBrushProperties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
                         if tempbrushtemp == None:
                             tempbrushtemp = unit.getSerial(0)
-                        if not keys_pressed[K_LCTRL]:
-                            brush.SetValues(tempbrushtemp)
-                        else:
-                            brush.SetValues(tempbrushtemp, unit.properties.GetAll())
+                        if tempbrushtemp.startswith("3"):
+                            tempbrushtemp = "3001" if int(tempbrushtemp[1:]) < 500 else "3501"
+                            teleportBrushMirrored = unit.properties.Get(UnitType.Teleport, "mirrored", None)
+                            if isinstance(teleportBrushMirrored, bool):
+                                if teleportBrushMirrored:
+                                    teleportBrushProperties = {UnitType.Teleport: {"mirrored": True}}
+                                    tempbrushtemp = "3502"
+
+                        if keys_pressed[K_LCTRL]:
+                            teleportBrushProperties = unit.properties.GetAll()
+
+                        brush.SetValues(tempbrushtemp, teleportBrushProperties)
 
                     pygame.draw.rect(surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
                     bpos = unit.pos
@@ -1308,7 +1319,11 @@ def main():
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
-                    brush.SetValues(materialMenu(brush.brush))
+                    tmpBrush = materialMenu(brush.brush)
+                    tmpProps: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+                    if tmpBrush == "3502":
+                        tmpProps = {UnitType.Teleport: {"mirrored": True}}
+                    brush.SetValues(tmpBrush, tmpProps)
                     allowTilePlacement = False
                 elif event.key == K_DELETE:
                     Selected.Set(UnitData.EMPTYSERIAL)
@@ -1436,7 +1451,7 @@ def main():
                 srlist = unit.getSerials()
                 for number in srlist:
                     if number != UnitData.EMPTY:
-                        UnitData.renderSerial(display, number, (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize))
+                        UnitData.renderSerial(display, unit.properties, number, (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize))
 
         if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
             selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
@@ -1445,6 +1460,11 @@ def main():
             pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), scalesize // 8)
             selectDraw.set_alpha(64)
             display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
+
+            wRnd = harbinger_font.render(str(dragRect.width), True, KDS.Colors.CloudWhite)
+            display.blit(wRnd, (selectDrawRect.x + selectDrawRect.width // 2, selectDrawRect.y - 25))
+            hRnd = harbinger_font.render(str(dragRect.height), True, KDS.Colors.CloudWhite)
+            display.blit(hRnd, (selectDrawRect.x - 25, selectDrawRect.y + selectDrawRect.height // 2))
 
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))

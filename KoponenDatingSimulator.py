@@ -561,7 +561,7 @@ class WorldData():
                                     if pointer == 0 and k == "checkCollision":
                                             value.checkCollision = bool(v)
                                             if not v:
-                                                tex = value.texture.convert_alpha()
+                                                tex: Any = value.texture.convert_alpha()
                                                 tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                                 value.darkOverlay = tex
                                     else:
@@ -838,7 +838,7 @@ class Tile:
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
         self.lateRender = False
-        self.darkOverlay: Optional[Any] = None
+        self.darkOverlay: Optional[pygame.Surface] = None
 
     @staticmethod
     # Tile_list is a list in a list in a list... Also known as a 3D array. Z axis is determined by index. Higher index means more towards the camera. Overlays are a different story
@@ -1267,13 +1267,15 @@ class Candle(Tile):
 
 class Teleport(Tile):
     door_texture = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
+    door_texture_mirrored = pygame.image.load("Assets/Textures/Tiles/door_front_mirrored.png").convert()
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, 1)
         self.texture = Teleport.door_texture if serialNumber > 499 else None
-        if serialNumber > 499:
-            self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
-        else:
+        if serialNumber < 500:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        else:
+            self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         self.checkCollision = False
         self.specialTileFlag = True
         self.teleportReady = True
@@ -1281,10 +1283,14 @@ class Teleport(Tile):
         self.message: str = ""
         self.renderedMessage: Optional[pygame.Surface] = None
         self.serialNumber = serialNumber
+        self.mirrored: bool = False
 
     def lateInit(self):
         if self.message != None:
             self.renderedMessage = tip_font.render(self.message, True, KDS.Colors.White)
+        if self.mirrored and self.serialNumber >= 500:
+            self.texture = Teleport.door_texture_mirrored
+            # darkOverlay flipping is probably not necessary, because it should work either way around...?
 
     def update(self):
         #Calculating next teleport with same serial number
@@ -1590,6 +1596,14 @@ class DoorFront(Tile):
                     KDS.Audio.PlaySound(door_locked)
         return self.texture if not self.opened else self.opentexture
 
+class DoorFrontMirrored(DoorFront):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.opentexture = pygame.image.load("Assets/Textures/Tiles/door_open_mirrored.png").convert_alpha()
+
+    def update(self):
+        return super().update()
+
 class Tent(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1801,7 +1815,8 @@ specialTilesD = {
     126: DoorFront,
     128: AvarnCar,
     130: GenericDoor,
-    131: Sound
+    131: Sound,
+    132: DoorFrontMirrored
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
