@@ -11,7 +11,18 @@ import KDS.Math
 
 _T = TypeVar("_T")
 
-def ToBool(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
+class String:
+    @staticmethod
+    def ToBool(string: str, fallback: Optional[str] = None, hideError: bool = False) -> Optional[str]:
+        s = string.lower()
+        if s in ("t", "true"): return True
+        elif s in ("f", "false"): return False
+        elif not hideError:
+            KDS.Logging.AutoError(f"Cannot convert \"{string}\" to bool.")
+        return fallback
+
+# The shittier version of ToBool
+def ToBool2(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]

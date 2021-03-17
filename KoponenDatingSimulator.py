@@ -122,8 +122,8 @@ I=====[ DEBUG INFO ]=====I
 
    [Driver Info]
    - SDL Video Driver: {pygame.display.get_driver()}
-   - Hardware Acceleration: {KDS.Convert.ToBool(display_info.hw)}
-   - Window Allowed: {KDS.Convert.ToBool(display_info.wm)}
+   - Hardware Acceleration: {bool(display_info.hw)}
+   - Window Allowed: {bool(display_info.wm)}
    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
 
    [Pixel Info]
@@ -134,12 +134,12 @@ I=====[ DEBUG INFO ]=====I
    - Losses: {display_info.losses}
 
    [Hardware Acceleration]
-   - Hardware Blitting: {KDS.Convert.ToBool(display_info.blit_hw)}
-   - Hardware Colorkey Blitting: {KDS.Convert.ToBool(display_info.blit_hw_CC)}
-   - Hardware Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_hw_A)}
-   - Software Blitting: {KDS.Convert.ToBool(display_info.blit_sw)}
-   - Software Colorkey Blitting: {KDS.Convert.ToBool(display_info.blit_sw_CC)}
-   - Software Pixel Alpha Blitting: {KDS.Convert.ToBool(display_info.blit_sw_A)}
+   - Hardware Blitting: {bool(display_info.blit_hw)}
+   - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
+   - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
+   - Software Blitting: {bool(display_info.blit_sw)}
+   - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
+   - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
 KDS.Audio.init(pygame.mixer)
@@ -2832,7 +2832,7 @@ def console(oldSurf: pygame.Surface):
             elif command_list[0] == "terms":
                 setTerms = False
                 if len(command_list) == 2:
-                    setTerms = KDS.Convert.ToBool(command_list[1], None)
+                    setTerms = KDS.Convert.String.ToBool(command_list[1], None)
                     if setTerms != None:
                         KDS.ConfigManager.SetSetting("Data/Terms/accepted", setTerms)
                         KDS.Console.Feed.append(f"Terms status set to: {setTerms}")
@@ -2842,7 +2842,7 @@ def console(oldSurf: pygame.Surface):
                     KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
             elif command_list[0] == "woof":
                 if len(command_list) == 2:
-                    woofState = KDS.Convert.ToBool(command_list[1], None)
+                    woofState = KDS.Convert.String.ToBool(command_list[1], None)
                     if woofState != None:
                         KDS.Console.Feed.append("Woof state assignment has not been implemented for the new AI system yet.")
                     else:
@@ -2852,14 +2852,14 @@ def console(oldSurf: pygame.Surface):
             elif command_list[0] == "infinite":
                 if len(command_list) == 3:
                     if command_list[1] == "health":
-                        h_state = KDS.Convert.ToBool(command_list[2], None)
+                        h_state = KDS.Convert.String.ToBool(command_list[2], None)
                         if h_state != None:
                             Player.infiniteHealth = h_state
                             KDS.Console.Feed.append(f"infinite health state has been set to: {Player.infiniteHealth}")
                         else:
                             KDS.Console.Feed.append("Please provide a proper state for infinite health.")
                     elif command_list[1] == "ammo":
-                        a_state = KDS.Convert.ToBool(command_list[2], None)
+                        a_state = KDS.Convert.String.ToBool(command_list[2], None)
                         if a_state != None:
                             Item.infiniteAmmo = a_state
                             KDS.Console.Feed.append(f"infinite ammo state has been set to: {Item.infiniteAmmo}")
@@ -2927,7 +2927,7 @@ def console(oldSurf: pygame.Surface):
                         KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
             elif command_list[0] == "fly":
                 if len(command_list) == 2:
-                    flyState = KDS.Convert.ToBool(command_list[1], None)
+                    flyState = KDS.Convert.String.ToBool(command_list[1], None)
                     if flyState != None:
                         Player.fly = flyState
                         KDS.Console.Feed.append(f"Fly state has been set to: {Player.fly}")
@@ -2937,7 +2937,7 @@ def console(oldSurf: pygame.Surface):
                     KDS.Console.Feed.append("Please provide a proper state for fly")
             elif command_list[0] == "godmode":
                 if len(command_list) == 2:
-                    godmodeState = KDS.Convert.ToBool(command_list[1], None)
+                    godmodeState = KDS.Convert.String.ToBool(command_list[1], None)
                     if godmodeState != None:
                         KDS.World.Bullet.GodMode = godmodeState
                         KDS.Console.Feed.append(f"Godmode state has been set to: {KDS.World.Bullet.GodMode}")

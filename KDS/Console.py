@@ -293,7 +293,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                 else: invalid = True
 
             elif _type == "bool":
-                if KDS.Convert.ToBool(cmd, None, True) == None: invalid = True
+                if KDS.Convert.ToBool2(cmd, None, True) == None: invalid = True
 
             elif _type in ("tuple", "rect"):
                 cmdSplit = re.sub(r"\)$", "", re.sub(r"^\(", "", cmd)).split(",")
@@ -513,7 +513,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
             elif _type == "float":
                 return float(cmd)
             elif _type == "bool":
-                return KDS.Convert.ToBool(cmd)
+                return KDS.Convert.ToBool2(cmd)
             elif _type in ("tuple", "rect"):
                 tmpSplit = cmd.split(",")
                 tmpVals = [int(re.sub(r"\D", "", val)) for val in tmpSplit]
