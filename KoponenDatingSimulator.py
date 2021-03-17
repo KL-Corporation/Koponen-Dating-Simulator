@@ -375,8 +375,8 @@ level_background = False
 level_background_img = Any
 lightsUpdating = 0
 
-Items = []
-Enemies = []
+Items: List[Item] = []
+Enemies: List[KDS.AI.HostileEnemy] = []
 
 true_scroll = [0.0, 0.0]
 
@@ -568,13 +568,16 @@ class WorldData():
                                         setattr(value, k, v)
             y += 1
 
+        # lateInit order is the reverse of pointers
+        for enemy in Enemies:
+            enemy.lateInit()
+        for item in Items:
+            item.lateInit()
         for row in tiles:
             pygame.event.pump()
             for unit in row:
                 for tile in unit:
                     tile.lateInit()
-        for enemy in Enemies:
-            enemy.lateInit()
 
         if os.path.isfile(os.path.join(MapPath, "music.ogg")):
             KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
@@ -885,7 +888,7 @@ class Tile:
         return self.texture
 
     def lateInit(self):
-        return self
+        pass
     """
     def textureUpdate(self):
         temp_surface = pygame.Surface(self.texture.get_size()).convert()
@@ -1890,7 +1893,7 @@ class Item:
     def drop(self) -> bool:
         return True
 
-    def init(self):
+    def lateInit(self):
         pass
 
 class BlueKey(Item):
@@ -2438,6 +2441,23 @@ class GasCanister(Item):
         KDS.Audio.PlaySound(GasCanister.pickup_sound)
         Chainsaw.ammunition = min(100, Chainsaw.ammunition + 50)
         return True
+
+class WalkieTalkie(Item):
+    OnPlay = KDS.Events.Event()
+
+    ### Story Mode Only ###
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
+        super().__init__(position, serialNumber, texture)
+        self.allowDrop: bool = True
+        self.playTime = -1
+        self.clip = None
+
+    def pickup(self):
+        self.allowDrop = False
+        KDS.Audio.PlaySound(self.clip)
+
+    def drop(self):
+        return self.allowDrop
 
 Item.serialNumbers = {
     1: BlueKey,
