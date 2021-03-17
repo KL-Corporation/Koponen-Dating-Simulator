@@ -1724,12 +1724,11 @@ class GenericDoor(Teleport):
         self.t_index = 0
 
     def lateInit(self) -> None:
-        if self.t_index != 0:
-            self.serialNumber = self.t_index
-            if self.serialNumber not in Teleport.teleportT_IDS:
-                Teleport.teleportT_IDS[self.serialNumber] = []
-            Teleport.teleportT_IDS[self.serialNumber].append(self)
-
+        self.serialNumber = self.t_index
+        if self.serialNumber not in Teleport.teleportT_IDS:
+            Teleport.teleportT_IDS[self.serialNumber] = []
+        Teleport.teleportT_IDS[self.serialNumber].append(self)
+        super().lateInit()
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
