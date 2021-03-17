@@ -679,6 +679,8 @@ class UnitProperties:
 
     @staticmethod
     def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
+        if len(jsonString) < 1 or jsonString.isspace():
+            return
         deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
         for row in grid:
             for unit in row:

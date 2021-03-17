@@ -75,8 +75,8 @@ pygame.event.set_allowed((
 ))
 #endregion
 #region Quit Handling
-def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool = False):
-    global main_running, main_menu_running, tcagr_running, esc_menu, settings_running, selectedSave, tick, restart, reset_data, level_finished_running
+def KDS_Quit(confirm: bool = False, remove_data_s: bool = False):
+    global main_running, main_menu_running, tcagr_running, esc_menu, settings_running, selectedSave, tick, remove_data_on_quit, level_finished_running
     if not confirm or KDS.System.MessageBox.Show("Quit?", "Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
         main_menu_running = False
         main_running = False
@@ -84,8 +84,7 @@ def KDS_Quit(confirm: bool = False, restart_s: bool = False, reset_data_s: bool 
         esc_menu = False
         KDS.Koponen.Talk.running = False
         settings_running = False
-        restart = restart_s
-        reset_data = reset_data_s
+        remove_data_on_quit = remove_data_s
         level_finished_running = False
 #endregion
 #region Initialisation
@@ -320,8 +319,7 @@ tentTip: pygame.Surface = tip_font.render("Toggle Sleep [E]", True, KDS.Colors.W
 renderPadding: int = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
 pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
 
-restart = False
-reset_data = False
+remove_data_on_quit = False
 
 colorInvert = False
 
@@ -3220,8 +3218,9 @@ def settings_menu():
         KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
         KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
 
-    def reset_data():
-        KDS_Quit(restart_s=True, reset_data_s=True)
+    def remove_data():
+        if KDS.System.MessageBox.Show("Remove Data", "Are you sure you want to remove all Koponen Dating Simulator data? This cannot be undone.", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
+            KDS_Quit(remove_data_s=True)
 
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
@@ -3229,7 +3228,7 @@ def settings_menu():
     walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), False, custom_path="Mixer/walkSound")
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
-    reset_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), reset_data, button_font.render("Reset Data", True, KDS.Colors.White))
+    remove_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), remove_data, button_font.render("Remove Data", True, KDS.Colors.White))
     music_volume_text = button_font.render("Music Volume", True, KDS.Colors.White)
     effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.White)
     walk_sound_text = button_font.render("Play footstep sounds", True, KDS.Colors.White)
@@ -3272,7 +3271,7 @@ def settings_menu():
 
         return_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
-        reset_data_button.update(display, mouse_pos, c)
+        remove_data_button.update(display, mouse_pos, c)
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
@@ -4153,8 +4152,6 @@ KDS.Logging.quit()
 pygame.mixer.quit()
 pygame.display.quit()
 pygame.quit()
-if reset_data:
+if remove_data_on_quit:
     shutil.rmtree(PersistentPaths.AppData)
-if restart:
-    os.execl(sys.executable, os.path.abspath(__file__))
 #endregion

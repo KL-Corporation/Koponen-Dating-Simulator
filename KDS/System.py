@@ -85,7 +85,8 @@ class MessageBox:
         argVal += icon.value if icon != None else 0
         argVal += defaultButton.value if defaultButton != None else 0
         argVal += sum(args)
-        return MessageBox.Responses(ctypes.windll.user32.MessageBoxW(0, text, title, argVal))
+        response = ctypes.windll.user32.MessageBoxW(0, text, title, argVal)
+        return MessageBox.Responses(response)
 
 class Console:
     ATTRIBUTES = dict(
