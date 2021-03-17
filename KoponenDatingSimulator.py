@@ -1723,8 +1723,8 @@ class GenericDoor(Teleport):
         self.rect = _rect
         self.t_index = 0
 
-    def lateinit(self, name: str, value: Any) -> None:
-        if t_index != 0:
+    def lateinit(self) -> None:
+        if self.t_index != 0:
             self.serialNumber = self.t_index
             if self.serialNumber not in Teleport.teleportT_IDS:
                 Teleport.teleportT_IDS[self.serialNumber] = []
