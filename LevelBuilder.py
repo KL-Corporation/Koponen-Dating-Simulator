@@ -1360,7 +1360,7 @@ def main():
                                 raise ValueError(f"Clipboard data (type: from) is an incorrect type. Tuple of length 2 expected; got: \"{toClipboard}\".")
                             pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}", "utf-8"))
                         except Exception:
-                            KDS.Logging.AutoError(f"Copy to clipboard failed. Exception: {traceback.format_exc()}")
+                            KDS.Logging.AutoError(f"Copy to clipboard failed. Exception Below:\n{traceback.format_exc()}")
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
                         try:
