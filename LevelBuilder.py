@@ -33,7 +33,7 @@ root.withdraw()
 pygame.init()
 pygame.scrap.init()
 pygame.scrap.set_mode(SCRAP_CLIPBOARD)
-display_size = (1600, 800)
+display_size: Tuple[int, int] = (1600, 800)
 scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
@@ -437,8 +437,8 @@ class UnitData:
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         #region Scroll Clamping
-        scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize + 1), gridSize[0] - 1)
-        scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize + 1), gridSize[1] - 1)
+        scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize) + 1, gridSize[0] - 1)
+        scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize) + 1, gridSize[1] - 1)
         #endregion
         bpos = (-1, -1)
 
@@ -1244,11 +1244,14 @@ class Selected:
 
 def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
     global DebugMode
+    #region Event Ignoring
     if event.type == ignoreEventOfType:
         return False
+    #endregion
+
     if event.type == QUIT:
         LB_Quit()
-        return True # Return True if you event handling can be stopped
+        return True # Return True if event handling can be stopped
     elif event.type == KEYDOWN:
         if event.key == K_F3:
             DebugMode = not DebugMode
