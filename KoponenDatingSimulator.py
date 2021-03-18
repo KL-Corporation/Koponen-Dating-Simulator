@@ -119,7 +119,7 @@ I=====[ DEBUG INFO ]=====I
    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
 
-   [Driver Info]
+   [Video Info]
    - SDL Video Driver: {pygame.display.get_driver()}
    - Hardware Acceleration: {bool(display_info.hw)}
    - Window Allowed: {bool(display_info.wm)}
