@@ -169,5 +169,11 @@
 "82-15":{"0":{"checkCollision":false}},
 "83-15":{"0":{"checkCollision":false}},
 "84-15":{"0":{"checkCollision":false}},
-"85-15":{"0":{"checkCollision":false}}
+"85-15":{"0":{"checkCollision":false}},
+"69-37":{"0":{"checkCollision":false}},
+"69-38":{"0":{"checkCollision":false}},
+"69-39":{"0":{"checkCollision":false}},
+"69-40":{"0":{"checkCollision":false}},
+"69-41":{"0":{"checkCollision":false}},
+"69-42":{"0":{"checkCollision":false}}
 }
