@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+##### MOST FUNCTIONS DO NOT SUPPORT LINUX #####
+
 import ctypes
 import os
 import shutil
 import subprocess
-from typing import Union
 
 import KDS.Logging
 
 from enum import IntEnum
 
 def hide(path: str):
-    """Hides the file or directory specified by path. [WINDOWS ONLY]
+    """Hides the file or directory specified by path.
 
     Args:
         path (str): The path to the file or directory to be hidden.
@@ -19,7 +20,7 @@ def hide(path: str):
     subprocess.call(["attrib", "+H", path])
 
 def unhide(path: str):
-    """Unhides the file or directory specified by path. [WINDOWS ONLY]
+    """Unhides the file or directory specified by path.
 
     Args:
         path (str): The path to the file or directory to be unhidden.
@@ -39,7 +40,7 @@ def emptdir(dirpath: str):
         elif os.path.isdir(itemPath):
             shutil.rmtree(itemPath)
         else:
-            KDS.Logging.AutoError("Cannot determine child type.")
+            KDS.Logging.AutoError(f"Cannot determine child type of path: \"{itemPath}\".")
 
 class MessageBox:
     class Buttons(IntEnum):

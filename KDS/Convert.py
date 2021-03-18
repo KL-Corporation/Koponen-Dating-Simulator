@@ -69,7 +69,7 @@ def ToBool2(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = Fal
 def AutoType(value: str, fallbackValue: _T) -> Union[str, int, float, bool, _T]:
     #region String
     if value.startswith("\"") and value.endswith("\""):
-        return value
+        return value.removeprefix("\"").removesuffix("\"")
     #endregion
     #region Int
     try:

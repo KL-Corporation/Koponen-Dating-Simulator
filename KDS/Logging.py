@@ -72,16 +72,16 @@ def Profiler(enabled: bool = True):
         profiler_running = False
         profile.disable()
         try:
-            log_stream = open(logFileName, "a+")
-            log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
-            ps = pstats.Stats(profile, stream=log_stream)
-            ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
-            ps.print_stats()
-            log_stream.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n")
-            log_stream.close()
+            with open(logFileName, "a+") as f:
+                f.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
+                ps = pstats.Stats(profile, stream=f)
+                ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
+                ps.print_stats()
+                f.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n")
         except IOError as e: AutoError(f"IO Error! Details: {e}")
 
 def quit():
     global running
     running = False
     logging.shutdown()
+    Profiler(False)

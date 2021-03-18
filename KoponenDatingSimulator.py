@@ -3856,7 +3856,7 @@ while main_running:
     true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]
-    if level_background: screen.blit(level_background_img, (scroll[0] * 0.12 * -1 - 68, scroll[1] *0.12 * -1 - 68))
+    if level_background: screen.blit(level_background_img, (scroll[0] * 0.12 * -1 - 68, scroll[1] * 0.12 * -1 - 68))
     else: screen.fill((20, 25, 20))
     mouse_pos = pygame.mouse.get_pos()
 
