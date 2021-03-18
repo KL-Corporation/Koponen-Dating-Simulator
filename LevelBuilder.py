@@ -169,8 +169,6 @@ trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
 
 DebugMode = False
 
-dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
-light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
 scroll = [0, 0]
 teleportTemp = "001"
 currentSaveName = ''
@@ -798,8 +796,8 @@ def saveMapName():
     global currentSaveName, grid
     savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
     if len(savePath) > 0:
-        saveMap(grid, savePath)
         currentSaveName = savePath
+        saveMap(grid, currentSaveName)
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
     global currentSaveName, gridSize, grid
@@ -810,7 +808,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         KDS.Logging.info(f"Map file at path \"{path}\" is not a valid type.", True)
         return False
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
-        if not currentSaveName:
+        if len(currentSaveName) < 1 or currentSaveName.isspace():
             saveMapName()
         else:
             saveMap(grid, currentSaveName)
@@ -1393,7 +1391,7 @@ def main():
                 scroll[1] = scroll_beforeMove[1] + mid_scroll_y
 
         if keys_pressed[K_s] and keys_pressed[K_LCTRL]:
-            if not currentSaveName:
+            if len(currentSaveName) < 1 or currentSaveName.isspace():
                 saveMapName()
             else:
                 saveMap(grid, currentSaveName)
