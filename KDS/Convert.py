@@ -34,7 +34,7 @@ class String:
             KDS.Logging.AutoError(f"Cannot convert \"{string}\" to bool.")
         return fallback
 
-# The shittier version of ToBool
+# The shittier version of String.ToBool
 def ToBool2(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
@@ -86,7 +86,7 @@ def AutoType(value: str, fallbackValue: _T) -> Union[str, int, float, bool, _T]:
         pass
     #endregion
     #region Bool
-    r = String.ToBool(value, None, True)
+    r = String.ToBool(value, None, hideError=True)
     if r != None:
         return r
     #endregion
@@ -187,7 +187,7 @@ def CorrelatedColorTemperatureToRGB(kelvin: float) -> Tuple[int, int, int]:
         kelvin (float): The correlated color temperature. Is clamped to the range [1000, 40000].
 
     Returns:
-        Tuple[int, int, int]: [description]
+        Tuple[int, int, int]: The output RGB
     """
 
     kelvin = KDS.Math.Clamp(kelvin, 1000.0, 40000.0)
@@ -224,7 +224,7 @@ def HSVToRGB(hue: float, saturation: float, value: float) -> Tuple[float, float,
     """Converts an HSV color to RGB. This method automatically converts the hue to the range of 0-1.
 
     Args:
-        hue (float): The hue of the color.
+        hue (float): The hue of the color. range[0.0, 360.0]
         saturation (float): The saturation of the color.
         value (float): The value / brightness of the color.
 
@@ -237,7 +237,7 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
     """Converts an HSV color to RGB. This method does NOT automatically convert the hue to the range of 0-1.
 
     Args:
-        hue (float): The hue of the color.
+        hue (float): The hue of the color. range[0.0, 1.0]
         saturation (float): The saturation of the color.
         value (float): The value / brightness of the color.
 
@@ -249,9 +249,9 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
     if saturation == 0.0:
         value *= 255
         return (value, value, value)
-    i = int(hue * 6.)
-    f = (hue * 6.) - i
-    p, q, t = int(255 * (value * (1. - saturation))), int(255 * (value * (1. - saturation * f))), int(255 * (value * (1. -saturation * (1. - f))))
+    i = int(hue * 6.0)
+    f = (hue * 6.0) - i
+    p, q, t = int(255 * (value * (1.0 - saturation))), int(255 * (value * (1.0 - saturation * f))), int(255 * (value * (1.0 -saturation * (1.0 - f))))
     value *= 255
     i %= 6
     if i == 0:
@@ -294,10 +294,10 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> 
     else: return tuple([text])
 
 def ToRational(value: float) -> str:
-    decimal, integer = KDS.Math.SplitFloat(value)
+    fraction, integer = KDS.Math.SplitFloat(value)
     integer = int(integer)
     marks = {0.0: "", 0.25: "+", 0.5: "½", 0.75: "-", 1.0: ""}
-    closest = KDS.Math.Closest(decimal, marks.keys())
+    closest = KDS.Math.Closest(fraction, marks.keys())
     mark = marks[closest]
     if closest > 0.5:
         integer += 1

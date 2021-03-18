@@ -28,6 +28,7 @@ from enum import IntEnum
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 root = tkinter.Tk()
+root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 root.withdraw()
 pygame.init()
 pygame.scrap.init()
@@ -68,14 +69,16 @@ class TextureHolder:
             self.serialNumber = serialNumber
             if path != None:
                 self.path: str = path
+                self.directory, self.filename = os.path.split(self.path)
                 self.texture: pygame.Surface = pygame.image.load(path).convert()
             else:
                 self.path: str = "<error>"
                 KDS.Logging.AutoError("Texture path was None.")
+                self.directory = "<error>"
+                self.filename = "<error>"
                 self.texture: pygame.Surface = pygame.Surface((gamesize, gamesize))
             self.texture_size: Tuple[int, int] = self.texture.get_size()
             self.name = name
-            self.directory, self.filename = os.path.split(path)
             if colorkey != None:
                 if len(colorkey) == 3:
                     self.texture.set_colorkey(cast(Tuple[int, int, int], colorkey))
@@ -434,20 +437,20 @@ class UnitData:
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         #region Scroll Clamping
-        scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
-        scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
+        scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize + 1), gridSize[0] - 1)
+        scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize + 1), gridSize[1] - 1)
         #endregion
         bpos = (-1, -1)
 
         tip_renders = []
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
-        pygame.draw.rect(surface, (80, 30, 30), pygame.Rect(0, 0, (gridSize[0] - scroll[0]) * scalesize, (gridSize[1] - scroll[1]) * scalesize))
+        pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
         doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         overlayRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
-        for row in renderList[scroll[1] : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
+        for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             row: List[UnitData]
-            for unit in row[scroll[0] : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
+            for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 srlist = unit.getSerials()
@@ -794,7 +797,7 @@ def saveMap(grid: List[List[UnitData]], name: str):
 
 def saveMapName():
     global currentSaveName, grid
-    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
+    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Save Map")
     if len(savePath) > 0:
         currentSaveName = savePath
         saveMap(grid, currentSaveName)
@@ -850,7 +853,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
 
 def openMap() -> bool: #Returns True if the operation was succesful
     global currentSaveName, gridSize, grid
-    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
+    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Map File")
     if fileName == None or len(fileName) < 1:
         return False
     return loadMap(fileName)
@@ -1051,7 +1054,7 @@ def generateLevelProp():
 
     tb_start, tb_end = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0, requireIncrease=True), autoFormat=True)
 
-    savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
+    savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")), title="Save LevelProp")
     if len(savePath) > 0:
         if os.path.isfile(savePath): os.remove(savePath)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/enabled", dark)
@@ -1065,7 +1068,7 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
 
 def upgradeTileProp():
-    filename = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")))
+    filename = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")), title="Select Tileprops File")
     if filename == None or len(filename) < 1:
         return
     try:
@@ -1092,7 +1095,7 @@ def upgradeTileProp():
             os.remove(filename)
     except Exception as e:
         KDS.System.MessageBox.Show("Failure!", "Tileprops conversion failed.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
-        KDS.Logging.AutoError(str(e)) # Number probably means a key error
+        KDS.Logging.AutoError(e) # Number probably means a key error
 
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
@@ -1116,7 +1119,7 @@ def menu():
     quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
 
     txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and is not maintained.", True, KDS.Colors.CloudWhite)
-    txt_icon = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Branding/levelBuilderTextIcon.png").convert_alpha(), (1000000000000000000, 150))
+    txt_icon = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Branding/levelBuilderTextIcon.png").convert_alpha(), (0, 150), aspectMode=KDS.Convert.AspectMode.HeightControlsWidth)
 
     while btn_menu:
         clicked = False

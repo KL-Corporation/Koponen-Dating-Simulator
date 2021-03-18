@@ -5,7 +5,7 @@ import os
 import pstats
 import KDS.System
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 running = False
 profiler_running = False
@@ -27,29 +27,31 @@ def init(_AppDataPath: str, _LogPath: str):
     logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
     logging.debug("Created log file: " + logFileName)
 
-def __log(message: str, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any):
-    if running:
-        _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
-        logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
-        if stack_info:
-            message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
-        if consoleVisible: print(KDS.System.Console.Colored(message, color))
+def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
+    if not running:
+        print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
         return
-    print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
 
-def debug(message: str, consoleVisible: bool = False, stack_info: bool = False):
+    message = str(message)
+    _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
+    logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
+    if stack_info:
+        message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
+    if consoleVisible: print(KDS.System.Console.Colored(message, color))
+
+def debug(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
 
-def info(message: str, consoleVisible: bool = False, stack_info: bool = False):
+def info(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.INFO, "blue")
 
-def warning(message: str, consoleVisible: bool = False, stack_info: bool = False):
+def warning(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
 
-def error(message: str, consoleVisible: bool = False, stack_info: bool = False):
+def error(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
-def AutoError(message: str, **kwargs: Any):
+def AutoError(message: Union[str, Exception], **kwargs: Any) -> None:
     """Generates an automatic error message.
 
     Args:
