@@ -132,14 +132,14 @@ def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = Midpoint
     """
     if math.isnan(value) or math.isinf(value):
         return value
-    power10 = pow(10, digits) # 10 to the power of zero is one
+    power10: int = pow(10, digits) # 10 to the power of zero is one
     value *= power10
     if mode == MidpointRounding.AwayFromZero:
         fraction, value = math.modf(value)
         if abs(fraction) >= 0.5:
             value += Sign(fraction)
     elif mode == MidpointRounding.ToEven:
-        value = round(value)
+        value = round(value) # Python's builtin round rounds to even
     else:
         raise ValueError("Invalid midpoint rounding mode!")
     value /= power10

@@ -1,5 +1,5 @@
 from enum import IntEnum, auto
-from typing import Any, Literal, Tuple, TypeVar, Union, cast, Optional
+from typing import Any, Literal, Sequence, Tuple, TypeVar, Union, cast, Optional
 
 import pygame
 from PIL import Image as PIL_Image
@@ -140,23 +140,37 @@ class AspectMode(IntEnum):
     EnvelopeTarget = auto()
     EnvelopeTargetCrop = auto()
 
-def AspectScale(image: pygame.Surface, targetSize: Tuple[int, int], mode: AspectMode = AspectMode.FitInTarget) -> pygame.Surface:
+class ScalingMode(IntEnum):
+    Quick = auto()
+    Smooth = auto()
+
+def AspectScale(image: pygame.Surface, targetSize: Sequence[int], aspectMode: AspectMode = AspectMode.FitInTarget, scalingMode: ScalingMode = ScalingMode.Quick) -> pygame.Surface:
     imageSize = image.get_size()
-    if mode == AspectMode.FitInTarget:
+    if aspectMode == AspectMode.FitInTarget:
         scaling = min(targetSize[0] / imageSize[0], targetSize[1] / imageSize[1])
-    elif mode == AspectMode.EnvelopeTarget or mode == AspectMode.EnvelopeTargetCrop:
+    elif aspectMode == AspectMode.EnvelopeTarget or aspectMode == AspectMode.EnvelopeTargetCrop:
         scaling = max(targetSize[0] / imageSize[0], targetSize[1] / imageSize[1])
-    elif mode == AspectMode.WidthControlsHeight:
+    elif aspectMode == AspectMode.WidthControlsHeight:
         scaling = targetSize[0] / imageSize[0]
-    elif mode == AspectMode.HeightControlsWidth:
+    elif aspectMode == AspectMode.HeightControlsWidth:
         scaling = targetSize[1] / imageSize[1]
     else:
-        KDS.Logging.AutoError("Invalid mode!")
+        KDS.Logging.AutoError("Invalid Aspect Mode! Image will not be scaled.")
         scaling = 1.0
 
-    scaled: pygame.Surface = pygame.transform.scale(image, (round(imageSize[0] * scaling), round(imageSize[1] * scaling)))
-    if mode == AspectMode.EnvelopeTargetCrop:
+    if scalingMode == ScalingMode.Quick:
+        scalingAlgorithm = pygame.transform.scale
+    elif scalingMode == ScalingMode.Smooth:
+        scalingAlgorithm = pygame.transform.smoothscale
+    else:
+        KDS.Logging.AutoError("Invalid Scaling Mode! Image will not be scaled.")
+        scalingAlgorithm = lambda surf, size: surf.copy()
+
+    scaled: pygame.Surface = scalingAlgorithm(image, (round(imageSize[0] * scaling), round(imageSize[1] * scaling)))
+
+    if aspectMode == AspectMode.EnvelopeTargetCrop:
         scaled = cast(pygame.Surface, scaled.subsurface(scaled.get_width() // 2 - targetSize[0] // 2, scaled.get_height() // 2 - targetSize[1] // 2, targetSize[0], targetSize[1]))
+
     return scaled
 
 def ToMultiplier(boolean: bool) -> Union[Literal[-1], Literal[1]]:
@@ -280,11 +294,11 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> 
     else: return tuple([text])
 
 def ToRational(value: float) -> str:
-    rational, base = KDS.Math.SplitFloat(value)
-    base = int(base)
+    decimal, integer = KDS.Math.SplitFloat(value)
+    integer = int(integer)
     marks = {0.0: "", 0.25: "+", 0.5: "½", 0.75: "-", 1.0: ""}
-    closest = KDS.Math.Closest(rational, marks.keys())
+    closest = KDS.Math.Closest(decimal, marks.keys())
     mark = marks[closest]
     if closest > 0.5:
-        base += 1
-    return f"{base}{mark}"
+        integer += 1
+    return f"{integer}{mark}"

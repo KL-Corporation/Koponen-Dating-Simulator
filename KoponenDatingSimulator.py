@@ -114,31 +114,32 @@ if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False):
 
 KDS.Logging.debug(f"""
 I=====[ DEBUG INFO ]=====I
-   [Version Info]
-   - pygame: {pygame.version.ver}
-   - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
-   - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
+    [Version Info]
+    - pygame: {pygame.version.ver}
+    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
+    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
 
-   [Video Info]
-   - SDL Video Driver: {pygame.display.get_driver()}
-   - Hardware Acceleration: {bool(display_info.hw)}
-   - Window Allowed: {bool(display_info.wm)}
-   - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
+    [Video Info]
+    - SDL Video Driver: {pygame.display.get_driver()}
+    - Hardware Acceleration: {bool(display_info.hw)}
+    - Window Allowed: {bool(display_info.wm)}
+    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
 
-   [Pixel Info]
-   - Bit Size: {display_info.bitsize}
-   - Byte Size: {display_info.bytesize}
-   - Masks: {display_info.masks}
-   - Shifts: {display_info.shifts}
-   - Losses: {display_info.losses}
+    [Pixel Info]
+    - Bit Size: {display_info.bitsize}
+    - Byte Size: {display_info.bytesize}
+    - Masks: {display_info.masks}
+    - Shifts: {display_info.shifts}
+    - Losses: {display_info.losses}
 
-   [Hardware Acceleration]
-   - Hardware Blitting: {bool(display_info.blit_hw)}
-   - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
-   - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
-   - Software Blitting: {bool(display_info.blit_sw)}
-   - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
-   - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
+    [Hardware Acceleration]
+    - Hardware Blitting: {bool(display_info.blit_hw)}
+    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
+    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
+    - Software Blitting: {bool(display_info.blit_sw)}
+    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
+    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
 KDS.Audio.init(pygame.mixer)
@@ -1523,9 +1524,11 @@ class GlassPane(Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        self.checkCollision = True
         self.texture = t_textures[serialNumber]
         self.texture.set_alpha(30)
+
+    def lateInit(self):
+        self.darkOverlay = None
 
     def update(self):
         return self.texture
@@ -1546,14 +1549,17 @@ class RoofPlanks(Tile):
 class Patja(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
+        # Rect is handled by trueScale
         self.texture = t_textures[serialNumber]
         self.kaatunutTexture = patja_kaatunut
-        self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
         self.checkCollision = False
         self.kaatunut = False
         self.kaatumisTrigger = False
         self.kaatumisCounter = 0
         self.kaatumisDelay = 180
+
+    def lateInit(self):
+        self.darkOverlay = None
 
     def update(self):
         if self.rect.colliderect(Player.rect):

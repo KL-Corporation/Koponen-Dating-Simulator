@@ -1109,11 +1109,14 @@ def menu():
             grid = loadGrid(gridSize)
             btn_menu = False
 
-    newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 450,       125, 400, 200), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       125, 400, 200), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 450, 425, 400, 100), upgradeTileProp, harbinger_font.render("Upgrade Legacy tileprops", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 50,       425, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 650, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       250, 400, 150), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425, 450, 400, 100), upgradeTileProp, harbinger_font.render("Upgrade Legacy tileprops", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+    quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
+
+    txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and is not maintained.", True, KDS.Colors.CloudWhite)
+    txt_icon = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Branding/levelBuilderTextIcon.png").convert_alpha(), (1000000000000000000, 150))
 
     while btn_menu:
         clicked = False
@@ -1133,6 +1136,9 @@ def menu():
         upgradeProps_btn.update(display, mouse_pos, clicked)
         genProp_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
+
+        display.blit(txt, (2, display_size[1] - harbinger_font_small.get_height() - 2))
+        display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, 50))
 
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
@@ -1461,9 +1467,9 @@ def main():
             display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
 
             wRnd = harbinger_font.render(str(dragRect.width), True, KDS.Colors.CloudWhite)
-            display.blit(wRnd, (selectDrawRect.x + selectDrawRect.width // 2, selectDrawRect.y - 25))
+            display.blit(wRnd, (selectDrawRect.x + selectDrawRect.width // 2 - wRnd.get_width() // 2, selectDrawRect.y - 10 - wRnd.get_height()))
             hRnd = harbinger_font.render(str(dragRect.height), True, KDS.Colors.CloudWhite)
-            display.blit(hRnd, (selectDrawRect.x - 25, selectDrawRect.y + selectDrawRect.height // 2))
+            display.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
         if DebugMode:
             debugSurf = pygame.Surface((200, 40))
