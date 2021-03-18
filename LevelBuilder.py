@@ -1407,7 +1407,7 @@ def main():
             consoleHandler(inputConsole_output)
             inputConsole_output = None
 
-        display.fill((30,20,60))
+        display.fill((30, 20, 60))
         grid = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement, middleMouseOnDown)
 
         undoTotal = Undo.index + Undo.overflowCount
