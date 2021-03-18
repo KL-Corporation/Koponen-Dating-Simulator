@@ -268,11 +268,12 @@
         "028": "flask_blood.png",
         "029": "grenade.png",
         "030": "fire_extinguisher.png",
-        "031": "level_ender.png",
+        "031": "walkie_talkie.png",
         "032": "ppsh41_mag.png",
         "033": "lantern.png",
         "034": "chainsaw.png",
-        "035": "gas_canister.png"
+        "035": "gas_canister.png",
+        "036": "walkie_talkie.png"
     },
     "item_doubles": [
         12,

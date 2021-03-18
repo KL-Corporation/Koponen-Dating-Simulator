@@ -766,15 +766,15 @@ class Inventory:
                 self.SIndex = index
 
     def dropItemAtIndex(self, index: int) -> Optional[Item]:
-        temp = self.storage[index]
-        if not isinstance(temp, str):
-            KDS.Missions.Listeners.ItemDrop.Trigger(temp.serialNumber)
+        toDrop = self.storage[index]
+        if not isinstance(toDrop, str):
+            KDS.Missions.Listeners.ItemDrop.Trigger(toDrop.serialNumber)
             if index < self.size - 1:
                 if self.storage[index + 1] == Inventory.doubleItem:
                     self.storage[index + 1] = Inventory.emptySlot
-            if temp.drop() == True:
+            if toDrop.drop() == True:
                 self.storage[index] = Inventory.emptySlot
-            return temp
+                return toDrop
         return None
 
     def dropItem(self) -> Optional[Item]:
@@ -1316,7 +1316,7 @@ class Teleport(Tile):
                     KDS.Audio.PlaySound(door_locked)
 
             if self.renderedMessage != None:
-                screen.blit(self.renderedMessage, (self.rect.centerx - level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+                screen.blit(self.renderedMessage, (self.rect.centerx - self.renderedMessage.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
         else:
             if self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
                 Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
@@ -2256,6 +2256,7 @@ class Awm(Item):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.t = i_textures[24] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
         global tiles, awm_ammo
@@ -2268,7 +2269,7 @@ class Awm(Item):
             return awm_f_texture
         else:
             KDS.World.awm_C.counter += 1
-            return i_textures[24]
+            return self.t
 
     def pickup(self):
         return False
@@ -2301,6 +2302,7 @@ class EmptyFlask(Item):
 class MethFlask(Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.t = i_textures[27] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
         if KDS.Keys.mainKey.pressed:
@@ -2308,7 +2310,7 @@ class MethFlask(Item):
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
             Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26)
             KDS.Audio.PlaySound(glug_sound)
-        return i_textures[27]
+        return self.t
 
     def pickup(self):
         KDS.Scores.score += 10
@@ -2318,6 +2320,7 @@ class MethFlask(Item):
 class BloodFlask(Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.t = i_textures[28] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
         if KDS.Keys.mainKey.pressed:
@@ -2325,7 +2328,7 @@ class BloodFlask(Item):
             Player.health += random.randint(0, 10)
             Player.inventory.storage[Player.inventory.SIndex] = Item.serialNumbers[26]((0, 0), 26)
             KDS.Audio.PlaySound(glug_sound)
-        return i_textures[28]
+        return self.t
 
     def pickup(self):
         KDS.Audio.PlaySound(coffeemug_sound)
@@ -2335,6 +2338,7 @@ class BloodFlask(Item):
 class Grenade(Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.t = i_textures[29] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
 
@@ -2348,7 +2352,7 @@ class Grenade(Item):
             KDS.Audio.PlaySound(grenade_throw)
             Player.inventory.storage[Player.inventory.SIndex] = Inventory.emptySlot
             BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
-        return i_textures[29]
+        return self.t
 
     def pickup(self):
         KDS.Scores.score += 7
@@ -2367,12 +2371,13 @@ class FireExtinguisher(Item):
 class LevelEnderItem(Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.t = i_textures[31] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
         if KDS.Keys.mainKey.pressed:
             KDS.Missions.Listeners.LevelEnder.Trigger()
 
-        return i_textures[31]
+        return self.t
 
     def pickup(self):
         KDS.Audio.PlaySound(weapon_pickup)
@@ -2460,15 +2465,27 @@ class WalkieTalkie(Item):
     OnPlay = KDS.Events.Event()
 
     ### Story Mode Only ###
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
         super().__init__(position, serialNumber, texture)
         self.allowDrop: bool = True
         self.playTime = -1
         self.clip = None
+        self.clipVolume = 1.0
+        self.clipSound = None
+
+    def lateInit(self):
+        if self.clip != None:
+            self.clipSound = pygame.mixer.Sound(self.clip)
+        if self.clipVolume != 1.0:
+            self.clipSound.set_volume(self.clipVolume)
 
     def pickup(self):
         self.allowDrop = False
-        KDS.Audio.PlaySound(self.clip)
+        KDS.Audio.PlaySound(weapon_pickup)
+        if self.clipSound != None:
+            KDS.Audio.PlaySound(self.clipSound)
+
+        return False
 
     def drop(self):
         return self.allowDrop
@@ -2508,7 +2525,8 @@ Item.serialNumbers = {
     32: Ppsh41Mag,
     33: Lantern,
     34: Chainsaw,
-    35: GasCanister
+    35: GasCanister,
+    36: WalkieTalkie
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion
