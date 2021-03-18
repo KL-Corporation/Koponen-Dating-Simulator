@@ -132,10 +132,12 @@ def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool])
     Returns:
         Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
-    try:
-        return First(source=source, predicate=predicate)
-    except LookupError:
-        return None
+    # Not calling First and catching an exception because catching exceptions is slow as hell
+
+    for v in source:
+        if predicate(v) == True:
+            return v
+    return None
 
 def Last(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSource:
     """Returns the last element of a sequence that satisfies a specified condition.
@@ -150,7 +152,7 @@ def Last(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSo
     Returns:
         TSource: The first element in the iterable that passes the test in the specified predicate function.
     """
-    for v in reversed(list(source)): # This will be fucking slow, but Iterables cannot be reversed.
+    for v in reversed(tuple(source)): # This will be fucking slow, but Iterables cannot be reversed.
         if predicate(v) == True:
             return v
     raise LookupError("No element satisfies the condition in predicate.")
@@ -165,9 +167,11 @@ def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) 
     Returns:
         Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
-    try:
-        return Last(source=source, predicate=predicate)
-    except LookupError:
-        return None
+    # Not calling Last and catching an exception because catching exceptions is slow as hell
+
+    for v in reversed(tuple(source)): # This will be fucking slow, but Iterables cannot be reversed.
+        if predicate(v) == True:
+            return v
+    return None
 
 
