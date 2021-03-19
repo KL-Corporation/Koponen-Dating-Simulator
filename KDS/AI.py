@@ -4,7 +4,6 @@ import random
 import threading
 from typing import List, Optional, Tuple, Union
 
-import numpy
 import pygame
 
 import KDS.Animator

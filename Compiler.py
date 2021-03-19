@@ -28,7 +28,15 @@ toBuild = {
     }
 }
 
+def clearCache():
+    if os.path.isdir(os.path.join(AppDataPath, "cache")):
+        print("Clearing cache...")
+        shutil.rmtree(os.path.join(AppDataPath, "cache"))
+
+
 for buildType in toBuild.items():
+    clearCache()
+
     filename = buildType[1]["filename"]
     iconname = buildType[1]["iconname"]
 
@@ -53,10 +61,7 @@ for buildType in toBuild.items():
         shutil.rmtree(EditorTexturesPath)
         print(f"Deleted Editor Textures directory at {EditorTexturesPath}")
 
-if os.path.isdir(os.path.join(AppDataPath, "cache")):
-    print("Clearing cache...")
-    shutil.rmtree(os.path.join(AppDataPath, "cache"))
-
+clearCache()
 for buildType in toBuild.items():
     cutName = os.path.splitext(buildType[1]["filename"])[0]
     print(KDS.System.Console.Colored(f"Built {buildType[0]} at " + os.path.join(BuildPath, cutName, cutName + ".exe"), "green"))
