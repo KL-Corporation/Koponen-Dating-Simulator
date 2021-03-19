@@ -11,14 +11,15 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
 from pygame.locals import *
 import KDS.Colors
-import KDS.Convert
 import KDS.ConfigManager
-import KDS.System
-import KDS.Math
-import KDS.UI
 import KDS.Console
-import KDS.Logging
+import KDS.Convert
+import KDS.Jobs
+import KDS.Math
 import KDS.Linq
+import KDS.Logging
+import KDS.System
+import KDS.UI
 import tkinter
 from tkinter import filedialog
 import json
@@ -26,7 +27,9 @@ import traceback
 import sys
 from enum import IntEnum
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
+
+from KDS.Testing import PerformanceTimer
 
 root = tkinter.Tk()
 root.withdraw()
@@ -82,6 +85,8 @@ I=====[ DEBUG INFO ]=====I
     - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 
+KDS.Jobs.init()
+
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
@@ -118,7 +123,7 @@ class TextureHolder:
             self.rescaleTexture()
 
         def rescaleTexture(self):
-            self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (int(self.texture.get_width() * scaleMultiplier), int(self.texture.get_height() * scaleMultiplier)))
+            self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (round(self.texture.get_width() * scaleMultiplier), round(self.texture.get_height() * scaleMultiplier)))
             self.scaledTexture_size: Tuple[int, int] = self.scaledTexture.get_size()
             self.darkOverlay = self.scaledTexture.convert_alpha()
             self.darkOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
@@ -165,9 +170,14 @@ class TextureHolder:
         return None
 
     def RescaleTextures(self) -> None:
-        for t in self.data.values():
-            for d in t.values():
+        def rescaleBatch(datas: Iterable[TextureHolder.TextureData]):
+            for d in datas:
                 d.rescaleTexture()
+
+        handles = []
+        for t in self.data.values():
+            handles.append(KDS.Jobs.Schedule(rescaleBatch, t))
+        KDS.Jobs.JobHandle.CompleteAll(handles)
 
 #region Textures
 with open("Assets/Textures/build.json") as f:
@@ -1319,7 +1329,11 @@ def main():
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
+        pt = PerformanceTimer()
+        pt.Start()
         Textures.RescaleTextures()
+        pt.Stop()
+        pt.PrintResult()
 
     inputConsole_output = None
     allowTilePlacement = True
@@ -1534,6 +1548,7 @@ except Exception as e:
             KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
 
 pygame.quit()
+KDS.Jobs.quit()
 
 """ KEYMAP
     [Normal]
