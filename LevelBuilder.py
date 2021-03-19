@@ -23,13 +23,14 @@ import tkinter
 from tkinter import filedialog
 import json
 import traceback
+import sys
 from enum import IntEnum
 
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 root = tkinter.Tk()
-root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 root.withdraw()
+root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 pygame.init()
 pygame.scrap.init()
 pygame.scrap.set_mode(SCRAP_CLIPBOARD)
@@ -41,15 +42,45 @@ scaleMultiplier = scalesize / gamesize
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
-    global display, display_size
-    display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | HWSURFACE | DOUBLEBUF))
+    global display, display_size, display_info
+    display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
     display_size = display.get_size()
+    display_info = pygame.display.Info()
 SetDisplaySize(display_size)
 
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
 os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
+KDS.Logging.debug(f"""
+I=====[ DEBUG INFO ]=====I
+    [Version Info]
+    - pygame: {pygame.version.ver}
+    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
+    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
+
+    [Video Info]
+    - SDL Video Driver: {pygame.display.get_driver()}
+    - Hardware Acceleration: {bool(display_info.hw)}
+    - Window Allowed: {bool(display_info.wm)}
+    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
+
+    [Pixel Info]
+    - Bit Size: {display_info.bitsize}
+    - Byte Size: {display_info.bytesize}
+    - Masks: {display_info.masks}
+    - Shifts: {display_info.shifts}
+    - Losses: {display_info.losses}
+
+    [Hardware Acceleration]
+    - Hardware Blitting: {bool(display_info.blit_hw)}
+    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
+    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
+    - Software Blitting: {bool(display_info.blit_sw)}
+    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
+    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
+I=====[ DEBUG INFO ]=====I""")
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
@@ -446,6 +477,7 @@ class UnitData:
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
         doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
+        DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
         overlayRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             row: List[UnitData]
@@ -460,7 +492,7 @@ class UnitData:
                     if number == UnitData.EMPTY:
                         continue
 
-                    if number in ("0023", "0024", "0025", "0026"):
+                    if number in DOORSERIALS:
                         doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
                         continue
 
