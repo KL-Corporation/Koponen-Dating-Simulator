@@ -36,7 +36,7 @@ import json
 import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -50,7 +50,7 @@ CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.pn
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
-display = pygame.display.set_mode(display_size, RESIZABLE | HWSURFACE | HWACCEL | DOUBLEBUF | SCALED)
+display = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
 display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
@@ -588,8 +588,7 @@ class WorldData():
 KDS.Logging.debug("Loading Data...")
 
 with open("Assets/Textures/build.json", "r") as f:
-    data = f.read()
-buildData = json.loads(data)
+    buildData = json.loads(f.read())
 
 t_textures: Dict[int, pygame.Surface] = {}
 for t in buildData["tile_textures"]:
@@ -601,14 +600,14 @@ for i in buildData["item_textures"]:
     i_textures[int(i)] = pygame.image.load("Assets/Textures/Items/" + buildData["item_textures"][i]).convert()
     i_textures[int(i)].set_colorkey(KDS.Colors.White)
 
-inventory_items = buildData["inventory_items"]
+inventory_items: Set[int] = set(buildData["inventory_items"])
 
-specialTilesSerialNumbers = buildData["special_tiles"]
+specialTilesSerialNumbers: Set[int] = set(buildData["special_tiles"])
 
-inventoryDobulesSerialNumbers = buildData["item_doubles"]
+inventoryDobulesSerialNumbers: Set[int] = set(buildData["item_doubles"])
 
 path_sounds_temp = buildData["tile_sounds"]
-path_sounds = {}
+path_sounds: Dict[str, pygame.mixer.Sound] = {}
 default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
 sounds = []
 for p in default_paths:
@@ -825,8 +824,8 @@ class Inventory:
 #region Tiles
 KDS.Logging.debug("Loading Tiles...")
 class Tile:
-    noCollision = buildData["noCollision"]
-    trueScale = buildData["trueScale"]
+    noCollision = set(buildData["noCollision"])
+    trueScale = set(buildData["trueScale"])
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.serialNumber = serialNumber
