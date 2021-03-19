@@ -170,9 +170,14 @@ class TextureHolder:
         return None
 
     def RescaleTextures(self) -> None:
-        for t in self.data.values():
-            for d in t.values():
+        def rescaleBatch(datas: Iterable[TextureHolder.TextureData]):
+            for d in datas:
                 d.rescaleTexture()
+
+        handles = []
+        for t in self.data.values():
+            handles.append(KDS.Jobs.Schedule(rescaleBatch, t))
+        KDS.Jobs.JobHandle.CompleteAll(handles)
 
 #region Textures
 with open("Assets/Textures/build.json") as f:
