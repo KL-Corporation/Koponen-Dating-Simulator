@@ -15,6 +15,7 @@ import KDS.ConfigManager
 import KDS.Console
 import KDS.Convert
 import KDS.Math
+import KDS.Jobs
 import KDS.Linq
 import KDS.Logging
 import KDS.System

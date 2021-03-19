@@ -8,7 +8,7 @@ import KDS.Audio
 import KDS.Colors
 import KDS.Convert
 import KDS.Math
-import KDS.Threading
+import KDS.Jobs
 
 pygame.init()
 
@@ -18,10 +18,9 @@ circleOffset = (0, 550)
 #endregion
 
 class Circle:
-
     running = False
+    handle = None
 
-    ld_thread = None
     circleMask = None
     loadingBackground: pygame.Surface = pygame.Surface((0, 0))
     scaledLoadingBackground: pygame.Surface = pygame.Surface((0, 0))
@@ -74,26 +73,26 @@ class Circle:
 
     @staticmethod
     def Start(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool = False):
-        global circleMask, debugFont, running
+        global circleMask, debugFont
         if Circle.circleMask == None:
             circleMask = pygame.image.load("Assets/Textures/UI/loading_circle_mask.png").convert_alpha()
             Circle.loadingBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
             debugFont = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
-        running = True
+        Circle.running = True
         surface_size = surface.get_size()
         Circle.scaledLoadingBackground = KDS.Convert.AspectScale(Circle.loadingBackground, surface_size)
         surface.blit(Circle.scaledLoadingBackground, (surface_size[0] // 2 - Circle.scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - Circle.scaledLoadingBackground.get_height() // 2))
         pygame.display.flip()
-        Circle.ld_thread = KDS.Threading.StoppableThread(Circle.rendering, "loading-screen", True, True, surface, clock, debug)
+        Circle.handle = KDS.Jobs.Schedule(Circle.rendering, surface, clock, debug, lambda: not Circle.running)
 
     @staticmethod
     def Stop():
-        global running
-        if Circle.ld_thread != None:
-            Circle.ld_thread.Stop()
+        Circle.running = False
+        if Circle.handle != None:
+            Circle.handle.Complete()
 
 class Story:
-    thread = None
+    handle = None
 
     @staticmethod
     def rendering(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, clock: pygame.time.Clock, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
@@ -137,10 +136,10 @@ class Story:
 
     @staticmethod
     def Start(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, clock: pygame.time.Clock, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
-        Story.thread = KDS.Threading.Thread(Story.rendering, "story-loading-screen", True, True, surface, oldSurf, map_name_str, clock, titleFont, normalFont)
+        Story.handle = KDS.Jobs.Schedule(Story.rendering, surface, oldSurf, map_name_str, clock, titleFont, normalFont)
 
     @staticmethod
     def WaitForExit():
-        if Story.thread != None:
-            Story.thread.WaitForExit()
-            Story.thread = None
+        if Story.handle != None:
+            Story.handle.Complete()
+            Story.handle = None
