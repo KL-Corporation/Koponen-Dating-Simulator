@@ -18,7 +18,13 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
+        # upgrade pip
         python -m pip install --upgrade pip
+
+        # install linters
+        pip install pylint flake8
+
+        #install requirements
         pip install -r requirements.txt
     - name: Lint with Pylint
       run: |
