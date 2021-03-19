@@ -10,7 +10,7 @@ def init():
     global executor
     coreCount = os.cpu_count()
     workerCount = KDS.Math.Clamp(coreCount if coreCount != None else -1, 2, 10)
-    executor = ProcessPoolExecutor(max_workers=workerCount)
+    executor = ThreadPoolExecutor(max_workers=workerCount)
     KDS.Logging.debug(f"Setting up {workerCount} worker threads for Jobs.")
 
 def quit():
