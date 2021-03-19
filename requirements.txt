@@ -3,3 +3,4 @@
 pygame
 pillow
 markdown
+numpy
