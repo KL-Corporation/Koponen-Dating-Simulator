@@ -14,7 +14,7 @@ def init():
     KDS.Logging.debug(f"Setting up {workerCount} worker threads for Jobs.")
 
 def quit():
-    executor.shutdown(wait=False, cancel_futures=True)
+    executor.shutdown(wait=True, cancel_futures=True)
 
 class JobHandle:
     def __init__(self, future: Future) -> None:

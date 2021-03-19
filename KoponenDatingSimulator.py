@@ -15,6 +15,7 @@ import KDS.Console
 import KDS.Convert
 import KDS.Events
 import KDS.Gamemode
+import KDS.Jobs
 import KDS.Keys
 import KDS.Koponen
 import KDS.Linq
@@ -37,6 +38,8 @@ import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+
+from KDS.Testing import PerformanceTimer
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -143,6 +146,7 @@ I=====[ DEBUG INFO ]=====I
 I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
 KDS.Audio.init(pygame.mixer)
+KDS.Jobs.init()
 KDS.AI.init()
 KDS.World.init()
 KDS.Missions.init()
@@ -2548,6 +2552,43 @@ Item.serialNumbers = {
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion
+#region Enemies
+class Enemy:
+    @staticmethod
+    def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
+        result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
+        if result[0]:
+            #print(len(result[0]))
+            for r in result[0]:
+                Projectiles.append(r)
+        if result[1]:
+            for serialNumber in result[1]:
+                    tempItem = Item((enemy.rect.center), serialNumber=serialNumber, texture = i_textures[serialNumber])
+                    counter = 0
+                    while True:
+                        tempItem.rect.y += tempItem.rect.height
+                        for collision in KDS.World.collision_test(tempItem.rect, tiles):
+                            tempItem.rect.bottom = collision.rect.top
+                            counter = 250
+                        counter += 1
+                        if counter > 250:
+                            break
+                    Items.append(tempItem)
+                    del tempItem
+
+    @staticmethod
+    def update(Enemy_List: Sequence[KDS.AI.HostileEnemy]):
+        # handlers = []
+        # for enemy in Enemy_List:
+        #     if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
+        #         handlers.append(KDS.Jobs.Schedule(Enemy._internalEnemyHandler, enemy))
+        # KDS.Jobs.JobHandle.CompleteAll(handlers)
+
+        for enemy in Enemy_List:
+            if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
+                Enemy._internalEnemyHandler(enemy)
+
+#endregion
 #region Player
 KDS.Logging.debug("Loading Player...")
 class PlayerClass:
@@ -3911,27 +3952,12 @@ while main_running:
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
-    for enemy in Enemies:
-        if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
-            result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
-            if result[0]:
-                #print(len(result[0]))
-                for r in result[0]:
-                    Projectiles.append(r)
-            if result[1]:
-                for serialNumber in result[1]:
-                        tempItem = Item((enemy.rect.center), serialNumber=serialNumber, texture = i_textures[serialNumber])
-                        counter = 0
-                        while True:
-                            tempItem.rect.y += tempItem.rect.height
-                            for collision in KDS.World.collision_test(tempItem.rect, tiles):
-                                tempItem.rect.bottom = collision.rect.top
-                                counter = 250
-                            counter += 1
-                            if counter > 250:
-                                break
-                        Items.append(tempItem)
-                        del tempItem
+
+    pt = PerformanceTimer()
+    pt.Start()
+    Enemy.update(Enemies)
+    pt.Stop()
+    pt.PrintResult()
 
     Player.update()
 
@@ -4184,6 +4210,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+KDS.Jobs.quit()
 KDS.Audio.Music.Unload()
 KDS.System.emptdir(PersistentPaths.Cache)
 KDS.Logging.quit()
