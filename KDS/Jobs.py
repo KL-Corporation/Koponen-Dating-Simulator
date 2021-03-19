@@ -23,9 +23,6 @@ class JobHandle:
     def IsComplete(self) -> bool:
         return self.future.done()
 
-    def TryCancel(self) -> bool:
-        return self.future.cancel()
-
     def Complete(self) -> Any:
         """Ensures that the job has completed.
 

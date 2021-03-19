@@ -49,8 +49,8 @@ class Circle:
             ##### OLD CIRCLE #####
 
             ##### NEW CIRCLE #####
-            crl = circle.copy()
             maskRotated = pygame.transform.rotate(circleMask, angle * speed)
+            crl = circle.copy()
             crl.blit(maskRotated, (circle_size[0] // 2 - maskRotated.get_width() // 2, circle_size[1] // 2 - maskRotated.get_height() // 2), special_flags=pygame.BLEND_RGBA_MULT)
             ##### NEW CIRCLE #####
 

@@ -306,6 +306,7 @@ class UnitData:
     def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
+        self._updateSplit()
         self.properties = UnitProperties(self)
 
     def __eq__(self, other) -> bool:
@@ -334,33 +335,31 @@ class UnitData:
             for k, v in value.items():
                 self.properties.Set(_type, k, v)
 
+    def _updateSplit(self):
+        self.serials = tuple(self.serialNumber.split(" "))
+        self.filledSerials = tuple(KDS.Linq.Where(self.serials, lambda s: s != UnitData.EMPTY))
+
     def setSerial(self, srlNumber: str):
         Undo.register(self)
         self.serialNumber = f"{srlNumber} 0000 0000 0000"
+        self._updateSplit()
 
     def setSerialToSlot(self, srlNumber: str, slot: int):
         if slot >= UnitData.SLOTCOUNT or slot < 0:
             raise ValueError(f"Slot {slot} is an invalid index!")
         Undo.register(self)
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        self._updateSplit()
 
     def getSerial(self, slot: int):
         slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
 
-    def getSerials(self) -> List[str]:
-        return self.serialNumber.split()
-
-    def getFilledSerials(self) -> List[str]:
-        serials = self.getSerials()
-        return cast(List[str], KDS.Linq.Where(serials, lambda s: s != UnitData.EMPTY)) # Should come back as a list
-
     def addSerial(self, srlNumber: str):
-        srlist = self.getSerials()
-        for index, number in enumerate(srlist):
+        for index, number in enumerate(self.serials):
             if int(number) == 0:
-                if srlNumber not in srlist:
-                    if not srlNumber.startswith("3") or not self.hasTeleport():
+                if srlNumber not in self.serials:
+                    if srlNumber[0] != "3" or not self.hasTeleport():
                         self.setSerialToSlot(srlNumber, index)
                     else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
                 else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
@@ -368,30 +367,27 @@ class UnitData:
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
     def insertSerial(self, srlNumber: str):
-        srlist = self.getSerials()
-        for fakeIndex, number in enumerate(reversed(srlist)):
+        for fakeIndex, number in enumerate(reversed(self.serials)):
             if fakeIndex == 0:
                 if int(number) != 0:
                     KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
                     return
-            elif srlNumber not in srlist:
-                if not srlNumber.startswith("3") or not self.hasTeleport():
-                    self.setSerialToSlot(number, len(srlist) - fakeIndex) # The second argument will be one higher than the real index.
+            elif srlNumber not in self.serials:
+                if srlNumber[0] != "3" or not self.hasTeleport():
+                    self.setSerialToSlot(number, len(self.serials) - fakeIndex) # The second argument will be one higher than the real index.
                 else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
             else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
         self.setSerialToSlot(srlNumber, 0)
 
     def removeSerial(self):
-        srlist = self.getSerials()
-        for index, number in reversed(list(enumerate(srlist))):
+        for index, number in reversed(list(enumerate(self.serials))):
             if int(number) != 0:
                 self.setSerialToSlot(UnitData.EMPTY, index)
                 return
 
     def removeSerialFromStart(self):
-        srlist = self.getSerials()
-        for fakeIndex, number in enumerate(reversed(srlist)):
-            index = len(srlist) - fakeIndex - 1
+        for fakeIndex, number in enumerate(reversed(self.serials)):
+            index = len(self.serials) - fakeIndex - 1
             if index <= 0: # If it's the last tile, the process is complete.
                 return
 
@@ -401,21 +397,20 @@ class UnitData:
 
     def getSlot(self, serial: str) -> Optional[int]:
         try:
-            return self.getSerials().index(serial)
+            return self.serials.index(serial)
         except ValueError:
             return None
 
     def hasTile(self):
-        split = self.getSerials()
-        return KDS.Linq.Any(split, lambda s: s.startswith("0") and s != UnitData.EMPTY)
+        return KDS.Linq.Any(self.serials, lambda s: s[0] == "0" and s != UnitData.EMPTY)
 
     def hasTeleport(self):
-        split = self.getSerials()
-        return KDS.Linq.Any(split, lambda s: s.startswith("3"))
+        return KDS.Linq.Any(self.serials, lambda s: s[0] == "3")
 
     def resetSerial(self):
         Undo.register(self)
         self.serialNumber = UnitData.EMPTYSERIAL
+        self._updateSplit()
         self.properties.RemoveUnused()
 
     @staticmethod
@@ -426,19 +421,19 @@ class UnitData:
     def renderSerial(surface: pygame.Surface, properties: UnitProperties, serial: str, pos: Tuple[int, int]):
         teleportOverlayFlag = False
         darkOverlayFlag = False
-        if serial.startswith("3"):
-            if int(serial[1:]) < 500:
-                serial = "3001"
-            else:
-                serial = "3501" if not properties.Get(UnitType.Teleport, "mirrored", None) else "3502"
-                teleportOverlayFlag = True
-        elif serial.startswith("0"):
+        if serial[0] == "0":
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
                     darkOverlayFlag = True
                 else:
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
+        elif serial[0] == "3":
+            if int(serial[1:]) < 500:
+                serial = "3001"
+            else:
+                serial = "3501" if not properties.Get(UnitType.Teleport, "mirrored", None) else "3502"
+                teleportOverlayFlag = True
 
         unitData = Textures.GetData(serial)
         blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - unitData.scaledTexture_size[0] + scalesize, pos[1] - unitData.scaledTexture_size[1] + scalesize)
@@ -487,11 +482,10 @@ class UnitData:
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
-                srlist = unit.getSerials()
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
                 if isinstance(overlayTileprops, str):
                     overlayRenders.append(Textures.GetRenderArgs(overlayTileprops, normalBlitPos))
-                for number in srlist:
+                for number in unit.serials:
                     if number == UnitData.EMPTY:
                         continue
 
@@ -503,7 +497,7 @@ class UnitData:
 
                 if unitRect.collidepoint(mpos_scaled):
                     if unit.hasTeleport():
-                        teleportSerial = KDS.Linq.First(unit.getSerials(), lambda s: s.startswith("3"))
+                        teleportSerial = KDS.Linq.First(unit.serials, lambda s: s[0] == "3")
                         t_ind = str(int(teleportSerial[1:]))
                         tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
                         if keys_pressed[K_p]:
@@ -540,16 +534,15 @@ class UnitData:
                         else:
                             unit.properties.Remove(UnitType.Unspecified, "overlay")
 
-                    filled_srlist = unit.getFilledSerials()
-                    if len(filled_srlist) > 1: # If more than one tile
-                        for sr in filled_srlist: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
+                    if len(unit.filledSerials) > 1: # If more than one tile
+                        for sr in unit.filledSerials: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
 
                     if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
-                        tempbrushtemp = KDS.Linq.FirstOrNone(filled_srlist, lambda s: s != brush.brush)
+                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != brush.brush)
                         teleportBrushProperties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
                         if tempbrushtemp == None:
                             tempbrushtemp = unit.getSerial(0)
-                        if tempbrushtemp.startswith("3"):
+                        if tempbrushtemp[0] == "3":
                             tempbrushtemp = "3001" if int(tempbrushtemp[1:]) < 500 else "3501"
                             teleportBrushMirrored = unit.properties.Get(UnitType.Teleport, "mirrored", None)
                             if isinstance(teleportBrushMirrored, bool):
@@ -678,12 +671,11 @@ class UnitProperties:
         return {k: v.copy() for k, v in self.values.items()}
 
     def RemoveUnused(self):
-        splitValues = self.parent.getSerials()
         for _type in self.values.copy():
             if _type == UnitType.Unspecified:
                 continue
 
-            if not KDS.Linq.Any(splitValues, lambda v: int(v[0]) == _type.value and int(v) != 0):
+            if not KDS.Linq.Any(self.parent.serials, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
     def Copy(self, parentOverride: UnitData = None) -> UnitProperties:
@@ -758,7 +750,7 @@ class BrushData:
         return self.brush == UnitData.EMPTY
 brush = BrushData()
 
-def loadGrid(size: Tuple[int, int]):
+def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
     rlist = []
     for y in range(size[1]):
         row = []
@@ -872,7 +864,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
             if len(unit) > len(UnitData.EMPTYSERIAL):
                 unit = unit[:len(UnitData.EMPTYSERIAL) - 1]
             #endregion
-            rUnit.serialNumber = unit
+            rUnit.setSerial(unit)
 
     currentSaveName = path
 
@@ -962,9 +954,7 @@ def consoleHandler(commandlist):
         elif commandlist[1] == "stacks":
             for row in grid:
                 for unit in row:
-                    unit: UnitData
-                    srlist = unit.getSerials()
-                    for i in range(1, len(srlist)):
+                    for i in range(1, len(unit.serials)):
                         unit.setSerialToSlot(UnitData.EMPTY, i)
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
@@ -1203,7 +1193,7 @@ class Selected:
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
-                unitCopy.serialNumber = serialOverride
+                unitCopy.setSerial(serialOverride)
             if propertiesOverride != None:
                 unitCopy.properties.values = propertiesOverride
             try:
@@ -1317,8 +1307,13 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
-        scalesize = KDS.Math.Clamp(scalesize + add, 10, 128)
+        newsize = KDS.Math.Clamp(scalesize + add, 3, 128)
+        if newsize == scalesize:
+            return
+
+        scalesize = newsize
         scaleMultiplier = scalesize / gamesize
+
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
@@ -1493,8 +1488,7 @@ def main():
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
-                srlist = unit.getSerials()
-                for number in srlist:
+                for number in unit.serials:
                     if number != UnitData.EMPTY:
                         UnitData.renderSerial(display, unit.properties, number, (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize))
 

@@ -37,8 +37,6 @@ import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
-
-from KDS.Testing import PerformanceTimer
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -3942,11 +3940,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    pt = PerformanceTimer()
-    pt.Start()
     Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
-    pt.Stop()
-    pt.Stop()
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
 
     Enemy.update(Enemies)
