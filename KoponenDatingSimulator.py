@@ -1725,8 +1725,17 @@ class Sound(Tile):
 
         return self.texture
 
+class FluorescentTube(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, 5)
+
+    def update(self):
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.y + 170 // 2 + 5), KDS.World.Lighting.Shapes.fluorecent.get(170, 8500), True))
+        return self.texture
+
 class GenericDoor(Teleport):
-    def __init__(self, position, serialNumber) -> None:
+    def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         _rect = pygame.Rect(self.rect.x, self.rect.y - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
@@ -1739,6 +1748,7 @@ class GenericDoor(Teleport):
             Teleport.teleportT_IDS[self.serialNumber] = []
         Teleport.teleportT_IDS[self.serialNumber].append(self)
         super().lateInit()
+
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
@@ -1822,7 +1832,8 @@ specialTilesD = {
     128: AvarnCar,
     130: GenericDoor,
     131: Sound,
-    132: DoorFrontMirrored
+    132: DoorFrontMirrored,
+    134: FluorescentTube
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
