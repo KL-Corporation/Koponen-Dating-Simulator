@@ -1871,7 +1871,7 @@ class Item:
                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
+    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory: Inventory):
         index = 0
         showItemTip = True
         collision = False
@@ -1885,35 +1885,36 @@ class Item:
                 if distance < shortest_distance:
                     shortest_item = item
                     shortest_distance = distance
-                if functionKey:
-                    if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
-                            temp_var = item.pickup()
-                            if not temp_var:
-                                inventory.storage[inventory.SIndex] = item
-                                KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
-                            Item_list.remove(item) # Remove seems to search for instance and not equality
+
+                if not functionKey:
+                    continue
+
+                if item.serialNumber not in inventoryDobulesSerialNumbers:
+                    if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
+                        temp_var = item.pickup()
+                        if not temp_var:
+                            inventory.storage[inventory.SIndex] = item
+                            KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
+                        Item_list.remove(item) # Remove seems to search for instance and not equality
+                        showItemTip = False
+                    elif item.serialNumber not in inventory_items:
+                        try:
+                            item.pickup()
+                            Item_list.remove(item)
                             showItemTip = False
-                        elif item.serialNumber not in inventory_items:
-                            try:
-                                item.pickup()
-                                Item_list.remove(item)
-                                showItemTip = False
-                            except Exception as e:
-                                KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
-                    else:
-                        if inventory.SIndex < inventory.size - 1:
-                            if inventory.storage[inventory.SIndex] == Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
-                                item.pickup()
-                                inventory.storage[inventory.SIndex] = item
-                                inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
-                                Item_list.remove(item)
-                                showItemTip = False
+                        except Exception as e:
+                            KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
+                else:
+                    if inventory.SIndex < inventory.size - 1:
+                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
+                            item.pickup()
+                            inventory.storage[inventory.SIndex] = item
+                            inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
+                            Item_list.remove(item)
+                            showItemTip = False
             index += 1
 
         Item.tipItem = shortest_item if collision and showItemTip else None
-
-        return Item_list, inventory
 
     def pickup(self):
         return False
@@ -3908,7 +3909,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Items, Player.inventory = Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
+    Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
     for enemy in Enemies:
         if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
