@@ -28,8 +28,8 @@ jobs:
         pip install -r requirements.txt
     - name: Lint with Pylint
       run: |
-        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame --extension-pkg-whitelist=markdown KoponenDatingSimulator.py
-        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame --extension-pkg-whitelist=markdown LevelBuilder.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame KoponenDatingSimulator.py
+        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame LevelBuilder.py
     - name: Lint with Flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
