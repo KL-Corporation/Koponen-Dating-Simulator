@@ -8,7 +8,7 @@ on: [push]
 jobs:
   KDS_Linting:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -19,20 +19,20 @@ jobs:
     - name: Install dependencies
       run: |
         # upgrade pip
-        python -m pip install --upgrade pip
+        py -m pip install --upgrade pip
 
         # install linters
-        pip install pylint flake8
+        py -m pip install pylint flake8
 
         #install requirements
-        pip install -r requirements.txt
+        py -m pip install -r requirements.txt
     - name: Lint with Pylint
       run: |
-        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame KoponenDatingSimulator.py
-        pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame LevelBuilder.py
+        py -m pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame KoponenDatingSimulator.py
+        py -m pylint --disable=W --disable=R --disable=C --extension-pkg-whitelist=pygame LevelBuilder.py
     - name: Lint with Flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        py -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        py -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
