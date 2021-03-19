@@ -23,6 +23,9 @@ class JobHandle:
     def IsComplete(self) -> bool:
         return self.future.done()
 
+    def TryCancel(self) -> bool:
+        return self.future.cancel()
+
     def Complete(self) -> Any:
         """Ensures that the job has completed.
 
@@ -45,4 +48,13 @@ class JobHandle:
         wait([f.future for f in jobs], return_when=ALL_COMPLETED)
 
 def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
+    """Schedule the job for execution on a worker thread.
+
+    Args:
+        function (Callable): The job and data to schedule.
+        dependsOn (JobHandle, optional): Dependencies are used to ensure that a job executes on workerthreads after the dependency has completed execution. Making sure that two jobs reading or writing to same data do not run in parallel. Defaults to None.
+
+    Returns:
+        JobHandle: The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+    """
     return JobHandle(executor.submit(function, *args, **kwargs))

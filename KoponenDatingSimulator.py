@@ -1877,6 +1877,7 @@ class Item:
         collision = False
         shortest_item = None
         shortest_distance = KDS.Math.MAXVALUE
+
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 collision = True
@@ -1891,12 +1892,12 @@ class Item:
                             if not temp_var:
                                 inventory.storage[inventory.SIndex] = item
                                 KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
-                            Item_list.pop(index)
+                            Item_list.remove(item) # Remove seems to search for instance and not equality
                             showItemTip = False
                         elif item.serialNumber not in inventory_items:
                             try:
                                 item.pickup()
-                                Item_list.pop(index)
+                                Item_list.remove(item)
                                 showItemTip = False
                             except Exception as e:
                                 KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
@@ -1906,7 +1907,7 @@ class Item:
                                 item.pickup()
                                 inventory.storage[inventory.SIndex] = item
                                 inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
-                                Item_list.pop(index)
+                                Item_list.remove(item)
                                 showItemTip = False
             index += 1
 
