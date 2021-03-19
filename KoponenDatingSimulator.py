@@ -450,7 +450,6 @@ class WorldData():
             level_background_img = pygame.image.load(os.path.join(MapPath, "background.png")).convert()
         else: level_background = False
 
-        pygame.event.pump()
         with open(os.path.join(MapPath, "level.dat"), "r", encoding="utf-8") as map_file:
             map_data = map_file.read().split("\n")
 
@@ -460,7 +459,6 @@ class WorldData():
         tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
 
-        pygame.event.pump()
         global dark, darkness, ambient_light, ambient_light_tint
         KDS.ConfigManager.LevelProp.init(MapPath)
         dark = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False)
@@ -492,7 +490,6 @@ class WorldData():
         koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", [])
         if koponen_script:
             Koponen.loadScript(koponen_script)
-        pygame.event.pump()
 
         enemySerialNumbers = {
             1: KDS.AI.Imp,
@@ -508,7 +505,6 @@ class WorldData():
 
         y = 0
         for row in map_data:
-            pygame.event.pump()
             x = 0
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
@@ -577,7 +573,6 @@ class WorldData():
         for item in Items:
             item.lateInit()
         for row in tiles:
-            pygame.event.pump()
             for unit in row:
                 for tile in unit:
                     tile.lateInit()
@@ -1876,7 +1871,6 @@ class Item:
 
     @staticmethod
     def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory: Inventory):
-        index = 0
         showItemTip = True
         collision = False
         shortest_item = None
@@ -1916,7 +1910,6 @@ class Item:
                             inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
                             Item_list.remove(item)
                             showItemTip = False
-            index += 1
 
         Item.tipItem = shortest_item if collision and showItemTip else None
 
@@ -2578,12 +2571,6 @@ class Enemy:
 
     @staticmethod
     def update(Enemy_List: Sequence[KDS.AI.HostileEnemy]):
-        # handlers = []
-        # for enemy in Enemy_List:
-        #     if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
-        #         handlers.append(KDS.Jobs.Schedule(Enemy._internalEnemyHandler, enemy))
-        # KDS.Jobs.JobHandle.CompleteAll(handlers)
-
         for enemy in Enemy_List:
             if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
                 Enemy._internalEnemyHandler(enemy)
@@ -3135,7 +3122,13 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
 
     LoadGameSettings()
 
-    wdata = WorldData.LoadMap(mapPath)
+
+    loadMapHandle = KDS.Jobs.Schedule(WorldData.LoadMap, mapPath)
+    while not loadMapHandle.IsComplete():
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                KDS_Quit()
+    wdata = loadMapHandle.Complete()
     if not wdata:
         return 1
     Player.rect.topleft, Temp_value = wdata
@@ -3950,14 +3943,14 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
-    Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
-
     pt = PerformanceTimer()
     pt.Start()
-    Enemy.update(Enemies)
+    Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     pt.Stop()
-    pt.PrintResult()
+    pt.Stop()
+    Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
+
+    Enemy.update(Enemies)
 
     Player.update()
 
