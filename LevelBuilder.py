@@ -14,7 +14,6 @@ import KDS.Colors
 import KDS.ConfigManager
 import KDS.Console
 import KDS.Convert
-import KDS.Jobs
 import KDS.Math
 import KDS.Linq
 import KDS.Logging
@@ -28,8 +27,6 @@ import sys
 from enum import IntEnum
 
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
-
-from KDS.Testing import PerformanceTimer
 
 root = tkinter.Tk()
 root.withdraw()
@@ -1319,16 +1316,12 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
-        scalesize = KDS.Math.Clamp(scalesize + add, 1, 256)
+        scalesize = KDS.Math.Clamp(scalesize + add, 10, 128)
         scaleMultiplier = scalesize / gamesize
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        pt = PerformanceTimer()
-        pt.Start()
         Textures.RescaleTextures()
-        pt.Stop()
-        pt.PrintResult()
 
     inputConsole_output = None
     allowTilePlacement = True

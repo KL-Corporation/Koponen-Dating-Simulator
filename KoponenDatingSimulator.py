@@ -15,6 +15,7 @@ import KDS.Console
 import KDS.Convert
 import KDS.Events
 import KDS.Gamemode
+import KDS.Jobs
 import KDS.Keys
 import KDS.Koponen
 import KDS.Linq
@@ -37,6 +38,8 @@ import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+
+from KDS.Testing import PerformanceTimer
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -143,6 +146,7 @@ I=====[ DEBUG INFO ]=====I
 I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
 KDS.Audio.init(pygame.mixer)
+KDS.Jobs.init()
 KDS.AI.init()
 KDS.World.init()
 KDS.Missions.init()
@@ -446,7 +450,6 @@ class WorldData():
             level_background_img = pygame.image.load(os.path.join(MapPath, "background.png")).convert()
         else: level_background = False
 
-        pygame.event.pump()
         with open(os.path.join(MapPath, "level.dat"), "r", encoding="utf-8") as map_file:
             map_data = map_file.read().split("\n")
 
@@ -456,7 +459,6 @@ class WorldData():
         tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
 
-        pygame.event.pump()
         global dark, darkness, ambient_light, ambient_light_tint
         KDS.ConfigManager.LevelProp.init(MapPath)
         dark = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False)
@@ -488,7 +490,6 @@ class WorldData():
         koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", [])
         if koponen_script:
             Koponen.loadScript(koponen_script)
-        pygame.event.pump()
 
         enemySerialNumbers = {
             1: KDS.AI.Imp,
@@ -504,7 +505,6 @@ class WorldData():
 
         y = 0
         for row in map_data:
-            pygame.event.pump()
             x = 0
             for datapoint in row.split(" "):
                 # Tänne jokaisen blockin käsittelyyn liittyvä koodi
@@ -573,7 +573,6 @@ class WorldData():
         for item in Items:
             item.lateInit()
         for row in tiles:
-            pygame.event.pump()
             for unit in row:
                 for tile in unit:
                     tile.lateInit()
@@ -1871,12 +1870,12 @@ class Item:
                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory: Inventory) -> Tuple[Any, Inventory]:
-        index = 0
+    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory: Inventory):
         showItemTip = True
         collision = False
         shortest_item = None
         shortest_distance = KDS.Math.MAXVALUE
+
         for item in Item_list:
             if collidingRect.colliderect(item.rect):
                 collision = True
@@ -1884,35 +1883,35 @@ class Item:
                 if distance < shortest_distance:
                     shortest_item = item
                     shortest_distance = distance
-                if functionKey:
-                    if item.serialNumber not in inventoryDobulesSerialNumbers:
-                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
-                            temp_var = item.pickup()
-                            if not temp_var:
-                                inventory.storage[inventory.SIndex] = item
-                                KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
-                            Item_list.pop(index)
+
+                if not functionKey:
+                    continue
+
+                if item.serialNumber not in inventoryDobulesSerialNumbers:
+                    if inventory.storage[inventory.SIndex] == Inventory.emptySlot:
+                        temp_var = item.pickup()
+                        if not temp_var:
+                            inventory.storage[inventory.SIndex] = item
+                            KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
+                        Item_list.remove(item) # Remove seems to search for instance and not equality
+                        showItemTip = False
+                    elif item.serialNumber not in inventory_items:
+                        try:
+                            item.pickup()
+                            Item_list.remove(item)
                             showItemTip = False
-                        elif item.serialNumber not in inventory_items:
-                            try:
-                                item.pickup()
-                                Item_list.pop(index)
-                                showItemTip = False
-                            except Exception as e:
-                                KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
-                    else:
-                        if inventory.SIndex < inventory.size - 1:
-                            if inventory.storage[inventory.SIndex] == Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
-                                item.pickup()
-                                inventory.storage[inventory.SIndex] = item
-                                inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
-                                Item_list.pop(index)
-                                showItemTip = False
-            index += 1
+                        except Exception as e:
+                            KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
+                else:
+                    if inventory.SIndex < inventory.size - 1:
+                        if inventory.storage[inventory.SIndex] == Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == Inventory.emptySlot:
+                            item.pickup()
+                            inventory.storage[inventory.SIndex] = item
+                            inventory.storage[inventory.SIndex + 1] = Inventory.doubleItem
+                            Item_list.remove(item)
+                            showItemTip = False
 
         Item.tipItem = shortest_item if collision and showItemTip else None
-
-        return Item_list, inventory
 
     def pickup(self):
         return False
@@ -2546,6 +2545,37 @@ Item.serialNumbers = {
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion
+#region Enemies
+class Enemy:
+    @staticmethod
+    def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
+        result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
+        if result[0]:
+            #print(len(result[0]))
+            for r in result[0]:
+                Projectiles.append(r)
+        if result[1]:
+            for serialNumber in result[1]:
+                    tempItem = Item((enemy.rect.center), serialNumber=serialNumber, texture = i_textures[serialNumber])
+                    counter = 0
+                    while True:
+                        tempItem.rect.y += tempItem.rect.height
+                        for collision in KDS.World.collision_test(tempItem.rect, tiles):
+                            tempItem.rect.bottom = collision.rect.top
+                            counter = 250
+                        counter += 1
+                        if counter > 250:
+                            break
+                    Items.append(tempItem)
+                    del tempItem
+
+    @staticmethod
+    def update(Enemy_List: Sequence[KDS.AI.HostileEnemy]):
+        for enemy in Enemy_List:
+            if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
+                Enemy._internalEnemyHandler(enemy)
+
+#endregion
 #region Player
 KDS.Logging.debug("Loading Player...")
 class PlayerClass:
@@ -3092,7 +3122,13 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
 
     LoadGameSettings()
 
-    wdata = WorldData.LoadMap(mapPath)
+
+    loadMapHandle = KDS.Jobs.Schedule(WorldData.LoadMap, mapPath)
+    while not loadMapHandle.IsComplete():
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                KDS_Quit()
+    wdata = loadMapHandle.Complete()
     if not wdata:
         return 1
     Player.rect.topleft, Temp_value = wdata
@@ -3907,29 +3943,14 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    Items, Player.inventory = Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
+    pt = PerformanceTimer()
+    pt.Start()
+    Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
+    pt.Stop()
+    pt.Stop()
     Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
-    for enemy in Enemies:
-        if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
-            result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
-            if result[0]:
-                #print(len(result[0]))
-                for r in result[0]:
-                    Projectiles.append(r)
-            if result[1]:
-                for serialNumber in result[1]:
-                        tempItem = Item((enemy.rect.center), serialNumber=serialNumber, texture = i_textures[serialNumber])
-                        counter = 0
-                        while True:
-                            tempItem.rect.y += tempItem.rect.height
-                            for collision in KDS.World.collision_test(tempItem.rect, tiles):
-                                tempItem.rect.bottom = collision.rect.top
-                                counter = 250
-                            counter += 1
-                            if counter > 250:
-                                break
-                        Items.append(tempItem)
-                        del tempItem
+
+    Enemy.update(Enemies)
 
     Player.update()
 
@@ -4182,6 +4203,7 @@ while main_running:
 #endregion
 #endregion
 #region Application Quitting
+KDS.Jobs.quit()
 KDS.Audio.Music.Unload()
 KDS.System.emptdir(PersistentPaths.Cache)
 KDS.Logging.quit()
