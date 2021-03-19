@@ -1324,11 +1324,7 @@ def main():
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        pt = PerformanceTimer()
-        pt.Start()
         Textures.RescaleTextures()
-        pt.Stop()
-        pt.PrintResult()
 
     inputConsole_output = None
     allowTilePlacement = True
