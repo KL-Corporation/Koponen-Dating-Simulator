@@ -1731,7 +1731,7 @@ class FluorescentTube(Tile):
         self.rect = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, 5)
 
     def update(self):
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.y + 170 // 2 + 5), KDS.World.Lighting.Shapes.fluorecent.get(170, 8500), True))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.y + 170 // 2 + 5), KDS.World.Lighting.Shapes.fluorecent.get(170, 9500), True))
         return self.texture
 
 class GenericDoor(Teleport):
