@@ -1918,7 +1918,7 @@
 "47-154":{"0":{"checkCollision":false}},
 "48-154":{"0":{"checkCollision":false}},
 "49-154":{"0":{"checkCollision":false}},
-"50-154":{"0":{"locked":true}},
+"50-154":{"0":{"locked":true,"message":"Turha paikka"}},
 "51-154":{"0":{"checkCollision":false}},
 "52-154":{"0":{"checkCollision":false}},
 "53-154":{"0":{"checkCollision":false}},
