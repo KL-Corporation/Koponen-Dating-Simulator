@@ -1004,8 +1004,8 @@ def materialMenu(previousMaterial: str) -> str:
                     matMenRunning = False
                     return previousMaterial
             elif event.type == MOUSEWHEEL:
-                if event.y > 0: rscroll = max(rscroll - 1, 0)
-                else: rscroll = int(min((rscroll + 1) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because (whatever nimittäjä is in english) is a multiple digit value.
+                if event.y > 0: rscroll = max(rscroll - 2, 0)
+                else: rscroll = int(min((rscroll + 2) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because (whatever nimittäjä is in english) is a multiple digit value.
         yCalc = rscroll * 30
 
         tip_renders = []
