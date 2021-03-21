@@ -132,7 +132,8 @@
         "130": "large_door_closed.png",
         "131": "sound.png",
         "132": "door_front_mirrored.png",
-        "134": "loisteputki.png"
+        "134": "loisteputki.png",
+        "135": "molok.png"
     },
 
     "tile_sounds" : {
@@ -188,7 +189,8 @@
         130,
         131,
         132,
-        134
+        134,
+        135
     ],
     "noCollision": [
         10,

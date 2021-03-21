@@ -1744,7 +1744,14 @@ class GenericDoor(Teleport):
         Teleport.teleportT_IDS[self.serialNumber].append(self)
         super().lateInit()
 
+class Molok(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(position[0], position[1], 90, 59)
 
+    def update(self):
+        return self.texture
+        
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
 #         super().__init__(position, serialNumber)
@@ -1828,7 +1835,8 @@ specialTilesD = {
     130: GenericDoor,
     131: Sound,
     132: DoorFrontMirrored,
-    134: FluorescentTube
+    134: FluorescentTube,
+    135: Molok
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
