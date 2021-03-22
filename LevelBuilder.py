@@ -492,7 +492,7 @@ class UnitData:
                     if number in DOORSERIALS:
                         doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
                         continue
-
+                    
                     UnitData.renderSerial(surface, unit.properties, number, normalBlitPos)
 
                 if unitRect.collidepoint(mpos_scaled):
@@ -862,7 +862,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
                 else:
                     unit += " "
             if len(unit) > len(UnitData.EMPTYSERIAL):
-                unit = unit[:len(UnitData.EMPTYSERIAL) - 1]
+                unit = unit[:len(UnitData.EMPTYSERIAL)]
             #endregion
             rUnit.setSerial(unit)
 
