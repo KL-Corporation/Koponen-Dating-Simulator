@@ -337,7 +337,7 @@ KDS.Logging.debug("Defining Variables...")
 selectedSave = 0
 
 esc_menu = False
-dark = False
+dark: bool = False
 darkness = (255, 255, 255)
 
 gamemode_bc_1_alpha = KDS.Animator.Value(0.0, 255.0, 8, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
@@ -1751,7 +1751,7 @@ class Molok(Tile):
 
     def update(self):
         return self.texture
-        
+
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
 #         super().__init__(position, serialNumber)
