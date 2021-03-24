@@ -173,5 +173,3 @@ def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) 
         if predicate(v) == True:
             return v
     return None
-
-

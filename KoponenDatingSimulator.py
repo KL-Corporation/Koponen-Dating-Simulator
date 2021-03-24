@@ -1299,17 +1299,8 @@ class Teleport(Tile):
             index = 0
         if self.rect.colliderect(Player.rect):
             if Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
-                if self.serialNumber < 500 or KDS.Keys.functionKey.clicked and not self.locked:
-                    #Executing teleporting process
-                    if self.serialNumber > 499: KDS.Audio.PlaySound(door_opening)
-                    Player.rect.bottomleft = Teleport.teleportT_IDS[self.serialNumber][index].rect.bottomleft
-                    Teleport.teleportT_IDS[self.serialNumber][index].teleportReady = False
-                    Teleport.last_teleported = True
-                    #Reseting scroll
-                    true_scroll[0] += Player.rect.x - true_scroll[0] - (screen_size[0] // 2)
-                    true_scroll[1] += Player.rect.y - true_scroll[1] - 220
-                    #Triggering Listener
-                    KDS.Missions.Listeners.Teleport.Trigger()
+                if (self.serialNumber < 500 or KDS.Keys.functionKey.clicked) and not self.locked:
+                    pass
                 elif self.serialNumber > 499 and KDS.Keys.functionKey.clicked and self.locked:
                     KDS.Audio.PlaySound(door_locked)
 
@@ -1753,6 +1744,47 @@ class Molok(Tile):
 
     def update(self):
         return self.texture
+
+class BaseTeleport(Tile):
+    teleportIndexes: Dict[int, int] = {}
+    teleportDatas: Dict[int, List[BaseTeleport]] = {}
+    exited: bool = False
+
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        self.message = None
+        self.identifier: Optional[int] = None
+        self.order: int = KDS.Math.MAXVALUE
+        super().__init__(position, serialNumber)
+
+    def lateInit(self):
+        if self.message != None:
+            self.renderedMessage = tip_font.render(self.message, True, KDS.Colors.White)
+        if self.identifier != None:
+            if self.identifier not in BaseTeleport.teleportIndexes:
+                BaseTeleport.teleportIndexes[self.identifier] = 0
+            if self.identifier not in BaseTeleport.teleportDatas:
+                BaseTeleport.teleportDatas[self.identifier] = [self]
+            else:
+                BaseTeleport.teleportDatas[self.identifier].append(self)
+        else:
+            KDS.Logging.AutoError(f"No identifier set for teleport at {self.rect.topleft}!")
+
+    def teleport(self):
+        global trueScroll
+        if self.identifier == None:
+            return
+
+        index = BaseTeleport.teleportIndexes[self.identifier] + 1
+        if index > len(BaseTeleport.teleportDatas[self.identifier]):
+            index = 0
+        BaseTeleport.teleportIndexes[self.identifier] = index
+        #Executing teleporting process
+        Player.rect.midbottom = BaseTeleport.teleportDatas[self.identifier][index].rect.midbottom
+        BaseTeleport.exited = False
+        #Reseting scroll
+        trueScroll = [Player.rect.x - 301.0, Player.rect.y - 221.0]
+        #Triggering Listener
+        KDS.Missions.Listeners.Teleport.Trigger()
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:

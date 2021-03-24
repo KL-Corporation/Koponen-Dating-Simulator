@@ -137,7 +137,8 @@
         "136": "yellow_wall.png",
         "137": "monitor.png",
         "138": "couch.png",
-        "139": "painting6.png"
+        "139": "painting6.png",
+        "140": "painting7.png"
     },
 
     "tile_sounds" : {
@@ -219,7 +220,8 @@
         120,
         127,
         138,
-        139
+        139,
+        140
     ],
     "trueScale": [
         86,
@@ -247,7 +249,8 @@
         127,
         128,
         138,
-        139
+        139,
+        140
     ],
     "item_textures": {
         "000": "empty.png",
