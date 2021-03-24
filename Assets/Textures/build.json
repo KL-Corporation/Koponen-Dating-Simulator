@@ -134,7 +134,9 @@
         "132": "door_front_mirrored.png",
         "134": "loisteputki.png",
         "135": "molok.png",
-        "136": "yellow_wall.png"
+        "136": "yellow_wall.png",
+		"137": "monitor.png",
+		"138": "couch.png"
     },
 
     "tile_sounds" : {
@@ -214,7 +216,8 @@
         107,
         115,
         120,
-        127
+        127,
+		138
     ],
     "trueScale": [
         86,
@@ -240,7 +243,8 @@
         123,
         125,
         127,
-        128
+        128,
+		138
     ],
     "item_textures": {
         "000": "empty.png",
