@@ -37,6 +37,8 @@ import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+
+from KDS.Testing import PerformanceTimer
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -485,7 +487,7 @@ class WorldData():
         Koponen.force_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceTalk", False)
         Koponen.setListeners(KDS.ConfigManager.LevelProp.Get("Entities/Koponen/listeners", []))
         koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", [])
-        if koponen_script:
+        if len(koponen_script) > 0:
             Koponen.loadScript(koponen_script)
 
         enemySerialNumbers = {
@@ -3133,6 +3135,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         for event in pygame.event.get():
             if event.type == QUIT:
                 KDS_Quit()
+        pygame.time.wait(1000)
     wdata = loadMapHandle.Complete()
     if not wdata:
         return 1
@@ -3369,6 +3372,8 @@ def settings_menu():
 def main_menu():
     global current_map, DebugMode, current_map_name
 
+    pygame.mouse.set_visible(True)
+
     class Mode(IntEnum):
         MainMenu = 0
         ModeSelectionMenu = 1
@@ -3499,7 +3504,12 @@ def main_menu():
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
     campaign_play_text = button_font1.render("START", True, KDS.Colors.EmeraldGreen)
-    campaign_play_button = KDS.UI.Button(campaign_play_button_rect, play_function, campaign_play_text)
+
+    def campaign_play_handler():
+        if current_map_int != 0:
+            play_function(KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
+
+    campaign_play_button = KDS.UI.Button(campaign_play_button_rect, campaign_play_handler, campaign_play_text)
     campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left, pygame.transform.flip(arrow_button, True, False))
     campaign_right_button = KDS.UI.Button(campaign_right_button_rect, level_pick.right, arrow_button)
 
@@ -3626,7 +3636,7 @@ def main_menu():
                 rect = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)[index]
                 if not story_new_save_override:
                     if data != None:
-                        lines = [data["name"], "Progress: " + str(data["progress"] * 100) + "%", data["grade"] if data["grade"] > 0 else None]
+                        lines = [data["name"], f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100, KDS.Math.MidpointRounding.AwayFromZero)}%""", data["grade"] if data["grade"] > 0 else None]
                         for i, line in enumerate(lines):
                             rendered = font.render(line, True, KDS.Colors.White)
                             display.blit(rendered, (text_offset[0] + rect.x, (i * (fontHeight + line_offset)) + text_offset[1] + rect.y))
@@ -3656,7 +3666,7 @@ def main_menu():
             level_text = button_font1.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
-            skip_render_this_frame = campaign_play_button.update(display, mouse_pos, c, KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
+            skip_render_this_frame = campaign_play_button.update(display, mouse_pos, c)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
@@ -4193,7 +4203,6 @@ while main_running:
     if go_to_main_menu:
         KDS.Audio.StopAllSounds()
         KDS.Audio.Music.Stop()
-        pygame.mouse.set_visible(True)
         main_menu()
 #endregion
 #region Ticks

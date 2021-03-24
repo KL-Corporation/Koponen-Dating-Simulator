@@ -99,7 +99,7 @@ class UnitType(IntEnum):
 
 class TextureHolder:
     class TextureData:
-        def __init__(self, serialNumber: str, path: Optional[str], name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]]) -> None:
+        def __init__(self, serialNumber: str, path: Optional[str], name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]], alpha: int = -1) -> None:
             self.serialNumber = serialNumber
             if path != None:
                 self.path: str = path
@@ -118,6 +118,10 @@ class TextureHolder:
                     self.texture.set_colorkey(cast(Tuple[int, int, int], colorkey))
                 elif len(colorkey) == 2:
                     self.texture.set_colorkey(self.texture.get_at(colorkey))
+                else:
+                    KDS.Logging.AutoError("Invalid colorkey.")
+            if 0 <= alpha <= 255:
+                self.texture.set_alpha(alpha)
             self.rescaleTexture()
 
         def rescaleTexture(self):
@@ -131,9 +135,9 @@ class TextureHolder:
         self.serials: List[str] = []
         self.names: List[str] = []
 
-    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]] = KDS.Colors.White) -> None:
+    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]] = KDS.Colors.White, alpha: int = -1) -> None:
         try:
-            self.data[UnitType(int(serialNumber[0]))][serialNumber] = TextureHolder.TextureData(serialNumber, path, name, colorkey)
+            self.data[UnitType(int(serialNumber[0]))][serialNumber] = TextureHolder.TextureData(serialNumber, path, name, colorkey, alpha)
             self.serials.append(serialNumber)
             self.names.append(name)
         except Exception as e:
@@ -179,7 +183,7 @@ Textures = TextureHolder()
 for element in buildData["tile_textures"]:
     srl = f"0{element}"
     elmt = buildData["tile_textures"][element]
-    Textures.AddTexture(srl, f"Assets/Textures/Tiles/{elmt}", os.path.splitext(elmt)[0])
+    Textures.AddTexture(srl, f"Assets/Textures/Tiles/{elmt}", os.path.splitext(elmt)[0], alpha= -1 if srl != "0102" else 30)
 
 for element in buildData["item_textures"]:
     srl = f"1{element}"

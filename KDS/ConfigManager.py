@@ -32,7 +32,7 @@ class JSON:
 
     @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True) ->  Union[Any, None]:
-        config = {}
+        config: Dict[str, Any] = {}
         if os.path.isfile(filePath):
             try:
                 with open(filePath, "r") as f:
@@ -65,7 +65,7 @@ class JSON:
 
     @staticmethod
     def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False) -> Any:
-        config = {}
+        config: Dict[str, Any] = {}
         if os.path.isfile(filePath):
             try:
                 with open(filePath, "r") as f:
@@ -112,16 +112,31 @@ def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None, False, True)
 
 class LevelProp:
-    mapPath: str = ""
+    cachedValues: Dict[str, Any] = {}
 
     @staticmethod
     def init(MapPath: str):
-        LevelProp.mapPath = MapPath
+        try:
+            with open(os.path.join(MapPath, "levelprop.kdf"), "r") as f:
+                LevelProp.cachedValues = json.loads(f.read())
+        except IOError as e:
+            KDS.Logging.AutoError(e)
+        except json.decoder.JSONDecodeError as e:
+            KDS.Logging.AutoError(e)
 
     @staticmethod
-    def Get(path: str, DefaultValue: Any, listToTuple: bool = True) -> Any:
-        val = JSON.Get(os.path.join(LevelProp.mapPath, "levelprop.kdf"), path, DefaultValue, writeMissing=False)
-        return tuple(val) if isinstance(val, list) and listToTuple else val
+    def Get(path: str, DefaultValue: Any) -> Any:
+        paths: List[str] = JSON.ToKeyList(path)
+        tmpvals = LevelProp.cachedValues
+        for i in range(len(paths)):
+            p = paths[i]
+            if p not in tmpvals:
+                return DefaultValue
+            if i < len(paths) - 1: tmpvals = tmpvals[p]
+            else: return tmpvals[p]
+
+        KDS.Logging.AutoError("This code should not execute!")
+        return DefaultValue
 
 class Save:
     Active = None
