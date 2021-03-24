@@ -492,7 +492,7 @@ class UnitData:
                     if number in DOORSERIALS:
                         doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
                         continue
-                    
+
                     UnitData.renderSerial(surface, unit.properties, number, normalBlitPos)
 
                 if unitRect.collidepoint(mpos_scaled):

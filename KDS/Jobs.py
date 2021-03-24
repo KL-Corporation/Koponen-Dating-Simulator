@@ -36,7 +36,7 @@ class JobHandle:
         return res
 
     @staticmethod
-    def CompleteAll(jobs: Sequence[JobHandle]):
+    def CompleteAll(jobs: Sequence[JobHandle]) -> None:
         """Ensures that all jobs have completed.
 
         Args:
@@ -56,7 +56,7 @@ def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
     """
     return JobHandle(executor.submit(function, *args, **kwargs))
 
-##### OLD KDS.THREADING CODE #####
+#region OLD KDS.THREADING CODE
 # import concurrent.futures  # Tätä tarvitaan toivottavasti tulevaisuudessa. (Haha, tulevaisuudessa... Hauska vitsi)
 # import threading
 # from typing import Any, List, Union
@@ -141,3 +141,4 @@ def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
 #         self.thread.cancel()
 #         self.executor.shutdown()
 #         del self
+#endregion
