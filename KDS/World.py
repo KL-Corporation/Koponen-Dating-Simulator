@@ -43,7 +43,7 @@ def collision_test(rect, Tile_list):
     for row in Tile_list[y:end_y]:
         for unit in row[x:end_x]:
             for tile in unit:
-                if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
+                if rect.colliderect(tile.rect) and tile.checkCollision:
                     hit_list.append(tile)
     return hit_list
 

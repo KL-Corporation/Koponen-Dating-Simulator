@@ -200,9 +200,9 @@ Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0
 Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "mummy", (0, 0))
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "security_guard", (0, 0))
 
-Textures.AddTexture("3001", "Assets/Textures/Editor/telep.png", "teleport", None)
-Textures.AddTexture("3501", "Assets/Textures/Tiles/door_front.png", "door_teleport")
-Textures.AddTexture("3502", "Assets/Textures/Tiles/door_front_mirrored.png", "door_teleport")
+Textures.AddTexture("3001", "Assets/Textures/Tiles/telep.png", "teleport", None)
+Textures.AddTexture("3002", "Assets/Textures/Tiles/door_front.png", "door_teleport")
+Textures.AddTexture("3003", "Assets/Textures/Tiles/door_front_mirrored.png", "door_teleport_mirrored")
 #endregion
 
 trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
@@ -405,10 +405,10 @@ class UnitData:
         except ValueError:
             return None
 
-    def hasTile(self):
+    def hasTile(self) -> bool:
         return KDS.Linq.Any(self.serials, lambda s: s[0] == "0" and s != UnitData.EMPTY)
 
-    def hasTeleport(self):
+    def hasTeleport(self) -> bool:
         return KDS.Linq.Any(self.serials, lambda s: s[0] == "3")
 
     def resetSerial(self):
@@ -433,11 +433,7 @@ class UnitData:
                 else:
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
         elif serial[0] == "3":
-            if int(serial[1:]) < 500:
-                serial = "3001"
-            else:
-                serial = "3501" if not properties.Get(UnitType.Teleport, "mirrored", None) else "3502"
-                teleportOverlayFlag = True
+            teleportOverlayFlag = serial != "3001"
 
         unitData = Textures.GetData(serial)
         blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - unitData.scaledTexture_size[0] + scalesize, pos[1] - unitData.scaledTexture_size[1] + scalesize)
@@ -501,18 +497,13 @@ class UnitData:
 
                 if unitRect.collidepoint(mpos_scaled):
                     if unit.hasTeleport():
-                        teleportSerial = KDS.Linq.First(unit.serials, lambda s: s[0] == "3")
-                        t_ind = str(int(teleportSerial[1:]))
-                        tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
-                        if keys_pressed[K_p]:
-                            temp_serial: str = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
-                            if len(temp_serial) > 0:
-                                temp_serial = f"3{int(temp_serial):03d}"
-                                teleportSlot = unit.getSlot(teleportSerial)
-                                if teleportSlot != None:
-                                    unit.setSerialToSlot(temp_serial, teleportSlot)
-                                else:
-                                    KDS.Logging.AutoError("Teleport slot could not be found.")
+                        teleportIdentifier = unit.properties.Get(UnitType.Teleport, "identifier", None)
+                        if isinstance(teleportIdentifier, int):
+                            tip_renders.append(harbinger_font_small.render(str(teleportIdentifier), True, KDS.Colors.AviatorRed))
+                            if keys_pressed[K_p]:
+                                newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=teleportIdentifier, autoFormat=True)
+                                if newTeleportIdentifier != None:
+                                    unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
 
                     if keys_pressed[K_f]:
                         autoFill = {}
@@ -546,13 +537,6 @@ class UnitData:
                         teleportBrushProperties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
                         if tempbrushtemp == None:
                             tempbrushtemp = unit.getSerial(0)
-                        if tempbrushtemp[0] == "3":
-                            tempbrushtemp = "3001" if int(tempbrushtemp[1:]) < 500 else "3501"
-                            teleportBrushMirrored = unit.properties.Get(UnitType.Teleport, "mirrored", None)
-                            if isinstance(teleportBrushMirrored, bool):
-                                if teleportBrushMirrored:
-                                    teleportBrushProperties = {UnitType.Teleport: {"mirrored": True}}
-                                    tempbrushtemp = "3502"
 
                         if keys_pressed[K_LCTRL]:
                             teleportBrushProperties = unit.properties.GetAll()
@@ -594,7 +578,7 @@ class UnitData:
                     for _type, properties in tipProps.items():
                         color = _TYPECOLORS[_type]
                         for k, v in properties.items():
-                            if k == "checkCollision":
+                            if k in ("checkCollision", "identifier"):
                                 continue
                             rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
                             tip_renders.append(rendered_tip)
@@ -1009,7 +993,7 @@ def materialMenu(previousMaterial: str) -> str:
                     return previousMaterial
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 2, 0)
-                else: rscroll = int(min((rscroll + 2) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because (whatever nimittäjä is in english) is a multiple digit value.
+                else: rscroll = int(min((rscroll + 2) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
         yCalc = rscroll * 30
 
         tip_renders = []
@@ -1365,8 +1349,8 @@ def main():
                 elif event.key == K_e:
                     tmpBrush = materialMenu(brush.brush)
                     tmpProps: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
-                    if tmpBrush == "3502":
-                        tmpProps = {UnitType.Teleport: {"mirrored": True}}
+                    if tmpBrush[0] == "3":
+                        tmpProps = {UnitType.Teleport: {"identifier": 1}}
                     brush.SetValues(tmpBrush, tmpProps)
                     allowTilePlacement = False
                 elif event.key == K_DELETE:

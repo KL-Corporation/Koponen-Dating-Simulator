@@ -381,6 +381,7 @@ Items: List[Item] = []
 Enemies: List[KDS.AI.HostileEnemy] = []
 
 true_scroll = [0.0, 0.0]
+SCROLL_OFFSET = (301, 221)
 
 stand_size = (28, 63)
 crouch_size = (28, 34)
@@ -540,13 +541,8 @@ class WorldData():
                         value = enemySerialNumbers[serialNumber]((x * 34,y * 34))
                         Enemies.append(value)
                     elif pointer == 3:
-                        temp_teleport = Teleport((x * 34, y * 34), serialNumber=serialNumber)
-                        if serialNumber not in Teleport.teleportT_IDS:
-                            Teleport.teleportT_IDS[serialNumber] = []
-                        Teleport.teleportT_IDS[serialNumber].append(temp_teleport)
-                        value = temp_teleport
+                        value = BaseTeleport.CreateInstance((x * 34, y * 34), serialNumber)
                         tiles[y][x].append(value)
-                        del temp_teleport
                     else:
                         KDS.Logging.AutoError(f"Invalid pointer at ({x}, {y})")
 
@@ -555,15 +551,14 @@ class WorldData():
                         idPropCheck = str(pointer)
                         if idPropCheck in idProp:
                             for k, v in idProp[idPropCheck].items():
-                                if value != None:
-                                    if pointer == 0 and k == "checkCollision":
-                                            value.checkCollision = bool(v)
-                                            if not v:
-                                                tex: Any = value.texture.convert_alpha()
-                                                tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                                value.darkOverlay = tex
-                                    else:
-                                        setattr(value, k, v)
+                                if pointer == 0 and k == "checkCollision":
+                                        value.checkCollision = bool(v)
+                                        if not v:
+                                            tex: Any = value.texture.convert_alpha()
+                                            tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                            value.darkOverlay = tex
+                                else:
+                                    setattr(value, k, v)
             y += 1
 
         # lateInit order is the reverse of pointers
@@ -575,6 +570,9 @@ class WorldData():
             for unit in row:
                 for tile in unit:
                     tile.lateInit()
+
+        for teleportData in BaseTeleport.teleportDatas.values():
+            teleportData.Order()
 
         if os.path.isfile(os.path.join(MapPath, "music.ogg")):
             KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
@@ -589,14 +587,18 @@ with open("Assets/Textures/build.json", "r") as f:
     buildData = json.loads(f.read())
 
 t_textures: Dict[int, pygame.Surface] = {}
-for t in buildData["tile_textures"]:
-    t_textures[int(t)] = pygame.image.load("Assets/Textures/Tiles/" + buildData["tile_textures"][t]).convert()
-    t_textures[int(t)].set_colorkey(KDS.Colors.White)
+for k, v in buildData["tile_textures"].items():
+    t_textures[int(k)] = pygame.image.load("Assets/Textures/Tiles/" + v).convert()
+    t_textures[int(k)].set_colorkey(KDS.Colors.White)
+
+telep_textures: Dict[int, Optional[pygame.Surface]] = {}
+for k, v in buildData["teleport_textures"].items():
+    telep_textures[int(k)] = pygame.image.load("Assets/Textures/Teleports/" + v).convert() if v != None else None
 
 i_textures: Dict[int, pygame.Surface] = {}
-for i in buildData["item_textures"]:
-    i_textures[int(i)] = pygame.image.load("Assets/Textures/Items/" + buildData["item_textures"][i]).convert()
-    i_textures[int(i)].set_colorkey(KDS.Colors.White)
+for k, v in buildData["item_textures"].items():
+    i_textures[int(k)] = pygame.image.load("Assets/Textures/Items/" + v).convert()
+    i_textures[int(k)].set_colorkey(KDS.Colors.White)
 
 inventory_items: Set[int] = set(buildData["inventory_items"])
 
@@ -827,67 +829,63 @@ class Tile:
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.serialNumber = serialNumber
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        if serialNumber:
-            self.texture = t_textures[serialNumber]
-            self.air = False
+        self.texture = t_textures[self.serialNumber] if serialNumber != -1 else None
+        if serialNumber in Tile.trueScale:
+            self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
         else:
-            self.air = True
-        if serialNumber in Tile.trueScale: self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
+            self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
         self.checkCollision = False if serialNumber in Tile.noCollision else True
         self.checkCollisionDefault = self.checkCollision
         self.lateRender = False
         self.darkOverlay: Optional[pygame.Surface] = None
+        self.removeFlag: bool = False
+
+    @staticmethod
+    def renderUnit(unit: Tile, surface: pygame.Surface):
+        if DebugMode:
+            pygame.draw.rect(surface, KDS.Colors.Cyan, (unit.rect.x - scroll[0], unit.rect.y - scroll[1], unit.rect.width, unit.rect.height))
+        if not unit.specialTileFlag and unit.texture != None:
+            surface.blit(unit.texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
+        else:
+            texture = unit.update()
+            if texture != None:
+                surface.blit(texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
+        if unit.darkOverlay != None:
+            surface.blit(unit.darkOverlay, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
 
     @staticmethod
     # Tile_list is a list in a list in a list... Also known as a 3D array. Z axis is determined by index. Higher index means more towards the camera. Overlays are a different story
-    def renderUpdate(Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: list, center_position: Tuple[int, int]):
-        x = round((center_position[0] / 34) - ((Surface.get_width() / 34) / 2)) - 1 - renderPadding
-        y = round((center_position[1] / 34) - ((Surface.get_height() / 34) / 2)) - 1 - renderPadding
-        x = max(x, 0)
-        y = max(y, 0)
-        max_x = len(Tile_list[0])
-        max_y = len(Tile_list)
-        end_x = round((center_position[0] / 34) + ((Surface.get_width() / 34) / 2)) + renderPadding
-        end_y = round((center_position[1] / 34) + ((Surface.get_height() / 34) / 2)) + renderPadding
-        end_x = min(end_x, max_x)
-        end_y = min(end_y, max_y)
+    def renderUpdate(Tile_list: List[List[List[Tile]]], surface: pygame.Surface, center_position: Tuple[int, int]):
+        start_x = round((center_position[0] / 34) - ((surface.get_width() / 34) / 2)) - 1 - renderPadding
+        start_y = round((center_position[1] / 34) - ((surface.get_height() / 34) / 2)) - 1 - renderPadding
+        start_x = max(start_x, 0)
+        start_y = max(start_y, 0)
+        end_x = round((center_position[0] / 34) + ((surface.get_width() / 34) / 2)) + renderPadding
+        end_y = round((center_position[1] / 34) + ((surface.get_height() / 34) / 2)) + renderPadding
+        end_x = min(end_x, len(Tile_list[0]))
+        end_y = min(end_y, len(Tile_list))
 
         lateRender = []
-        for row in Tile_list[y:end_y]:
-            for unit in row[x:end_x]:
+        for y, row in enumerate(Tile_list[start_y:end_y]):
+            for x, unit in enumerate(row[start_x:end_x]):
                 for renderable in unit:
                     if renderable.lateRender:
                         lateRender.append(renderable)
                         continue
 
-                    renderable: Tile
-                    if not renderable.air:
-                        if DebugMode:
-                            pygame.draw.rect(Surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-                        if not renderable.specialTileFlag:
-                            Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                        else:
-                            texture = renderable.update()
-                            if texture != None:
-                                Surface.blit(texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-                        if renderable.darkOverlay != None:
-                            Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+                    Tile.renderUnit(renderable, surface)
+                    if renderable.removeFlag:
+                        Tile_list[y][x].remove(renderable)
 
         for renderable in lateRender:
-            if not renderable.specialTileFlag:
-                Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-            else:
-                Surface.blit(renderable.update(), (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
-            if renderable.darkOverlay != None:
-                Surface.blit(renderable.darkOverlay, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+            Tile.renderUnit(renderable, surface)
 
-    def update(self):
+    def update(self) -> Optional[pygame.Surface]:
         KDS.Logging.AutoError(f"No custom update initialised for tile: \"{self.serialNumber}\"!")
         return self.texture
 
-    def lateInit(self):
+    def lateInit(self) -> None:
         pass
     """
     def textureUpdate(self):
@@ -1051,9 +1049,9 @@ class Landmine(Tile):
             for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100 and enemy.enabled:
                     enemy.health -= 120 - KDS.Math.getDistance(enemy.rect.center, self.rect.center)
-            self.air = True
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))
+            self.removeFlag = True
         return self.texture
 
 class Ladder(Tile):
@@ -1091,7 +1089,7 @@ class Lamp(Tile):
             for row in tiles:
                 for unit in row:
                     for tile in unit:
-                        if not tile.air and tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
+                        if tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
                             y = y - (self.rect.y + self.rect.height + y - tile.rect.y) + 8
                             r = False
             if y > 154:
@@ -1746,45 +1744,78 @@ class Molok(Tile):
         return self.texture
 
 class BaseTeleport(Tile):
-    teleportIndexes: Dict[int, int] = {}
-    teleportDatas: Dict[int, List[BaseTeleport]] = {}
-    exited: bool = False
+    class TeleportData:
+        def __init__(self) -> None:
+            self.index: int = 0
+            self.teleports: List[BaseTeleport] = []
+
+        def Next(self, caller: BaseTeleport) -> BaseTeleport:
+            self.index = self.teleports.index(caller) + 1
+            if self.index >= len(self.teleports):
+                self.index = 0
+            return self.teleports[self.index]
+
+        def Order(self) -> None:
+            self.teleports.sort(key=lambda t: t.order)
+
+    @staticmethod
+    def CreateInstance(position: Tuple[int, int], serialNumber: int) -> BaseTeleport:
+        return teleportsD[serialNumber](position, serialNumber)
+
+    teleportDatas: Dict[int, BaseTeleport.TeleportData] = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.message = None
+        self.renderedMessage = None
         self.identifier: Optional[int] = None
         self.order: int = KDS.Math.MAXVALUE
-        super().__init__(position, serialNumber)
+        super().__init__(position, -1)
+        self.serialNumber = serialNumber
+        self.texture = telep_textures[self.serialNumber]
 
     def lateInit(self):
         if self.message != None:
             self.renderedMessage = tip_font.render(self.message, True, KDS.Colors.White)
         if self.identifier != None:
-            if self.identifier not in BaseTeleport.teleportIndexes:
-                BaseTeleport.teleportIndexes[self.identifier] = 0
             if self.identifier not in BaseTeleport.teleportDatas:
-                BaseTeleport.teleportDatas[self.identifier] = [self]
-            else:
-                BaseTeleport.teleportDatas[self.identifier].append(self)
+                BaseTeleport.teleportDatas[self.identifier] = BaseTeleport.TeleportData()
+            BaseTeleport.teleportDatas[self.identifier].teleports.append(self)
         else:
             KDS.Logging.AutoError(f"No identifier set for teleport at {self.rect.topleft}!")
 
     def teleport(self):
         global trueScroll
         if self.identifier == None:
+            KDS.Logging.AutoError("Teleport has no identifier!")
             return
-
-        index = BaseTeleport.teleportIndexes[self.identifier] + 1
-        if index > len(BaseTeleport.teleportDatas[self.identifier]):
-            index = 0
-        BaseTeleport.teleportIndexes[self.identifier] = index
         #Executing teleporting process
-        Player.rect.midbottom = BaseTeleport.teleportDatas[self.identifier][index].rect.midbottom
-        BaseTeleport.exited = False
+        t = BaseTeleport.teleportDatas[self.identifier].Next(self)
+        t.onTeleport()
+        Player.rect.midbottom = t.rect.midbottom
         #Reseting scroll
-        trueScroll = [Player.rect.x - 301.0, Player.rect.y - 221.0]
+        true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
+        true_scroll[1] += Player.rect.y - true_scroll[1] - SCROLL_OFFSET[1]
         #Triggering Listener
         KDS.Missions.Listeners.Teleport.Trigger()
+
+    def onTeleport(self):
+        pass
+
+class InvisibleTeleport(BaseTeleport):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.checkCollision = False
+        self.lastCollision: bool = False
+
+    def update(self):
+        collision = bool(self.rect.colliderect(Player.rect))
+        if collision != self.lastCollision and collision:
+            self.teleport()
+        self.lastCollision = collision
+        return None
+
+    def onTeleport(self):
+        self.lastCollision = True
 
 # class Ramp(Tile):
 #     def __init__(self, position, serialNumber) -> None:
@@ -1871,6 +1902,9 @@ specialTilesD = {
     132: DoorFrontMirrored,
     134: FluorescentTube,
     135: Molok
+}
+teleportsD = {
+    1: InvisibleTeleport
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
@@ -3180,7 +3214,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
 
     main_menu_running = False
     KDS.Scores.ScoreCounter.start()
-    if reset_scroll: true_scroll = [Player.rect.x - 301.0, Player.rect.y - 221.0]
+    if reset_scroll: true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
@@ -3411,7 +3445,7 @@ def main_menu():
         ModeSelectionMenu = 1
         StoryMenu = 2
         CampaignMenu = 3
-    MenuMode = Mode.MainMenu
+    MenuMode: Mode = Mode.MainMenu
 
     current_map_int = int(current_map)
 
@@ -3991,7 +4025,7 @@ while main_running:
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
-    Tile.renderUpdate(tiles, screen, scroll, (Player.rect.centerx - (Player.rect.x - scroll[0] - 301), Player.rect.centery - (Player.rect.y - scroll[1] - 221)))
+    Tile.renderUpdate(tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])))
 
     Enemy.update(Enemies)
 

@@ -252,6 +252,11 @@
         139,
         140
     ],
+    "teleport_textures": {
+        "001": null,
+        "002": "door_front.png",
+        "003": "door_front_mirrored.png"
+    },
     "item_textures": {
         "000": "empty.png",
         "001": "blue_key.png",

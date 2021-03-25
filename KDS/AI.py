@@ -32,7 +32,7 @@ def ai_collision_test(rect, Tile_list):
     for row in Tile_list[y:end_y]:
         for unit in row[x:end_x]:
             for tile in unit:
-                if rect.colliderect(tile.rect) and not tile.air and tile.checkCollision:
+                if rect.colliderect(tile.rect) and tile.checkCollision:
                     hit_list.append(tile.rect)
     return hit_list
 
@@ -124,9 +124,8 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
                     for tile in unit:
                         if KDS.Logging.profiler_running:
                             pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
-                        if not tile.air:
-                            if tile.checkCollision:
-                                return False, 0
+                        if tile.checkCollision:
+                            return False, 0
                         if tile.rect.colliderect(targetRect):
                             return True, slope
                 else:
@@ -708,7 +707,7 @@ class Mummy(HostileEnemy):
                     try:
                         jump = True
                         for y in range(3):
-                            if not obstacles[y_coor - 1 + y][x_coor].air or not obstacles[y_coor - 1 + y][x_coor].checkCollision:
+                            if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
                                 jump = False
                                 return self
                         if jump:
