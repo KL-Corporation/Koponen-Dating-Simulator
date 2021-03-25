@@ -117,7 +117,6 @@
         "115": "plant.png",
         "116": "blue_bench.png",
         "117": "red_bench.png",
-        "118": "gray_door.png",
         "119": "white_concrete.png",
         "120": "painting5.png",
         "121": "gray_concrete.png",
@@ -129,7 +128,6 @@
         "127": "patja.png",
         "128": "avarn_car.png",
         "129": "gray_wall.png",
-        "130": "large_door_closed.png",
         "131": "sound.png",
         "132": "door_front_mirrored.png",
         "134": "loisteputki.png",
@@ -187,11 +185,9 @@
         110,
         111,
         113,
-        118,
         123,
         126,
         128,
-        130,
         131,
         132,
         134,
@@ -253,9 +249,11 @@
         140
     ],
     "teleport_textures": {
-        "001": null,
+        "001": "telep.png",
         "002": "door_front.png",
-        "003": "door_front_mirrored.png"
+        "003": "door_front_mirrored.png",
+        "004": "gray_door.png",
+        "005": "large_door_closed.png"
     },
     "item_textures": {
         "000": "empty.png",

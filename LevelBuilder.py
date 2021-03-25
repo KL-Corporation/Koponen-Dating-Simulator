@@ -17,6 +17,7 @@ import KDS.Convert
 import KDS.Math
 import KDS.Jobs
 import KDS.Linq
+import KDS.Loading
 import KDS.Logging
 import KDS.System
 import KDS.UI
@@ -190,6 +191,11 @@ for element in buildData["item_textures"]:
     elmt = buildData["item_textures"][element]
     Textures.AddTexture(srl, f"Assets/Textures/Items/{elmt}", os.path.splitext(elmt)[0])
 
+for element in buildData["teleport_textures"]:
+    srl = f"3{element}"
+    elmt = buildData["teleport_textures"][element]
+    Textures.AddTexture(srl, f"Assets/Textures/Teleports/{elmt}", f"teleport_{os.path.splitext(elmt)[0]}", KDS.Colors.White if srl != "3001" else None)
+
 Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "imp", (0, 0))
 Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "seargeant", (0, 0))
 Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "drug_dealer", (0, 0))
@@ -199,10 +205,6 @@ Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "
 Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "undead_monster", (0, 0))
 Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "mummy", (0, 0))
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "security_guard", (0, 0))
-
-Textures.AddTexture("3001", "Assets/Textures/Tiles/telep.png", "teleport", None)
-Textures.AddTexture("3002", "Assets/Textures/Tiles/door_front.png", "door_teleport")
-Textures.AddTexture("3003", "Assets/Textures/Tiles/door_front_mirrored.png", "door_teleport_mirrored")
 #endregion
 
 trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
@@ -341,7 +343,14 @@ class UnitData:
 
     def _updateSplit(self):
         self.serials = tuple(self.serialNumber.split(" "))
+        if len(self.serials) > UnitData.SLOTCOUNT:
+            KDS.Logging.AutoError(f"Serials length does not match slot count! Serials length: {len(self.serials)} | Slot Count: {UnitData.SLOTCOUNT} | Serials: {self.serials} | Serial Number: {self.serialNumber}")
         self.filledSerials = tuple(KDS.Linq.Where(self.serials, lambda s: s != UnitData.EMPTY))
+
+    def overrideSerial(self, newSerial: str):
+        Undo.register(self)
+        self.serialNumber = newSerial
+        self._updateSplit()
 
     def setSerial(self, srlNumber: str):
         Undo.register(self)
@@ -371,16 +380,18 @@ class UnitData:
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
     def insertSerial(self, srlNumber: str):
-        for fakeIndex, number in enumerate(reversed(self.serials)):
-            if fakeIndex == 0:
-                if int(number) != 0:
-                    KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
-                    return
-            elif srlNumber not in self.serials:
-                if srlNumber[0] != "3" or not self.hasTeleport():
-                    self.setSerialToSlot(number, len(self.serials) - fakeIndex) # The second argument will be one higher than the real index.
-                else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
-            else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
+        if srlNumber[0] != "3" and self.hasTeleport():
+            KDS.Logging.info("Only one teleport is allowed per unit.", True)
+            return
+        if srlNumber in self.serials:
+            KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
+            return
+        if len(self.filledSerials) > UnitData.SLOTCOUNT:
+            KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
+            return
+
+        for index, number in enumerate(self.filledSerials): # No need to copy because tuple
+            self.setSerialToSlot(number, index + 1)
         self.setSerialToSlot(srlNumber, 0)
 
     def removeSerial(self):
@@ -390,14 +401,12 @@ class UnitData:
                 return
 
     def removeSerialFromStart(self):
-        for fakeIndex, number in enumerate(reversed(self.serials)):
-            index = len(self.serials) - fakeIndex - 1
-            if index <= 0: # If it's the last tile, the process is complete.
-                return
-
-            self.setSerialToSlot(number, index - 1)
-            if fakeIndex == 0:
+        srlist = self.serials
+        for index in range(len(srlist)):
+            if index >= len(srlist) - 1:
                 self.setSerialToSlot(UnitData.EMPTY, index)
+            else:
+                self.setSerialToSlot(srlist[index + 1], index)
 
     def getSlot(self, serial: str) -> Optional[int]:
         try:
@@ -453,7 +462,8 @@ class UnitData:
             surface.blit(teleportOverlay, pos)
 
     @staticmethod
-    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, allowTilePlacement: bool = True, middleMouseOnDown: bool = False) -> List[List[UnitData]]:
+    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, middleMouseOnDown: bool = False) -> List[List[UnitData]]:
+        global allowTilePlacement
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
             UnitType.Item: KDS.Colors.RiverBlue,
@@ -498,10 +508,13 @@ class UnitData:
                 if unitRect.collidepoint(mpos_scaled):
                     if unit.hasTeleport():
                         teleportIdentifier = unit.properties.Get(UnitType.Teleport, "identifier", None)
+                        if teleportIdentifier == None:
+                            unit.properties.Set(UnitType.Teleport, "identifier", 1)
+                            teleportIdentifier = 1
                         if isinstance(teleportIdentifier, int):
                             tip_renders.append(harbinger_font_small.render(str(teleportIdentifier), True, KDS.Colors.AviatorRed))
                             if keys_pressed[K_p]:
-                                newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=teleportIdentifier, autoFormat=True)
+                                newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
                                 if newTeleportIdentifier != None:
                                     unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
 
@@ -524,6 +537,7 @@ class UnitData:
                             KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
                     elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
                         overlayId = materialMenu(UnitData.EMPTY)
+                        allowTilePlacement = False
                         if overlayId != UnitData.EMPTY:
                             unit.properties.Set(UnitType.Unspecified, "overlay", overlayId)
                         else:
@@ -534,9 +548,13 @@ class UnitData:
 
                     if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
                         tempbrushtemp = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != brush.brush)
-                        teleportBrushProperties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+                        teleportBrushProperties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
                         if tempbrushtemp == None:
                             tempbrushtemp = unit.getSerial(0)
+                        elif tempbrushtemp[0] == "3":
+                            tmpProp = unit.properties.Get(UnitType.Teleport, "identifier", 1)
+                            if isinstance(tmpProp, int):
+                                teleportBrushProperties = {UnitType.Teleport:{"identifier":tmpProp}}
 
                         if keys_pressed[K_LCTRL]:
                             teleportBrushProperties = unit.properties.GetAll()
@@ -708,12 +726,12 @@ class UnitProperties:
 class BrushData:
     def __init__(self) -> None:
         self.brush: str = UnitData.EMPTY
-        self.properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+        self.properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
 
-    def SetValues(self, brush: str = UnitData.EMPTY, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}):
+    def SetValues(self, brush: str = UnitData.EMPTY, properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None):
         self.brush = brush
-        self.properties = {}
-        if not self.IsEmpty():
+        self.properties = None
+        if not self.IsEmpty() and self.properties != None:
             correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
             if correctType != None:
                 propValues = properties[correctType]
@@ -721,17 +739,20 @@ class BrushData:
 
     def SetOnUnit(self, unit: UnitData):
         unit.setSerial(self.brush)
-        unit.setProperties(self.properties)
+        if self.properties != None:
+            unit.setProperties(self.properties)
         unit.properties.RemoveUnused()
 
     def AddOnUnit(self, unit: UnitData):
         unit.addSerial(self.brush)
-        unit.addProperties(self.properties)
+        if self.properties != None:
+            unit.addProperties(self.properties)
         unit.properties.RemoveUnused()
 
     def InsertOnUnit(self, unit: UnitData):
         unit.insertSerial(self.brush)
-        unit.addProperties(self.properties)
+        if self.properties != None:
+            unit.addProperties(self.properties)
         unit.properties.RemoveUnused()
 
     def IsEmpty(self):
@@ -817,52 +838,68 @@ def saveMapName():
         saveMap(grid, currentSaveName)
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
-    global currentSaveName, gridSize, grid
+    global currentSaveName, gridSize, grid, display, clock
     if path == None or len(path) < 1:
         KDS.Logging.info(f"Path \"{path}\" of map file is not valid.", True)
         return False
     if not path.endswith(".dat"):
         KDS.Logging.info(f"Map file at path \"{path}\" is not a valid type.", True)
         return False
+
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
         if len(currentSaveName) < 1 or currentSaveName.isspace():
             saveMapName()
         else:
             saveMap(grid, currentSaveName)
 
-    temporaryGrid = None
-    with open(path, 'r') as f:
-        contents = f.read().splitlines()
-        while len(contents[-1]) < 1: contents = contents[:-1]
+    KDS.Loading.Circle.Start(display, clock)
 
-    maxW = 0
-    for c in contents:
-        maxW = max(maxW, len(c.split("/")))
-    temporaryGrid = loadGrid((maxW, len(contents)))
+    def internalLoad():
+        global currentSaveName, gridSize, grid, display, clock
 
-    for row, rRow in zip(contents, temporaryGrid):
-        for unit, rUnit in zip(row.split("/"), rRow):
-            unit = unit.strip(" ")
-            #region Fixing Broken Serials
-            while len(unit) < len(UnitData.EMPTYSERIAL):
-                if not unit.endswith("0000"):
-                    unit += "0"
-                else:
-                    unit += " "
-            if len(unit) > len(UnitData.EMPTYSERIAL):
-                unit = unit[:len(UnitData.EMPTYSERIAL)]
-            #endregion
-            rUnit.setSerial(unit)
+        temporaryGrid = None
+        with open(path, 'r') as f:
+            contents = f.read().splitlines()
+            while len(contents[-1]) < 1: contents = contents[:-1]
 
-    currentSaveName = path
+        maxW = 0
+        for c in contents:
+            maxW = max(maxW, len(c.split("/")))
+        temporaryGrid = loadGrid((maxW, len(contents)))
 
-    grid = temporaryGrid
-    fpath = os.path.join(os.path.dirname(path), "properties.kdf")
-    if os.path.isfile(fpath):
-        with open(fpath, 'r', encoding="utf-8") as f:
-            UnitProperties.Deserialize(f.read(), grid)
+        for row, rRow in zip(contents, temporaryGrid):
+            for unit, rUnit in zip(row.split("/"), rRow):
+                unit = unit.strip(" ")
+                #region Fixing Broken Serials
+                while len(unit) < len(UnitData.EMPTYSERIAL):
+                    if not unit.endswith("0000"):
+                        unit += "0"
+                    else:
+                        unit += " "
+                while len(unit) > len(UnitData.EMPTYSERIAL):
+                    unit = unit[:-1]
+                if KDS.Linq.Any(unit.split(" "), lambda n: len(n) != len(UnitData.EMPTY)):
+                    KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
+                #endregion
+                rUnit.overrideSerial(unit)
+
+        currentSaveName = path
+
+        grid = temporaryGrid
+        fpath = os.path.join(os.path.dirname(path), "properties.kdf")
+        if os.path.isfile(fpath):
+            with open(fpath, 'r', encoding="utf-8") as f:
+                UnitProperties.Deserialize(f.read(), grid)
+
+    handle = KDS.Jobs.Schedule(internalLoad)
+    while not handle.IsComplete():
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                LB_Quit()
+        pygame.time.wait(1000)
 
     Undo.clear()
+    KDS.Loading.Circle.Stop()
     return True
 
 def openMap() -> bool: #Returns True if the operation was succesful
@@ -1165,7 +1202,8 @@ def menu():
             fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
             display.blit(fps_text, (10, 10))
 
-        pygame.display.flip()
+        if btn_menu:
+            pygame.display.flip()
         clock.tick_busy_loop(60)
 
 class Selected:
@@ -1181,7 +1219,7 @@ class Selected:
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
-                unitCopy.setSerial(serialOverride)
+                unitCopy.overrideSerial(serialOverride)
             if propertiesOverride != None:
                 unitCopy.properties.values = propertiesOverride
             try:
@@ -1282,8 +1320,9 @@ def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
         #     return True
     return False
 
+allowTilePlacement = True
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect, allowTilePlacement
 
     menu()
     if not mainRunning: return
@@ -1308,7 +1347,6 @@ def main():
         Textures.RescaleTextures()
 
     inputConsole_output = None
-    allowTilePlacement = True
 
     dragStartPos = None
     dragPos = None
@@ -1348,7 +1386,7 @@ def main():
                     if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     tmpBrush = materialMenu(brush.brush)
-                    tmpProps: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+                    tmpProps: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
                     if tmpBrush[0] == "3":
                         tmpProps = {UnitType.Teleport: {"identifier": 1}}
                     brush.SetValues(tmpBrush, tmpProps)
@@ -1437,7 +1475,7 @@ def main():
             inputConsole_output = None
 
         display.fill((30, 20, 60))
-        grid = UnitData.renderUpdate(display, scroll, grid, brush, allowTilePlacement, middleMouseOnDown)
+        grid = UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
