@@ -464,6 +464,7 @@ class KoponenEntity:
                         execArgs = shlex.split(execArgs.removesuffix(")"))
                         execFunc = execFuncs.allowedFuncs[execFuncName] if execFuncName in execFuncs.allowedFuncs else None
                         if execFunc != None:
+                            print(execArgs)
                             execCArgs = [KDS.Convert.AutoType2(a) for a in execArgs]
                             if None not in execCArgs:
                                 try:
