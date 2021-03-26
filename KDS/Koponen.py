@@ -398,7 +398,7 @@ class KoponenEntity:
             #endregion
             self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
         else:
-            self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
+            if not self.forceIdle: self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
 
         self.handleInstructions(tiles)
         if self.collisions["left"] or self.collisions["right"]:
@@ -441,6 +441,7 @@ class KoponenEntity:
             instruction = self.ls_instructions[self.current_instruction]
             new_instruction = instruction != self.last_instruction
             self.last_instruction = instruction
+
             args = instruction.split(":", 1)
             if len(args):
                 if args[0] == "move":
@@ -457,11 +458,6 @@ class KoponenEntity:
                     else:
                         self.continueAutoMove()
                         self.current_instruction += 1
-                elif  args[0] == "forceIdle":
-                    self.forceIdle = KDS.Convert.ToBool2(args[1])
-                    if self.forceIdle: self.movement[0] = 0
-                    else: self.movement[0] = abs(self.speed) * random.choice([-1, 1])
-                    self.current_instruction += 1
                 elif args[0] == "exec":
                     if re.fullmatch(r"[a-zA-Z]+\(.*\)", args[1]) != None:
                         execFuncName, execArgs = args[1].split("(", 1)

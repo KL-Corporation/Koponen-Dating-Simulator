@@ -14,8 +14,7 @@
                 517
             ],
             "lscript" : [
-                "move:729,544",
-                "forceIdle:True",
+                "move:715,525",
                 "exec:SetSelfProperty('forceIdle', True)",
                 "exec:SetTileProperty(16, 21, -1, 'interactable', True)",
                 "exec:SetTileProperty(16, 21, -1, 'propOpen', True)",
