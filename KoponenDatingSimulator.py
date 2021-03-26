@@ -3148,10 +3148,12 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     Projectiles.clear()
     #endregion
 
+    #region Ammo Resetting
     for c in Item.serialNumbers.values():
         defaultAmmo = getattr(c, "defaultAmmunition", None)
         if defaultAmmo != None:
             setattr(c, "ammunition", defaultAmmo)
+    #endregion
 
     LoadGameSettings()
 
