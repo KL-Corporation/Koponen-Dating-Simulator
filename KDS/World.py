@@ -245,6 +245,7 @@ class Bullet:
         self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
         self.speed = speed
         self.texture = texture
+        self.texture_size = self.texture.get_size()
         self.maxDistance = maxDistance
         self.movedDistance = 0
         self.environment_obstacles = environment_obstacles
@@ -254,11 +255,11 @@ class Bullet:
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
         if self.texture:
-            Surface.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+            Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if debugMode:
             pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
-            debugStartPos = (self.rect.x - (self.movedDistance * self.direction_multiplier), self.rect.y - (self.slope * self.movedDistance))
+            debugStartPos = (self.rect.centerx - (self.movedDistance * self.direction_multiplier), self.rect.centery - (self.slope * self.movedDistance))
             pygame.draw.line(Surface, KDS.Colors.Black, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))
 
         if self.speed == -1:

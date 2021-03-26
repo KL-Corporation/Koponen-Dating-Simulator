@@ -1861,7 +1861,7 @@ KDS.Logging.debug("Loading Items...")
 class Item:
     infiniteAmmo: bool = False
 
-    serialNumbers = {}
+    serialNumbers: Dict[int, object] = {}
 
     tipItem = None
 
@@ -1875,15 +1875,15 @@ class Item:
 
     @staticmethod
     # Item_list is a list
-    def renderUpdate(Item_list, Surface: pygame.Surface, scroll: Sequence[int], DebugMode = False):
+    def renderUpdate(Item_list: Sequence[Item], Surface: pygame.Surface, scroll: Sequence[int], DebugMode = False):
         for renderable in Item_list:
             if DebugMode:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             if renderable.texture != None:
-                Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y-scroll[1]))
+                Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
             if renderable.physics:
                 renderable.momentum = min(renderable.momentum + item_fall_speed, item_fall_max_velocity)
-                renderable.rect.y += renderable.momentum
+                renderable.rect.y += int(renderable.momentum)
                 collisions = KDS.World.collision_test(renderable.rect, tiles)
                 if len(collisions) > 0:
                     renderable.rect.bottom = collisions[0].rect.top
@@ -2076,7 +2076,8 @@ class Medkit(Item):
         return True
 
 class Pistol(Item):
-    ammunition = 8
+    ammunition = -1
+    defaultAmmunition = 8
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
@@ -2117,7 +2118,8 @@ class PistolMag(Item):
 
 class rk62(Item):
 
-    ammunition = 30
+    ammunition = -1
+    defaultAmmunition = 30
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
@@ -2145,7 +2147,8 @@ class rk62(Item):
 
 class Shotgun(Item):
 
-    ammunition = 8
+    ammunition = -1
+    defaultAmmunition = 8
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
@@ -2191,7 +2194,8 @@ class ShotgunShells(Item):
 
 class Plasmarifle(Item):
 
-    ammunition = 36
+    ammunition = -1
+    defaultAmmunition = 36
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
@@ -2201,12 +2205,9 @@ class Plasmarifle(Item):
             KDS.World.plasmarifle_C.counter = 0
             KDS.Audio.PlaySound(plasmarifle_f_sound)
             Plasmarifle.ammunition -= 1
-            if Player.direction:
-                temp = 100
-            else:
-                temp = -80
-            Lights.append(KDS.World.Lighting.Light((int(Player.rect.centerx - temp / 1.4), Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - temp, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
+            asset_offset = 70 * -KDS.Convert.ToMultiplier(Player.direction)
+            Lights.append(KDS.World.Lighting.Light((int(Player.rect.centerx - asset_offset / 1.4), Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - asset_offset, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
             return plasmarifle_animation.update()
         else:
             KDS.World.plasmarifle_C.counter += 1
@@ -2261,7 +2262,8 @@ class Turboneedle(Item):
 
 class Ppsh41(Item):
 
-    ammunition = 72
+    ammunition = -1
+    defaultAmmunition = 72
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
@@ -2287,7 +2289,8 @@ class Ppsh41(Item):
 
 class Awm(Item):
 
-    ammunition = 5
+    ammunition = -1
+    defaultAmmunition = 5
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
@@ -2447,7 +2450,8 @@ class Chainsaw(Item):
     throttle_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_throttle.ogg")
     soundCounter = 70
     soundCounter1 = 122
-    ammunition = 100.0
+    ammunition = -1.0
+    defaultAmmunition = 100.0
     a_a = False
     Ianimation = KDS.Animator.Animation("chainsaw_animation", 2, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -3136,12 +3140,18 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     Player = PlayerClass()
 
     #region World Data
-    global Items, Enemies, Explosions, BallisticObjects
-    Items = []
-    Enemies = []
-    Explosions = []
-    BallisticObjects = []
+    global Items, Enemies, Explosions, BallisticObjects, Projectiles
+    Items.clear()
+    Enemies.clear()
+    Explosions.clear()
+    BallisticObjects.clear()
+    Projectiles.clear()
     #endregion
+
+    for c in Item.serialNumbers.values():
+        defaultAmmo = getattr(c, "defaultAmmunition", None)
+        if defaultAmmo != None:
+            setattr(c, "ammunition", defaultAmmo)
 
     LoadGameSettings()
 
@@ -3155,7 +3165,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     wdata = loadMapHandle.Complete()
     if not wdata:
         return 1
-    Player.rect.topleft, Temp_value = wdata
+    Player.rect.topleft, _ = wdata
 
     #region Set Game Data
     global level_finished
