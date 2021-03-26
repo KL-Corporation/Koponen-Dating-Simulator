@@ -1232,14 +1232,16 @@ class LevelEnderDoor(Tile):
         self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         self.checkCollision = False
         self.opened = False
-        self.locked = False
+        self.propOpen = False
+        self.interactable: bool = True
         self.showTip = False
 
     def update(self):
-        if self.rect.colliderect(Player.rect):
+        if self.rect.colliderect(Player.rect) or self.propOpen:
             if self.showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-            if KDS.Keys.functionKey.clicked:
-                if not self.locked:
+            if KDS.Keys.functionKey.clicked or self.propOpen:
+                self.propOpen = False
+                if self.interactable:
                     KDS.Missions.Listeners.LevelEnder.Trigger()
                     KDS.Audio.PlaySound(door_opening)
                     self.opened = True
@@ -1262,55 +1264,6 @@ class Candle(Tile):
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale // 2, self.rect.y - self.light_scale // 2), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 2000)))
         return self.texture.update()
-
-# class Teleport(Tile):
-#     door_texture = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
-#     door_texture_mirrored = pygame.image.load("Assets/Textures/Tiles/door_front_mirrored.png").convert()
-#
-#     def __init__(self, position: Tuple[int, int], serialNumber: int):
-#         super().__init__(position, 1)
-#         self.texture = Teleport.door_texture if serialNumber > 499 else None
-#         if serialNumber < 500:
-#             self.rect = pygame.Rect(position[0], position[1], 34, 34)
-#         else:
-#             self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
-#         self.checkCollision = False
-#         self.specialTileFlag = True
-#         self.teleportReady = True
-#         self.locked = False
-#         self.message: str = ""
-#         self.renderedMessage: Optional[pygame.Surface] = None
-#         self.serialNumber = serialNumber
-#         self.mirrored: bool = False
-#
-#     def lateInit(self):
-#         if self.message != None:
-#             self.renderedMessage = tip_font.render(self.message, True, KDS.Colors.White)
-#         if self.mirrored and self.serialNumber >= 500:
-#             self.texture = Teleport.door_texture_mirrored
-#             # darkOverlay flipping is probably not necessary, because it should work either way around...?
-#
-#     def update(self):
-#         #Calculating next teleport with same serial number
-#         index = Teleport.teleportT_IDS[self.serialNumber].index(self) + 1
-#         if index > len(Teleport.teleportT_IDS[self.serialNumber]) - 1:
-#             index = 0
-#         if self.rect.colliderect(Player.rect):
-#             if Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady: #Checking if teleporting is possible
-#                 if (self.serialNumber < 500 or KDS.Keys.functionKey.clicked) and not self.locked:
-#                     pass
-#                 elif self.serialNumber > 499 and KDS.Keys.functionKey.clicked and self.locked:
-#                     KDS.Audio.PlaySound(door_locked)
-#
-#             if self.renderedMessage != None:
-#                 screen.blit(self.renderedMessage, (self.rect.centerx - self.renderedMessage.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-#         else:
-#             if self.serialNumber > 499: #Checking if it is possible to release teleport from teleport-lock
-#                 Teleport.teleportT_IDS[self.serialNumber][Teleport.teleportT_IDS[self.serialNumber].index(self)].teleportReady = True
-#
-#         return self.texture
-#
-#     teleportT_IDS = {}
 
 class LampPoleLamp(Tile):
     def __init__(self, position, serialNumber: int):
@@ -1720,21 +1673,6 @@ class FluorescentTube(Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.y + 170 // 2 + 5), KDS.World.Lighting.Shapes.fluorecent.get(170, 9500), True))
         return self.texture
 
-# class GenericDoor(Teleport):
-#     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
-#         super().__init__(position, serialNumber)
-#         self.texture = t_textures[serialNumber]
-#         _rect = pygame.Rect(self.rect.x, self.rect.y - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
-#         self.rect = _rect
-#         self.t_index = 0
-#
-#     def lateInit(self) -> None:
-#         self.serialNumber = self.t_index
-#         if self.serialNumber not in Teleport.teleportT_IDS:
-#             Teleport.teleportT_IDS[self.serialNumber] = []
-#         Teleport.teleportT_IDS[self.serialNumber].append(self)
-#         super().lateInit()
-
 class Molok(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1765,6 +1703,7 @@ class BaseTeleport(Tile):
         self.renderedMessage = None
         self.identifier: Optional[int] = None
         self.order: int = KDS.Math.MAXVALUE
+        self.interactable: bool = True
 
         super().__init__(position, -1)
         self.serialNumber = serialNumber
@@ -1773,6 +1712,7 @@ class BaseTeleport(Tile):
         self.specialTileFlag = True
 
         self.teleportSound: Optional[pygame.mixer.Sound] = None
+        self.nonInteractableSound: Optional[pygame.mixer.Sound] = None
         self.messageOffset: Tuple[int, int] = (0, 0)
 
     def lateInit(self):
@@ -1793,6 +1733,10 @@ class BaseTeleport(Tile):
         global trueScroll
         if self.identifier == None:
             KDS.Logging.AutoError("Teleport has no identifier!")
+            return
+        if not self.interactable:
+            if self.nonInteractableSound != None:
+                KDS.Audio.PlaySound(self.nonInteractableSound)
             return
         if self.teleportSound != None:
             KDS.Audio.PlaySound(self.teleportSound)
@@ -1828,67 +1772,28 @@ class InvisibleTeleport(BaseTeleport):
 class DoorTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.locked = False
         self.rect = pygame.Rect(self.rect.x, self.rect.y - 34, 34, 68)
         self.teleportSound = None
-        self.lockedSound = None
         self.messageOffset = (0, -50)
 
     def update(self):
         if self.rect.colliderect(Player.rect):
             self.renderMessage()
             if KDS.Keys.functionKey.clicked:
-                if not self.locked:
-                    self.teleport()
-                elif self.lockedSound != None:
-                    KDS.Audio.PlaySound(self.lockedSound)
+                self.teleport()
         return self.texture
 
 class WoodDoorTeleport(DoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.teleportSound = door_opening
-        self.lockedSound = door_locked
+        self.nonInteractableSound = door_locked
 
 class LargeDoorTeleport(DoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(self.rect.x, self.rect.y, 68, 68)
         self.messageOffset = (0, -55)
-
-# class Ramp(Tile):
-#     def __init__(self, position, serialNumber) -> None:
-#         super().__init__(position, serialNumber)
-#         self.checkCollision = False
-#         self.direction = True if serialNumber == 108 else Falsed
-#
-#         self.triangle: List[Tuple[int, int]]
-#         if self.direction:
-#             self.triangle = [
-#                             (position[0], position[1] + self.texture.get_height()),
-#                             (position[0] + self.texture.get_width(), position[1]),
-#                             (position[0] + self.texture.get_width(), position[1] + self.texture.get_height())
-#                             ]
-#         else:
-#             self.triangle = [
-#                             (position[0], position[1]),
-#                             (position[0] + self.texture.get_width(), position[1] + self.texture.get_height()),
-#                             (position[0], position[1] + self.texture.get_height())
-#                             ]
-#
-#         self.slope = KDS.Math.getSlope(self.triangle[0], self.triangle[1]) * -1
-#         print(self.triangle[0], self.triangle[1])
-#         print(self.slope)
-#
-#     def update(self):
-#         markPoint = Player.rect.bottomright if self.serialNumber == 108 else Player.rect.bottomleft
-#
-#         if Player.movement[1] < 0 and Player.rect.colliderect(self.rect) and Player.rect.bottom > self.rect.bottom:
-#             Player.rect.top = self.rect.bottom
-#         elif KDS.Math.trianglePointIntersect(self.triangle, markPoint):
-#             Player.rect.bottom = self.rect.y + self.rect.height - round(self.slope * (markPoint[0] - self.rect.x))
-#             #Player.rect.bottom =
-#         return self.texture
 
 specialTilesD = {
     15: Toilet,

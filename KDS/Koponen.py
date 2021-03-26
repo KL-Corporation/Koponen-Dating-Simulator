@@ -431,15 +431,15 @@ class KoponenEntity:
             def PlaySoundFromFile(filepath: str):
                 KDS.Audio.PlayFromFile(filepath)
 
-            allowedFuncs = (
-                SetTileProperty,
-                SetSelfProperty,
-                PlaySoundFromFile
-            )
+            allowedFuncs: Dict[str, Callable] = {
+                "SetTileProperty": SetTileProperty,
+                "SetSelfProperty": SetSelfProperty,
+                "PlaySoundFromFile": PlaySoundFromFile
+            }
 
         if self.current_instruction < len(self.ls_instructions):
             instruction = self.ls_instructions[self.current_instruction]
-            new_instruction = True if instruction != self.last_instruction else False
+            new_instruction = instruction != self.last_instruction
             self.last_instruction = instruction
 
             args = instruction.split(":", 1)
@@ -462,8 +462,8 @@ class KoponenEntity:
                     if re.fullmatch(r"[a-zA-Z]+\(.*\)", args[1]) != None:
                         execFuncName, execArgs = args[1].split("(", 1)
                         execArgs = shlex.split(execArgs.removesuffix(")"))
-                        execFunc = getattr(execFuncs, execFuncName, None)
-                        if execFunc != None and callable(execFunc):
+                        execFunc = execFuncs.allowedFuncs[execFuncName] if execFuncName in execFuncs.allowedFuncs else None
+                        if execFunc != None:
                             if execFunc in execFuncs.allowedFuncs:
                                 execCArgs = [KDS.Convert.AutoType2(a) for a in execArgs]
                                 if None not in execCArgs:

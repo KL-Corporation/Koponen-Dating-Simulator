@@ -318,7 +318,7 @@
 "18-16":{"0":{"checkCollision":false}},
 "19-16":{"0":{"checkCollision":false,"listener":"TentSleepStart"}},
 "20-16":{"0":{"checkCollision":false}},
-"21-16":{"0":{"locked":true}},
+"21-16":{"0":{"interactable":false}},
 "22-16":{"4":{"overlay":"0112"},"0":{"locked":true}},
 "23-16":{"0":{"checkCollision":false}},
 "24-16":{"0":{"checkCollision":false}},
