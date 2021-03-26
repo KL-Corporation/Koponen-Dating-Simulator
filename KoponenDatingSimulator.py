@@ -2202,9 +2202,9 @@ class Plasmarifle(Item):
             KDS.Audio.PlaySound(plasmarifle_f_sound)
             Plasmarifle.ammunition -= 1
             if Player.direction:
-                temp = 100
+                temp = 70
             else:
-                temp = -80
+                temp = -60
             Lights.append(KDS.World.Lighting.Light((int(Player.rect.centerx - temp / 1.4), Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - temp, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1)/27))
             return plasmarifle_animation.update()
