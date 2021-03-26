@@ -37,8 +37,6 @@ import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
-
-from KDS.Testing import PerformanceTimer
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -875,6 +873,7 @@ class Tile:
                         continue
 
                     Tile.renderUnit(renderable, surface)
+                    # EI TOIMI
                     if renderable.removeFlag:
                         Tile_list[y][x].remove(renderable)
 
@@ -2571,6 +2570,9 @@ class Enemy:
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
         result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
+        if enemy.health > 0:
+            healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
+            screen.blit(healthTxt, (enemy.rect.centerx - scroll[0], enemy.rect.top - 20 - scroll[1]))
         if result[0]:
             #print(len(result[0]))
             for r in result[0]:

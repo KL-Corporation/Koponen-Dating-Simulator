@@ -109,6 +109,12 @@ def AutoType2(value: str) -> Union[str, bool, int, float, None]: # Strict type c
     KDS.Logging.AutoError(f"Value {value} cannot be parsed to any type!")
     return None
 
+def AutoType3(value: str) -> Union[str, bool, int, float]:
+    output = AutoType2(value)
+    if output == None:
+        return value
+    return output
+
 def ToGrayscale(image: pygame.Surface):
     """Converts an image to grayscale.
 
