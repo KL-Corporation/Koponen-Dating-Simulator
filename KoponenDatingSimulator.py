@@ -2572,7 +2572,7 @@ class Enemy:
         result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
         if enemy.health > 0:
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
-            screen.blit(healthTxt, (enemy.rect.centerx - scroll[0], enemy.rect.top - 20 - scroll[1]))
+            screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
         if result[0]:
             #print(len(result[0]))
             for r in result[0]:

@@ -92,7 +92,7 @@ def AutoType(value: str, fallbackValue: _T) -> Union[str, int, float, bool, _T]:
     #endregion
     return fallbackValue
 
-def AutoType2(value: str) -> Union[str, bool, int, float, None]: # Strict type check for auto type
+def AutoType2(value: str, hideErrorMessage: bool = False) -> Union[str, bool, int, float, None]: # Strict type check for auto type
     if value.startswith("\"") and value.endswith("\""):
         return value
     elif value == "True":
@@ -106,11 +106,12 @@ def AutoType2(value: str) -> Union[str, bool, int, float, None]: # Strict type c
             return float(value)
         except ValueError:
             pass # Not a float
-    KDS.Logging.AutoError(f"Value {value} cannot be parsed to any type!")
+    if not hideErrorMessage:
+        KDS.Logging.AutoError(f"Value {value} cannot be parsed to any type!")
     return None
 
 def AutoType3(value: str) -> Union[str, bool, int, float]:
-    output = AutoType2(value)
+    output = AutoType2(value, hideErrorMessage=True)
     if output == None:
         return value
     return output
