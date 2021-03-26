@@ -60,6 +60,9 @@ class Listener:
             AddProgress(listnr[0], listnr[1], listnr[2])
         self.OnTrigger.Invoke()
 
+    def Clear(self):
+        self._listenerList.clear()
+
 class ItemListener:
     def __init__(self) -> None:
         self._listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
@@ -75,6 +78,9 @@ class ItemListener:
             for v in self._listenerDict[itemSerial]:
                 AddProgress(v[0], v[1], v[2])
         self.OnTrigger.Invoke(itemSerial)
+
+    def Clear(self):
+        self._listenerDict.clear()
 
 class Listeners:
     InventorySlotSwitching = Listener()
@@ -351,6 +357,9 @@ def SetFinished(MissionName: str):
         task.Progress(100)
 def Clear():
     global Missions
+    for l in Listeners.__dict__.values():
+        if isinstance(l, Listener) or isinstance(l, ItemListener):
+            l.Clear()
     Missions = MissionHolder()
 def Finish():
     global Missions

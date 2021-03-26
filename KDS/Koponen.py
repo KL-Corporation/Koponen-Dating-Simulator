@@ -419,6 +419,7 @@ class KoponenEntity:
 
     def handleInstructions(self, tiles: List[List[List]]):
         class execFuncs:
+            allowedFuncs: Dict[str, Callable] = {}
             @staticmethod
             def SetTileProperty(x: int, y: int, index: int, propertyName: str, value: Any):
                 nonlocal tiles
@@ -430,12 +431,16 @@ class KoponenEntity:
             @staticmethod
             def PlaySoundFromFile(filepath: str):
                 KDS.Audio.PlayFromFile(filepath)
+            @staticmethod
+            def SetMissionProgress(missionName: str, taskName: str, progress: float):
+                KDS.Missions.SetProgress(missionName, taskName, progress)
 
-            allowedFuncs: Dict[str, Callable] = {
-                "SetTileProperty": SetTileProperty,
-                "SetSelfProperty": SetSelfProperty,
-                "PlaySoundFromFile": PlaySoundFromFile
-            }
+        execFuncs.allowedFuncs = {
+            "SetTileProperty": execFuncs.SetTileProperty,
+            "SetSelfProperty": execFuncs.SetSelfProperty,
+            "PlaySoundFromFile": execFuncs.PlaySoundFromFile,
+            "SetMissionProgress": execFuncs.SetMissionProgress
+        }
 
         if self.current_instruction < len(self.ls_instructions):
             instruction = self.ls_instructions[self.current_instruction]
@@ -461,7 +466,7 @@ class KoponenEntity:
                 elif args[0] == "exec":
                     if re.fullmatch(r"[a-zA-Z]+\(.*\)", args[1]) != None:
                         execFuncName, execArgs = args[1].split("(", 1)
-                        execArgs = shlex.split(execArgs.removesuffix(")"))
+                        execArgs = [a.removesuffix(",") for a in shlex.split(execArgs.removesuffix(")"))]
                         execFunc = execFuncs.allowedFuncs[execFuncName] if execFuncName in execFuncs.allowedFuncs else None
                         if execFunc != None:
                             print(execArgs)
@@ -469,7 +474,7 @@ class KoponenEntity:
                             try:
                                 execFunc(*execCArgs)
                             except Exception as e:
-                                KDS.Logging.AutoError(f"Exec function failed on instruction {self.current_instruction} with message: {e}")
+                                KDS.Logging.AutoError(f"Exec function {execFuncName} failed on instruction {self.current_instruction} with message: {e}")
                         else:
                             KDS.Logging.AutoError(f"Exec function not found on instruction {self.current_instruction}")
                     else:

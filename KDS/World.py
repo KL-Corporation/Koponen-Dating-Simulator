@@ -1,7 +1,7 @@
 import math
 import random
 import sys
-from typing import Dict, List, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -238,14 +238,14 @@ class Lighting:
 class Bullet:
     GodMode = False
 
-    def __init__(self, rect, direction: bool, speed: int, environment_obstacles, damage, texture: pygame.Surface = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect, direction: bool, speed: int, environment_obstacles, damage, texture: Optional[pygame.Surface] = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
         self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
         self.speed = speed
         self.texture = texture
-        self.texture_size = self.texture.get_size()
+        self.texture_size = self.texture.get_size() if self.texture != None else None
         self.maxDistance = maxDistance
         self.movedDistance = 0
         self.environment_obstacles = environment_obstacles
@@ -254,7 +254,7 @@ class Bullet:
         self.slopeBuffer = float(self.rect.y)
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
-        if self.texture:
+        if self.texture != None:
             Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if debugMode:

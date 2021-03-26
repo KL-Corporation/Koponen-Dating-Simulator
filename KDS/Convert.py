@@ -99,7 +99,7 @@ def AutoType2(value: str, hideErrorMessage: bool = False) -> Union[str, bool, in
         return True
     elif value == "False":
         return False
-    elif value.isnumeric():
+    elif value.removeprefix("-").isnumeric():
         return int(value)
     else:
         try:

@@ -16,8 +16,9 @@
             "lscript" : [
                 "move:715,525",
                 "exec:SetSelfProperty('forceIdle', True)",
-                "exec:SetTileProperty(16, 21, -1, 'interactable', True)",
-                "exec:SetTileProperty(16, 21, -1, 'propOpen', True)",
+                "exec:SetTileProperty(21, 16, -1, 'interactable', True)",
+                "exec:SetTileProperty(21, 16, -1, 'propOpen', True)",
+                "exec:SetMissionProgress('wait', 'unlock_door', 1.0)",
                 "exec:SetSelfProperty('enabled', False)"
             ],
             "listeners" : [

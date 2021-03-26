@@ -87,7 +87,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
 
             KDS.Missions.InitialiseMission("wait", "Odota")
             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
-            KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
+            KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 0.5))
         elif index == 3:
             KDS.Missions.InitialiseMission("biology_exam", "Biologian Tunti")
             KDS.Missions.InitialiseTask("biology_exam", "go_to_biology", "Mene Biologian Tunnille")
