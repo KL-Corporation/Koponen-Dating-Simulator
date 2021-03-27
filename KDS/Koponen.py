@@ -469,7 +469,6 @@ class KoponenEntity:
                         execArgs = [a.removesuffix(",") for a in shlex.split(execArgs.removesuffix(")"))]
                         execFunc = execFuncs.allowedFuncs[execFuncName] if execFuncName in execFuncs.allowedFuncs else None
                         if execFunc != None:
-                            print(execArgs)
                             execCArgs = [KDS.Convert.AutoType3(a) for a in execArgs]
                             try:
                                 execFunc(*execCArgs)
