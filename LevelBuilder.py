@@ -1072,7 +1072,7 @@ def materialMenu(previousMaterial: str) -> str:
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
             display.blit(fps_text, (10, 10))
 
@@ -1198,7 +1198,7 @@ def menu():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
             display.blit(fps_text, (10, 10))
 
@@ -1537,7 +1537,7 @@ def main():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
             display.blit(fps_text, (10, 10))
 

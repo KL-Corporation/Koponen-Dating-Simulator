@@ -65,7 +65,7 @@ class Circle:
                 debugSurf.set_alpha(128)
                 surface.blit(debugSurf, (0, 0))
 
-                fps_text = "FPS: " + str(round(clock.get_fps()))
+                fps_text = "FPS: " + str(clock.get_fps())
                 fps_text = debugFont.render(fps_text, True, KDS.Colors.White)
                 surface.blit(pygame.transform.scale(fps_text, (int(
                     fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))

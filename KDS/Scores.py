@@ -24,10 +24,10 @@ def init():
 
 class GameTime:
     formattedGameTime = "null"
-    gameTime = -1
-    startTime = -1
-    pauseStartTime = -1
-    cumulativePauseTime = 0
+    gameTime = -1.0
+    startTime = -1.0
+    pauseStartTime = -1.0
+    cumulativePauseTime = 0.0
     @staticmethod
     def start():
         GameTime.gameTime = -1
@@ -47,8 +47,12 @@ class GameTime:
     @staticmethod
     def stop():
         GameTime.gameTime = time.perf_counter() - GameTime.startTime - GameTime.cumulativePauseTime
-        divTime = divmod(GameTime.gameTime, 60)
-        GameTime.formattedGameTime = f"{round(divTime[0]):02d}m {round(divTime[1]):02d}s"
+        GameTime.formattedGameTime = GameTime.formatTime(GameTime.gameTime)
+
+    @staticmethod
+    def formatTime(seconds: float) -> str:
+        divTime = divmod(seconds, 60)
+        return f"{round(divTime[0]):02d}m {round(divTime[1]):02d}s"
 
 class ScoreCounter:
     @staticmethod

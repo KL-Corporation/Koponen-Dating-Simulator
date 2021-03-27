@@ -371,7 +371,7 @@ def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, De
                 debugSurf.set_alpha(128)
                 Display.blit(debugSurf, (0, 0))
 
-                fps_text = "FPS: " + str(round(Clock.get_fps()))
+                fps_text = "FPS: " + str(Clock.get_fps())
                 fps_text = examTestFont.render(fps_text, True, KDS.Colors.White)
                 Display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
@@ -526,7 +526,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = Fonts.GRADE.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()

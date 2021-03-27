@@ -11,6 +11,7 @@ import KDS.Gamemode
 import KDS.Logging
 import KDS.Missions
 import KDS.World
+import KDS.Scores
 #endregion
 
 def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
@@ -152,9 +153,11 @@ class Save:
             path = Save.ToPath(i)
             if os.path.isfile(path):
                 retu.append({
-                    "name": JSON.Get(path, "playerName", "<name-error>", False, True),
-                    "progress": ((JSON.Get(path, "index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
-                    "grade": JSON.Get(path, "examGrade", -1, False, True)
+                    "name": JSON.Get(path, "Story/playerName", "<name-error>", False, True),
+                    "progress": ((JSON.Get(path, "Story/index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
+                    "grade": JSON.Get(path, "Story/examGrade", -1, False, True),
+                    "score": JSON.Get(path, "Stats/score", -1, False, True),
+                    "playtime": JSON.Get(path, "Stats/playtime", -1, False, True)
                 })
             else:
                 retu.append(None)
@@ -167,22 +170,36 @@ class Save:
             self.examGrade: int = -1
             self.principalName: str = "<principal-name-error>"
 
+    class StatsData:
+        def __init__(self) -> None:
+            self.playtime: float = 0
+            self.score: int = 0
+
     def __init__(self, index: int) -> None:
         Save.Active = self
         self.index = index
         self.Story = Save.StoryData()
+        self.Stats = Save.StatsData()
         if os.path.isfile(Save.ToPath(self.index)):
             with open(Save.ToPath(self.index), "r") as f:
                 data: Dict[str, Any] = json.loads(f.read())
-                for k, v in data.items():
-                    setattr(self.Story, k, v)
-        else: self.save()
 
-    def save(self):
+            for dataKey in ("Story", "Stats"):
+                for k, v in data[dataKey].items():
+                    setattr(getattr(self, dataKey), k, v)
+        else:
+            self.save()
+
+    def save(self, updateStats: bool = True):
         path = Save.ToPath(self.index)
-        data = self.Story.__dict__
+
+        if updateStats:
+            self.Stats.playtime += KDS.Scores.GameTime.gameTime
+            self.Stats.score += KDS.Scores.score
+
+        data = {"Story": self.Story.__dict__, "Stats": self.Stats.__dict__}
         with open(path, "w") as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(data, separators=(',', ':')))
 
     def delete(self):
         path = Save.ToPath(self.index)

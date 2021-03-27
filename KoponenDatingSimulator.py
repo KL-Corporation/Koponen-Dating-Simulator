@@ -36,7 +36,7 @@ import json
 import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -489,18 +489,6 @@ class WorldData():
         if len(koponen_script) > 0:
             Koponen.loadScript(koponen_script)
 
-        enemySerialNumbers = {
-            1: KDS.AI.Imp,
-            2: KDS.AI.SergeantZombie,
-            3: KDS.AI.DrugDealer,
-            4: KDS.AI.TurboShotgunner,
-            5: KDS.AI.MafiaMan,
-            6: KDS.AI.MethMaker,
-            7: KDS.AI.CaveMonster,
-            8: KDS.AI.Mummy,
-            9: KDS.AI.SecurityGuard
-        }
-
         y = 0
         for row in map_data:
             x = 0
@@ -530,16 +518,16 @@ class WorldData():
                             value = Tile((x * 34, y * 34), serialNumber=serialNumber)
                             tiles[y][x].append(value)
                         else:
-                            value = specialTilesD[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                            value = Tile.specialTiles[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                             tiles[y][x].append(value)
                     elif pointer == 1:
                         value = Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                         Items.append(value)
                     elif pointer == 2:
-                        value = enemySerialNumbers[serialNumber]((x * 34,y * 34))
+                        value = Enemy.serialNumbers[serialNumber]((x * 34,y * 34))
                         Enemies.append(value)
                     elif pointer == 3:
-                        value = teleportsD[serialNumber]((x * 34, y * 34), serialNumber)
+                        value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
                         tiles[y][x].append(value)
                     else:
                         KDS.Logging.AutoError(f"Invalid pointer at ({x}, {y})")
@@ -549,12 +537,12 @@ class WorldData():
                         idPropCheck = str(pointer)
                         if idPropCheck in idProp:
                             for k, v in idProp[idPropCheck].items():
-                                if pointer == 0 and k == "checkCollision":
-                                        value.checkCollision = bool(v)
-                                        if not v and value.texture != None:
-                                            tex: Any = value.texture.convert_alpha()
-                                            tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
-                                            value.darkOverlay = tex
+                                if pointer == 0 and k == "checkCollision" and isinstance(value, Tile): # It should be tile, but Pylance gets angry if I don't check it.
+                                    value.checkCollision = bool(v)
+                                    if not v and value.texture != None:
+                                        tex: Any = value.texture.convert_alpha()
+                                        tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+                                        value.darkOverlay = tex
                                 else:
                                     setattr(value, k, v)
             y += 1
@@ -822,6 +810,8 @@ class Inventory:
 #region Tiles
 KDS.Logging.debug("Loading Tiles...")
 class Tile:
+    specialTiles: Dict[int, Type[Tile]] = {}
+
     noCollision = set(buildData["noCollision"])
     trueScale = set(buildData["trueScale"])
 
@@ -1239,13 +1229,15 @@ class LevelEnderDoor(Tile):
         if self.rect.colliderect(Player.rect) or self.propOpen:
             if self.showTip: screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked or self.propOpen:
-                self.propOpen = False
                 if self.interactable:
-                    KDS.Missions.Listeners.LevelEnder.Trigger()
+                    if not self.propOpen:
+                        KDS.Missions.Listeners.LevelEnder.Trigger()
+                        Player.visible = False
                     KDS.Audio.PlaySound(door_opening)
                     self.opened = True
                 else:
                     KDS.Audio.PlaySound(door_locked)
+                self.propOpen = False
         return self.texture if not self.opened else self.opentexture
 
 class Candle(Tile):
@@ -1695,6 +1687,7 @@ class BaseTeleport(Tile):
         def Order(self) -> None:
             self.teleports.sort(key=lambda t: t.order)
 
+    serialNumbers: Dict[int, Type[BaseTeleport]] = {}
     teleportDatas: Dict[int, BaseTeleport.TeleportData] = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -1794,7 +1787,7 @@ class LargeDoorTeleport(DoorTeleport):
         self.rect = pygame.Rect(self.rect.x, self.rect.y, 68, 68)
         self.messageOffset = (0, -55)
 
-specialTilesD = {
+Tile.specialTiles = {
     15: Toilet,
     16: Trashcan,
     17: Tree,
@@ -1846,7 +1839,7 @@ specialTilesD = {
     134: FluorescentTube,
     135: Molok
 }
-teleportsD = {
+BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
     2: WoodDoorTeleport,
     3: WoodDoorTeleport,
@@ -1861,7 +1854,7 @@ KDS.Logging.debug("Loading Items...")
 class Item:
     infiniteAmmo: bool = False
 
-    serialNumbers: Dict[int, object] = {}
+    serialNumbers: Dict[int, Type[Item]] = {}
 
     tipItem = None
 
@@ -2551,8 +2544,8 @@ Item.serialNumbers = {
     19: SSBonuscard,
     20: Turboneedle,
     21: Ppsh41,
-    22: "",
-    23: "",
+    # 22: "",
+    # 23: "",
     24: Awm,
     25: AwmMag,
     26: EmptyFlask,
@@ -2571,6 +2564,18 @@ KDS.Logging.debug("Item Loading Complete.")
 #endregion
 #region Enemies
 class Enemy:
+    serialNumbers: Dict[int, Type] = {
+        1: KDS.AI.Imp,
+        2: KDS.AI.SergeantZombie,
+        3: KDS.AI.DrugDealer,
+        4: KDS.AI.TurboShotgunner,
+        5: KDS.AI.MafiaMan,
+        6: KDS.AI.MethMaker,
+        7: KDS.AI.CaveMonster,
+        8: KDS.AI.Mummy,
+        9: KDS.AI.SecurityGuard
+    }
+
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
         result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
@@ -3212,8 +3217,13 @@ def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = T
         return
 
     if KDS.ConfigManager.Save.Active.Story.playerName == "<name-error>":
-        KDS.ConfigManager.Save.Active.Story.playerName = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=("Name", "name"), noSpace=True)) #Name is invalid because fuck the player. They took "Enter Name" literally.
-        KDS.ConfigManager.Save.Active.save()
+        playerName = KDS.Console.Start("Enter Name:", True, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=("Name", "name"), noSpace=True)) #Name is invalid because fuck the player. They took "Enter Name" literally.
+        if len(playerName) < 1:
+            KDS.ConfigManager.Save.Active.delete()
+            pygame.mouse.set_visible(True)
+            return
+        KDS.ConfigManager.Save.Active.Story.playerName = playerName
+        KDS.ConfigManager.Save.Active.save(updateStats=False)
 
     pygame.mixer.music.stop()
 
@@ -3301,7 +3311,7 @@ def esc_menu_f(oldSurf: pygame.Surface):
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         display.blit(pygame.transform.scale(display, display_size), (0, 0))
@@ -3386,7 +3396,7 @@ def settings_menu():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = score_font.render(
                 fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(
@@ -3526,6 +3536,7 @@ def main_menu():
     story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, storyStartMiddleman)
     story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, storyStartMiddleman)
     story_new_save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 175, display_size[1] - 325, 350, 125), newSave, "<error>")
+    story_menu_data = None
     #endregion
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
@@ -3643,7 +3654,8 @@ def main_menu():
             text_offset = (10, 10)
             line_offset = 25
 
-            story_menu_data = KDS.ConfigManager.Save.GetMenuData()
+            if story_menu_data == None:
+                story_menu_data = KDS.ConfigManager.Save.GetMenuData()
 
             pygame.draw.rect(
                 display, KDS.Colors.DarkGray, story_save_button_0_rect, 10)
@@ -3664,7 +3676,16 @@ def main_menu():
                 rect = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)[index]
                 if not story_new_save_override:
                     if data != None:
-                        lines = [data["name"], f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100, KDS.Math.MidpointRounding.AwayFromZero)}%""", data["grade"] if data["grade"] > 0 else None]
+                        lines = [
+                            data["name"],
+                            f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100,
+                            KDS.Math.MidpointRounding.AwayFromZero)}%""",
+                            data["grade"] if data["grade"] > 0 else None,
+                            None,
+                            None,
+                            f"""Score: {data["score"]}""",
+                            f"""Playtime: {KDS.Scores.GameTime.formatTime(data["playtime"])}"""
+                        ]
                         for i, line in enumerate(lines):
                             rendered = font.render(line, True, KDS.Colors.White)
                             display.blit(rendered, (text_offset[0] + rect.x, (i * (fontHeight + line_offset)) + text_offset[1] + rect.y))
@@ -3706,7 +3727,7 @@ def main_menu():
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
 
@@ -3828,7 +3849,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
             debugSurf.set_alpha(128)
             display.blit(debugSurf, (0, 0))
 
-            fps_text = "FPS: " + str(round(clock.get_fps()))
+            fps_text = "FPS: " + str(clock.get_fps())
             fps_text = score_font.render(fps_text, True, KDS.Colors.White)
             display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()
@@ -4144,7 +4165,7 @@ while main_running:
         debugSurf.set_alpha(128)
         screen.blit(debugSurf, (0, 0))
 
-        screen.blit(score_font.render(f"FPS: {round(clock.get_fps())}", True, KDS.Colors.White), (5, 5))
+        screen.blit(score_font.render(f"FPS: {clock.get_fps()}", True, KDS.Colors.White), (5, 5))
         screen.blit(score_font.render(f"Player Position: {Player.rect.topleft}", True, KDS.Colors.White), (5, 15))
         screen.blit(score_font.render(f"Total Monsters: {monstersLeft} / {monsterAmount}", True, KDS.Colors.White), (5, 25))
         screen.blit(score_font.render(f"Sounds Playing: {len(KDS.Audio.GetBusyChannels())} / {pygame.mixer.get_num_channels()}", True, KDS.Colors.White), (5, 35))
@@ -4164,7 +4185,7 @@ while main_running:
         if data["repeat_index"] > data["repeat_length"]:
             data["repeat_index"] = 0
             ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
-    elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut):
+    elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut): # let's not stack Screen Effects
         data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
         anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
         rev: bool = data["reversed"]
