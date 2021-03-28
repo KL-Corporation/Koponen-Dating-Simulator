@@ -855,8 +855,8 @@ class Tile:
         end_y = min(end_y, len(Tile_list))
 
         lateRender = []
-        for y, row in enumerate(Tile_list[start_y:end_y]):
-            for x, unit in enumerate(row[start_x:end_x]):
+        for unscaled_y, row in enumerate(Tile_list[start_y:end_y]):
+            for unscaled_x, unit in enumerate(row[start_x:end_x]):
                 for renderable in unit:
                     if renderable.lateRender:
                         lateRender.append(renderable)
@@ -864,7 +864,7 @@ class Tile:
 
                     Tile.renderUnit(renderable, surface)
                     if renderable.removeFlag:
-                        Tile_list[y + start_y][x + start_x].remove(renderable)
+                        Tile_list[unscaled_y + start_y][unscaled_x + start_x].remove(renderable)
 
         for renderable in lateRender:
             Tile.renderUnit(renderable, surface)

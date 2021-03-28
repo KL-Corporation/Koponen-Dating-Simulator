@@ -732,7 +732,7 @@ class BrushData:
     def SetValues(self, brush: str = UnitData.EMPTY, properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None):
         self.brush = brush
         self.properties = None
-        if not self.IsEmpty() and self.properties != None:
+        if not self.IsEmpty() and properties != None:
             correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
             if correctType != None:
                 propValues = properties[correctType]
