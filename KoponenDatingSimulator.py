@@ -450,8 +450,8 @@ class WorldData():
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
-        tiles: List[List[List[Tile]]] = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
-        overlays: List[Tile] = []
+        tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
+        overlays = []
 
         global dark, darkness, ambient_light, ambient_light_tint
         KDS.ConfigManager.LevelProp.init(MapPath)
