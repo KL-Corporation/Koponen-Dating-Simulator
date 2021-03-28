@@ -418,7 +418,7 @@ ambient_light_tint: Tuple[int, int, int] = (0, 0, 0)
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
-    def LoadMap(MapPath: str) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
         global Items, tiles, Enemies, Projectiles, overlays, Player
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
