@@ -1793,7 +1793,7 @@ class Kiuas(Tile):
         self.animation = KDS.Animator.Animation("kiuas", 3, 3, KDS.Colors.White)
 
     def update(self):
-        #Tänne valojen jutut  vielä
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.centery), KDS.World.Lighting.circle_surface(20, KDS.Colors.Orange)))
         return self.animation.update()
 
 Tile.specialTiles = {
