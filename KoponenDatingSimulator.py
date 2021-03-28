@@ -418,7 +418,7 @@ ambient_light_tint: Tuple[int, int, int] = (0, 0, 0)
 class WorldData():
     MapSize = (0, 0)
     @staticmethod
-    def LoadMap(MapPath: str):
+    def LoadMap(MapPath: str) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         global Items, tiles, Enemies, Projectiles, overlays, Player
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
@@ -450,8 +450,8 @@ class WorldData():
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
-        tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
-        overlays = []
+        tiles: List[List[List[Tile]]] = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
+        overlays: List[Tile] = []
 
         global dark, darkness, ambient_light, ambient_light_tint
         KDS.ConfigManager.LevelProp.init(MapPath)
@@ -552,6 +552,8 @@ class WorldData():
             enemy.lateInit()
         for item in Items:
             item.lateInit()
+        for overlay in overlays:
+            overlay.lateInit()
         for row in tiles:
             for unit in row:
                 for tile in unit:
@@ -833,12 +835,15 @@ class Tile:
     def renderUnit(unit: Tile, surface: pygame.Surface):
         if DebugMode:
             pygame.draw.rect(surface, KDS.Colors.Cyan, (unit.rect.x - scroll[0], unit.rect.y - scroll[1], unit.rect.width, unit.rect.height))
-        if not unit.specialTileFlag and unit.texture != None:
-            surface.blit(unit.texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
+
+        if not unit.specialTileFlag:
+            if unit.texture != None:
+                surface.blit(unit.texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
         else:
             texture = unit.update()
             if texture != None:
                 surface.blit(texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
+
         if unit.darkOverlay != None:
             surface.blit(unit.darkOverlay, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
 
@@ -1000,6 +1005,9 @@ class Door(Tile):
         self.maxClosingCounter = closingCounter
         self.closingCounter = 0
         self.lateRender = True
+
+    def lateInit(self):
+        self.darkOverlay = None
 
     def update(self):
         self.checkCollision = not self.open
@@ -1521,6 +1529,9 @@ class DoorFront(Tile):
         self.opened = False
         self.locked = False
         self.showTip = False
+
+    def lateInit(self):
+        self.darkOverlay = None
 
     def update(self):
         if self.rect.colliderect(Player.rect):
@@ -4084,8 +4095,7 @@ while main_running:
     for ov in overlays:
         if DebugMode:
             pygame.draw.rect(screen, KDS.Colors.Blue, (ov.rect.x - scroll[0], ov.rect.y - scroll[1], 34, 34))
-        if ov.texture != None:
-            Tile.renderUnit(ov, screen)
+        Tile.renderUnit(ov, screen)
 
     #Item Tip
     if Item.tipItem != None:
