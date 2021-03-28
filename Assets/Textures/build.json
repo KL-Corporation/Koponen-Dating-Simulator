@@ -136,7 +136,12 @@
         "137": "monitor.png",
         "138": "couch.png",
         "139": "painting6.png",
-        "140": "painting7.png"
+        "140": "painting7.png",
+        "141": "wood1.png",
+        "142": "bench.png",
+        "143": "wood2.png",
+        "144": "projector.png",
+        "145": "kiuas"
     },
 
     "tile_sounds" : {
@@ -191,7 +196,8 @@
         131,
         132,
         134,
-        135
+        135,
+        145
     ],
     "noCollision": [
         10,
@@ -246,7 +252,8 @@
         128,
         138,
         139,
-        140
+        140,
+        141
     ],
     "teleport_textures": {
         "001": "telep.png",

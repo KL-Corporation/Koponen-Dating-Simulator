@@ -1786,6 +1786,16 @@ class LargeDoorTeleport(DoorTeleport):
         self.rect = pygame.Rect(self.rect.x, self.rect.y, 68, 68)
         self.messageOffset = (0, -55)
 
+class Kiuas(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(position[0], position[1] - 31, 38, 65)
+        self.animation = KDS.Animator.Animation("kiuas", 3, 3, KDS.Colors.White)
+
+    def update(self):
+        #Tänne valojen jutut  vielä
+        return self.animation.update()
+
 Tile.specialTiles = {
     15: Toilet,
     16: Trashcan,
