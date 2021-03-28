@@ -1218,6 +1218,9 @@ class Selected:
     @staticmethod
     def Move(x: int, y: int):
         global dragRect
+        if dragRect == None:
+            return
+
         for u in Selected.units:
             u.pos = (u.pos[0] + x, u.pos[1] + y)
         dragRect.x += x

@@ -141,7 +141,9 @@
         "142": "bench.png",
         "143": "wood2.png",
         "144": "projector.png",
-        "145": "kiuas.png"
+        "145": "kiuas.png",
+        "146": "white_table_front.png",
+        "147": "white_table_side.png"
     },
 
     "tile_sounds" : {
@@ -253,7 +255,9 @@
         138,
         139,
         140,
-        141
+        141,
+        146,
+        147
     ],
     "teleport_textures": {
         "001": "telep.png",

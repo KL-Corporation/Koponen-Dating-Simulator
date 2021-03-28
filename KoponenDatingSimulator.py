@@ -506,7 +506,11 @@ class WorldData():
                     if "4" in idProp: # 4 is an unspecified type.
                         tlProp = idProp["4"]
                         if "overlay" in tlProp:
-                            overlays.append(Tile((x * 34, y * 34), int(tlProp["overlay"])))
+                            tmpOV = Tile((x * 34, y * 34), int(tlProp["overlay"]))
+                            for k, v in tlProp.items():
+                                setattr(tmpOV, k, v)
+                                # Does not set darkOverlay, but probably not needed.
+                            overlays.append(tmpOV)
 
                 if len(datapoint) == 4 and int(datapoint) != 0:
                     serialNumber = int(datapoint[1:])
