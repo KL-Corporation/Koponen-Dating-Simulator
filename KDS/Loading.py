@@ -7,6 +7,7 @@ import KDS.Animator
 import KDS.Audio
 import KDS.Colors
 import KDS.Convert
+import KDS.Debug
 import KDS.Math
 import KDS.Jobs
 
@@ -60,15 +61,7 @@ class Circle:
             angle += 4
             while angle >= 360: angle -= 360
             if debug:
-                debugSurf = pygame.Surface((200, 40))
-                debugSurf.fill(KDS.Colors.DarkGray)
-                debugSurf.set_alpha(128)
-                surface.blit(debugSurf, (0, 0))
-
-                fps_text = "FPS: " + str(clock.get_fps())
-                fps_text = debugFont.render(fps_text, True, KDS.Colors.White)
-                surface.blit(pygame.transform.scale(fps_text, (int(
-                    fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+                surface.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
             clock.tick_busy_loop(60)
             pygame.display.flip()

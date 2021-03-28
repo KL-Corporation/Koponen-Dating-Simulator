@@ -13,6 +13,7 @@ import KDS.Colors
 import KDS.ConfigManager
 import KDS.Console
 import KDS.Convert
+import KDS.Debug
 import KDS.Events
 import KDS.Gamemode
 import KDS.Jobs
@@ -325,8 +326,6 @@ remove_data_on_quit = False
 
 colorInvert = False
 
-monstersLeft = 0
-
 main_running = True
 tick = 0
 currently_on_mission = False
@@ -351,8 +350,6 @@ level_finished_running = False
 tcagr_running = False
 mode_selection_running = False
 settings_running = False
-monsterAmount = 0
-monstersLeft = 0
 
 renderPlayer = True
 
@@ -373,7 +370,6 @@ ambient_light_tint = (255, 255, 255)
 ambient_light = False
 level_background = False
 level_background_img = Any
-lightsUpdating = 0
 
 Items: List[Item] = []
 Enemies: List[KDS.AI.HostileEnemy] = []
@@ -489,6 +485,9 @@ class WorldData():
         if len(koponen_script) > 0:
             Koponen.loadScript(koponen_script)
 
+        Enemy.total = 0
+        Enemy.death_count = 0
+
         y = 0
         for row in map_data:
             x = 0
@@ -526,6 +525,7 @@ class WorldData():
                     elif pointer == 2:
                         value = Enemy.serialNumbers[serialNumber]((x * 34,y * 34))
                         Enemies.append(value)
+                        Enemy.total += 1
                     elif pointer == 3:
                         value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
                         tiles[y][x].append(value)
@@ -863,9 +863,8 @@ class Tile:
                         continue
 
                     Tile.renderUnit(renderable, surface)
-                    # EI TOIMI
                     if renderable.removeFlag:
-                        Tile_list[y][x].remove(renderable)
+                        Tile_list[y + start_y][x + start_x].remove(renderable)
 
         for renderable in lateRender:
             Tile.renderUnit(renderable, surface)
@@ -2576,6 +2575,13 @@ class Enemy:
         9: KDS.AI.SecurityGuard
     }
 
+    death_count = 0
+    total = 0
+
+    @staticmethod
+    def _addDeath():
+        Enemy.death_count += 1
+
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
         result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
@@ -2606,7 +2612,7 @@ class Enemy:
         for enemy in Enemy_List:
             if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
                 Enemy._internalEnemyHandler(enemy)
-
+KDS.Missions.Listeners.EnemyDeath.OnTrigger += Enemy._addDeath
 #endregion
 #region Player
 KDS.Logging.debug("Loading Player...")
@@ -3306,14 +3312,8 @@ def esc_menu_f(oldSurf: pygame.Surface):
         esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(esc_surface, (0, 0))
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = score_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         display.blit(pygame.transform.scale(display, display_size), (0, 0))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
@@ -3391,16 +3391,7 @@ def settings_menu():
         remove_data_button.update(display, mouse_pos, c)
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = score_font.render(
-                fps_text, True, KDS.Colors.White)
-            display.blit(pygame.transform.scale(fps_text, (int(
-                fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()
         display.fill((0, 0, 0))
@@ -3722,14 +3713,7 @@ def main_menu():
 
         KDS.Logging.Profiler(DebugMode)
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = score_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         c = False
         if not skip_render_this_frame:
@@ -3844,14 +3828,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
         level_f_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(level_f_surf, (0, 0))
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = score_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         clock.tick_busy_loop(60)
@@ -4111,13 +4088,11 @@ while main_running:
     #Valojen käsittely
     #dark = False if Player.rect.x > 500 else 1
     #^^ Bruh miks tää on olemassa?
-    lightsUpdating = 0
     if dark:
         black_tint.fill(darkness)
         if Player.light and Player.visible:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), True))
         for light in Lights:
-            lightsUpdating += 1
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
             if DebugMode:
                 rectSurf = pygame.Surface(light.surf.get_size())
@@ -4160,16 +4135,13 @@ while main_running:
 #region Debug Mode
     KDS.Logging.Profiler(DebugMode)
     if DebugMode:
-        debugSurf = pygame.Surface((score_font.size(f"Player Position: {Player.rect.topleft}")[0] + 10, 60))
-        debugSurf.fill(KDS.Colors.DarkGray)
-        debugSurf.set_alpha(128)
-        screen.blit(debugSurf, (0, 0))
-
-        screen.blit(score_font.render(f"FPS: {clock.get_fps()}", True, KDS.Colors.White), (5, 5))
-        screen.blit(score_font.render(f"Player Position: {Player.rect.topleft}", True, KDS.Colors.White), (5, 15))
-        screen.blit(score_font.render(f"Total Monsters: {monstersLeft} / {monsterAmount}", True, KDS.Colors.White), (5, 25))
-        screen.blit(score_font.render(f"Sounds Playing: {len(KDS.Audio.GetBusyChannels())} / {pygame.mixer.get_num_channels()}", True, KDS.Colors.White), (5, 35))
-        screen.blit(score_font.render(f"Lights Rendering: {lightsUpdating}", True, KDS.Colors.White), (5, 45))
+        screen.blit(KDS.Debug.RenderData({
+            "FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero),
+            "Player Position": Player.rect.topleft,
+            "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
+            "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio.SoundMixer.get_num_channels()}",
+            "Lights Rendering": len(Lights)
+        }, fontOverride=tip_font), (0, 0))
 #endregion
 #region Screen Rendering
     if ScreenEffects.Get(ScreenEffects.Effects.Flicker):

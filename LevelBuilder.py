@@ -14,6 +14,7 @@ import KDS.Colors
 import KDS.ConfigManager
 import KDS.Console
 import KDS.Convert
+import KDS.Debug
 import KDS.Math
 import KDS.Jobs
 import KDS.Linq
@@ -1067,14 +1068,7 @@ def materialMenu(previousMaterial: str) -> str:
                 cumHeight += tip.get_height() + 8
 
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(fps_text, (10, 10))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()
         clock.tick()
@@ -1193,14 +1187,7 @@ def menu():
         display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, 50))
 
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(fps_text, (10, 10))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         if btn_menu:
             pygame.display.flip()
@@ -1532,14 +1519,7 @@ def main():
             display.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
         if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(fps_text, (10, 10))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()
         clock.tick()
