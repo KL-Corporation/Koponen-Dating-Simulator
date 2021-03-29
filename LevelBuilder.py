@@ -529,7 +529,10 @@ class UnitData:
                                     setPropVal = setPropValUnformatted
                                 else:
                                     setPropVal = KDS.Convert.AutoType(setPropValUnformatted, setPropValUnformatted) # If cannot be parsed to int, bool or float; return string
-                                unit.properties.Set(propType, setPropKey, setPropVal)
+                                if len(setPropValUnformatted) > 0:
+                                    unit.properties.Set(propType, setPropKey, setPropVal)
+                                else:
+                                    unit.properties.Remove(propType, setPropKey)
                         elif len(setPropType) > 0:
                             KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
                     elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:

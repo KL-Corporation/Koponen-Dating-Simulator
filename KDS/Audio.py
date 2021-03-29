@@ -1,3 +1,4 @@
+from typing import Optional
 import pygame
 import KDS.ConfigManager
 import KDS.Events
@@ -11,7 +12,7 @@ def init(_mixer):
     MusicMixer.set_endevent(MUSICENDEVENT)
     SoundMixer = _mixer
 
-    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 32))
+    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 128))
 
     MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", 0.25)
     EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", 0.75)
@@ -87,7 +88,7 @@ def quit():
 def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
     if volume == -1.0: volume = EffectVolume
-    play_channel = SoundMixer.find_channel(True)
+    play_channel = SoundMixer.find_channel(True) # Won't return None, because force is true
     play_channel.play(sound, loops, fade_ms)
     play_channel.set_volume(volume)
     return play_channel

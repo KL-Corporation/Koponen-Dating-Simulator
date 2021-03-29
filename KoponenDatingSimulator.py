@@ -37,7 +37,7 @@ import json
 import datetime
 from pygame.locals import *
 from enum import IntEnum, auto
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 #endregion
 #region Priority Initialisation
 pygame.init()
@@ -152,6 +152,7 @@ KDS.Scores.init()
 KDS.Koponen.init()
 KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
+KDS.School.init(display, clock)
 
 cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", 0)
 cursorData = {
@@ -766,6 +767,12 @@ class Inventory:
             else:
                 self.SIndex = index
 
+    def getSlot(self, itemType: Type) -> Optional[int]:
+        var = KDS.Linq.FirstOrNone(self.storage, lambda i: isinstance(i, itemType))
+        if var != None:
+            return self.storage.index(var)
+        return None
+
     def dropItemAtIndex(self, index: int) -> Optional[Item]:
         toDrop = self.storage[index]
         if not isinstance(toDrop, str):
@@ -795,11 +802,17 @@ class Inventory:
     def useItem(self, surface: pygame.Surface):
         self.useItemAtIndex(self.SIndex, surface)
 
-    def useItemByClass(self, Class, surface: pygame.Surface):
+    def useItemByClass(self, Class: Type, surface: pygame.Surface):
         for i, v in enumerate(self.storage):
             if isinstance(v, Class):
                 self.useItemAtIndex(i, surface)
                 return
+
+    def useItemsByClasses(self, Classes: Sequence[Type], surface: pygame.Surface):
+        for c in Classes:
+            if not isinstance(self.getHandItem(), c) and any(isinstance(item, c) for item in self.storage):
+                self.useItemByClass(c, surface)
+
 
     # def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
     #     dumpValues = nullLantern.use(args, Surface)
@@ -1076,7 +1089,6 @@ class Ladder(Tile):
         if self.rect.colliderect(Player.rect):
             Player.onLadder = True
             if Ladder.ct > 45:
-                KDS.Audio.PlaySound(random.choice(Ladder.sounds))
                 Ladder.ct = 0
             Ladder.ct += 1
         return self.texture
@@ -1413,7 +1425,8 @@ class FlickerTrigger(Tile):
         self.repeating: bool = repeating
         self.texture = None
         self.listener = None
-        self.listenerInstance: Optional[KDS.Missions.Listener] = None
+        self.listenerItem = None
+        self.listenerInstance: Optional[Union[KDS.Missions.Listener, KDS.Missions.ItemListener]] = None
 
     def flickerEnd(self, effect: ScreenEffects.Effects):
         if effect == ScreenEffects.Effects.Flicker and self.animation:
@@ -1423,7 +1436,9 @@ class FlickerTrigger(Tile):
             flicker_trigger_sound.stop()
             KDS.Audio.UnpauseAllSounds()
 
-    def eventHandler(self):
+    def eventHandler(self, *args: Any):
+        if len(args) < 1 or isinstance(self.listenerInstance, KDS.Missions.ItemListener) or args[0] != self.listenerItem:
+            return
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None
         self.readyToTrigger = True
@@ -1431,7 +1446,7 @@ class FlickerTrigger(Tile):
     def lateInit(self):
         if self.listener != None:
             tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
-            if tmpListener != None:
+            if tmpListener != None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem != None):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
                 self.readyToTrigger = False
@@ -2543,7 +2558,8 @@ class GasCanister(Item):
         return True
 
 class WalkieTalkie(Item):
-    ### Story Mode Only ###
+    storyTrigger: bool = False
+
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
         super().__init__(position, serialNumber, texture)
         self.allowDrop: bool = True
@@ -2551,7 +2567,7 @@ class WalkieTalkie(Item):
         self.clip = None
         self.clipVolume = 1.0
         self.clipSound = None
-        self.clipType = "effect"
+        self.audioChannel = None
 
     def lateInit(self):
         if self.clip != None:
@@ -2562,13 +2578,9 @@ class WalkieTalkie(Item):
     def pickup(self):
         KDS.Audio.PlaySound(weapon_pickup)
         if self.clipSound != None:
-            if self.clipType == "music":
-                KDS.Audio.Music.Play(self.clip, loops=1)
-                KDS.Audio.Music.OnEnd -= KDS.Missions.Listeners.WalkieTalkieEnd.Trigger
-                KDS.Audio.Music.OnEnd += KDS.Missions.Listeners.WalkieTalkieEnd.Trigger
-            else:
-                KDS.Audio.PlaySound(self.clipSound)
-                raise NotImplementedError("Walkie Talkie effect clip's listener has not been finished.")
+            self.audioChannel = KDS.Audio.PlaySound(self.clipSound)
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            WalkieTalkie.storyTrigger = True
 
         return False
 
@@ -2794,8 +2806,12 @@ class PlayerClass:
             if self.onLadder:
                 self.wasOnLadder = True
                 self.vertical_momentum = 0
-                if KDS.Keys.moveUp.pressed: self.vertical_momentum += -1
-                if KDS.Keys.moveDown.pressed: self.vertical_momentum += 1
+                if KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
+                    KDS.Audio.PlaySound(random.choice(Ladder.sounds))
+                    if KDS.Keys.moveUp.pressed:
+                        self.vertical_momentum += -1
+                    else:
+                        self.vertical_momentum += 1
             elif self.wasOnLadder:
                 self.wasOnLadder = False
                 jump(True)
@@ -3963,7 +3979,7 @@ while main_running:
                     Player.health = 0
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
-                quit_temp, exam_score = KDS.School.Exam(display, clock, DebugMode=DebugMode)
+                quit_temp, exam_score = KDS.School.Exam(DebugMode=DebugMode)
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
                     KDS_Quit()
@@ -4071,8 +4087,7 @@ while main_running:
     #endregion
     Item.renderUpdate(Items, screen, scroll, DebugMode)
     Player.inventory.useItem(screen)
-    if not isinstance(Player.inventory.getHandItem(), Lantern) and any(isinstance(item, Lantern) for item in Player.inventory.storage):
-        Player.inventory.useItemByClass(Lantern, screen)
+    Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), screen)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, Enemies, HitTargets, Particles, Player.rect, Player.health, DebugMode)
@@ -4209,7 +4224,7 @@ while main_running:
         if data["repeat_index"] > data["repeat_length"]:
             data["repeat_index"] = 0
             ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
-    if ScreenEffects.Get(ScreenEffects.Effects.FadeInOut):
+    elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut): # No effect stacking
         data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
         anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
         rev: bool = data["reversed"]
@@ -4240,6 +4255,9 @@ while main_running:
         level_finished = True
 #endregion
 #region Conditional Events
+    if WalkieTalkie.storyTrigger:
+        KDS.Story.WalkieTalkieEffect(Player, WalkieTalkie, display, clock, defaultEventHandler, screen)
+        WalkieTalkie.storyTrigger = False
     if Player.rect.y > len(tiles) * 34 + 340:
         Player.health = 0
         Player.rect.y = len(tiles) * 34 + 340

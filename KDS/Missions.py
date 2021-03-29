@@ -92,7 +92,6 @@ class Listeners:
     Teleport = Listener()
     TentSleepStart = Listener()
     TentSleepEnd = Listener()
-    WalkieTalkieEnd = Listener()
     EnemyDeath = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
@@ -110,7 +109,7 @@ class Task:
         self.progressScaled = 0
         self.finished = False
         self.lastFinished = False
-        self.color = KDS.Animator.Color(TaskColor, TaskFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
+        self.color = KDS.Animator.Color(TaskColor, TaskColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
         Missions.GetMission(missionName).AddTask(safeName, self)
 
     def Progress(self, Value: float, Add: bool = False):
@@ -124,10 +123,6 @@ class Task:
         self.progressScaled = KDS.Math.FloorToInt(self.progress * 100)
 
     def Update(self, Width: int, Height: int, PlaySound: bool = True):
-        surface = pygame.Surface((Width, Height))
-        surface.fill(self.color.update(not self.finished))
-        surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
-        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
         if self.finished != self.lastFinished:
             if self.finished:
                 if PlaySound:
@@ -137,6 +132,11 @@ class Task:
                 if PlaySound:
                     KDS.Audio.PlaySound(TaskUnFinishSound)
                 self.color.changeValues(TaskColor, TaskUnFinishedColor)
+
+        surface = pygame.Surface((Width, Height))
+        surface.fill(self.color.update(not self.finished))
+        surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
+        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
         self.lastFinished = self.finished
         return surface
 
@@ -152,7 +152,7 @@ class KoponenTask(Task):
         self.callVariation = itemsCallVariation
 
 class Mission:
-    def __init__(self, safeName: str, text: str) -> None:
+    def __init__(self, safeName: str, text: str, playSound: bool) -> None:
         global Missions
         self.safeName = safeName
         self.text = text
@@ -164,7 +164,8 @@ class Mission:
         self.finishedTicks = 0
         self.trueFinished = False
         self.color = KDS.Animator.Color(MissionColor, MissionFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
-        self.PlaySound = True
+        self._playTaskSound: bool = False
+        self.playSound = playSound
         Missions.AddMission(self.safeName, self)
 
     def AddTask(self, safeName: str, task: Task):
@@ -187,7 +188,7 @@ class Mission:
 
     def Update(self):
         self.finished = True
-        self.PlaySound = False
+        self._playTaskSound = False
         notFinished = 0
         taskAssigned = False
         for task in self.tasks.values():
@@ -200,7 +201,7 @@ class Mission:
                 taskAssigned = True
 
             if notFinished > 0:
-                self.PlaySound = True
+                self._playTaskSound = True
                 if taskAssigned: break
         del notFinished, taskAssigned
 
@@ -216,10 +217,10 @@ class Mission:
 
         if self.lastFinished != self.finished:
             if self.finished:
-                KDS.Audio.PlaySound(MissionFinishSound)
+                if self.playSound: KDS.Audio.PlaySound(MissionFinishSound)
                 self.color.changeValues(MissionColor, MissionFinishedColor)
             else:
-                KDS.Audio.PlaySound(MissionUnFinishSound)
+                if self.playSound: KDS.Audio.PlaySound(MissionUnFinishSound)
                 self.color.changeValues(MissionColor, MissionUnFinishedColor)
         self.lastFinished = self.finished
 
@@ -234,7 +235,7 @@ class Mission:
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
         for i, t in enumerate(self.tasks.values()):
-            surface.blit(t.Update(_taskWidth, _taskHeight, self.PlaySound), (0, HeaderHeight + (i * _taskHeight)))
+            surface.blit(t.Update(_taskWidth, _taskHeight, self._playTaskSound if self.playSound else False), (0, HeaderHeight + (i * _taskHeight)))
         return surface, int(_taskWidth)
 
 class MissionHolder:
@@ -298,14 +299,14 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
 def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, ItemsCallName: str, ItemsCallNameVariation: str, *itemIDs: int):
     KoponenTask(MissionName, SafeName, Text, itemIDs, ItemsCallName, ItemsCallNameVariation)
 
-def InitialiseMission(SafeName: str, Text: str):
+def InitialiseMission(SafeName: str, Text: str, NoSound: bool = False):
     """Initialises a mission.
 
     Args:
         Safe_Name (str): A name that does not conflict with any other names.
         Visible_Name (str): The name that will be displayed as the task header.
     """
-    Mission(SafeName, Text)
+    Mission(SafeName, Text, not NoSound)
 #endregion
 #region Rendering
 def Render(surface: pygame.Surface):

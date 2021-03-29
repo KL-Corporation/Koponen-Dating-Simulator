@@ -8,7 +8,7 @@
         "pauseOnFocusLoss": true
     },
     "Mixer": {
-        "channelCount": 32,
+        "channelCount": 128,
         "Volume": {
             "music": 0.25,
             "effect": 0.75

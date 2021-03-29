@@ -30,7 +30,23 @@ class Timer:
         time = divmod(int(self.time), 60)
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
-def Exam(Display: pygame.Surface, Clock: pygame.time.Clock, showtitle = True, DebugMode: bool = False):
+
+def init(display: pygame.Surface, clock: pygame.time.Clock):
+    global Display, Clock, Surnames, SurnamesSet, GradeWeights
+    Display = display
+    Clock = clock
+
+    try:
+        with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
+            Surnames = f.read().splitlines()
+            SurnamesSet = set(Surnames)
+    except Exception as e:
+        KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
+        Surnames = None
+
+    GradeWeights = tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values())
+
+def Exam(showtitle = True, DebugMode: bool = False):
     _quit = False
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
@@ -401,21 +417,16 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         INFO = pygame.font.SysFont("ArialBD", 27)
         GRADE = pygame.font.SysFont("Arial", 18, bold=0)
 
-    Surnames = None
-    try:
-        with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
-            Surnames = f.read().splitlines()
-    except Exception as e:
-        KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
-
     surname = None
     if Surnames != None:
-        for check in reversed(KDS.System.GetUserNameEx(KDS.System.EXTENDED_NAME_FORMAT.NameDisplay).split(" ")): # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
-            if check in Surnames: # Will be case sensitive, but case insensitivity would be too demanding to process.
+        username = KDS.System.GetUserNameEx(KDS.System.EXTENDED_NAME_FORMAT.NameDisplay)
+        for check in reversed(username.split(" ")): # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
+            if check in SurnamesSet: # Will be case sensitive, but case insensitivity would be too demanding to process.
                 surname = check
                 break
         if surname == None:
-            surname = random.choice(Surnames[0:40])
+            surname = random.choice(Surnames[0:50])
+            KDS.Logging.info(f"Username: {username} did not contain a surname.")
     else:
         surname = "<surname-loading-failed>"
 
@@ -443,7 +454,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         ref = round(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride)
         gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
-            weights=tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values()),
+            weights=GradeWeights,
             k=1
         )
         return KDS.Math.Clamp(gradeList[0], 4, 10)
