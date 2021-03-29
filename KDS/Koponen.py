@@ -515,7 +515,7 @@ class KoponenEntity:
                 self.movement[0] = -self.movement[0]
                 self.rect.y -= 35
         except Exception as e:
-            print(str(e))
+            KDS.Logging.AutoError(e)
 
     def setEnabled(self, state: bool = True) -> None:
         self.enabled = state

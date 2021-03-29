@@ -347,19 +347,19 @@ class BallisticProjectile:
         self.rect.x += round(self.force)
 
         c = collision_test(self.rect, tiles)
-        c_types = {
-            "right":False,
-            "left":False,
-            "bottom":False,
-            "top":False
+        collisions = {
+            "right": False,
+            "left": False,
+            "bottom": False,
+            "top": False
         }
         for c1 in c:
             if self.force > 0:
                 self.rect.right = c1.rect.left
-                c_types['left'] = True
+                collisions['left'] = True
             elif self.force < 0:
                 self.rect.left = c1.rect.right
-                c_types['right'] = True
+                collisions['right'] = True
 
         self.rect.y += self.upforce
         self.upforce += self.gravitational_factor
@@ -370,14 +370,13 @@ class BallisticProjectile:
         for c1 in c:
             if self.upforce > 0:
                 self.rect.bottom = c1.rect.top
-                c_types['bottom'] = True
+                collisions['bottom'] = True
             elif self.upforce < 0:
                 self.rect.top = c1.rect.bottom
-                c_types['top'] = True
+                collisions['top'] = True
 
 
-        #print(c_types)
-        if c_types["top"] or c_types["bottom"]:
+        if collisions["top"] or collisions["bottom"]:
             self.upforce *= 0.6
             self.force *= 0.7
             s = self.upforce
@@ -385,7 +384,7 @@ class BallisticProjectile:
             if s:
                 self.upforce *= 0.1
 
-        if c_types["right"] or c_types["left"]:
+        if collisions["right"] or collisions["left"]:
             self.force *= 0.60
             self.force = -self.force
 

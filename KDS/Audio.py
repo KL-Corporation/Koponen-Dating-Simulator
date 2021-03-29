@@ -1,10 +1,14 @@
 import pygame
 import KDS.ConfigManager
+import KDS.Events
 import KDS.Logging
+
+MUSICENDEVENT = pygame.event.custom_type()
 
 def init(_mixer):
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels, SoundMixer
     MusicMixer = _mixer.music
+    MusicMixer.set_endevent(MUSICENDEVENT)
     SoundMixer = _mixer
 
     _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 32))
@@ -17,6 +21,7 @@ def init(_mixer):
 
 class Music:
     Loaded = None
+    OnEnd = KDS.Events.Event()
 
     @staticmethod
     def Play(path: str = None, loops: int = -1):

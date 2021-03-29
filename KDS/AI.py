@@ -370,7 +370,7 @@ class HostileEnemy:
                 self.movement[0] = -self.movement[0]
                 self.rect.y -= 35
         except Exception as e:
-            print(str(e))
+            KDS.Logging.AutoError(e)
             pass
 
 class Imp(HostileEnemy):
@@ -430,7 +430,6 @@ class SergeantZombie(HostileEnemy):
         dist /= 1200
         shotgunShot.set_volume(dist)
         KDS.Audio.PlaySound(shotgunShot)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 35), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
@@ -474,7 +473,6 @@ class DrugDealer(HostileEnemy):
         dist /= 1200
         pistol_shot.set_volume(dist)
         KDS.Audio.PlaySound(pistol_shot)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
@@ -520,7 +518,6 @@ class TurboShotgunner(HostileEnemy):
         dist /= 1200
         double_barrel_fire.set_volume(dist)
         KDS.Audio.PlaySound(double_barrel_fire)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction)+(3-fd)*1.5 ) for fd in range(6)]
 
     def onDeath(self):
@@ -563,7 +560,6 @@ class MafiaMan(HostileEnemy):
         dist /= 1200
         basicGunshot.set_volume(dist)
         KDS.Audio.PlaySound(basicGunshot)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
@@ -606,7 +602,6 @@ class MethMaker(HostileEnemy):
         dist /= 1200
         basicGunshot.set_volume(dist)
         KDS.Audio.PlaySound(basicGunshot)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
@@ -651,7 +646,6 @@ class CaveMonster(HostileEnemy):
         dist /= 1200
         cavemonster_gun.set_volume(dist)
         KDS.Audio.PlaySound(cavemonster_gun)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
@@ -794,7 +788,6 @@ class SecurityGuard(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)
-        #print(KDS.Math.getSlope(self.rect.center, target.center))
         return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):

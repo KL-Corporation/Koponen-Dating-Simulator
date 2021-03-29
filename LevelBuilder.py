@@ -162,10 +162,6 @@ class TextureHolder:
         data = self.GetData(serialNumber)
         return data.scaledTexture, data.scaledTexture_size
 
-    def GetRenderArgs(self, serialNumber: str, pos: Tuple[int, int]) -> Tuple[pygame.Surface, Tuple[int, int]]:
-        data = self.GetData(serialNumber)
-        return data.scaledTexture, (pos[0], pos[1] - data.scaledTexture_size[1] + scalesize)  # Will render some tiles incorrectly
-
     def GetDataByName(self, name: str) -> Optional[TextureHolder.TextureData]:
         for t in self.data.values():
             for d in t.values():
@@ -432,10 +428,10 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderSerial(surface: pygame.Surface, properties: UnitProperties, serial: str, pos: Tuple[int, int]):
+    def renderSerial(surface: pygame.Surface, properties: Optional[UnitProperties], serial: str, pos: Tuple[int, int]):
         teleportOverlayFlag = False
         darkOverlayFlag = False
-        if serial[0] == "0":
+        if serial[0] == "0" and properties != None:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
@@ -487,7 +483,7 @@ class UnitData:
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
         doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
-        overlayRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
+        overlayRenders: List[Tuple[str, Tuple[int, int]]] = []
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             row: List[UnitData]
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
@@ -495,7 +491,7 @@ class UnitData:
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
                 if isinstance(overlayTileprops, str):
-                    overlayRenders.append(Textures.GetRenderArgs(overlayTileprops, normalBlitPos))
+                    overlayRenders.append((overlayTileprops, normalBlitPos))
                 for number in unit.serials:
                     if number == UnitData.EMPTY:
                         continue
@@ -606,7 +602,7 @@ class UnitData:
             surface.blit(doorTex, doorPos)
 
         for ovs, ovp in overlayRenders:
-            surface.blit(ovs, ovp)
+            UnitData.renderSerial(surface, None, ovs, ovp)
 
         if len(tip_renders) > 0:
             totHeight = 0

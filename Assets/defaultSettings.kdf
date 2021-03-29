@@ -23,7 +23,7 @@
         ],
 
         "Tile": {
-            "renderPadding": 4
+            "renderPadding": 8
         },
         "Item": {
 
@@ -32,7 +32,7 @@
 
         },
         "Lighting": {
-            
+
         },
         "Particle": {
             "maxCount": 128
