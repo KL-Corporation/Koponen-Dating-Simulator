@@ -364,8 +364,6 @@ overlays: List[Tile] = []
 LightScroll = [0, 0]
 renderUI = True
 walk_sound_delay = 0
-ambient_light_tint = (255, 255, 255)
-ambient_light = False
 level_background = False
 level_background_img = Any
 
@@ -411,8 +409,6 @@ except:
 #region World Data
 dark: bool = False
 darkness: Tuple[int, int, int] = (0, 0, 0)
-ambient_light: bool = False
-ambient_light_tint: Tuple[int, int, int] = (0, 0, 0)
 class WorldData():
     @staticmethod
     def SetDark(enabled: bool, strength: int):
@@ -458,11 +454,9 @@ class WorldData():
         tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
 
-        global dark, darkness, ambient_light, ambient_light_tint
+        global dark, darkness
         KDS.ConfigManager.LevelProp.init(MapPath)
         WorldData.SetDark(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
-        ambient_light = KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/enabled", False)
-        ambient_light_tint = tuple(KDS.ConfigManager.LevelProp.Get("Rendering/AmbientLight/tint", (255, 255, 255)))
         Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
         Player.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
         Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
@@ -4143,10 +4137,6 @@ while main_running:
     if Item.tipItem != None:
         screen.blit(itemTip, (Item.tipItem.rect.centerx - itemTip.get_width() // 2 - scroll[0], Item.tipItem.rect.bottom - 45 - scroll[1]))
 
-    #Ambient Light
-    if ambient_light:
-        ambient_tint.fill(ambient_light_tint)
-        screen.blit(ambient_tint, (0, 0), special_flags=BLEND_ADD)
     #Valojen käsittely
     #dark = False if Player.rect.x > 500 else 1
     #^^ Bruh miks tää on olemassa?
