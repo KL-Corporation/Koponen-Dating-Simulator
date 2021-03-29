@@ -319,7 +319,7 @@ level_ender_tip: pygame.Surface = tip_font.render("Finish level [E]", True, KDS.
 itemTip: pygame.Surface = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 tentTip: pygame.Surface = tip_font.render("Toggle Sleep [E]", True, KDS.Colors.White)
 
-renderPadding: int = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 8)
+renderPadding: int = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 4)
 pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
 
 remove_data_on_quit = False
