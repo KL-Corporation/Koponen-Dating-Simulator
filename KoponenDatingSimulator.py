@@ -828,8 +828,8 @@ class Tile:
             self.rect = pygame.Rect(position[0] - (self.texture.get_width() - 34), position[1] - (self.texture.get_height() - 34), self.texture.get_width(), self.texture.get_height())
         else:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        self.specialTileFlag = True if serialNumber in specialTilesSerialNumbers else False
-        self.checkCollision = False if serialNumber in Tile.noCollision else True
+        self.specialTileFlag = serialNumber in specialTilesSerialNumbers
+        self.checkCollision = serialNumber not in Tile.noCollision
         self.checkCollisionDefault = self.checkCollision
         self.lateRender = False
         self.darkOverlay: Optional[pygame.Surface] = None

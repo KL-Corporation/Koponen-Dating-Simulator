@@ -3,6 +3,7 @@ import pygame
 from pygame.constants import SRCALPHA
 import KDS.Colors
 
+pygame.init()
 font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 padding: Dict[str, int] = {"left": 10, "right": 10, "top": 10, "bottom": 10}
 background_color = KDS.Colors.DarkGray
