@@ -47,6 +47,7 @@ pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilder
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     global display, display_size, display_info
     display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
+    display.set_alpha(None)
     display_size = display.get_size()
     display_info = pygame.display.Info()
 SetDisplaySize(display_size)
