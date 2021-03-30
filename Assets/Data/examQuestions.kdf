@@ -346,5 +346,25 @@
         "Kuusi": true,
         "Koivu": false,
         "Palmu": false
+    },
+    "Mitkä näistä eläimistä EIVÄT OLE tasalämpöisiä?": {
+        "Ihminen": false,
+        "Kana": false,
+        "Kala": true,
+        "Sammakko": true
+    },
+    "Mitkä seuraavista luonnonmaantieteellisistä muodostumista ovat syntyneet jään sulatessa ja jäätikön vetäytyessä?": {
+        "drumliini": false,
+        "pitkittäisharju": true,
+        "silokallio": false,
+        "pohjamoreeni": false,
+        "lustosavi": true
+    },
+    "Pitkittäisharjuille on tyypillistä, että...": {
+        "ne muodostuvat pääasiassa moreenista.": false,
+        "ne ovat enimmäkseen syntyneet mannerjään sisällä": true,
+        "niissä aines on hyvin lajittunutta": true,
+        "ne kulkevat eri ilmansuuntiin Lapissa kuin etelässä.": true,
+        "jääkauden talviaikaan ainesta kerrostui kesää enemmän": false
     }
 }
