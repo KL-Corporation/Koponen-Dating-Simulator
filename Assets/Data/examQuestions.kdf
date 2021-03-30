@@ -78,7 +78,7 @@
     },
     "Miikalla on viisi banaania. Miikan kaverilla on herpes. Laske auringon massa.": {
         "2 000 000 000 000 000 000 000 000 000g": false,
-        "1 980 000 000 000 000 000 000 000 000 000 000g": true,
+        "1 989 000 000 000 000 000 000 000 000 000 000g": true,
         "3 094 000 000 000 000 000 000 000 000 000 000g": false
     },
     "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä on nyt?": {
@@ -359,12 +359,5 @@
         "silokallio": false,
         "pohjamoreeni": false,
         "lustosavi": true
-    },
-    "Pitkittäisharjuille on tyypillistä, että...": {
-        "ne muodostuvat pääasiassa moreenista.": false,
-        "ne ovat enimmäkseen syntyneet mannerjään sisällä": true,
-        "niissä aines on hyvin lajittunutta": true,
-        "ne kulkevat eri ilmansuuntiin Lapissa kuin etelässä.": true,
-        "jääkauden talviaikaan ainesta kerrostui kesää enemmän": false
     }
 }
