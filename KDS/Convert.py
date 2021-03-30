@@ -171,7 +171,7 @@ def AspectScale(image: pygame.Surface, targetSize: Sequence[int], aspectMode: As
         scalingAlgorithm = pygame.transform.smoothscale
     else:
         KDS.Logging.AutoError("Invalid Scaling Mode! Image will not be scaled.")
-        scalingAlgorithm = lambda surf, size: surf.copy()
+        scalingAlgorithm = lambda surf, _: surf.copy()
 
     scaled: pygame.Surface = scalingAlgorithm(image, (round(imageSize[0] * scaling), round(imageSize[1] * scaling)))
 

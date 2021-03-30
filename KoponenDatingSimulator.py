@@ -593,7 +593,6 @@ for k, v in buildData["item_textures"].items():
 inventory_items: Set[int] = set(buildData["inventory_items"])
 
 specialTilesSerialNumbers: Set[int] = set(buildData["special_tiles"])
-
 inventoryDobulesSerialNumbers: Set[int] = set(buildData["item_doubles"])
 
 path_sounds_temp = buildData["tile_sounds"]
