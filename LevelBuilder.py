@@ -215,9 +215,16 @@ class TextureHolder:
         return None
 
     def RescaleTextures(self) -> None:
-        for t in self.data.values():
-            for d in t.values():
+        def _internalScale(toScale: Iterable[TextureHolder.TextureData]):
+            for d in toScale:
                 d.rescaleTexture()
+
+        pt = PerformanceTimer()
+        pt.Start()
+        for t in self.data.values():
+            KDS.Jobs.Process.Schedule(_internalScale, t.values())
+        pt.Stop()
+        pt.PrintResult()
 
 ### START ###
 if __name__ == "__main__":
