@@ -64,7 +64,7 @@ class Process:
 
     @staticmethod
     def init():
-        Process.executor = ProcessPoolExecutor(max_workers=workerCount)
+        Process.executor = ProcessPoolExecutor(max_workers=workerCount, )
         KDS.Logging.debug(f"Setting up {workerCount} worker threads for Process Jobs.")
 
     @staticmethod
