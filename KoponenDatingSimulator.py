@@ -52,11 +52,9 @@ pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
 display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
-display.set_alpha(None)
 display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
-screen.set_alpha(None)
 
 CompanyLogo = CompanyLogo.convert()
 
