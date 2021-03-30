@@ -451,7 +451,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
             return -1
         elif 4 <= GlobalRefrenceOverride <= 10 and refrenceOverride == None: refrenceOverride = GlobalRefrenceOverride
 
-        ref = round(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride)
+        ref = KDS.Math.RoundCustomInt(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride, KDS.Math.MidpointRounding.AwayFromZero)
         gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
             weights=GradeWeights,

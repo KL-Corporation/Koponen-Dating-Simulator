@@ -43,8 +43,7 @@ def FloorToInt(f: float) -> int: return math.floor(f)
 def Sqrt(f: float) -> float: return math.sqrt(f)
 def Log(f: float) -> float: return math.log(f)
 
-def Sign(f: Union[int, float]) -> int: return 1 if f >= 0 else -1
-
+def Sign(f: Union[int, float]) -> int: return bool(f > 0) - bool(f < 0)
 def Approximately(a: float, b: float) -> bool: return math.isclose(a, b)
 
 def IsInfinity(f: float) -> bool: return math.isinf(f)
