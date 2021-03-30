@@ -1,4 +1,10 @@
 from __future__ import annotations
+
+#region Import Error
+if __name__ != "__main__":
+    raise ImportError("Level Builder cannot be imported!")
+#endregion
+
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -25,117 +31,66 @@ from enum import IntEnum
 
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
-from KDS.Testing import PerformanceTimer
+root = tkinter.Tk()
+root.withdraw()
+root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
+pygame.init()
+pygame.scrap.init()
+pygame.scrap.set_mode(SCRAP_CLIPBOARD)
+display_size: Tuple[int, int] = (1600, 800)
+scalesize = 68
+gamesize = 34
+scaleMultiplier = scalesize / gamesize
 
+pygame.display.set_caption("KDS Level Builder")
+pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     global display, display_size, display_info
     display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
     display_size = display.get_size()
     display_info = pygame.display.Info()
-
-scalesize = 68
-gamesize = 34
-scaleMultiplier = scalesize / gamesize
+SetDisplaySize(display_size)
 
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
 os.makedirs(LOGPATH, exist_ok=True)
+KDS.Logging.init(APPDATA, LOGPATH)
+KDS.Logging.debug(f"""
+I=====[ DEBUG INFO ]=====I
+    [Version Info]
+    - pygame: {pygame.version.ver}
+    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
+    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
+
+    [Video Info]
+    - SDL Video Driver: {pygame.display.get_driver()}
+    - Hardware Acceleration: {bool(display_info.hw)}
+    - Window Allowed: {bool(display_info.wm)}
+    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
+
+    [Pixel Info]
+    - Bit Size: {display_info.bitsize}
+    - Byte Size: {display_info.bytesize}
+    - Masks: {display_info.masks}
+    - Shifts: {display_info.shifts}
+    - Losses: {display_info.losses}
+
+    [Hardware Acceleration]
+    - Hardware Blitting: {bool(display_info.blit_hw)}
+    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
+    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
+    - Software Blitting: {bool(display_info.blit_sw)}
+    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
+    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
+I=====[ DEBUG INFO ]=====I""")
+
+KDS.Jobs.init()
 
 clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
-
-def LB_Quit():
-    global matMenRunning, btn_menu, mainRunning
-    if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
-        return
-    matMenRunning = False
-    btn_menu = False
-    mainRunning = False
-
-def init():
-    root = tkinter.Tk()
-    root.withdraw()
-    root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
-    pygame.init()
-    pygame.scrap.init()
-    pygame.scrap.set_mode(SCRAP_CLIPBOARD)
-
-    pygame.display.set_caption("KDS Level Builder")
-    pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
-
-    SetDisplaySize((1600, 800))
-
-    KDS.Logging.init(APPDATA, LOGPATH)
-    KDS.Logging.debug(f"""
-    I=====[ DEBUG INFO ]=====I
-        [Version Info]
-        - pygame: {pygame.version.ver}
-        - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
-        - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-        - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
-
-        [Video Info]
-        - SDL Video Driver: {pygame.display.get_driver()}
-        - Hardware Acceleration: {bool(display_info.hw)}
-        - Window Allowed: {bool(display_info.wm)}
-        - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
-
-        [Pixel Info]
-        - Bit Size: {display_info.bitsize}
-        - Byte Size: {display_info.bytesize}
-        - Masks: {display_info.masks}
-        - Shifts: {display_info.shifts}
-        - Losses: {display_info.losses}
-
-        [Hardware Acceleration]
-        - Hardware Blitting: {bool(display_info.blit_hw)}
-        - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
-        - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
-        - Software Blitting: {bool(display_info.blit_sw)}
-        - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
-        - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
-    I=====[ DEBUG INFO ]=====I""")
-
-    KDS.Jobs.init()
-    KDS.Jobs.Process.init()
-
-    KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
-
-    #region Textures
-    global Textures, trueScale
-
-    with open("Assets/Textures/build.json") as f:
-        buildData = json.loads(f.read())
-    Textures = TextureHolder()
-    for element in buildData["tile_textures"]:
-        srl = f"0{element}"
-        elmt = buildData["tile_textures"][element]
-        Textures.AddTexture(srl, f"Assets/Textures/Tiles/{elmt}", os.path.splitext(elmt)[0], alpha= -1 if srl != "0102" else 30)
-
-    for element in buildData["item_textures"]:
-        srl = f"1{element}"
-        elmt = buildData["item_textures"][element]
-        Textures.AddTexture(srl, f"Assets/Textures/Items/{elmt}", os.path.splitext(elmt)[0])
-
-    for element in buildData["teleport_textures"]:
-        srl = f"3{element}"
-        elmt = buildData["teleport_textures"][element]
-        Textures.AddTexture(srl, f"Assets/Textures/Teleports/{elmt}", f"teleport_{os.path.splitext(elmt)[0]}", KDS.Colors.White if srl != "3001" else None)
-
-    Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "imp", (0, 0))
-    Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "seargeant", (0, 0))
-    Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "drug_dealer", (0, 0))
-    Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "turbo_shotgunner", (0, 0))
-    Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "mafiaman", (0, 0))
-    Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "methmaker", (0, 0))
-    Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "undead_monster", (0, 0))
-    Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "mummy", (0, 0))
-    Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "security_guard", (0, 0))
-    #endregion
-
-    trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
 
 class UnitType(IntEnum):
     Tile = 0
@@ -215,20 +170,42 @@ class TextureHolder:
         return None
 
     def RescaleTextures(self) -> None:
-        def _internalScale(toScale: Iterable[TextureHolder.TextureData]):
-            for d in toScale:
+        for t in self.data.values():
+            for d in t.values():
                 d.rescaleTexture()
 
-        pt = PerformanceTimer()
-        pt.Start()
-        for t in self.data.values():
-            KDS.Jobs.Process.Schedule(_internalScale, t.values())
-        pt.Stop()
-        pt.PrintResult()
+#region Textures
+with open("Assets/Textures/build.json") as f:
+    buildData = json.loads(f.read())
+Textures = TextureHolder()
+for element in buildData["tile_textures"]:
+    srl = f"0{element}"
+    elmt = buildData["tile_textures"][element]
+    Textures.AddTexture(srl, f"Assets/Textures/Tiles/{elmt}", os.path.splitext(elmt)[0], alpha= -1 if srl != "0102" else 30)
 
-### START ###
-if __name__ == "__main__":
-    init()
+for element in buildData["item_textures"]:
+    srl = f"1{element}"
+    elmt = buildData["item_textures"][element]
+    Textures.AddTexture(srl, f"Assets/Textures/Items/{elmt}", os.path.splitext(elmt)[0])
+
+for element in buildData["teleport_textures"]:
+    srl = f"3{element}"
+    elmt = buildData["teleport_textures"][element]
+    Textures.AddTexture(srl, f"Assets/Textures/Teleports/{elmt}", f"teleport_{os.path.splitext(elmt)[0]}", KDS.Colors.White if srl != "3001" else None)
+
+Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "imp", (0, 0))
+Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "seargeant", (0, 0))
+Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "drug_dealer", (0, 0))
+Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "turbo_shotgunner", (0, 0))
+Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "mafiaman", (0, 0))
+Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "methmaker", (0, 0))
+Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "undead_monster", (0, 0))
+Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "mummy", (0, 0))
+Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "security_guard", (0, 0))
+#endregion
+
+trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
+### GLOBAL VARIABLES ###
 
 DebugMode = False
 
@@ -310,6 +287,15 @@ class Undo:
         Undo.index = 0
         Undo.overflowCount = 0
 
+def LB_Quit():
+    global matMenRunning, btn_menu, mainRunning
+    if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
+        return
+    matMenRunning = False
+    btn_menu = False
+    mainRunning = False
+
+KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
 
 ####################################################################################################
 
@@ -910,9 +896,8 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         for event in pygame.event.get():
             if event.type == QUIT:
                 LB_Quit()
-        pygame.time.wait(100)
+        pygame.time.wait(1000)
 
-    handle.Complete()
     Undo.clear()
     KDS.Loading.Circle.Stop()
     return True
@@ -924,6 +909,22 @@ def openMap() -> bool: #Returns True if the operation was succesful
         return False
     return loadMap(fileName)
 
+tmpNames = {n: "break" for n in Textures.names}
+commandTree = {
+    "set": {
+        "brush": tmpNames,
+        **tmpNames
+    },
+    "add": {
+        "rows": "break",
+        "cols": "break"
+    },
+    "rmv": {
+        "rows": "break",
+        "cols": "break",
+        "stacks": "break"
+    }
+}
 def consoleHandler(commandlist):
     global brush, grid, dragRect
     if commandlist[0] == "set":
@@ -1368,22 +1369,6 @@ def main():
                         Undo.request(event.key == K_y)
                         Selected.Update()
                 elif event.key == K_t:
-                    tmpNames = {n: "break" for n in Textures.names}
-                    commandTree = {
-                        "set": {
-                            "brush": tmpNames,
-                            **tmpNames
-                        },
-                        "add": {
-                            "rows": "break",
-                            "cols": "break"
-                        },
-                        "rmv": {
-                            "rows": "break",
-                            "cols": "break",
-                            "stacks": "break"
-                        }
-                    }
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
@@ -1541,22 +1526,20 @@ def main():
         pygame.display.flip()
         clock.tick()
 
-if __name__ == "__main__":
-    mainRunning = True
-    try:
-        main()
-    except Exception as e:
-        KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below:\n{traceback.format_exc()}")
-        if KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Do you want to try to save your project?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.ERROR) == KDS.System.MessageBox.Responses.YES:
-            try:
-                saveMapName()
-                KDS.System.MessageBox.Show("Success!", "Your project was saved successfully.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
-            except Exception:
-                KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
+mainRunning = True
+try:
+    main()
+except Exception as e:
+    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below:\n{traceback.format_exc()}")
+    if KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Do you want to try to save your project?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.ERROR) == KDS.System.MessageBox.Responses.YES:
+        try:
+            saveMapName()
+            KDS.System.MessageBox.Show("Success!", "Your project was saved successfully.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
+        except Exception:
+            KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
 
-    KDS.Jobs.quit()
-    KDS.Jobs.Process.quit()
-    pygame.quit()
+pygame.quit()
+KDS.Jobs.quit()
 
 """ KEYMAP
     [Normal]
