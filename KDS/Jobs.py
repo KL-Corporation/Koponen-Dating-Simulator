@@ -2,19 +2,12 @@ from __future__ import annotations
 
 from concurrent.futures import *
 import os
-from typing import Any, Callable, Sequence, Union
+from typing import Any, Callable, Optional, Sequence, Union
 import KDS.Math
 import KDS.Logging
 
-def init():
-    global executor
-    coreCount = os.cpu_count()
-    workerCount = KDS.Math.Clamp(coreCount if coreCount != None else -1, 4, 16)
-    executor = ThreadPoolExecutor(max_workers=workerCount, thread_name_prefix="Jobs")
-    KDS.Logging.debug(f"Setting up {workerCount} worker threads for Jobs.")
-
-def quit():
-    executor.shutdown(wait=True, cancel_futures=True)
+coreCount = os.cpu_count()
+workerCount = KDS.Math.Clamp(coreCount if coreCount != None else -1, 4, 16)
 
 class JobHandle:
     def __init__(self, future: Future) -> None:
@@ -39,10 +32,20 @@ class JobHandle:
     def CompleteAll(jobs: Sequence[JobHandle]) -> None:
         """Ensures that all jobs have completed.
 
+        Complete needs to be called afterwards to get values or exceptions
+
         Args:
             jobs (Sequence[JobHandle]): The jobs to complete.
         """
         wait([f.future for f in jobs], return_when=ALL_COMPLETED)
+
+def init():
+    global executor
+    executor = ThreadPoolExecutor(max_workers=workerCount, thread_name_prefix="Jobs") # Initializer to create the theards on start and not when required.
+    KDS.Logging.debug(f"Setting up {workerCount} worker threads for Jobs.")
+
+def quit():
+    executor.shutdown(wait=True, cancel_futures=True)
 
 def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
     """Schedule the job for execution on a worker thread.
@@ -55,6 +58,22 @@ def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
         JobHandle: The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
     """
     return JobHandle(executor.submit(function, *args, **kwargs))
+
+class Process:
+    executor: Optional[ProcessPoolExecutor] = None
+
+    @staticmethod
+    def init():
+        Process.executor = ProcessPoolExecutor(max_workers=workerCount, )
+        KDS.Logging.debug(f"Setting up {workerCount} worker threads for Process Jobs.")
+
+    @staticmethod
+    def quit():
+        Process.executor.shutdown(wait=True, cancel_futures=True)
+
+    @staticmethod
+    def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
+        return JobHandle(Process.executor.submit(function, *args, **kwargs))
 
 #region OLD KDS.THREADING CODE
 # import concurrent.futures  # Tätä tarvitaan toivottavasti tulevaisuudessa. (Haha, tulevaisuudessa... Hauska vitsi)
