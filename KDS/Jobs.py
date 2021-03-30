@@ -9,7 +9,7 @@ import KDS.Logging
 def init():
     global executor
     coreCount = os.cpu_count()
-    workerCount = KDS.Math.Clamp(coreCount if coreCount != None else -1, 2, 10)
+    workerCount = KDS.Math.Clamp(coreCount if coreCount != None else -1, 4, 16)
     executor = ThreadPoolExecutor(max_workers=workerCount, thread_name_prefix="Jobs")
     KDS.Logging.debug(f"Setting up {workerCount} worker threads for Jobs.")
 

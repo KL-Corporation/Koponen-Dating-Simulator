@@ -51,7 +51,7 @@ CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.pn
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
-display = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
+display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
 display_info = pygame.display.Info()
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
@@ -767,20 +767,20 @@ class Inventory:
             else:
                 self.SIndex = index
 
-    def getSlot(self, itemType: Type) -> Optional[int]:
-        var = KDS.Linq.FirstOrNone(self.storage, lambda i: isinstance(i, itemType))
+    def getSlot(self, itemSerial: int) -> Optional[int]:
+        var = KDS.Linq.FirstOrNone(self.storage, lambda i: not isinstance(i, str) and i.serialNumber == itemSerial)
         if var != None:
             return self.storage.index(var)
         return None
 
-    def dropItemAtIndex(self, index: int) -> Optional[Item]:
+    def dropItemAtIndex(self, index: int, forceDrop: bool = False) -> Optional[Item]:
         toDrop = self.storage[index]
         if not isinstance(toDrop, str):
             KDS.Missions.Listeners.ItemDrop.Trigger(toDrop.serialNumber)
             if index < self.size - 1:
                 if self.storage[index + 1] == Inventory.doubleItem:
                     self.storage[index + 1] = Inventory.emptySlot
-            if toDrop.drop() == True:
+            if toDrop.drop() == True or forceDrop:
                 self.storage[index] = Inventory.emptySlot
                 return toDrop
         return None
@@ -2559,6 +2559,7 @@ class GasCanister(Item):
 
 class WalkieTalkie(Item):
     storyTrigger: bool = False
+    storyRunning: bool = False
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
         super().__init__(position, serialNumber, texture)
@@ -3245,7 +3246,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         for event in pygame.event.get(): # No default event handler in loading screen
             if event.type == QUIT:
                 KDS_Quit()
-        pygame.time.wait(1000)
+        pygame.time.wait(100)
     wdata = loadMapHandle.Complete()
     if not wdata:
         return 1
@@ -4248,6 +4249,14 @@ while main_running:
 
     display.blit(pygame.transform.scale(screen, display_size), (0, 0))
 
+    if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
+        if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):
+            KDS.Missions.SetProgress("explore", "find_walkie_talkie", 1.0)
+            WalkieTalkie.storyRunning = False
+        else:
+            WalkieTalkie.storyRunning = True
+        WalkieTalkie.storyTrigger = False
+
     pygame.display.flip()
 #endregion
 #region Data Update
@@ -4255,9 +4264,6 @@ while main_running:
         level_finished = True
 #endregion
 #region Conditional Events
-    if WalkieTalkie.storyTrigger:
-        KDS.Story.WalkieTalkieEffect(Player, WalkieTalkie, display, clock, defaultEventHandler, screen)
-        WalkieTalkie.storyTrigger = False
     if Player.rect.y > len(tiles) * 34 + 340:
         Player.health = 0
         Player.rect.y = len(tiles) * 34 + 340

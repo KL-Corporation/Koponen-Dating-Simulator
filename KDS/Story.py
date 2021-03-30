@@ -59,60 +59,74 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
     KDS.Audio.Music.Stop()
     return False
 
-def WalkieTalkieEffect(player: PlayerClass, walkieTalkie: Type, display: pygame.Surface, clock: pygame.time.Clock, eventHandler: Callable[[Any], Any], screenBefore: pygame.Surface):
-    oldSurf = pygame.transform.scale(screenBefore, display.get_size())
-    slot = player.inventory.getSlot(walkieTalkie)
-    if slot != None:
-        player.inventory.dropItemAtIndex(slot)
-    else:
-        KDS.Logging.AutoError(f"No Walkie Talkie found! Type to check: {walkieTalkie}")
+class WalkieTalkieEffect:
+    phaseTwoIndex = 0
+    phaseIndex = 0
+    phaseZeroChannel = None
+    phaseOneChannel = None
+    phaseThreeChannel = None
+    blackSurf = None
+    alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
 
-    def phaseZero():
-        nonlocal display
-        chnl = KDS.Audio.PlayFromFile("Assets/Audio/Effects/walkie_talkie.ogg", clip_volume=0.3)
+    @staticmethod
+    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface) -> bool:
+        if newCall:
+            WalkieTalkieEffect.phaseTwoIndex = 0
+            WalkieTalkieEffect.phaseIndex = 0
+            WalkieTalkieEffect.phaseZeroChannel = None
+            WalkieTalkieEffect.phaseOneChannel = None
+            WalkieTalkieEffect.blackSurf = pygame.Surface(display.get_size())
 
-        display.blit(oldSurf, (0, 0))
-        pygame.display.flip()
+        def phaseZero() -> bool:
+            if WalkieTalkieEffect.phaseZeroChannel == None:
+                WalkieTalkieEffect.phaseZeroChannel = KDS.Audio.PlayFromFile("Assets/Audio/Effects/walkie_talkie.ogg", clip_volume=0.3)
 
-        while chnl.get_busy():
-            for event in pygame.event.get():
-                eventHandler(event)
+            return False if WalkieTalkieEffect.phaseZeroChannel.get_busy() else True
 
-    def phaseOne():
-        nonlocal display
-        chnl = KDS.Audio.PlayFromFile("Assets/Audio/Effects/spooky_cut.ogg", clip_volume=0.3)
+        def phaseOne() -> bool:
+            if WalkieTalkieEffect.phaseOneChannel == None:
+                WalkieTalkieEffect.phaseOneChannel = KDS.Audio.PlayFromFile("Assets/Audio/Effects/spooky_cut.ogg", clip_volume=0.3)
 
-        while chnl.get_busy():
-            for event in pygame.event.get():
-                eventHandler(event)
+            return False if WalkieTalkieEffect.phaseOneChannel.get_busy() else True
 
-    def phaseTwo():
-        nonlocal display
-        KDS.Audio.PlayFromFile("Assets/Audio/Effects/pistol_shoot.ogg")
-        display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
-        pygame.display.flip()
+        def phaseTwo() -> bool:
+            if WalkieTalkieEffect.phaseTwoIndex == 0:
+                KDS.Audio.PlayFromFile("Assets/Audio/Effects/pistol_shoot.ogg")
 
-        for _ in range(60 * 8): # Frames per second times seconds
-            for event in pygame.event.get():
-                eventHandler(event)
-            clock.tick_busy_loop(60)
+                slot = player.inventory.getSlot(36)
+                if slot != None:
+                    player.inventory.dropItemAtIndex(slot, forceDrop=True)
+                else:
+                    KDS.Logging.AutoError("Walkie talkie not found!")
 
-    def phaseThree():
-        nonlocal display, clock
-        # NO SOUND CREATED   KDS.Audio.PlayFromFile("Assets/Audio/Effects/fadeout tinnitus thingy")
-        blackSurf = pygame.Surface(display.get_size())
-        alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
+            display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
 
-        while not alpha_anim.Finished:
-            blackSurf.set_alpha(int(alpha_anim.update()))
-            display.blit(oldSurf, (0, 0))
-            display.blit(blackSurf, (0, 0))
-            pygame.display.flip()
-            clock.tick_busy_loop(60)
+            WalkieTalkieEffect.phaseTwoIndex += 1
+            return False if WalkieTalkieEffect.phaseTwoIndex < 60 * 8 else True
 
-    phaseZero()
-    phaseOne()
-    phaseTwo()
-    phaseThree()
+        def phaseThree() -> bool:
+            if WalkieTalkieEffect.phaseThreeChannel == None:
+                pass
+            # NO SOUND CREATED   KDS.Audio.PlayFromFile("Assets/Audio/Effects/fadeout tinnitus thingy")
+            if WalkieTalkieEffect.blackSurf != None:
+                WalkieTalkieEffect.blackSurf.set_alpha(int(WalkieTalkieEffect.alpha_anim.update()))
+                display.blit(WalkieTalkieEffect.blackSurf, (0, 0))
 
-    # Game state will be changed in main (NOT IMPLEMENTED)
+                return False if not WalkieTalkieEffect.alpha_anim.Finished else True
+            else:
+                KDS.Logging.AutoError("alpha_anim is None!")
+                return False
+
+        phases = (
+            phaseZero,
+            phaseOne,
+            phaseTwo,
+            phaseThree
+        )
+
+        if phases[WalkieTalkieEffect.phaseIndex]():
+            WalkieTalkieEffect.phaseIndex += 1
+
+        return False if WalkieTalkieEffect.phaseIndex < len(phases) else True
+
+        # Game state will be changed in main (NOT IMPLEMENTED)

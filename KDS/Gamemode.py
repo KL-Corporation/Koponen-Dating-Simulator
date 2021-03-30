@@ -91,7 +91,10 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 3:
             KDS.Missions.InitialiseMission("explore", "Kummituksia", NoSound=True)
-            KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta", (KDS.Missions.Listeners.ItemPickup, 36, 1.0))
+            KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta")
+
+            KDS.Missions.InitialiseMission("fuck", "Mitä vittua?")
+            KDS.Missions.InitialiseTask("fuck", "bail", "Pakene koulusta")
         elif index == 4:
             KDS.Missions.InitialiseMission("biology_exam", "Biologian Tunti")
             KDS.Missions.InitialiseTask("biology_exam", "go_to_biology", "Mene Biologian Tunnille")
