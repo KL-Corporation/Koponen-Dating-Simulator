@@ -258,9 +258,9 @@ class Bullet:
             Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if debugMode:
-            pygame.draw.rect(Surface, KDS.Colors.White, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
+            pygame.draw.rect(Surface, KDS.Colors.Black, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
             debugStartPos = (self.rect.centerx - (self.movedDistance * self.direction_multiplier), self.rect.centery - (self.slope * self.movedDistance))
-            pygame.draw.line(Surface, KDS.Colors.Black, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))
+            pygame.draw.line(Surface, KDS.Colors.White, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))
 
         if self.speed == -1:
             for _ in range(round(self.maxDistance / 18)):

@@ -1087,9 +1087,6 @@ class Ladder(Tile):
     def update(self):
         if self.rect.colliderect(Player.rect):
             Player.onLadder = True
-            if Ladder.ct > 45:
-                Ladder.ct = 0
-            Ladder.ct += 1
         return self.texture
 
 class Lamp(Tile):
@@ -2762,6 +2759,8 @@ class PlayerClass:
                     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                     self.crouching = True
             elif self.crouching:
+                if len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), tiles)) > 0:
+                    return
                 self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 self.crouching = False
 
@@ -2807,7 +2806,12 @@ class PlayerClass:
                 self.wasOnLadder = True
                 self.vertical_momentum = 0
                 if KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
-                    KDS.Audio.PlaySound(random.choice(Ladder.sounds))
+                    if Ladder.ct > 20:
+                        Ladder.ct = 0
+                    if Ladder.ct == 0: # Separate if to make the sound play immediately.
+                        KDS.Audio.PlaySound(random.choice(Ladder.sounds))
+                    Ladder.ct += 1
+
                     if KDS.Keys.moveUp.pressed:
                         self.vertical_momentum += -1
                     else:
@@ -2819,14 +2823,9 @@ class PlayerClass:
             self.movement[1] += self.vertical_momentum
             self.vertical_momentum = min(self.vertical_momentum + _fall_speed, fall_max_velocity)
 
-            if self.crouching == True:
-                crouch_collisions = len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), tiles)) > 0
-            else:
-                crouch_collisions = False
-
             if KDS.Keys.moveDown.pressed and not self.onLadder:
                 crouch(True)
-            elif not crouch_collisions:
+            else:
                 crouch(False)
 
             self.rect, collisions = KDS.World.move_entity(self.rect, self.movement if not self.lockMovement else (0, 0), tiles, w_sounds=path_sounds, playWalkSound=s)
