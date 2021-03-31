@@ -466,7 +466,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
 
     if GradeExtras:
         # PE grade lowers depending on average.
-        grades[11] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
+        grades[-1] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
 
     if StoryExtras:
         # Because of KDS Story Mode,

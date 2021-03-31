@@ -145,7 +145,7 @@ Aaro Koljonen
 Aarne Autio <br/>
 Matias Broman <br/>
 Otto Heikkilä <br/>
-*Add later!*
+Juho Kimpimäki
 <br/>
 <br/>
 
@@ -156,4 +156,4 @@ Matias Broman
 <br/>
 <br/>
 
-Made With: Pygame
+Made With: pygame

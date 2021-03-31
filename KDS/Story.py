@@ -37,23 +37,22 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
     md.set_color_background(20, 25, 20) # Default background color of KDS maps.
     md.display([], 0, 0, [False for _ in range(10)])
 
+    waitTicks = 0
+
     if endingType == EndingType.Happy:
         KDS.Audio.Music.Play("Assets/Audio/Music/Prologue.ogg", 0)
 
     running = True
     while running:
         display.fill((20, 25, 20))
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                return True
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    running = False
+        pygame.event.get() # Because Windows thinks this app has frozen
         display.blit(mdSurf, (mdHorizontalPadding[0], display.get_height() - mdScroll.update() * mdSurf.get_height()))
-        if mdScroll.Finished and KDS.Audio.Music.GetPlaying():
-            pygame.time.delay(3000)
-            KDS.School.Certificate(display, clock, BackgroundColor=(20, 25, 20))
-            running = False
+        if mdScroll.Finished and not KDS.Audio.Music.GetPlaying():
+            pygame.mouse.set_visible(True)
+            waitTicks += 1
+            if waitTicks > 60 * 3:
+                KDS.School.Certificate(display, clock, BackgroundColor=(20, 25, 20))
+                running = False
         pygame.display.flip()
         clock.tick_busy_loop(60)
     KDS.Audio.Music.Stop()
