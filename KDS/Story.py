@@ -75,6 +75,7 @@ class WalkieTalkieEffect:
             WalkieTalkieEffect.phaseZeroChannel = None
             WalkieTalkieEffect.phaseOneChannel = None
             WalkieTalkieEffect.blackSurf = pygame.Surface(display.get_size())
+            player.lockMovement = True
 
         def phaseZero() -> bool:
             if WalkieTalkieEffect.phaseZeroChannel == None:
@@ -126,6 +127,10 @@ class WalkieTalkieEffect:
         if phases[WalkieTalkieEffect.phaseIndex]():
             WalkieTalkieEffect.phaseIndex += 1
 
-        return False if WalkieTalkieEffect.phaseIndex < len(phases) else True
+        if WalkieTalkieEffect.phaseIndex >= len(phases):
+            player.lockMovement = False
+            return True
+
+        return False
 
         # Game state will be changed in main (NOT IMPLEMENTED)

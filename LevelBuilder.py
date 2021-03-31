@@ -429,18 +429,6 @@ class UnitData:
 
     @staticmethod
     def renderSerial(surface: pygame.Surface, properties: Optional[UnitProperties], serial: str, pos: Tuple[int, int]):
-        teleportOverlayFlag = False
-        darkOverlayFlag = False
-        if serial[0] == "0" and properties != None:
-            checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
-            if isinstance(checkCollision, bool):
-                if not checkCollision:
-                    darkOverlayFlag = True
-                else:
-                    KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
-        elif serial[0] == "3":
-            teleportOverlayFlag = serial != "3001"
-
         unitData = Textures.GetData(serial)
         blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - unitData.scaledTexture_size[0] + scalesize, pos[1] - unitData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
@@ -448,12 +436,15 @@ class UnitData:
         #region Blitting
         surface.blit(unitData.scaledTexture, blitPos)
         #endregion
-        #region Overlay
-        if darkOverlayFlag:
-            surface.blit(unitData.darkOverlay, blitPos)
-        #endregion
 
-        if teleportOverlayFlag:
+        if serial[0] == "0" and properties != None:
+            checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
+            if isinstance(checkCollision, bool):
+                if not checkCollision:
+                    surface.blit(unitData.darkOverlay, blitPos)
+                else:
+                    KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
+        elif serial[0] == "3" and serial != "3001":
             teleportOverlay = Textures.GetScaledTexture("3001").copy()
             teleportOverlay.set_alpha(100)
             surface.blit(teleportOverlay, pos)
@@ -487,6 +478,9 @@ class UnitData:
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             row: List[UnitData]
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
+                if unit.serialNumber == UnitData.EMPTYSERIAL:
+                    continue
+
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)

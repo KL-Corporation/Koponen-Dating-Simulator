@@ -985,27 +985,34 @@ class Jukebox(Tile):
         self.checkCollision = False
         self.playing = -1
         self.lastPlayed = [-69 for _ in range(5)]
+        self.channel = None
 
     def stopPlayingTrack(self):
         for music in Jukebox.songs:
             music.stop()
         self.playing = -1
+        self.channel = None
         KDS.Audio.Music.Unpause()
+
+    def playRandomTrack(self):
+        KDS.Audio.Music.Pause()
+        loopStopper = 0
+        while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
+            self.playing = random.randint(0, len(Jukebox.songs) - 1)
+            loopStopper += 1
+        self.lastPlayed.pop(0)
+        self.lastPlayed.append(self.playing)
+        self.channel = KDS.Audio.PlaySound(Jukebox.songs[self.playing], KDS.Audio.MusicVolume)
 
     def update(self):
         if self.rect.colliderect(Player.rect):
             screen.blit(jukebox_tip, (self.rect.centerx - scroll[0] - jukebox_tip.get_width() / 2, self.rect.y - scroll[1] - 30))
             if KDS.Keys.functionKey.clicked and not KDS.Keys.functionKey.holdClicked:
                 self.stopPlayingTrack()
-                KDS.Audio.Music.Pause()
-                loopStopper = 0
-                while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
-                    self.playing = random.randint(0, len(Jukebox.songs) - 1)
-                    loopStopper += 1
-                del self.lastPlayed[0]
-                self.lastPlayed.append(self.playing)
-                KDS.Audio.PlaySound(Jukebox.songs[self.playing], KDS.Audio.MusicVolume)
+                self.playRandomTrack()
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
+        if self.channel != None and not self.channel.get_busy():
+            self.playRandomTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 350
             jukebox_volume = KDS.Math.Lerp(1, 0, KDS.Math.Clamp01(lerp_multiplier))
@@ -1433,7 +1440,7 @@ class FlickerTrigger(Tile):
             KDS.Audio.UnpauseAllSounds()
 
     def eventHandler(self, *args: Any):
-        if len(args) < 1 or isinstance(self.listenerInstance, KDS.Missions.ItemListener) or args[0] != self.listenerItem:
+        if len(args) < 1 or (isinstance(self.listenerInstance, KDS.Missions.ItemListener) and args[0] != self.listenerItem):
             return
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None

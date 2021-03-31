@@ -89,7 +89,7 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     return max(_min, min(value, _max))
 
 def Clamp01(value: Value) -> Value:
-    return Clamp(value, cast(Value, 0), cast(Value, 1)) # Should be fine...?
+    return Clamp(value, 0, 1) # Should be fine...?
 
 def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
