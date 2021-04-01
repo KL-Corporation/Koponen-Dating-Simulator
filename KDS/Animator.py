@@ -221,7 +221,10 @@ class Value:
         Returns:
             float: Current value.
         """
-        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
+        t = self.tick / self.ticks
+        if self.type != None: t = self.type(t)
+
+        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, t)
         else: return self.To
 
     def update(self, reverse: bool = False) -> float:
@@ -261,11 +264,7 @@ class Value:
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
 
-        t = self.tick / self.ticks
-        if self.type != None: t = self.type(t)
-
-        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, t)
-        else: return self.To
+        return self.get_value()
 
 class Color:
     def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:

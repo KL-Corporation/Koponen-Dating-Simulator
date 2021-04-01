@@ -16,7 +16,10 @@
             "startPos": [
                 560,
                 425
-            ]
+            ],
+            "Inventory": {
+                "4": 6
+            }
         }
     },
     "Rendering": {
