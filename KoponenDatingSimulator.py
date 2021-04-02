@@ -936,7 +936,7 @@ class Toilet(Tile):
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
                 Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x + 7, self.rect.x + self.rect.width - 13), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
-            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1700), (self.light_scale, self.light_scale)), True))
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1700), True))
             return self.animation.update()
         else:
             return self.texture
@@ -964,7 +964,7 @@ class Trashcan(Tile):
                 self.light_scale += 4
             if random.randint(0, 2) == 0:
                 Particles.append(KDS.World.Lighting.Fireparticle((random.randint(self.rect.x, self.rect.x + self.rect.width - 16), self.rect.y + 8), random.randint(3, 6), 30, 1, color=(240, 200, 0)))
-            Lights.append(KDS.World.Lighting.Light(self.rect.center, pygame.transform.scale(KDS.World.Lighting.Shapes.circle.get(256, 1700), (self.light_scale, self.light_scale)), True))
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1700), True))
             return self.animation.update()
         else:
             return self.texture
@@ -1410,7 +1410,7 @@ class Methtable(Tile):
         super().__init__(position, serialNumber)
         self.animation = KDS.Animator.Animation("methtable", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         for index, im in enumerate(self.animation.images):
-            self.animation.images[index] = pygame.transform.scale(im, (round(im.get_width() / 2.5), round(im.get_height() / 2.5)))
+            self.animation.images[index] = pygame.transform.scale(im, (round(im.get_width() / 2.5), round(im.get_height() / 2.5))) # WTF????
         self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
         self.checkCollision = False
 
@@ -1652,7 +1652,7 @@ class AvarnCar(Tile):
         self.texture.set_colorkey(KDS.Colors.Cyan)
         self.checkCollision = False
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
-        l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3)))
+        l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3))) # WTF???
         self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)
         self.hidden = False
         self.listener = None
@@ -3472,7 +3472,7 @@ def settings_menu():
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()
-        display.fill((0, 0, 0))
+        display.fill(KDS.Colors.Black)
         c = False
         clock.tick_busy_loop(60)
 
@@ -4253,7 +4253,7 @@ while main_running:
     if screen_overlay != None:
         screen.blit(screen_overlay, (0, 0))
 
-    display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+    pygame.transform.scale(screen, display_size, display)
 
     if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
         if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):
@@ -4278,7 +4278,7 @@ while main_running:
         KDS.Audio.Music.Pause()
         KDS.Audio.PauseAllSounds()
         display.fill(KDS.Colors.Black)
-        display.blit(pygame.transform.scale(screen, display_size), (0, 0))
+        pygame.transform.scale(screen, display_size, display)
         pygame.mouse.set_visible(True)
         esc_menu_f(screen)
         pygame.mouse.set_visible(False)
