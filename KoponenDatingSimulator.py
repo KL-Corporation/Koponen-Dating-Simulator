@@ -4248,8 +4248,6 @@ while main_running:
                 data["wait_index"] = 0
                 ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
 
-    display.fill(KDS.Colors.Black)
-
     if screen_overlay != None:
         screen.blit(screen_overlay, (0, 0))
 
@@ -4277,7 +4275,6 @@ while main_running:
         KDS.Scores.ScoreCounter.pause()
         KDS.Audio.Music.Pause()
         KDS.Audio.PauseAllSounds()
-        display.fill(KDS.Colors.Black)
         pygame.transform.scale(screen, display_size, display)
         pygame.mouse.set_visible(True)
         esc_menu_f(screen)
