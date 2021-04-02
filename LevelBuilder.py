@@ -38,6 +38,7 @@ pygame.init()
 pygame.scrap.init()
 pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 display_size: Tuple[int, int] = (1600, 800)
+monitor_info = pygame.display.Info()
 scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
@@ -49,7 +50,7 @@ def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
     display_size = display.get_size()
     display_info = pygame.display.Info()
-SetDisplaySize(display_size)
+SetDisplaySize((min(display_size[0], monitor_info.current_w), min(display_size[1], monitor_info.current_h - 100)))
 
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
@@ -129,8 +130,13 @@ class TextureHolder:
         def rescaleTexture(self):
             self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (round(self.texture.get_width() * scaleMultiplier), round(self.texture.get_height() * scaleMultiplier)))
             self.scaledTexture_size: Tuple[int, int] = self.scaledTexture.get_size()
+
             self.darkOverlay = self.scaledTexture.convert_alpha()
-            self.darkOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
+            self.darkOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
+
+            self.lightOverlay = self.scaledTexture.convert_alpha()
+            self.lightOverlay.fill((255, 255, 255, 255), special_flags=BLEND_RGB_MAX)
+            self.lightOverlay.fill((255, 255, 255, 128), special_flags=BLEND_RGBA_MULT)
 
     def __init__(self) -> None:
         self.data: Dict[UnitType, Dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
@@ -214,6 +220,10 @@ teleportTemp = "001"
 currentSaveName = ''
 grid: List[List[UnitData]] = [[]]
 gridSize = (0, 0)
+
+refrenceGrid: Optional[List[List[UnitData]]] = None
+refrenceGridSize = (0, 0)
+refrenceScanProgress = [0, 0]
 
 dragRect = None
 
@@ -309,6 +319,7 @@ class UnitData:
     def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
+        self.matchesRefrence = False
         self._updateSplit()
         self.properties = UnitProperties(self)
 
@@ -428,26 +439,28 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderSerial(surface: pygame.Surface, properties: Optional[UnitProperties], serial: str, pos: Tuple[int, int]):
-        unitData = Textures.GetData(serial)
-        blitPos = (pos[0], pos[1] - unitData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - unitData.scaledTexture_size[0] + scalesize, pos[1] - unitData.scaledTexture_size[1] + scalesize)
+    def renderSerial(surface: pygame.Surface, properties: Optional[UnitProperties], serial: str, pos: Tuple[int, int], lightOverlay: bool = False):
+        textureData = Textures.GetData(serial)
+        blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
 
         #region Blitting
-        surface.blit(unitData.scaledTexture, blitPos)
+        surface.blit(textureData.scaledTexture, blitPos)
         #endregion
 
         if serial[0] == "0" and properties != None:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
-                    surface.blit(unitData.darkOverlay, blitPos)
+                    surface.blit(textureData.darkOverlay, blitPos)
                 else:
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
         elif serial[0] == "3" and serial != "3001":
             teleportOverlay = Textures.GetScaledTexture("3001").copy()
             teleportOverlay.set_alpha(100)
             surface.blit(teleportOverlay, pos)
+        if lightOverlay:
+            surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
     def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, middleMouseOnDown: bool = False) -> List[List[UnitData]]:
@@ -472,29 +485,24 @@ class UnitData:
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
-        doorRenders: List[Tuple[pygame.Surface, Tuple[int, int]]] = []
         DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
-        overlayRenders: List[Tuple[str, Tuple[int, int]]] = []
+        doorRenders: List[Tuple[str, Tuple[int, int], bool]] = []
+        overlayRenders: List[Tuple[str, Tuple[int, int], bool]] = []
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
-            row: List[UnitData]
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
-                if unit.serialNumber == UnitData.EMPTYSERIAL:
-                    continue
-
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
                 if isinstance(overlayTileprops, str):
-                    overlayRenders.append((overlayTileprops, normalBlitPos))
+                    overlayRenders.append((overlayTileprops, normalBlitPos, unit.matchesRefrence))
                 for number in unit.serials:
                     if number == UnitData.EMPTY:
                         continue
-
                     if number in DOORSERIALS:
-                        doorRenders.append((Textures.GetScaledTexture(number), normalBlitPos))
+                        doorRenders.append((number, normalBlitPos, unit.matchesRefrence))
                         continue
 
-                    UnitData.renderSerial(surface, unit.properties, number, normalBlitPos)
+                    UnitData.renderSerial(surface, unit.properties, number, normalBlitPos, unit.matchesRefrence)
 
                 if unitRect.collidepoint(mpos_scaled):
                     if unit.hasTeleport():
@@ -595,11 +603,11 @@ class UnitData:
                             rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
                             tip_renders.append(rendered_tip)
 
-        for doorTex, doorPos in doorRenders:
-            surface.blit(doorTex, doorPos)
+        for doorSrl, doorPos, lightOverlay in doorRenders:
+            UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay)
 
-        for ovs, ovp in overlayRenders:
-            UnitData.renderSerial(surface, None, ovs, ovp)
+        for ovs, ovp, ovov in overlayRenders:
+            UnitData.renderSerial(surface, None, ovs, ovp, ovov)
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -760,8 +768,6 @@ def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
         for x in range(size[0]):
             row.append(UnitData((x, y)))
         rlist.append(row)
-    global gridSize
-    gridSize = size
     return rlist
 
 def resizeGrid(size: Tuple[int, int], grid: list):
@@ -831,6 +837,42 @@ def saveMapName():
         currentSaveName = savePath
         saveMap(grid, currentSaveName)
 
+def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
+    global display, clock
+
+    temporaryGrid = None
+    with open(path, 'r') as f:
+        contents = f.read().splitlines()
+        while len(contents[-1]) < 1: contents = contents[:-1]
+
+    maxWStr = max(contents, key=lambda c: len(c.split("/")))
+    maxW = len(maxWStr.split("/"))
+    temporaryGridSize = (maxW, len(contents))
+    temporaryGrid = loadGrid(temporaryGridSize)
+
+    for row, rRow in zip(contents, temporaryGrid):
+        for unit, rUnit in zip(row.split("/"), rRow):
+            unit = unit.strip(" ")
+            #region Fixing Broken Serials
+            while len(unit) < len(UnitData.EMPTYSERIAL):
+                if not unit.endswith("0000"):
+                    unit += "0"
+                else:
+                    unit += " "
+            while len(unit) > len(UnitData.EMPTYSERIAL):
+                unit = unit[:-1]
+            if KDS.Linq.Any(unit.split(" "), lambda n: len(n) != len(UnitData.EMPTY)):
+                KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
+            #endregion
+            rUnit.overrideSerial(unit)
+
+    fpath = os.path.join(os.path.dirname(path), "properties.kdf")
+    if os.path.isfile(fpath):
+        with open(fpath, 'r', encoding="utf-8") as f:
+            UnitProperties.Deserialize(f.read(), temporaryGrid)
+
+    return temporaryGrid, temporaryGridSize
+
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
     global currentSaveName, gridSize, grid, display, clock
     if path == None or len(path) < 1:
@@ -848,55 +890,20 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
 
     KDS.Loading.Circle.Start(display, clock)
 
-    def internalLoad():
-        global currentSaveName, gridSize, grid, display, clock
-
-        temporaryGrid = None
-        with open(path, 'r') as f:
-            contents = f.read().splitlines()
-            while len(contents[-1]) < 1: contents = contents[:-1]
-
-        maxW = 0
-        for c in contents:
-            maxW = max(maxW, len(c.split("/")))
-        temporaryGrid = loadGrid((maxW, len(contents)))
-
-        for row, rRow in zip(contents, temporaryGrid):
-            for unit, rUnit in zip(row.split("/"), rRow):
-                unit = unit.strip(" ")
-                #region Fixing Broken Serials
-                while len(unit) < len(UnitData.EMPTYSERIAL):
-                    if not unit.endswith("0000"):
-                        unit += "0"
-                    else:
-                        unit += " "
-                while len(unit) > len(UnitData.EMPTYSERIAL):
-                    unit = unit[:-1]
-                if KDS.Linq.Any(unit.split(" "), lambda n: len(n) != len(UnitData.EMPTY)):
-                    KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
-                #endregion
-                rUnit.overrideSerial(unit)
-
-        currentSaveName = path
-
-        grid = temporaryGrid
-        fpath = os.path.join(os.path.dirname(path), "properties.kdf")
-        if os.path.isfile(fpath):
-            with open(fpath, 'r', encoding="utf-8") as f:
-                UnitProperties.Deserialize(f.read(), grid)
-
-    handle = KDS.Jobs.Schedule(internalLoad)
+    handle = KDS.Jobs.Schedule(internalLoadMap, path)
     while not handle.IsComplete():
         for event in pygame.event.get():
             if event.type == QUIT:
                 LB_Quit()
         pygame.time.wait(1000)
+    currentSaveName = path
+    grid, gridSize = handle.Complete()
 
     Undo.clear()
     KDS.Loading.Circle.Stop()
     return True
 
-def openMap() -> bool: #Returns True if the operation was succesful
+def openMap() -> bool: # Returns True if the operation was succesful
     global currentSaveName, gridSize, grid
     fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Map File")
     if fileName == None or len(fileName) < 1:
@@ -1138,7 +1145,7 @@ def menu():
     btn_menu = True
     grid = [[]]
     def button_handler(_openMap: bool = False):
-        global btn_menu, grid
+        global btn_menu, grid, gridSize
         if _openMap:
             # Button menu is turned off if openMap was succesful
             btn_menu = not openMap()
@@ -1154,7 +1161,7 @@ def menu():
     genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
     quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed), (255, 255, 255), (235, 235, 235), (200, 200, 200))
 
-    txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and is not maintained.", True, KDS.Colors.CloudWhite)
+    txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and/or maintenance.", True, KDS.Colors.CloudWhite)
     txt_icon = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Branding/levelBuilderTextIcon.png").convert_alpha(), (0, 150), aspectMode=KDS.Convert.AspectMode.HeightControlsWidth)
 
     while btn_menu:
@@ -1305,7 +1312,7 @@ def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
 
 allowTilePlacement = True
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect, allowTilePlacement
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect, allowTilePlacement, refrenceGrid, refrenceGridSize
 
     menu()
     if not mainRunning: return
@@ -1424,6 +1431,16 @@ def main():
                                         KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
                         except Exception:
                             KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
+                elif event.key == K_g:
+                    if refrenceGrid != None:
+                        refrenceGrid = None
+                        for row in grid:
+                            for unit in row:
+                                unit.matchesRefrence = False
+                    else:
+                        refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File")
+                        if len(refrencePath) > 0 and not refrencePath.isspace():
+                            refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -1456,6 +1473,18 @@ def main():
         if inputConsole_output != None:
             consoleHandler(inputConsole_output)
             inputConsole_output = None
+
+        if refrenceGrid != None:
+            for _ in range(100):
+                refrenceScanProgress[0] += 1
+                if refrenceScanProgress[0] >= refrenceGridSize[0]:
+                    refrenceScanProgress[0] = 0
+                    refrenceScanProgress[1] += 1
+                    if refrenceScanProgress[1] >= refrenceGridSize[1]:
+                        refrenceScanProgress[1] = 0
+                        break
+                match = grid[refrenceScanProgress[1]][refrenceScanProgress[0]].serialNumber == refrenceGrid[refrenceScanProgress[1]][refrenceScanProgress[0]].serialNumber
+                grid[refrenceScanProgress[1]][refrenceScanProgress[0]].matchesRefrence = match
 
         display.fill((30, 20, 60))
         grid = UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
