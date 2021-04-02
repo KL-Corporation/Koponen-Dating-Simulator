@@ -230,7 +230,6 @@ class Mission:
         for task in self.tasks.values():
             _taskWidth = max(_taskWidth, task.renderedTextSize[0])
         _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
-        HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))
         surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))))
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
@@ -311,17 +310,19 @@ def InitialiseMission(SafeName: str, Text: str, NoSound: bool = False):
 #region Rendering
 def Render(surface: pygame.Surface):
     global Missions, Active_Mission
-    Active_Mission = ""
+    Active_Mission = None
     for mission in Missions.GetMissionList():
         mission.Update()
         if not mission.trueFinished:
             Active_Mission = mission.safeName
             break
-    if len(Active_Mission) < 1: Missions.finished = True
-    else: Missions.finished = False
-    if not Missions.finished:
-        rendered, offset = Missions.GetMission(Active_Mission).Render()
-        surface.blit(rendered, (surface.get_width() - offset, 0))
+    if Active_Mission == None:
+        Missions.finished = True
+        return
+    
+    Missions.finished = False
+    rendered, offset = Missions.GetMission(Active_Mission).Render()
+    surface.blit(rendered, (surface.get_width() - offset, 0))
 #endregion
 #region Progress
 def SetProgress(MissionName: str, TaskName: str, SetValue: float):
