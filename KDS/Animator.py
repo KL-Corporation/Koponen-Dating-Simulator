@@ -221,11 +221,13 @@ class Value:
         Returns:
             float: Current value.
         """
-        t = self.tick / self.ticks
+        try:
+            t = self.tick / self.ticks
+        except ZeroDivisionError:   # Trying and catching so that the function is generally faster
+            t = 1.0                 # than when the user uses the animator not so optimally...
         if self.type != None: t = self.type(t)
 
-        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, t)
-        else: return self.To
+        return KDS.Math.Lerp(self.From, self.To, t)
 
     def update(self, reverse: bool = False) -> float:
         """Updates the float animation
