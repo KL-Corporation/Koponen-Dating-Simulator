@@ -68,7 +68,7 @@ class WalkieTalkieEffect:
     alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
 
     @staticmethod
-    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface) -> bool:
+    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface, SetDark: Callable[[bool, int], Any]) -> bool:
         if newCall:
             WalkieTalkieEffect.phaseTwoIndex = 0
             WalkieTalkieEffect.phaseIndex = 0
@@ -98,6 +98,8 @@ class WalkieTalkieEffect:
                     player.inventory.dropItemAtIndex(slot, forceDrop=True)
                 else:
                     KDS.Logging.AutoError("Walkie talkie not found!")
+
+                SetDark(True, 224)
 
             display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
 

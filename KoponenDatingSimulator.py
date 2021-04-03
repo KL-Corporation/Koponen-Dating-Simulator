@@ -325,8 +325,6 @@ pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", T
 
 remove_data_on_quit = False
 
-colorInvert = False
-
 main_running = True
 tick = 0
 currently_on_mission = False
@@ -2577,7 +2575,7 @@ class WalkieTalkie(Item):
     def lateInit(self):
         if self.clip != None:
             self.clipSound = pygame.mixer.Sound(self.clip)
-        if self.clipVolume != 1.0:
+        if self.clipVolume != 1.0 and self.clipSound != None:
             self.clipSound.set_volume(self.clipVolume)
 
     def pickup(self):
@@ -4225,7 +4223,6 @@ while main_running:
             invPix = pygame.surfarray.pixels2d(screen)
             invPix ^= 2 ** 32 - 1
             del invPix
-            colorInvert = False
 
         data["repeat_index"] += 1
         if data["repeat_index"] > data["repeat_length"]:
@@ -4254,7 +4251,7 @@ while main_running:
     pygame.transform.scale(screen, display_size, display)
 
     if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
-        if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):
+        if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display, WorldData.SetDark):
             KDS.Missions.SetProgress("explore", "find_walkie_talkie", 1.0)
             WalkieTalkie.storyRunning = False
         else:

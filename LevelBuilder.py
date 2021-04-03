@@ -1448,7 +1448,7 @@ def main():
                             for unit in row:
                                 unit.matchesRefrence = False
                     else:
-                        refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File")
+                        refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
                         if len(refrencePath) > 0 and not refrencePath.isspace():
                             refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
             elif event.type == MOUSEWHEEL:
