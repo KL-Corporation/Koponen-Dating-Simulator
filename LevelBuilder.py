@@ -355,6 +355,11 @@ class UnitData:
             KDS.Logging.AutoError(f"Serials length does not match slot count! Serials length: {len(self.serials)} | Slot Count: {UnitData.SLOTCOUNT} | Serials: {self.serials} | Serial Number: {self.serialNumber}")
         self.filledSerials = tuple(KDS.Linq.Where(self.serials, lambda s: s != UnitData.EMPTY))
 
+    def overrideData(self, _from: UnitData):
+        self.overrideSerial(_from.serialNumber)
+        self._updateSplit()
+        self.properties.SetAll(_from.properties.GetAll())
+
     def overrideSerial(self, newSerial: str):
         Undo.register(self)
         self.serialNumber = newSerial
@@ -544,6 +549,11 @@ class UnitData:
                             unit.properties.Set(UnitType.Unspecified, "overlay", overlayId)
                         else:
                             unit.properties.Remove(UnitType.Unspecified, "overlay")
+                    elif keys_pressed[K_q]:
+                        if refrenceGrid != None and unit.pos[1] in refrenceGrid:
+                            refrence2 = refrenceGrid[unit.pos[1]]
+                            if unit.pos[0] in refrence2:
+                                unit.overrideData(refrence2[unit.pos[0]])
 
                     if len(unit.filledSerials) > 1: # If more than one tile
                         for sr in unit.filledSerials: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
