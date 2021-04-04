@@ -1,7 +1,23 @@
-from typing import Iterable, List, Tuple, TypeVar, Union, cast
-import math
+from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union, cast
 import sys
 import enum
+
+from math import tan as Tan
+from math import atan as Atan
+from math import atan2 as Atan2
+from math import sin as Sin
+from math import asin as Asin
+from math import cos as Cos
+from math import acos as Acos
+from math import ceil as CeilToInt
+from math import floor as FloorToInt
+from math import sqrt as Sqrt
+from math import log as Log
+from math import isclose as Approximately
+from math import isinf as IsInfinity
+from math import isnan as IsNan
+from math import modf as SplitFloat
+from math import pi as PI
 
 T = TypeVar("T")
 Value = TypeVar("Value", int, float)
@@ -9,7 +25,6 @@ Value = TypeVar("Value", int, float)
 import KDS.Logging
 
 #region Constants
-PI = math.pi
 EPSILON = sys.float_info.epsilon
 INFINITY = float("inf")
 NEGATIVEINFINITY = float("-inf")
@@ -20,51 +35,22 @@ MINVALUE = -MAXVALUE - 1
 #endregion
 
 #region Default Math Functions
-def Tan(f: float) -> float: return math.tan(f)
-def Atan(f: float) -> float: return math.atan(f)
-def Atan2(x: float, y: float) -> float: return math.atan2(x, y)
-
-def Sin(f: float) -> float: return math.sin(f)
-def Asin(f: float) -> float: return math.asin(f)
-
-def Cos(f: float) -> float: return math.cos(f)
-def Acos(f: float) -> float: return math.acos(f)
-
 def Ceil(f: float, digits: int = 0) -> float:
     power10: int = pow(10, digits) # Anything to the power of zero is one.
-    return math.ceil(f * power10) / power10
-def CeilToInt(f: float) -> int: return math.ceil(f)
+    return CeilToInt(f * power10) / power10
 
 def Floor(f: float, digits: int = 0) -> float:
     power10: int = pow(10, digits) # Anything to the power of zero is one.
-    return math.floor(f * power10) / power10
-def FloorToInt(f: float) -> int: return math.floor(f)
+    return FloorToInt(f * power10) / power10
 
-def Sqrt(f: float) -> float: return math.sqrt(f)
-def Log(f: float) -> float: return math.log(f)
+def Sign(f: Union[int, float]) -> int: return bool(f > 0) - bool(f < 0) # Bruh this is like 9000 IQ code
 
-def Sign(f: Union[int, float]) -> int: return bool(f > 0) - bool(f < 0)
-def Approximately(a: float, b: float) -> bool: return math.isclose(a, b)
-
-def IsInfinity(f: float) -> bool: return math.isinf(f)
-def IsPositiveInfinity(f: float) -> bool: return math.isinf(f) and f > 0 # faster than f == MAXVALUE
-def IsNegativeInfinity(f: float) -> bool: return math.isinf(f) and f < 0 # faster than f == MINVALUE
-def IsNan(f: float) -> bool: return math.isnan(f)
+def IsPositiveInfinity(f: float) -> bool: return IsInfinity(f) and f > 0 # faster than f == MAXVALUE
+def IsNegativeInfinity(f: float) -> bool: return IsInfinity(f) and f < 0 # faster than f == MINVALUE
 #endregion
 
 #region Value Manipulation
-def SplitFloat(f: float) -> Tuple[float, float]:
-    """Returns the fractional and integer parts of \"f\" in a two-item tuple.
-
-    Args:
-        f (float): The value to split.
-
-    Returns:
-        Tuple[float, float]: (fraction, integer parts)
-    """
-    return math.modf(f)
-
-def GetFraction(f: float) -> float:
+def GetFraction(__x: SupportsFloat) -> float:
     """Returns the fractional part of \"f\".
 
     Args:
@@ -73,7 +59,7 @@ def GetFraction(f: float) -> float:
     Returns:
         float: The extracted fractional. Will be negative if \"f\" is negative.
     """
-    return math.modf(f)[0]
+    return SplitFloat(__x)[0]
 
 def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     """Clamps the given value between the given minimum and maximum values. Returns the given value if it is within the min and max range.
@@ -129,12 +115,12 @@ def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = Midpoint
 
     The return value is an integer if \"digits\" is 0. Otherwise the return value will be float. \"digits\" may be negative.
     """
-    if math.isnan(value) or math.isinf(value):
+    if IsNan(value) or IsInfinity(value):
         return value
     power10: int = pow(10, digits) # 10 to the power of zero is one
     value *= power10
     if mode == MidpointRounding.AwayFromZero:
-        fraction, value = math.modf(value)
+        fraction, value = SplitFloat(value)
         if abs(fraction) >= 0.5:
             value += Sign(fraction)
     elif mode == MidpointRounding.ToEven:
@@ -272,7 +258,7 @@ def MoveTowards(current: float, target: float, maxDelta: float) -> float:
         target (float): The value to move towards.
         maxDelta (float): The maximum change that should be applied to the value.
     """
-    if (abs(target - current) <= maxDelta): return target
+    if abs(target - current) <= maxDelta: return target
     return current + Sign(target - current) * maxDelta
 
 def MoveTowardsAngle(current: float, target: float, maxDelta: float) -> float:
