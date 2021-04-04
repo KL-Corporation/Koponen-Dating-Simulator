@@ -3135,6 +3135,8 @@ def console(oldSurf: pygame.Surface):
                     godmodeState = KDS.Convert.String.ToBool(command_list[1], None)
                     if godmodeState != None:
                         KDS.World.Bullet.GodMode = godmodeState
+                        Player.infiniteHealth = godmodeState
+                        Item.infiniteAmmo = godmodeState
                         KDS.Console.Feed.append(f"Godmode state has been set to: {KDS.World.Bullet.GodMode}")
                     else:
                         KDS.Console.Feed.append("Please provide a proper state for godmode")
