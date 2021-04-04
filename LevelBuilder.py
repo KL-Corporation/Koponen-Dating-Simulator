@@ -31,6 +31,7 @@ from enum import IntEnum
 
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
+
 root = tkinter.Tk()
 root.withdraw()
 root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
@@ -131,12 +132,14 @@ class TextureHolder:
             self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (round(self.texture.get_width() * scaleMultiplier), round(self.texture.get_height() * scaleMultiplier)))
             self.scaledTexture_size: Tuple[int, int] = self.scaledTexture.get_size()
 
-            self.darkOverlay = self.scaledTexture.convert_alpha()
-            self.darkOverlay.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
+            drkOvl = self.scaledTexture.convert_alpha()
+            drkOvl.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
+            self.darkOverlay = drkOvl
 
-            self.lightOverlay = self.scaledTexture.convert_alpha()
-            self.lightOverlay.fill((255, 255, 255, 255), special_flags=BLEND_RGB_MAX)
-            self.lightOverlay.fill((255, 255, 255, 128), special_flags=BLEND_RGBA_MULT)
+            lghtOvl = self.scaledTexture.convert_alpha()
+            lghtOvl.fill((255, 255, 255, 255), special_flags=BLEND_RGB_MAX)
+            lghtOvl.fill((255, 255, 255, 128), special_flags=BLEND_RGBA_MULT)
+            self.lightOverlay = lghtOvl
 
     def __init__(self) -> None:
         self.data: Dict[UnitType, Dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
@@ -457,14 +460,15 @@ class UnitData:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
-                    surface.blit(textureData.darkOverlay, blitPos)
+                    if textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
+                        surface.blit(textureData.darkOverlay, blitPos)
                 else:
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
         elif serial[0] == "3" and serial != "3001":
-            teleportOverlay = Textures.GetScaledTexture("3001").copy()
-            teleportOverlay.set_alpha(100)
-            surface.blit(teleportOverlay, pos)
-        if lightOverlay:
+            telepOverlay = Textures.GetScaledTexture("3001").copy()
+            telepOverlay.set_alpha(100)
+            surface.blit(telepOverlay, pos)
+        if lightOverlay and textureData.lightOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
             surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
@@ -1329,8 +1333,11 @@ def main():
 
     display.fill(KDS.Colors.Black)
 
+    textureRescaleHandle: Optional[KDS.Jobs.JobHandle] = None
+
     def zoom(add: int, scroll: List[int], grid: List[List[UnitData]]):
         global scalesize, scaleMultiplier
+        nonlocal textureRescaleHandle
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
@@ -1344,7 +1351,9 @@ def main():
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        Textures.RescaleTextures()
+        if textureRescaleHandle != None and not textureRescaleHandle.future.cancel():
+            textureRescaleHandle.Complete()
+        textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
     inputConsole_output = None
 
@@ -1352,6 +1361,8 @@ def main():
     dragPos = None
     selectTrigger = False
     brushTrigger = True
+
+    forceRefrenceCheck: bool = False
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
@@ -1451,6 +1462,8 @@ def main():
                         refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
                         if len(refrencePath) > 0 and not refrencePath.isspace():
                             refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
+                elif event.key == K_F5:
+                    forceRefrenceCheck = True
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y
@@ -1485,7 +1498,14 @@ def main():
             inputConsole_output = None
 
         if refrenceGrid != None:
-            for _ in range(100):
+            refrenceIters = 100
+            if forceRefrenceCheck:
+                forceRefrenceCheck = False
+                refrenceIters = KDS.Math.MAXVALUE
+                refrenceScanProgress[0] = 0
+                refrenceScanProgress[1] = 0
+
+            for _ in range(refrenceIters):
                 refrenceScanProgress[0] += 1
                 if refrenceScanProgress[0] >= min(refrenceGridSize[0], gridSize[0]):
                     refrenceScanProgress[0] = 0
@@ -1600,6 +1620,8 @@ KDS.Jobs.quit()
     F: Set Property
     P: Set teleport index
     O: Set Overlay
+    G: Select Refrence Map File
+    F5: Force Refrence Check
     CTRL + A: Select All
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As

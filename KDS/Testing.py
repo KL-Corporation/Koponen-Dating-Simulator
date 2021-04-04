@@ -1,4 +1,5 @@
 import time
+from typing import Callable
 
 class PerformanceTimer():
     def __init__(self, identifier: str = None) -> None:
@@ -23,3 +24,13 @@ class PerformanceTimer():
             txt += f"\"{self.identifier}\""
         txt += f"took {self.stopTime - self.startTime} nanoseconds."
         print(txt)
+
+def timeit(func: Callable):
+    """Decorator that prints the execution time."""
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter_ns()
+        output = func(*args, **kwargs)
+        stop = time.perf_counter_ns()
+        print(f"Execution of function \"{func.__name__}\" took {stop - start} nanoseconds.")
+        return output
+    return wrapper
