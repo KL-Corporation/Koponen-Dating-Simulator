@@ -164,6 +164,11 @@ cursorData = {
 }
 if cursorIndex in cursorData: pygame.mouse.set_cursor(*cursorData[cursorIndex])
 del cursorData
+
+surfarrayLagFix = pygame.surfarray.pixels2d(screen)
+# Creating a surfarray for the first time is not noticeable on faster hardware like my desktop,
+# but lags the shit out of the game on my laptop with an amazing two-core processor.
+del surfarrayLagFix
 #endregion
 #region Loading
 #region Settings

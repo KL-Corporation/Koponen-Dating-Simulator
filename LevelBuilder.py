@@ -1487,10 +1487,10 @@ def main():
         if refrenceGrid != None:
             for _ in range(100):
                 refrenceScanProgress[0] += 1
-                if refrenceScanProgress[0] >= refrenceGridSize[0]:
+                if refrenceScanProgress[0] >= min(refrenceGridSize[0], gridSize[0]):
                     refrenceScanProgress[0] = 0
                     refrenceScanProgress[1] += 1
-                    if refrenceScanProgress[1] >= refrenceGridSize[1]:
+                    if refrenceScanProgress[1] >= min(refrenceGridSize[1], gridSize[1]):
                         refrenceScanProgress[1] = 0
                         break
                 match = grid[refrenceScanProgress[1]][refrenceScanProgress[0]].serialNumber == refrenceGrid[refrenceScanProgress[1]][refrenceScanProgress[0]].serialNumber
