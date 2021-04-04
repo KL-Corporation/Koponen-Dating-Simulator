@@ -45,8 +45,8 @@ def Floor(f: float, digits: int = 0) -> float:
 
 def Sign(f: Union[int, float]) -> int: return bool(f > 0) - bool(f < 0) # Bruh this is like 9000 IQ code
 
-def IsPositiveInfinity(f: float) -> bool: return IsInfinity(f) and f > 0 # faster than f == MAXVALUE
-def IsNegativeInfinity(f: float) -> bool: return IsInfinity(f) and f < 0 # faster than f == MINVALUE
+def IsPositiveInfinity(f: float) -> bool: return IsInfinity(f) and f > 0 # faster than f == INFINITY
+def IsNegativeInfinity(f: float) -> bool: return IsInfinity(f) and f < 0 # faster than f == NEGATIVEINFINITY
 #endregion
 
 #region Value Manipulation
@@ -75,7 +75,7 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     return max(_min, min(value, _max))
 
 def Clamp01(value: Value) -> Value:
-    return Clamp(value, 0, 1) # Should be fine...?
+    return Clamp(value, 0, 1) # Should be fine without being the same type...?
 
 def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
