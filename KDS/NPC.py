@@ -43,6 +43,8 @@ class NPC:
         rect_size = KDS.ConfigManager.JSON.Get(property_json, "rect_size", self.animation.get_frame().get_size())
         self.rect = pygame.Rect(position[0], position[1], rect_size[0], rect_size[1])
 
+        self.mover = KDS.World.EntityMover()
+
     def loadResources(self, path: str):
         texture_resources = os.listdir(path)
         texture_resources.sort()
@@ -80,7 +82,7 @@ class NPC:
         self.y_velocity = min(8.0, self.y_velocity)
         self.movement[1] = self.y_velocity
 
-        self.rect, self.collisions = KDS.World.move_entity(self.rect, self.movement, tiles)
+        self.collisions = self.mover.move(self.rect, self.movement, tiles)
 
     def render(self, Surface: pygame.Surface, scroll: Tuple[int, int], debugMode: bool = False):
         if debugMode: pygame.draw.rect(Surface, KDS.Colors.Magenta, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))

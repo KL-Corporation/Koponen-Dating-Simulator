@@ -36,7 +36,7 @@ import shutil
 import json
 import datetime
 from pygame.locals import *
-from enum import IntEnum, auto
+from enum import IntEnum, auto, IntFlag
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 #endregion
 #region Priority Initialisation
@@ -542,12 +542,19 @@ class WorldData():
                         idPropCheck = str(pointer)
                         if idPropCheck in idProp:
                             for k, v in idProp[idPropCheck].items():
-                                if pointer == 0 and k == "checkCollision" and isinstance(value, Tile): # It should be tile, but Pylance gets angry if I don't check it.
+                                if k == "checkCollision" and isinstance(value, Tile): # Checking instance instead of pointer so that Pylance is happy.
                                     value.checkCollision = bool(v)
                                     if not v and value.texture != None:
                                         tex: Any = value.texture.convert_alpha()
                                         tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                         value.darkOverlay = tex
+                                elif k == "collisionDirection" and isinstance(value, Tile):
+                                    if isinstance(v, str):
+                                        value.collisionDirection = KDS.World.CollisionDirection[v]
+                                    elif isinstance(v, int):
+                                        value.collisionDirection = KDS.World.CollisionDirection(v)
+                                    else:
+                                        KDS.Logging.AutoError("Invalid collision direction in properties!")
                                 else:
                                     setattr(value, k, v)
             y += 1
@@ -854,7 +861,7 @@ class Tile:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.specialTileFlag = serialNumber in specialTilesSerialNumbers
         self.checkCollision = serialNumber not in Tile.noCollision
-        self.checkCollisionDefault = self.checkCollision
+        self.collisionDirection = KDS.World.CollisionDirection.All
         self.lateRender = False
         self.darkOverlay: Optional[pygame.Surface] = None
         self.removeFlag: bool = False
@@ -2722,6 +2729,8 @@ class PlayerClass:
         )
         self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
 
+        self.mover = KDS.World.EntityMover(w_sounds=path_sounds)
+
     def reset(self, clear_inventory: bool = True):
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
         self.health: float = 100.0
@@ -2764,6 +2773,7 @@ class PlayerClass:
                     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                     self.crouching = True
             elif self.crouching:
+                # If more than zero collisions; do not release crouch
                 if len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), tiles)) > 0:
                     return
                 self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
@@ -2802,10 +2812,10 @@ class PlayerClass:
             elif self.stamina < 100.0: self.stamina += 0.25
 
             if not self.movement[0] or self.air_timer > 1:
-                self.walk_sound_delay = 9999
+                self.walk_sound_delay = KDS.Math.MAXVALUE
             self.walk_sound_delay += abs(self.movement[0])
-            s = (self.walk_sound_delay > 60) if play_walk_sound else False
-            if s: self.walk_sound_delay = 0
+            playWalkSound = (self.walk_sound_delay > 60) if play_walk_sound else False
+            if playWalkSound: self.walk_sound_delay = 0
 
             if self.onLadder:
                 self.wasOnLadder = True
@@ -2833,7 +2843,7 @@ class PlayerClass:
             else:
                 crouch(False)
 
-            self.rect, collisions = KDS.World.move_entity(self.rect, self.movement if not self.lockMovement else (0, 0), tiles, w_sounds=path_sounds, playWalkSound=s)
+            collisions = self.mover.move(self.rect, self.movement if not self.lockMovement else (0.0, 0.0), tiles, playWalkSound=playWalkSound)
 
             if collisions.bottom:
                 self.air_timer = 0

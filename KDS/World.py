@@ -15,6 +15,8 @@ import KDS.Math
 
 import dataclasses
 
+from enum import auto, IntFlag
+
 pygame.init()
 pygame.key.stop_text_input()
 
@@ -50,38 +52,54 @@ def collision_test(rect: pygame.Rect, Tile_list: List[List[List]]):
     return hit_list
 
 @dataclasses.dataclass
-class Collisions:
+class Collisions: # Direction relative to rect (player / enemy)
     left: bool = False
     right: bool = False
     top: bool = False
     bottom: bool = False
 
-def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], w_sounds: dict = {"default" : []}, playWalkSound = False) -> Tuple[pygame.Rect, Collisions]:
-    collisions = Collisions()
+class CollisionDirection(IntFlag): # Direction relative to tile
+    Left = 1
+    Right = 2
+    Top = 4
+    Bottom = 8
 
-    rect.x += int(movement[0])
-    hit_list = collision_test(rect, tiles)
-    for tile in hit_list:
-        if movement[0] > 0:
-            rect.right = tile.rect.left
-            collisions.right = True
-        elif movement[0] < 0:
-            rect.left = tile.rect.right
-            collisions.left = True
+    Horizontal = 3
+    Vertical = 12
 
-    rect.y += int(movement[1])
-    # Has to be checked twice
-    hit_list = collision_test(rect, tiles)
-    for tile in hit_list:
-        if movement[1] > 0:
-            rect.bottom = tile.rect.top
-            collisions.bottom = True
-            if movement[0] and playWalkSound:
-                KDS.Audio.PlaySound(random.choice(w_sounds["default"]))
-        elif movement[1] < 0:
-            rect.top = tile.rect.bottom
-            collisions.top = True
-    return rect, collisions
+    All = 15
+
+class EntityMover:
+    def __init__(self, w_sounds: Optional[Dict[str, Sequence[pygame.mixer.Sound]]] = None) -> None:
+        self.walkSounds = w_sounds
+
+    def move(self, rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], playWalkSound: bool = False) -> Collisions:
+        collisions = Collisions()
+        realCollisions = Collisions()
+
+        rect.x += round(movement[0])
+        hit_list = collision_test(rect, tiles)
+        for tile in hit_list: # CollisionDirection is inverted, because it is relative to tile
+            if movement[0] > 0 and CollisionDirection.Left in tile.collisionDirection:
+                rect.right = tile.rect.left
+                collisions.right = True
+            elif movement[0] < 0 and CollisionDirection.Right in tile.collisionDirection:
+                rect.left = tile.rect.right
+                collisions.left = True
+
+        rect.y += round(movement[1])
+        # Has to be checked twice or my testing of merging these two went horribly wrong
+        hit_list = collision_test(rect, tiles)
+        for tile in hit_list:
+            if movement[1] > 0 and CollisionDirection.Top in tile.collisionDirection:
+                rect.bottom = tile.rect.top
+                collisions.bottom = True
+                if movement[0] != 0 and self.walkSounds != None and playWalkSound:
+                    KDS.Audio.PlaySound(random.choice(self.walkSounds["default"]))
+            elif movement[1] < 0 and CollisionDirection.Bottom in tile.collisionDirection:
+                rect.top = tile.rect.bottom
+                collisions.top = True
+        return collisions
 
 class Lighting:
 

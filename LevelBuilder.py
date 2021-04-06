@@ -912,6 +912,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         pygame.time.wait(1000)
     currentSaveName = path
     grid, gridSize = handle.Complete()
+    gridSize: Tuple[int, int]
 
     Undo.clear()
     KDS.Loading.Circle.Stop()
