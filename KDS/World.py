@@ -93,7 +93,7 @@ class EntityMover:
         # Has to be checked twice or my testing of merging these two went horribly wrong
         hit_list = collision_test(rect, tiles)
         for tile in hit_list:
-            if movement[1] > 0 and CollisionDirection.Top in tile.collisionDirection:
+            if movement[1] > 0 and CollisionDirection.Top in tile.collisionDirection and tile.rect.bottom > rect.bottom:
                 rect.bottom = tile.rect.top
                 collisions.bottom = True
                 if movement[0] != 0 and self.walkSounds != None and playWalkSound:
