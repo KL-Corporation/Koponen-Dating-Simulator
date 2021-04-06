@@ -17,46 +17,6 @@ pygame.mixer.init()
 pygame.init()
 pygame.key.stop_text_input()
 
-def ai_collision_test(rect, Tile_list):
-    hit_list = []
-
-    max_x = len(Tile_list[0]) - 1
-    max_y = len(Tile_list) - 1
-    x = KDS.Math.Clamp(int(rect.x / 34 - 3), 0, max_x)
-    y = KDS.Math.Clamp(int(rect.y / 34 - 3), 0, max_y)
-    end_x = KDS.Math.Clamp(x + 6, 0, max_x)
-    end_y = KDS.Math.Clamp(y + 6, 0, max_y)
-
-    for row in Tile_list[y:end_y]:
-        for unit in row[x:end_x]:
-            for tile in unit:
-                if rect.colliderect(tile.rect) and tile.checkCollision:
-                    hit_list.append(tile.rect)
-    return hit_list
-
-def move(rect, movement, tiles):
-    collision_types = {'top': False, 'bottom': False,
-                       'right': False, 'left': False}
-    rect.x += movement[0]
-    hit_list = ai_collision_test(rect, tiles)
-    for tile in hit_list:
-        if movement[0] > 0:
-            rect.right = tile.left
-            collision_types['right'] = True
-        elif movement[0] < 0:
-            rect.left = tile.right
-            collision_types['left'] = True
-    rect.y += int(movement[1])
-    hit_list = ai_collision_test(rect, tiles)
-    for tile in hit_list:
-        if movement[1] > 0:
-            rect.bottom = tile.top
-            collision_types['bottom'] = True
-        elif movement[1] < 0:
-            rect.top = tile.bottom
-            collision_types['top'] = True
-    return rect, collision_types
-
 imp_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_sight.ogg")
 imp_death_sound = pygame.mixer.Sound("Assets/Audio/Entities/imp_death.ogg")
 zombie_sight_sound = pygame.mixer.Sound("Assets/Audio/Entities/zombie_sight.ogg")
@@ -134,9 +94,9 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
     return False, 0
 
 # class Bulldog:
-# 
+#
 #     a = False
-# 
+#
 #     def __init__(self, position: Tuple[int, int], health: int, speed: int, animation):
 #         self.position = position
 #         self.health = health
@@ -147,12 +107,12 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 #         self.hits = {'top': False, 'bottom': False, 'right': False, 'left': False}
 #         self.playDeathAnimation = False
 #         self.a = False
-# 
+#
 #         self.animation = animation
 #         self.damage = 0
-# 
+#
 #     def startUpdateThread(self, _rect, tile_rects):
-# 
+#
 #         def _update(self, __rect, tile_rects):
 #             def __move(rect, movement, tiles):
 #                 def collision_test(rect, tiles):
@@ -161,7 +121,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 #                         if rect.colliderect(tile):
 #                             hit_list.append(tile)
 #                     return hit_list
-# 
+#
 #                 collision_types = {'top': False, 'bottom': False,
 #                                 'right': False, 'left': False}
 #                 rect.x += movement[0]
@@ -183,10 +143,10 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 #                         rect.top = tile.bottom
 #                         collision_types['top'] = True
 #                 return rect, collision_types
-# 
+#
 #             j = self.animation.update()
 #             del j
-# 
+#
 #             if not self.rect.colliderect(__rect) or self.a == False:
 #                 self.damage = 0
 #                 if self.a:
@@ -198,19 +158,19 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 #                         self.direction = False
 #                         if self.movement[0] < 1:
 #                             self.movement[0] = -self.movement[0]
-# 
+#
 #                 self.rect, self.hits = __move(self.rect, self.movement, tile_rects)
 #                 if self.hits["right"] or self.hits["left"]:
 #                     self.movement[0] = -self.movement[0]
 #             else:
 #                 self.damage = 100
-# 
+#
 #         bdThread = threading.Thread(target=_update,args=[self, _rect, tile_rects])
 #         bdThread.start()
-# 
+#
 #     def SetAngry(self, state: bool):
 #         self.a = state
-# 
+#
 #     def getAttributes(self):
 #         if not self.a:
 #             if self.movement[0] < 0:
@@ -218,7 +178,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 #             elif self.movement[0] > 0:
 #                 self.direction = False
 #         return self.rect, self.animation.get_frame(), self.direction, self.damage
-# 
+#
 #     def AI_Update(self, surface: pygame.Surface, scroll: Tuple[int, int], render_rect: pygame.Rect):
 #         if not self.a:
 #             if self.movement[0] < 0:
@@ -250,12 +210,14 @@ class HostileEnemy:
         self.manualAttackHandling = False
         self.movement = mv
         self.clearlagcounter = 0
-        self.c = {"right" : False, "left" : False, "top" : False, "bottom" : False}
+        self.collisions = KDS.World.Collisions()
 
         self.enabled = True
         self.listener = None
         self.listenerInstance: Optional[KDS.Missions.Listener] = None
         self.listenerRegistered = False
+
+        self.mover = KDS.World.EntityMover()
 
     def lateInit(self):
         if self.listener != None and not self.listenerRegistered:
@@ -311,15 +273,15 @@ class HostileEnemy:
                 if self.playSightSound:
                     KDS.Audio.PlaySound(self.sight_sound)
                     self.playSightSound = False
-                self.rect, self.c = move(self.rect, self.movement, tiles)
-                if self.c["right"] or self.c["left"]:
+                self.collisions = self.mover.move(self.rect, self.movement, tiles)
+                if self.collisions.right or self.collisions.left:
                     self.movement[0] = -self.movement[0]
                     self.direction = not self.direction
-                    col_type = "right" if self.c["right"] else "left"
+                    col_type = "right" if self.collisions.right else "left"
                     self.AI_jump(tiles, col_type, Surface, scroll)
                 self.animation.trigger("walk")
         elif self.health > 0:
-            self.rect, c = move(self.rect, [0,8], tiles)
+            _ = self.mover.move(self.rect, [0,8], tiles)
             self.animation.trigger("idle")
         elif self.health < 1:
             if self.playDeathSound:
@@ -330,7 +292,7 @@ class HostileEnemy:
                     if item:
                         dropItems.append(item)
                 self.playDeathSound = False
-            self.rect, c = move(self.rect, [0,8], tiles)
+            _ = self.mover.move(self.rect, [0,8], tiles)
             self.animation.trigger("death")
             self.clearlagcounter += 1
             if self.clearlagcounter > 3600:
@@ -688,7 +650,7 @@ class Mummy(HostileEnemy):
         if not self.sleep and self.health > 0:
             s = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
             s1 = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
-            if self.c != None:
+            if self.collisions != None:
                 def AI_pathfinder(self : Mummy, obstacles, collision_type : str):
                     x_coor = 0
                     if collision_type == "right":
@@ -710,9 +672,9 @@ class Mummy(HostileEnemy):
                     except IndexError:
                         return self
 
-                if self.c["right"]:
+                if self.collisions.right:
                     self = AI_pathfinder(self, args[0], "right")
-                elif self.c["left"]:
+                elif self.collisions.left:
                     self = AI_pathfinder(self, args[0], "left")
 
             if s or s1:

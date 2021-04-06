@@ -20,6 +20,7 @@ import KDS.Missions
 import KDS.UI
 import KDS.Linq
 import KDS.AI
+import KDS.World
 
 import re
 import shlex
@@ -346,7 +347,7 @@ class KoponenEntity:
         )
         self.speed = KDS.ConfigManager.GetGameData("Physics/Koponen/speed")
         self.movement = [self.speed, 4]
-        self.collisions = {"right" : False, "left" : False, "top" : False, "bottom" : False}
+        self.collisions = KDS.World.Collisions()
 
         self.listeners = []
         self.listenerInstances: Dict[str,  KDS.Missions.Listener] = {}
@@ -372,6 +373,8 @@ class KoponenEntity:
         self.allow_talk = False
         self.force_talk = False
 
+        self.mover = KDS.World.EntityMover()
+
     def update(self, tiles, display, quitHandler, clock):
         if self._move and not self.forceIdle:
             #region Handling randomisation
@@ -396,16 +399,16 @@ class KoponenEntity:
                         self._aut_idle = False
                         self._aut_moving = True
             #endregion
-            self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
+            self.collisions = self.mover.move(self.rect, self.movement, tiles)
         else:
-            if not self.forceIdle: self.rect, self.collisions = KDS.AI.move(self.rect, self.movement, tiles)
+            if not self.forceIdle: self.collisions = self.mover.move(self.rect, self.movement, tiles)
 
         self.handleInstructions(tiles)
-        if self.collisions["left"] or self.collisions["right"]:
+        if self.collisions.left or self.collisions.right:
             self.movement[0] *= -1
-            self.AI_jump(tiles, "left" if self.collisions["left"] else "right")
+            self.AI_jump(tiles, "left" if self.collisions.left else "right")
 
-        if self.collisions["bottom"]:
+        if self.collisions.bottom:
             self.air_time = 0
             self.y_velocity = 0
         else: self.air_time += 1

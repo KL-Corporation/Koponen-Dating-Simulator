@@ -52,7 +52,7 @@ def collision_test(rect: pygame.Rect, Tile_list: List[List[List]]):
     return hit_list
 
 @dataclasses.dataclass
-class Collisions: # Direction relative to rect (player / enemy)
+class Collisions: # Direction relative to rect (player / entity)
     left: bool = False
     right: bool = False
     top: bool = False
@@ -74,8 +74,10 @@ class EntityMover:
         self.walkSounds = w_sounds
 
     def move(self, rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], playWalkSound: bool = False) -> Collisions:
+        if len(movement) != 2:
+            raise ValueError(f"Invalid movement size! Expected: 2, Got: {len(movement)}.")
+
         collisions = Collisions()
-        realCollisions = Collisions()
 
         rect.x += round(movement[0])
         hit_list = collision_test(rect, tiles)
