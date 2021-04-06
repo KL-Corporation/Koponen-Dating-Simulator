@@ -32,7 +32,7 @@ def init():
     Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
     Lighting.Shapes.fluorecent = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/fluorecent.png").convert_alpha())
 
-def collision_test(rect: pygame.Rect, Tile_list: List[List[List[Any]]]):
+def collision_test(rect: pygame.Rect, Tile_list: List[List[List]]):
     hit_list = []
 
     max_x = len(Tile_list[0]) - 1
@@ -56,7 +56,7 @@ class Collisions:
     top: bool = False
     bottom: bool = False
 
-def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List[Any]]], w_sounds: dict = {"default" : []}, playWalkSound = False) -> Tuple[pygame.Rect, Collisions]:
+def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], w_sounds: dict = {"default" : []}, playWalkSound = False) -> Tuple[pygame.Rect, Collisions]:
     collisions = Collisions()
 
     rect.x += int(movement[0])
