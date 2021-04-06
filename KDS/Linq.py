@@ -98,11 +98,7 @@ def Where(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> It
     Returns:
         Iterable[TSource]: An Iterable that contains elements from the input iterable that satisfy the condition.
     """
-    r = []
-    for v in source:
-        if predicate(v) == True:
-            r.append(v)
-    return r
+    return filter(predicate, source)
 
 def First(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSource:
     """Returns the first element of a sequence that satisfies a specified condition.
@@ -133,7 +129,6 @@ def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool])
         Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
     # Not calling First and catching an exception because catching exceptions is slow as hell
-
     for v in source:
         if predicate(v) == True:
             return v

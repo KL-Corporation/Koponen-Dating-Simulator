@@ -209,6 +209,7 @@ class HostileEnemy:
         self.attackRunning = False
         self.manualAttackHandling = False
         self.movement = mv
+        self.allowJump: bool = True
         self.clearlagcounter = 0
         self.collisions = KDS.World.Collisions()
 
@@ -277,8 +278,8 @@ class HostileEnemy:
                 if self.collisions.right or self.collisions.left:
                     self.movement[0] = -self.movement[0]
                     self.direction = not self.direction
-                    col_type = "right" if self.collisions.right else "left"
-                    self.AI_jump(tiles, col_type, Surface, scroll)
+                    if self.allowJump:
+                        self.AI_jump(tiles, self.collisions, Surface, scroll)
                 self.animation.trigger("walk")
         elif self.health > 0:
             _ = self.mover.move(self.rect, [0,8], tiles)
@@ -311,17 +312,17 @@ class HostileEnemy:
         if self.health < 0:
             self.health = 0
 
-    def AI_jump(self, obstacles, collision_type : str, surface, scroll):
+    def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
         x_coor = 0
-        if collision_type == "right":
-            x_coor = (self.rect.x + self.rect.w) // 34
-        else:
-            x_coor = (self.rect.x) // 34 - 1
-        y_coor = (self.rect.y + self.rect.h) // 34 - 1
+        if collisions.right:
+            x_coor = (self.rect.x + self.rect.w) / 34
+        elif collisions.left:
+            x_coor = (self.rect.x) / 34 - 1
+        y_coor = (self.rect.y + self.rect.h) / 34 - 1
         try:
             jump = True
             for y in range(math.ceil(self.rect.h / 34)):
-                for obst in obstacles[y_coor - 1 - y][x_coor]:
+                for obst in obstacles[int(y_coor) - 1 - y][int(x_coor)]:
                     if obst.checkCollision:
                         jump = False
                         break
@@ -331,7 +332,6 @@ class HostileEnemy:
                 self.rect.y -= 35
         except Exception as e:
             KDS.Logging.AutoError(e)
-            pass
 
 class Imp(HostileEnemy):
     def __init__(self, pos):

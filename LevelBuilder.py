@@ -222,7 +222,7 @@ scroll = [0, 0]
 teleportTemp = "001"
 currentSaveName = ''
 grid: List[List[UnitData]] = [[]]
-gridSize = (0, 0)
+gridSize: Tuple[int, int] = (0, 0)
 
 refrenceGrid: Optional[List[List[UnitData]]] = None
 refrenceGridSize = (0, 0)
@@ -912,7 +912,6 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         pygame.time.wait(1000)
     currentSaveName = path
     grid, gridSize = handle.Complete()
-    gridSize: Tuple[int, int]
 
     Undo.clear()
     KDS.Loading.Circle.Stop()
@@ -1352,8 +1351,7 @@ def main():
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        if textureRescaleHandle != None and not textureRescaleHandle.future.cancel():
-            textureRescaleHandle.Complete()
+        if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This might break some textures...? but this should be a lot faster than waiting.
         textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
     inputConsole_output = None
