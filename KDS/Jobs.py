@@ -8,8 +8,9 @@ import KDS.Logging
 
 def init():
     global executor
-    threadCount = os.cpu_count()
-    workerCount = KDS.Math.Clamp(threadCount if threadCount != None else -1, 4, 16)
+    # threadCount = os.cpu_count()
+    # workerCount = KDS.Math.Clamp(threadCount if threadCount != None else -1, 4, 16)
+    workerCount = 4 # We really don't need more than 4, because if it goes on the same thread as the main thread, then it will be slower.
     executor = ThreadPoolExecutor(max_workers=workerCount, thread_name_prefix="Jobs")
     KDS.Logging.debug(f"Setting up {workerCount} worker threads for Jobs.")
 
@@ -23,7 +24,7 @@ class JobHandle:
     def IsComplete(self) -> bool:
         return self.future.done()
 
-    def Complete(self) -> Any:
+    def Complete(self):
         """Ensures that the job has completed.
 
         Returns:
