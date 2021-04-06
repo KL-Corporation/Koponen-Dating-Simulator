@@ -24,6 +24,7 @@
 "12-8":{"4":{"overlay":"0057"}},
 "14-8":{"3":{"identifier":2,"message":"ovi"}},
 "24-8":{"1":{"clip":"Assets/Audio/Effects/walkie_talkie.ogg","allowDrop":false,"clipVolume":0.25}},
+"29-8":{"0":{"collisionDirection":"Vertical"}},
 "42-8":{"3":{"identifier":420,"message":"Tie mystiseen maailmaan"}},
 "47-8":{"3":{"identifier":69,"locked":true}},
 "52-8":{"0":{"filepath":"Assets/Audio/Effects/spooky.ogg","clip_volume":0.3}},
