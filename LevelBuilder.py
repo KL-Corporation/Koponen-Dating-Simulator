@@ -1463,10 +1463,10 @@ def main():
                 elif event.key == K_F5:
                     forceRefrenceCheck = True
             elif event.type == MOUSEWHEEL:
-                if keys_pressed[K_LSHIFT]:
-                    scroll[0] -= event.y
-                elif keys_pressed[K_LCTRL]:
+                if keys_pressed[K_LCTRL]:
                     zoom(event.y * 5, scroll, grid)
+                elif keys_pressed[K_LSHIFT]:
+                    scroll[0] -= event.y
                 else:
                     scroll[1] -= event.y
                 scroll[0] += event.x
