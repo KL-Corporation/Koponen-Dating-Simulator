@@ -5,9 +5,9 @@ import KDS.Animator
 import KDS.Audio
 import KDS.ConfigManager
 import KDS.Colors
+import KDS.World
 
 import os
-from KDS.World import move_entity
 from typing import Dict, Tuple, List
 
 last_NPCID = 0
@@ -33,7 +33,7 @@ class NPC:
         self.air_time = 0
         self.y_velocity = 0
 
-        self.collisions = {"right": False, "left": False, "top": False, "bottom": False}
+        self.collisions = KDS.World.Collisions()
 
         self.resources = {}
         self.animation: KDS.Animator.MultiAnimation
@@ -70,7 +70,8 @@ class NPC:
     def update(self, tiles: list):
         if self.call_unique_update: self.unique_update()
 
-        if self.collisions["bottom"]: # Pylance complains about this, because pylance is completely useless piece of shit
+        if self.collisions.bottom: # Pylance complains about this, because pylance is completely useless piece of shit
+                                   # No. Pylance complains, because you are a completely useless piece of shit (jk)
             self.air_time = 0
             self.y_velocity = 0
         else: self.air_time += 1
@@ -79,7 +80,7 @@ class NPC:
         self.y_velocity = min(8.0, self.y_velocity)
         self.movement[1] = self.y_velocity
 
-        self.rect, self.collisions = move_entity(self.rect, self.movement, tiles)
+        self.rect, self.collisions = KDS.World.move_entity(self.rect, self.movement, tiles)
 
     def render(self, Surface: pygame.Surface, scroll: Tuple[int, int], debugMode: bool = False):
         if debugMode: pygame.draw.rect(Surface, KDS.Colors.Magenta, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))

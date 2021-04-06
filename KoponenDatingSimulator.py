@@ -908,12 +908,6 @@ class Tile:
 
     def lateInit(self) -> None:
         pass
-    """
-    def textureUpdate(self):
-        temp_surface = pygame.Surface(self.texture.get_size()).convert()
-        temp_surface.set_alpha(68)
-        self.texture.blit(temp_surface, (0, 0))
-    """
 
 class Toilet(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):
@@ -1331,7 +1325,7 @@ class WallLight(Tile):
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
-        self.direction = True if serialNumber == 72 else False
+        self.direction = serialNumber == 72
         self.texture = pygame.transform.flip(t_textures[71], self.direction, False)
         self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False)
 
@@ -1711,7 +1705,7 @@ class Sound(Tile):
                 if self.filepath != None:
                     KDS.Audio.PlayFromFile(self.filepath, volume=self.volume, clip_volume=self.clip_volume)
         elif not self.exited:
-            self.readyToTrigger = True if self.repeating else False
+            self.readyToTrigger = self.repeating
             self.exited = True
 
         return self.texture
@@ -2802,7 +2796,7 @@ class PlayerClass:
                     self.movement[0] -= 4
                 elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
 
-            self.running = True if abs(self.movement[0]) > 4 else False
+            self.running = abs(self.movement[0]) > 4
 
             if self.running: self.stamina -= 0.75
             elif self.stamina < 100.0: self.stamina += 0.25
@@ -2845,19 +2839,17 @@ class PlayerClass:
                 self.air_timer = 0
                 self.vertical_momentum = 0
             else:
+                if collisions.top:
+                    self.vertical_momentum = 0
                 self.air_timer += 1
-            if collisions.top:
-                self.vertical_momentum = 0
-            if self.movement[0] > 0:
-                self.direction = False
-                self.walking = True
-                KDS.Missions.Listeners.Movement.Trigger()
-            elif self.movement[0] < 0:
-                self.direction = True
+
+            if self.movement[0] != 0:
+                self.direction = self.movement[0] < 0
                 self.walking = True
                 KDS.Missions.Listeners.Movement.Trigger()
             else:
                 self.walking = False
+
             if self.walking:
                 if not self.running:
                     if not self.crouching:
@@ -2871,8 +2863,10 @@ class PlayerClass:
                     self.animations.trigger("idle")
                 else:
                     self.animations.trigger("idle_short")
-            if self.health < self.lastHealth and self.health > 0: KDS.Audio.PlaySound(hurt_sound)
-            self.lastHealth = self.health
+
+            if self.health < self.lastHealth and self.health > 0:
+                KDS.Audio.PlaySound(hurt_sound)
+                self.lastHealth = self.health
             self.onLadder = False
         #endregion
         #region Flying
@@ -2914,11 +2908,6 @@ class PlayerClass:
                 self.deathAnimFinished = True
             else:
                 self.deathWait += 1
-                if self.deathWait > 240:
-                    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-                        play_story(KDS.ConfigManager.Save.Active.index, False)
-                    else:
-                        respawn_function()
         #endregion
 
 Player = PlayerClass()
@@ -3279,7 +3268,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     if auto_play_music and KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
     return 0
 
-def play_story(saveIndex: int = -1, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
+def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
     pygame.mouse.set_visible(False)
 
     map_names = {}
@@ -3845,7 +3834,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
         current_map = f"{int(current_map) + 1:02}"
         play_function(KDS.Gamemode.Modes.Campaign, True)
 
-    next_level_bool = True if int(current_map) < int(max_map) else False
+    next_level_bool = int(current_map) < int(max_map)
 
     main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
     next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
@@ -3883,12 +3872,12 @@ def level_finished_menu(oldSurf: pygame.Surface):
         pygame.draw.rect(level_f_surf, (123, 134, 111), menu_rect)
         level_f_surf.blit(pygame.transform.scale(level_cleared_icon, (250, 139)), (display_size[0] // 2 - 125, display_size[1] // 2 - 275))
 
-        values = KDS.Scores.ScoreAnimation.update(True if anim_lerp_x.tick >= anim_lerp_x.ticks else False)
+        values = KDS.Scores.ScoreAnimation.update(anim_lerp_x.tick >= anim_lerp_x.ticks)
         comparisonValue = KDS.Math.Clamp(KDS.Scores.ScoreAnimation.animationIndex + 1, 0, len(values))
         lineY = textStartVertOffset + (len(values) - 1) * textVertOffset + round(totalVertOffset / 2)
         pygame.draw.line(level_f_surf, KDS.Colors.Cyan, (menu_rect.left + padding, lineY), (menu_rect.right - padding, lineY), 3)
         for i in range(len(scoreTexts)):
-            totalOffset = True if i == len(values) - 1 else False
+            totalOffset = i == len(values) - 1
             textY = textStartVertOffset + i * textVertOffset + (0 if not totalOffset else totalVertOffset)
             if i < comparisonValue:
                 value = str(values[i])
@@ -4272,6 +4261,11 @@ while main_running:
         level_finished = True
 #endregion
 #region Conditional Events
+    if Player.deathWait > 240:
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            play_story(KDS.ConfigManager.Save.Active.index, newSave=False, oldSurf=screen)
+        else:
+            respawn_function()
     if Player.rect.y > len(tiles) * 34 + 340:
         Player.health = 0
         Player.rect.y = len(tiles) * 34 + 340
@@ -4292,7 +4286,7 @@ while main_running:
         KDS.Audio.Music.Stop()
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             KDS.ConfigManager.Save.Active.Story.index += 1
-            play_story(newSave=False, oldSurf=screen)
+            play_story(KDS.ConfigManager.Save.Active.Story.index, newSave=False, oldSurf=screen)
         else:
             pygame.mouse.set_visible(True)
             level_finished_menu(screen)

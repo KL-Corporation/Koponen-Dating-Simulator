@@ -1,7 +1,7 @@
 import math
 import random
 import sys
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -12,6 +12,8 @@ import KDS.Colors
 import KDS.Convert
 import KDS.Logging
 import KDS.Math
+
+import dataclasses
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -30,7 +32,7 @@ def init():
     Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
     Lighting.Shapes.fluorecent = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/fluorecent.png").convert_alpha())
 
-def collision_test(rect, Tile_list):
+def collision_test(rect: pygame.Rect, Tile_list: List[List[List[Any]]]):
     hit_list = []
 
     max_x = len(Tile_list[0]) - 1
@@ -47,14 +49,14 @@ def collision_test(rect, Tile_list):
                     hit_list.append(tile)
     return hit_list
 
+@dataclasses.dataclass
 class Collisions:
-    def __init__(self) -> None:
-        self.top = False
-        self.bottom = False
-        self.right = False
-        self.left = False
+    left: bool = False
+    right: bool = False
+    top: bool = False
+    bottom: bool = False
 
-def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles, w_sounds: dict = {"default" : []}, playWalkSound = False):
+def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List[Any]]], w_sounds: dict = {"default" : []}, playWalkSound = False) -> Tuple[pygame.Rect, Collisions]:
     collisions = Collisions()
 
     rect.x += int(movement[0])
@@ -68,6 +70,7 @@ def move_entity(rect: pygame.Rect, movement: Sequence[float], tiles, w_sounds: d
             collisions.left = True
 
     rect.y += int(movement[1])
+    # Has to be checked twice
     hit_list = collision_test(rect, tiles)
     for tile in hit_list:
         if movement[1] > 0:
@@ -107,7 +110,7 @@ class Lighting:
                 corRad = self.getRadius(radius)
 
                 if color not in corRad:
-                    tmp_tex: pygame.Surface = corRad["default"].copy()
+                    tmp_tex: Any = corRad["default"].copy()
                     convCol = KDS.Convert.CorrelatedColorTemperatureToRGB(color)
                     tmp_tex.fill((convCol[0], convCol[1], convCol[2], 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
@@ -118,7 +121,7 @@ class Lighting:
                 color = (hue, saturation, value)
 
                 if color not in corRad:
-                    tmp_tex: pygame.Surface = corRad["default"].copy()
+                    tmp_tex: Any = corRad["default"].copy()
                     convCol = KDS.Convert.HSVToRGB(hue, saturation, value)
                     tmp_tex.fill((int(convCol[0]), int(convCol[1]), int(convCol[2]), 255), special_flags=BLEND_RGBA_MULT)
                     corRad[color] = tmp_tex
