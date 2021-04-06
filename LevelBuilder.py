@@ -1351,7 +1351,7 @@ def main():
         mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This might break some textures...? but this should be a lot faster than waiting.
+        if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This should not break anything, because CPython still has it's stupid GIL
         textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
     inputConsole_output = None
@@ -1435,20 +1435,19 @@ def main():
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
                         try:
-                            fromClipboard = pygame.scrap.get("text/plain;charset=utf-8")
-                            if fromClipboard:
+                            fromClipboard: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
+                            if fromClipboard != None:
                                 if isinstance(fromClipboard, bytes):
                                     fromClipboard = fromClipboard.decode("utf-8")
-                                else:
-                                    fromClipboard = str(fromClipboard)
                                 if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
-                                    fromClipboard = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
-                                    if len(fromClipboard) != 2:
-                                        raise ValueError(f"Clipboard data (type: to) is an incorrect type. Tuple of length 2 expected; got: \"{fromClipboard}\".")
-                                    if len(fromClipboard[1]) > 0 and not fromClipboard[1].isspace():
-                                        Selected.FromString(fromClipboard[0], fromClipboard[1])
+                                    fromClipboardSplit = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
+                                    if len(fromClipboardSplit) != 2:
+                                        raise ValueError(f"Clipboard data (type: to) is an incorrect type. List of length 2 expected; got: \"{fromClipboardSplit}\".")
+                                    if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
+                                        Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
                                     else:
                                         KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
+                                else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.")
                         except Exception:
                             KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
                 elif event.key == K_g:

@@ -13,6 +13,8 @@ import KDS.Math
 
 pygame.init()
 pygame.key.stop_text_input()
+pygame.scrap.init()
+pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 #region Settings
 console_font = pygame.font.SysFont("Consolas", 25, bold=False, italic=False)
 console_font_small = pygame.font.SysFont("Consolas", 15, bold=False, italic=False)
@@ -143,7 +145,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     def addText(text: str):
         nonlocal cursor_index, cmd
         cmd = cmd[:cursor_index] + text + cmd[cursor_index:]
-        cursor_index += 1
+        cursor_index += len(text)
         cursor_animation.tick = 0
 
     while running:
@@ -218,9 +220,11 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     suggestionIndex += 1
                     Key_Down = True
                 elif event.key == K_v and pygame.key.get_pressed()[K_LCTRL]:
-                    clipboardText = pygame.scrap.get(SCRAP_TEXT)
-                    if clipboardText: addText(clipboardText)
-                    #CTRL + V doesn't work because pygame always loses rights to the clipboard...
+                    clipboardText: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
+                    if clipboardText != None:
+                        if isinstance(clipboardText, bytes):
+                            clipboardText = clipboardText.decode("utf-8")
+                        addText(clipboardText)
             elif event.type == MOUSEBUTTONDOWN:
                 cursor_animation.tick = 0
                 if text_input_rect.collidepoint(pygame.mouse.get_pos()):
