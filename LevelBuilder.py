@@ -810,6 +810,7 @@ def resizeGrid(size: Tuple[int, int], grid: list):
     return grid
 
 def saveMap(grid: List[List[UnitData]], name: str):
+    #region Map
     outputString = ''
     for row in grid:
         for unit in row:
@@ -817,6 +818,7 @@ def saveMap(grid: List[List[UnitData]], name: str):
         outputString = outputString.removesuffix(" / ") + "\n"
     with open(name, 'w', encoding="utf-8") as f:
         f.write(outputString)
+    #endregion
     #region Tile Props
     propertiesPath = os.path.join(os.path.dirname(name), "properties.kdf")
     propertiesString = UnitProperties.Serialize(grid)

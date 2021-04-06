@@ -442,7 +442,7 @@ class WorldData():
                         #pos,     type,      key,  value
         properties: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = {}
         if os.path.isfile(os.path.join(MapPath, "properties.kdf")):
-            properties = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "properties.kdf"), KDS.ConfigManager.JSON.NULLPATH, {})
+            properties = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "properties.kdf"), KDS.ConfigManager.JSON.NULLPATH, {}, encoding="utf-8")
         global level_background, level_background_img
         if os.path.isfile(os.path.join(MapPath, "background.png")):
             level_background = True
@@ -507,7 +507,11 @@ class WorldData():
                     if "4" in idProp: # 4 is an unspecified type.
                         tlProp = idProp["4"]
                         if "overlay" in tlProp:
-                            tmpOV = Tile((x * 34, y * 34), int(tlProp["overlay"]))
+                            ovSerial = int(tlProp["overlay"])
+                            if ovSerial not in specialTilesSerialNumbers: # Currently only tiles are supported
+                                tmpOV = Tile((x * 34, y * 34), ovSerial)
+                            else:
+                                tmpOV = Tile.specialTiles[ovSerial]((x * 34, y * 34), serialNumber=ovSerial)
                             for k, v in tlProp.items():
                                 setattr(tmpOV, k, v)
                                 # Does not set darkOverlay, but probably not needed.
@@ -1510,7 +1514,7 @@ class GroundFire(Tile):
         return self.animation.update()
 
 class GlassPane(Tile):
-    def __init__(self, position, serialNumber) -> None:
+    def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.texture = t_textures[serialNumber]
@@ -1519,7 +1523,7 @@ class GlassPane(Tile):
     def lateInit(self):
         self.darkOverlay = None
 
-    def update(self):
+    def update(self) -> Optional[pygame.Surface]:
         return self.texture
 
 class RoofPlanks(Tile):
@@ -1909,7 +1913,8 @@ Tile.specialTiles = {
     131: Sound,
     132: DoorFrontMirrored,
     134: FluorescentTube,
-    135: Molok
+    135: Molok,
+    145: Kiuas
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -3259,7 +3264,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         pygame.time.wait(100)
     wdata = loadMapHandle.Complete()
     if not wdata:
-        return 1
+        pygame.mouse.set_visible(True)
+        return
     Player.rect.topleft, _ = wdata
 
     #region Set Game Data
@@ -3276,7 +3282,6 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     if show_loading: KDS.Loading.Circle.Stop()
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
     if auto_play_music and KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
-    return 0
 
 def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
     pygame.mouse.set_visible(False)

@@ -11,6 +11,8 @@ import KDS.Debug
 import KDS.Math
 import KDS.Jobs
 
+import threading
+
 pygame.init()
 
 #region Settings
@@ -40,7 +42,9 @@ class Circle:
         pygame.draw.circle(circle, (0, 148, 255), (circle_size[0] // 2, circle_size[1] // 2), circle_size[0] // 2, 10)
         ##### NEW CIRCLE #####
 
-        while not stop():
+        is_main_thread_active = lambda : any((i.name == "MainThread") and i.is_alive() for i in threading.enumerate())
+
+        while not stop() and is_main_thread_active(): # Fix for thread still running after game has crashed
             surface.fill(Circle.loadingFill)
             surface.blit(Circle.scaledLoadingBackground, (surface_size[0] // 2 - Circle.scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - Circle.scaledLoadingBackground.get_height() // 2))
 

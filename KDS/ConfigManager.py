@@ -65,11 +65,11 @@ class JSON:
             return None
 
     @staticmethod
-    def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False) -> Any:
+    def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False, encoding: str = None) -> Any:
         config: Dict[str, Any] = {}
         if os.path.isfile(filePath):
             try:
-                with open(filePath, "r") as f:
+                with open(filePath, "r", encoding=encoding) as f:
                     try: config = json.loads(f.read())
                     except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error with file {filePath}! Details: {e}")
             except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
