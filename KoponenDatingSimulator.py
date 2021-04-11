@@ -1497,6 +1497,10 @@ class Barrier(Tile):
         self.checkCollision = True
         self.texture = None
 
+    def lateInit(self) -> None:
+        self.checkCollision = True
+        self.darkOverlay = None
+
     def update(self):
         return self.texture
 

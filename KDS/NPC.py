@@ -48,10 +48,10 @@ class NPC:
     def loadResources(self, path: str):
         texture_resources = os.listdir(path)
         texture_resources.sort()
-        animations = {}
-        npc_idle = []
-        npc_walk = []
-        npc_death = []
+        animations: Dict[str, KDS.Animator.Animation] = {}
+        npc_idle: List[str] = []
+        npc_walk: List[str] = []
+        npc_death: List[str] = []
         for texture_resource in texture_resources:
             if "npc-idle" in texture_resource:
                 self.resources["idle_animation"] = True
@@ -63,9 +63,9 @@ class NPC:
                 self.resources["death_animation"] = True
                 npc_death.append(texture_resource)
 
-        if len(npc_idle): animations["idle"] = KDS.Animator.Animation("npc-idle", len(npc_idle), 60, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        if len(npc_walk): animations["walk"] = KDS.Animator.Animation("npc-walk", len(npc_walk), 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        if len(npc_death): animations["death"] = KDS.Animator.Animation("npc-idle", len(npc_death), 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        if len(npc_idle) > 0: animations["idle"] = KDS.Animator.Animation("npc-idle", len(npc_idle), 60, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        if len(npc_walk) > 0: animations["walk"] = KDS.Animator.Animation("npc-walk", len(npc_walk), 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        if len(npc_death) > 0: animations["death"] = KDS.Animator.Animation("npc-idle", len(npc_death), 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
         self.animation = KDS.Animator.MultiAnimation(**animations)
 
