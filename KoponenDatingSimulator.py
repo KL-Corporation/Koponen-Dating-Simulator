@@ -1284,6 +1284,19 @@ class LevelEnderDoor(Tile):
                 self.propOpen = False
         return self.texture if not self.opened else self.opentexture
 
+class LevelEnderTransparent(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = None
+        # NoCollision Flag
+        self.triggered: bool = False
+
+    def update(self) -> Optional[pygame.Surface]:
+        if self.rect.colliderect(Player.rect) and not self.triggered:
+            KDS.Missions.Listeners.LevelEnder.Trigger()
+            self.triggered = True
+        return None
+
 class Candle(Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1752,6 +1765,34 @@ class Kiuas(Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.centery), KDS.World.Lighting.circle_surface(20, KDS.Colors.Orange)))
         return self.animation.update()
 
+class Nysse(Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        # TrueScale flag
+        self.blinker: bool = True
+        self.headlights: bool = True
+        self.blinkerIndex = 0
+        self.blinkerRepeatRate = 180 # beats per minute
+        self.blinkerLight: bool = False
+
+    def lateInit(self) -> None:
+        self.darkOverlay = None
+
+    def update(self) -> Optional[pygame.Surface]:
+        if self.headlights:
+            Lights.append(KDS.World.Lighting.Light((self.rect.x + 23, self.rect.y + 71), KDS.World.Lighting.Shapes.circle_harder.get(50, 5000), True))
+            Lights.append(KDS.World.Lighting.Light((self.rect.x + 99, self.rect.y + 71), KDS.World.Lighting.Shapes.circle_harder.get(50, 5000), True))
+        if self.blinker:
+            if self.blinkerIndex == 0:
+                self.blinkerLight = not self.blinkerLight
+            if self.blinkerLight:                                                   # Nice
+                Lights.append(KDS.World.Lighting.Light((self.rect.x + 18, self.rect.y + 68), KDS.World.Lighting.Shapes.circle_hard.get(10, 2550), True))
+            self.blinkerIndex += self.blinkerRepeatRate
+            if self.blinkerIndex > 3600:
+                self.blinkerIndex = 0
+        return self.texture
+
+
 class BaseTeleport(Tile):
     class TeleportData:
         def __init__(self) -> None:
@@ -1909,11 +1950,11 @@ Tile.specialTiles = {
     110: RoofPlanks,
     111: RoofPlanks,
     113: Patja,
-    # 118: GenericDoor,
+    118: LevelEnderTransparent,
     123: Crackhead,
     126: DoorFront,
     128: AvarnCar,
-    # 130: GenericDoor,
+    130: Nysse,
     131: Sound,
     132: DoorFrontMirrored,
     134: FluorescentTube,
