@@ -1,5 +1,5 @@
 import shutil
-import PyInstaller.__main__
+import PyInstaller.__main__ as pyinstaller
 import os
 import KDS.System
 from datetime import datetime
@@ -29,10 +29,9 @@ toBuild = {
 }
 
 def clearCache():
-    if os.path.isdir(os.path.join(AppDataPath, "cache")):
+    if os.path.isdir(CachePath):
         print("Clearing cache...")
-        shutil.rmtree(os.path.join(AppDataPath, "cache"))
-
+        shutil.rmtree(CachePath)
 
 for buildType in toBuild.items():
     clearCache()
@@ -40,7 +39,7 @@ for buildType in toBuild.items():
     filename = buildType[1]["filename"]
     iconname = buildType[1]["iconname"]
 
-    PyInstaller.__main__.run([
+    pyinstaller.run([
         "--noconfirm",
         "--distpath",
         BuildPath,
@@ -64,4 +63,4 @@ for buildType in toBuild.items():
 clearCache()
 for buildType in toBuild.items():
     cutName = os.path.splitext(buildType[1]["filename"])[0]
-    print(KDS.System.Console.Colored(f"Built {buildType[0]} at " + os.path.join(BuildPath, cutName, cutName + ".exe"), "green"))
+    print(KDS.System.Console.Colored(f"Built {buildType[0]} at " + os.path.join(BuildPath, cutName, f"{cutName}.exe"), "green"))
