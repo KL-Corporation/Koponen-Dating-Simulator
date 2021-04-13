@@ -37,9 +37,9 @@
         "Saddam Hussein": false,
         "Roberto Esquivel Cabrera": true,
         "Donald Trump": false,
-        "Niko Leinonen": true
+        "Niko Leinonen": false
     },
-    "Mikä näista koodikielistä on vanhin?": {
+    "Mikä näistä koodikielistä on vanhin?": {
         "Python": true,
         "C#": false,
         "JavaScript": false,
@@ -51,6 +51,12 @@
         "JavaScript": true,
         "Scratch": false
     },
+    "Mikä näistä koodikielistä on paras?": {
+        "Python": false,
+        "C": false,
+        "C++": true,
+        "C#": false
+    },
     "Minä vuonna sähkö löydettiin?": {
         "1902": false,
         "1881": false,
@@ -59,9 +65,9 @@
     "Mikä on maailman pisin käärme?": {
         "Anaconda": false,
         "Python": true,
-        "Mun kyrpä ( ͡° ͜ʖ ͡°)": true
+        "Mun kyrpä ( ͡° ͜ʖ ͡°)": false
     },
-    "Kuinka suuri on kirahvin keskiverto hupituutti?": {
+    "Kuinka pitkä on kirahvin keskiverto hupituutti?": {
         "50 cm": false,
         "100 cm": true,
         "69 cm": false
@@ -224,7 +230,7 @@
         "Kiinan kansantasavalta": false,
         "Pohjois-Korean demokraattinen kansantasavalta": false
     },
-    "Mikä seuraavista pelin jakelupalveluista on paras?": {
+    "Mikä seuraavista pelinjakelupalveluista on paras?": {
         "Steam": false,
         "Epic Games Store": false,
         "NALStudio Game Launcher": true,
