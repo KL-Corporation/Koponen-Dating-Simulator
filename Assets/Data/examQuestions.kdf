@@ -365,5 +365,11 @@
         "silokallio": false,
         "pohjamoreeni": false,
         "lustosavi": true
+    },
+    "Kuinka monen desimaalin tarkkuudella NALCalculator pystyy laskemaan lukuja?": {
+        "30": false,
+        "69": false,
+        "420": false,
+        "∞": true
     }
 }
