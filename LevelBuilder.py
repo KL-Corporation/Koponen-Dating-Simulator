@@ -99,7 +99,8 @@ class UnitType(IntEnum):
     Item = 1
     Enemy = 2
     Teleport = 3
-    Unspecified = 4
+    Entity = 4
+    Unspecified = 9
 
 class TextureHolder:
     class TextureData:

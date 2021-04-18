@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Dict, Any, Sequence, List, Tuple, Set, Type, Optional
+import dataclasses
+from typing import Dict, Any, Sequence, List, Tuple, Set, Type, Optional, Union
 import pygame
 import KDS.World
 import KDS.ConfigManager
@@ -8,6 +9,11 @@ import KDS.Missions
 import KDS.Math
 import KDS.Logging
 import KDS.Inventory
+import KDS.Keys
+import KDS.Build
+import KDS.Scores
+import KDS.Audio
+import KDS.Animator
 
 def init(buildData: Dict[str, Any], t_textures: Dict[int, pygame.Surface], i_textures: Dict[int, pygame.Surface]):
     Tile.noCollision = set(buildData["noCollision"])
@@ -152,9 +158,8 @@ class Item:
                     continue
 
                 if item.serialNumber not in Item.inventoryDoubles:
-                    if inventory.storage[inventory.SIndex] == KDS.Inventory.Inventory.emptySlot:
-                        temp_var = item.pickup()
-                        if not temp_var:
+                    if inventory.storage[inventory.SIndex] == KDS.Inventory.EMPTYSLOT:
+                        if not item.pickup():
                             inventory.storage[inventory.SIndex] = item
                             KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
                         Item_list.remove(item) # Remove seems to search for instance and not equality
@@ -168,17 +173,17 @@ class Item:
                             KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
                 else:
                     if inventory.SIndex < inventory.size - 1:
-                        if inventory.storage[inventory.SIndex] == KDS.Inventory.Inventory.emptySlot and inventory.storage[inventory.SIndex + 1] == KDS.Inventory.Inventory.emptySlot:
+                        if inventory.storage[inventory.SIndex] == KDS.Inventory.EMPTYSLOT and inventory.storage[inventory.SIndex + 1] == KDS.Inventory.EMPTYSLOT:
                             item.pickup()
                             inventory.storage[inventory.SIndex] = item
-                            inventory.storage[inventory.SIndex + 1] = KDS.Inventory.Inventory.doubleItem
+                            inventory.storage[inventory.SIndex + 1] = KDS.Inventory.DOUBLEITEM
                             Item_list.remove(item)
                             showItemTip = False
 
         Item.tipItem = shortest_item if collision and showItemTip else None
 
     def pickup(self):
-        return False
+        return False # Seems to return False if we want to put in inventory
 
     def use(self):
         return self.texture
@@ -188,3 +193,93 @@ class Item:
 
     def lateInit(self):
         pass
+
+class Weapon(Item):
+    @dataclasses.dataclass
+    class WeaponData:
+        counter: int
+        ammo: Union[int, float]
+
+    data: Dict[Type[Weapon], Weapon.WeaponData] = {}
+
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface) -> None:
+        super().__init__(position, serialNumber, texture=texture)
+
+                                                # float to pass infinite through
+    def internalInit(self, repeat_rate: int, defaultAmmo: Union[int, float], shootTexture: Optional[Union[pygame.Surface, KDS.Animator.Animation]], shootSound: Optional[pygame.mixer.Sound], stopSound: bool = False, allowHold: bool = False) -> None:
+        self.repeat_rate = repeat_rate
+        if type(self) not in Weapon.data:
+            Weapon.data[type(self)] = Weapon.WeaponData(self.repeat_rate + 1, defaultAmmo)
+        else:
+            Weapon.data[type(self)].counter = self.repeat_rate + 1
+        self.sound = shootSound
+        self.stopSound = stopSound
+        self.f_texture = shootTexture
+        self.allowHold = allowHold
+
+    def internalShoot(self) -> bool:
+        if Weapon.data[type(self)].counter > self.repeat_rate:
+            if self.stopSound and self.sound != None:
+                self.sound.stop()
+            if Weapon.data[type(self)].ammo > 0 or KDS.Build.Item.infiniteAmmo:
+                if self.sound != None:
+                    KDS.Audio.PlaySound(self.sound)
+                Weapon.data[type(self)].counter = 0
+                Weapon.data[type(self)].ammo -= 1 # Infinity - 1 is still infinity
+                return True
+        return False
+
+    def shoot(self) -> bool:
+        # OVERLOAD EXAMPLE
+        # super().shoot()
+        # Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+        # Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
+        # OVERLOAD EXAMPLE
+        return self.internalShoot()
+
+    def use(self) -> pygame.Surface:
+        if KDS.Keys.mainKey.onDown or (self.allowHold and KDS.Keys.mainKey.pressed):
+            if self.shoot() and self.f_texture != None:
+                return self.f_texture if not isinstance(self.f_texture, KDS.Animator.Animation) else self.f_texture.update()
+        elif self.stopSound and self.sound != None:
+            self.sound.stop()
+        Weapon.data[type(self)].counter += 1
+        return self.texture
+
+    def pickup(self) -> bool:
+        Weapon.data[type(self)].counter = self.repeat_rate + 1
+        if isinstance(self.f_texture, KDS.Animator.Animation):
+            self.f_texture.tick = 0
+        return super().pickup()
+
+    def getAmmo(self) -> Union[int, float]:
+        return Weapon.data[type(self)].ammo
+
+    @staticmethod
+    def addAmmo(_type: Type[Weapon], amount: Union[int, float]) -> None:
+        Weapon.data[_type].ammo += amount
+
+    @staticmethod
+    def reset() -> None:
+        Weapon.data.clear()
+
+class Ammo(Item):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
+        super().__init__(position, serialNumber, texture=texture)
+
+    def internalInit(self, _type: Type[Weapon], addAmmo: int, addScore: int, sound: pygame.mixer.Sound):
+        self.sound = sound
+        self.type = _type
+        self.add = addAmmo
+        self.score = addScore
+
+    def use(self):
+        if KDS.Keys.mainKey.onDown:
+            self.pickup()
+        return self.texture
+
+    def pickup(self):
+        KDS.Scores.score += self.score
+        KDS.Audio.PlaySound(self.sound)
+        Weapon.data[self.type].ammo += self.add
+        return True

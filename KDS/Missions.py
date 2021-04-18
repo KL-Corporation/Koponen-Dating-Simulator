@@ -93,6 +93,8 @@ class Listeners:
     TentSleepStart = Listener()
     TentSleepEnd = Listener()
     EnemyDeath = Listener()
+    TeacherAgro = Listener() # Not implemented
+    TeacherDeath = Listener() # Not implemented
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
 #endregion
@@ -319,7 +321,7 @@ def Render(surface: pygame.Surface):
     if Active_Mission == None:
         Missions.finished = True
         return
-    
+
     Missions.finished = False
     rendered, offset = Missions.GetMission(Active_Mission).Render()
     surface.blit(rendered, (surface.get_width() - offset, 0))

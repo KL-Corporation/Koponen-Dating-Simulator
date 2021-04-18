@@ -26,9 +26,11 @@ import KDS.Loading
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
+import KDS.NPC
 import KDS.Scores
 import KDS.Story
 import KDS.System
+import KDS.Teachers
 import KDS.UI
 import KDS.World
 import KDS.School
@@ -374,6 +376,7 @@ level_background_img = Any
 
 Items: List[KDS.Build.Item] = []
 Enemies: List[KDS.AI.HostileEnemy] = []
+Entities: List[Union[KDS.NPC.NPC, KDS.Teachers.Teacher]]
 
 true_scroll = [0.0, 0.0]
 SCROLL_OFFSET = (301, 221)
@@ -467,7 +470,7 @@ class WorldData():
         tmpInventory: Dict[str, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/Inventory", {})
         for k, v in tmpInventory.items():
             if k.isnumeric() and int(k) < len(Player.inventory) and v in KDS.Build.Item.serialNumbers:
-                Player.inventory.storage[int(k)] = KDS.Build.Item.serialNumbers[v]((0, 0), v)
+                Player.inventory.pickupItemToIndex(int(k), KDS.Build.Item.serialNumbers[v]((0, 0), v), force=True)
             else:
                 KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
         KDS.Build.Item.infiniteAmmo = KDS.ConfigManager.LevelProp.Get("Data/infiniteAmmo", False)
@@ -487,6 +490,9 @@ class WorldData():
 
         Enemy.total = 0
         Enemy.death_count = 0
+        Entity.total = 0
+        Entity.death_count = 0
+        Entity.agro_count = 0
 
         y = 0
         for row in map_data:
@@ -503,8 +509,8 @@ class WorldData():
                 identifier = f"{x}-{y}"
                 if identifier in properties:
                     idProp = properties[identifier]
-                    if "4" in idProp: # 4 is an unspecified type.
-                        tlProp = idProp["4"]
+                    if "9" in idProp: # 9 is an unspecified type.
+                        tlProp = idProp["9"]
                         if "overlay" in tlProp:
                             ovSerial = int(tlProp["overlay"])
                             if ovSerial not in KDS.Build.Tile.specialTiles: # Currently only tiles are supported
@@ -537,6 +543,10 @@ class WorldData():
                     elif pointer == 3:
                         value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
                         tiles[y][x].append(value)
+                    elif pointer == 4:
+                        value = KDS.Teachers.Teacher((x * 34, y * 34))
+                        Entities.append(value)
+                        Entity.total += 1
                     else:
                         KDS.Logging.AutoError(f"Invalid pointer at ({x}, {y})")
 
@@ -1783,15 +1793,10 @@ class BlueKey(KDS.Build.Item):
 
         return True
 
-class Cell(KDS.Build.Item):
+class Cell(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-
-    def pickup(self):
-        KDS.Scores.score += 4
-        KDS.Audio.PlaySound(item_pickup)
-        Plasmarifle.ammunition += 30
-        return True
+        self.internalInit(Plasmarifle, 30, 5, item_pickup)
 
 class Coffeemug(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -1860,25 +1865,28 @@ class iPuhelin(KDS.Build.Item):
         KDS.Audio.PlaySound(item_pickup)
         return False
 
-class Knife(KDS.Build.Item):
+class Knife(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(40, KDS.Math.INFINITY, knife_animation_object, None, allowHold=True)
 
-    def use(self):
+    def shoot(self) -> bool:
+        output = super().shoot()
+        if output:
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
+        return output
+
+    def use(self) -> pygame.Surface:
+        super().use()
         if KDS.Keys.mainKey.pressed:
-            if KDS.World.knife_C.counter > 40:
-                KDS.World.knife_C.counter = 0
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
-            KDS.World.knife_C.counter  += 1
             return knife_animation_object.update()
         else:
-            KDS.World.knife_C.counter  += 1
-            if KDS.World.knife_C.counter > 100:
-                KDS.World.knife_C.counter = 100
+            knife_animation_object.tick = 0
             return self.texture
 
     def pickup(self):
-        KDS.Scores.score += 15
+        super().pickup()
+        KDS.Scores.score += 5
         KDS.Audio.PlaySound(knife_pickup)
         return False
 
@@ -1903,146 +1911,92 @@ class Medkit(KDS.Build.Item):
         Player.health = min(Player.health + 25, 100)
         return True
 
-class Pistol(KDS.Build.Item):
-    ammunition = -1
-    defaultAmmunition = 8
-
+class Pistol(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-
-    def use(self):
-        global tiles
-        if KDS.Keys.mainKey.pressed and KDS.World.pistol_C.counter > 30 and (Pistol.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            KDS.Audio.PlaySound(pistol_shot)
-            KDS.World.pistol_C.counter = 0
-            Pistol.ammunition -= 1
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
-            return pistol_f_texture
-        else:
-            KDS.World.pistol_C.counter += 1
-            return self.texture
+        self.internalInit(30, 8, pistol_f_texture, pistol_shot)
 
     def pickup(self):
+        super().pickup()
         KDS.Scores.score += 18
         KDS.Audio.PlaySound(weapon_pickup)
         return False
 
-class PistolMag(KDS.Build.Item):
+    def shoot(self):
+        output = super().shoot()
+        if output:
+            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
+        return output
+
+class PistolMag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(Pistol, 7, 7, item_pickup)
 
-    def use(self):
-        if KDS.Keys.mainKey.pressed:
-            self.pickup()
-            Player.inventory.storage[Player.inventory.storage.index(self)] = KDS.Inventory.Inventory.emptySlot
-        return self.texture
-
-    def pickup(self):
-        Pistol.ammunition += 7
-        KDS.Scores.score += 7
-        KDS.Audio.PlaySound(item_pickup)
-        return True
-
-class rk62(KDS.Build.Item):
-
-    ammunition = -1
-    defaultAmmunition = 30
-
+class rk62(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(4, 30, rk62_f_texture, rk62_shot, True, True)
 
-    def use(self):
-        global tiles
-        if KDS.Keys.mainKey.pressed and KDS.World.rk62_C.counter > 4 and (rk62.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            KDS.World.rk62_C.counter = 0
-            rk62_shot.stop()
-            KDS.Audio.PlaySound(rk62_shot)
-            rk62.ammunition -= 1
+    def shoot(self):
+        output = super().shoot()
+        if output:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 50 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 25))
-            return rk62_f_texture
-        else:
-            if not KDS.Keys.mainKey.pressed:
-                rk62_shot.stop()
-            KDS.World.rk62_C.counter += 1
-            return self.texture
+        return output
 
     def pickup(self):
+        super().pickup()
         KDS.Scores.score += 29
         KDS.Audio.PlaySound(weapon_pickup)
         return False
 
-class Shotgun(KDS.Build.Item):
-
-    ammunition = -1
-    defaultAmmunition = 8
-
+class Shotgun(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(50, 8, shotgun_f, shotgun_shot)
 
-    def use(self):
-        global tiles
-        if KDS.Keys.mainKey.onDown and KDS.World.shotgun_C.counter > 50 and (Shotgun.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            KDS.World.shotgun_C.counter = 0
-            KDS.Audio.PlaySound(shotgun_shot)
-            Shotgun.ammunition -= 1
+    def shoot(self):
+        output = super().shoot()
+        if output:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
-            return shotgun_f
-        else:
-            KDS.World.shotgun_C.counter += 1
-            return self.texture
+        return output
 
     def pickup(self):
+        super().pickup()
         KDS.Scores.score += 23
         KDS.Audio.PlaySound(weapon_pickup)
         return False
 
-class rk62Mag(KDS.Build.Item):
+class rk62Mag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(rk62, 30, 8, item_pickup)
 
-    def pickup(self):
-        rk62.ammunition += 30
-        KDS.Scores.score += 8
-        KDS.Audio.PlaySound(item_pickup)
-        return True
-
-class ShotgunShells(KDS.Build.Item):
+class ShotgunShells(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(Shotgun, 4, 5, item_pickup)
 
-    def pickup(self):
-        Shotgun.ammunition += 4
-        KDS.Scores.score += 5
-        KDS.Audio.PlaySound(item_pickup)
-        return True
-
-class Plasmarifle(KDS.Build.Item):
-
-    ammunition = -1
-    defaultAmmunition = 36
-
+class Plasmarifle(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(3, 36, plasmarifle_animation, plasmarifle_f_sound, allowHold=True)
 
-    def use(self):
-        if KDS.Keys.mainKey.pressed and KDS.World.plasmarifle_C.counter > 3 and (Plasmarifle.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            KDS.World.plasmarifle_C.counter = 0
-            KDS.Audio.PlaySound(plasmarifle_f_sound)
-            Plasmarifle.ammunition -= 1
+    def shoot(self):
+        output = super().shoot()
+        if output:
             asset_offset = 70 * -KDS.Convert.ToMultiplier(Player.direction)
             Lights.append(KDS.World.Lighting.Light((int(Player.rect.centerx - asset_offset / 1.4), Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - asset_offset, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
-            return plasmarifle_animation.update()
-        else:
-            KDS.World.plasmarifle_C.counter += 1
-            return self.texture
+        return output
 
     def pickup(self):
-        KDS.Scores.score += 25
+        super().pickup()
+        KDS.Scores.score += 35
         KDS.Audio.PlaySound(weapon_pickup)
         return False
 
@@ -2088,70 +2042,44 @@ class Turboneedle(KDS.Build.Item):
     def pickup(self):
         return True
 
-class Ppsh41(KDS.Build.Item):
-
-    ammunition = -1
-    defaultAmmunition = 72
-
+class Ppsh41(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
+        self.internalInit(2, 72, ppsh41_f_texture, smg_shot, True, True)
 
-    def use(self):
-        global tiles
-        if KDS.Keys.mainKey.pressed and KDS.World.ppsh41_C.counter > 2 and (Ppsh41.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            KDS.World.ppsh41_C.counter = 0
-            smg_shot.stop()
-            KDS.Audio.PlaySound(smg_shot)
-            Ppsh41.ammunition -= 1
+    def shoot(self):
+        output = super().shoot()
+        if output:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
-            return ppsh41_f_texture
-        else:
-            if not KDS.Keys.mainKey.pressed:
-                smg_shot.stop()
-            KDS.World.ppsh41_C.counter += 1
-            return self.texture
+        return output
 
     def pickup(self):
+        super().pickup()
+        KDS.Scores.score += 15
         return False
 
-class Awm(KDS.Build.Item):
-
-    ammunition = -1
-    defaultAmmunition = 5
-
+class Awm(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-        self.t = i_textures[24] # t is temporary, but we don't want to check the item dictionary each frame.
+        self.internalInit(130, 5, awm_f_texture, awm_shot)
 
-    def use(self):
-        global tiles, awm_ammo
-        if KDS.Keys.mainKey.pressed and KDS.World.awm_C.counter > 130 and (Awm.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            KDS.World.awm_C.counter = 0
-            KDS.Audio.PlaySound(awm_shot)
-            Awm.ammunition -= 1
+    def shoot(self) -> bool:
+        output = super().shoot()
+        if output:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 90 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, random.randint(300, 590), slope=0))
-            return awm_f_texture
-        else:
-            KDS.World.awm_C.counter += 1
-            return self.t
+        return output
 
     def pickup(self):
+        super().pickup()
+        KDS.Scores.score += 25
         return False
 
-class AwmMag(KDS.Build.Item):
+class AwmMag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-
-    def use(self):
-        return self.texture
-
-    def pickup(self):
-        Awm.ammunition += 5
-        KDS.Audio.PlaySound(item_pickup)
-
-        return True
+        self.internalInit(Awm, 5, 10, item_pickup)
 
 class EmptyFlask(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2174,7 +2102,7 @@ class MethFlask(KDS.Build.Item):
         if KDS.Keys.mainKey.pressed:
             KDS.Scores.score += 1
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
-            Player.inventory.storage[Player.inventory.SIndex] = KDS.Build.Item.serialNumbers[26]((0, 0), 26)
+            Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[26]((0, 0), 26), force=True)
             KDS.Audio.PlaySound(glug_sound)
         return self.t
 
@@ -2192,7 +2120,7 @@ class BloodFlask(KDS.Build.Item):
         if KDS.Keys.mainKey.pressed:
             KDS.Scores.score += 1
             Player.health += random.randint(0, 10)
-            Player.inventory.storage[Player.inventory.SIndex] = KDS.Build.Item.serialNumbers[26]((0, 0), 26)
+            Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[26]((0, 0), 26), force=True)
             KDS.Audio.PlaySound(glug_sound)
         return self.t
 
@@ -2216,7 +2144,7 @@ class Grenade(KDS.Build.Item):
         pygame.draw.line(screen, (255, 10, 10), (Player.rect.centerx - scroll[0], Player.rect.y + 10 - scroll[1]), (Player.rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(Player.direction) - scroll[0], Player.rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
         if KDS.Keys.mainKey.pressed:
             KDS.Audio.PlaySound(grenade_throw)
-            Player.inventory.storage[Player.inventory.SIndex] = KDS.Inventory.Inventory.emptySlot
+            Player.inventory.dropItem(forceDrop=True)
             BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return self.t
 
@@ -2249,15 +2177,10 @@ class LevelEnderItem(KDS.Build.Item):
         KDS.Audio.PlaySound(weapon_pickup)
         return False
 
-class Ppsh41Mag(KDS.Build.Item):
+class Ppsh41Mag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-
-    def pickup(self):
-        KDS.Audio.PlaySound(item_pickup)
-        Ppsh41.ammunition += 69
-
-        return True
+        self.internalInit(Ppsh41, 69, 5, item_pickup)
 
 class Lantern(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2401,7 +2324,7 @@ KDS.Logging.debug("Item Loading Complete.")
 #endregion
 #region Enemies
 class Enemy:
-    serialNumbers: Dict[int, Type] = {
+    serialNumbers: Dict[int, Type[KDS.AI.HostileEnemy]] = {
         1: KDS.AI.Imp,
         2: KDS.AI.SergeantZombie,
         3: KDS.AI.DrugDealer,
@@ -2422,27 +2345,16 @@ class Enemy:
 
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
-        result = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
+        projectiles, items = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
         if enemy.health > 0:
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
-        if result[0]:
-            for r in result[0]:
-                Projectiles.append(r)
-        if result[1]:
-            for serialNumber in result[1]:
-                    tempItem = KDS.Build.Item((enemy.rect.center), serialNumber=serialNumber, texture = i_textures[serialNumber])
-                    counter = 0
-                    while True:
-                        tempItem.rect.y += tempItem.rect.height
-                        for collision in KDS.World.collision_test(tempItem.rect, tiles):
-                            tempItem.rect.bottom = collision.rect.top
-                            counter = 250
-                        counter += 1
-                        if counter > 250:
-                            break
-                    Items.append(tempItem)
-                    del tempItem
+        for r in projectiles:
+            Projectiles.append(r)
+        for serialNumber in items:
+            tempItem = KDS.Build.Item(enemy.rect.center, serialNumber=serialNumber, texture=i_textures[serialNumber])
+            tempItem.physics = True
+            Items.append(tempItem)
 
     @staticmethod
     def update(Enemy_List: Sequence[KDS.AI.HostileEnemy]):
@@ -2450,6 +2362,45 @@ class Enemy:
             if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
                 Enemy._internalEnemyHandler(enemy)
 KDS.Missions.Listeners.EnemyDeath.OnTrigger += Enemy._addDeath
+#endregion
+#region Entity
+class Entity:
+    serialNumbers: Dict[int, Type[KDS.Teachers.Teacher]] = {
+        1: KDS.Teachers.LaaTo,
+        2: KDS.Teachers.KuuMa
+    }
+
+    agro_count = 0
+    death_count = 0
+    total = 0
+
+    @staticmethod
+    def _addDeath():
+        Enemy.death_count += 1
+
+    @staticmethod
+    def _addAgro():
+        Entity.agro_count += 1
+
+    @staticmethod
+    def _internalEntityHandler(entity: KDS.Teachers.Teacher):
+        projectiles, items = entity.update(screen, scroll, tiles, Player, DebugMode)
+        if entity.agroed and entity.health > 0:
+            healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
+            screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
+        for r in projectiles:
+            Projectiles.append(r)
+        for serialNumber in items:
+            tempItem = KDS.Build.Item(entity.rect.center, serialNumber=serialNumber, texture=i_textures[serialNumber])
+            tempItem.physics = True
+            Items.append(tempItem)
+
+    @staticmethod
+    def update(Entity_List: Sequence[KDS.Teachers.Teacher]):
+        for entity in Entity_List:
+            Entity._internalEntityHandler(entity)
+KDS.Missions.Listeners.TeacherAgro.OnTrigger += Entity._addAgro
+KDS.Missions.Listeners.TeacherDeath.OnTrigger += Entity._addDeath
 #endregion
 #region Player
 KDS.Logging.debug("Loading Player...")
@@ -2747,11 +2698,7 @@ def console(oldSurf: pygame.Surface):
                 if command_list[1] != "key":
                     if command_list[1] in itemDict:
                         consoleItemSerial = int(itemDict[command_list[1]])
-                        if consoleItemSerial in KDS.Build.Item.inventoryDoubles:
-                            if Player.inventory.SIndex >= Player.inventory.size:
-                                Player.inventory.SIndex = Player.inventory.size - 2
-                            Player.inventory.storage[Player.inventory.SIndex + 1] = KDS.Inventory.Inventory.doubleItem
-                        Player.inventory.storage[Player.inventory.SIndex] = KDS.Build.Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial)
+                        Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial), force=True)
                         KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
                     else: KDS.Console.Feed.append(f"Item not found.")
                 else:
@@ -2763,10 +2710,7 @@ def console(oldSurf: pygame.Surface):
                     else: KDS.Console.Feed.append("No key specified!")
             elif command_list[0] == "remove":
                 if command_list[1] == "item":
-                    if Player.inventory.storage[Player.inventory.SIndex] != KDS.Inventory.Inventory.emptySlot:
-                        KDS.Console.Feed.append(f"Item was removed: {Player.inventory.storage[Player.inventory.SIndex]}")
-                        Player.inventory.storage[Player.inventory.SIndex] = KDS.Inventory.Inventory.emptySlot
-                    else: KDS.Console.Feed.append("Selected inventory slot is already empty!")
+                    Player.inventory.dropItem(forceDrop=True)
                 elif command_list[1] == "key":
                     if command_list[2] in Player.keys:
                         if Player.keys[command_list[2]] == True:
@@ -3726,7 +3670,7 @@ while main_running:
             elif event.key in KDS.Keys.inventoryKeys:
                 Player.inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
             elif event.key == K_q:
-                if Player.inventory.getHandItem() != KDS.Inventory.Inventory.emptySlot and Player.inventory.getHandItem() != KDS.Inventory.Inventory.doubleItem:
+                if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
                     droppedItem: Any = Player.inventory.dropItem()
                     if droppedItem != None:
                         droppedItem.rect.center = Player.rect.center
@@ -3960,10 +3904,10 @@ while main_running:
         screen.blit(score_font.render(f"STAMINA: {KDS.Math.CeilToInt(Player.stamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
 
-        tmpAmmo = getattr(ui_hand_item, "ammunition", None)
-        if tmpAmmo != None:
-            tmpAmmo = tmpAmmo if isinstance(tmpAmmo, int) else KDS.Math.Ceil(tmpAmmo, 1)
-            screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, 360))
+        if isinstance(ui_hand_item, KDS.Build.Weapon):
+            tmpAmmo = ui_hand_item.getAmmo()
+            if not KDS.Math.IsInfinity(tmpAmmo):
+                screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, 360))
 
         if Player.keys["red"]:
             screen.blit(red_key, (10, 20))
@@ -3988,6 +3932,7 @@ while main_running:
             "FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero),
             "Player Position": Player.rect.topleft,
             "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
+            "Entities": f"{Entity.total - Entity.death_count} / {Entity.total} | Agro: {Entity.agro_count}",
             "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio.SoundMixer.get_num_channels()}",
             "Lights Rendering": len(Lights)
         }, fontOverride=tip_font), (0, 0))

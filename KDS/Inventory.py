@@ -6,21 +6,41 @@ import KDS.Build
 import KDS.Missions
 import KDS.Linq
 
-class Inventory:
-    emptySlot = "none"
-    doubleItem = "doubleItem"
+EMPTYSLOT = "none"
+DOUBLEITEM = "DOUBLEITEM"
 
-    def __init__(self, size: int):
-        self.storage: List[Union[KDS.Build.Item, str]] = [Inventory.emptySlot for _ in range(size)]
+class Inventory:
+    def __init__(self, size: int, storage: Sequence[Union[KDS.Build.Item, str]] = None):
+        self.storage: List[Union[KDS.Build.Item, str]] = [EMPTYSLOT for _ in range(size)]
+        if storage != None:
+            for i in range(min(len(storage), len(self.storage))):
+                self.storage[i] = storage[i]
         self.size: int = size
         self.SIndex: int = 0
         self.offset: Tuple[int, int] = (10, 75)
 
     def __len__(self) -> int:
-        return len(self.storage)
+        return self.size
 
-    def empty(self):
-        self.storage = [Inventory.emptySlot for _ in range(self.size)]
+    def __getitem__(self, index: int) -> Union[KDS.Build.Item, None]:
+        item = self.storage[index]
+
+        if isinstance(item, str):
+            if item == EMPTYSLOT:
+                return None
+            if item == DOUBLEITEM:
+                item = self.storage[index - 1]
+                if isinstance(item, KDS.Build.Item):
+                    return item
+                else:
+                    raise RuntimeError(f"Unexpected type \"{type(item)}\" for double item!")
+            else:
+                raise RuntimeError(f"Unexpected value \"{item}\" for string item!")
+
+        return item
+
+    def clear(self):
+        self.storage = [EMPTYSLOT for _ in range(self.size)]
 
     def render(self, Surface: pygame.Surface):
         pygame.draw.rect(Surface, (192, 192, 192), (self.offset[0], self.offset[1], self.size * 34, 34), 3)
@@ -42,7 +62,7 @@ class Inventory:
         self.SIndex += 1
         if self.SIndex >= self.size:
             self.SIndex = 0
-        if self.storage[self.SIndex] == Inventory.doubleItem:
+        if self.storage[self.SIndex] == DOUBLEITEM:
             self.SIndex += 1
 
     def moveLeft(self):
@@ -50,13 +70,13 @@ class Inventory:
         self.SIndex -= 1
         if self.SIndex < 0:
             self.SIndex = self.size - 1
-        if self.storage[self.SIndex] == Inventory.doubleItem:
+        if self.storage[self.SIndex] == DOUBLEITEM:
             self.SIndex -= 1
 
     def pickSlot(self, index: int):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         if 0 <= index < len(self.storage):
-            if self.storage[index] == Inventory.doubleItem:
+            if self.storage[index] == DOUBLEITEM:
                 self.SIndex = index - 1
             else:
                 self.SIndex = index
@@ -72,15 +92,32 @@ class Inventory:
         if not isinstance(toDrop, str):
             KDS.Missions.Listeners.ItemDrop.Trigger(toDrop.serialNumber)
             if index < self.size - 1:
-                if self.storage[index + 1] == Inventory.doubleItem:
-                    self.storage[index + 1] = Inventory.emptySlot
+                if self.storage[index + 1] == DOUBLEITEM:
+                    self.storage[index + 1] = EMPTYSLOT
             if toDrop.drop() == True or forceDrop:
-                self.storage[index] = Inventory.emptySlot
+                self.storage[index] = EMPTYSLOT
                 return toDrop
         return None
 
-    def dropItem(self) -> Optional[KDS.Build.Item]:
-        return self.dropItemAtIndex(self.SIndex)
+    def dropItem(self, forceDrop: bool = False) -> Optional[KDS.Build.Item]:
+        return self.dropItemAtIndex(self.SIndex, forceDrop)
+
+    def pickupItemToIndex(self, index: int, item: KDS.Build.Item, force: bool = False) -> bool:
+        if self.storage[index] != EMPTYSLOT and not force:
+            return False
+        if item.serialNumber in KDS.Build.Item.inventoryDoubles:
+            if index >= self.size - 1:
+                index = self.size - 2
+                if self.storage[index] != EMPTYSLOT and not force:
+                    return False
+            if self.storage[index + 1] != EMPTYSLOT and not force:
+                return False
+            self.storage[index + 1] = DOUBLEITEM
+        self.storage[index] = item
+        return True
+
+    def pickupItem(self, item: KDS.Build.Item, force: bool = False) -> bool:
+        return self.pickupItemToIndex(self.SIndex, item, force)
 
     def useItemAtIndex(self, index: int, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
         item = self.storage[index]
@@ -123,6 +160,6 @@ class Inventory:
     def getCount(self):
         count = 0
         for i in range(self.size):
-            if self.storage[i] != Inventory.emptySlot:
+            if self.storage[i] != EMPTYSLOT:
                 count += 1
         return count

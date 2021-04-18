@@ -422,34 +422,10 @@ class BallisticProjectile:
         return self.counter > self.flight_time
 
 class itemTools:
-    class rk62:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
-    class plasmarifle:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
-    class pistol:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
-    class shotgun:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
-    class ppsh41:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
-
-    class awm:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
-
     class Grenade:
         def __init__(self, slope, force):
             self.Slope = slope
             self.force = force
-
-    class Knife:
-        def __init__(self, arg = 0):
-            self.counter: int = arg
 
 class Explosion:
     def __init__(self, animation: KDS.Animator.Animation, pos: Tuple[int, int]):
@@ -460,12 +436,4 @@ class Explosion:
         Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
 
-rk62_C = itemTools.rk62(100)
-plasmarifle_C = itemTools.plasmarifle(100)
-pistol_C = itemTools.pistol(100)
-shotgun_C = itemTools.shotgun(100)
-ppsh41_C = itemTools.ppsh41(100)
-awm_C = itemTools.awm(100)
-
-knife_C = itemTools.Knife(100)
 Grenade_O = itemTools.Grenade(0.7, 9)

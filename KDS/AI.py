@@ -12,6 +12,7 @@ import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.World
+import KDS.Build
 
 pygame.mixer.init()
 pygame.init()
@@ -45,7 +46,7 @@ def init():
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
     imp_fireball.set_colorkey((255, 255, 255))
 
-def searchForPlayer(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, Surface: pygame.Surface, scroll: Sequence[int], obstacles,  maxAngle: int = 40, maxSearchUnits: int = 24):
+def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, Surface: pygame.Surface, scroll: Sequence[int], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24):
     if direction:
         if targetRect.x > searchRect.x:
             return False, 0
@@ -57,8 +58,8 @@ def searchForPlayer(targetRect: pygame.Rect, searchRect: pygame.Rect, direction:
     if abs(angle) < maxAngle:
         return False, 0
     if angle > 0:
-        angle = 90-angle
-    elif angle < 0:
+        angle = 90 - angle
+    elif angle < 0: # Why the fuck this check is here? I don't think you need to not run this if it's zero
         angle = -90 - angle
     slope = KDS.Math.getSlope2(angle)
     dirVar = KDS.Convert.ToMultiplier(direction)
@@ -67,10 +68,10 @@ def searchForPlayer(targetRect: pygame.Rect, searchRect: pygame.Rect, direction:
         #pygame.draw.rect(Surface, KDS.Colors.EmeraldGreen, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 3, 3))
         x = int(pointer[0] / 34)
         y = int(pointer[1] / 34)
-        end_y = y + 1
-        end_x = x + 1
         max_x = len(obstacles[0]) - 1
         max_y = len(obstacles) - 1
+        end_x = min(x + 1, max_x)
+        end_y = min(y + 1, max_y)
 
         if end_x > max_x:
             end_x = max_x
@@ -78,10 +79,10 @@ def searchForPlayer(targetRect: pygame.Rect, searchRect: pygame.Rect, direction:
             end_y = max_y
         for row in obstacles[y:end_y]:
             for unit in row[x:end_x]:
-                if len(unit):
+                if len(unit) > 0:
                     for tile in unit:
                         if KDS.Logging.profiler_running:
-                            pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x-scroll[0], tile.rect.y-scroll[1], 34, 34))
+                            pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x - scroll[0], tile.rect.y - scroll[1], 34, 34))
                         if tile.checkCollision:
                             return False, 0
                         if tile.rect.colliderect(targetRect):
@@ -192,7 +193,10 @@ def searchForPlayer(targetRect: pygame.Rect, searchRect: pygame.Rect, direction:
 #endregion
 
 class HostileEnemy:
-    def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
+    def __init__(self, pos: Tuple[int, int]):
+        pass
+
+    def internalInit(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health: int, mv: List[int], attackPropability: int, sleep: bool = True, direction: bool = False):
         self.rect = rect
         self.health = health
         self.sleep = sleep
@@ -212,7 +216,6 @@ class HostileEnemy:
         self.manualAttackHandling = False
         self.movement = mv
         self.allowJump: bool = True
-        self.clearlagcounter = 0
         self.collisions = KDS.World.Collisions()
 
         self.enabled = True
@@ -233,11 +236,11 @@ class HostileEnemy:
         if self.direction:
             self.movement[0] = -self.movement[0]
 
-    def onDeath(self):
+    def onDeath(self) -> List[int]:
         return []
 
-    def attack(self, slope, env_obstacles, target, *args):
-        KDS.Logging.AutoError("This code should not execute.")
+    def attack(self, slope, env_obstacles, target, *args) -> List[KDS.World.Bullet]:
+        KDS.Logging.AutoError(f"{type(self).__name__} attack is not overloaded!")
         return []
 
     def listenerTrigger(self):
@@ -245,12 +248,12 @@ class HostileEnemy:
         self.listenerInstance.OnTrigger -= self.listenerTrigger
         self.listenerInstance = None
 
-    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles, targetRect, debug: bool = False):
-        enemyProjectiles = None
-        dropItems = []
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool = False):
+        enemyProjectiles: List[KDS.World.Bullet] = []
+        dropItems: List[int] = []
 
         if self.health:
-            s = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)[0]
+            s = searchRect(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)[0]
         else:
             s = False
         if s:
@@ -258,35 +261,36 @@ class HostileEnemy:
 
         self.lateUpdate(tiles, targetRect, debug, scroll, Surface)
 
-        if self.health > 0 and not self.sleep:
-            if s:
-                if not self.attackRunning and not self.manualAttackHandling:
-                    if not random.randint(0, self.a_propability):
-                        self.attackRunning = True
-            if self.attackRunning:
-                self.animation.trigger("attack")
-                if self.animation.active.done:
-                    df, sl2 = searchForPlayer(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
-                    if df:
-                        enemyProjectiles = self.attack((sl2 * -1) * 3, tiles, targetRect)
-                    self.attakF = False
-                    self.attackRunning = False
-                    self.animation.active.tick = 0
+        if self.health > 0:
+            if not self.sleep:
+                if s:
+                    if not self.attackRunning and not self.manualAttackHandling:
+                        if not random.randint(0, self.a_propability):
+                            self.attackRunning = True
+                if self.attackRunning:
+                    self.animation.trigger("attack")
+                    if self.animation.active.done:
+                        df, sl2 = searchRect(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
+                        if df:
+                            enemyProjectiles = self.attack((sl2 * -1) * 3, tiles, targetRect)
+                        self.attakF = False
+                        self.attackRunning = False
+                        self.animation.active.tick = 0
+                else:
+                    if self.playSightSound:
+                        KDS.Audio.PlaySound(self.sight_sound)
+                        self.playSightSound = False
+                    self.collisions = self.mover.move(self.rect, self.movement, tiles)
+                    if self.collisions.right or self.collisions.left:
+                        self.movement[0] = -self.movement[0]
+                        self.direction = not self.direction
+                        if self.allowJump:
+                            self.AI_jump(tiles, self.collisions, Surface, scroll)
+                    self.animation.trigger("walk")
             else:
-                if self.playSightSound:
-                    KDS.Audio.PlaySound(self.sight_sound)
-                    self.playSightSound = False
-                self.collisions = self.mover.move(self.rect, self.movement, tiles)
-                if self.collisions.right or self.collisions.left:
-                    self.movement[0] = -self.movement[0]
-                    self.direction = not self.direction
-                    if self.allowJump:
-                        self.AI_jump(tiles, self.collisions, Surface, scroll)
-                self.animation.trigger("walk")
-        elif self.health > 0:
-            _ = self.mover.move(self.rect, [0,8], tiles)
-            self.animation.trigger("idle")
-        elif self.health < 1:
+                _ = self.mover.move(self.rect, [0,8], tiles)
+                self.animation.trigger("idle")
+        else:
             if self.playDeathSound:
                 KDS.Audio.PlaySound(self.death_sound)
                 items = self.onDeath()
@@ -297,9 +301,6 @@ class HostileEnemy:
                 self.playDeathSound = False
             _ = self.mover.move(self.rect, [0,8], tiles)
             self.animation.trigger("death")
-            self.clearlagcounter += 1
-            if self.clearlagcounter > 3600:
-                self.clearlagcounter = 3600
 
         if debug:
             pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
@@ -343,7 +344,7 @@ class Imp(HostileEnemy):
         a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         d_anim = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 55)
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=imp_sight_sound, death_sound=imp_death_sound, health=health, mv=[1, 8], attackPropability=40)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -382,7 +383,7 @@ class SergeantZombie(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=60)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=60)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -425,7 +426,7 @@ class DrugDealer(HostileEnemy):
         del af
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -470,7 +471,7 @@ class TurboShotgunner(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=random.choice([d_anim0, d_anim1]), i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=80)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=random.choice([d_anim0, d_anim1]), i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=80)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -512,7 +513,7 @@ class MafiaMan(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=mafiaman_sight, death_sound=mafiaman_death, health=health, mv=[1, 8], attackPropability=40)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=mafiaman_sight, death_sound=mafiaman_death, health=health, mv=[1, 8], attackPropability=40)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -554,7 +555,7 @@ class MethMaker(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=methmaker_death, health=health, mv=[2, 8], attackPropability=50)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=methmaker_death, health=health, mv=[2, 8], attackPropability=50)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -598,7 +599,7 @@ class CaveMonster(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[2, 8], attackPropability=50)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[2, 8], attackPropability=50)
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
@@ -636,7 +637,7 @@ class Mummy(HostileEnemy):
         d_anim = KDS.Animator.Animation("mummy_dying", 10, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0]-17, pos[1]-38, 51, 72)
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(Mummy.soundboard_scream), death_sound=Mummy.sound_death, health=health, mv=[1, 8], attackPropability=50)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(Mummy.soundboard_scream), death_sound=Mummy.sound_death, health=health, mv=[1, 8], attackPropability=50)
 
         self.manualAttackHandling = True
 
@@ -648,36 +649,35 @@ class Mummy(HostileEnemy):
         items = []
         return items
 
+    def pathfinder(self, obstacles, collision_type : str) -> None:
+        x_coor = 0
+        if collision_type == "right":
+            x_coor = (self.rect.x + self.rect.w) // 34
+        else:
+            x_coor = (self.rect.x) // 34
+        y_coor = (self.rect.y) // 34
+        try:
+            jump = True
+            for y in range(3):
+                if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
+                    jump = False
+            if jump:
+                self.direction = not self.direction
+                self.movement[0] = -self.movement[0]
+                self.rect.y -= 35
+        except Exception as e:
+            KDS.Logging.AutoError(e)
+
     def lateUpdate(self, *args):
         if not self.sleep and self.health > 0:
-            s = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
-            s1 = searchForPlayer(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
+            s = searchRect(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
+            s1 = searchRect(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
             if self.collisions != None:
-                def AI_pathfinder(self : Mummy, obstacles, collision_type : str):
-                    x_coor = 0
-                    if collision_type == "right":
-                        x_coor = (self.rect.x + self.rect.w) // 34
-                    else:
-                        x_coor = (self.rect.x) // 34
-                    y_coor = (self.rect.y) // 34
-                    try:
-                        jump = True
-                        for y in range(3):
-                            if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
-                                jump = False
-                                return self
-                        if jump:
-                            self.direction = not self.direction
-                            self.movement[0] = -self.movement[0]
-                            self.rect.y -= 35
-                        return self
-                    except IndexError:
-                        return self
 
                 if self.collisions.right:
-                    self = AI_pathfinder(self, args[0], "right")
+                    self = self.pathfinder(args[0], "right")
                 elif self.collisions.left:
-                    self = AI_pathfinder(self, args[0], "left")
+                    self = self.pathfinder(args[0], "left")
 
             if s or s1:
                 if self.rect.centerx < args[1].centerx:
@@ -724,7 +724,7 @@ class SecurityGuard(HostileEnemy):
 
         #endregion
 
-        super().__init__(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[1, 8], attackPropability=40)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[1, 8], attackPropability=40)
 
     def lateInit(self):
         super().lateInit()
