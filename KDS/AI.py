@@ -1,6 +1,6 @@
 import math
 import random
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import pygame
 
@@ -45,7 +45,7 @@ def init():
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
     imp_fireball.set_colorkey((255, 255, 255))
 
-def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacles,  maxAngle=40, maxSearchUnits=24):
+def searchForPlayer(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, Surface: pygame.Surface, scroll: Sequence[int], obstacles,  maxAngle: int = 40, maxSearchUnits: int = 24):
     if direction:
         if targetRect.x > searchRect.x:
             return False, 0
@@ -93,6 +93,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
                         return True, slope
     return False, 0
 
+#region Old Bulldog
 # class Bulldog:
 #
 #     a = False
@@ -188,6 +189,7 @@ def searchForPlayer(targetRect, searchRect, direction, Surface, scroll, obstacle
 #         if self.rect.colliderect(render_rect):
 #             surface.blit(pygame.transform.flip(self.animation.get_frame(), self.direction, False),(self.rect.x - scroll[0], self.rect.y - scroll[1]))
 #         return self.damage
+#endregion
 
 class HostileEnemy:
     def __init__(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health, mv, attackPropability, sleep = True, direction = False):
@@ -243,7 +245,7 @@ class HostileEnemy:
         self.listenerInstance.OnTrigger -= self.listenerTrigger
         self.listenerInstance = None
 
-    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect, debug: bool = False):
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles, targetRect, debug: bool = False):
         enemyProjectiles = None
         dropItems = []
 
@@ -753,9 +755,3 @@ class SecurityGuard(HostileEnemy):
     def onDeath(self):
         items = []
         return items
-
-class Projectile:
-    pass
-
-class Hitscanner:
-    pass

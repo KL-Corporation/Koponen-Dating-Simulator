@@ -146,7 +146,9 @@
         "145": "kiuas.png",
         "146": "white_table_front.png",
         "147": "white_table_side.png",
-        "148": "CorkBoard.png"
+        "148": "CorkBoard.png",
+		"149": "map.png",
+		"150": "table0_mirrored.png"
     },
 
     "tile_sounds" : {
@@ -233,7 +235,8 @@
         138,
         139,
         140,
-        148
+        148,
+		149
     ],
     "trueScale": [
         86,
@@ -267,7 +270,8 @@
         141,
         146,
         147,
-        148
+        148,
+		149
     ],
     "teleport_textures": {
         "001": "telep.png",
