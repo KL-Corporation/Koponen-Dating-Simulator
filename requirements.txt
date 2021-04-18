@@ -4,4 +4,3 @@ pygame
 pillow
 markdown
 numpy
-numba
