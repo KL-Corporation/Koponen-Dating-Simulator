@@ -1,5 +1,4 @@
-from KoponenDatingSimulator import Player
-from typing import List, Optional, Sequence, TYPE_CHECKING, Tuple
+from typing import List, Sequence, TYPE_CHECKING, Tuple
 import pygame
 
 import KDS.Animator
