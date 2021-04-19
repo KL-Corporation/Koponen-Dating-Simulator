@@ -46,13 +46,12 @@ def init():
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
     imp_fireball.set_colorkey((255, 255, 255))
 
-def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, Surface: pygame.Surface, scroll: Sequence[int], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24):
+def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, surface: Optional[pygame.Surface], scroll: Optional[Sequence[int]], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24):
     if direction:
         if targetRect.x > searchRect.x:
             return False, 0
-    else:
-        if targetRect.x < searchRect.x:
-            return False, 0
+    elif targetRect.x < searchRect.x:
+        return False, 0
 
     angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
     if abs(angle) < maxAngle:
@@ -65,7 +64,7 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
     dirVar = KDS.Convert.ToMultiplier(direction)
     searchPointers = [(searchRect.centerx + x * 30 * dirVar, searchRect.centery + x * 30 * dirVar * slope) for x in range(maxSearchUnits)]
     for pointer in searchPointers:
-        #pygame.draw.rect(Surface, KDS.Colors.EmeraldGreen, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 3, 3))
+        # pygame.draw.rect(surface, KDS.Colors.EmeraldGreen, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 3, 3))
         x = int(pointer[0] / 34)
         y = int(pointer[1] / 34)
         max_x = len(obstacles[0]) - 1
@@ -81,15 +80,16 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
             for unit in row[x:end_x]:
                 if len(unit) > 0:
                     for tile in unit:
-                        if KDS.Logging.profiler_running:
-                            pygame.draw.rect(Surface, KDS.Colors.Red, (tile.rect.x - scroll[0], tile.rect.y - scroll[1], 34, 34))
+                        if KDS.Logging.profiler_running and surface != None and scroll != None:
+                            # ^^^^^^^^^^^^^^^^^^^^^^^^ BRUHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+                            pygame.draw.rect(surface, KDS.Colors.Red, (tile.rect.x - scroll[0], tile.rect.y - scroll[1], 34, 34))
                         if tile.checkCollision:
                             return False, 0
                         if tile.rect.colliderect(targetRect):
                             return True, slope
                 else:
-                    if KDS.Logging.profiler_running:
-                        pygame.draw.rect(Surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13))
+                    if KDS.Logging.profiler_running and surface != None and scroll != None:
+                        pygame.draw.rect(surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13))
                     if targetRect.collidepoint( (int(pointer[0]), int(pointer[1]))):
                         return True, slope
     return False, 0
@@ -253,7 +253,7 @@ class HostileEnemy:
         dropItems: List[int] = []
 
         if self.health:
-            s = searchRect(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)[0]
+            s = searchRect(targetRect=targetRect, searchRect=self.rect, direction=self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
         else:
             s = False
         if s:
@@ -270,7 +270,7 @@ class HostileEnemy:
                 if self.attackRunning:
                     self.animation.trigger("attack")
                     if self.animation.active.done:
-                        df, sl2 = searchRect(targetRect=targetRect, searchRect=self.rect, direction=self.direction, Surface=Surface, scroll=scroll, obstacles=tiles)
+                        df, sl2 = searchRect(targetRect=targetRect, searchRect=self.rect, direction=self.direction, surface=Surface, scroll=scroll, obstacles=tiles)
                         if df:
                             enemyProjectiles = self.attack((sl2 * -1) * 3, tiles, targetRect)
                         self.attakF = False
@@ -299,7 +299,7 @@ class HostileEnemy:
                     if item:
                         dropItems.append(item)
                 self.playDeathSound = False
-            _ = self.mover.move(self.rect, [0,8], tiles)
+            _ = self.mover.move(self.rect, [0,8], tiles) # Useless?
             self.animation.trigger("death")
 
         if debug:
@@ -670,8 +670,8 @@ class Mummy(HostileEnemy):
 
     def lateUpdate(self, *args):
         if not self.sleep and self.health > 0:
-            s = searchRect(targetRect=args[1], searchRect=self.rect, direction= self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
-            s1 = searchRect(targetRect=args[1], searchRect=self.rect, direction= not self.direction, Surface=args[4], scroll=args[3], obstacles=args[0])[0]
+            s = searchRect(targetRect=args[1], searchRect=self.rect, direction= self.direction, surface=args[4], scroll=args[3], obstacles=args[0])[0]
+            s1 = searchRect(targetRect=args[1], searchRect=self.rect, direction= not self.direction, surface=args[4], scroll=args[3], obstacles=args[0])[0]
             if self.collisions != None:
 
                 if self.collisions.right:

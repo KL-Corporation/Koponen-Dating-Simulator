@@ -376,7 +376,7 @@ level_background_img = Any
 
 Items: List[KDS.Build.Item] = []
 Enemies: List[KDS.AI.HostileEnemy] = []
-Entities: List[Union[KDS.NPC.NPC, KDS.Teachers.Teacher]]
+Entities: List[KDS.Teachers.Teacher] = []
 
 true_scroll = [0.0, 0.0]
 SCROLL_OFFSET = (301, 221)
@@ -2149,23 +2149,24 @@ class BloodFlask(KDS.Build.Item):
         return False
 
 class Grenade(KDS.Build.Item):
+    Slope = 0.7
+    Force = 9
+
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-        self.t = i_textures[29] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
-
         if KDS.Keys.altUp.pressed:
-            KDS.World.Grenade_O.Slope += 0.03
+            Grenade.Slope += 0.03
         elif KDS.Keys.altDown.pressed:
-            KDS.World.Grenade_O.Slope -= 0.03
+            Grenade.Slope -= 0.03
 
-        pygame.draw.line(screen, (255, 10, 10), (Player.rect.centerx - scroll[0], Player.rect.y + 10 - scroll[1]), (Player.rect.centerx + (KDS.World.Grenade_O.force + 15)*KDS.Convert.ToMultiplier(Player.direction) - scroll[0], Player.rect.y+ 10 + KDS.World.Grenade_O.Slope*(KDS.World.Grenade_O.force + 15)*-1 - scroll[1]) )
+        pygame.draw.line(screen, (255, 10, 10), (Player.rect.centerx - scroll[0], Player.rect.y + 10 - scroll[1]), (Player.rect.centerx + (Grenade.Force + 15) * KDS.Convert.ToMultiplier(Player.direction) - scroll[0], Player.rect.y + 10 + Grenade.Slope * (Grenade.Force + 15) * -1 - scroll[1]) )
         if KDS.Keys.mainKey.pressed:
             KDS.Audio.PlaySound(grenade_throw)
             Player.inventory.dropItem(forceDrop=True)
-            BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), KDS.World.Grenade_O.Slope, KDS.World.Grenade_O.force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
-        return self.t
+            BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), Grenade.Slope, Grenade.Force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
+        return self.texture
 
     def pickup(self):
         KDS.Scores.score += 7
@@ -2371,7 +2372,7 @@ class Enemy:
         for r in projectiles:
             Projectiles.append(r)
         for serialNumber in items:
-            tempItem = KDS.Build.Item(enemy.rect.center, serialNumber=serialNumber, texture=i_textures[serialNumber])
+            tempItem = KDS.Build.Item.serialNumbers[serialNumber](enemy.rect.center, serialNumber=serialNumber)
             tempItem.physics = True
             Items.append(tempItem)
 
@@ -2403,8 +2404,8 @@ class Entity:
 
     @staticmethod
     def _internalEntityHandler(entity: KDS.Teachers.Teacher):
-        projectiles, items = entity.update(screen, scroll, tiles, Player, DebugMode)
-        if entity.agroed and entity.health > 0:
+        projectiles, items = entity.update(tiles, Player)
+        if KDS.Teachers.TeacherState.Alerted in entity.state and entity.health > 0:
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
         for r in projectiles:
@@ -2413,6 +2414,7 @@ class Entity:
             tempItem = KDS.Build.Item(entity.rect.center, serialNumber=serialNumber, texture=i_textures[serialNumber])
             tempItem.physics = True
             Items.append(tempItem)
+        entity.render(screen, scroll, DebugMode)
 
     @staticmethod
     def update(Entity_List: Sequence[KDS.Teachers.Teacher]):
@@ -2659,7 +2661,7 @@ KDS.Logging.debug("Player Loading Complete.")
 #region Console
 KDS.Logging.debug("Loading Console...")
 def console(oldSurf: pygame.Surface):
-    global level_finished, go_to_console, Player
+    global level_finished, go_to_console, Player, Enemies
     go_to_console = False
 
     itemDict = {}
@@ -2680,6 +2682,7 @@ def console(oldSurf: pygame.Surface):
         "kill": "break",
         "stop": "break",
         "killme": "break",
+        "killall": "break",
         "terms": trueFalseTree,
         "woof": trueFalseTree,
         "infinite": {
@@ -2750,6 +2753,13 @@ def console(oldSurf: pygame.Surface):
                 KDS.Console.Feed.append("Player Killed.")
                 KDS.Logging.info("Player kill command issued through console.", True)
                 Player.health = 0
+            elif command_list[0] == "killall":
+                KDS.Console.Feed.append("All entities killed.")
+                KDS.Logging.info("Entity kill command issued through console.", True)
+                for enemy in Enemies:
+                    enemy.health = 0
+                for entity in Entities:
+                    entity.health = 0
             elif command_list[0] == "terms":
                 setTerms = False
                 if len(command_list) == 2:
@@ -2840,17 +2850,18 @@ def console(oldSurf: pygame.Surface):
                 else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
             elif command_list[0] == "summon":
                 if len(command_list) > 1:
-                    summonEntity = {
-                        "imp": KDS.AI.Imp(Player.rect.topright),
-                        "sergeantzombie": KDS.AI.SergeantZombie(Player.rect.topright),
-                        "drugdealer": KDS.AI.DrugDealer(Player.rect.topright),
-                        "turboshotgunner": KDS.AI.TurboShotgunner(Player.rect.topright),
-                        "methmaker": KDS.AI.MethMaker(Player.rect.topright),
-                        "cavemonster": KDS.AI.CaveMonster(Player.rect.topright)
+                    summonEntity: Dict[str, Type[KDS.AI.HostileEnemy]] = {
+                        "imp": KDS.AI.Imp,
+                        "sergeantzombie": KDS.AI.SergeantZombie,
+                        "drugdealer": KDS.AI.DrugDealer,
+                        "turboshotgunner": KDS.AI.TurboShotgunner,
+                        "methmaker": KDS.AI.MethMaker,
+                        "cavemonster": KDS.AI.cavemonster_gun
                     }
                     try:
-                        global Enemies
-                        Enemies.append(summonEntity[command_list[1]])
+                        ent = summonEntity[command_list[1]]
+                        Enemies.append(ent(Player.rect.topright))
+                        KDS.Console.Feed.append(f"Summoned Entity: \"{ent.__name__}\".")
                     except KeyError:
                         KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
             elif command_list[0] == "fly":

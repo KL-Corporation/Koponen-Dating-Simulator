@@ -24,6 +24,7 @@ def init(buildData: Dict[str, Any], t_textures: Dict[int, pygame.Surface], i_tex
     Item._textures = i_textures
     Item.inventoryItems = set(buildData["inventory_items"])
     Item.inventoryDoubles = set(buildData["item_doubles"])
+    Item.contraband = set(buildData["contraband"])
 
 class Tile:
     specialTilesClasses: Dict[int, Type[Tile]] = {}
@@ -112,6 +113,7 @@ class Item:
 
     inventoryItems: Set[int] = set()
     inventoryDoubles: Set[int] = set()
+    contraband: Set[int] = set()
 
     _textures: Dict[int, pygame.Surface] = {}
 

@@ -16,6 +16,7 @@ import KDS.World
 import KDS.ConfigManager
 import KDS.Missions
 import KDS.Linq
+import KDS.Build
 
 import dataclasses
 
@@ -265,7 +266,7 @@ class Lighting:
 class Bullet:
     GodMode = False
 
-    def __init__(self, rect, direction: bool, speed: int, environment_obstacles, damage, texture: Optional[pygame.Surface] = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
@@ -421,12 +422,6 @@ class BallisticProjectile:
             Surface.blit(self.texture, (self.rect.x-scroll[0],  self.rect.y-scroll[1]))
         return self.counter > self.flight_time
 
-class itemTools:
-    class Grenade:
-        def __init__(self, slope, force):
-            self.Slope = slope
-            self.force = force
-
 class Explosion:
     def __init__(self, animation: KDS.Animator.Animation, pos: Tuple[int, int]):
         self.animation = animation
@@ -435,5 +430,3 @@ class Explosion:
     def update(self, Surface: pygame.Surface, scroll: List[int]):
         Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
-
-Grenade_O = itemTools.Grenade(0.7, 9)

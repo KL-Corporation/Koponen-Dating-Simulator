@@ -111,7 +111,7 @@ class MultiAnimation:
             else:
                 break
 
-    def trigger(self, animation_trigger):
+    def trigger(self, animation_trigger: str):
         if animation_trigger in self.animations:
             self.active = self.animations[animation_trigger]
         else:
