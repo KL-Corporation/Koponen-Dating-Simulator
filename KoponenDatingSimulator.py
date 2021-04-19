@@ -415,13 +415,26 @@ except:
 #region World Data
 dark: bool = False
 darkness: Tuple[int, int, int] = (0, 0, 0)
-class WorldData():
+class WorldData:
+    _defaultDark: bool = False
+    _defaultDarkness: int = -1
+
     @staticmethod
     def SetDark(enabled: bool, strength: int):
         global dark, darkness
         dark = enabled
         tmp = 255 - strength
         darkness = (tmp, tmp, tmp)
+
+    @staticmethod
+    def ResetDark():
+        WorldData.SetDark(WorldData._defaultDark, WorldData._defaultDarkness)
+
+    @staticmethod
+    def ConfigureDark(enabled: bool, strength: int):
+        WorldData._defaultDark = enabled
+        WorldData._defaultDarkness = strength
+        WorldData.ResetDark()
 
     MapSize = (0, 0)
     @staticmethod
@@ -462,7 +475,7 @@ class WorldData():
 
         global dark, darkness
         KDS.ConfigManager.LevelProp.init(MapPath)
-        WorldData.SetDark(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
+        WorldData.ConfigureDark(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
         Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
         Player.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
         Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
@@ -1627,6 +1640,7 @@ class BaseTeleport(KDS.Build.Tile):
         self.identifier: Optional[int] = None
         self.order: int = KDS.Math.MAXVALUE
         self.interactable: bool = True
+        self.setDark: Optional[int] = None
 
         super().__init__(position, -1)
         self.serialNumber = serialNumber
@@ -1663,14 +1677,19 @@ class BaseTeleport(KDS.Build.Tile):
             return
         if self.teleportSound != None:
             KDS.Audio.PlaySound(self.teleportSound)
-        #Executing teleporting process
+        # Executing teleporting process
         t = BaseTeleport.teleportDatas[self.identifier].Next(self)
         t.onTeleport()
         Player.rect.midbottom = t.rect.midbottom
-        #Reseting scroll
+        # Reseting scroll
         true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
         true_scroll[1] += Player.rect.y - true_scroll[1] - SCROLL_OFFSET[1]
-        #Triggering Listener
+        # Setting Dark
+        if self.setDark != None:
+            WorldData.SetDark(True, self.setDark)
+        else:
+            WorldData.ResetDark()
+        # Triggering Listener
         KDS.Missions.Listeners.Teleport.Trigger()
 
     def onTeleport(self):
