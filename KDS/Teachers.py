@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List, Sequence, TYPE_CHECKING, Tuple
 import pygame
 
@@ -30,19 +31,20 @@ class Teacher:
     def __init__(self, pos: Tuple[int, int]) -> None:
         pass
 
+    @property
+    def health(self) -> int:
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        if value < self._health:
+            self.onDamage()
+        self._health = value
+
     def internalInit(self, rect: pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, agro_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health: int, weapon: KDS.Build.Weapon, walk_speed: int, run_speed: int, attackPropability: int, sleep: bool = True, direction: bool = False) -> None:
         self.rect = rect
-        self.__health = health
+        self._health = health
 
-        def sethealth(self: Teacher, health: int):
-            if health < self.__health:
-                self.onDamage()
-            self.__health = health
-
-        def gethealth(self: Teacher) -> int:
-            return self.health
-
-        self.health = property(gethealth, sethealth)
         self.sleep = sleep
         self.direction = direction
 
@@ -80,7 +82,11 @@ class Teacher:
         return [x.serialNumber for x in self.inventory if x != None]
 
     def onDamage(self):
-        pass
+        # Sub-optimal, but works
+        if TeacherState.Combat not in self.state:
+            self.state |= TeacherState.Combat
+        if TeacherState.Alerted not in self.state:
+            self.state |= TeacherState.Alerted
 
     def render(self, surface: pygame.Surface, scroll: Sequence[int], debug: bool):
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
@@ -130,6 +136,9 @@ class Teacher:
                 self.state |= TeacherState.RemovingContraband
             if TeacherState.Alerted in self.state and TeacherState.Combat not in self.state:
                 self.state |= TeacherState.Combat
+        else:
+            if TeacherState.Combat in self.state:
+                self.state &= TeacherState.Combat
                 if TeacherState.Searching not in self.state:
                     self.state |= TeacherState.Searching
         #endregion

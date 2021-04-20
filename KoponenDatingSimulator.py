@@ -2427,33 +2427,7 @@ KDS.Missions.Listeners.TeacherDeath.OnTrigger += Entity._addDeath
 KDS.Logging.debug("Loading Player...")
 class PlayerClass:
     def __init__(self) -> None:
-        self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.health: float = 100.0
-        self.lastHealth: float = self.health
-        self.stamina: float = 100.0
         self.inventory = KDS.Inventory.Inventory(5)
-        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
-        self.farting: bool = False
-        self.fart_counter: int = 0
-        self.light: bool = False
-        self.infiniteHealth: bool = False
-        self.fly: bool = False
-        self.dead: bool = False
-        self.deathAnimFinished: bool = False
-        self.deathWait: int = 0
-        self.direction: bool = False
-        self.walking: bool = False
-        self.air_timer: int = 0
-        self.movement: List[float] = [0, 0]
-        self.walk_sound_delay: float = 9999
-        self.vertical_momentum: float = 0
-        self.onLadder: bool = False
-        self.disableSprint: bool = False
-        self.wasOnLadder: bool = False
-        self.crouching: bool = False
-        self.running: bool = False
-        self.visible: bool = True
-        self.lockMovement: bool = False
         self.animations: KDS.Animator.MultiAnimation = KDS.Animator.MultiAnimation(
             idle = KDS.Animator.Animation("idle", 2, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
             walk = KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
@@ -2463,13 +2437,13 @@ class PlayerClass:
             death = KDS.Animator.Animation("death", 6, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Player")
         )
         self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
-
         self.mover = KDS.World.EntityMover(w_sounds=path_sounds)
+
+        self.reset()
 
     def reset(self, clear_inventory: bool = True):
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
-        self.health: float = 100.0
-        self.lastHealth: float = self.health
+        self._health: float = 100.0
         self.stamina: float = 100.0
         if clear_inventory: self.inventory = KDS.Inventory.Inventory(5)
         self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
@@ -2496,6 +2470,16 @@ class PlayerClass:
         self.lockMovement: bool = False
         self.animations.reset()
         self.deathSound.stop()
+
+    @property
+    def health(self) -> float:
+        return self._health
+
+    @health.setter
+    def health(self, value: float):
+        if value < self._health and value > 0:
+            KDS.Audio.PlaySound(hurt_sound)
+        self._health = value
 
     def update(self):
         if self.infiniteHealth: self.health = KDS.Math.INFINITY
@@ -2609,9 +2593,6 @@ class PlayerClass:
                 else:
                     self.animations.trigger("idle_short")
 
-            if self.health < self.lastHealth and self.health > 0:
-                KDS.Audio.PlaySound(hurt_sound)
-                self.lastHealth = self.health
             self.onLadder = False
         #endregion
         #region Flying
