@@ -981,13 +981,9 @@ class DecorativeHead(KDS.Build.Tile):
         if self.rect.colliderect(Player.rect):
             if not self.prayed:
                 screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - decorative_head_tip.get_width() // 2, self.rect.top - scroll[1] - 20))
-                if KDS.Keys.functionKey.pressed:
-                    if not self.praying and not self.prayed:
-                        KDS.Audio.PlaySound(pray_sound)
-                        self.praying = True
-                else:
-                    pray_sound.stop()
-                    self.praying = False
+                if KDS.Keys.functionKey.pressed and not self.praying:
+                    KDS.Audio.PlaySound(pray_sound)
+                    self.praying = True
                 if KDS.Keys.functionKey.held:
                     self.prayed = True
                     self.justPrayed = True
