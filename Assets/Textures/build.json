@@ -71,7 +71,7 @@
         "069": "nice.png",
         "070": "block_r.png",
         "071": "wall_light.png",
-        "072": "wall_light1.png",
+        "072": "wall_light_mirrored.png",
         "073": "door_front.png",
         "074": "respawn_anchor_off.png",
         "075": "teleport_base.png",

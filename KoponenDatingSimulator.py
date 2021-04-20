@@ -996,6 +996,7 @@ class DecorativeHead(KDS.Build.Tile):
         else:
             pray_sound.stop()
             self.praying = False
+
         if self.prayed:
             if dark:
                 Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 1900), True))
@@ -1169,11 +1170,10 @@ class WallLight(KDS.Build.Tile):
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
         self.direction = serialNumber == 72
-        self.texture = pygame.transform.flip(t_textures[71], self.direction, False)
         self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False)
 
     def update(self):
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - 17 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery), self.light_t, True))
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx - (17 * KDS.Convert.ToMultiplier(self.direction)), self.rect.centery), self.light_t, True))
         return self.texture
 
 class RespawnAnchor(KDS.Build.Tile):

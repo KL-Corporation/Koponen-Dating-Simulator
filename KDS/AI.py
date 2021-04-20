@@ -46,7 +46,7 @@ def init():
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
     imp_fireball.set_colorkey((255, 255, 255))
 
-def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, surface: Optional[pygame.Surface], scroll: Optional[Sequence[int]], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24):
+def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, surface: Optional[pygame.Surface], scroll: Optional[Sequence[int]], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24) -> Tuple[bool, float]:
     if direction:
         if targetRect.x > searchRect.x:
             return False, 0
@@ -84,7 +84,7 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
                             # ^^^^^^^^^^^^^^^^^^^^^^^^ BRUHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
                             pygame.draw.rect(surface, KDS.Colors.Red, (tile.rect.x - scroll[0], tile.rect.y - scroll[1], 34, 34))
                         if tile.checkCollision:
-                            return False, 0
+                            return False, 0.0
                         if tile.rect.colliderect(targetRect):
                             return True, slope
                 else:
@@ -92,7 +92,7 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
                         pygame.draw.rect(surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13))
                     if targetRect.collidepoint( (int(pointer[0]), int(pointer[1]))):
                         return True, slope
-    return False, 0
+    return False, 0.0
 
 #region Old Bulldog
 # class Bulldog:
@@ -290,17 +290,15 @@ class HostileEnemy:
             else:
                 _ = self.mover.move(self.rect, [0,8], tiles)
                 self.animation.trigger("idle")
-        else:
-            if self.playDeathSound:
-                KDS.Audio.PlaySound(self.death_sound)
-                items = self.onDeath()
-                KDS.Missions.Listeners.EnemyDeath.Trigger()
-                for item in items:
-                    if item:
-                        dropItems.append(item)
-                self.playDeathSound = False
-            _ = self.mover.move(self.rect, [0,8], tiles) # Useless?
+        elif self.playDeathSound:
             self.animation.trigger("death")
+            KDS.Audio.PlaySound(self.death_sound)
+            items = self.onDeath()
+            KDS.Missions.Listeners.EnemyDeath.Trigger()
+            for item in items:
+                if item:
+                    dropItems.append(item)
+            self.playDeathSound = False
 
         if debug:
             pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
