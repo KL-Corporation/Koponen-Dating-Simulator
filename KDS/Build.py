@@ -15,16 +15,32 @@ import KDS.Scores
 import KDS.Audio
 import KDS.Animator
 
-def init(buildData: Dict[str, Any], t_textures: Dict[int, pygame.Surface], i_textures: Dict[int, pygame.Surface]):
-    Tile.noCollision = set(buildData["noCollision"])
-    Tile.trueScale = set(buildData["trueScale"])
-    Tile.specialTiles = set(buildData["special_tiles"])
+def init(tileData: Dict[str, Dict[str, Any]], itemData: Dict[str, Dict[str, Any]], t_textures: Dict[int, pygame.Surface], i_textures: Dict[int, pygame.Surface]):
+    Tile.noCollision.clear()
+    Tile.trueScale.clear()
+    Tile.specialTiles.clear()
+    for d in tileData.values():
+        if d["noCollision"] == True:
+            Tile.noCollision.add(d["serialNumber"])
+        if d["trueScale"] == True:
+            Tile.trueScale.add(d["serialNumber"])
+        if d["specialTile"] == True:
+            Tile.specialTiles.add(d["serialNumber"])
+
+    Item.inventoryItems.clear()
+    Item.inventoryDoubles.clear()
+    Item.contraband.clear()
+    for d in itemData.values():
+        if d["supportsInventory"] == True:
+            Item.inventoryItems.add(d["serialNumber"])
+        if d["doubleSize"] == True:
+            Item.inventoryDoubles.add(d["serialNumber"])
+        if d["isContraband"] == True:
+            Item.contraband.add(d["serialNumber"])
+
     Tile._renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 8)
     Tile._textures = t_textures
     Item._textures = i_textures
-    Item.inventoryItems = set(buildData["inventory_items"])
-    Item.inventoryDoubles = set(buildData["item_doubles"])
-    Item.contraband = set(buildData["contraband"])
 
 class Tile:
     specialTilesClasses: Dict[int, Type[Tile]] = {}

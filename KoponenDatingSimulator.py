@@ -609,24 +609,28 @@ class WorldData:
 #region Data
 KDS.Logging.debug("Loading Data...")
 
-with open("Assets/Textures/build.json", "r") as f:
-    buildData: Dict[str, Any] = json.loads(f.read())
-
+with open("Assets/Data/Build/tiles.kdf", "r", encoding="utf-8") as f:
+    tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
 t_textures: Dict[int, pygame.Surface] = {}
-for k, v in buildData["tile_textures"].items():
-    t_textures[int(k)] = pygame.image.load("Assets/Textures/Tiles/" + v).convert()
-    t_textures[int(k)].set_colorkey(KDS.Colors.White)
+for d in tileData.values():
+    d_srl = d["serialNumber"]
+    t_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Tiles/{d["path"]}""").convert()
+    t_textures[d_srl].set_colorkey(KDS.Colors.White)
 
+with open("Assets/Data/Build/teleports.kdf", "r", encoding="utf-8") as f:
+    teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
 telep_textures: Dict[int, Optional[pygame.Surface]] = {}
-for k, v in buildData["teleport_textures"].items():
-    telep_textures[int(k)] = pygame.image.load("Assets/Textures/Teleports/" + v).convert() if v != None else None
+for d in teleportData.values():
+    telep_textures[d["serialNumber"]] = pygame.image.load(f"""Assets/Textures/Teleports/{d["path"]}""").convert()
 
+with open("Assets/Data/Build/items.kdf", "r", encoding="utf-8") as f:
+    itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
 i_textures: Dict[int, pygame.Surface] = {}
-for k, v in buildData["item_textures"].items():
-    i_textures[int(k)] = pygame.image.load("Assets/Textures/Items/" + v).convert()
-    i_textures[int(k)].set_colorkey(KDS.Colors.White)
+for d in itemData.values():
+    d_srl = d["serialNumber"]
+    i_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Items/{d["path"]}""").convert()
+    i_textures[d_srl].set_colorkey(KDS.Colors.White)
 
-path_sounds_temp = buildData["tile_sounds"]
 path_sounds: Dict[str, pygame.mixer.Sound] = {}
 default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
 sounds = []
@@ -635,9 +639,9 @@ for p in default_paths:
 path_sounds["default"] = sounds
 #for p in path_sounds_temp:
 #    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
-del path_sounds_temp, default_paths, sounds
+del default_paths, sounds
 
-KDS.Build.init(buildData, t_textures, i_textures)
+KDS.Build.init(tileData, itemData, t_textures, i_textures)
 
 def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
     if event in ignore:
@@ -2641,11 +2645,15 @@ def console(oldSurf: pygame.Surface):
     global level_finished, go_to_console, Player, Enemies
     go_to_console = False
 
-    itemDict = {}
-    for itemKey in buildData["item_textures"]:
-        if int(itemKey) in buildData["inventory_items"]: itemDict[os.path.splitext(buildData["item_textures"][itemKey])[0]] = itemKey
-    itemDict["key"] = {}
-    for key in Player.keys: itemDict["key"][key] = "break"
+    itemDict: Dict[str, Union[str, Dict[str, str]]] = {}
+    for itemName, _data in itemData.items():
+        if _data["supportsInventory"] != True:
+            continue
+        itemDict[itemName.replace(" ", "_")] = f"""{_data["serialNumber"]:03d}"""
+    keyDict = {}
+    for key in Player.keys:
+        keyDict[key] = "break"
+    itemDict["key"] = keyDict
 
     trueFalseTree = {"true": "break", "false": "break"}
 
@@ -2696,7 +2704,11 @@ def console(oldSurf: pygame.Surface):
             if command_list[0] == "give":
                 if command_list[1] != "key":
                     if command_list[1] in itemDict:
-                        consoleItemSerial = int(itemDict[command_list[1]])
+                        consoleItemSerial = itemDict[command_list[1]]
+                        if not isinstance(consoleItemSerial, str):
+                            KDS.Logging.AutoError(f"Unexpected data type. Expected: {str.__name__}, Got: {type(consoleItemSerial)}")
+                            return
+                        consoleItemSerial = int(consoleItemSerial)
                         Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial), force=True)
                         KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
                     else: KDS.Console.Feed.append(f"Item not found.")

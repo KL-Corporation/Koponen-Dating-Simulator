@@ -17,11 +17,6 @@ import KDS.Math
 import KDS.Linq
 
 #endregion
-#region Initialisation
-with open ("Assets/Textures/build.json", "r") as f:
-    data = f.read()
-buildData = json.loads(data)
-#endregion
 #region Settings
 MissionColor = (128, 128, 128)
 MissionFinishedColor = (0, 128, 0)
