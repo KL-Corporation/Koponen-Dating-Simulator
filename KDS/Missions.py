@@ -307,13 +307,13 @@ def InitialiseMission(SafeName: str, Text: str, NoSound: bool = False):
 #region Rendering
 def Render(surface: pygame.Surface):
     global Missions, Active_Mission
-    Active_Mission = None
+    Active_Mission = ""
     for mission in Missions.GetMissionList():
         mission.Update()
         if not mission.trueFinished:
             Active_Mission = mission.safeName
             break
-    if Active_Mission == None:
+    if len(Active_Mission) < 1:
         Missions.finished = True
         return
 

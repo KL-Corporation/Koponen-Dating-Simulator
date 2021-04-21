@@ -1,10 +1,8 @@
 from __future__ import annotations
-
 #region Import Error
 if __name__ != "__main__":
     raise ImportError("Level Builder cannot be imported!")
 #endregion
-
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -185,23 +183,28 @@ class TextureHolder:
                 d.rescaleTexture()
 
 #region Textures
-with open("Assets/Textures/build.json") as f:
-    buildData = json.loads(f.read())
 Textures = TextureHolder()
-for element in buildData["tile_textures"]:
-    srl = f"0{element}"
-    elmt = buildData["tile_textures"][element]
-    Textures.AddTexture(srl, f"Assets/Textures/Tiles/{elmt}", os.path.splitext(elmt)[0], alpha= -1 if srl != "0102" else 30)
+trueScale: Set[str] = set()
 
-for element in buildData["item_textures"]:
-    srl = f"1{element}"
-    elmt = buildData["item_textures"][element]
-    Textures.AddTexture(srl, f"Assets/Textures/Items/{elmt}", os.path.splitext(elmt)[0])
+with open("Assets/Data/Build/tiles.kdf") as f:
+    tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+for dName, d in tileData.items():
+    srl = f"""0{d["serialNumber"]:03d}"""
+    Textures.AddTexture(srl, f"""Assets/Textures/Tiles/{d["path"]}""", dName, alpha= -1 if srl != "0102" else 30)
+    if d["trueScale"] == True:
+        trueScale.add(srl)
 
-for element in buildData["teleport_textures"]:
-    srl = f"3{element}"
-    elmt = buildData["teleport_textures"][element]
-    Textures.AddTexture(srl, f"Assets/Textures/Teleports/{elmt}", f"teleport_{os.path.splitext(elmt)[0]}", KDS.Colors.White if srl != "3001" else None)
+with open("Assets/Data/Build/items.kdf") as f:
+    itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+for dName, d in itemData.items():
+    srl = f"""1{d["serialNumber"]:03d}"""
+    Textures.AddTexture(srl, f"""Assets/Textures/Items/{d["path"]}""", dName)
+
+with open("Assets/Data/Build/teleports.kdf") as f:
+    teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+for dName, d in teleportData.items():
+    srl = f"""3{d["serialNumber"]:03d}"""
+    Textures.AddTexture(srl, f"""Assets/Textures/Teleports/{d["path"]}""", dName, KDS.Colors.White if srl != "3001" else None)
 
 Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "imp", (0, 0))
 Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "seargeant", (0, 0))
@@ -214,7 +217,8 @@ Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "m
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "security_guard", (0, 0))
 #endregion
 
-trueScale = {f"0{e:03d}" for e in buildData["trueScale"]}
+
+
 ### GLOBAL VARIABLES ###
 
 DebugMode = False
