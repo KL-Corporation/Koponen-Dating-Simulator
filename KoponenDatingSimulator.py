@@ -2648,7 +2648,7 @@ def console(oldSurf: pygame.Surface):
     for itemName, _data in itemData.items():
         if _data["supportsInventory"] != True:
             continue
-        itemDict[itemName.replace(" ", "_")] = f"""{_data["serialNumber"]:03d}"""
+        itemDict[itemName.replace(" ", "_").lower()] = f"""{_data["serialNumber"]:03d}"""
     keyDict = {}
     for key in Player.keys:
         keyDict[key] = "break"
@@ -2702,15 +2702,14 @@ def console(oldSurf: pygame.Surface):
         try:
             if command_list[0] == "give":
                 if command_list[1] != "key":
-                    foundItem = KDS.Linq.GetOrNone(itemDict, command_list[1], lambda iterN, N: iterN.lower() == N) # N is already lowered.
-                    if foundItem != None:
-                        consoleItemSerial = itemDict[foundItem]
+                    if command_list[1] in itemDict:
+                        consoleItemSerial = itemDict[command_list[1]]
                         if not isinstance(consoleItemSerial, str):
                             KDS.Logging.AutoError(f"Unexpected data type. Expected: {str.__name__}, Got: {type(consoleItemSerial)}")
                             return
                         consoleItemSerialInt = int(consoleItemSerial)
                         Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerialInt]((0, 0), consoleItemSerialInt), force=True)
-                        KDS.Console.Feed.append(f"Item was given: [{consoleItemSerial}: {foundItem}]")
+                        KDS.Console.Feed.append(f"Item was given: [{consoleItemSerial}: {command_list[1]}]")
                     else: KDS.Console.Feed.append(f"Item not found.")
                 else:
                     if len(command_list) > 2:
