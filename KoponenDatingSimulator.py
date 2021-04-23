@@ -2708,9 +2708,9 @@ def console(oldSurf: pygame.Surface):
                         if not isinstance(consoleItemSerial, str):
                             KDS.Logging.AutoError(f"Unexpected data type. Expected: {str.__name__}, Got: {type(consoleItemSerial)}")
                             return
-                        consoleItemSerial = int(consoleItemSerial)
-                        Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerial]((0, 0), consoleItemSerial), force=True)
-                        KDS.Console.Feed.append(f"Item was given: [{itemDict[command_list[1]]}: {command_list[1]}]")
+                        consoleItemSerialInt = int(consoleItemSerial)
+                        Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerialInt]((0, 0), consoleItemSerialInt), force=True)
+                        KDS.Console.Feed.append(f"Item was given: [{consoleItemSerial}: {foundItem}]")
                     else: KDS.Console.Feed.append(f"Item not found.")
                 else:
                     if len(command_list) > 2:
@@ -2894,7 +2894,7 @@ def console(oldSurf: pygame.Surface):
             else:
                 KDS.Console.Feed.append("Invalid Command.")
         except Exception as e:
-            KDS.Logging.AutoError(f"An exception occured while running console. Exception below:\n{e}")
+            KDS.Logging.AutoError(f"An exception occured while running console. Exception below:\n{traceback.format_exc()}")
             KDS.Console.Feed.append("An exception occured!")
 #endregion
 #region Terms and Conditions
