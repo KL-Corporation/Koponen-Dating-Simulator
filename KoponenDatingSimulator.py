@@ -2704,7 +2704,7 @@ def console(oldSurf: pygame.Surface):
                 if command_list[1] != "key":
                     foundItem = KDS.Linq.GetOrNone(itemDict, command_list[1], lambda iterN, N: iterN.lower() == N) # N is already lowered.
                     if foundItem != None:
-                        consoleItemSerial = itemDict[command_list[1]]
+                        consoleItemSerial = itemDict[foundItem]
                         if not isinstance(consoleItemSerial, str):
                             KDS.Logging.AutoError(f"Unexpected data type. Expected: {str.__name__}, Got: {type(consoleItemSerial)}")
                             return
@@ -2714,8 +2714,7 @@ def console(oldSurf: pygame.Surface):
                     else: KDS.Console.Feed.append(f"Item not found.")
                 else:
                     if len(command_list) > 2:
-                        foundItem = KDS.Linq.GetOrNone(itemDict, command_list[1], lambda iterN, N: iterN.lower() == N) # N is already lowered.
-                        if foundItem != None:
+                        if command_list[2] in Player.keys:
                             Player.keys[command_list[2]] = True
                             KDS.Console.Feed.append(f"Item was given: {command_list[1]} {command_list[2]}")
                         else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
