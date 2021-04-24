@@ -248,11 +248,13 @@ class Weapon(Item):
         return False
 
     def shoot(self) -> bool:
-        # OVERLOAD EXAMPLE
-        # super().shoot()
-        # Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-        # Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
-        # OVERLOAD EXAMPLE
+        """
+        ### OVERLOAD EXAMPLE
+        super().shoot()\n
+        Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))\n
+        Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))\n
+        ### OVERLOAD EXAMPLE
+        """
         return self.internalShoot()
 
     def use(self) -> pygame.Surface:

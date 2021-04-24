@@ -39,6 +39,17 @@ class Inventory:
 
         return item
 
+    def __iter__(self):
+        self.next = 0
+        return self
+
+    def __next__(self):
+        if self.next >= self.size:
+            raise StopIteration
+        result = self.__getitem__(self.next)
+        self.next += 1
+        return result
+
     def clear(self):
         self.storage = [EMPTYSLOT for _ in range(self.size)]
 

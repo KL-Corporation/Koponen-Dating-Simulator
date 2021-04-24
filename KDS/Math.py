@@ -1,4 +1,4 @@
-from typing import Iterable, List, SupportsFloat, Tuple, TypeVar, Union, cast
+from typing import Iterable, List, Sequence, SupportsFloat, Tuple, TypeVar, Union, cast
 import sys
 import enum
 
@@ -230,6 +230,16 @@ def LerpUnclamped(a: float, b: float, t: float) -> float:
     The parameter t is not clamped.
     """
     return a + (b - a) * t
+
+def LerpColor(a: Sequence[int], b: Sequence[int], t: float) -> Tuple[int, int, int]:
+    """Same as Lerp, but lerps color sequences instead.
+
+    The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be sequences of size three with integers in range [0, 255].
+    """
+    _r = Lerp(a[0], b[0], t)
+    _g = Lerp(a[1], b[1], t)
+    _b = Lerp(a[2], b[2], t)
+    return (round(_r), round(_g), round(_b))
 
 def LerpAngle(a: float, b: float, t: float) -> float:
     """Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.

@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, TypeVar, Union, cast
+from typing import Callable, Iterable, Optional, TypeVar, Union, cast
 
 TSource = TypeVar("TSource", bound=object)
 TSelector = TypeVar("TSelector", int, float)
@@ -118,7 +118,7 @@ def First(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TS
             return v
     raise LookupError("No element satisfies the condition in predicate.")
 
-def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Union[TSource, None]:
+def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Optional[TSource]:
     """Returns the first element of the iterable that satisfies a condition or None if no such element is found.
 
     Args:
@@ -126,7 +126,7 @@ def FirstOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool])
         predicate (Callable[[TSource], bool]): A function to test each element for a condition.
 
     Returns:
-        Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
+        Optional[TSource]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
     # Not calling First and catching an exception because catching exceptions is slow as hell
     for v in source:
@@ -152,7 +152,7 @@ def Last(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> TSo
             return v
     raise LookupError("No element satisfies the condition in predicate.")
 
-def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Union[TSource, None]:
+def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> Optional[TSource]:
     """Returns the last element of the iterable that satisfies a condition or None if no such element is found.
 
     Args:
@@ -160,7 +160,7 @@ def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) 
         predicate (Callable[[TSource], bool]): A function to test each element for a condition.
 
     Returns:
-        Union[TSource, None]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
+        Optional[TSource]: None if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
     """
     # Not calling Last and catching an exception because catching exceptions is slow as hell
 

@@ -206,15 +206,17 @@ for dName, d in teleportData.items():
     srl = f"""3{d["serialNumber"]:03d}"""
     Textures.AddTexture(srl, f"""Assets/Textures/Teleports/{d["path"]}""", dName, KDS.Colors.White if srl != "3001" else None)
 
-Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "imp", (0, 0))
-Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "seargeant", (0, 0))
-Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "drug_dealer", (0, 0))
-Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "turbo_shotgunner", (0, 0))
-Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "mafiaman", (0, 0))
-Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "methmaker", (0, 0))
-Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "undead_monster", (0, 0))
-Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "mummy", (0, 0))
-Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "security_guard", (0, 0))
+Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "Imp", (0, 0))
+Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "Seargeant", (0, 0))
+Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "Drug Dealer", (0, 0))
+Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "Turbo Shotgunner", (0, 0))
+Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "Mafiaman", (0, 0))
+Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", (0, 0))
+Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", (0, 0))
+Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy", (0, 0))
+Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", (0, 0))
+
+Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
 #endregion
 
 
@@ -1052,7 +1054,7 @@ def materialMenu(previousMaterial: str) -> str:
                     return previousMaterial
             elif event.type == MOUSEWHEEL:
                 if event.y > 0: rscroll = max(rscroll - 2, 0)
-                else: rscroll = int(min((rscroll + 2) * 30, ROWS * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
+                else: rscroll = int(min((rscroll + 2) * 30, (ROWS - 2) * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
         yCalc = rscroll * 30
 
         tip_renders = []

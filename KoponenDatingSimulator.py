@@ -39,6 +39,7 @@ import sys
 import shutil
 import json
 import datetime
+import traceback
 from pygame.locals import *
 from enum import IntEnum, auto, IntFlag
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
@@ -364,7 +365,7 @@ BallisticObjects: List[KDS.World.BallisticProjectile] = []
 Lights: List[KDS.World.Lighting.Light] = []
 level_finished = False
 Particles = []
-HitTargets = {}
+HitTargets: Dict[KDS.Build.Tile, KDS.World.HitTarget] = {}
 enemy_difficulty = 1
 tiles: List[List[List[KDS.Build.Tile]]] = []
 overlays: List[KDS.Build.Tile] = []
@@ -557,7 +558,7 @@ class WorldData:
                         value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
                         tiles[y][x].append(value)
                     elif pointer == 4:
-                        value = KDS.Teachers.Teacher((x * 34, y * 34))
+                        value = KDS.Teachers.Teacher.serialNumbers[serialNumber]((x * 34, y * 34))
                         Entities.append(value)
                         Entity.total += 1
                     else:
@@ -911,7 +912,7 @@ class Landmine(KDS.Build.Tile):
                 Player.health -= 100 - KDS.Math.getDistance(Player.rect.center, self.rect.center)
             for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100 and enemy.enabled:
-                    enemy.health -= 120 - KDS.Math.getDistance(enemy.rect.center, self.rect.center)
+                    enemy.health -= 120 - round(KDS.Math.getDistance(enemy.rect.center, self.rect.center))
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))
             self.removeFlag = True
@@ -2384,11 +2385,6 @@ KDS.Missions.Listeners.EnemyDeath.OnTrigger += Enemy._addDeath
 #endregion
 #region Entity
 class Entity:
-    serialNumbers: Dict[int, Type[KDS.Teachers.Teacher]] = {
-        1: KDS.Teachers.LaaTo,
-        2: KDS.Teachers.KuuMa
-    }
-
     agro_count = 0
     death_count = 0
     total = 0
@@ -2418,7 +2414,13 @@ class Entity:
     @staticmethod
     def update(Entity_List: Sequence[KDS.Teachers.Teacher]):
         for entity in Entity_List:
-            Entity._internalEntityHandler(entity)
+            if KDS.Math.getDistance(Player.rect.center, entity.rect.center) < 1200:
+                Entity._internalEntityHandler(entity)
+KDS.Teachers.Teacher.serialNumbers = {
+    1: KDS.Teachers.LaaTo,
+    2: KDS.Teachers.KuuMa,
+    3: KDS.Teachers.Test
+}
 KDS.Missions.Listeners.TeacherAgro.OnTrigger += Entity._addAgro
 KDS.Missions.Listeners.TeacherDeath.OnTrigger += Entity._addDeath
 #endregion
@@ -2478,7 +2480,7 @@ class PlayerClass:
     def health(self, value: float):
         if value < self._health and value > 0:
             KDS.Audio.PlaySound(hurt_sound)
-        self._health = value
+        self._health = max(value, 0)
 
     def update(self):
         if self.infiniteHealth: self.health = KDS.Math.INFINITY
@@ -2648,7 +2650,8 @@ def console(oldSurf: pygame.Surface):
     for itemName, _data in itemData.items():
         if _data["supportsInventory"] != True:
             continue
-        itemDict[itemName.replace(" ", "_").lower()] = f"""{_data["serialNumber"]:03d}"""
+        modName = itemName.replace(" ", "_").lower().replace("(", "").replace(")", "")
+        itemDict[modName.encode("ascii", "ignore").decode("ascii")] = f"""{_data["serialNumber"]:03d}"""
     keyDict = {}
     for key in Player.keys:
         keyDict[key] = "break"
@@ -3797,7 +3800,7 @@ while main_running:
             Player.fart_counter = 0
             for enemy in Enemies:
                 if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) <= 800 and enemy.enabled:
-                    enemy.dmg(random.randint(500, 1000))
+                    enemy.health -= random.randint(500, 1000)
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
@@ -3805,6 +3808,7 @@ while main_running:
     KDS.Build.Tile.renderUpdate(tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll, DebugMode)
 
     Enemy.update(Enemies)
+    Entity.update(Entities)
 
     Player.update()
 
@@ -3834,12 +3838,10 @@ while main_running:
     Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, Enemies, HitTargets, Particles, Player.rect, Player.health, DebugMode)
-        if result:
+        result = Projectile.update(screen, scroll, (*Enemies, *Entities), HitTargets, Particles, Player.rect, Player.health, DebugMode)
+        if result != None:
             v = result[0]
-            Enemies = result[1]
-            Player.health = result[2]
-            HitTargets = result[3]
+            Player.health = result[1]
         else:
             v = None
 

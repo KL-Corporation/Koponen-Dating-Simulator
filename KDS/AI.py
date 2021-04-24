@@ -196,9 +196,17 @@ class HostileEnemy:
     def __init__(self, pos: Tuple[int, int]):
         pass
 
+    @property
+    def health(self) -> int:
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        self._health = max(value, 0)
+
     def internalInit(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health: int, mv: List[int], attackPropability: int, sleep: bool = True, direction: bool = False):
         self.rect = rect
-        self.health = health
+        self._health = health
         self.sleep = sleep
         self.direction = direction
 
@@ -307,11 +315,6 @@ class HostileEnemy:
 
     def lateUpdate(self, *args):
         return
-
-    def dmg(self, dmgAmount):
-        self.health -= dmgAmount
-        if self.health < 0:
-            self.health = 0
 
     def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
         x_coor = 0

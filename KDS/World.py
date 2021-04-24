@@ -7,6 +7,9 @@ import pygame
 from pygame.locals import *
 
 import KDS.Animator
+import KDS.AI
+import KDS.NPC
+import KDS.Teachers
 import KDS.Audio
 import KDS.Colors
 import KDS.Convert
@@ -281,7 +284,7 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets, HitTargets, Particles, plr_rct, plr_htlt, debugMode = False):
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float, debugMode = False) -> Optional[Tuple[str, float]]:
         if self.texture != None:
             Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
@@ -301,27 +304,26 @@ class Bullet:
 
                 collision_list = collision_test(self.rect, self.environment_obstacles)
 
-                for hTarget in HitTargets:
-                    if HitTargets[hTarget].rect.colliderect(self.rect):
-                        HitTargets[hTarget].hitted = True
-                        return "wall", targets, plr_htlt, HitTargets, Particles
+                for hTarget in HitTargets.values():
+                    if hTarget.rect.colliderect(self.rect):
+                        hTarget.hitted = True
+                        return "wall", player_health
 
                 for target in targets:
                     if self.rect.colliderect(target.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
-                        target.dmg(self.damage)
-                        target.sleep = False
+                        target.health -= self.damage
+                        if isinstance(target, KDS.AI.HostileEnemy):
+                            target.sleep = False
                         Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
-                        return "wall", targets, plr_htlt, HitTargets, Particles
+                        return "wall", player_health
 
                 if plr_rct.colliderect(self.rect):
-                    plr_htlt -= self.damage
-                    if plr_htlt < 0:
-                        plr_htlt = 0
-                    return "wall", targets, plr_htlt, HitTargets, Particles
+                    player_health -= self.damage
+                    return "wall", player_health
                 if collision_list:
-                    return "wall", targets, plr_htlt, HitTargets, Particles
+                    return "wall", player_health
 
-            return "air", targets, plr_htlt, HitTargets, Particles
+            return "air", player_health
         else:
             self.rect.x += self.speed * self.direction_multiplier
             self.movedDistance += self.speed
@@ -331,27 +333,25 @@ class Bullet:
 
             collision_list = collision_test(self.rect, self.environment_obstacles)
 
-            for hTarget in HitTargets:
-                if HitTargets[hTarget].rect.colliderect(self.rect):
-                    HitTargets[hTarget].hitted = True
-                    return "wall", targets, plr_htlt, HitTargets, Particles
+            for hTarget in HitTargets.values():
+                if hTarget.rect.colliderect(self.rect):
+                    hTarget.hitted = True
+                    return "wall", player_health
 
             for target in targets:
                 if target.rect.colliderect(self.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
-                    target.sleep = False
-                    target.dmg(self.damage)
-                    return "wall", targets, plr_htlt, HitTargets, Particles
+                    if isinstance(target, KDS.AI.HostileEnemy):
+                        target.sleep = False
+                    target.health -= self.damage
+                    return "wall", player_health
 
             if plr_rct.colliderect(self.rect):
-                plr_htlt -= self.damage
-                if plr_htlt < 0:
-                    plr_htlt = 0
-
-                return "wall", targets, plr_htlt, HitTargets, Particles
+                player_health -= self.damage
+                return "wall", player_health
             if collision_list:
-                return "wall", targets, plr_htlt, HitTargets, Particles
+                return "wall", player_health
             if self.movedDistance > self.maxDistance:
-                return "air", targets, plr_htlt, HitTargets, Particles
+                return "air", player_health
 
 class HitTarget:
     def __init__(self, rect: pygame.Rect):
