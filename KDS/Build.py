@@ -1,10 +1,11 @@
 from __future__ import annotations
 import dataclasses
-from typing import Dict, Any, Sequence, List, Tuple, Set, Type, Optional, Union
+from typing import Dict, Any, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
 import pygame
 import KDS.World
 import KDS.ConfigManager
 import KDS.Colors
+import KDS.Convert
 import KDS.Missions
 import KDS.Math
 import KDS.Logging
@@ -12,8 +13,14 @@ import KDS.Inventory
 import KDS.Keys
 import KDS.Build
 import KDS.Scores
+import KDS.Teachers
 import KDS.Audio
 import KDS.Animator
+
+if TYPE_CHECKING:
+    from KoponenDatingSimulator import PlayerClass
+else:
+    PlayerClass = None
 
 def init(tileData: Dict[str, Dict[str, Any]], itemData: Dict[str, Dict[str, Any]], t_textures: Dict[int, pygame.Surface], i_textures: Dict[int, pygame.Surface]):
     Tile.noCollision.clear()
@@ -218,6 +225,20 @@ class Weapon(Item):
         counter: int
         ammo: Union[int, float]
 
+    @dataclasses.dataclass
+    class WeaponHolderData:
+        rect: pygame.Rect
+        direction: bool
+        weaponDataOverride: Optional[Weapon.WeaponData] = None
+
+        @staticmethod
+        def fromPlayer(player: PlayerClass) -> Weapon.WeaponHolderData:
+            return Weapon.WeaponHolderData(player.rect, player.direction)
+
+        @staticmethod
+        def fromEntity(entity: KDS.Teachers.Teacher) -> Weapon.WeaponHolderData:
+            return Weapon.WeaponHolderData(entity.rect, entity.direction, entity.weaponData)
+
     data: Dict[Type[Weapon], Weapon.WeaponData] = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface) -> None:
@@ -226,40 +247,48 @@ class Weapon(Item):
                                                 # float to pass infinite through
     def internalInit(self, repeat_rate: int, defaultAmmo: Union[int, float], shootTexture: Optional[Union[pygame.Surface, KDS.Animator.Animation]], shootSound: Optional[pygame.mixer.Sound], stopSound: bool = False, allowHold: bool = False) -> None:
         self.repeat_rate = repeat_rate
-        if type(self) not in Weapon.data:
-            Weapon.data[type(self)] = Weapon.WeaponData(self.repeat_rate + 1, defaultAmmo)
-        else:
-            Weapon.data[type(self)].counter = self.repeat_rate + 1
+        self.defaultAmmo = defaultAmmo
+        Weapon.data[type(self)] = self.CreateWeaponData()
         self.sound = shootSound
         self.stopSound = stopSound
         self.f_texture = shootTexture
         self.allowHold = allowHold
 
-    def internalShoot(self) -> bool:
-        if Weapon.data[type(self)].counter > self.repeat_rate:
+    def CreateWeaponData(self) -> Weapon.WeaponData:
+        return Weapon.WeaponData(self.repeat_rate + 1, self.defaultAmmo)
+
+    def internalShoot(self, entityDataOverride: Optional[Weapon.WeaponData]) -> bool:
+        weaponData = Weapon.data[type(self)] if entityDataOverride == None else entityDataOverride
+        if weaponData.counter > self.repeat_rate:
             if self.stopSound and self.sound != None:
                 self.sound.stop()
-            if Weapon.data[type(self)].ammo > 0 or KDS.Build.Item.infiniteAmmo:
+            if weaponData.ammo > 0 or KDS.Build.Item.infiniteAmmo:
                 if self.sound != None:
                     KDS.Audio.PlaySound(self.sound)
-                Weapon.data[type(self)].counter = 0
-                Weapon.data[type(self)].ammo -= 1 # Infinity - 1 is still infinity
+                weaponData.counter = 0
+                weaponData.ammo -= 1 # Infinity - 1 is still infinity
                 return True
         return False
 
-    def shoot(self) -> bool:
+    def shoot(self, holderData: Weapon.WeaponHolderData) -> bool:
         """
         ### OVERLOAD EXAMPLE
-        super().shoot()\n
-        Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))\n
-        Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))\n
+        output = super().shoot(directionMultiplier) \\
+        if output: \\
+            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True)) \\
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * directionMultiplier, Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100)) \\
+        return output
         ### OVERLOAD EXAMPLE
         """
-        return self.internalShoot()
+        return self.internalShoot(holderData.weaponDataOverride)
 
     def use(self) -> pygame.Surface:
+        KDS.Logging.AutoError(f"No custom use initialised for weapon: \"{self.serialNumber}\"!")
+        return self.texture
+
+    def internalUse(self, holderData: Weapon.WeaponHolderData) -> pygame.Surface:
         if KDS.Keys.mainKey.onDown or (self.allowHold and KDS.Keys.mainKey.pressed):
-            if self.shoot() and self.f_texture != None:
+            if self.shoot(holderData) and self.f_texture != None:
                 return self.f_texture if not isinstance(self.f_texture, KDS.Animator.Animation) else self.f_texture.update()
         elif self.stopSound and self.sound != None:
             self.sound.stop()

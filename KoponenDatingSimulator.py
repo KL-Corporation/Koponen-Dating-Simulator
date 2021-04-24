@@ -1889,14 +1889,14 @@ class Knife(KDS.Build.Weapon):
         super().__init__(position, serialNumber, texture)
         self.internalInit(40, KDS.Math.INFINITY, knife_animation_object, None, allowHold=True)
 
-    def shoot(self) -> bool:
-        output = super().shoot()
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 13 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 1, 1), Player.direction, -1, tiles, 25, maxDistance=40))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, tiles, 25, maxDistance=40))
         return output
 
     def use(self) -> pygame.Surface:
-        super().use()
+        self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
         if KDS.Keys.mainKey.pressed:
             return knife_animation_object.update()
         else:
@@ -1941,12 +1941,15 @@ class Pistol(KDS.Build.Weapon):
         KDS.Audio.PlaySound(weapon_pickup)
         return False
 
-    def shoot(self):
-        output = super().shoot()
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
+            Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 100))
         return output
+
+    def use(self) -> pygame.Surface:
+        return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
 
 class PistolMag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -1958,12 +1961,16 @@ class rk62(KDS.Build.Weapon):
         super().__init__(position, serialNumber, texture)
         self.internalInit(4, 30, rk62_f_texture, rk62_shot, True, True)
 
-    def shoot(self):
-        output = super().shoot()
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 50 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 25))
+            Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 25))
         return output
+
+
+    def use(self) -> pygame.Surface:
+        return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
 
     def pickup(self):
         super().pickup()
@@ -1976,13 +1983,16 @@ class Shotgun(KDS.Build.Weapon):
         super().__init__(position, serialNumber, texture)
         self.internalInit(50, 8, shotgun_f, shotgun_shot)
 
-    def shoot(self):
-        output = super().shoot()
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
         return output
+
+    def use(self) -> pygame.Surface:
+        return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
 
     def pickup(self):
         super().pickup()
@@ -2005,12 +2015,15 @@ class Plasmarifle(KDS.Build.Weapon):
         super().__init__(position, serialNumber, texture)
         self.internalInit(3, 36, plasmarifle_animation, plasmarifle_f_sound, allowHold=True)
 
-    def shoot(self):
-        output = super().shoot()
+    def use(self) -> pygame.Surface:
+        return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
+
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            asset_offset = 70 * -KDS.Convert.ToMultiplier(Player.direction)
-            Lights.append(KDS.World.Lighting.Light((int(Player.rect.centerx - asset_offset / 1.4), Player.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx - asset_offset, Player.rect.y + 13, 2, 2), Player.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
+            asset_offset = 70 * -KDS.Convert.ToMultiplier(holderData.direction)
+            Lights.append(KDS.World.Lighting.Light((int(holderData.rect.centerx - asset_offset / 1.4), holderData.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
         return output
 
     def pickup(self):
@@ -2066,11 +2079,14 @@ class Ppsh41(KDS.Build.Weapon):
         super().__init__(position, serialNumber, texture)
         self.internalInit(2, 72, ppsh41_f_texture, smg_shot, True, True)
 
-    def shoot(self):
-        output = super().shoot()
+    def use(self) -> pygame.Surface:
+        return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
+
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 60 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
         return output
 
     def pickup(self):
@@ -2083,11 +2099,14 @@ class Awm(KDS.Build.Weapon):
         super().__init__(position, serialNumber, texture)
         self.internalInit(130, 5, awm_f_texture, awm_shot)
 
-    def shoot(self) -> bool:
-        output = super().shoot()
+    def use(self) -> pygame.Surface:
+        return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
+
+    def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
+        output = super().shoot(holderData)
         if output:
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 90 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, random.randint(300, 590), slope=0))
+            Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, random.randint(300, 590), slope=0))
         return output
 
     def pickup(self):
@@ -2399,8 +2418,8 @@ class Entity:
 
     @staticmethod
     def _internalEntityHandler(entity: KDS.Teachers.Teacher):
-        projectiles, items = entity.update(tiles, Player)
-        if KDS.Teachers.TeacherState.Alerted in entity.state and entity.health > 0:
+        projectiles, items = entity.update(screen, scroll, tiles, Player)
+        if KDS.Teachers.TeacherState.Combat in entity.state and entity.health > 0:
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
         for r in projectiles:
@@ -2409,7 +2428,6 @@ class Entity:
             tempItem = KDS.Build.Item(entity.rect.center, serialNumber=serialNumber, texture=i_textures[serialNumber])
             tempItem.physics = True
             Items.append(tempItem)
-        entity.render(screen, scroll, DebugMode)
 
     @staticmethod
     def update(Entity_List: Sequence[KDS.Teachers.Teacher]):

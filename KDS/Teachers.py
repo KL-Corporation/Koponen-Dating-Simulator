@@ -1,5 +1,6 @@
 from __future__ import annotations
 import random
+from subprocess import STARTF_USESTDHANDLES
 from typing import Dict, List, Optional, Sequence, TYPE_CHECKING, Tuple, Type
 import pygame
 
@@ -51,7 +52,7 @@ class Teacher:
             self.onDamage()
         self._health = max(value, 0)
 
-    def internalInit(self, rect: pygame.Rect, w: KDS.Animator.Animation, r: KDS.Animator.Animation, s: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, agro_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, weapon_serial: int, walk_speed: int, run_speed: int, idle: bool = False, direction: bool = False) -> None:
+    def internalInit(self, rect: pygame.Rect, w: KDS.Animator.Animation, r: KDS.Animator.Animation, s: KDS.Animator.Animation, c: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, agro_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, weapon_serial: int, walk_speed: int, run_speed: int, shootProbability: float, idle: bool = False, direction: bool = False) -> None:
         self.rect = rect
         self._health = health
 
@@ -63,17 +64,23 @@ class Teacher:
         if not isinstance(weapon, KDS.Build.Weapon):
             KDS.Logging.AutoError(f"Unexpected weapon type! Expected: {KDS.Build.Weapon.__name__}, Got: {type(weapon).__name__}")
             weapon = KDS.Inventory.EMPTYSLOT
+            self.weaponData = None
+        else:
+            self.weaponData = weapon.CreateWeaponData()
+            self.weaponData.ammo = KDS.Math.INFINITY
+            self.weaponData.counter = 0
         self.inventory = KDS.Inventory.Inventory(5, (KDS.Inventory.EMPTYSLOT, weapon))
 
-        self.animation = KDS.Animator.MultiAnimation(walk = w, run = r, search = s, death = d, idle = i)
+        self.animation = KDS.Animator.MultiAnimation(walk = w, run = r, search = s, combat = c, death = d, idle = i)
 
         self.agro_sound = agro_sound
         self.death_sound = death_sound
 
+        self.shootProbability = shootProbability
+
         self.state: TeacherState = TeacherState.Neutral
         self.seenContrabandSerials: List[int] = []
 
-        self.playSightSound = True
         self.walk_speed = walk_speed
         self.run_speed = run_speed
         self.search_speed = KDS.Math.RoundCustomInt(KDS.Math.Lerp(self.walk_speed, self.run_speed, 0.5), KDS.Math.MidpointRounding.AwayFromZero)
@@ -83,6 +90,7 @@ class Teacher:
         self.searchTime = 10 * 60
         self.currentSearch = 0
         self.lineOfSight = False
+        self.noSightTime = 0
 
         self.alertTimeBeforeCombat = 3 * 60
         self.alertTime = 0
@@ -105,17 +113,18 @@ class Teacher:
     def onDeath(self) -> List[int]:
         return [x.serialNumber for x in self.inventory if x != None]
 
-    def onDamage(self):
-        # Sub-optimal, but works
+    def startAgro(self):
         if TeacherState.Combat not in self.state:
             self.state |= TeacherState.Combat
             if self.agro_sound != None:
                 KDS.Audio.PlaySound(self.agro_sound)
-        if TeacherState.Alerted not in self.state:
-            self.state |= TeacherState.Alerted
             KDS.Missions.Listeners.TeacherAgro.Trigger()
+        self.state |= TeacherState.Alerted
 
-    def render(self, surface: pygame.Surface, scroll: Sequence[int], debug: bool):
+    def onDamage(self):
+        self.startAgro()
+
+    def render(self, surface: pygame.Surface, scroll: Sequence[int]):
         indicatorColor: Optional[Tuple[int, int, int]] = None
         if TeacherState.Combat in self.state:
             indicatorColor = KDS.Colors.Red
@@ -125,12 +134,12 @@ class Teacher:
             indicatorColor = KDS.Colors.Cyan
 
         if indicatorColor != None:
-            pygame.draw.circle(surface, indicatorColor, (self.rect.centerx, self.rect.y - 9), 2)
+            pygame.draw.circle(surface, indicatorColor, (self.rect.centerx - scroll[0], self.rect.y - 2 - 5 - scroll[1]), 2)
 
         self.inventory.useItem(self.rect, self.direction, surface, scroll)
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-    def update(self, tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def neutralBehaviour():
             self.animation.trigger("walk")
             self.inventory.pickSlot(0)
@@ -169,14 +178,14 @@ class Teacher:
                 self.inventory.pickupItemToIndex(firstEmptySlot, droppedItem)
 
         def searchingBehaviour():
-            self.animation.trigger("run")
+            self.animation.trigger("search")
             self.inventory.pickSlot(1)
             self.currentSearch += 1
             if self.currentSearch > self.searchTime and TeacherState.Searching in self.state:
                 self.state &= ~TeacherState.Searching
 
             distance = self.rect.centerx - player.rect.centerx
-            if abs(distance) > 680: # If over 20 blocks away and player behind, turn
+            if abs(distance) > 50 * 34: # If over 50 blocks away and player behind, turn
                 self.direction = False if distance >= 0 else True
 
             self.collisions = self.mover.move(self.rect, (self.search_speed * KDS.Convert.ToMultiplier(self.direction), TEACHER_FALL_SPEED), tiles)
@@ -186,12 +195,12 @@ class Teacher:
                 self.idleTime = random.randint(1 * 60, 3 * 60) // 2
 
         def combatBehaviour():
-            self.animation.trigger("search")
+            self.animation.trigger("combat")
             self.inventory.pickSlot(1)
 
             distance = self.rect.centerx - player.rect.centerx
             targetDirection = True if distance >= 0 else False
-            if targetDirection != self.direction and (abs(distance) > 170 or self.ticksSinceSwitch > 120) and self.health > 0: # If over five blocks away from target or hasn't turned for two seconds while player is behind; turn around
+            if targetDirection != self.direction and (abs(distance) > 8 * 34 or self.ticksSinceSwitch > 3 * 60) and self.health > 0: # If over 8 blocks away from target or hasn't turned for three seconds while player is behind; turn around
                 self.direction = not self.direction
                 self.ticksSinceSwitch = 0
             self.ticksSinceSwitch += 1
@@ -199,12 +208,17 @@ class Teacher:
             self.collisions = self.mover.move(self.rect, (self.run_speed * KDS.Convert.ToMultiplier(self.direction), TEACHER_FALL_SPEED), tiles)
             if self.collisions.right or self.collisions.left:
                 self.direction = not self.direction
+                self.ticksSinceSwitch = 0
 
             hItem = self.inventory.getHandItem()
             if not isinstance(hItem, KDS.Build.Weapon):
                 KDS.Logging.AutoError(f"Unexpected hand item of type: {type(hItem).__name__}, expected: {KDS.Build.Weapon.__name__}")
                 return
-            hItem.shoot()
+            if self.lineOfSight:
+                hItem.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
+                self.weaponData.counter += 1
+            else:
+                self.weaponData.counter = 0
 
         def inventoryFullBehaviour():
             raise NotImplementedError("Inventory full behaviour has not been implemented yet!")
@@ -223,36 +237,35 @@ class Teacher:
                     if item:
                         dropItems.append(item)
                 self.deathHandled = True
+            self.render(surface, scroll)
             return enemyProjectiles, dropItems
         #endregion
-        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, self.rect, self.direction, None, None, tiles, maxSearchUnits=8)
+        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, self.rect, self.direction, surface, scroll, tiles, maxSearchUnits=8)
+        self.noSightTime += 1
+        if self.lineOfSight:
+            self.noSightTime = 0
         #region Behaviour Triggers
-        if all([x != None and i != 0 for i, x in enumerate(self.inventory)]) and TeacherState.ClearingInventory not in self.state:
+        if all([x != None and i != 0 for i, x in enumerate(self.inventory)]):
             self.state |= TeacherState.ClearingInventory
         if self.lineOfSight:
             self.alertTime += 1
             playerHandItem = player.inventory.getHandItem()
             if not isinstance(playerHandItem, str) and playerHandItem.serialNumber in KDS.Build.Item.contraband:
-                if TeacherState.RemovingContraband not in self.state:
-                    self.state |= TeacherState.RemovingContraband
-            elif TeacherState.RemovingContraband in self.state:
+                self.state |= TeacherState.RemovingContraband
+            else:
                 self.state &= ~TeacherState.RemovingContraband
 
             alertCombat = TeacherState.Alerted in self.state and (self.alertTime > self.alertTimeBeforeCombat or TeacherState.RemovingContraband in self.state)
-            if (alertCombat or TeacherState.Searching in self.state) and TeacherState.Combat not in self.state:
-                self.state |= TeacherState.Combat
-                if self.agro_sound != None:
-                    KDS.Audio.PlaySound(self.agro_sound)
+            if (alertCombat or TeacherState.Searching in self.state):
+                self.startAgro()
         else:
             self.alertTime = 0
 
-            if TeacherState.RemovingContraband in self.state:
-                self.state &= ~TeacherState.RemovingContraband
+            self.state &= ~TeacherState.RemovingContraband
 
-            if TeacherState.Combat in self.state:
+            if self.noSightTime > 10 * 60:
                 self.state &= ~TeacherState.Combat
-                if TeacherState.Searching not in self.state:
-                    self.state |= TeacherState.Searching
+                self.state |= TeacherState.Searching
         #endregion
         #region States
         if TeacherState.Combat in self.state:
@@ -268,6 +281,7 @@ class Teacher:
         else:
             neutralBehaviour()
         #endregion
+        self.render(surface, scroll)
         return enemyProjectiles, dropItems
 
 class Test(Teacher):
@@ -276,9 +290,10 @@ class Test(Teacher):
                           KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
                           KDS.Animator.Animation("koponen_walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
                           KDS.Animator.Animation("koponen_walk", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
+                          KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
                           KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
                           KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
-                          None, None, 1000, 10, 1, 3
+                          None, None, 1000, 10, 1, 3, 1.5
         )
 
 class LaaTo(Teacher):
