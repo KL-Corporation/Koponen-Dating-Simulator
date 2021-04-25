@@ -117,7 +117,7 @@ def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = Midpoint
 
     The return value is an integer if \"digits\" is 0. Otherwise the return value will be float. \"digits\" may be negative.
     """
-    if IsNan(value) or IsInfinity(value):
+    if (IsNan(value) or IsInfinity(value)) and digits != 0:
         return value
     power10: int = pow(10, digits) # 10 to the power of zero is one
     value *= power10
