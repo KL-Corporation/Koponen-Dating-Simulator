@@ -479,7 +479,7 @@ class UnitData:
             surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
-    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, middleMouseOnDown: bool = False) -> List[List[UnitData]]:
+    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, middleMouseOnDown: bool = False):
         global allowTilePlacement
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
@@ -561,9 +561,9 @@ class UnitData:
                         else:
                             unit.properties.Remove(UnitType.Unspecified, "overlay")
                     elif keys_pressed[K_q]:
-                        if refrenceGrid != None and unit.pos[1] in refrenceGrid:
+                        if refrenceGrid != None and unit.pos[1] < len(refrenceGrid):
                             refrence2 = refrenceGrid[unit.pos[1]]
-                            if unit.pos[0] in refrence2:
+                            if unit.pos[0] < len(refrence2):
                                 unit.overrideData(refrence2[unit.pos[0]])
 
                     if len(unit.filledSerials) > 1: # If more than one tile
@@ -650,8 +650,6 @@ class UnitData:
 
         UnitData.releasedButtons[0] = not mouse_pressed[0]
         UnitData.releasedButtons[2] = not mouse_pressed[2]
-
-        return renderList
 
 class UnitProperties:
     def __init__(self, parent: UnitData) -> None:
@@ -1520,11 +1518,13 @@ def main():
                     if refrenceScanProgress[1] >= min(refrenceGridSize[1], gridSize[1]):
                         refrenceScanProgress[1] = 0
                         break
-                match = grid[refrenceScanProgress[1]][refrenceScanProgress[0]].serialNumber == refrenceGrid[refrenceScanProgress[1]][refrenceScanProgress[0]].serialNumber
+                tocheck1 = grid[refrenceScanProgress[1]][refrenceScanProgress[0]]
+                tocheck2 = refrenceGrid[refrenceScanProgress[1]][refrenceScanProgress[0]]
+                match = tocheck1 == tocheck2
                 grid[refrenceScanProgress[1]][refrenceScanProgress[0]].matchesRefrence = match
 
         display.fill((30, 20, 60))
-        grid = UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
+        UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
@@ -1621,7 +1621,7 @@ KDS.Jobs.quit()
     CTRL + Y: Redo
     CTRL + D: Duplicate Selection
     CTRL + C: Copy
-    CTRL + Z: Paste if possible
+    CTRL + V: Paste if possible
     T: Input Console
     R: Resize Map
     F: Set Property
