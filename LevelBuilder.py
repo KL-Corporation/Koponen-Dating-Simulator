@@ -190,7 +190,7 @@ with open("Assets/Data/Build/tiles.kdf") as f:
     tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
 for dName, d in tileData.items():
     srl = f"""0{d["serialNumber"]:03d}"""
-    Textures.AddTexture(srl, f"""Assets/Textures/Tiles/{d["path"]}""", dName, alpha= -1 if srl != "0102" else 30)
+    Textures.AddTexture(srl, f"""Assets/Textures/Tiles/{d["path"]}""", dName, colorkey=KDS.Colors.White if srl != "0128" else KDS.Colors.Cyan, alpha= -1 if srl != "0102" else 30)
     if d["trueScale"] == True:
         trueScale.add(srl)
 
