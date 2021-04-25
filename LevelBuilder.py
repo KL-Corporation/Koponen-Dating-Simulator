@@ -1026,7 +1026,7 @@ def materialMenu(previousMaterial: str) -> str:
     y = 0
     x = 0
     for i, collection in enumerate(Textures.data.values()):
-        for data in collection.values():
+        for data in sorted(collection.values(), key=lambda k: k.name.lower()):
             selectorRects.append(selectorRect((x, y), data))
             x += 1
             if x > COLUMNS:
