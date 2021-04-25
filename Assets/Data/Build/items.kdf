@@ -1,0 +1,254 @@
+{
+    "Key (blue)": {
+        "serialNumber": 1,
+        "path": "blue_key.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Plasmarifle Cell": {
+        "serialNumber": 2,
+        "path": "cell.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Coffee Mug": {
+        "serialNumber": 3,
+        "path": "coffeemug.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Gasburner": {
+        "serialNumber": 4,
+        "path": "gasburner_off.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Key (green)": {
+        "serialNumber": 5,
+        "path": "green_key.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "iPuhelin™": {
+        "serialNumber": 6,
+        "path": "iPuhelin.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Knife": {
+        "serialNumber": 7,
+        "path": "knife.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Lappi Sytytyspalat": {
+        "serialNumber": 8,
+        "path": "lappi_sytytyspalat.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Medkit": {
+        "serialNumber": 9,
+        "path": "medkit.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Pistol": {
+        "serialNumber": 10,
+        "path": "pistol.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Pistol Mag": {
+        "serialNumber": 11,
+        "path": "pistol_mag.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Plasmarifle": {
+        "serialNumber": 12,
+        "path": "plasmarifle.png",
+        "doubleSize": true,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Key (red)": {
+        "serialNumber": 13,
+        "path": "red_key.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "RK 62 Mag": {
+        "serialNumber": 14,
+        "path": "rk_mag.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "RK 62": {
+        "serialNumber": 15,
+        "path": "rk62.png",
+        "doubleSize": true,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Shotgun": {
+        "serialNumber": 16,
+        "path": "shotgun.png",
+        "doubleSize": true,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Shotgun Shells": {
+        "serialNumber": 17,
+        "path": "shotgun_shells.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Soulsphere": {
+        "serialNumber": 18,
+        "path": "soulsphere.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "SS-Bonuscard": {
+        "serialNumber": 19,
+        "path": "ss_bonuscard.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Turboneedle": {
+        "serialNumber": 20,
+        "path": "turboneedle.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "PPSH-41": {
+        "serialNumber": 21,
+        "path": "ppsh41.png",
+        "doubleSize": true,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "55 S 55 (unarmed)": {
+        "serialNumber": 22,
+        "path": "55s55_without_missile.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "55 S 55 (armed)": {
+        "serialNumber": 23,
+        "path": "55s55_missile.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "AWM": {
+        "serialNumber": 24,
+        "path": "awm.png",
+        "doubleSize": true,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "AWM Mag": {
+        "serialNumber": 25,
+        "path": "awm_mag.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Flask (empty)": {
+        "serialNumber": 26,
+        "path": "empty_flask.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Flask (meth)": {
+        "serialNumber": 27,
+        "path": "flask_meth.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Flask (blood)": {
+        "serialNumber": 28,
+        "path": "flask_blood.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Grenade": {
+        "serialNumber": 29,
+        "path": "grenade.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Fire Extinguisher": {
+        "serialNumber": 30,
+        "path": "fire_extinguisher.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Level Ender Walkie Talkie": {
+        "serialNumber": 31,
+        "path": "walkie_talkie.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "PPŠ-41 Mag": {
+        "serialNumber": 32,
+        "path": "ppsh41_mag.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Lantern": {
+        "serialNumber": 33,
+        "path": "lantern.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Chainsaw": {
+        "serialNumber": 34,
+        "path": "chainsaw.png",
+        "doubleSize": true,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+    "Gas Canister": {
+        "serialNumber": 35,
+        "path": "gas_canister.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    },
+    "Walkie Talkie": {
+        "serialNumber": 36,
+        "path": "walkie_talkie.png",
+        "doubleSize": false,
+        "supportsInventory": false,
+        "isContraband": false
+    }
+}
