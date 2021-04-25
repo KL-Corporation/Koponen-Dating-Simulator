@@ -2133,7 +2133,6 @@ class EmptyFlask(KDS.Build.Item):
 class MethFlask(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-        self.t = i_textures[27] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
         if KDS.Keys.mainKey.pressed:
@@ -2141,7 +2140,7 @@ class MethFlask(KDS.Build.Item):
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
             Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[26]((0, 0), 26), force=True)
             KDS.Audio.PlaySound(glug_sound)
-        return self.t
+        return self.texture
 
     def pickup(self):
         KDS.Scores.score += 10
@@ -2151,15 +2150,13 @@ class MethFlask(KDS.Build.Item):
 class BloodFlask(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-        self.t = i_textures[28] # t is temporary, but we don't want to check the item dictionary each frame.
-
     def use(self):
         if KDS.Keys.mainKey.pressed:
             KDS.Scores.score += 1
             Player.health += random.randint(0, 10)
             Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[26]((0, 0), 26), force=True)
             KDS.Audio.PlaySound(glug_sound)
-        return self.t
+        return self.texture
 
     def pickup(self):
         KDS.Audio.PlaySound(coffeemug_sound)
@@ -2203,13 +2200,12 @@ class FireExtinguisher(KDS.Build.Item):
 class LevelEnderItem(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
-        self.t = i_textures[31] # t is temporary, but we don't want to check the item dictionary each frame.
 
     def use(self):
         if KDS.Keys.mainKey.pressed:
             KDS.Missions.Listeners.LevelEnder.Trigger()
 
-        return self.t
+        return self.texture
 
     def pickup(self):
         KDS.Audio.PlaySound(weapon_pickup)
@@ -2320,6 +2316,16 @@ class WalkieTalkie(KDS.Build.Item):
     def drop(self):
         return self.allowDrop
 
+class BucketOfBlood(KDS.Build.Item):
+    pickup_sound = pygame.mixer.Sound("Assets/Audio/Items/bucket_of_blood_pickup.ogg")
+    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
+        super().__init__(position, serialNumber, texture=texture)
+
+    def pickup(self):
+        KDS.Audio.PlaySound(BucketOfBlood.pickup_sound)
+        KDS.Missions.SetProgress("physics_teacher_blood", "something_suspicious", 1.0)
+        return False
+
 KDS.Build.Item.serialNumbers = {
     1: BlueKey,
     2: Cell,
@@ -2356,7 +2362,8 @@ KDS.Build.Item.serialNumbers = {
     33: Lantern,
     34: Chainsaw,
     35: GasCanister,
-    36: WalkieTalkie
+    36: WalkieTalkie,
+    37: BucketOfBlood
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion

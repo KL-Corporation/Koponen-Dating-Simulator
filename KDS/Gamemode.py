@@ -109,10 +109,10 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule("Missä on \"alakerta\"?", KDS.Koponen.Prefixes.player)
             KDS.Koponen.Talk.Conversation.schedule("Niinpä... Tämän takia pyysin sinua tekemään tämän.", KDS.Koponen.Prefixes.koponen)
 
-            KDS.Missions.InitialiseMission("physics_teacher_meth", "Laittomuuksia")
-            KDS.Missions.InitialiseTask("physics_teacher_meth", "downstairs", "Löydä Alakerta")
-            KDS.Missions.InitialiseTask("physics_teacher_meth", "something_suspicious", "Etsi Jotain Epäilyttävää")
-            KDS.Missions.InitialiseTask("physics_teacher_meth", "return_suspicious", "Palauta Tämä Koposelle")
+            KDS.Missions.InitialiseMission("physics_teacher_blood", "Laittomuuksia")
+            KDS.Missions.InitialiseTask("physics_teacher_blood", "downstairs", "Löydä Alakerta")
+            KDS.Missions.InitialiseTask("physics_teacher_blood", "something_suspicious", "Etsi Jotain Epäilyttävää")
+            KDS.Missions.InitialiseTask("physics_teacher_blood", "return_suspicious", "Palauta Tämä Koposelle")
 
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN)
             KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen, True)

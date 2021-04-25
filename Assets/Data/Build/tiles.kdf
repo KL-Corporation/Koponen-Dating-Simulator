@@ -1190,13 +1190,5 @@
         "noCollision": false,
         "trueScale": false,
         "sound": null
-    },
-    "Stool": {
-        "serialNumber": 151,
-        "path": "stool.png",
-        "specialTile": false,
-        "noCollision": false,
-        "trueScale": false,
-        "sound": null
     }
 }

@@ -30,7 +30,7 @@ class TeacherState(IntFlag):
     Alerted = 2 # Starts combat if sees player
     Searching = 4 # Actively searches for the player
     Combat = 8 # In combat with player
-    ClearingInventory = 16 # Goes to a specific place to clear inventory from confiscated contraband (NOT IMPLEMENTED)
+    # ClearingInventory = 16 # Goes to a specific place to clear inventory from confiscated contraband (NOT IMPLEMENTED)
 
 class Teacher:
     serialNumbers: Dict[int, Type[Teacher]] = {}
@@ -165,14 +165,16 @@ class Teacher:
             self.direction = True if distance >= 0 else False
             if self.rect.colliderect(player.rect):
                 firstEmptySlot = None
-                for i in range(len(self.inventory)):
+                for i in range(2, len(self.inventory)):
                     if self.inventory[i] == None:
                         firstEmptySlot = i
                         break
                 if firstEmptySlot == None:
+                    KDS.Logging.AutoError("No empty inventory slots found to confiscate contraband!")
                     return
                 droppedItem = player.inventory.dropItemAtIndex(player.inventory.SIndex)
                 if droppedItem == None:
+                    KDS.Logging.AutoError("Confiscated contraband was null!")
                     return
                 self.inventory.pickupItemToIndex(firstEmptySlot, droppedItem)
 
@@ -244,12 +246,12 @@ class Teacher:
         if self.lineOfSight:
             self.noSightTime = 0
         #region Behaviour Triggers
-        if all([x != None and i != 0 for i, x in enumerate(self.inventory)]):
-            self.state |= TeacherState.ClearingInventory
+        # if all([x != None and i != 0 for i, x in enumerate(self.inventory)]):
+        #     self.state |= TeacherState.ClearingInventory
         if self.lineOfSight:
             self.alertTime += 1
             playerHandItem = player.inventory.getHandItem()
-            if not isinstance(playerHandItem, str) and playerHandItem.serialNumber in KDS.Build.Item.contraband:
+            if not isinstance(playerHandItem, str) and playerHandItem.serialNumber in KDS.Build.Item.contraband and not (all([x != None and i != 0 for i, x in enumerate(self.inventory)])):
                 self.state |= TeacherState.RemovingContraband
             else:
                 self.state &= ~TeacherState.RemovingContraband
@@ -271,8 +273,8 @@ class Teacher:
             combatBehaviour()
         elif TeacherState.Searching in self.state:
             searchingBehaviour()
-        elif TeacherState.ClearingInventory in self.state:
-            inventoryFullBehaviour()
+        # elif TeacherState.ClearingInventory in self.state:
+        #     inventoryFullBehaviour()
         elif TeacherState.RemovingContraband in self.state:
             contrabandBehaviour()
         elif self.idle:

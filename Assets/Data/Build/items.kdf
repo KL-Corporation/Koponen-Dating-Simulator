@@ -216,7 +216,7 @@
         "supportsInventory": true,
         "isContraband": false
     },
-    "PPŠ-41 Mag": {
+    "PPSH-41 Mag": {
         "serialNumber": 32,
         "path": "ppsh41_mag.png",
         "doubleSize": false,
@@ -250,5 +250,12 @@
         "doubleSize": false,
         "supportsInventory": false,
         "isContraband": false
+    },
+    "Bucket of Blood": {
+        "serialNumber": 37,
+        "path": "bucketOfBlood.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": true
     }
 }
