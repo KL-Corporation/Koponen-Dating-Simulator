@@ -115,7 +115,7 @@ def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = Midpoint
     """
     Round a number to a given precision in decimal digits and rounding mode.
 
-    The return value is an integer if \"digits\" is 0. Otherwise the return value will be float. \"digits\" may be negative.
+    The return value is a float. \"digits\" may be negative.
     """
     if (IsNan(value) or IsInfinity(value)) and digits != 0:
         return value
@@ -132,7 +132,10 @@ def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = Midpoint
     value /= power10
     return value
 
-def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEven):
+def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEven) -> int:
+    """
+    Same as RoundCustom, but converts the returned value to an int.
+    """
     return int(RoundCustom(value=value, digits=0, mode=mode))
 #endregion
 

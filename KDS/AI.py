@@ -349,8 +349,7 @@ class Imp(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         impAttack.set_volume(dist)
@@ -388,8 +387,7 @@ class SergeantZombie(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         shotgunShot.set_volume(dist)
@@ -431,8 +429,7 @@ class DrugDealer(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         pistol_shot.set_volume(dist)
@@ -476,8 +473,7 @@ class TurboShotgunner(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         double_barrel_fire.set_volume(dist)
@@ -518,8 +514,7 @@ class MafiaMan(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         basicGunshot.set_volume(dist)
@@ -560,8 +555,7 @@ class MethMaker(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         basicGunshot.set_volume(dist)
@@ -604,8 +598,7 @@ class CaveMonster(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         cavemonster_gun.set_volume(dist)
@@ -746,8 +739,7 @@ class SecurityGuard(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = min(1200, dist)
-        dist = max(0, dist)
+        dist = KDS.Math.Clamp(dist, 0, 1200)
         dist = 1200 - dist
         dist /= 1200
         KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)

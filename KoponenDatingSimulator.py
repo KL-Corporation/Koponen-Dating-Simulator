@@ -851,7 +851,6 @@ class Jukebox(KDS.Build.Tile):
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
             jukebox_volume = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
-            print(jukebox_volume)
             Jukebox.songs[self.playing].set_volume(jukebox_volume)
             Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
