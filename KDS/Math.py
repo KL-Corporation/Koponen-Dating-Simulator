@@ -28,6 +28,7 @@ import KDS.Logging
 EPSILON = sys.float_info.epsilon
 INFINITY = float("inf")
 NEGATIVEINFINITY = float("-inf")
+NAN = float("nan")
 DEG2RAD = (PI * 2) / 360
 RAD2DEG = 1 / DEG2RAD
 MAXVALUE = sys.maxsize
@@ -51,13 +52,13 @@ def IsNegativeInfinity(f: float) -> bool: return IsInfinity(f) and f < 0 # faste
 
 #region Value Manipulation
 def GetFraction(__x: SupportsFloat) -> float:
-    """Returns the fractional part of \"f\".
+    """Returns the fractional part of \"__x\".
 
     Args:
-        f (float): The value to get the fractional.
+        __x (float): The value to get the fractional.
 
     Returns:
-        float: The extracted fractional. Will be negative if \"f\" is negative.
+        float: The extracted fractional. Will be negative if \"__x\" is negative.
     """
     return SplitFloat(__x)[0]
 
@@ -76,6 +77,7 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
 
 def Clamp01(value: Value) -> Value:
     return Clamp(value, 0, 1) # Should be fine without being the same type...?
+                              # Not casting, because it will call two extra functions and slow the code down.
 
 def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
@@ -85,13 +87,13 @@ def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> f
         return (value - from1) / (to1 - from1) * (to2 - from2) + from2
     except ZeroDivisionError:
         KDS.Logging.AutoError("Division by zero!")
-        return float("nan")
+        return NAN
 
 def Remap01(value: float, from1: float, from2: float) -> float:
     """
     Converts a value to another value within the given arguments.
     """
-    return Remap(value, from1, 0, from2, 1)
+    return Remap(value, from1, 0.0, from2, 1.0)
 
 def Repeat(t: float, length: float) -> float:
     """Loops the value t, so that it is never larger than length and never smaller than 0.
@@ -135,8 +137,6 @@ def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEve
 #endregion
 
 #region Area
-def triangleArea(triangle: List[Tuple[int, int]]):
-    return abs((triangle[0][0] * (triangle[1][1] - triangle[2][1]) + triangle[1][0] * (triangle[2][1] - triangle[0][1])  + triangle[2][0] * (triangle[0][1] - triangle[1][1])) / 2.0)
 #endregion
 
 #region Distance
@@ -169,35 +169,8 @@ def getSlope2(angle: float) -> float: #Angle in degrees
 #endregion
 
 #region Angles
-def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
-    """Calculates the angle between two vectors.
-
-    Args:
-        p1 (tuple): First vector
-        p2 (tuple): Secod vector
-
-    Returns:
-        float: The angle between the vectors
-    """
-    try:
-        q = p1[0] - p2[0]
-        w = p1[1] - p2[1]
-        if w == 0:
-            w = 1
-        r = q / w
-
-        a = Atan(r) * RAD2DEG
-        #a = 360 - a
-        #while a >= 360:
-        #    a = a - 360
-
-        return a
-    except Exception as e:
-        KDS.Logging.AutoError(e)
-        return 0
-
-def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
-    """Calculates the angle between two vectors faster, but without error handling.
+def GetAngle(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+    """Calculates the angle between two vectors faster.
 
     Args:
         p1 (tuple): First vector
@@ -206,11 +179,13 @@ def getAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
     Returns:
         float: The angle between the vectors
     """
-    dx = p1[0] - p2[0]
-    dy = p1[1] - p2[1]
-
-
-    return Atan2(dy, dx) * RAD2DEG
+    try:
+        dx = p1[0] - p2[0]
+        dy = p1[1] - p2[1]
+        return Atan2(dy, dx) * RAD2DEG
+    except Exception as e:
+        KDS.Logging.AutoError(e)
+        return NAN
 
 def DeltaAngle(current: float, target: float):
     return ((target - current) + 180) % 360 - 180
@@ -289,7 +264,7 @@ def PingPong(t: float, length: float) -> float:
 #region Iterables
 def Closest(value: float, iterable: Iterable[Value]) -> Value:
     COMPARISONFUNCTION = lambda k: abs(k - value)
-    # key means that instead of finding the smallest value it will run the function "comparisonFunction"
+    # key means that instead of finding the smallest value it will run the function "COMPARISONFUNCTION"
     # and return the value that was associated with the smallest return value from the function
     return min(iterable, key=COMPARISONFUNCTION)
 
@@ -298,11 +273,44 @@ def Furthest(value: float, iterable: Iterable[Value]) -> Value:
     return max(iterable, key=COMPARISONFUNCTION)
 #endregion
 
-#region Misc
-def trianglePointIntersect(triangle: List[Tuple[int, int]], point: Tuple[int, int]) -> bool:
-    A = triangleArea(triangle)
-    A1 = triangleArea([point, triangle[1], triangle[2]])
-    A2 = triangleArea([triangle[0], point, triangle[2]])
-    A3 = triangleArea([triangle[0], triangle[1], point])
-    return True if sum((A1, A2, A3)) == A else False
+#region Scrapped
+
+# def TriangleCollidePoint(triangle: Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]], point: Tuple[int, int]) -> bool:
+#     A = GetTriangleArea(triangle)
+#     A1 = GetTriangleArea((point, triangle[1], triangle[2]))
+#     A2 = GetTriangleArea((triangle[0], point, triangle[2]))
+#     A3 = GetTriangleArea((triangle[0], triangle[1], point))
+#     return True if sum((A1, A2, A3)) == A else False
+
+# def GetTriangleArea(triangle: Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]):
+#     return abs((triangle[0][0] * (triangle[1][1] - triangle[2][1]) + triangle[1][0] * (triangle[2][1] - triangle[0][1])  + triangle[2][0] * (triangle[0][1] - triangle[1][1])) / 2.0)
+#                 # WTF is happening?
+
+# def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
+#     """Calculates the angle between two vectors.
+#
+#     Args:
+#         p1 (tuple): First vector
+#         p2 (tuple): Secod vector
+#
+#     Returns:
+#         float: The angle between the vectors
+#     """
+#     try:
+#         q = p1[0] - p2[0]
+#         w = p1[1] - p2[1]
+#         if w == 0:
+#             w = 1
+#         r = q / w
+#
+#         a = Atan(r) * RAD2DEG
+#         #a = 360 - a
+#         #while a >= 360:
+#         #    a = a - 360
+#
+#         return a
+#     except Exception as e:
+#         KDS.Logging.AutoError(e)
+#         return 0
+
 #endregion

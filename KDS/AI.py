@@ -53,8 +53,8 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
     elif targetRect.x < searchRect.x:
         return False, 0
 
-    angle = KDS.Math.getAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
-    if abs(angle) < maxAngle:
+    angle = KDS.Math.GetAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
+    if abs(angle) < maxAngle or KDS.Math.IsNan(angle):
         return False, 0
     if angle > 0:
         angle = 90 - angle
