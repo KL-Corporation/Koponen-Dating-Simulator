@@ -613,11 +613,8 @@ class UnitData:
                             rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
                             tip_renders.append(rendered_tip)
 
-        for doorSrl, doorPos, lightOverlay in doorRenders:
-            UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay)
-
-        for ovs, ovp, ovov in overlayRenders:
-            UnitData.renderSerial(surface, None, ovs, ovp, ovov)
+        [UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay) for doorSrl, doorPos, lightOverlay in doorRenders]
+        [UnitData.renderSerial(surface, None, ovs, ovp, ovov) for ovs, ovp, ovov in overlayRenders]
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -889,6 +886,8 @@ class DragData:
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
     def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool):
+        if not brush.IsEmpty():
+            return
         if right_down:
             self.clear()
             return
@@ -1694,6 +1693,9 @@ def main():
             Drag.render(Drag.DEFAULT_STYLE, display, scroll)
 
         if zoneMode:
+            if brush.brush != UnitData.EMPTY:
+                brush.SetValues()
+
             if Drag.Mode != DragMode.Zone:
                 Drag.clear()
                 Drag.Mode = DragMode.Zone
@@ -1702,7 +1704,7 @@ def main():
             zoneScreen.fill(KDS.Colors.White)
             for zoneRect, zoneData in PropertiesData.Zones:
                 zoneRectScaled = pygame.Rect((zoneRect.x - scroll[0]) * scalesize, (zoneRect.y - scroll[1]) * scalesize, zoneRect.width * scalesize, zoneRect.height * scalesize)
-                if zoneRectScaled.left < 0 or zoneRectScaled.right > display_size[0] or zoneRectScaled.top < 0 or zoneRectScaled.bottom > display_size[0]:
+                if zoneRectScaled.right < 0 or zoneRectScaled.left > display_size[0] or zoneRectScaled.bottom < 0 or zoneRectScaled.top > display_size[0]:
                     continue
 
                 zoneSurf = pygame.Surface(zoneRectScaled.size)
