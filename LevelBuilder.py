@@ -1,8 +1,4 @@
 from __future__ import annotations
-#region Import Error
-if __name__ != "__main__":
-    raise ImportError("Level Builder cannot be imported!")
-#endregion
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -13,6 +9,7 @@ import KDS.ConfigManager
 import KDS.Console
 import KDS.Convert
 import KDS.Debug
+import KDS.Events
 import KDS.Math
 import KDS.Jobs
 import KDS.Linq
@@ -25,10 +22,10 @@ from tkinter import filedialog
 import json
 import traceback
 import sys
-from enum import IntEnum
+from dataclasses import dataclass
+from enum import Enum, IntEnum
 
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
-
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast
 
 root = tkinter.Tk()
 root.withdraw()
@@ -225,7 +222,7 @@ Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", 
 
 DebugMode = False
 
-scroll = [0, 0]
+scroll: List[int] = [0, 0]
 teleportTemp = "001"
 currentSaveName = ''
 grid: List[List[UnitData]] = [[]]
@@ -235,7 +232,7 @@ refrenceGrid: Optional[List[List[UnitData]]] = None
 refrenceGridSize = (0, 0)
 refrenceScanProgress = [0, 0]
 
-dragRect = None
+zoneMode = False
 
 class Undo:
     changes: List[UnitData] = []
@@ -292,15 +289,6 @@ class Undo:
             return
         grid[change.pos[1]][change.pos[0]] = change.Copy()
 
-        """
-        Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
-
-        global grid, dragRect
-        data = Undo.points[Undo.index]
-        grid = data["grid"]
-        dragRect = data["dragRect"]
-        """
-
     @staticmethod
     def clear():
         Undo.changes.clear()
@@ -331,7 +319,7 @@ class UnitData:
         self.serialNumber = serialNumber
         self.matchesRefrence = False
         self._updateSplit()
-        self.properties = UnitProperties(self)
+        self.properties = PropertiesData(self)
 
     def __eq__(self, other) -> bool:
         """ == operator """
@@ -454,7 +442,7 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderSerial(surface: pygame.Surface, properties: Optional[UnitProperties], serial: str, pos: Tuple[int, int], lightOverlay: bool = False):
+    def renderSerial(surface: pygame.Surface, properties: Optional[PropertiesData], serial: str, pos: Tuple[int, int], lightOverlay: bool = False):
         textureData = Textures.GetData(serial)
         blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
@@ -529,9 +517,10 @@ class UnitData:
                         if isinstance(teleportIdentifier, int):
                             tip_renders.append(harbinger_font_small.render(str(teleportIdentifier), True, KDS.Colors.AviatorRed))
                             if keys_pressed[K_p]:
-                                newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
-                                if newTeleportIdentifier != None:
-                                    unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
+                                if not zoneMode:
+                                    newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
+                                    if newTeleportIdentifier != None:
+                                        unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
 
                     if keys_pressed[K_f]:
                         autoFill = {}
@@ -651,14 +640,56 @@ class UnitData:
         UnitData.releasedButtons[0] = not mouse_pressed[0]
         UnitData.releasedButtons[2] = not mouse_pressed[2]
 
-class UnitProperties:
+class PropertiesData:
+    class ZoneSetting(Enum):
+        StaffOnly = "staffOnly"
+        Darkness = "darkness"
+
+    class ZoneData:
+        def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
+            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(cast(pygame.Rect, v[0].copy()), v[1]) for v in values]
+
+        def __getitem__(self, index: int) -> Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
+            return self.zones[index]
+
+        def __setitem__(self, index: int, value: Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]):
+            self.zones[index] = value
+
+        def __len__(self) -> int:
+            return len(self.zones)
+
+        def RemoveCollidePoint(self, mouse_pos: Tuple[int, int]) -> None:
+            mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
+            for zone in self.zones:
+                if zone[0].collidepoint(mouse_pos_scaled):
+                    self.zones.remove(zone)
+                    return
+
+        def NewDragRect(self):
+            self.zones.append((cast(pygame.Rect, Drag.Rect.copy()), {}))
+
+        def UpdateDragRect(self):
+            if len(self.zones) < 1:
+                return
+            self.zones[-1] = (cast(pygame.Rect, Drag.Rect.copy()), self.zones[-1][1])
+
+        def SetSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting, value: Union[str, int, float, bool]):
+            for zone in self.zones:
+                if zone[0].x == zoneRect.x and zone[0].y == zoneRect.y and zone[0].width == zoneRect.width and zone[0].height == zoneRect.height:
+                    zone[1][setting] = value
+                    return
+            KDS.Logging.warning(f"No zone matching {zoneRect} found!", consoleVisible=True)
+
+
+    Zones = ZoneData()
+
     def __init__(self, parent: UnitData) -> None:
         self.parent = parent
         self.values: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
 
     def __eq__(self, other) -> bool:
         """ == operator """
-        if isinstance(other, UnitProperties):
+        if isinstance(other, PropertiesData):
             return self.values == other.values # Won't check parents
         return False
 
@@ -705,8 +736,8 @@ class UnitProperties:
             if not KDS.Linq.Any(self.parent.serials, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
-    def Copy(self, parentOverride: UnitData = None) -> UnitProperties:
-        new = UnitProperties(parentOverride if parentOverride != None else self.parent)
+    def Copy(self, parentOverride: UnitData = None) -> PropertiesData:
+        new = PropertiesData(parentOverride if parentOverride != None else self.parent)
         new.values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
         return new
 
@@ -719,6 +750,21 @@ class UnitProperties:
         return f"\"{key}\":{value}" # Puts key in quotes so that it is valid JSON
 
     @staticmethod
+    def _zonesSerializer():
+        parsableZones: Dict[str, Dict[str, Union[str, int, float, bool]]] = {}
+        for rect, data in PropertiesData.Zones:
+            parsableZones[f"{rect.x}-{rect.y}-{rect.width}-{rect.height}"] = {k.value: v for k, v in data.items()}
+        return f"\"zones\":{json.dumps(parsableZones, separators=(',', ':'))}"
+
+    @staticmethod
+    def _zonesDeserializer(data: Dict[str, Dict[str, Union[str, int, float, bool]]]) -> List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]]:
+        parsedZones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []
+        for rect, d in data.items():
+            x, y, w, h = rect.split("-")
+            parsedZones.append((pygame.Rect(int(x), int(y), int(w), int(h)), {PropertiesData.ZoneSetting(t): v for t, v in d.items()}))
+        return parsedZones
+
+    @staticmethod
     def Serialize(grid: List[List[UnitData]]) -> str:
         strings: List[str] = []
         for row in grid:
@@ -726,6 +772,8 @@ class UnitProperties:
                 pString = str(unit.properties)
                 if len(pString) > 0:
                     strings.append(pString)
+        if len(PropertiesData.Zones) > 0:
+            strings.append(PropertiesData._zonesSerializer())
         if len(strings) < 1: # If there is nothing to save, return empty.
             return ""
         result = "{\n" + "".join(f"{s},\n" for s in strings).removesuffix(",\n") + "\n}"
@@ -735,14 +783,20 @@ class UnitProperties:
     def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
         if len(jsonString) < 1 or jsonString.isspace():
             return
-        deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
+        deserialized: Dict[str, Union[Dict[str, Dict[str, Union[str, int, float, bool]]]]] = json.loads(jsonString)
         for row in grid:
             for unit in row:
                 key = f"{unit.pos[0]}-{unit.pos[1]}"
                 if key in deserialized:
-                    unitProp = UnitProperties(unit)
-                    unitProp.values = {UnitType(int(k)): v for k, v in deserialized[key].items()}
+                    toSet = deserialized[key]
+                    if not isinstance(toSet, dict):
+                        KDS.Logging.AutoError(f"Invalid value type occured during deserialization. Key for data: {key}")
+                        continue
+                    unitProp = PropertiesData(unit)
+                    unitProp.values = {UnitType(int(k)): v for k, v in toSet.items()}
                     unit.properties = unitProp
+        if "zones" in deserialized:
+            PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"]))
 
 class BrushData:
     def __init__(self) -> None:
@@ -779,6 +833,102 @@ class BrushData:
     def IsEmpty(self):
         return self.brush == UnitData.EMPTY
 brush = BrushData()
+
+class DragMode(IntEnum):
+    Default = 0
+    Zone = 1
+
+@dataclass
+class DragStyle:
+    color: Tuple[int, int, int]
+    alpha: int
+    border_width: int
+
+class DragData:
+    DEFAULT_STYLE = DragStyle(KDS.Colors.White, 64, 5)
+
+    def __init__(self) -> None:
+        self.Rect: Optional[pygame.Rect] = None
+        self.Mode: DragMode = DragMode.Default
+
+        self.startPos: Optional[Tuple[int, int]] = None
+        self.c_onDragStart: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragUpdate: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragEnd: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragClear: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+
+        self.lastL = False
+
+    def SelectCustom(self, rect: Optional[pygame.Rect]):
+        if rect != None:
+            self.Rect = cast(pygame.Rect, rect.copy())
+            [onStart() for onStart in self.c_onDragStart[self.Mode]]
+        else:
+            self.clear()
+
+    def clear(self):
+        self.Rect = None
+        self.startPos = None
+        [onClear() for onClear in self.c_onDragClear[self.Mode]]
+
+    def render(self, style: DragStyle, surface: pygame.Surface, scroll: List[int]):
+        if self.Rect == None:
+            return
+
+        selectDrawRect = pygame.Rect((self.Rect.x - scroll[0]) * scalesize, (self.Rect.y - scroll[1]) * scalesize, self.Rect.width * scalesize, self.Rect.height * scalesize)
+        selectDraw = pygame.Surface(selectDrawRect.size)
+        selectDraw.fill(style.color)
+        if style.border_width > 0:
+            pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), KDS.Math.CeilToInt(style.border_width / 34 * scalesize))
+        selectDraw.set_alpha(style.alpha)
+        surface.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
+
+        wRnd = harbinger_font.render(str(self.Rect.width), True, KDS.Colors.CloudWhite)
+        surface.blit(wRnd, (selectDrawRect.x + selectDrawRect.width // 2 - wRnd.get_width() // 2, selectDrawRect.y - 10 - wRnd.get_height()))
+        hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
+        surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
+
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool):
+        if right_down:
+            self.clear()
+            return
+        if self.lastL != left_down:
+            self.lastL = left_down
+            if left_down:
+                self.startPos = None
+            else:
+                [onEnd() for onEnd in self.c_onDragEnd[self.Mode]]
+        if not left_down:
+            return
+
+        startCallFlag = False
+        if self.startPos == None:
+            self.startPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
+            startCallFlag = True
+
+        mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
+        x = min(mouse_pos_scaled[0], self.startPos[0])
+        y = min(mouse_pos_scaled[1], self.startPos[1])
+        w = abs(self.startPos[0] - mouse_pos_scaled[0]) + 1
+        h = abs(self.startPos[1] - mouse_pos_scaled[1]) + 1
+        self.Rect = pygame.Rect(x, y, w, h)
+        if startCallFlag:
+            [onStart() for onStart in self.c_onDragStart[self.Mode]]
+        else:
+            [onUpdate() for onUpdate in self.c_onDragUpdate[self.Mode]]
+
+    def registerCalls(self, mode: DragMode, onDragStart: Optional[Callable[[], None]], onDragUpdate: Optional[Callable[[], None]], onDragEnd: Optional[Callable[[], None]], onDragClear: Optional[Callable[[], None]]):
+        if onDragStart != None:
+            self.c_onDragStart[mode].append(onDragStart)
+        if onDragUpdate != None:
+            self.c_onDragUpdate[mode].append(onDragUpdate)
+        if onDragEnd != None:
+            self.c_onDragEnd[mode].append(onDragEnd)
+        if onDragClear != None:
+            self.c_onDragClear[mode].append(onDragClear)
+
+Drag = DragData()
+Drag.registerCalls(DragMode.Zone, PropertiesData.Zones.NewDragRect, PropertiesData.Zones.UpdateDragRect, PropertiesData.Zones.UpdateDragRect, None)
 
 def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
     rlist = []
@@ -826,7 +976,7 @@ def saveMap(grid: List[List[UnitData]], name: str):
     #endregion
     #region Tile Props
     propertiesPath = os.path.join(os.path.dirname(name), "properties.kdf")
-    propertiesString = UnitProperties.Serialize(grid)
+    propertiesString = PropertiesData.Serialize(grid)
     saveProps = False
 
     if len(propertiesString) > 0:
@@ -890,7 +1040,7 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
     fpath = os.path.join(os.path.dirname(path), "properties.kdf")
     if os.path.isfile(fpath):
         with open(fpath, 'r', encoding="utf-8") as f:
-            UnitProperties.Deserialize(f.read(), temporaryGrid)
+            PropertiesData.Deserialize(f.read(), temporaryGrid)
 
     return temporaryGrid, temporaryGridSize
 
@@ -948,7 +1098,7 @@ commandTree = {
     }
 }
 def consoleHandler(commandlist):
-    global brush, grid, dragRect
+    global brush, grid
     if commandlist[0] == "set":
         textureNames = Textures.names
         textureSerials = Textures.serials
@@ -964,16 +1114,16 @@ def consoleHandler(commandlist):
                 brush.SetValues(commandlist[2])
                 KDS.Console.Feed.append(f"Brush set: [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
             else: KDS.Console.Feed.append("Invalid brush.")
-        elif dragRect != None:
+        elif Drag.Mode == DragMode.Default and Drag.Rect != None:
             if commandlist[1] in textureNames:
                 data = Textures.GetDataByName(commandlist[1])
                 Selected.Set(UnitData.toSerialString(data.serialNumber))
                 Selected.Update()
-                KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{data.serialNumber}: {data.name}]")
+                KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{data.serialNumber}: {data.name}]")
             elif commandlist[1] in textureSerials:
                 Selected.Set(UnitData.toSerialString(commandlist[2]))
                 Selected.Update()
-                KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
+                KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
         else: KDS.Console.Feed.append("Invalid set command.")
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
@@ -1238,21 +1388,20 @@ class Selected:
 
     @staticmethod
     def Move(x: int, y: int):
-        global dragRect
-        if dragRect == None:
+        if Drag.Rect == None:
             return
 
         for u in Selected.units:
             u.pos = (u.pos[0] + x, u.pos[1] + y)
-        dragRect.x += x
-        dragRect.y += y
+        Drag.Rect.x += x
+        Drag.Rect.y += y
 
     @staticmethod
     def Update():
         Selected.units = []
-        if dragRect == None: return
-        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
-            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
+        if Drag.Rect == None: return
+        for row in grid[Drag.Rect.y:Drag.Rect.y + Drag.Rect.height]:
+            for unit in row[Drag.Rect.x:Drag.Rect.x + Drag.Rect.width]:
                 Selected.units.append(unit.Copy())
 
     @staticmethod
@@ -1262,8 +1411,6 @@ class Selected:
 
     @staticmethod
     def ToString(serializeProperties: bool = False) -> Union[str, Tuple[str, str]]:
-        global dragRect
-
         units2d: Dict[int, Dict[int, UnitData]] = {} # Dictionaries are ordered
         for u in Selected.units:
             if u.pos[1] not in units2d:
@@ -1281,27 +1428,27 @@ class Selected:
             for y, row in enumerate(unitsNormalizedPositions):
                 for x, u in enumerate(row):
                     u.pos = (x, y)
-            return output, UnitProperties.Serialize(unitsNormalizedPositions)
+            return output, PropertiesData.Serialize(unitsNormalizedPositions)
 
     @staticmethod
     def FromString(string: str, properties: str = None):
-        global dragRect
         Selected.units: List[UnitData] = []
         contents = string.splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
 
-        offset = dragRect.topleft if dragRect != None else (0, 0)
+        offset = Drag.Rect.topleft if Drag.Rect != None else (0, 0)
         maxX = 0
         for y, row in enumerate(contents):
             for x, unit in enumerate(row.split("/")):
                 maxX = max(maxX, x)
                 Selected.units.append(UnitData((x, y), unit.strip(" ")))
         if properties != None:
-            UnitProperties.Deserialize(properties, [Selected.units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
+            PropertiesData.Deserialize(properties, [Selected.units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
         for u in Selected.units:
             u.pos = (u.pos[0] + offset[0], u.pos[1] + offset[1])
-        dragRect = pygame.Rect(offset[0], offset[1], maxX + 1, len(contents)) if maxX > 0 and len(contents) > 0 else None
-                                                    # ^^ Need to add one... I don't know why.
+        Drag.SelectCustom(pygame.Rect(offset[0], offset[1], maxX + 1, len(contents)) if maxX > 0 and len(contents) > 0 else None)
+                                                                    # ^^ Need to add one... I don't know why.
+Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
 
 def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
     global DebugMode
@@ -1333,12 +1480,10 @@ def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
 
 allowTilePlacement = True
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, dragRect, allowTilePlacement, refrenceGrid, refrenceGridSize
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode
 
     menu()
     if not mainRunning: return
-
-    display.fill(KDS.Colors.Black)
 
     textureRescaleHandle: Optional[KDS.Jobs.JobHandle] = None
 
@@ -1346,7 +1491,7 @@ def main():
         global scalesize, scaleMultiplier
         nonlocal textureRescaleHandle
         mouse_pos = pygame.mouse.get_pos()
-        mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
+        mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
         newsize = KDS.Math.Clamp(scalesize + add, 3, 128)
         if newsize == scalesize:
@@ -1355,18 +1500,13 @@ def main():
         scalesize = newsize
         scaleMultiplier = scalesize / gamesize
 
-        mouse_pos_scaled = (KDS.Math.FloorToInt(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.FloorToInt(mouse_pos[1] / scalesize + scroll[1]))
+        mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
         if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This should not break anything, because CPython still has it's stupid GIL
         textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
     inputConsole_output = None
-
-    dragStartPos = None
-    dragPos = None
-    selectTrigger = False
-    brushTrigger = True
 
     forceRefrenceCheck: bool = False
 
@@ -1382,12 +1522,13 @@ def main():
             if defaultEventHandler(event):
                 continue
             elif event.type == MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    selectTrigger = True
-                elif event.button == 2:
+                if event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
                     middleMouseOnDown = True
+                elif event.button == 3:
+                    if zoneMode:
+                        PropertiesData.Zones.RemoveCollidePoint(mouse_pos)
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     allowTilePlacement = True
@@ -1396,6 +1537,8 @@ def main():
                     if keys_pressed[K_LCTRL]:
                         Undo.request(event.key == K_y)
                         Selected.Update()
+                    else:
+                        zoneMode = not zoneMode
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
@@ -1428,7 +1571,8 @@ def main():
                     Selected.Move(x, y)
                 elif event.key == K_a:
                     if keys_pressed[K_LCTRL]:
-                        dragRect = pygame.Rect(0, 0, gridSize[0], gridSize[1])
+                        if Drag.Mode == DragMode.Default:
+                            Drag.SelectCustom(pygame.Rect(0, 0, gridSize[0], gridSize[1]))
                         Selected.Get()
                 elif event.key == K_c:
                     if keys_pressed[K_LCTRL]:
@@ -1533,33 +1677,12 @@ def main():
             elif 100 >= undoTotal >= 50: _color = KDS.Colors.Orange
             else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
+
         if not brush.IsEmpty():
             tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
-            if brushTrigger:
-                selectTrigger = False
-                dragStartPos = None
-                dragRect = None
-                Selected.Set()
-                brushTrigger = False
-        elif selectTrigger and mouse_pressed[0] and not keys_pressed[K_c]:
-            if dragStartPos == None:
-                Selected.Set()
-                dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
-            dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
-            dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
-            Selected.Update()
-        elif dragStartPos != None:
-            selectTrigger = False
-            dragStartPos = None
-            Selected.Get()
-        if brush.IsEmpty(): brushTrigger = True
-        if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
-            selectTrigger = False
-            dragStartPos = None
-            dragRect = None
-            Selected.Set()
-            Selected.Update()
+
+        Drag.update(mouse_pos, mouse_pressed[0] if allowTilePlacement else False, mouse_pressed[2])
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
@@ -1567,18 +1690,64 @@ def main():
                     if number != UnitData.EMPTY:
                         UnitData.renderSerial(display, unit.properties, number, (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize))
 
-        if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
-            selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
-            selectDraw = pygame.Surface(selectDrawRect.size)
-            selectDraw.fill(KDS.Colors.White)
-            pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), scalesize // 8)
-            selectDraw.set_alpha(64)
-            display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
+        if Drag.Mode == DragMode.Default:
+            Drag.render(Drag.DEFAULT_STYLE, display, scroll)
 
-            wRnd = harbinger_font.render(str(dragRect.width), True, KDS.Colors.CloudWhite)
-            display.blit(wRnd, (selectDrawRect.x + selectDrawRect.width // 2 - wRnd.get_width() // 2, selectDrawRect.y - 10 - wRnd.get_height()))
-            hRnd = harbinger_font.render(str(dragRect.height), True, KDS.Colors.CloudWhite)
-            display.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
+        if zoneMode:
+            if Drag.Mode != DragMode.Zone:
+                Drag.clear()
+                Drag.Mode = DragMode.Zone
+
+            zoneScreen = pygame.Surface(display_size)
+            zoneScreen.fill(KDS.Colors.White)
+            for zoneRect, zoneData in PropertiesData.Zones:
+                zoneRectScaled = pygame.Rect((zoneRect.x - scroll[0]) * scalesize, (zoneRect.y - scroll[1]) * scalesize, zoneRect.width * scalesize, zoneRect.height * scalesize)
+                if zoneRectScaled.left < 0 or zoneRectScaled.right > display_size[0] or zoneRectScaled.top < 0 or zoneRectScaled.bottom > display_size[0]:
+                    continue
+
+                zoneSurf = pygame.Surface(zoneRectScaled.size)
+                zoneSurf.fill(KDS.Colors.Gray)
+                if PropertiesData.ZoneSetting.StaffOnly in zoneData and zoneData[PropertiesData.ZoneSetting.StaffOnly] == True:
+                    lineWidth = max(scalesize // 8, 1)
+                    line_45 = ((0, 0), zoneRectScaled.size)
+                    for y in range(-max(zoneRectScaled.width, zoneRectScaled.height), max(zoneRectScaled.width, zoneRectScaled.height), lineWidth * 2):
+                        pygame.draw.line(zoneSurf, KDS.Colors.Black, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
+
+                zoneScreen.blit(zoneSurf, zoneRectScaled.topleft)
+
+                if keys_pressed[K_p] and zoneRectScaled.collidepoint(*mouse_pos):
+                    zone_command_tree = {
+                        "staffOnly": {"true": "break", "false": "break"},
+                        "darkness": {"[int]": "break"}
+                    }
+                    zone_command: Sequence[str] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
+                    if zone_command != None and len(zone_command) == 2:
+                        command_setting: Optional[PropertiesData.ZoneSetting] = None
+                        for zs in PropertiesData.ZoneSetting:
+                            if zs.value.lower() == zone_command[0]:
+                                command_setting = zs
+                                break
+                        if command_setting != None:
+                            if command_setting == PropertiesData.ZoneSetting.StaffOnly:
+                                parsedBool = KDS.Convert.String.ToBool(zone_command[1], hideError=True)
+                                if parsedBool != None:
+                                    PropertiesData.Zones.SetSetting(zoneRect, command_setting, parsedBool)
+                                else:
+                                    KDS.Logging.info(f"{zone_command[1]} is not a valid bool.", consoleVisible=True)
+                            elif command_setting == PropertiesData.ZoneSetting.Darkness:
+                                if zone_command[1].isnumeric():
+                                    PropertiesData.Zones.SetSetting(zoneRect, command_setting, int(zone_command[1]))
+                                else:
+                                    KDS.Logging.info(f"{zone_command[1]} is not a valid int.", consoleVisible=True)
+                        else:
+                            KDS.Logging.info(f"No property {zone_command[0]} found!", consoleVisible=True)
+                    else:
+                        KDS.Logging.info("Invalid command.", consoleVisible=True)
+            zoneScreen.set_alpha(128)
+            display.blit(zoneScreen, (0, 0))
+        elif Drag.Mode != DragMode.Default:
+            Drag.Mode = DragMode.Default
+            Drag.clear()
 
         if DebugMode:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
@@ -1628,6 +1797,7 @@ KDS.Jobs.quit()
     P: Set teleport index
     O: Set Overlay
     G: Select Refrence Map File
+    Z: Toggle Zone Mode
     F5: Force Refrence Check
     CTRL + A: Select All
     CTRL + S: Save Project
