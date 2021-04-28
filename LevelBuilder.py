@@ -669,14 +669,16 @@ class PropertiesData:
                     self.zones.remove(zone)
                     return
 
-        def NewDragRect(self):
-            self.zones.append((cast(pygame.Rect, Drag.Rect.copy()), {}))
+        @staticmethod
+        def NewDragRect():
+            PropertiesData.Zones.zones.append((cast(pygame.Rect, Drag.Rect.copy()), {}))
             Undo.overflowCount += 1
 
-        def UpdateDragRect(self):
-            if len(self.zones) < 1:
+        @staticmethod
+        def UpdateDragRect():
+            if len(PropertiesData.Zones.zones) < 1:
                 return
-            self.zones[-1] = (cast(pygame.Rect, Drag.Rect.copy()), self.zones[-1][1])
+            PropertiesData.Zones.zones[-1] = (cast(pygame.Rect, Drag.Rect.copy()), PropertiesData.Zones.zones[-1][1])
 
         def SetSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting, value: Union[str, int, float, bool]):
             for zone in self.zones:
@@ -935,7 +937,7 @@ class DragData:
             self.c_onDragClear[mode].append(onDragClear)
 
 Drag = DragData()
-Drag.registerCalls(DragMode.Zone, PropertiesData.Zones.NewDragRect, PropertiesData.Zones.UpdateDragRect, PropertiesData.Zones.UpdateDragRect, None)
+Drag.registerCalls(DragMode.Zone, PropertiesData.ZoneData.NewDragRect, PropertiesData.ZoneData.UpdateDragRect, PropertiesData.ZoneData.UpdateDragRect, None)
 
 def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
     rlist = []
