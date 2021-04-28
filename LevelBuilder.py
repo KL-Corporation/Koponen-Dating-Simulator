@@ -142,6 +142,20 @@ class TextureHolder:
         self.serials: List[str] = []
         self.names: List[str] = []
 
+    def __iter__(self):
+        self.iterIndex: int = 0
+        self.iterValues: List[TextureHolder.TextureData] = []
+        for d in self.data.values():
+            self.iterValues.extend([v for v in d.values()])
+        return self
+
+    def __next__(self) -> TextureHolder.TextureData:
+        if self.iterIndex >= len(self.iterValues):
+            raise StopIteration
+        output = self.iterValues[self.iterIndex]
+        self.iterIndex += 1
+        return output
+
     def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]] = KDS.Colors.White, alpha: int = -1) -> None:
         try:
             self.data[UnitType(int(serialNumber[0]))][serialNumber] = TextureHolder.TextureData(serialNumber, path, name, colorkey, alpha)
@@ -166,13 +180,6 @@ class TextureHolder:
     def GetScaledTextureWithSize(self, serialNumber: str) -> Tuple[pygame.Surface, Tuple[int, int]]:
         data = self.GetData(serialNumber)
         return data.scaledTexture, data.scaledTexture_size
-
-    def GetDataByName(self, name: str) -> Optional[TextureHolder.TextureData]:
-        for t in self.data.values():
-            for d in t.values():
-                if d.name == name:
-                    return d
-        return None
 
     def RescaleTextures(self) -> None:
         for t in self.data.values():
@@ -664,6 +671,7 @@ class PropertiesData:
 
         def NewDragRect(self):
             self.zones.append((cast(pygame.Rect, Drag.Rect.copy()), {}))
+            Undo.overflowCount += 1
 
         def UpdateDragRect(self):
             if len(self.zones) < 1:
@@ -1080,11 +1088,14 @@ def openMap() -> bool: # Returns True if the operation was succesful
         return False
     return loadMap(fileName)
 
-tmpNames = {n: "break" for n in Textures.names}
+consoleTextureNames = {}
+for tmpName in Textures:
+    modName = tmpName.name.replace(" ", "_").lower().replace("(", "").replace(")", "")
+    consoleTextureNames[modName.encode("ascii", "ignore").decode("ascii")] = tmpName.serialNumber
 commandTree = {
     "set": {
-        "brush": tmpNames,
-        **tmpNames
+        "brush": consoleTextureNames,
+        **consoleTextureNames
     },
     "add": {
         "rows": "break",
@@ -1096,7 +1107,7 @@ commandTree = {
         "stacks": "break"
     }
 }
-def consoleHandler(commandlist):
+def consoleHandler(commandlist: List[str]):
     global brush, grid
     if commandlist[0] == "set":
         textureNames = Textures.names
@@ -1106,7 +1117,7 @@ def consoleHandler(commandlist):
                 KDS.Console.Feed.append("Invalid set command.")
                 return
             if commandlist[2] in textureNames:
-                data = Textures.GetDataByName(commandlist[2])
+                data = Textures.GetData(consoleTextureNames[commandlist[2]])
                 brush.SetValues(data.serialNumber)
                 KDS.Console.Feed.append(f"Brush set: [{data.serialNumber}: {data.name}]")
             elif commandlist[2] in textureSerials:
@@ -1115,7 +1126,7 @@ def consoleHandler(commandlist):
             else: KDS.Console.Feed.append("Invalid brush.")
         elif Drag.Mode == DragMode.Default and Drag.Rect != None:
             if commandlist[1] in textureNames:
-                data = Textures.GetDataByName(commandlist[1])
+                data = Textures.GetData(consoleTextureNames[commandlist[1]])
                 Selected.Set(UnitData.toSerialString(data.serialNumber))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{data.serialNumber}: {data.name}]")
@@ -1154,6 +1165,36 @@ def consoleHandler(commandlist):
                         unit.setSerialToSlot(UnitData.EMPTY, i)
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
+
+def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
+    if commandlist == None:
+        return
+
+    if len(commandlist) != 2:
+        KDS.Logging.info("Invalid command.", consoleVisible=True)
+        return
+
+    command_setting: Optional[PropertiesData.ZoneSetting] = None
+    for zs in PropertiesData.ZoneSetting:
+        if zs.value.lower() == commandlist[0]:
+            command_setting = zs
+            break
+
+    if command_setting == None:
+        KDS.Logging.info(f"No property {commandlist[0]} found!", consoleVisible=True)
+        return
+
+    if command_setting == PropertiesData.ZoneSetting.StaffOnly:
+        parsedBool = KDS.Convert.String.ToBool(commandlist[1], hideError=True)
+        if parsedBool == None:
+            KDS.Logging.info(f"{commandlist[1]} is not a valid bool.", consoleVisible=True)
+            return
+        PropertiesData.Zones.SetSetting(zoneRect, command_setting, parsedBool)
+    elif command_setting == PropertiesData.ZoneSetting.Darkness:
+        if commandlist[1].isnumeric():
+            KDS.Logging.info(f"{commandlist[1]} is not a valid int.", consoleVisible=True)
+            return
+        PropertiesData.Zones.SetSetting(zoneRect, command_setting, int(commandlist[1]))
 
 def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
@@ -1681,7 +1722,7 @@ def main():
             tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
 
-        Drag.update(mouse_pos, mouse_pressed[0] if allowTilePlacement else False, mouse_pressed[2])
+        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2])
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
@@ -1695,10 +1736,10 @@ def main():
         if zoneMode:
             if brush.brush != UnitData.EMPTY:
                 brush.SetValues()
-
             if Drag.Mode != DragMode.Zone:
                 Drag.clear()
                 Drag.Mode = DragMode.Zone
+            allowTilePlacement = False
 
             zoneScreen = pygame.Surface(display_size)
             zoneScreen.fill(KDS.Colors.White)
@@ -1712,7 +1753,8 @@ def main():
                 if PropertiesData.ZoneSetting.StaffOnly in zoneData and zoneData[PropertiesData.ZoneSetting.StaffOnly] == True:
                     lineWidth = max(scalesize // 8, 1)
                     line_45 = ((0, 0), zoneRectScaled.size)
-                    for y in range(-max(zoneRectScaled.width, zoneRectScaled.height), max(zoneRectScaled.width, zoneRectScaled.height), lineWidth * 2):
+                    lineLength = max(zoneRectScaled.width, zoneRectScaled.height)
+                    for y in range(-lineLength, lineLength, lineWidth * 3):
                         pygame.draw.line(zoneSurf, KDS.Colors.Black, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
 
                 zoneScreen.blit(zoneSurf, zoneRectScaled.topleft)
@@ -1722,29 +1764,8 @@ def main():
                         "staffOnly": {"true": "break", "false": "break"},
                         "darkness": {"[int]": "break"}
                     }
-                    zone_command: Sequence[str] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
-                    if zone_command != None and len(zone_command) == 2:
-                        command_setting: Optional[PropertiesData.ZoneSetting] = None
-                        for zs in PropertiesData.ZoneSetting:
-                            if zs.value.lower() == zone_command[0]:
-                                command_setting = zs
-                                break
-                        if command_setting != None:
-                            if command_setting == PropertiesData.ZoneSetting.StaffOnly:
-                                parsedBool = KDS.Convert.String.ToBool(zone_command[1], hideError=True)
-                                if parsedBool != None:
-                                    PropertiesData.Zones.SetSetting(zoneRect, command_setting, parsedBool)
-                                else:
-                                    KDS.Logging.info(f"{zone_command[1]} is not a valid bool.", consoleVisible=True)
-                            elif command_setting == PropertiesData.ZoneSetting.Darkness:
-                                if zone_command[1].isnumeric():
-                                    PropertiesData.Zones.SetSetting(zoneRect, command_setting, int(zone_command[1]))
-                                else:
-                                    KDS.Logging.info(f"{zone_command[1]} is not a valid int.", consoleVisible=True)
-                        else:
-                            KDS.Logging.info(f"No property {zone_command[0]} found!", consoleVisible=True)
-                    else:
-                        KDS.Logging.info("Invalid command.", consoleVisible=True)
+                    zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
+                    zoneConsoleHandler(zone_command, zoneRect)
             zoneScreen.set_alpha(128)
             display.blit(zoneScreen, (0, 0))
         elif Drag.Mode != DragMode.Default:
