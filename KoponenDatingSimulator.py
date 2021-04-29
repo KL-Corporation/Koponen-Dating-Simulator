@@ -361,6 +361,7 @@ renderPlayer = True
 
 Tiles: List[List[List[KDS.Build.Tile]]] = []
 Items: List[KDS.Build.Item] = []
+Zones: List[KDS.World.Zone] = []
 
 Enemies: List[KDS.AI.HostileEnemy] = []
 Entities: List[KDS.Teachers.Teacher] = []
@@ -371,7 +372,6 @@ Explosions: List[KDS.World.Explosion] = []
 
 Lights: List[KDS.World.Lighting.Light] = []
 Particles: List[KDS.World.Lighting.Particle] = []
-
 
 level_finished = False
 HitTargets: Dict[KDS.Build.Tile, KDS.World.HitTarget] = {}
@@ -423,7 +423,7 @@ class WorldData:
     MapSize = (0, 0)
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
-        global Items, Tiles, Enemies, Projectiles, overlays, Player
+        global Items, Tiles, Enemies, Projectiles, overlays, Player, Zones
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
@@ -573,8 +573,9 @@ class WorldData:
         #region Zones
         if "zones" in properties:
             for k, v in properties["zones"].items():
-                raise NotImplementedError # Make a zone class (KDS.World) that detects when player is inside.
-                                            # The code should respond automatically to different zone settings.
+                zoneKSplit = k.split("-")
+                zoneKRect = pygame.Rect(int(zoneKSplit[0]), int(zoneKSplit[1]), int(zoneKSplit[2]), int(zoneKSplit[3]))
+                Zones.append(KDS.World.Zone(zoneKRect, v))
         #endregion
 
         #region LateInit
@@ -3855,6 +3856,9 @@ while main_running:
     KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll, DebugMode)
     Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
     Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
+
+    for Zone in Zones:
+        Zone.update(Player.rect)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, (*Enemies, *Entities), HitTargets, Particles, Player.rect, Player.health, DebugMode)
