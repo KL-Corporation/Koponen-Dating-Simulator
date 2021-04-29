@@ -680,13 +680,26 @@ class PropertiesData:
                 return
             PropertiesData.Zones.zones[-1] = (cast(pygame.Rect, Drag.Rect.copy()), PropertiesData.Zones.zones[-1][1])
 
-        def SetSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting, value: Union[str, int, float, bool]):
+        def _returnCorrectZone(self, zoneRect: pygame.Rect) -> Optional[Dict[PropertiesData.ZoneSetting, str | int | float | bool]]:
             for zone in self.zones:
                 if zone[0].x == zoneRect.x and zone[0].y == zoneRect.y and zone[0].width == zoneRect.width and zone[0].height == zoneRect.height:
-                    zone[1][setting] = value
-                    return
-            KDS.Logging.warning(f"No zone matching {zoneRect} found!", consoleVisible=True)
+                    return zone[1]
+            return None
 
+        def SetSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting, value: Union[str, int, float, bool]):
+            zone = self._returnCorrectZone(zoneRect)
+            if zone == None:
+                KDS.Logging.warning(f"No zone matching {zoneRect} found!", consoleVisible=True)
+                return
+            zone[setting] = value
+
+        def RemoveSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting):
+            zone = self._returnCorrectZone(zoneRect)
+            if zone == None:
+                KDS.Logging.warning(f"No zone matching {zoneRect} found!", consoleVisible=True)
+                return
+            if setting in zone:
+                zone.pop(setting)
 
     Zones = ZoneData()
 
@@ -1169,6 +1182,7 @@ def consoleHandler(commandlist: List[str]):
     else: KDS.Console.Feed.append("Invalid command.")
 
 def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
+    Undo.overflowCount += 1
     if commandlist == None:
         return
 
@@ -1186,6 +1200,10 @@ def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
         KDS.Logging.info(f"No property {commandlist[0]} found!", consoleVisible=True)
         return
 
+    if commandlist[1] == "null":
+        PropertiesData.Zones.RemoveSetting(zoneRect, command_setting)
+        return
+
     if command_setting == PropertiesData.ZoneSetting.StaffOnly:
         parsedBool = KDS.Convert.String.ToBool(commandlist[1], hideError=True)
         if parsedBool == None:
@@ -1193,10 +1211,14 @@ def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
             return
         PropertiesData.Zones.SetSetting(zoneRect, command_setting, parsedBool)
     elif command_setting == PropertiesData.ZoneSetting.Darkness:
-        if commandlist[1].isnumeric():
+        if not commandlist[1].isnumeric():
             KDS.Logging.info(f"{commandlist[1]} is not a valid int.", consoleVisible=True)
             return
-        PropertiesData.Zones.SetSetting(zoneRect, command_setting, int(commandlist[1]))
+        intDarkness = int(commandlist[1])
+        if intDarkness < 0 or intDarkness > 255:
+            KDS.Logging.info(f"{intDarkness} is over the range [0 - 255] of darkness.", consoleVisible=True)
+            return
+        PropertiesData.Zones.SetSetting(zoneRect, command_setting, intDarkness)
 
 def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
@@ -1752,6 +1774,15 @@ def main():
 
                 zoneSurf = pygame.Surface(zoneRectScaled.size)
                 zoneSurf.fill(KDS.Colors.Gray)
+                if PropertiesData.ZoneSetting.Darkness in zoneData:
+                    zoneDarkness = zoneData[PropertiesData.ZoneSetting.Darkness]
+                    if isinstance(zoneDarkness, int):
+                        darkColor = 255 - zoneDarkness
+                        scaleDiv = scalesize // 3
+                        for y in range(0, zoneRectScaled.height, scaleDiv * 2):
+                            for x in range(0, zoneRectScaled.width, scaleDiv * 2):
+                                pygame.draw.circle(zoneSurf, (darkColor, darkColor, darkColor), (x, y), scaleDiv // 2)
+
                 if PropertiesData.ZoneSetting.StaffOnly in zoneData and zoneData[PropertiesData.ZoneSetting.StaffOnly] == True:
                     lineWidth = max(scalesize // 8, 1)
                     line_45 = ((0, 0), zoneRectScaled.size)
@@ -1763,8 +1794,8 @@ def main():
 
                 if keys_pressed[K_p] and zoneRectScaled.collidepoint(*mouse_pos):
                     zone_command_tree = {
-                        "staffOnly": {"true": "break", "false": "break"},
-                        "darkness": {"[int]": "break"}
+                        "staffOnly": {"true": "break", "false": "break", "null": "break"},
+                        "darkness": {"[int]": "break", "null": "break"}
                     }
                     zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
                     zoneConsoleHandler(zone_command, zoneRect)

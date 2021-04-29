@@ -11,6 +11,7 @@ import KDS.Colors
 import KDS.School
 import KDS.Missions
 import KDS.Logging
+import KDS.World
 
 from typing import Any, Callable, TYPE_CHECKING, Type
 
@@ -68,7 +69,7 @@ class WalkieTalkieEffect:
     alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
 
     @staticmethod
-    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface, SetDark: Callable[[bool, int], Any]) -> bool:
+    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface) -> bool:
         if newCall:
             WalkieTalkieEffect.phaseTwoIndex = 0
             WalkieTalkieEffect.phaseIndex = 0
@@ -99,7 +100,7 @@ class WalkieTalkieEffect:
                 else:
                     KDS.Logging.AutoError("Walkie talkie not found!")
 
-                SetDark(True, 224)
+                KDS.World.Dark.Set(True, 224)
 
             display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
 
@@ -135,4 +136,4 @@ class WalkieTalkieEffect:
 
         return False
 
-        # Game state will be changed in main (NOT IMPLEMENTED)
+        # Game state will be changed in main (NOT IMPLEMENTED) (or is it? I can't remember)

@@ -430,3 +430,60 @@ class Explosion:
     def update(self, Surface: pygame.Surface, scroll: List[int]):
         Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
+
+
+class Dark:
+    enabled: bool = False
+    darkness: Tuple[int, int, int] = (0, 0, 0)
+    _defaultEnabled: bool = False
+    _defaultDarknessStrength: int = -1
+
+    @staticmethod
+    def Set(enabled: bool, strength: int):
+        Dark.enabled = enabled
+        tmp = 255 - strength
+        Dark.darkness = (tmp, tmp, tmp)
+
+    @staticmethod
+    def Reset():
+        Dark.Set(Dark._defaultEnabled, Dark._defaultDarknessStrength)
+
+    @staticmethod
+    def Configure(enabled: bool, strength: int):
+        Dark._defaultEnabled = enabled
+        Dark._defaultDarknessStrength = strength
+        Dark.Reset()
+
+class Zone:
+    StaffOnlyCollisions: int = 0
+
+    def __init__(self, rect: pygame.Rect, properties: Dict[str, Union[str, int, float, bool]]) -> None:
+        self.rect = rect
+        self.playerInside: bool = False
+        self.staffOnly = bool("staffOnly" in properties and properties["staffOnly"] == True)
+        self.darkness: Optional[int] = None
+        if "darkness" in properties:
+            setDark = properties["darkness"]
+            if isinstance(setDark, int):
+                self.darkness = setDark
+
+    def onEnter(self):
+        if self.darkness != None:
+            Dark.Set(True, self.darkness)
+        if self.staffOnly:
+            Zone.StaffOnlyCollisions += 1
+
+    def onExit(self):
+        if self.darkness != None:
+            Dark.Reset()
+        if self.staffOnly:
+            Zone.StaffOnlyCollisions -= 1
+
+    def update(self, playerRect: pygame.Rect):
+        if self.rect.colliderect(playerRect):
+            if not self.playerInside:
+                self.playerInside = True
+                self.onEnter()
+        elif self.playerInside:
+            self.playerInside = False
+            self.onExit()

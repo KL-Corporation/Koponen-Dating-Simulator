@@ -751,5 +751,5 @@
 "175-24":{"0":{"checkCollision":false}},
 "176-24":{"0":{"checkCollision":false}},
 "177-24":{"0":{"checkCollision":false}},
-"zones":{"43-10-11-15":{"staffOnly":true}}
+"zones":{"43-10-11-15":{"staffOnly":true,"darkness":255}}
 }

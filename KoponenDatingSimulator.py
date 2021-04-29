@@ -359,15 +359,23 @@ settings_running = False
 
 renderPlayer = True
 
+Tiles: List[List[List[KDS.Build.Tile]]] = []
+Items: List[KDS.Build.Item] = []
+
+Enemies: List[KDS.AI.HostileEnemy] = []
+Entities: List[KDS.Teachers.Teacher] = []
+
 Projectiles: List[KDS.World.Bullet] = []
-Explosions: List[KDS.World.Explosion] = []
 BallisticObjects: List[KDS.World.BallisticProjectile] = []
+Explosions: List[KDS.World.Explosion] = []
+
 Lights: List[KDS.World.Lighting.Light] = []
+Particles: List[KDS.World.Lighting.Particle] = []
+
+
 level_finished = False
-Particles = []
 HitTargets: Dict[KDS.Build.Tile, KDS.World.HitTarget] = {}
 enemy_difficulty = 1
-tiles: List[List[List[KDS.Build.Tile]]] = []
 overlays: List[KDS.Build.Tile] = []
 LightScroll = [0, 0]
 renderUI = True
@@ -375,9 +383,6 @@ walk_sound_delay = 0
 level_background = False
 level_background_img = Any
 
-Items: List[KDS.Build.Item] = []
-Enemies: List[KDS.AI.HostileEnemy] = []
-Entities: List[KDS.Teachers.Teacher] = []
 
 true_scroll = [0.0, 0.0]
 SCROLL_OFFSET = (301, 221)
@@ -414,33 +419,11 @@ except:
     KDS.Logging.AutoError("Game Settings could not be loaded!")
 #endregion
 #region World Data
-dark: bool = False
-darkness: Tuple[int, int, int] = (0, 0, 0)
 class WorldData:
-    _defaultDark: bool = False
-    _defaultDarkness: int = -1
-
-    @staticmethod
-    def SetDark(enabled: bool, strength: int):
-        global dark, darkness
-        dark = enabled
-        tmp = 255 - strength
-        darkness = (tmp, tmp, tmp)
-
-    @staticmethod
-    def ResetDark():
-        WorldData.SetDark(WorldData._defaultDark, WorldData._defaultDarkness)
-
-    @staticmethod
-    def ConfigureDark(enabled: bool, strength: int):
-        WorldData._defaultDark = enabled
-        WorldData._defaultDarkness = strength
-        WorldData.ResetDark()
-
     MapSize = (0, 0)
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
-        global Items, tiles, Enemies, Projectiles, overlays, Player
+        global Items, Tiles, Enemies, Projectiles, overlays, Player
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
             KDS.Logging.AutoError(f"""##### MAP FILE ERROR #####
@@ -471,12 +454,11 @@ class WorldData:
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
-        tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
+        Tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
 
-        global dark, darkness
         KDS.ConfigManager.LevelProp.init(MapPath)
-        WorldData.ConfigureDark(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
+        KDS.World.Dark.Configure(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
         Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
         Player.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
         Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
@@ -509,6 +491,7 @@ class WorldData:
         Entity.agro_count = 0
 
         y = 0
+        #region Main Map
         for row in map_data:
             x = 0
             for datapoint in row.split(" "):
@@ -543,10 +526,10 @@ class WorldData:
                     if pointer == 0:
                         if serialNumber not in KDS.Build.Tile.specialTiles:
                             value = KDS.Build.Tile((x * 34, y * 34), serialNumber=serialNumber)
-                            tiles[y][x].append(value)
+                            Tiles[y][x].append(value)
                         else:
                             value = KDS.Build.Tile.specialTilesClasses[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                            tiles[y][x].append(value)
+                            Tiles[y][x].append(value)
                     elif pointer == 1:
                         value = KDS.Build.Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                         Items.append(value)
@@ -556,7 +539,7 @@ class WorldData:
                         Enemy.total += 1
                     elif pointer == 3:
                         value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
-                        tiles[y][x].append(value)
+                        Tiles[y][x].append(value)
                     elif pointer == 4:
                         value = KDS.Teachers.Teacher.serialNumbers[serialNumber]((x * 34, y * 34))
                         Entities.append(value)
@@ -585,18 +568,30 @@ class WorldData:
                                 else:
                                     setattr(value, k, v)
             y += 1
+        #endregion
 
+        #region Zones
+        if "zones" in properties:
+            for k, v in properties["zones"].items():
+                raise NotImplementedError # Make a zone class (KDS.World) that detects when player is inside.
+                                            # The code should respond automatically to different zone settings.
+        #endregion
+
+        #region LateInit
         # lateInit order is the reverse of pointers
+        for entity in Entities:
+            entity.lateInit()
         for enemy in Enemies:
             enemy.lateInit()
         for item in Items:
             item.lateInit()
         for overlay in overlays:
             overlay.lateInit()
-        for row in tiles:
+        for row in Tiles:
             for unit in row:
                 for tile in unit:
                     tile.lateInit()
+        #endregion
 
         for teleportData in BaseTeleport.teleportDatas.values():
             teleportData.Order()
@@ -940,12 +935,12 @@ class Lamp(KDS.Build.Tile):
         self.coneheight = 90
 
     def lateInit(self):
-        global tiles
+        global Tiles
         y = 0
         r = True
         while r:
             y += 33
-            for row in tiles:
+            for row in Tiles:
                 for unit in row:
                     for tile in unit:
                         if tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
@@ -1001,7 +996,7 @@ class DecorativeHead(KDS.Build.Tile):
             self.praying = False
 
         if self.prayed:
-            if dark:
+            if KDS.World.Dark.enabled:
                 Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 1900), True))
             else:
                 day_light = KDS.World.Lighting.Shapes.circle.get(150, 1900).copy()
@@ -1194,7 +1189,7 @@ class RespawnAnchor(KDS.Build.Tile):
 
     def update(self):
         if RespawnAnchor.active == self:
-            if dark:
+            if KDS.World.Dark.enabled:
                 Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 2400), True))
             else:
                 day_light = KDS.World.Lighting.Shapes.splatter.get(150, 2400).copy()
@@ -1685,9 +1680,9 @@ class BaseTeleport(KDS.Build.Tile):
         true_scroll[1] += Player.rect.y - true_scroll[1] - SCROLL_OFFSET[1]
         # Setting Dark
         if self.setDark != None:
-            WorldData.SetDark(True, self.setDark)
+            KDS.World.Dark.Set(True, self.setDark)
         else:
-            WorldData.ResetDark()
+            KDS.World.Dark.Reset()
         # Triggering Listener
         KDS.Missions.Listeners.Teleport.Trigger()
 
@@ -1891,7 +1886,7 @@ class Knife(KDS.Build.Weapon):
     def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
         output = super().shoot(holderData)
         if output:
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, tiles, 25, maxDistance=40))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 25, maxDistance=40))
         return output
 
     def use(self) -> pygame.Surface:
@@ -1944,7 +1939,7 @@ class Pistol(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 100))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 100))
         return output
 
     def use(self) -> pygame.Surface:
@@ -1964,7 +1959,7 @@ class rk62(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25))
         return output
 
 
@@ -1987,7 +1982,7 @@ class Shotgun(KDS.Build.Weapon):
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2022,7 +2017,7 @@ class Plasmarifle(KDS.Build.Weapon):
         if output:
             asset_offset = 70 * -KDS.Convert.ToMultiplier(holderData.direction)
             Lights.append(KDS.World.Lighting.Light((int(holderData.rect.centerx - asset_offset / 1.4), holderData.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, Tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
         return output
 
     def pickup(self):
@@ -2085,7 +2080,7 @@ class Ppsh41(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 10, slope=random.uniform(-0.5, 0.5)))
         return output
 
     def pickup(self):
@@ -2105,7 +2100,7 @@ class Awm(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, tiles, random.randint(300, 590), slope=0))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(300, 590), slope=0))
         return output
 
     def pickup(self):
@@ -2248,7 +2243,7 @@ class Chainsaw(KDS.Build.Item):
         if self.pickupFinished and (Chainsaw.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
             if KDS.Keys.mainKey.pressed:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, tiles, damage=1, maxDistance=80))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, Tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     Chainsaw.freespin_sound.stop()
                     KDS.Audio.PlaySound(Chainsaw.throttle_sound)
@@ -2390,7 +2385,7 @@ class Enemy:
 
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
-        projectiles, items = enemy.update(screen, scroll, tiles, Player.rect, DebugMode)
+        projectiles, items = enemy.update(screen, scroll, Tiles, Player.rect, DebugMode)
         if enemy.health > 0:
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
@@ -2424,7 +2419,7 @@ class Entity:
 
     @staticmethod
     def _internalEntityHandler(entity: KDS.Teachers.Teacher):
-        projectiles, items = entity.update(screen, scroll, tiles, Player)
+        projectiles, items = entity.update(screen, scroll, Tiles, Player)
         if KDS.Teachers.TeacherState.Combat in entity.state and entity.health > 0:
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
@@ -2518,7 +2513,7 @@ class PlayerClass:
                     self.crouching = True
             elif self.crouching:
                 # If more than zero collisions; do not release crouch
-                if len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), tiles)) > 0:
+                if len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), Tiles)) > 0:
                     return
                 self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 self.crouching = False
@@ -2587,7 +2582,7 @@ class PlayerClass:
             else:
                 crouch(False)
 
-            collisions = self.mover.move(self.rect, self.movement if not self.lockMovement else (0.0, 0.0), tiles, playWalkSound=playWalkSound)
+            collisions = self.mover.move(self.rect, self.movement if not self.lockMovement else (0.0, 0.0), Tiles, playWalkSound=playWalkSound)
 
             if collisions.bottom:
                 self.air_timer = 0
@@ -3829,7 +3824,7 @@ while main_running:
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     KDS.Build.Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
-    KDS.Build.Tile.renderUpdate(tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll, DebugMode)
+    KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll, DebugMode)
 
     Enemy.update(Enemies)
     Entity.update(Entities)
@@ -3855,9 +3850,9 @@ while main_running:
                 screen_overlay = pygame.transform.scale(tmp, screen_size)
         else: Koponen.continueAutoMove()
 
-        Koponen.update(tiles, display, KDS_Quit, clock)
+        Koponen.update(Tiles, display, KDS_Quit, clock)
     #endregion
-    KDS.Build.Item.renderUpdate(Items, tiles, screen, scroll, DebugMode)
+    KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll, DebugMode)
     Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
     Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
 
@@ -3873,16 +3868,16 @@ while main_running:
             Projectiles.remove(Projectile)
 
     for B_Object in BallisticObjects:
-        r2 = B_Object.update(tiles, screen, scroll)
+        r2 = B_Object.update(Tiles, screen, scroll)
         if r2:
             for x in range(8):
                 x = -x
                 x /= 8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), True, -1, tiles, 25, maxDistance=82, slope=x))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), True, -1, Tiles, 25, maxDistance=82, slope=x))
             for x in range(8):
                 x = -x
                 x /= 8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), False, -1, tiles, 25, maxDistance=82, slope=x))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), False, -1, Tiles, 25, maxDistance=82, slope=x))
 
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x - 60, B_Object.rect.y - 55)))
@@ -3923,10 +3918,8 @@ while main_running:
         screen.blit(itemTip, (KDS.Build.Item.tipItem.rect.centerx - itemTip.get_width() // 2 - scroll[0], KDS.Build.Item.tipItem.rect.bottom - 45 - scroll[1]))
 
     #Valojen käsittely
-    #dark = False if Player.rect.x > 500 else 1
-    #^^ Bruh miks tää on olemassa?
-    if dark:
-        black_tint.fill(darkness)
+    if KDS.World.Dark.enabled:
+        black_tint.fill(KDS.World.Dark.darkness)
         if Player.light and Player.visible:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), True))
         for light in Lights:
@@ -4017,7 +4010,7 @@ while main_running:
     pygame.transform.scale(screen, display_size, display)
 
     if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
-        if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display, WorldData.SetDark):
+        if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):
             KDS.Missions.SetProgress("explore", "find_walkie_talkie", 1.0)
             WalkieTalkie.storyRunning = False
         else:
@@ -4036,9 +4029,9 @@ while main_running:
             play_story(KDS.ConfigManager.Save.Active.index, newSave=False, oldSurf=screen)
         else:
             respawn_function()
-    if Player.rect.y > len(tiles) * 34 + 340:
+    if Player.rect.y > len(Tiles) * 34 + 340:
         Player.health = 0
-        Player.rect.y = len(tiles) * 34 + 340
+        Player.rect.y = len(Tiles) * 34 + 340
     if esc_menu:
         KDS.Scores.ScoreCounter.pause()
         KDS.Audio.Music.Pause()
