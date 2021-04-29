@@ -244,7 +244,7 @@ class Weapon(Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface) -> None:
         super().__init__(position, serialNumber, texture=texture)
 
-                                                # float to pass infinite through
+    #                                                                  ↓  float to pass infinite through
     def internalInit(self, repeat_rate: int, defaultAmmo: Union[int, float], shootTexture: Optional[Union[pygame.Surface, KDS.Animator.Animation]], shootSound: Optional[pygame.mixer.Sound], stopSound: bool = False, allowHold: bool = False) -> None:
         self.repeat_rate = repeat_rate
         self.defaultAmmo = defaultAmmo

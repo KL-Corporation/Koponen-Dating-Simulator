@@ -86,7 +86,7 @@ class Teacher:
         self.allowJump: bool = True
         self.collisions = KDS.World.Collisions()
 
-        self.searchTime = 10 * 60
+        self.searchTime = 15 * 60 # 60 is fps
         self.currentSearch = 0
         self.lineOfSight = False
         self.noSightTime = 0
@@ -135,7 +135,9 @@ class Teacher:
         if indicatorColor != None:
             pygame.draw.circle(surface, indicatorColor, (self.rect.centerx - scroll[0], self.rect.y - 2 - 5 - scroll[1]), 2)
 
-        self.inventory.useItem(self.rect, self.direction, surface, scroll)
+        handItem = self.inventory.getHandItem()
+        if not isinstance(handItem, str):
+            KDS.Inventory.Inventory.renderItemTexture(handItem.texture, self.rect, self.direction, surface, scroll)
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
     def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
@@ -184,6 +186,7 @@ class Teacher:
             self.currentSearch += 1
             if self.currentSearch > self.searchTime and TeacherState.Searching in self.state:
                 self.state &= ~TeacherState.Searching
+                self.currentSearch = 0
 
             distance = self.rect.centerx - player.rect.centerx
             if abs(distance) > 50 * 34: # If over 50 blocks away and player behind, turn
@@ -230,6 +233,7 @@ class Teacher:
         #region Dead
         if self.health <= 0:
             self.animation.trigger("death")
+            self.inventory.pickSlot(0)
             if not self.deathHandled and self.death_sound != None:
                 KDS.Audio.PlaySound(self.death_sound)
                 items = self.onDeath()
@@ -241,7 +245,7 @@ class Teacher:
             self.render(surface, scroll)
             return enemyProjectiles, dropItems
         #endregion
-        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, self.rect, self.direction, surface, scroll, tiles, maxSearchUnits=8)
+        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, self.rect, self.direction, surface, scroll, tiles, maxSearchUnits=10)
         self.noSightTime += 1
         if self.lineOfSight:
             self.noSightTime = 0
@@ -251,20 +255,20 @@ class Teacher:
         if self.lineOfSight:
             self.alertTime += 1
             playerHandItem = player.inventory.getHandItem()
-            if not isinstance(playerHandItem, str) and playerHandItem.serialNumber in KDS.Build.Item.contraband and not (all([x != None and i != 0 for i, x in enumerate(self.inventory)])):
+            if not isinstance(playerHandItem, str) and playerHandItem.serialNumber in KDS.Build.Item.contraband and any([i != 0 and x == None for i, x in enumerate(self.inventory)]):
                 self.state |= TeacherState.RemovingContraband
             else:
                 self.state &= ~TeacherState.RemovingContraband
 
             alertCombat = TeacherState.Alerted in self.state and (self.alertTime > self.alertTimeBeforeCombat or TeacherState.RemovingContraband in self.state)
-            if (alertCombat or TeacherState.Searching in self.state):
+            if alertCombat or TeacherState.Searching in self.state or KDS.World.Zone.StaffOnlyCollisions > 0:
                 self.startAgro()
         else:
             self.alertTime = 0
 
             self.state &= ~TeacherState.RemovingContraband
 
-            if self.noSightTime > 10 * 60:
+            if self.noSightTime > 10 * 60 and TeacherState.Combat in self.state: # Second check to fix searching happening when teacher is not agroed
                 self.state &= ~TeacherState.Combat
                 self.state |= TeacherState.Searching
         #endregion

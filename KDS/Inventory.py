@@ -134,10 +134,7 @@ class Inventory:
         item = self.storage[index]
         if not isinstance(item, str):
             dumpVals = item.use()
-            if direction: renderOffset = -dumpVals.get_width()
-            else: renderOffset = rect.width + 2
-
-            surface.blit(pygame.transform.flip(dumpVals, direction, False), (rect.x - scroll[0] + renderOffset, rect.y + 10 -scroll[1]))
+            Inventory.renderItemTexture(dumpVals, rect, direction, surface, scroll)
         return None
 
     def useItem(self, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
@@ -154,6 +151,12 @@ class Inventory:
             if not isinstance(self.getHandItem(), c) and any(isinstance(item, c) for item in self.storage):
                 self.useItemByClass(c, rect, direction, surface, scroll)
 
+    @staticmethod
+    def renderItemTexture(texture: pygame.Surface, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
+        if direction: renderOffset = -texture.get_width()
+        else: renderOffset = rect.width + 2
+
+        surface.blit(pygame.transform.flip(texture, direction, False), (rect.x - scroll[0] + renderOffset, rect.y + 10 -scroll[1]))
 
     # def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
     #     dumpValues = nullLantern.use(args, Surface)

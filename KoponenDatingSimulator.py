@@ -3866,8 +3866,6 @@ while main_running:
 
     for Zone in Zones:
         Zone.update(Player.rect)
-        if KDS.World.Zone.StaffOnlyCollisions > 0:
-            print(KDS.World.Zone.StaffOnlyCollisions)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, (*Enemies, *Entities), HitTargets, Particles, Player.rect, Player.health, DebugMode)
@@ -3946,6 +3944,10 @@ while main_running:
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:
+        yellow_indicator_states: Dict[str, bool] = {
+            "visible_contraband": False
+        }
+
         Player.health = max(Player.health, 0)
         ui_hand_item = Player.inventory.getHandItem()
 
@@ -3954,10 +3956,15 @@ while main_running:
         screen.blit(score_font.render(f"STAMINA: {KDS.Math.CeilToInt(Player.stamina)}", True, KDS.Colors.White), (10, 120))
         screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
 
-        if isinstance(ui_hand_item, KDS.Build.Weapon):
-            tmpAmmo = ui_hand_item.getAmmo()
-            if not KDS.Math.IsInfinity(tmpAmmo):
-                screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, 360))
+        KDS.UI.Indicator.visible_contraband = False
+        if isinstance(ui_hand_item, KDS.Build.Item):
+            if ui_hand_item.serialNumber in KDS.Build.Item.contraband:
+                KDS.UI.Indicator.visible_contraband = True
+
+            if isinstance(ui_hand_item, KDS.Build.Weapon):
+                tmpAmmo = ui_hand_item.getAmmo()
+                if not KDS.Math.IsInfinity(tmpAmmo):
+                    screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, screen_size[1] - harbinger_font.get_height() - KDS.UI.Indicator.TEXTURESIZE[1] - (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0)))
 
         if Player.keys["red"]:
             screen.blit(red_key, (10, 20))
@@ -3965,6 +3972,11 @@ while main_running:
             screen.blit(green_key, (24, 20))
         if Player.keys["blue"]:
             screen.blit(blue_key, (38, 20))
+
+        KDS.UI.Indicator.combat = any([KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in Entities])
+        KDS.UI.Indicator.searching = any([KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in Entities])
+        KDS.UI.Indicator.trespassing = bool(KDS.World.Zone.StaffOnlyCollisions > 0)
+        KDS.UI.Indicator.render(screen)
 
         KDS.Missions.Render(screen)
 

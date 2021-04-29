@@ -46,15 +46,40 @@ def init():
     imp_fireball = pygame.image.load("Assets/Textures/Animations/imp_fireball.png").convert()
     imp_fireball.set_colorkey((255, 255, 255))
 
-def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, surface: Optional[pygame.Surface], scroll: Optional[Sequence[int]], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24) -> Tuple[bool, float]:
+def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24) -> Tuple[bool, float]:
+    def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
+        """Calculates the angle between two vectors.
+        Args:
+            p1 (tuple): First vector
+            p2 (tuple): Secod vector
+        Returns:
+            float: The angle between the vectors
+        """
+        try:
+            q = p1[0] - p2[0]
+            w = p1[1] - p2[1]
+            if w == 0:
+                w = 1
+            r = q / w
+
+            a = KDS.Math.Atan(r) * KDS.Math.RAD2DEG
+            #a = 360 - a
+            #while a >= 360:
+            #    a = a - 360
+
+            return a
+        except Exception as e:
+            KDS.Logging.AutoError(e)
+            return 0.0
+
     if direction:
         if targetRect.x > searchRect.x:
             return False, 0
     elif targetRect.x < searchRect.x:
         return False, 0
 
-    angle = KDS.Math.GetAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
-    if abs(angle) < maxAngle or KDS.Math.IsNan(angle):
+    angle = getAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
+    if abs(angle) < maxAngle:
         return False, 0
     if angle > 0:
         angle = 90 - angle
@@ -80,7 +105,7 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
             for unit in row[x:end_x]:
                 if len(unit) > 0:
                     for tile in unit:
-                        if KDS.Logging.profiler_running and surface != None and scroll != None:
+                        if KDS.Logging.profiler_running:
                             # ^^^^^^^^^^^^^^^^^^^^^^^^ BRUHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
                             pygame.draw.rect(surface, KDS.Colors.Red, (tile.rect.x - scroll[0], tile.rect.y - scroll[1], 34, 34))
                         if tile.checkCollision:
@@ -88,7 +113,7 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
                         if tile.rect.colliderect(targetRect):
                             return True, slope
                 else:
-                    if KDS.Logging.profiler_running and surface != None and scroll != None:
+                    if KDS.Logging.profiler_running:
                         pygame.draw.rect(surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13))
                     if targetRect.collidepoint( (int(pointer[0]), int(pointer[1]))):
                         return True, slope
