@@ -554,7 +554,7 @@ class WorldData:
                             for k, v in idProp[idPropCheck].items():
                                 if k == "checkCollision" and isinstance(value, KDS.Build.Tile): # Checking instance instead of pointer so that Pylance is happy.
                                     value.checkCollision = bool(v)
-                                    if not v and value.texture != None:
+                                    if not v and value.texture != None and isinstance(value.texture, pygame.Surface): # Some tiles have animations as texture
                                         tex: Any = value.texture.convert_alpha()
                                         tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                         value.darkOverlay = tex
@@ -574,7 +574,7 @@ class WorldData:
         if "zones" in properties:
             for k, v in properties["zones"].items():
                 zoneKSplit = k.split("-")
-                zoneKRect = pygame.Rect(int(zoneKSplit[0]), int(zoneKSplit[1]), int(zoneKSplit[2]), int(zoneKSplit[3]))
+                zoneKRect = pygame.Rect(int(zoneKSplit[0]) * 34, int(zoneKSplit[1]) * 34, int(zoneKSplit[2]) * 34, int(zoneKSplit[3]) * 34)
                 Zones.append(KDS.World.Zone(zoneKRect, v))
         #endregion
 
@@ -863,7 +863,7 @@ class Door(KDS.Build.Tile):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
-        self.rect = pygame.Rect(position[0], position[1], 5, 68)
+        self.rect = pygame.Rect(position[0], position[1] - 34, 5, 68)
         self.open = False
         self.maxClosingCounter = closingCounter
         self.closingCounter = 0
@@ -1042,7 +1042,7 @@ class Torch(KDS.Build.Tile):
             self.light_scale += 4
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
-        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1850), True))
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1900), True))
         return self.texture.update()
 
 class GoryHead(KDS.Build.Tile):
@@ -1578,9 +1578,16 @@ class Kiuas(KDS.Build.Tile):
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1] - 31, 38, 65)
         self.animation = KDS.Animator.Animation("kiuas", 3, 3, KDS.Colors.White)
+        self.light_scale = 150
 
     def update(self):
-        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.centery), KDS.World.Lighting.circle_surface(20, KDS.Colors.Orange)))
+        if 130 < self.light_scale < 170:
+            self.light_scale += random.randint(-3, 6)
+        elif self.light_scale > 160:
+            self.light_scale -= 4
+        else:
+            self.light_scale += 4
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1900), True))
         return self.animation.update()
 
 class Nysse(KDS.Build.Tile):
@@ -3859,6 +3866,8 @@ while main_running:
 
     for Zone in Zones:
         Zone.update(Player.rect)
+        if KDS.World.Zone.StaffOnlyCollisions > 0:
+            print(KDS.World.Zone.StaffOnlyCollisions)
 
     for Projectile in Projectiles:
         result = Projectile.update(screen, scroll, (*Enemies, *Entities), HitTargets, Particles, Player.rect, Player.health, DebugMode)
