@@ -51,7 +51,7 @@ class Teacher:
             self.onDamage()
         self._health = max(value, 0)
 
-    def internalInit(self, rect: pygame.Rect, w: KDS.Animator.Animation, r: KDS.Animator.Animation, s: KDS.Animator.Animation, c: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, agro_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, weapon_serial: int, walk_speed: int, run_speed: int, shootProbability: float, idle: bool = False, direction: bool = False) -> None:
+    def internalInit(self, rect: pygame.Rect, w: KDS.Animator.Animation, r: KDS.Animator.Animation, s: KDS.Animator.Animation, c: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, agro_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, weapon_serial: int, walk_speed: int, run_speed: int, idle: bool = False, direction: bool = False) -> None:
         self.rect = rect
         self._health = health
 
@@ -75,15 +75,12 @@ class Teacher:
         self.agro_sound = agro_sound
         self.death_sound = death_sound
 
-        self.shootProbability = shootProbability
-
         self.state: TeacherState = TeacherState.Neutral
         self.seenContrabandSerials: List[int] = []
 
         self.walk_speed = walk_speed
         self.run_speed = run_speed
         self.search_speed = KDS.Math.RoundCustomInt(KDS.Math.Lerp(self.walk_speed, self.run_speed, 0.5), KDS.Math.MidpointRounding.AwayFromZero)
-        self.allowJump: bool = True
         self.collisions = KDS.World.Collisions()
 
         self.searchTime = 15 * 60 # 60 is fps
@@ -298,7 +295,7 @@ class Test(Teacher):
                           KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
                           KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
                           KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/Test"),
-                          None, None, 1000, 10, 1, 3, 1.5
+                          None, None, 1000, 10, 1, 3
         )
 
 class LaaTo(Teacher):
