@@ -3959,7 +3959,10 @@ while main_running:
             if isinstance(ui_hand_item, KDS.Build.Weapon):
                 tmpAmmo = ui_hand_item.getAmmo()
                 if not KDS.Math.IsInfinity(tmpAmmo):
-                    screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, screen_size[1] - harbinger_font.get_height() - KDS.UI.Indicator.TEXTURESIZE[1] - (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0)))
+                    ammoOffset = 0
+                    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+                        ammoOffset = KDS.UI.Indicator.TEXTURESIZE[1] - (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0)
+                    screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, screen_size[1] - harbinger_font.get_height() - ammoOffset))
 
         if Player.keys["red"]:
             screen.blit(red_key, (10, 20))
@@ -3971,7 +3974,8 @@ while main_running:
         KDS.UI.Indicator.combat = any([KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList]) # Doing it by iterating whole list to have more consistent performance.
         KDS.UI.Indicator.searching = any([KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList])
         KDS.UI.Indicator.trespassing = bool(KDS.World.Zone.StaffOnlyCollisions > 0)
-        KDS.UI.Indicator.render(screen)
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            KDS.UI.Indicator.render(screen)
 
         KDS.Missions.Render(screen)
 
