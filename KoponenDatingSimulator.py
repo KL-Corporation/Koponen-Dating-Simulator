@@ -3821,9 +3821,9 @@ while main_running:
         if Player.fart_counter > 256:
             Player.farting = False
             Player.fart_counter = 0
-            for enemy in Entities:
-                if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) <= 800 and enemy.enabled:
-                    enemy.health -= random.randint(500, 1000)
+            for entity in Entities:
+                if KDS.Math.getDistance(entity.rect.center, Player.rect.center) <= 800 and entity.enabled:
+                    entity.health -= random.randint(500, 1000)
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
