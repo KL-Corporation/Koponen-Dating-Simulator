@@ -363,8 +363,7 @@ Tiles: List[List[List[KDS.Build.Tile]]] = []
 Items: List[KDS.Build.Item] = []
 Zones: List[KDS.World.Zone] = []
 
-Enemies: List[KDS.AI.HostileEnemy] = []
-Entities: List[Union[KDS.Teachers.Teacher, KDS.NPC.NPC]] = []
+Entities: List[Union[KDS.Teachers.Teacher, KDS.NPC.NPC, KDS.AI.HostileEnemy]] = []
 
 Projectiles: List[KDS.World.Bullet] = []
 BallisticObjects: List[KDS.World.BallisticProjectile] = []
@@ -535,7 +534,7 @@ class WorldData:
                         Items.append(value)
                     elif pointer == 2:
                         value = Enemy.serialNumbers[serialNumber]((x * 34,y * 34))
-                        Enemies.append(value)
+                        Entities.append(value)
                         Enemy.total += 1
                     elif pointer == 3:
                         value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
@@ -582,8 +581,6 @@ class WorldData:
         # lateInit order is the reverse of pointers
         for entity in Entities:
             entity.lateInit()
-        for enemy in Enemies:
-            enemy.lateInit()
         for item in Items:
             item.lateInit()
         for overlay in overlays:
@@ -902,12 +899,12 @@ class Landmine(KDS.Build.Tile):
         self.checkCollision = False
 
     def update(self):
-        if self.rect.colliderect(Player.rect) or True in map(lambda r: r.rect.colliderect(self.rect), Enemies):
+        if Player.rect.colliderect(self.rect) or any([r.rect.colliderect(self.rect) for r in Entities]):
             if KDS.Math.getDistance(Player.rect.center, self.rect.center) < 100:
                 Player.health -= 100 - KDS.Math.getDistance(Player.rect.center, self.rect.center)
-            for enemy in Enemies:
-                if KDS.Math.getDistance(enemy.rect.center, self.rect.center) < 100 and enemy.enabled:
-                    enemy.health -= 120 - round(KDS.Math.getDistance(enemy.rect.center, self.rect.center))
+            for entity in Entities:
+                if KDS.Math.getDistance(entity.rect.center, self.rect.center) < 100 and entity.enabled:
+                    entity.health -= 120 - round(KDS.Math.getDistance(entity.rect.center, self.rect.center))
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))
             self.removeFlag = True
@@ -2403,12 +2400,6 @@ class Enemy:
             tempItem = KDS.Build.Item.serialNumbers[serialNumber](enemy.rect.center, serialNumber=serialNumber)
             tempItem.physics = True
             Items.append(tempItem)
-
-    @staticmethod
-    def update(Enemy_List: Sequence[KDS.AI.HostileEnemy]):
-        for enemy in Enemy_List:
-            if KDS.Math.getDistance(Player.rect.center, enemy.rect.center) < 1200 and enemy.enabled:
-                Enemy._internalEnemyHandler(enemy)
 KDS.Missions.Listeners.EnemyDeath.OnTrigger += Enemy._addDeath
 #endregion
 #region Entity
@@ -2441,10 +2432,14 @@ class Entity:
             Items.append(tempItem)
 
     @staticmethod
-    def update(Entity_List: Sequence[Union[KDS.Teachers.Teacher, KDS.NPC.NPC]]):
+    def update(Entity_List: Sequence[Union[KDS.Teachers.Teacher, KDS.NPC.NPC, KDS.AI.HostileEnemy]]):
         for entity in Entity_List:
             if KDS.Math.getDistance(Player.rect.center, entity.rect.center) < 1200:
-                Entity._internalEntityHandler(entity)
+                if isinstance(entity, KDS.AI.HostileEnemy):
+                    Enemy._internalEnemyHandler(entity)
+                else:
+                    Entity._internalEntityHandler(entity)
+
 Entity.serialNumbers = {
     1: KDS.Teachers.LaaTo,
     2: KDS.Teachers.KuuMa,
@@ -2777,8 +2772,6 @@ def console(oldSurf: pygame.Surface):
             elif command_list[0] == "killall":
                 KDS.Console.Feed.append("All entities killed.")
                 KDS.Logging.info("Entity kill command issued through console.", True)
-                for enemy in Enemies:
-                    enemy.health = 0
                 for entity in Entities:
                     entity.health = 0
             elif command_list[0] == "terms":
@@ -2881,7 +2874,7 @@ def console(oldSurf: pygame.Surface):
                     }
                     try:
                         ent = summonEntity[command_list[1]]
-                        Enemies.append(ent(Player.rect.topright))
+                        Entities.append(ent(Player.rect.topright))
                         KDS.Console.Feed.append(f"Summoned Entity: \"{ent.__name__}\".")
                     except KeyError:
                         KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
@@ -2999,12 +2992,12 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     Player = PlayerClass()
 
     #region World Data
-    global Items, Enemies, Explosions, BallisticObjects, Projectiles
+    global Items, Explosions, BallisticObjects, Projectiles, Entities
     Items.clear()
-    Enemies.clear()
     Explosions.clear()
     BallisticObjects.clear()
     Projectiles.clear()
+    Entities.clear()
     #endregion
 
     #region Ammo Resetting
@@ -3828,7 +3821,7 @@ while main_running:
         if Player.fart_counter > 256:
             Player.farting = False
             Player.fart_counter = 0
-            for enemy in Enemies:
+            for enemy in Entities:
                 if KDS.Math.getDistance(enemy.rect.center, Player.rect.center) <= 800 and enemy.enabled:
                     enemy.health -= random.randint(500, 1000)
 #endregion
@@ -3837,7 +3830,6 @@ while main_running:
     KDS.Build.Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll, DebugMode)
 
-    Enemy.update(Enemies)
     Entity.update(Entities)
 
     Player.update()
@@ -3871,7 +3863,7 @@ while main_running:
         Zone.update(Player.rect)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, (*Enemies, *Entities), HitTargets, Particles, Player.rect, Player.health, DebugMode)
+        result = Projectile.update(screen, scroll, Entities, HitTargets, Particles, Player.rect, Player.health, DebugMode)
         if result != None:
             v = result[0]
             Player.health = result[1]

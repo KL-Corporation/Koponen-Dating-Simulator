@@ -153,6 +153,8 @@ class StudentNPC(NPC):
         self.noPanick = True
 
 
+# region OLD NPC CODE
+#
 # last_NPCID = 0
 # def get_NPCID():
 #     global last_NPCID
@@ -237,3 +239,5 @@ class StudentNPC(NPC):
 # class StudentNPC(NPC):
 #     def __init__(self, datapath: str, position: Tuple[int, int]):
 #         super().__init__(datapath, position)
+#
+#endregion
