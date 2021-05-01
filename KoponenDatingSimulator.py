@@ -3959,10 +3959,11 @@ while main_running:
             if isinstance(ui_hand_item, KDS.Build.Weapon):
                 tmpAmmo = ui_hand_item.getAmmo()
                 if not KDS.Math.IsInfinity(tmpAmmo):
-                    ammoOffset = 0
+                    ammoOffset = 10
                     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-                        ammoOffset = KDS.UI.Indicator.TEXTURESIZE[1] - (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0)
-                    screen.blit(harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White), (10, screen_size[1] - harbinger_font.get_height() - ammoOffset))
+                        ammoOffset = KDS.UI.Indicator.TEXTURESIZE[1] - (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0) + 10
+                    ammoRender: pygame.Surface = harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White)
+                    screen.blit(ammoRender, (10, screen_size[1] - ammoRender.get_height() - ammoOffset))
 
         if Player.keys["red"]:
             screen.blit(red_key, (10, 20))

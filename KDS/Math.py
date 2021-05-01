@@ -52,13 +52,13 @@ def IsNegativeInfinity(f: float) -> bool: return IsInfinity(f) and f < 0 # faste
 
 #region Value Manipulation
 def GetFraction(__x: SupportsFloat) -> float:
-    """Returns the fractional part of \"__x\".
+    """Returns the fractional part of ``__x``.
 
     Args:
         __x (float): The value to get the fractional.
 
     Returns:
-        float: The extracted fractional. Will be negative if \"__x\" is negative.
+        float: The extracted fractional. Will be negative if ``__x`` is negative.
     """
     return SplitFloat(__x)[0]
 
@@ -107,9 +107,6 @@ def Repeat(t: float, length: float) -> float:
 class MidpointRounding(enum.Enum):
     ToEven = 0
     AwayFromZero = 1
-    ToZero = 2
-    ToNegativeInfinity = 3
-    ToPositiveInfinity = 4
 
 def RoundCustom(value: float, digits: int = 0, mode: MidpointRounding = MidpointRounding.ToEven) -> float:
     """
@@ -137,9 +134,6 @@ def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEve
     Same as RoundCustom, but converts the returned value to an int.
     """
     return int(RoundCustom(value=value, digits=0, mode=mode))
-#endregion
-
-#region Area
 #endregion
 
 #region Distance
@@ -239,7 +233,7 @@ def SmoothStep(a: float, b: float, t: float) -> float:
 
 def MoveTowards(current: float, target: float, maxDelta: float) -> float:
     """Moves a value current towards target.
-    This is essentially the same as KDS.Math.Lerp but instead the function will ensure that the speed never exceeds maxDelta. Negative values of maxDelta pushes the value away from target.
+    This is essentially the same as Lerp, but instead the function will ensure that the speed never exceeds maxDelta. Negative values of maxDelta pushes the value away from target.
 
     Args:
         current (float): The current value.
