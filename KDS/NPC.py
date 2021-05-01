@@ -14,8 +14,13 @@ import KDS.Convert
 
 import os
 import random
-from typing import Dict, Optional, Sequence, Tuple, List
+from typing import Dict, Optional, Sequence, TYPE_CHECKING, Tuple, List
 from enum import IntEnum, auto
+
+if TYPE_CHECKING:
+    from KoponenDatingSimulator import PlayerClass
+else:
+    PlayerClass = None
 
 NPC_FALL_SPEED = 8
 
@@ -24,12 +29,11 @@ class Type(IntEnum):
     DefaultWalking = auto()
     FranticWalking = auto()
 
-# Parempi NPC, se vanha oli vähän kakka
-# En testannu vielä... Testaan myöhemmin, jos jaksan
+
 class NPC:
     InstanceList: List[NPC] = []
 
-    def __init__(self) -> None:
+    def __init__(self, pos: Tuple[int, int]) -> None:
         pass
 
     @property
@@ -62,18 +66,25 @@ class NPC:
         self.collisions = KDS.World.Collisions()
 
         self.panicked: bool = False
+        self.noPanick: bool = False
 
         self.enabled = True
 
         self.mover = KDS.World.EntityMover()
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], playerRect: pygame.Rect):
+    def lateInit(self):
+        pass
+
+    def render(self, surface: pygame.Surface, scroll: Sequence[int]):
+        surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def panickBehaviour():
             self.animation.trigger("run")
             if self.direction:
-                if self.rect.centerx > playerRect.centerx:
+                if self.rect.centerx > player.rect.centerx:
                     self.direction = not self.direction
-            elif self.rect.centerx < playerRect.centerx:
+            elif self.rect.centerx < player.rect.centerx:
                 self.direction = not self.direction
 
         def idleBehaviour():
@@ -97,8 +108,8 @@ class NPC:
 
         if self.health <= 0:
             self.animation.trigger("death")
-            surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
-            return
+            self.render(surface, scroll)
+            return [], []
 
         if self.panicked:
             panickBehaviour()
@@ -116,17 +127,30 @@ class NPC:
                 franticBehaviour()
             else:
                 KDS.Logging.AutoError(f"Unexpected NPC type. Got: {self.type.name}")
+        self.render(surface, scroll)
+        return [], []
 
 
     def onDamage(self):
-        self.panicked = True
-        KDS.Jobs.Schedule(NPC.panickNearby, self.rect) # Threaded to not cause a massive lag spike even though I'm not sure if it's gonna even happen
+        if not self.noPanick:
+            self.panicked = True
+        KDS.Jobs.Schedule(NPC.panickNearby, self.rect) # Threaded to not cause a massive lag spike even though I'm not sure if it's gonna even happen, but still... We will have a lot of NPC's
 
     @staticmethod
     def panickNearby(rect: pygame.Rect):
         for npc in NPC.InstanceList:
             if abs(rect.centerx - npc.rect.centerx) < 16 * 34 and abs(rect.centery - npc.rect.centery) < 34:
                 npc.panicked = True
+
+class StudentNPC(NPC):
+    def __init__(self, pos: Tuple[int, int]) -> None:
+        randomPerson_dir = random.choice(os.listdir("Assets/Textures/NPC/Static"))
+        idle_anim_dir = os.path.join("NPC/Static", randomPerson_dir)
+        idle_anim = KDS.Animator.Animation("npc-idle", len(os.listdir(f"Assets/Textures/{idle_anim_dir}")), 30, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir=idle_anim_dir)
+        idle_anim_size = idle_anim.get_size()
+        rect = pygame.Rect(pos[0], pos[1] + (34 - idle_anim_size[1]), idle_anim_size[0], idle_anim_size[1])
+        self.internalInit(rect, Type.Idle, idle_anim, idle_anim, idle_anim, idle_anim, 100, 0, 0)
+        self.noPanick = True
 
 
 # last_NPCID = 0

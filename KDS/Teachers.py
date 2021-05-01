@@ -33,7 +33,7 @@ class TeacherState(IntFlag):
     # ClearingInventory = 16 # Goes to a specific place to clear inventory from confiscated contraband (NOT IMPLEMENTED)
 
 class Teacher:
-    serialNumbers: Dict[int, Type[Teacher]] = {}
+    InstanceList: List[Teacher] = []
 
     def __init__(self, pos: Tuple[int, int]) -> None:
         pass
@@ -52,6 +52,8 @@ class Teacher:
         self._health = max(value, 0)
 
     def internalInit(self, rect: pygame.Rect, w: KDS.Animator.Animation, r: KDS.Animator.Animation, s: KDS.Animator.Animation, c: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, agro_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, weapon_serial: int, walk_speed: int, run_speed: int, idle: bool = False, direction: bool = False) -> None:
+        Teacher.InstanceList.append(self)
+
         self.rect = rect
         self._health = health
 

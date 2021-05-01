@@ -221,6 +221,7 @@ Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "M
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", (0, 0))
 
 Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
+Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "TEST STUDENT")
 #endregion
 
 
@@ -481,6 +482,7 @@ class UnitData:
             UnitType.Item: KDS.Colors.RiverBlue,
             UnitType.Enemy: KDS.Colors.AviatorRed,
             UnitType.Teleport: KDS.Colors.Yellow,
+            UnitType.Entity: KDS.Colors.Orange,
             UnitType.Unspecified: KDS.Colors.Magenta
         }
 

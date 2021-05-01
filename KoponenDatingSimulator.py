@@ -364,7 +364,7 @@ Items: List[KDS.Build.Item] = []
 Zones: List[KDS.World.Zone] = []
 
 Enemies: List[KDS.AI.HostileEnemy] = []
-Entities: List[KDS.Teachers.Teacher] = []
+Entities: List[Union[KDS.Teachers.Teacher, KDS.NPC.NPC]] = []
 
 Projectiles: List[KDS.World.Bullet] = []
 BallisticObjects: List[KDS.World.BallisticProjectile] = []
@@ -541,7 +541,7 @@ class WorldData:
                         value = BaseTeleport.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber)
                         Tiles[y][x].append(value)
                     elif pointer == 4:
-                        value = KDS.Teachers.Teacher.serialNumbers[serialNumber]((x * 34, y * 34))
+                        value = Entity.serialNumbers[serialNumber]((x * 34, y * 34))
                         Entities.append(value)
                         Entity.total += 1
                     else:
@@ -2413,6 +2413,8 @@ KDS.Missions.Listeners.EnemyDeath.OnTrigger += Enemy._addDeath
 #endregion
 #region Entity
 class Entity:
+    serialNumbers: Dict[int, Type[Union[KDS.Teachers.Teacher, KDS.NPC.NPC]]] = {}
+
     agro_count = 0
     death_count = 0
     total = 0
@@ -2426,9 +2428,9 @@ class Entity:
         Entity.agro_count += 1
 
     @staticmethod
-    def _internalEntityHandler(entity: KDS.Teachers.Teacher):
+    def _internalEntityHandler(entity: Union[KDS.Teachers.Teacher, KDS.NPC.NPC]):
         projectiles, items = entity.update(screen, scroll, Tiles, Player)
-        if KDS.Teachers.TeacherState.Combat in entity.state and entity.health > 0:
+        if ((isinstance(entity, KDS.Teachers.Teacher) and KDS.Teachers.TeacherState.Combat in entity.state) or (isinstance(entity, KDS.NPC.NPC) and entity.panicked)) and entity.health > 0:
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
         for r in projectiles:
@@ -2439,14 +2441,15 @@ class Entity:
             Items.append(tempItem)
 
     @staticmethod
-    def update(Entity_List: Sequence[KDS.Teachers.Teacher]):
+    def update(Entity_List: Sequence[Union[KDS.Teachers.Teacher, KDS.NPC.NPC]]):
         for entity in Entity_List:
             if KDS.Math.getDistance(Player.rect.center, entity.rect.center) < 1200:
                 Entity._internalEntityHandler(entity)
-KDS.Teachers.Teacher.serialNumbers = {
+Entity.serialNumbers = {
     1: KDS.Teachers.LaaTo,
     2: KDS.Teachers.KuuMa,
-    3: KDS.Teachers.Test
+    3: KDS.Teachers.Test,
+    999: KDS.NPC.StudentNPC
 }
 KDS.Missions.Listeners.TeacherAgro.OnTrigger += Entity._addAgro
 KDS.Missions.Listeners.TeacherDeath.OnTrigger += Entity._addDeath
@@ -3973,8 +3976,8 @@ while main_running:
         if Player.keys["blue"]:
             screen.blit(blue_key, (38, 20))
 
-        KDS.UI.Indicator.combat = any([KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in Entities])
-        KDS.UI.Indicator.searching = any([KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in Entities])
+        KDS.UI.Indicator.combat = any([KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList]) # Doing it by iterating whole list to have more consistent performance.
+        KDS.UI.Indicator.searching = any([KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList])
         KDS.UI.Indicator.trespassing = bool(KDS.World.Zone.StaffOnlyCollisions > 0)
         KDS.UI.Indicator.render(screen)
 

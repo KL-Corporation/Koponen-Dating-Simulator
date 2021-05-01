@@ -227,6 +227,9 @@ class HostileEnemy:
 
     @health.setter
     def health(self, value: int):
+        if value < self._health and value > 0:
+            self.sleep = False
+
         self._health = max(value, 0)
 
     def internalInit(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health: int, mv: List[int], attackPropability: int, sleep: bool = True, direction: bool = False):

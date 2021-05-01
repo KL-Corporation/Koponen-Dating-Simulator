@@ -29,7 +29,7 @@ class Animation:
         """
         if number_of_images < 1 or duration < 1:
             KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
-        self.images = []
+        self.images: List[pygame.Surface] = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
@@ -100,6 +100,17 @@ class Animation:
     def change_colorkey(self, colorkey: Tuple[int, int, int]):
         for image in self.images:
             image.set_colorkey(colorkey)
+
+    def get_size(self) -> Tuple[int, int]:
+        if len(self.images) > 0:
+            return self.images[0].get_size()
+        return (-1, -1)
+
+    def get_width(self) -> int:
+        return self.get_size()[0]
+
+    def get_height(self) -> int:
+        return self.get_size()[1]
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
