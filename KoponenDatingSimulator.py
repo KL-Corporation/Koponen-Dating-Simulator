@@ -2485,7 +2485,7 @@ class Entity:
 
     @staticmethod
     def _internalEntityHandler(entity: Union[KDS.Teachers.Teacher, KDS.NPC.NPC]):
-        projectiles, items = entity.update(screen, scroll, Tiles, Player)
+        projectiles, items = entity.update(screen, scroll, Tiles, Player, DebugMode)
         if ((isinstance(entity, KDS.Teachers.Teacher) and KDS.Teachers.TeacherState.Combat in entity.state) or (isinstance(entity, KDS.NPC.NPC) and entity.panicked)) and entity.health > 0:
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))

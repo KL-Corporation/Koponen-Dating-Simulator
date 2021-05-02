@@ -75,10 +75,12 @@ class NPC:
     def lateInit(self):
         pass
 
-    def render(self, surface: pygame.Surface, scroll: Sequence[int]):
+    def render(self, surface: pygame.Surface, scroll: Sequence[int], debug: bool):
+        if debug:
+            pygame.draw.rect(surface, KDS.Colors.Magenta if self.panicked else KDS.Colors.Green, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass, debug: bool) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def panickBehaviour():
             self.animation.trigger("run")
             if self.direction:
@@ -108,7 +110,7 @@ class NPC:
 
         if self.health <= 0:
             self.animation.trigger("death")
-            self.render(surface, scroll)
+            self.render(surface, scroll, debug)
             return [], []
 
         if self.panicked:
@@ -127,7 +129,7 @@ class NPC:
                 franticBehaviour()
             else:
                 KDS.Logging.AutoError(f"Unexpected NPC type. Got: {self.type.name}")
-        self.render(surface, scroll)
+        self.render(surface, scroll, debug)
         return [], []
 
 

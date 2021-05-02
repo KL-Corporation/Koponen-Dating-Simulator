@@ -122,7 +122,7 @@ class Teacher:
     def onDamage(self):
         self.startAgro()
 
-    def render(self, surface: pygame.Surface, scroll: Sequence[int]):
+    def render(self, surface: pygame.Surface, scroll: Sequence[int], debug: bool = False):
         indicatorColor: Optional[Tuple[int, int, int]] = None
         if TeacherState.Combat in self.state:
             indicatorColor = KDS.Colors.Red
@@ -137,9 +137,11 @@ class Teacher:
         handItem = self.inventory.getHandItem()
         if not isinstance(handItem, str):
             KDS.Inventory.Inventory.renderItemTexture(handItem.texture, self.rect, self.direction, surface, scroll)
+        if debug:
+            pygame.draw.rect(surface, KDS.Colors.Green, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass, debug: bool) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def neutralBehaviour():
             self.animation.trigger("walk")
             self.inventory.pickSlot(0)
@@ -285,7 +287,7 @@ class Teacher:
         else:
             neutralBehaviour()
         #endregion
-        self.render(surface, scroll)
+        self.render(surface, scroll, debug)
         return enemyProjectiles, dropItems
 
 class Test(Teacher):
@@ -302,7 +304,15 @@ class Test(Teacher):
 
 class LaaTo(Teacher):
     def __init__(self, pos: Tuple[int, int]) -> None:
-        self.internalInit()
+        self.internalInit(pygame.Rect(pos[0], pos[1] - 29, 19, 68),
+                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("idle", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("idle", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          None, None, 1000, 10, 1, 3
+        )
 
 class KuuMa(Teacher):
     def __init__(self, pos: Tuple[int, int]) -> None:
