@@ -357,7 +357,7 @@ class UnitData:
 
     def _updateSplit(self):
         self.serials = tuple(self.serialNumber.split(" "))
-        if len(self.serials) > UnitData.SLOTCOUNT:
+        if len(self.serials) != UnitData.SLOTCOUNT:
             KDS.Logging.AutoError(f"Serials length does not match slot count! Serials length: {len(self.serials)} | Slot Count: {UnitData.SLOTCOUNT} | Serials: {self.serials} | Serial Number: {self.serialNumber}")
         self.filledSerials = tuple(KDS.Linq.Where(self.serials, lambda s: s != UnitData.EMPTY))
 
