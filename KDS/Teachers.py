@@ -305,10 +305,10 @@ class Test(Teacher):
 class LaaTo(Teacher):
     def __init__(self, pos: Tuple[int, int]) -> None:
         self.internalInit(pygame.Rect(pos[0], pos[1] - 29, 19, 68),
-                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
-                          KDS.Animator.Animation("idle", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
-                          KDS.Animator.Animation("idle", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
-                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("walk", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           None, None, 1000, 10, 1, 3
