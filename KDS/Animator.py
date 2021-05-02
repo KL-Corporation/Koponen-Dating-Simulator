@@ -15,7 +15,7 @@ class OnAnimationEnd(IntEnum):
     PingPong = auto()
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations", load_in_reverse: bool = False) -> None:
         """Initialises an animation.
 
         Args:
@@ -39,7 +39,8 @@ class Animation:
         self.done = False
 
         KDS.Logging.debug(f"Initialising {number_of_images} Animation Images...")
-        for i in range(number_of_images):
+        iterRange = (0, number_of_images, 1) if not load_in_reverse else (number_of_images - 1, -1, -1)
+        for i in range(*iterRange):
             converted_animation_name = animation_name + "_" + str(i) + filetype
             path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
             image = pygame.image.load(path).convert()

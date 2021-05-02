@@ -120,12 +120,12 @@ class Lighting:
                 self.texture = texture
                 self.rendered: Dict[int, Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]] = {}
 
-            def getRadius(self, radius: int) -> Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]:
-                if radius not in self.rendered:
-                    self.rendered[radius] = { "default": pygame.transform.smoothscale(self.texture, (radius, radius)) }
-                return self.rendered[radius]
+            def getDiameter(self, diameter: int) -> Dict[Union[int, Tuple[float, float, float], str], pygame.Surface]:
+                if diameter not in self.rendered:
+                    self.rendered[diameter] = { "default": pygame.transform.smoothscale(self.texture, (diameter, diameter)) }
+                return self.rendered[diameter]
 
-            def get(self, radius: int, color: int):
+            def get(self, diameter: int, color: int):
                 """Returns a light shape from memory
 
                 Args:
@@ -135,7 +135,7 @@ class Lighting:
                 Returns:
                     Surface: The surface that contains the light texture
                 """
-                corRad = self.getRadius(radius)
+                corRad = self.getDiameter(diameter)
 
                 if color not in corRad:
                     tmp_tex: Any = corRad["default"].copy()
@@ -144,8 +144,8 @@ class Lighting:
                     corRad[color] = tmp_tex
                 return corRad[color]
 
-            def getColor(self, radius: int, hue: float, saturation: float, value: float):
-                corRad = self.getRadius(radius)
+            def getColor(self, diameter: int, hue: float, saturation: float, value: float):
+                corRad = self.getDiameter(diameter)
                 color = (hue, saturation, value)
 
                 if color not in corRad:
@@ -428,7 +428,6 @@ class Explosion:
     def update(self, Surface: pygame.Surface, scroll: List[int]):
         Surface.blit(self.animation.update(), (self.pos[0] - scroll[0], self.pos[1] - scroll[1]))
         return self.animation.done, self.animation.tick
-
 
 class Dark:
     enabled: bool = False

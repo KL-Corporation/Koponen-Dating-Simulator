@@ -1190,5 +1190,13 @@
         "noCollision": false,
         "trueScale": false,
         "sound": null
+    },
+    "Tile Fire": {
+        "serialNumber": 151,
+        "path": "tileFire_0.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": false,
+        "sound": null
     }
 }

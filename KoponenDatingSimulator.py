@@ -1340,10 +1340,70 @@ class GroundFire(KDS.Build.Tile):
         self.checkCollision = False
 
     def update(self):
-        if Player.rect.colliderect(self.rect) and random.randint(0, 55) == 20:
+        if self.rect.colliderect(Player.rect) and random.randint(0, 55) == 20:
             Player.health -= random.randint(5, 10)
         if random.randint(0, 2) == 0: Particles.append(KDS.World.Lighting.Fireparticle((self.rect.x + random.randint(0, 34), self.rect.y + 15 + random.randint(0, 12)), random.randint(3, 10), random.randint(1, 20), random.randint(2, 5)))
         return self.animation.update()
+
+class TileFire(KDS.Build.Tile):
+    # Has to be cached... Otherwise it will use way too much RAM
+    cachedAnimation = KDS.Animator.Animation("tileFire", 32, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Tiles")
+
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.gridPos = (position[0] // 34, position[1] // 34)
+        self.animationOffset = random.randint(0, TileFire.cachedAnimation.ticks - 1)
+        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        self.checkCollision = False
+        self.sound = pygame.mixer.Sound("Assets/Audio/Effects/fire.ogg")
+        self.randomSoundWait()
+        self.randomSpreadWait()
+
+    def randomSpreadWait(self):
+        self.spreadWait: int = random.randint(5 * 60, 15 * 60)
+
+    def randomSoundWait(self):
+        self.soundWait = random.randint(3 * 60, 5 * 60)
+
+    def update(self):
+        global Tiles
+        oldTick = TileFire.cachedAnimation.tick
+        TileFire.cachedAnimation.tick = (TileFire.cachedAnimation.tick + self.animationOffset) % TileFire.cachedAnimation.ticks
+        frame = TileFire.cachedAnimation.update()
+        TileFire.cachedAnimation.tick = oldTick
+
+        if self.rect.colliderect(Player.rect) and random.randint(0, 55) == 20:
+            Player.health -= random.randint(5, 10)
+
+        self.soundWait -= 1
+        if self.soundWait < 0:
+            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
+            volume_modifier = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
+            volume = (random.random() / 4) * volume_modifier
+            self.sound.set_volume(volume)
+            if volume > 0:
+                KDS.Audio.PlaySound(self.sound)
+            self.randomSoundWait()
+
+        self.spreadWait -= 1
+        if self.spreadWait < 0:
+            randomPos = (random.randint(self.gridPos[0] - 1, self.gridPos[0] + 1), random.randint(self.gridPos[1] - 1, self.gridPos[1] + 1))
+            if TileFire.createInstanceAtPosition(randomPos):
+                self.randomSpreadWait()
+
+        Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle_harder.get(34 * 5, 1850), True))
+
+        return frame
+
+    @staticmethod
+    def createInstanceAtPosition(gridPos: Tuple[int, int]) -> bool:
+        clampPos = KDS.Math.Clamp(gridPos[0], 0, WorldData.MapSize[0]), KDS.Math.Clamp(gridPos[1], 0, WorldData.MapSize[1])
+        unit = Tiles[clampPos[1]][clampPos[0]]
+        for t in unit:
+            if isinstance(t, TileFire):
+                return False
+        unit.append(TileFire((clampPos[0] * 34, clampPos[1] * 34), 151))
+        return True
 
 class GlassPane(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
@@ -1787,7 +1847,8 @@ KDS.Build.Tile.specialTilesClasses = {
     132: DoorFrontMirrored,
     134: FluorescentTube,
     135: Molok,
-    145: Kiuas
+    145: Kiuas,
+    151: TileFire
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -1913,6 +1974,10 @@ class LappiSytytyspalat(KDS.Build.Item):
         super().__init__(position, serialNumber, texture)
 
     def use(self):
+        global Tiles
+        if KDS.Keys.mainKey.held:
+            pos = (Player.rect.centerx // 34 + KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery // 34)
+            TileFire.createInstanceAtPosition(pos)
         return self.texture
 
     def pickup(self):
@@ -3829,6 +3894,7 @@ while main_running:
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     KDS.Build.Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
     KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll, DebugMode)
+    TileFire.cachedAnimation.update()
 
     Entity.update(Entities)
 
