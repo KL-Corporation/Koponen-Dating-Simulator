@@ -309,7 +309,7 @@ class LaaTo(Teacher):
                           KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("walk", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
-                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
+                          KDS.Animator.Animation("die", 32, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           None, None, 1000, 10, 1, 3
         )
