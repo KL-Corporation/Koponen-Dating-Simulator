@@ -530,7 +530,7 @@ class KoponenEntity:
         else:
             self.task_counter += 1
 
-    def setListeners(self, listener_names: list = []):
+    def setListeners(self, listener_names: List[str] = []):
         for listener in listener_names:
             if listener == "TentSleepEnd":
                 self.enabled = False
@@ -539,7 +539,7 @@ class KoponenEntity:
                     self.listenerInstances[listener] = tempListener
                     self.listenerInstances[listener].OnTrigger += self.listenerTrigger_0
             else:
-                pass
+                KDS.Logging.AutoError("This has not been implemented yet!")
 
     def loadScript(self, script: list = []) -> None:
         self.ls_instructions = script

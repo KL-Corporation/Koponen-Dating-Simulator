@@ -37,9 +37,12 @@ class JSON:
         if os.path.isfile(filePath):
             try:
                 with open(filePath, "r") as f:
-                    try: config = json.loads(f.read())
-                    except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error! Details: {e}")
-            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
+                    try:
+                        config = json.loads(f.read())
+                    except json.decoder.JSONDecodeError as e:
+                        KDS.Logging.AutoError(f"JSON Error! Details: {e}")
+            except IOError as e:
+                KDS.Logging.AutoError(f"IO Error! Details: {e}")
 
         if jsonPath != JSON.NULLPATH:
             path = JSON.ToKeyList(jsonPath)
@@ -47,18 +50,23 @@ class JSON:
             for i in range(len(path)):
                 p = path[i]
                 if i < len(path) - 1:
-                    if p not in tmpConfig: tmpConfig[p] = {}
+                    if p not in tmpConfig:
+                        tmpConfig[p] = {}
                     tmpConfig = tmpConfig[p]
-                elif p not in tmpConfig or tmpConfig[p] != value: tmpConfig[p] = value
-                else: return value
+                elif p not in tmpConfig or tmpConfig[p] != value:
+                    tmpConfig[p] = value
+                else:
+                    return value
         elif config != value:
             if value == JSON.EMPTY:
                 value = {}
             config = value
-        else: return value
+        else:
+            return value
 
         try:
-            with open(filePath, "w") as f: f.write(json.dumps(config, sort_keys = sortKeys, indent = 4))
+            with open(filePath, "w") as f:
+                f.write(json.dumps(config, sort_keys = sortKeys, indent = 4))
             return value
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
@@ -67,28 +75,39 @@ class JSON:
     @staticmethod
     def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False, encoding: str = None) -> Any:
         config: Dict[str, Any] = {}
-        if os.path.isfile(filePath):
-            try:
-                with open(filePath, "r", encoding=encoding) as f:
-                    try: config = json.loads(f.read())
-                    except json.decoder.JSONDecodeError as e: KDS.Logging.AutoError(f"JSON Error with file {filePath}! Details: {e}")
-            except IOError as e: KDS.Logging.AutoError(f"IO Error! Details: {e}")
-            if jsonPath == JSON.NULLPATH:
-                return config
-            path = JSON.ToKeyList(jsonPath)
-            tmpConfig = config
-            for i in range(len(path)):
-                p = path[i]
-                if p not in tmpConfig:
-                    if warnMissing: KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}." + (f"Value of {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
-                    if writeMissing: JSON.Set(filePath, jsonPath, defaultValue)
-                    return defaultValue
-                if i < len(path) - 1: tmpConfig = tmpConfig[p]
-                else: return tmpConfig[p]
-        else:
-            if warnMissing: KDS.Logging.warning(f"No file found in path: {filePath}." + (f"Value of the file's {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
-            if writeMissing: JSON.Set(filePath, jsonPath, defaultValue)
+        if not os.path.isfile(filePath):
+            if warnMissing:
+                KDS.Logging.warning(f"No file found in path: {filePath}." + (f"Value of the file's {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
+            if writeMissing:
+                JSON.Set(filePath, jsonPath, defaultValue)
             return defaultValue
+
+        try:
+            with open(filePath, "r", encoding=encoding) as f:
+                try:
+                    config = json.loads(f.read())
+                except json.decoder.JSONDecodeError as e:
+                    KDS.Logging.AutoError(f"JSON Error with file {filePath}! Details: {e}")
+        except IOError as e:
+            KDS.Logging.AutoError(f"IO Error! Details: {e}")
+
+        if jsonPath == JSON.NULLPATH:
+            return config
+
+        path = JSON.ToKeyList(jsonPath)
+        tmpConfig = config
+        for i in range(len(path)):
+            p = path[i]
+            if p not in tmpConfig:
+                if warnMissing:
+                    KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}." + (f"Value of {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
+                if writeMissing:
+                    JSON.Set(filePath, jsonPath, defaultValue)
+                return defaultValue
+            if i < len(path) - 1:
+                tmpConfig = tmpConfig[p]
+            else:
+                return tmpConfig[p]
         KDS.Logging.AutoError("Unknown Error! This code should never execute.")
         return defaultValue
 

@@ -185,6 +185,7 @@ class TextureHolder:
         for t in self.data.values():
             for d in t.values():
                 d.rescaleTexture()
+        LevelPropData.rescale()
 
 #region Textures
 Textures = TextureHolder()
@@ -225,8 +226,6 @@ Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo"
 Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
 #endregion
 
-
-
 ### GLOBAL VARIABLES ###
 
 DebugMode = False
@@ -242,6 +241,25 @@ refrenceGridSize = (0, 0)
 refrenceScanProgress = [0, 0]
 
 zoneMode = False
+
+class LevelPropData:
+    @staticmethod
+    def rescale():
+        LevelPropData.KoponenTextureRescaled = KDS.Convert.AspectScale(LevelPropData.KoponenTexture, (int(LevelPropData.KoponenTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
+        LevelPropData.PlayerTextureRescaled = KDS.Convert.AspectScale(LevelPropData.PlayerTexture, (int(LevelPropData.PlayerTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
+
+    KoponenPos: Optional[Tuple[int, int]] = None
+    KoponenTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/koponen_idle_0.png").convert()
+    KoponenTexture.set_colorkey(KDS.Colors.White)
+    KoponenTexture.set_alpha(64)
+    PlayerPos: Optional[Tuple[int, int]] = None
+    PlayerTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
+    PlayerTexture.set_colorkey(KDS.Colors.White)
+    PlayerTexture.set_alpha(64)
+    KoponenTextureRescaled: pygame.Surface = pygame.Surface((0, 0))
+    PlayerTextureRescaled: pygame.Surface = pygame.Surface((0, 0))
+    PlayerFlipped: bool = False
+LevelPropData.rescale()
 
 class Undo:
     changes: List[UnitData] = []
@@ -1038,7 +1056,6 @@ def saveMapName():
 def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
     global display, clock
 
-    temporaryGrid = None
     with open(path, 'r') as f:
         contents = f.read().splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
@@ -1064,10 +1081,42 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
             #endregion
             rUnit.overrideSerial(unit)
 
-    fpath = os.path.join(os.path.dirname(path), "properties.kdf")
-    if os.path.isfile(fpath):
-        with open(fpath, 'r', encoding="utf-8") as f:
+    def loadProperties():
+        nonlocal temporaryGrid
+        pPath = os.path.join(os.path.dirname(path), "properties.kdf")
+        if not os.path.isfile(pPath):
+            return
+        with open(pPath, 'r', encoding="utf-8") as f:
             PropertiesData.Deserialize(f.read(), temporaryGrid)
+
+    loadProperties()
+
+    def loadLevelProp():
+        lPath = os.path.join(os.path.dirname(path), "levelprop.kdf")
+        if not os.path.isfile(lPath):
+            return
+        with open(lPath, "r", encoding="utf-8") as f:
+            lpData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+            if "Entities" not in lpData:
+                LevelPropData.KoponenPos = None
+                LevelPropData.PlayerPos = None
+                return
+            entityData = lpData["Entities"]
+            if "Koponen" in entityData and "startPos" in entityData["Koponen"]:
+                tmpPos = entityData["Koponen"]["startPos"]
+                LevelPropData.KoponenPos = (tmpPos[0], tmpPos[1])
+            else:
+                LevelPropData.KoponenPos = None
+            if "Player" in entityData:
+                playerData = entityData["Player"]
+                if "startPos" in playerData:
+                    tmpPos = playerData["startPos"]
+                    LevelPropData.PlayerPos = (tmpPos[0], tmpPos[1])
+                else:
+                    LevelPropData.PlayerPos = None
+                if "spawnInverted" in playerData:
+                    LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
+    loadLevelProp()
 
     return temporaryGrid, temporaryGridSize
 
@@ -1809,6 +1858,11 @@ def main():
         elif Drag.Mode != DragMode.Default:
             Drag.Mode = DragMode.Default
             Drag.clear()
+
+        if LevelPropData.KoponenPos != None:
+            display.blit(LevelPropData.KoponenTextureRescaled, (LevelPropData.KoponenPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.KoponenPos[1] * scaleMultiplier - scroll[1] * scalesize))
+        if LevelPropData.PlayerPos != None:
+            display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if DebugMode:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
