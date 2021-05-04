@@ -2444,7 +2444,8 @@ class Enemy:
         6: KDS.AI.MethMaker,
         7: KDS.AI.CaveMonster,
         8: KDS.AI.Mummy,
-        9: KDS.AI.SecurityGuard
+        9: KDS.AI.SecurityGuard,
+        10: KDS.AI.Bulldog
     }
 
     death_count = 0

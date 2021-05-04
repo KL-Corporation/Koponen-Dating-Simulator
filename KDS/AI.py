@@ -232,7 +232,7 @@ class HostileEnemy:
 
         self._health = max(value, 0)
 
-    def internalInit(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: pygame.mixer.Sound, death_sound: pygame.mixer.Sound, health: int, mv: List[int], attackPropability: int, sleep: bool = True, direction: bool = False):
+    def internalInit(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, mv: List[int], attackPropability: int, sleep: bool = True, direction: bool = False):
         self.rect = rect
         self._health = health
         self.sleep = sleep
@@ -295,7 +295,7 @@ class HostileEnemy:
         if s:
             self.sleep = False
 
-        self.lateUpdate(tiles, targetRect, debug, scroll, Surface)
+        self.lateUpdate(Surface, scroll, tiles, targetRect, debug)
 
         if self.health > 0:
             if not self.sleep:
@@ -314,7 +314,8 @@ class HostileEnemy:
                         self.animation.active.tick = 0
                 else:
                     if self.playSightSound:
-                        KDS.Audio.PlaySound(self.sight_sound)
+                        if self.sight_sound != None:
+                            KDS.Audio.PlaySound(self.sight_sound)
                         self.playSightSound = False
                     self.collisions = self.mover.move(self.rect, self.movement, tiles)
                     if self.collisions.right or self.collisions.left:
@@ -328,7 +329,8 @@ class HostileEnemy:
                 self.animation.trigger("idle")
         elif self.playDeathSound:
             self.animation.trigger("death")
-            KDS.Audio.PlaySound(self.death_sound)
+            if self.death_sound != None:
+                KDS.Audio.PlaySound(self.death_sound)
             items = self.onDeath()
             KDS.Missions.Listeners.EnemyDeath.Trigger()
             for item in items:
@@ -341,7 +343,7 @@ class HostileEnemy:
         Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
 
-    def lateUpdate(self, *args):
+    def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool = False):
         return
 
     def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
@@ -588,7 +590,7 @@ class MethMaker(HostileEnemy):
         dist /= 1200
         basicGunshot.set_volume(dist)
         KDS.Audio.PlaySound(basicGunshot)
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -631,7 +633,7 @@ class CaveMonster(HostileEnemy):
         dist /= 1200
         cavemonster_gun.set_volume(dist)
         KDS.Audio.PlaySound(cavemonster_gun)
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -671,7 +673,7 @@ class Mummy(HostileEnemy):
         items = []
         return items
 
-    def pathfinder(self, obstacles, collision_type : str) -> None:
+    def pathfinder(self, obstacles: List[List[List[KDS.Build.Tile]]], collision_type : str) -> None:
         x_coor = 0
         if collision_type == "right":
             x_coor = (self.rect.x + self.rect.w) // 34
@@ -681,7 +683,8 @@ class Mummy(HostileEnemy):
         try:
             jump = True
             for y in range(3):
-                if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
+                # if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
+                if all(not AaroTääVitunKoodiEiToimiUudenVitunTilesysteeminKaaPerkele.checkCollision for AaroTääVitunKoodiEiToimiUudenVitunTilesysteeminKaaPerkele in obstacles[y_coor - 1 + y][x_coor]):
                     jump = False
             if jump:
                 self.direction = not self.direction
@@ -690,25 +693,24 @@ class Mummy(HostileEnemy):
         except Exception as e:
             KDS.Logging.AutoError(e)
 
-    def lateUpdate(self, *args):
+    def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool):
         if not self.sleep and self.health > 0:
-            s = searchRect(targetRect=args[1], searchRect=self.rect, direction= self.direction, surface=args[4], scroll=args[3], obstacles=args[0])[0]
-            s1 = searchRect(targetRect=args[1], searchRect=self.rect, direction= not self.direction, surface=args[4], scroll=args[3], obstacles=args[0])[0]
+            s = searchRect(targetRect=targetRect, searchRect=self.rect, direction= self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
+            s1 = searchRect(targetRect=targetRect, searchRect=self.rect, direction= not self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
             if self.collisions != None:
-
                 if self.collisions.right:
-                    self = self.pathfinder(args[0], "right")
+                    self.pathfinder(tiles, "right")
                 elif self.collisions.left:
-                    self = self.pathfinder(args[0], "left")
+                    self.pathfinder(tiles, "left")
 
             if s or s1:
-                if self.rect.centerx < args[1].centerx:
+                if self.rect.centerx < targetRect.centerx:
                     self.movement[0] = abs(self.movement[0])
                     self.direction = False
-                elif self.rect.centerx > args[1].centerx:
+                elif self.rect.centerx > targetRect.centerx:
                     self.movement[0] = abs(self.movement[0]) * -1
                     self.direction = True
-            dist = KDS.Math.getDistance(self.rect.center, args[1].center)
+            dist = KDS.Math.getDistance(self.rect.center, targetRect.center)
             if dist < 40 and not self.attackRunning:
                 self.attackRunning = True
             if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
@@ -729,7 +731,7 @@ class SecurityGuard(HostileEnemy):
         i_anim = KDS.Animator.Animation("security_guard_idle", 2, 40, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("security_guard_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
         d_anim = KDS.Animator.Animation("security_guard_dying", 5, 13, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
-        rect = pygame.Rect(pos[0]-20, pos[1]-23, 40, 73)
+        rect = pygame.Rect(pos[0] - 20, pos[1] - 23, 40, 73)
 
         #region Handling the i_anim:
         aim_im = a_anim.images[0]
@@ -771,8 +773,41 @@ class SecurityGuard(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
         return items
+
+class Bulldog(HostileEnemy):
+    def __init__(self, pos: Tuple[int, int]):
+        health = KDS.Math.MAXVALUE # They are 30 pixels tall so player should not be able to shoot them
+        w_anim = KDS.Animator.Animation("bulldog", 5, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = w_anim
+        a_anim = w_anim
+        d_anim = w_anim
+        rect = pygame.Rect(pos[0], pos[1], 44, 30)
+
+        self.internalInit(rect, w_anim, a_anim, d_anim, i_anim, None, None, health, [5, 8], KDS.Math.MAXVALUE)
+        self.manualAttackHandling = True
+
+    def lateInit(self):
+        self.normalMovement = self.movement
+
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool):
+        bullets: List[KDS.World.Bullet] = []
+        if self.rect.colliderect(targetRect):
+            self.movement = [0, 8]
+            bullets = self.attack(69, tiles, targetRect)
+        else:
+            self.movement = self.normalMovement if not self.direction else [-self.normalMovement[0], self.normalMovement[1]]
+
+        super().update(Surface, scroll, tiles, targetRect, debug=debug)
+        distance = self.rect.centerx - targetRect.centerx
+        self.direction = distance > 0
+        return bullets, []
+
+    def attack(self, slope, env_obstacles: List[List[List[KDS.Build.Tile]]], target: pygame.Rect, *args) -> List[KDS.World.Bullet]:
+        if random.randint(0, 30) == 0:
+            return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + KDS.Math.CeilToInt(((self.rect.width + 11) * KDS.Convert.ToMultiplier(self.direction)) / 2), self.rect.y, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
+        return []

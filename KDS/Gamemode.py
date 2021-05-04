@@ -77,18 +77,20 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseMission("sauna_and_exit", "Suuret Haaveet")
             KDS.Missions.InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 2:
-            KDS.Missions.InitialiseMission("t", "Telttailua")
-            KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleepStart, 1.0))
+            Presets.KoponenMissionRequest()
 
-            KDS.Missions.InitialiseMission("o", "O'ou")
-            KDS.Missions.InitialiseTask("o", "kill", "Hankkiudu Eroon Vartijasta", (KDS.Missions.Listeners.EnemyDeath, 1.0))
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST)
+            KDS.Koponen.Talk.Conversation.schedule("Sattuisiko sinulla olemaan mitään tehtävää minulle?")
+            KDS.Koponen.Talk.Conversation.schedule("Olen kuullut, että fysiikan opettaja keittelee laittomuuksia kemiavarastossa. Voisitko tuoda minulle mahdollisesti todisteen siitä?", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN)
 
-            KDS.Missions.InitialiseMission("s", "Kuin Tukki")
-            KDS.Missions.InitialiseTask("s", "sleep_again", "Nuku aamuun asti", (KDS.Missions.Listeners.TentSleepStart, 0.5))
+            KDS.Missions.InitialiseMission("laittomuuksia", "Laittomuuksia")
+            KDS.Missions.InitialiseTask("laittomuuksia", "search", "Etsi jotain epäilyttävää kemiavarastosta")
+            KDS.Missions.InitialiseKoponenTask("laittomuuksia", "search", "Palauta se Koposelle", "jotain epäilyttävää", "jotain epäilyttävää", 27)
 
-            KDS.Missions.InitialiseMission("wait", "Odota")
-            KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
-            KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
+            KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule("Jatketaanpas sitten tuntia…\nEnsimmäisen asteen yhtälössä esiintyy muuttujan ensimmäinen potenssi, mutta ei korkeampia potensseja. Ensimmäisen asteen yhtälöitä ovat esimerkiksi\n2x − 1 = 3 ja\n4x + 6 = -x – 11\nToisen asteen yhtälössä taas esiintyy muuttujan toinen potenssi, mutta ei korkeampia potensseja. Toisen asteen yhtälöitä ovat esimerkiksi\nx² = 7” ja\n4x² + 3x – 1 = 0", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Miten vitussa sä jaksoit lukee tätä tänne asti? Nyt perkele jatka pelin pelaamista äläkä lue tällästä turhaa paskaa.", KDS.Koponen.Prefixes.koponen, True)
         elif index == 3:
             KDS.Missions.InitialiseMission("explore", "Kummituksia", NoSound=True)
             KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta")
@@ -117,6 +119,22 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN)
             KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Oho perkele... Tuntisi alkaa kohta. Hopi hopi!", KDS.Koponen.Prefixes.koponen)
+
+#region Telttailu
+#             KDS.Missions.InitialiseMission("t", "Telttailua")
+#             KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleepStart, 1.0))
+#
+#             KDS.Missions.InitialiseMission("o", "O'ou")
+#             KDS.Missions.InitialiseTask("o", "kill", "Hankkiudu Eroon Vartijasta", (KDS.Missions.Listeners.EnemyDeath, 1.0))
+#
+#             KDS.Missions.InitialiseMission("s", "Kuin Tukki")
+#             KDS.Missions.InitialiseTask("s", "sleep_again", "Nuku aamuun asti", (KDS.Missions.Listeners.TentSleepStart, 0.5))
+#
+#             KDS.Missions.InitialiseMission("wait", "Odota")
+#             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
+#             KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
+#endregion
+#region Nimen keksiminen
 # KDS.Koponen.Talk.Conversation.schedule("Heh, minulla on sinulle mahtavia uutisia.", KDS.Koponen.Prefixes.koponen)
 # KDS.Koponen.Talk.Conversation.schedule("Koulumme sai juuri uuden rehtorin, jolle voimme keksiä pilanimen...", KDS.Koponen.Prefixes.koponen)
 # KDS.Koponen.Talk.Conversation.schedule("Mitä ehdottaisit?", KDS.Koponen.Prefixes.koponen, True)
@@ -127,6 +145,8 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
 
 # KDS.Missions.InitialiseMission("principal_name", "Rehtoripilailua")
 # KDS.Missions.InitialiseTask("principal_name", "name_it", "Keksi rehtorille pilanimi")
+#endregion
+
     else:
         if index == 1:
             Presets.Tutorial()

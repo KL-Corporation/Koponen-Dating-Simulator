@@ -163,6 +163,11 @@ class Talk:
 
         @staticmethod
         def schedule(text: str, prefix: str = Prefixes.player, forcePrefix: bool = False):
+            if "\n" in text:
+                for newLine in text.splitlines():
+                    Talk.Conversation.schedule(newLine)
+                return
+
             if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT):
                 Talk.scheduled.append(text)
                 return
@@ -474,7 +479,7 @@ class KoponenEntity:
                         if execFunc != None:
                             execCArgs = [KDS.Convert.AutoType3(a) for a in execArgs]
                             try:
-                                execFunc(*execCArgs)
+                                execFunc(*execCArgs) #type: ignore (tää disabloi ton tyhmän errorin)
                             except Exception as e:
                                 KDS.Logging.AutoError(f"Exec function {execFuncName} failed on instruction {self.current_instruction} with message: {e}")
                         else:

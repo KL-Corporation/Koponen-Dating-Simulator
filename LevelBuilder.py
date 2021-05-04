@@ -220,6 +220,7 @@ Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "
 Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", (0, 0))
 Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy", (0, 0))
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", (0, 0))
+Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog", (0, 0))
 
 Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
 Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
@@ -231,7 +232,6 @@ Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png"
 DebugMode = False
 
 scroll: List[int] = [0, 0]
-teleportTemp = "001"
 currentSaveName = ''
 grid: List[List[UnitData]] = [[]]
 gridSize: Tuple[int, int] = (0, 0)
