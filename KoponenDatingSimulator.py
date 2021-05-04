@@ -192,6 +192,7 @@ pygame.event.pump()
 KDS.Logging.debug("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
+message_font = pygame.font.Font("Assets/Fonts/gamefont3.otf", 12, bold=0, italic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
@@ -1713,7 +1714,7 @@ class BaseTeleport(KDS.Build.Tile):
 
     def lateInit(self):
         if self.message != None:
-            self.renderedMessage = tip_font.render(self.message, True, KDS.Colors.White)
+            self.renderedMessage = message_font.render(self.message, True, KDS.Colors.White)
         if self.identifier != None:
             if self.identifier not in BaseTeleport.teleportDatas:
                 BaseTeleport.teleportDatas[self.identifier] = BaseTeleport.TeleportData()

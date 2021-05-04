@@ -24,7 +24,7 @@
 "9-8":{"0":{"checkCollision":false}},
 "10-8":{"0":{"checkCollision":false}},
 "12-8":{"9":{"overlay":"0057"}},
-"14-8":{"3":{"identifier":2,"message":"ovi"}},
+"14-8":{"3":{"identifier":2,"message":"Testi Teksti 69420 pippeli haha"}},
 "16-8":{"0":{"collisionDirection":"Top"},"9":{"overlay":"0002"}},
 "24-8":{"1":{"clip":"Assets/Audio/Effects/walkie_talkie.ogg","allowDrop":false,"clipVolume":0.25}},
 "29-8":{"0":{"collisionDirection":"Vertical"}},
