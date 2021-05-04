@@ -389,6 +389,7 @@ class UnitData:
         return self.serialNumber[slot : slot + 4]
 
     def addSerial(self, srlNumber: str):
+        Undo.register(self)
         for index, number in enumerate(self.serials):
             if int(number) == 0:
                 if srlNumber not in self.serials:
@@ -400,6 +401,7 @@ class UnitData:
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
     def insertSerial(self, srlNumber: str):
+        Undo.register(self)
         if srlNumber[0] != "3" and self.hasTeleport():
             KDS.Logging.info("Only one teleport is allowed per unit.", True)
             return
