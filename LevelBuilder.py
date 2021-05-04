@@ -1869,8 +1869,3 @@ KDS.Jobs.quit()
     Escape: Close Material Menu
     E: Close Material Menu
 """
-
-""" Reserved indexes for teleports:
-        [0 - 499]: Invisible teleports
-        [500 - 999] Teleport-doors
-"""
