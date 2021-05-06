@@ -106,15 +106,14 @@ def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool
             for unit in row[x:end_x]:
                 if len(unit) > 0:
                     for tile in unit:
-                        if KDS.Logging.profiler_running:
-                            # ^^^^^^^^^^^^^^^^^^^^^^^^ BRUHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+                        if KDS.Debug.Enabled:
                             pygame.draw.rect(surface, KDS.Colors.Red, (tile.rect.x - scroll[0], tile.rect.y - scroll[1], 34, 34))
                         if tile.checkCollision:
                             return False, 0.0
                         if tile.rect.colliderect(targetRect):
                             return True, slope
                 else:
-                    if KDS.Logging.profiler_running:
+                    if KDS.Debug.Enabled:
                         pygame.draw.rect(surface, KDS.Colors.Red, (int(pointer[0]) - scroll[0], int(pointer[1]) - scroll[1], 13, 13))
                     if targetRect.collidepoint( (int(pointer[0]), int(pointer[1]))):
                         return True, slope
