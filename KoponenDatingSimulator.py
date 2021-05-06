@@ -1681,12 +1681,21 @@ class BaseTeleport(KDS.Build.Tile):
         def __init__(self) -> None:
             self.index: int = 0
             self.teleports: List[BaseTeleport] = []
+            self.allowNext = True
 
-        def Next(self, caller: BaseTeleport) -> BaseTeleport:
+        def Next(self, caller: BaseTeleport) -> Optional[BaseTeleport]:
+            if not self.allowNext:
+                return None
+
             self.index = self.teleports.index(caller) + 1
             if self.index >= len(self.teleports):
                 self.index = 0
+
+            self.allowNext = False
             return self.teleports[self.index]
+
+        def Update(self):
+            self.allowNext = True
 
         def Order(self) -> None:
             self.teleports.sort(key=lambda t: t.order)
@@ -1735,10 +1744,15 @@ class BaseTeleport(KDS.Build.Tile):
             if self.nonInteractableSound != None:
                 KDS.Audio.PlaySound(self.nonInteractableSound)
             return
+
+        # Getting next teleport if available
+        t = BaseTeleport.teleportDatas[self.identifier].Next(self)
+        if t == None:
+            return
+
         if self.teleportSound != None:
             KDS.Audio.PlaySound(self.teleportSound)
         # Executing teleporting process
-        t = BaseTeleport.teleportDatas[self.identifier].Next(self)
         t.onTeleport()
         Player.rect.midbottom = t.rect.midbottom
         # Reseting scroll
@@ -1796,6 +1810,11 @@ class LargeDoorTeleport(DoorTeleport):
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(self.rect.x, self.rect.y, 68, 68)
         self.messageOffset = (0, -55)
+
+class Elevator(DoorTeleport):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(self.rect.x, self.rect.y - 34, 102, 102)
 
 KDS.Build.Tile.specialTilesClasses = {
     15: Toilet,
@@ -1856,7 +1875,8 @@ BaseTeleport.serialNumbers = {
     2: WoodDoorTeleport,
     3: WoodDoorTeleport,
     4: DoorTeleport,
-    5: LargeDoorTeleport
+    5: LargeDoorTeleport,
+    6: Elevator
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
@@ -4115,6 +4135,9 @@ while main_running:
 #region Data Update
     if KDS.Missions.GetFinished():
         level_finished = True
+
+    for _teleportData in BaseTeleport.teleportDatas.values():
+        _teleportData.Update()
 #endregion
 #region Conditional Events
     if Player.deathWait > 240:

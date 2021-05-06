@@ -18,5 +18,9 @@
     "Large Door Teleport": {
         "serialNumber": 5,
         "path": "large_door_closed.png"
+    },
+    "Elevator Teleport": {
+        "serialNumber": 6,
+        "path": "elevator.png"
     }
 }
