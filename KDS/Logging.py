@@ -4,6 +4,8 @@ import logging
 import os
 import pstats
 import KDS.System
+import pygame
+import sys
 from datetime import datetime
 from typing import Any, Union
 
@@ -11,7 +13,7 @@ running = False
 profiler_running = False
 profile = cProfile.Profile()
 
-def init(_AppDataPath: str, _LogPath: str):
+def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
     global running, AppDataPath, LogPath, logFileName
     running = True
     AppDataPath = _AppDataPath
@@ -26,6 +28,40 @@ def init(_AppDataPath: str, _LogPath: str):
     logFileName = os.path.join(LogPath, f"log_{datetime.now().strftime(fileTimeFormat)}.log")
     logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
     logging.debug("Created log file: " + logFileName)
+
+    if not debugInfo:
+        return
+
+    display_info = pygame.display.Info()
+    debug(f"""
+I=====[ DEBUG INFO ]=====I
+    [Version Info]
+    - pygame: {pygame.version.ver}
+    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
+    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
+
+    [Video Info]
+    - SDL Video Driver: {pygame.display.get_driver()}
+    - Hardware Acceleration: {bool(display_info.hw)}
+    - Window Allowed: {bool(display_info.wm)}
+    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
+
+    [Pixel Info]
+    - Bit Size: {display_info.bitsize}
+    - Byte Size: {display_info.bytesize}
+    - Masks: {display_info.masks}
+    - Shifts: {display_info.shifts}
+    - Losses: {display_info.losses}
+
+    [Hardware Acceleration]
+    - Hardware Blitting: {bool(display_info.blit_hw)}
+    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
+    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
+    - Software Blitting: {bool(display_info.blit_sw)}
+    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
+    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
+I=====[ DEBUG INFO ]=====I""")
 
 def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
     if not running:

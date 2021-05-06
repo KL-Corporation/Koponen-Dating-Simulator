@@ -15,6 +15,7 @@ import KDS.Convert
 import KDS.Linq
 import KDS.Logging
 import KDS.Colors
+import KDS.Debug
 from enum import IntFlag
 
 TEACHER_FALL_SPEED = 8
@@ -122,7 +123,7 @@ class Teacher:
     def onDamage(self):
         self.startAgro()
 
-    def render(self, surface: pygame.Surface, scroll: Sequence[int], debug: bool = False):
+    def render(self, surface: pygame.Surface, scroll: Sequence[int]):
         indicatorColor: Optional[Tuple[int, int, int]] = None
         if TeacherState.Combat in self.state:
             indicatorColor = KDS.Colors.Red
@@ -137,11 +138,11 @@ class Teacher:
         handItem = self.inventory.getHandItem()
         if not isinstance(handItem, str):
             KDS.Inventory.Inventory.renderItemTexture(handItem.texture, self.rect, self.direction, surface, scroll)
-        if debug:
+        if KDS.Debug.Enabled:
             pygame.draw.rect(surface, KDS.Colors.Green, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass, debug: bool) -> Tuple[List[KDS.World.Bullet], List[int]]:
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def neutralBehaviour():
             self.animation.trigger("walk")
             self.inventory.pickSlot(0)
@@ -287,7 +288,7 @@ class Teacher:
         else:
             neutralBehaviour()
         #endregion
-        self.render(surface, scroll, debug)
+        self.render(surface, scroll)
         return enemyProjectiles, dropItems
 
 class Test(Teacher):

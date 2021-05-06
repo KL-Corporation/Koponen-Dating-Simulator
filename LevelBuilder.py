@@ -52,36 +52,6 @@ APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level B
 LOGPATH = os.path.join(APPDATA, "logs")
 os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
-KDS.Logging.debug(f"""
-I=====[ DEBUG INFO ]=====I
-    [Version Info]
-    - pygame: {pygame.version.ver}
-    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
-    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
-
-    [Video Info]
-    - SDL Video Driver: {pygame.display.get_driver()}
-    - Hardware Acceleration: {bool(display_info.hw)}
-    - Window Allowed: {bool(display_info.wm)}
-    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
-
-    [Pixel Info]
-    - Bit Size: {display_info.bitsize}
-    - Byte Size: {display_info.bytesize}
-    - Masks: {display_info.masks}
-    - Shifts: {display_info.shifts}
-    - Losses: {display_info.losses}
-
-    [Hardware Acceleration]
-    - Hardware Blitting: {bool(display_info.blit_hw)}
-    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
-    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
-    - Software Blitting: {bool(display_info.blit_sw)}
-    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
-    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
-I=====[ DEBUG INFO ]=====I""")
-
 KDS.Jobs.init()
 
 clock = pygame.time.Clock()
@@ -228,8 +198,6 @@ Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png"
 #endregion
 
 ### GLOBAL VARIABLES ###
-
-DebugMode = False
 
 scroll: List[int] = [0, 0]
 currentSaveName = ''
@@ -1356,7 +1324,7 @@ def materialMenu(previousMaterial: str) -> str:
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
 
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()
@@ -1475,7 +1443,7 @@ def menu():
         display.blit(txt, (2, display_size[1] - harbinger_font_small.get_height() - 2))
         display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, 50))
 
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         if btn_menu:
@@ -1569,7 +1537,6 @@ class Selected:
 Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
 
 def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
-    global DebugMode
     #region Event Ignoring
     if event.type == ignoreEventOfType:
         return False
@@ -1580,8 +1547,8 @@ def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
         return True # Return True if event handling can be stopped
     elif event.type == KEYDOWN:
         if event.key == K_F3:
-            DebugMode = not DebugMode
-            KDS.Logging.Profiler(DebugMode)
+            KDS.Debug.Enabled = not KDS.Debug.Enabled
+            KDS.Logging.Profiler(KDS.Debug.Enabled)
             return True
     elif event.type == VIDEORESIZE:
         SetDisplaySize((event.w, event.h))
@@ -1864,7 +1831,7 @@ def main():
         if LevelPropData.PlayerPos != None:
             display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()

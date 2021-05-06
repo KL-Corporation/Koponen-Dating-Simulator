@@ -13,6 +13,7 @@ import KDS.Math
 import KDS.Missions
 import KDS.World
 import KDS.Build
+import KDS.Debug
 
 pygame.mixer.init()
 pygame.init()
@@ -284,7 +285,7 @@ class HostileEnemy:
         self.listenerInstance.OnTrigger -= self.listenerTrigger
         self.listenerInstance = None
 
-    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool = False):
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         enemyProjectiles: List[KDS.World.Bullet] = []
         dropItems: List[int] = []
 
@@ -295,7 +296,7 @@ class HostileEnemy:
         if s:
             self.sleep = False
 
-        self.lateUpdate(Surface, scroll, tiles, targetRect, debug)
+        self.lateUpdate(Surface, scroll, tiles, targetRect)
 
         if self.health > 0:
             if not self.sleep:
@@ -338,12 +339,12 @@ class HostileEnemy:
                     dropItems.append(item)
             self.playDeathSound = False
 
-        if debug:
+        if KDS.Debug.Enabled:
             pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
 
-    def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool = False):
+    def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         return
 
     def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
@@ -693,7 +694,7 @@ class Mummy(HostileEnemy):
         except Exception as e:
             KDS.Logging.AutoError(e)
 
-    def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool):
+    def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         if not self.sleep and self.health > 0:
             s = searchRect(targetRect=targetRect, searchRect=self.rect, direction= self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
             s1 = searchRect(targetRect=targetRect, searchRect=self.rect, direction= not self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
@@ -755,8 +756,8 @@ class SecurityGuard(HostileEnemy):
         self.lastTargetDirection = KDS.Math.Sign(self.movement[0])
         self.ticksSinceSwitch = 0
 
-    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect: pygame.Rect, debug: bool):
-        tmp = super().update(Surface, scroll, tiles, targetRect, debug=debug)
+    def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect: pygame.Rect):
+        tmp = super().update(Surface, scroll, tiles, targetRect)
         distance = self.rect.centerx - targetRect.centerx
         targetDirection = KDS.Math.Sign(distance)
         if self.lastTargetDirection != targetDirection and (abs(distance) > 170 or self.ticksSinceSwitch > 120) and self.health > 0: # If over five blocks away from target or hasn't turned for two seconds while player is behind; turn around
@@ -794,7 +795,7 @@ class Bulldog(HostileEnemy):
     def lateInit(self):
         self.normalMovement = self.movement
 
-    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect, debug: bool):
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         bullets: List[KDS.World.Bullet] = []
         if self.rect.colliderect(targetRect):
             self.movement = [0, 8]
@@ -802,7 +803,7 @@ class Bulldog(HostileEnemy):
         else:
             self.movement = self.normalMovement if not self.direction else [-self.normalMovement[0], self.normalMovement[1]]
 
-        super().update(Surface, scroll, tiles, targetRect, debug=debug)
+        super().update(Surface, scroll, tiles, targetRect)
         distance = self.rect.centerx - targetRect.centerx
         self.direction = distance > 0
         return bullets, []

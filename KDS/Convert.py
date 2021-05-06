@@ -277,28 +277,32 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
         KDS.Logging.AutoError("Invalid HSV => RGB Conversion color.")
         return (0.0, 0.0, 0.0)
 
-def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> Tuple[str]:
+def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> Tuple[str, ...]:
+    if font.size(text)[0] < max_width:
+        return tuple([text])
+
     # Freezes if word is longer than max_width...
-    if font.size(text)[0] > max_width:
-        text_split = [" " + wrd for wrd in text.split(" ")]
-        new_split = [text_split]
-        while font.size( "".join(toTest := new_split[-1]).lstrip() )[0] > max_width:
-            i = 0
-            while font.size( "".join(toTest[:i]).lstrip() )[0] <= max_width:
-                i += 1
-                if i >= len(toTest):
-                    break
+    text_split = [" " + wrd for wrd in text.split(" ")]
+    new_split = [text_split]
+    while font.size( "".join(toTest := new_split[-1]).lstrip() )[0] > max_width:
+        i = 0
+        while font.size( "".join(toTest[:i]).lstrip() )[0] <= max_width:
+            i += 1
+            if i >= len(toTest):
+                break
 
-                if i == 1 and font.size( "".join(toTest[:i]).lstrip() )[0] > max_width:
-                    i += 1 # Added because minus one
-                    break # Fix for freezing if word is longer than max_width
-            i -= 1 # Fixes getting the wrong index... Or that is what I remember this does...  I should've documented this more clearly...
+            if i == 1 and font.size( "".join(toTest[:i]).lstrip() )[0] > max_width:
+                i += 1 # Added because minus one
+                break # Fix for freezing if word is longer than max_width... But why I have that other comment I don't know... Maybe I've cocked something up.
+        i -= 1 # Fixes getting the wrong index... Or that is what I remember this does...  I should've documented this more clearly...
 
-            new_split.append(toTest[i:])
-            new_split[-2] = toTest[:i]
-        if len(new_split[-1]) < 1: del(new_split[-1])
-        return tuple(["".join(new_split[i]).lstrip() for i in range(len(new_split))])
-    else: return tuple([text])
+        new_split.append(toTest[i:])
+        new_split[-2] = toTest[:i]
+
+    if len(new_split[-1]) < 1:
+        del(new_split[-1])
+
+    return tuple(["".join(new_split[i]).lstrip() for i in range(len(new_split))])
 
 def ToRational(value: float) -> str:
     fraction, integer = KDS.Math.SplitFloat(value)

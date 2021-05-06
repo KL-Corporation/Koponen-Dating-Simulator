@@ -35,7 +35,6 @@ import KDS.UI
 import KDS.World
 import KDS.School
 import random
-import sys
 import shutil
 import json
 import datetime
@@ -118,35 +117,6 @@ KDS.Logging.debug("Initialising Display Driver...")
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False):
     pygame.display.toggle_fullscreen()
 
-KDS.Logging.debug(f"""
-I=====[ DEBUG INFO ]=====I
-    [Version Info]
-    - pygame: {pygame.version.ver}
-    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
-    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
-
-    [Video Info]
-    - SDL Video Driver: {pygame.display.get_driver()}
-    - Hardware Acceleration: {bool(display_info.hw)}
-    - Window Allowed: {bool(display_info.wm)}
-    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
-
-    [Pixel Info]
-    - Bit Size: {display_info.bitsize}
-    - Byte Size: {display_info.bytesize}
-    - Masks: {display_info.masks}
-    - Shifts: {display_info.shifts}
-    - Losses: {display_info.losses}
-
-    [Hardware Acceleration]
-    - Hardware Blitting: {bool(display_info.blit_hw)}
-    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
-    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
-    - Software Blitting: {bool(display_info.blit_sw)}
-    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
-    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
-I=====[ DEBUG INFO ]=====I""")
 KDS.Logging.debug("Initialising KDS modules...")
 KDS.Audio.init(pygame.mixer)
 KDS.Jobs.init()
@@ -398,8 +368,6 @@ koponen_talk_tip = tip_font.render("Puhu Koposelle [E]", True, KDS.Colors.White)
 task = ""
 taskTaivutettu = ""
 
-DebugMode = False
-
 KDS.Logging.debug("Variable Defining Complete.")
 #endregion
 #region Game Settings
@@ -645,6 +613,11 @@ def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
     if event.type == KDS.Audio.MUSICENDEVENT:
         KDS.Audio.Music.OnEnd.Invoke()
         return True
+    elif event.type == KEYDOWN:
+        if event.key == K_F3:
+            KDS.Debug.Enabled = not KDS.Debug.Enabled
+            KDS.Logging.Profiler(KDS.Debug.Enabled)
+            return True
     elif event.type == QUIT:
         KDS_Quit(confirm=True)
         return True
@@ -2477,7 +2450,7 @@ class Enemy:
 
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
-        projectiles, items = enemy.update(screen, scroll, Tiles, Player.rect, DebugMode)
+        projectiles, items = enemy.update(screen, scroll, Tiles, Player.rect)
         if enemy.health > 0:
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
@@ -2507,7 +2480,7 @@ class Entity:
 
     @staticmethod
     def _internalEntityHandler(entity: Union[KDS.Teachers.Teacher, KDS.NPC.NPC]):
-        projectiles, items = entity.update(screen, scroll, Tiles, Player, DebugMode)
+        projectiles, items = entity.update(screen, scroll, Tiles, Player)
         if ((isinstance(entity, KDS.Teachers.Teacher) and KDS.Teachers.TeacherState.Combat in entity.state) or (isinstance(entity, KDS.NPC.NPC) and entity.panicked)) and entity.health > 0:
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
@@ -3062,7 +3035,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     pygame.mouse.set_visible(False)
 
     if show_loading:
-        KDS.Loading.Circle.Start(display, clock, DebugMode)
+        KDS.Loading.Circle.Start(display, clock)
 
     if gamemode == KDS.Gamemode.Modes.CustomCampaign:
         mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
@@ -3179,7 +3152,7 @@ def respawn_function():
 #endregion
 #region Menus
 def esc_menu_f(oldSurf: pygame.Surface):
-    global esc_menu, go_to_main_menu, DebugMode, clock, c
+    global esc_menu, go_to_main_menu, clock, c
     c = False
 
     esc_surface = pygame.Surface(display_size, SRCALPHA)
@@ -3236,10 +3209,9 @@ def esc_menu_f(oldSurf: pygame.Surface):
         settings_button.update(esc_surface, mouse_pos, c)
         main_menu_button.update(esc_surface, mouse_pos, c)
 
-        KDS.Logging.Profiler(DebugMode)
         esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(esc_surface, (0, 0))
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         display.blit(pygame.transform.scale(display, display_size), (0, 0))
@@ -3249,7 +3221,7 @@ def esc_menu_f(oldSurf: pygame.Surface):
         clock.tick_busy_loop(60)
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, DebugMode, pauseOnFocusLoss, play_walk_sound
+    global main_menu_running, esc_menu, main_running, settings_running, pauseOnFocusLoss, play_walk_sound
     c = False
     settings_running = True
 
@@ -3297,8 +3269,6 @@ def settings_menu():
                         KDS_Quit()
                 elif event.key == K_ESCAPE:
                     settings_running = False
-                elif event.key == K_F3:
-                    DebugMode = not DebugMode
 
         display.blit(settings_background, (0, 0))
 
@@ -3317,8 +3287,7 @@ def settings_menu():
         return_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
         remove_data_button.update(display, mouse_pos, c)
-        KDS.Logging.Profiler(DebugMode)
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         pygame.display.flip()
@@ -3327,7 +3296,7 @@ def settings_menu():
         clock.tick_busy_loop(60)
 
 def main_menu():
-    global current_map, DebugMode, current_map_name
+    global current_map, current_map_name
 
     pygame.mouse.set_visible(True)
 
@@ -3489,8 +3458,6 @@ def main_menu():
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
-                elif event.key == K_F3:
-                    DebugMode = not DebugMode
                 elif event.key == K_ESCAPE:
                     if MenuMode == Mode.ModeSelectionMenu or MenuMode == Mode.MainMenu:
                         MenuMode = Mode.MainMenu
@@ -3498,7 +3465,7 @@ def main_menu():
                         menu_mode_selector(Mode.ModeSelectionMenu)
                 elif event.key == K_F5:
                     KDS.Audio.MusicMixer.pause()
-                    certQuit = KDS.School.Certificate(display, clock, DebugMode=DebugMode)
+                    certQuit = KDS.School.Certificate(display, clock)
                     if certQuit: KDS_Quit()
                     KDS.Audio.MusicMixer.unpause()
                 elif event.key == K_F6:
@@ -3641,8 +3608,7 @@ def main_menu():
             campaign_left_button.update(display, mouse_pos, c)
             campaign_right_button.update(display, mouse_pos, c)
 
-        KDS.Logging.Profiler(DebugMode)
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
         c = False
@@ -3654,7 +3620,7 @@ def main_menu():
         clock.tick_busy_loop(60)
 
 def level_finished_menu(oldSurf: pygame.Surface):
-    global DebugMode, level_finished_running
+    global level_finished_running
 
     score_color = KDS.Colors.Cyan
     padding = 50
@@ -3714,8 +3680,6 @@ def level_finished_menu(oldSurf: pygame.Surface):
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
-                elif event.key == K_F3:
-                    DebugMode = not DebugMode
             elif event.type == KEYUP:
                 if event.key in (K_SPACE, K_RETURN, K_ESCAPE):
                     KDS.Scores.ScoreAnimation.skip()
@@ -3754,10 +3718,9 @@ def level_finished_menu(oldSurf: pygame.Surface):
             main_menu_button.update(level_f_surf, mouse_pos, c)
             next_level_button.update(level_f_surf, mouse_pos, c)
 
-        KDS.Logging.Profiler(DebugMode)
         level_f_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(level_f_surf, (0, 0))
-        if DebugMode:
+        if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
@@ -3798,8 +3761,8 @@ while main_running:
                 KDS.Keys.functionKey.SetState(True)
             elif event.key == K_ESCAPE:
                 esc_menu = True
-            elif event.key in KDS.Keys.inventoryKeys:
-                Player.inventory.pickSlot(KDS.Keys.inventoryKeys.index(event.key))
+            elif event.key in KDS.Keys.INVENTORYKEYS:
+                Player.inventory.pickSlot(KDS.Keys.INVENTORYKEYS.index(event.key))
             elif event.key == K_q:
                 if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
                     droppedItem: Any = Player.inventory.dropItem()
@@ -3825,10 +3788,8 @@ while main_running:
             elif event.key == K_F1:
                 renderUI = not renderUI
             elif event.key == K_t:
-                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or sys.gettrace() != None: # Console is disabled in story mode if application is not run on VSCode debug mode.
+                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Debug.IsVSCodeDebugging(): # Console is disabled in story mode if application is not run on VSCode debug mode.
                     go_to_console = True
-            elif event.key == K_F3:
-                DebugMode = not DebugMode
             elif event.key == K_F4:
                 if pygame.key.get_pressed()[K_LALT]:
                     KDS_Quit()
@@ -3836,7 +3797,7 @@ while main_running:
                     Player.health = 0
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
-                quit_temp, exam_score = KDS.School.Exam(DebugMode=DebugMode)
+                quit_temp, exam_score = KDS.School.Exam()
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
                     KDS_Quit()
@@ -3915,7 +3876,7 @@ while main_running:
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     KDS.Build.Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
-    KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll, DebugMode)
+    KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll)
     TileFire.cachedAnimation.update()
 
     Entity.update(Entities)
@@ -3943,7 +3904,7 @@ while main_running:
 
         Koponen.update(Tiles, display, KDS_Quit, clock)
     #endregion
-    KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll, DebugMode)
+    KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll)
     Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
     Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
 
@@ -3951,7 +3912,7 @@ while main_running:
         Zone.update(Player.rect)
 
     for Projectile in Projectiles:
-        result = Projectile.update(screen, scroll, Entities, HitTargets, Particles, Player.rect, Player.health, DebugMode)
+        result = Projectile.update(screen, scroll, Entities, HitTargets, Particles, Player.rect, Player.health)
         if result != None:
             v = result[0]
             Player.health = result[1]
@@ -3995,15 +3956,15 @@ while main_running:
         if isinstance(result, pygame.Surface): Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
         else: Particles.remove(particle)
 
-    if DebugMode:
+    if KDS.Debug.Enabled:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
     if Player.visible:
         screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
-    if Koponen.enabled: Koponen.render(screen, scroll, DebugMode)
+    if Koponen.enabled: Koponen.render(screen, scroll)
 
     #Overlayt
     for ov in overlays:
-        if DebugMode:
+        if KDS.Debug.Enabled:
             pygame.draw.rect(screen, KDS.Colors.Blue, (ov.rect.x - scroll[0], ov.rect.y - scroll[1], 34, 34))
         KDS.Build.Tile.renderUnit(ov, screen, scroll)
 
@@ -4018,7 +3979,7 @@ while main_running:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), True))
         for light in Lights:
             black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
-            if DebugMode:
+            if KDS.Debug.Enabled:
                 rectSurf = pygame.Surface(light.surf.get_size())
                 rectSurf.fill(KDS.Colors.Yellow)
                 rectSurf.set_alpha(128)
@@ -4076,8 +4037,7 @@ while main_running:
 
 #endregion
 #region Debug Mode
-    KDS.Logging.Profiler(DebugMode)
-    if DebugMode:
+    if KDS.Debug.Enabled:
         screen.blit(KDS.Debug.RenderData({
             "FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero),
             "Player Position": Player.rect.topleft,

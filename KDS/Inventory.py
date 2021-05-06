@@ -1,13 +1,13 @@
 from __future__ import annotations
-from typing import List, Union, Tuple, Optional, Sequence, Type
+from typing import List, Literal, Union, Tuple, Optional, Sequence, Type
 import pygame
 import KDS.World
 import KDS.Build
 import KDS.Missions
 import KDS.Linq
 
-EMPTYSLOT = "none"
-DOUBLEITEM = "DOUBLEITEM"
+EMPTYSLOT: Literal["none"] = "none"
+DOUBLEITEM: Literal["DOUBLEITEM"] = "DOUBLEITEM"
 
 class Inventory:
     def __init__(self, size: int, storage: Sequence[Union[KDS.Build.Item, str]] = None):

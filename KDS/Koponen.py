@@ -21,6 +21,7 @@ import KDS.UI
 import KDS.Linq
 import KDS.AI
 import KDS.World
+import KDS.Debug
 
 import re
 import shlex
@@ -490,8 +491,9 @@ class KoponenEntity:
             else:
                 self.current_instruction += 1
 
-    def render(self, Surface: pygame.Surface, scroll: list, debugMode: bool = False):
-        if debugMode: pygame.draw.rect(Surface, KDS.Colors.Cyan, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
+    def render(self, Surface: pygame.Surface, scroll: list):
+        if KDS.Debug.Enabled:
+            pygame.draw.rect(Surface, KDS.Colors.Cyan, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
         self.animations.update()
         Surface.blit(self.animations.get_frame(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 

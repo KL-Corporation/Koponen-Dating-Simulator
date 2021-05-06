@@ -54,7 +54,6 @@ moveLeft = Key()
 moveRun = Key()
 functionKey = Key()
 killKey = Key()
-inventoryKeys = [K_1, K_2, K_3, K_4, K_5]
 mainKey = Key()
 altUp = Key()
 altDown = Key()
@@ -66,3 +65,5 @@ def Update():
 
 def Reset():
     for key in keyList: key.SetState(False)
+
+INVENTORYKEYS = (K_1, K_2, K_3, K_4, K_5)

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Set, SupportsFloat, Tuple
+from typing import Any, Dict, List, Optional, Set, SupportsFloat, Tuple
 import pygame
 from pygame.locals import *
 import random
@@ -12,6 +12,7 @@ import KDS.Convert
 import KDS.System
 import KDS.Math
 import KDS.Logging
+import KDS.Debug
 import KDS.UI
 import KDS.Linq
 import datetime
@@ -46,7 +47,7 @@ def init(display: pygame.Surface, clock: pygame.time.Clock):
 
     GradeWeights = tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values())
 
-def Exam(showtitle = True, DebugMode: bool = False):
+def Exam(showtitle = True):
     _quit = False
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
@@ -381,15 +382,8 @@ def Exam(showtitle = True, DebugMode: bool = False):
                 return_exam()
             Display.blit(timerFont.render(strtime, False, KDS.Colors.Red), (10, 10))
 
-            if DebugMode:
-                debugSurf = pygame.Surface((200, 40))
-                debugSurf.fill(KDS.Colors.DarkGray)
-                debugSurf.set_alpha(128)
-                Display.blit(debugSurf, (0, 0))
-
-                fps_text = "FPS: " + str(Clock.get_fps())
-                fps_text = examTestFont.render(fps_text, True, KDS.Colors.White)
-                Display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
+            if KDS.Debug.Enabled:
+                Display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(Clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
             pygame.display.flip()
             Clock.tick_busy_loop(60)
@@ -402,15 +396,15 @@ def Exam(showtitle = True, DebugMode: bool = False):
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bool = False, BackgroundColor: Tuple[int, int, int] = None) -> bool:
+def Certificate(display: pygame.Surface, clock: pygame.time.Clock, BackgroundColor: Tuple[int, int, int] = None) -> bool:
     pygame.key.set_repeat(500, 31) #temp
     displaySize = display.get_size()
 
     #region Settings
-    GradeExtras = True
-    StoryExtras = True
-    AlignOverride = False
-    GlobalRefrenceOverride = 9
+    GradeExtras: bool = True
+    StoryExtras: bool = True
+    AlignOverride: bool = False
+    GlobalRefrenceOverride: Optional[int] = None
     #endregion
 
     class Fonts:
@@ -426,7 +420,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
                 break
         if surname == None:
             surname = random.choice(Surnames[0:50])
-            KDS.Logging.info(f"Username: {username} did not contain a surname.")
+            KDS.Logging.info(f"Username: {username} did not contain a surname.", True)
     else:
         surname = "<surname-loading-failed>"
 
@@ -447,9 +441,10 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         return f"{random_date.day}.{random_date.month}.{random_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]" # Teki niin mieli laittaa 6.9.2005
 
     def randomGrade(refrenceOverride: float = None) -> int:
-        if (KDS.ConfigManager.Save.Active == None or KDS.ConfigManager.Save.Active.Story.examGrade < 0) and not (4 <= GlobalRefrenceOverride <= 10):
+        if GlobalRefrenceOverride != None and (4 <= GlobalRefrenceOverride <= 10):
+            refrenceOverride = GlobalRefrenceOverride
+        elif (KDS.ConfigManager.Save.Active == None or KDS.ConfigManager.Save.Active.Story.examGrade < 0):
             return -1
-        elif 4 <= GlobalRefrenceOverride <= 10 and refrenceOverride == None: refrenceOverride = GlobalRefrenceOverride
 
         ref = KDS.Math.RoundCustomInt(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride, KDS.Math.MidpointRounding.AwayFromZero)
         gradeList = random.choices(
@@ -531,17 +526,8 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, DebugMode: bo
         display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
         exitButton.update(display, mousePos, c)
 
-        if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
-            fps_text = "FPS: " + str(clock.get_fps())
-            fps_text = Fonts.GRADE.render(fps_text, True, KDS.Colors.White)
-            display.blit(pygame.transform.scale(fps_text, (int(fps_text.get_width() * 2), int(fps_text.get_height() * 2))), (10, 10))
         pygame.display.flip()
         clock.tick_busy_loop(60)
-
-    KDS.Logging.AutoError("This code should not be reachable!")
-    return False

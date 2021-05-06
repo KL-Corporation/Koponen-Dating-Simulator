@@ -20,6 +20,7 @@ import KDS.ConfigManager
 import KDS.Missions
 import KDS.Linq
 import KDS.Build
+import KDS.Debug
 
 import dataclasses
 
@@ -284,11 +285,11 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float, debugMode = False) -> Optional[Tuple[str, float]]:
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
         if self.texture != None:
             Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
-        if debugMode:
+        if KDS.Debug.Enabled:
             pygame.draw.rect(Surface, KDS.Colors.Black, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
             debugStartPos = (self.rect.centerx - (self.movedDistance * self.direction_multiplier), self.rect.centery - (self.slope * self.movedDistance))
             pygame.draw.line(Surface, KDS.Colors.White, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))

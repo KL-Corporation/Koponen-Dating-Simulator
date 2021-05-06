@@ -16,6 +16,7 @@ import KDS.Scores
 import KDS.Teachers
 import KDS.Audio
 import KDS.Animator
+import KDS.Debug
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass
@@ -88,7 +89,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a list in a list in a list... Also known as a 3D array. Z axis is determined by index. Higher index means more towards the camera. Overlays are a different story
-    def renderUpdate(Tile_list: List[List[List[Tile]]], surface: pygame.Surface, center_position: Tuple[int, int], scroll: Sequence[int], debugMode: bool):
+    def renderUpdate(Tile_list: List[List[List[Tile]]], surface: pygame.Surface, center_position: Tuple[int, int], scroll: Sequence[int]):
         start_x = round((center_position[0] / 34) - ((surface.get_width() / 34) / 2)) - 1 - Tile._renderPadding
         start_y = round((center_position[1] / 34) - ((surface.get_height() / 34) / 2)) - 1 - Tile._renderPadding
         start_x = max(start_x, 0)
@@ -106,14 +107,14 @@ class Tile:
                         lateRender.append(renderable)
                         continue
 
-                    if debugMode:
+                    if KDS.Debug.Enabled:
                         pygame.draw.rect(surface, KDS.Colors.Cyan, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
                     Tile.renderUnit(renderable, surface, scroll)
                     if renderable.removeFlag:
                         Tile_list[unscaled_y + start_y][unscaled_x + start_x].remove(renderable)
 
         for renderable in lateRender:
-            if debugMode:
+            if KDS.Debug.Enabled:
                 pygame.draw.rect(surface, KDS.Colors.RiverBlue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             Tile.renderUnit(renderable, surface, scroll)
 
@@ -150,9 +151,9 @@ class Item:
 
     @staticmethod
     # Item_list is a list
-    def renderUpdate(Item_list: Sequence[Item], Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: Sequence[int], DebugMode = False):
+    def renderUpdate(Item_list: Sequence[Item], Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: Sequence[int]):
         for renderable in Item_list:
-            if DebugMode:
+            if KDS.Debug.Enabled:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
             if renderable.texture != None:
                 Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))

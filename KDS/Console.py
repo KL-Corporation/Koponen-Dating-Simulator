@@ -257,8 +257,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
             newFeed: List[str] = []
             for line in Feed:
                  splitFeed = KDS.Convert.ToLines(line, console_font, feedRect.width)
-                 for newLine in splitFeed: newFeed.append(newLine)
-            while len(newFeed) > feedRect.height / console_font.get_height(): del newFeed[0]
+                 for newLine in splitFeed:
+                     newFeed.append(newLine)
+            while len(newFeed) > feedRect.height / console_font.get_height():
+                del newFeed[0]
             Feed = newFeed
             renderFeed = Feed.copy()
             renderFeed.reverse()

@@ -28,10 +28,9 @@ class Circle:
     loadingBackground: pygame.Surface = pygame.Surface((0, 0))
     loadingFill: Tuple[int, int, int, int] = (0, 0, 0, 0)
     scaledLoadingBackground: pygame.Surface = pygame.Surface((0, 0))
-    debugFont = None
 
     @staticmethod
-    def rendering(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool, stop: Callable[[], bool]):
+    def rendering(surface: pygame.Surface, clock: pygame.time.Clock, stop: Callable[[], bool]):
         angle = 0
         speed = -1
         surface_size = surface.get_size()
@@ -64,27 +63,26 @@ class Circle:
             surface.blit(crl, (surface_size[0] // 2 - crl.get_width() // 2 + circleOffset[0], crl.get_height() // 2 + circleOffset[1]))
             angle += 4
             while angle >= 360: angle -= 360
-            if debug:
+            if KDS.Debug.Enabled:
                 surface.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
             clock.tick_busy_loop(60)
             pygame.display.flip()
 
     @staticmethod
-    def Start(surface: pygame.Surface, clock: pygame.time.Clock, debug: bool = False):
-        global circleMask, debugFont
+    def Start(surface: pygame.Surface, clock: pygame.time.Clock):
+        global circleMask
         if Circle.circleMask == None:
             circleMask = pygame.image.load("Assets/Textures/UI/loading_circle_mask.png").convert_alpha()
             Circle.loadingBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
             Circle.loadingFill = Circle.loadingBackground.get_at((0, 0))
-            debugFont = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
         Circle.running = True
         surface_size = surface.get_size()
         Circle.scaledLoadingBackground = KDS.Convert.AspectScale(Circle.loadingBackground, surface_size)
         surface.fill(Circle.loadingFill)
         surface.blit(Circle.scaledLoadingBackground, (surface_size[0] // 2 - Circle.scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - Circle.scaledLoadingBackground.get_height() // 2))
         pygame.display.flip()
-        Circle.handle = KDS.Jobs.Schedule(Circle.rendering, surface, clock, debug, lambda: not Circle.running)
+        Circle.handle = KDS.Jobs.Schedule(Circle.rendering, surface, clock, lambda: not Circle.running)
 
     @staticmethod
     def Stop():

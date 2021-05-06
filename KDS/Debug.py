@@ -2,6 +2,16 @@ from typing import Any, Dict, List
 import pygame
 from pygame.constants import SRCALPHA
 import KDS.Colors
+import KDS.Logging
+import sys
+
+Enabled: bool = False
+
+def IsVSCodeDebugging() -> bool:
+    """
+    Works with other IDE's, but KL Corporation's Management strongly recommends to use Visual Studio Code whenever you touch any of Koponen Dating Simulator's code.
+    """
+    return bool(sys.gettrace() != None)
 
 pygame.init()
 font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
