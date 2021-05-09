@@ -153,7 +153,7 @@ current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
 current_map_name: str = ""
 max_map: int = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
-play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", True)
+play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", False)
 KDS.Logging.debug("Settings Loaded.")
 #endregion
 KDS.Logging.debug("Loading Assets...")
