@@ -313,7 +313,7 @@ class Talk:
                 if event.type == KEYDOWN:
                     if event.key == K_F11:
                         pygame.display.toggle_fullscreen()
-                        KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                        KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                     elif event.key == K_F4:
                         if pygame.key.get_pressed()[K_LALT]:
                             KDS_Quit()

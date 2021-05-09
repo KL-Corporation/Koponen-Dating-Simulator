@@ -341,7 +341,7 @@ def Exam(showtitle = True):
                 elif event.type == KEYDOWN:
                     if event.key == K_F11:
                         pygame.display.toggle_fullscreen()
-                        KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                        KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.type == KEYUP:
                     if event.key == K_LEFT:
                         last_page_index = page_index

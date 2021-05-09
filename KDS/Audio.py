@@ -12,10 +12,10 @@ def init(_mixer):
     MusicMixer.set_endevent(MUSICENDEVENT)
     SoundMixer = _mixer
 
-    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 128))
+    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", ...))
 
-    MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", 0.25)
-    EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", 0.75)
+    MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", ...)
+    EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", ...)
     EffectChannels = []
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))

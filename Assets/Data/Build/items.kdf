@@ -129,7 +129,7 @@
         "serialNumber": 19,
         "path": "ss_bonuscard.png",
         "doubleSize": false,
-        "supportsInventory": false,
+        "supportsInventory": true,
         "isContraband": false
     },
     "Turboneedle": {
@@ -248,7 +248,7 @@
         "serialNumber": 36,
         "path": "walkie_talkie.png",
         "doubleSize": false,
-        "supportsInventory": false,
+        "supportsInventory": true,
         "isContraband": false
     },
     "Bucket of Blood": {

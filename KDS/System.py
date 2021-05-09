@@ -11,6 +11,8 @@ import KDS.Logging
 
 from enum import IntEnum
 
+BASEDIR = str(os.path.dirname(os.path.abspath(__file__)))
+
 def hide(path: str):
     """Hides the file or directory specified by path.
 
@@ -41,6 +43,15 @@ def emptdir(dirpath: str):
             shutil.rmtree(itemPath)
         else:
             KDS.Logging.AutoError(f"Cannot determine child type of path: \"{itemPath}\".")
+
+def GetLineCount(path: str) -> int:
+    with open(path, "r") as f:
+        lines = f.read().split("\n")
+
+    while len(lines) > 0 and len(lines[-1]) < 1:
+        lines.pop(-1)
+
+    return len(lines)
 
 class MessageBox:
     class Buttons(IntEnum):

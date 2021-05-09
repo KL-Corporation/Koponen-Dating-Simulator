@@ -114,7 +114,7 @@ KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, Persisten
 KDS.Logging.debug("Initialising Game...")
 KDS.Logging.debug("Initialising Display Driver...")
 
-if KDS.ConfigManager.GetSetting("Renderer/fullscreen", False):
+if KDS.ConfigManager.GetSetting("Renderer/fullscreen", ...):
     pygame.display.toggle_fullscreen()
 
 KDS.Logging.debug("Initialising KDS modules...")
@@ -129,7 +129,7 @@ KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 KDS.School.init(display, clock)
 
-cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", 0)
+cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
 cursorData = {
     1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
     2: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"),
@@ -149,11 +149,10 @@ del surfarrayLagFix
 #region Settings
 KDS.Logging.debug("Loading Settings...")
 tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
-current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", "01")
+current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", ...)
 current_map_name: str = ""
-max_map: int = KDS.ConfigManager.GetSetting("Player/maxMap", 99)
-maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", 128)
-play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", False)
+maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", ...)
+play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", ...)
 KDS.Logging.debug("Settings Loaded.")
 #endregion
 KDS.Logging.debug("Loading Assets...")
@@ -301,7 +300,7 @@ level_ender_tip: pygame.Surface = tip_font.render("Finish level [E]", True, KDS.
 itemTip: pygame.Surface = tip_font.render("Nosta Esine [E]", True, KDS.Colors.White)
 tentTip: pygame.Surface = tip_font.render("Toggle Sleep [E]", True, KDS.Colors.White)
 
-pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", True)
+pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", ...)
 
 remove_data_on_quit = False
 
@@ -783,7 +782,7 @@ class Jukebox(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__((0, 0), serialNumber)
         self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0], position[1] - 24, 38, 58)
+        self.rect = pygame.Rect(position[0] - 4, position[1] - 24, 38, 58) # -4 so that the texture isn't blocked by the tile on the right
         self.checkCollision = False
         self.playing = -1
         self.lastPlayed = [-69 for _ in range(5)]
@@ -1860,11 +1859,9 @@ class BlueKey(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(key_pickup)
         Player.keys["blue"] = True
-
-        return True
 
 class Cell(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -1878,10 +1875,9 @@ class Coffeemug(KDS.Build.Item):
     def use(self):
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 6
         KDS.Audio.PlaySound(coffeemug_sound)
-        return False
 
 class Gasburner(KDS.Build.Item):
     burning = False
@@ -1902,20 +1898,17 @@ class Gasburner(KDS.Build.Item):
             Gasburner.burning = False
             return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 12
         KDS.Audio.PlaySound(gasburner_clip)
-        return False
 
 class GreenKey(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(key_pickup)
         Player.keys["green"] = True
-
-        return True
 
 class iPuhelin(KDS.Build.Item):
     #pickup_sound = pygame.mixer.Sound("Assets/Audio/Legacy/apple_o_paskaa.ogg")
@@ -1933,10 +1926,9 @@ class iPuhelin(KDS.Build.Item):
             self.texture = iPuhelin.realistic_texture
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score -= 6
         KDS.Audio.PlaySound(item_pickup)
-        return False
 
 class Knife(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -1957,11 +1949,10 @@ class Knife(KDS.Build.Weapon):
             knife_animation_object.tick = 0
             return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 5
         KDS.Audio.PlaySound(knife_pickup)
-        return False
 
 class LappiSytytyspalat(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -1974,30 +1965,27 @@ class LappiSytytyspalat(KDS.Build.Item):
             TileFire.createInstanceAtPosition(pos)
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 14
         KDS.Audio.PlaySound(lappi_sytytyspalat_sound)
-        return True
 
 class Medkit(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(item_pickup)
         Player.health = min(Player.health + 25, 100)
-        return True
 
 class Pistol(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
         self.internalInit(30, 8, pistol_f_texture, pistol_shot)
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 18
         KDS.Audio.PlaySound(weapon_pickup)
-        return False
 
     def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
         output = super().shoot(holderData)
@@ -2030,11 +2018,10 @@ class rk62(KDS.Build.Weapon):
     def use(self) -> pygame.Surface:
         return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 29
         KDS.Audio.PlaySound(weapon_pickup)
-        return False
 
 class Shotgun(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2052,11 +2039,10 @@ class Shotgun(KDS.Build.Weapon):
     def use(self) -> pygame.Surface:
         return self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 23
         KDS.Audio.PlaySound(weapon_pickup)
-        return False
 
 class rk62Mag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2084,31 +2070,27 @@ class Plasmarifle(KDS.Build.Weapon):
             Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, Tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
         return output
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 35
         KDS.Audio.PlaySound(weapon_pickup)
-        return False
 
 class Soulsphere(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 20
         Player.health += 100
         KDS.Audio.PlaySound(item_pickup)
-        return True
 
 class RedKey(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(key_pickup)
         Player.keys["red"] = True
-
-        return True
 
 class SSBonuscard(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2117,10 +2099,9 @@ class SSBonuscard(KDS.Build.Item):
     def use(self):
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 30
         KDS.Audio.PlaySound(ss_sound)
-        return False
 
 class Turboneedle(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2128,9 +2109,6 @@ class Turboneedle(KDS.Build.Item):
 
     def use(self):
         return self.texture
-
-    def pickup(self):
-        return True
 
 class Ppsh41(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2147,10 +2125,9 @@ class Ppsh41(KDS.Build.Weapon):
             Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 10, slope=random.uniform(-0.5, 0.5)))
         return output
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 15
-        return False
 
 class Awm(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2167,10 +2144,9 @@ class Awm(KDS.Build.Weapon):
             Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(300, 590), slope=0))
         return output
 
-    def pickup(self):
+    def pickup(self) -> None:
         super().pickup()
         KDS.Scores.score += 25
-        return False
 
 class AwmMag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2184,10 +2160,9 @@ class EmptyFlask(KDS.Build.Item):
     def use(self):
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 1
         KDS.Audio.PlaySound(coffeemug_sound)
-        return False
 
 class MethFlask(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2201,10 +2176,9 @@ class MethFlask(KDS.Build.Item):
             KDS.Audio.PlaySound(glug_sound)
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 10
         KDS.Audio.PlaySound(coffeemug_sound)
-        return False
 
 class BloodFlask(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2217,10 +2191,9 @@ class BloodFlask(KDS.Build.Item):
             KDS.Audio.PlaySound(glug_sound)
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(coffeemug_sound)
         KDS.Scores.score += 7
-        return False
 
 class Grenade(KDS.Build.Item):
     Slope = 0.7
@@ -2242,9 +2215,8 @@ class Grenade(KDS.Build.Item):
             BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), Grenade.Slope, Grenade.Force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += 7
-        return False
 
 class FireExtinguisher(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2252,9 +2224,6 @@ class FireExtinguisher(KDS.Build.Item):
 
     def use(self):
         return self.texture
-
-    def pickup(self):
-        return False
 
 class LevelEnderItem(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2266,9 +2235,8 @@ class LevelEnderItem(KDS.Build.Item):
 
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(weapon_pickup)
-        return False
 
 class Ppsh41Mag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
@@ -2284,9 +2252,8 @@ class Lantern(KDS.Build.Item):
         Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hardest.get(random.randint(180, 220), 5000), True))
         return self.animation.update()
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(lantern_pickup)
-        return False
 
 class Chainsaw(KDS.Build.Item):
     pickup_sound = pygame.mixer.Sound("Assets/Audio/Items/chainsaw_start.ogg")
@@ -2330,19 +2297,17 @@ class Chainsaw(KDS.Build.Item):
             return Chainsaw.Ianimation.update()
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(Chainsaw.pickup_sound)
-        return False
 
 class GasCanister(KDS.Build.Item):
     pickup_sound = pygame.mixer.Sound("assets/Audio/Items/gascanister_shake.ogg")
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture = None):
         super().__init__(position, serialNumber, texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(GasCanister.pickup_sound)
         Chainsaw.ammunition = min(100, Chainsaw.ammunition + 50)
-        return True
 
 class WalkieTalkie(KDS.Build.Item):
     storyTrigger: bool = False
@@ -2363,14 +2328,12 @@ class WalkieTalkie(KDS.Build.Item):
         if self.clipVolume != 1.0 and self.clipSound != None:
             self.clipSound.set_volume(self.clipVolume)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(weapon_pickup)
         if self.clipSound != None:
             self.audioChannel = KDS.Audio.PlaySound(self.clipSound)
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             WalkieTalkie.storyTrigger = True
-
-        return False
 
     def drop(self):
         return self.allowDrop
@@ -2380,10 +2343,9 @@ class BucketOfBlood(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
         super().__init__(position, serialNumber, texture=texture)
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Audio.PlaySound(BucketOfBlood.pickup_sound)
         KDS.Missions.SetProgress("physics_teacher_blood", "something_suspicious", 1.0)
-        return False
 
 KDS.Build.Item.serialNumbers = {
     1: BlueKey,
@@ -3010,7 +2972,7 @@ def agr():
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -3033,6 +2995,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     global main_menu_running, current_map, true_scroll, selectedSave
 
     pygame.mouse.set_visible(False)
+    KDS.Audio.Music.Stop()
 
     if show_loading:
         KDS.Loading.Circle.Start(display, clock)
@@ -3100,7 +3063,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
 def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
     pygame.mouse.set_visible(False)
 
-    map_names = {}
+    map_names: Dict[int, str] = {}
     def load_map_names():
         nonlocal map_names
         map_names = {}
@@ -3109,7 +3072,8 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
-                    for i in range(len(tmp_split)): tmp_split[i] = tmp_split[i].strip()
+                    for i in range(len(tmp_split)):
+                        tmp_split[i] = tmp_split[i].strip()
                     map_names[int(tmp_split[0])] = tmp_split[1]
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
@@ -3189,7 +3153,7 @@ def esc_menu_f(oldSurf: pygame.Surface):
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.key == K_ESCAPE:
                     esc_menu = False
                 elif event.key == K_F4:
@@ -3231,19 +3195,19 @@ def settings_menu():
 
     def reset_settings():
         return_def()
-        os.remove(os.path.join(PersistentPaths.AppData, "settings.cfg"))
-        KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
-        KDS.ConfigManager.SetSetting("Data/Terms/accepted", True)
+        oldTerms = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
+        KDS.ConfigManager.OverrideDefaultSettings()
+        KDS.ConfigManager.SetSetting("Data/Terms/accepted", oldTerms)
 
     def remove_data():
         if KDS.System.MessageBox.Show("Remove Data", "Are you sure you want to remove all Koponen Dating Simulator data? This cannot be undone.", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
             KDS_Quit(remove_data_s=True)
 
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
-    music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/music")
-    effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), 1, custom_path="Mixer/Volume/effect")
-    walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), False, custom_path="Mixer/walkSound")
-    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), True, custom_path="Game/pauseOnFocusLoss")
+    music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/music")
+    effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/effect")
+    walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), ..., custom_path="Mixer/walkSound")
+    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
     remove_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), remove_data, button_font.render("Remove Data", True, KDS.Colors.White))
     music_volume_text = button_font.render("Music Volume", True, KDS.Colors.White)
@@ -3263,7 +3227,7 @@ def settings_menu():
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -3318,7 +3282,7 @@ def main_menu():
 
     KDS.Audio.Music.Play("Assets/Audio/music/lobbymusic.ogg")
 
-    map_names = {}
+    map_names: Dict[int, str] = {}
     custom_maps_names = {}
     def load_map_names():
         nonlocal map_names, custom_maps_names
@@ -3329,7 +3293,8 @@ def main_menu():
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
-                    for i in range(len(tmp_split)): tmp_split[i] = tmp_split[i].strip()
+                    for i in range(len(tmp_split)):
+                        tmp_split[i] = tmp_split[i].strip()
                     map_names[int(tmp_split[0])] = tmp_split[1]
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
@@ -3356,7 +3321,7 @@ def main_menu():
 
         @staticmethod
         def pick(direction: int):
-            global current_map, max_map
+            global current_map
             current_map_int = int(current_map)
             if direction == level_pick.direction.left:
                 current_map_int -= 1
@@ -3454,7 +3419,7 @@ def main_menu():
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -3656,7 +3621,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
         current_map = f"{int(current_map) + 1:02}"
         play_function(KDS.Gamemode.Modes.Campaign, True)
 
-    next_level_bool = int(current_map) < int(max_map)
+    next_level_bool = int(current_map) < int(KDS.System.GetLineCount("Assets/Maps/StoryMode/names.dat"))
 
     main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
     next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
@@ -3676,7 +3641,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
             elif event.type == KEYDOWN:
                 if event.key == K_F11:
                     pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.key == K_F4:
                     if pygame.key.get_pressed()[K_LALT]:
                         KDS_Quit()
@@ -3803,7 +3768,7 @@ while main_running:
                     KDS_Quit()
             elif event.key == K_F11:
                 pygame.display.toggle_fullscreen()
-                KDS.ConfigManager.SetSetting("Renderer/fullscreen", not KDS.ConfigManager.GetSetting("Renderer/fullscreen", False))
+                KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
             elif event.key == K_F12:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
@@ -3875,7 +3840,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    KDS.Build.Item.checkCollisions(Items, Player.rect, KDS.Keys.functionKey.pressed, Player.inventory)
+    KDS.Build.Item.checkCollisions(Items, Player.rect, Player.inventory)
     KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll)
     TileFire.cachedAnimation.update()
 
