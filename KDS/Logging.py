@@ -19,15 +19,15 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
     AppDataPath = _AppDataPath
     LogPath = _LogPath
 
-    while len(os.listdir(LogPath)) >= 5:
-        os.remove(os.path.join(LogPath, os.listdir(LogPath)[0]))
+    while len(logFiles := os.listdir(LogPath)) > 4:
+        os.remove(os.path.join(LogPath, logFiles[0]))
 
     fileTimeFormat = "%Y-%m-%d-%H-%M-%S"
     logTimeFormat = "%H:%M:%S"
     logFormat = "%(levelname)s-%(asctime)s: %(message)s"
     logFileName = os.path.join(LogPath, f"log_{datetime.now().strftime(fileTimeFormat)}.log")
     logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
-    logging.debug("Created log file: " + logFileName)
+    debug(f"Created log file: {logFileName}")
 
     if not debugInfo:
         return
@@ -73,7 +73,8 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
     logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
     if stack_info:
         message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
-    if consoleVisible: print(KDS.System.Console.Colored(message, color))
+    if consoleVisible:
+        print(KDS.System.Console.Colored(message, color))
 
 def debug(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
