@@ -4,1199 +4,1070 @@
         "path": "floor0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Floor 2": {
         "serialNumber": 2,
         "path": "floor0v2.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wall 1": {
         "serialNumber": 3,
         "path": "wall0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Planks": {
         "serialNumber": 4,
         "path": "planks.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Mossy Bricks": {
         "serialNumber": 5,
         "path": "mossy_bricks.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Light Bricks": {
         "serialNumber": 6,
         "path": "light_bricks.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Bricks": {
         "serialNumber": 7,
         "path": "bricks.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Grass 1": {
         "serialNumber": 8,
         "path": "grass0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": "grass.ogg"
+        "trueScale": false
     },
     "Hay": {
         "serialNumber": 9,
         "path": "hay.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Iron Bars (no collision)": {
         "serialNumber": 10,
         "path": "iron_bars_texture.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Soil 1": {
         "serialNumber": 11,
         "path": "soil.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Soil 2": {
         "serialNumber": 12,
         "path": "soil_2.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Stone": {
         "serialNumber": 13,
         "path": "stone.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Table 1": {
         "serialNumber": 14,
         "path": "table0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Toilet": {
         "serialNumber": 15,
         "path": "toilet0.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Trashcan": {
         "serialNumber": 16,
         "path": "trashcan.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Tree": {
         "serialNumber": 17,
         "path": "tree.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wooden Ladder": {
         "serialNumber": 18,
         "path": "ladder.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Jukebox": {
         "serialNumber": 19,
         "path": "jukebox.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Concrete 1": {
         "serialNumber": 20,
         "path": "concrete0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Landmine": {
         "serialNumber": 21,
         "path": "landmine.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Ceiling Lamp": {
         "serialNumber": 22,
         "path": "lamp0.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Door (key: None)": {
         "serialNumber": 23,
         "path": "door_closed.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Door (key: red)": {
         "serialNumber": 24,
         "path": "red_door_closed.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Door (key: blue)": {
         "serialNumber": 25,
         "path": "blue_door_closed.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Door (key: green)": {
         "serialNumber": 26,
         "path": "green_door_closed.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wood 1": {
         "serialNumber": 27,
         "path": "wood.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Ground": {
         "serialNumber": 28,
         "path": "ground0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Stone Wall": {
         "serialNumber": 29,
         "path": "stonewall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Red Bricks": {
         "serialNumber": 30,
         "path": "redbrickwall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Leaves": {
         "serialNumber": 31,
         "path": "leaves.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Rust": {
         "serialNumber": 32,
         "path": "rustywall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Code": {
         "serialNumber": 33,
         "path": "codewall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Metal Grid": {
         "serialNumber": 34,
         "path": "metal_grid.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wolfenstein 1": {
         "serialNumber": 35,
         "path": "wolfensteinwall1.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wolfenstein 2": {
         "serialNumber": 36,
         "path": "wolfensteinwall2.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Birch": {
         "serialNumber": 37,
         "path": "birch.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Concrete 2": {
         "serialNumber": 38,
         "path": "concrete1.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Old Bricks": {
         "serialNumber": 39,
         "path": "old_bricks.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Concrete Pavement": {
         "serialNumber": 40,
         "path": "roadconcrete.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Spruce Leaves": {
         "serialNumber": 41,
         "path": "spruce_leaves.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wooden Log": {
         "serialNumber": 42,
         "path": "woodlog0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Decorative Head": {
         "serialNumber": 43,
         "path": "decorative_head.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Grass 2": {
         "serialNumber": 44,
         "path": "grass.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Short Green Plant": {
         "serialNumber": 45,
         "path": "greenplant.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Tall Green Plant": {
         "serialNumber": 46,
         "path": "tall_greenplant.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Rock": {
         "serialNumber": 47,
         "path": "decor_rock.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Mossy Rock": {
         "serialNumber": 48,
         "path": "decor_rock_mossy.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Hole Panel": {
         "serialNumber": 49,
         "path": "holepanel.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Plates": {
         "serialNumber": 50,
         "path": "old_plates.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Cyan Wall": {
         "serialNumber": 51,
         "path": "cyan_wtwall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Tall Torch": {
         "serialNumber": 52,
         "path": "tall_torch.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Impaled Head": {
         "serialNumber": 53,
         "path": "impaled_head.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Level Ender": {
         "serialNumber": 54,
         "path": "level_ender.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Candle": {
         "serialNumber": 55,
         "path": "candle.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Lamp Pole (base)": {
         "serialNumber": 56,
         "path": "lamp_pole_base.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Lamp Pole (pole)": {
         "serialNumber": 57,
         "path": "lamp_pole_pole.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Lamp Pole (lamp)": {
         "serialNumber": 58,
         "path": "lamp_pole_lamp.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Chair": {
         "serialNumber": 59,
         "path": "chair.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Green Wall": {
         "serialNumber": 60,
         "path": "green_wall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Red Wall": {
         "serialNumber": 61,
         "path": "red_wall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Light Tile Pavement": {
         "serialNumber": 62,
         "path": "road_tiles.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Dark Tile Pavement": {
         "serialNumber": 63,
         "path": "road_tiles_dark.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Dark Wall": {
         "serialNumber": 64,
         "path": "dark_wall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Gray Stone": {
         "serialNumber": 65,
         "path": "gray_stone.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Skull": {
         "serialNumber": 66,
         "path": "skull.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Tile Wall": {
         "serialNumber": 67,
         "path": "kaakeliseina.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Iron Bars": {
         "serialNumber": 68,
         "path": "iron_bars_texture.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "NICE": {
         "serialNumber": 69,
         "path": "nice.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "I have no idea what to call this": {
         "serialNumber": 70,
         "path": "block_r.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wall Light": {
         "serialNumber": 71,
         "path": "wall_light.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Mirrored Wall Light": {
         "serialNumber": 72,
         "path": "wall_light_mirrored.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Level Ender Door": {
         "serialNumber": 73,
         "path": "door_front.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Respawn Anchor": {
         "serialNumber": 74,
         "path": "respawn_anchor_off.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Teleport Base": {
         "serialNumber": 75,
         "path": "teleport_base.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Spruce": {
         "serialNumber": 76,
         "path": "spruce.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Allahmas Spruce": {
         "serialNumber": 77,
         "path": "allahmas_spruce.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Meth Table": {
         "serialNumber": 78,
         "path": "methtable.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Clear Tiles": {
         "serialNumber": 79,
         "path": "clear_tiles.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Floor 3": {
         "serialNumber": 80,
         "path": "floor1.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Floor 3 Drain": {
         "serialNumber": 81,
         "path": "floor1_drain.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Steel Ladder": {
         "serialNumber": 82,
         "path": "steel_ladder.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Metal Platform": {
         "serialNumber": 83,
         "path": "metal_platform.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Flicker Trigger": {
         "serialNumber": 84,
         "path": "flicker_trigger.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Impaled Corpse": {
         "serialNumber": 85,
         "path": "impaled_corpse.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Jeep": {
         "serialNumber": 86,
         "path": "car.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Barrier": {
         "serialNumber": 87,
         "path": "barrier.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Tractor": {
         "serialNumber": 88,
         "path": "tractor.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Tall Tree": {
         "serialNumber": 89,
         "path": "tall_tree.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Dirt": {
         "serialNumber": 90,
         "path": "dirt_0.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Grass 3": {
         "serialNumber": 91,
         "path": "grass1.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Bed": {
         "serialNumber": 92,
         "path": "bed.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Fire": {
         "serialNumber": 93,
         "path": "ground_fire_0.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Ceiling Lamp Chain": {
         "serialNumber": 94,
         "path": "lamp0_chain.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Sand": {
         "serialNumber": 95,
         "path": "sand.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Dead Tree": {
         "serialNumber": 96,
         "path": "dead_tree.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Sand Wall": {
         "serialNumber": 97,
         "path": "sandwall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Barricade": {
         "serialNumber": 98,
         "path": "barricade.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Old Jeep": {
         "serialNumber": 99,
         "path": "old_car.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Old Vase": {
         "serialNumber": 100,
         "path": "old_vase.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Tent": {
         "serialNumber": 101,
         "path": "tent.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Glass Pane": {
         "serialNumber": 102,
         "path": "glass_pane.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Painting 1": {
         "serialNumber": 103,
         "path": "painting0.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Painting 2": {
         "serialNumber": 104,
         "path": "painting1.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Painting 3": {
         "serialNumber": 105,
         "path": "painting2.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Painting 4": {
         "serialNumber": 106,
         "path": "painting3.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Painting 5": {
         "serialNumber": 107,
         "path": "painting4.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Roof Planks": {
         "serialNumber": 108,
         "path": "roof_planks.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Roof Planks Mirrored": {
         "serialNumber": 109,
         "path": "roof_planks_flip.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Roof Planks End": {
         "serialNumber": 110,
         "path": "roof_planks_end.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Roof Planks End Mirrored": {
         "serialNumber": 111,
         "path": "roof_planks_end_flip.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Pillar": {
         "serialNumber": 112,
         "path": "pillar.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Landing Mattress (Otto)": {
         "serialNumber": 113,
         "path": "patja.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Hangers": {
         "serialNumber": 114,
         "path": "naulakko.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Plant": {
         "serialNumber": 115,
         "path": "plant.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Blue Bench": {
         "serialNumber": 116,
         "path": "blue_bench.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Red Bench": {
         "serialNumber": 117,
         "path": "red_bench.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Invisible Level Ender": {
         "serialNumber": 118,
         "path": "level_ender_text.png",
         "specialTile": true,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "White Concrete": {
         "serialNumber": 119,
         "path": "white_concrete.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Painting 6": {
         "serialNumber": 120,
         "path": "painting5.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Gray Concrete": {
         "serialNumber": 121,
         "path": "gray_concrete.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Lockers": {
         "serialNumber": 122,
         "path": "lockers.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Niklas": {
         "serialNumber": 123,
         "path": "crackhead.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Black": {
         "serialNumber": 124,
         "path": "black.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Table 2": {
         "serialNumber": 125,
         "path": "table1.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Door (front)": {
         "serialNumber": 126,
         "path": "door_front.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Landing Mattress": {
         "serialNumber": 127,
         "path": "patja.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Avarn Car": {
         "serialNumber": 128,
         "path": "avarn_car.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Gray Wall": {
         "serialNumber": 129,
         "path": "gray_wall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Nysse Bus": {
         "serialNumber": 130,
         "path": "Nysse.png",
         "specialTile": true,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Play Sound": {
         "serialNumber": 131,
         "path": "sound.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Door Mirrored (front)": {
         "serialNumber": 132,
         "path": "door_front_mirrored.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Fluorescent Tube": {
         "serialNumber": 134,
         "path": "loisteputki.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Molok": {
         "serialNumber": 135,
         "path": "molok.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Yellow Wall": {
         "serialNumber": 136,
         "path": "yellow_wall.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Monitor": {
         "serialNumber": 137,
         "path": "monitor.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Couch": {
         "serialNumber": 138,
         "path": "couch.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Painting 7": {
         "serialNumber": 139,
         "path": "painting6.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Painting 8": {
         "serialNumber": 140,
         "path": "painting7.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Wood 2": {
         "serialNumber": 141,
         "path": "wood1.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Bench": {
         "serialNumber": 142,
         "path": "bench.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Wood 3": {
         "serialNumber": 143,
         "path": "wood2.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Projector": {
         "serialNumber": 144,
         "path": "projector.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Kiuas": {
         "serialNumber": 145,
         "path": "kiuas.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "White Table (front)": {
         "serialNumber": 146,
         "path": "white_table_front.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "White Table (side)": {
         "serialNumber": 147,
         "path": "white_table_side.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Cork Board": {
         "serialNumber": 148,
         "path": "CorkBoard.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Map": {
         "serialNumber": 149,
         "path": "map.png",
         "specialTile": false,
         "noCollision": true,
-        "trueScale": true,
-        "sound": null
+        "trueScale": true
     },
     "Table 1 Mirrored": {
         "serialNumber": 150,
         "path": "table0_mirrored.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
     },
     "Tile Fire": {
         "serialNumber": 151,
         "path": "tileFire_0.png",
         "specialTile": true,
         "noCollision": true,
-        "trueScale": false,
-        "sound": null
+        "trueScale": false
+    },
+    "Blue Couch (front)": {
+        "serialNumber": 152,
+        "path": "couch_blue_front.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "Blue Couch (side)": {
+        "serialNumber": 153,
+        "path": "couch_blue_side.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "Blue Couch Mirrored (side)": {
+        "serialNumber": 154,
+        "path": "couch_blue_side_mirrored.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
     }
 }

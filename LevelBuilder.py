@@ -899,7 +899,7 @@ class DragData:
         hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
-    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool):
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: Dict[int, bool]):
         if not brush.IsEmpty():
             return
         if right_down:
@@ -912,6 +912,8 @@ class DragData:
             else:
                 [onEnd() for onEnd in self.c_onDragEnd[self.Mode]]
         if not left_down:
+            return
+        if keys_down[K_c]:
             return
 
         startCallFlag = False
@@ -1767,7 +1769,7 @@ def main():
             tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
 
-        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2])
+        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed)
 
         if len(Selected.units) > 0:
             for unit in Selected.units:

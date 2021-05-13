@@ -1212,9 +1212,7 @@ class AllahmasSpruce(KDS.Build.Tile):
         return self.texture
 
 class Methtable(KDS.Build.Tile):
-
     o_sounds = [pygame.mixer.Sound("Assets/Audio/Tiles/methtable_0.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/methtable_1.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/methtable_2.ogg")]
-
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
         self.animation = KDS.Animator.Animation("methtable", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
@@ -1653,7 +1651,7 @@ class BaseTeleport(KDS.Build.Tile):
         def __init__(self) -> None:
             self.index: int = 0
             self.teleports: List[BaseTeleport] = []
-            self.allowNext = True
+            self.allowNext: bool = True
 
         def Next(self, caller: BaseTeleport) -> Optional[BaseTeleport]:
             if not self.allowNext:
@@ -1676,18 +1674,19 @@ class BaseTeleport(KDS.Build.Tile):
     teleportDatas: Dict[int, BaseTeleport.TeleportData] = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
-        self.message = None
-        self.renderedMessage = None
+        self.message: Optional[str] = None
+        self.renderedMessage: Optional[pygame.Surface] = None
         self.identifier: Optional[int] = None
         self.order: int = KDS.Math.MAXVALUE
         self.interactable: bool = True
         self.setDark: Optional[int] = None
 
         super().__init__(position, -1)
-        self.serialNumber = serialNumber
-        self.texture = telep_textures[self.serialNumber]
-        self.checkCollision = False
-        self.specialTileFlag = True
+        self.serialNumber: int = serialNumber
+        self.texture: Optional[pygame.Surface] = telep_textures[self.serialNumber]
+        self.checkCollision: bool = False
+        self.specialTileFlag: bool = True
+        self.resetScroll: bool = True
 
         self.teleportSound: Optional[pygame.mixer.Sound] = None
         self.nonInteractableSound: Optional[pygame.mixer.Sound] = None
@@ -1728,8 +1727,9 @@ class BaseTeleport(KDS.Build.Tile):
         t.onTeleport()
         Player.rect.midbottom = t.rect.midbottom
         # Reseting scroll
-        true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
-        true_scroll[1] += Player.rect.y - true_scroll[1] - SCROLL_OFFSET[1]
+        if self.resetScroll:
+            true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
+            true_scroll[1] += Player.rect.y - true_scroll[1] - SCROLL_OFFSET[1]
         # Setting Dark
         if self.setDark != None:
             KDS.World.Dark.Set(True, self.setDark)
@@ -1787,6 +1787,7 @@ class Elevator(DoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(self.rect.x, self.rect.y - 34, 102, 102)
+        self.resetScroll = False
 
 KDS.Build.Tile.specialTilesClasses = {
     15: Toilet,
