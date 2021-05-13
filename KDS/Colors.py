@@ -4,6 +4,7 @@ MidnightBlue = (44, 62, 80)
 AviatorRed = (240, 71, 71)
 EmeraldGreen = (46, 204, 113)
 RiverBlue = (52, 152, 219)
+SunYellow = (241, 196, 15)
 
 #Primary Colors
 Red = (255, 0, 0)
