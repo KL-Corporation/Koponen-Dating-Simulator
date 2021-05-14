@@ -303,12 +303,23 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     if keys_pressed[K_LCTRL]:
                         caret_index = 0
                         addCaretLength(len(cmd))
-                elif event.key == K_v and keys_pressed[K_LCTRL]:
-                    clipboardText: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
-                    if clipboardText != None:
-                        if isinstance(clipboardText, bytes):
-                            clipboardText = clipboardText.decode("utf-8")
-                        addText(clipboardText)
+                elif event.key == K_v:
+                    if keys_pressed[K_LCTRL]:
+                        clipboardText: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
+                        if clipboardText != None:
+                            if isinstance(clipboardText, bytes):
+                                clipboardText = clipboardText.decode("utf-8")
+                            addText(clipboardText)
+                elif event.key == K_c:
+                    if keys_pressed[K_LCTRL] and caret_length != 0:
+                        tmp_crt_pos = caret_index + caret_length
+                        pygame.scrap.put("text/plain;charset=utf-8", cmd[min(tmp_crt_pos, caret_index):max(tmp_crt_pos, caret_index)].encode("utf-8"))
+                elif event.key == K_x:
+                    if keys_pressed[K_LCTRL] and caret_length != 0:
+                        tmp_crt_pos = caret_index + caret_length
+                        pygame.scrap.put("text/plain;charset=utf-8", cmd[min(tmp_crt_pos, caret_index):max(tmp_crt_pos, caret_index)].encode("utf-8"))
+                        addText("")
+
             elif event.type == MOUSEBUTTONDOWN:
                 caret_animation.tick = 0
                 if text_input_rect.collidepoint(pygame.mouse.get_pos()):
