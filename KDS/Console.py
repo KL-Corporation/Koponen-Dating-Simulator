@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import Any, Callable, List, Sequence, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
 import pygame
 from pygame.locals import *
@@ -128,8 +128,9 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     pygame.key.set_text_input_rect(text_input_rect)
     pygame.key.start_text_input()
     textInput = True
-    cursor_index = len(cmd)
-    cursor_animation = KDS.Animator.Value(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+    caret_index: int = len(cmd)
+    caret_length: int = 0
+    caret_animation = KDS.Animator.Value(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
     invalid = False
     warning = False
     warnText = console_font_small.render("[PERFORMANCE WARNING]" if checkType == None or checkType["type"] != "string" else "Haha, funny. Fuck you.", True, text_color)
@@ -143,44 +144,83 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     if checkType != None and (checkType["type"] == "commands") != (commands != None): KDS.Logging.AutoError("Check Type and Commands defined incorrectly!")
 
     def addText(text: str):
-        nonlocal cursor_index, cmd
-        cmd = cmd[:cursor_index] + text + cmd[cursor_index:]
-        cursor_index += len(text)
-        cursor_animation.tick = 0
+        nonlocal caret_index, cmd, caret_length
+        tmp_crt_pos = caret_index + caret_length
+        cmd = cmd[:min(caret_index, tmp_crt_pos)] + text + cmd[max(caret_index, tmp_crt_pos):]
+        caret_index = KDS.Math.Clamp(caret_index + len(text) + min(caret_length, 0), 0, len(cmd))
+        caret_length = 0
+        caret_animation.tick = 0
+
+    def addCaretLength(add: int):
+        nonlocal caret_index, caret_length, cmd
+        old_index = caret_index
+        caret_index = KDS.Math.Clamp(caret_index + add, 0, len(cmd))
+        caret_length += old_index - caret_index
+
+    def resetCaretLength(left: bool, right: bool) -> bool:
+        nonlocal caret_length, caret_index
+        if caret_length == 0:
+            return False
+
+        if left and caret_length < 0:
+            caret_index += caret_length
+        if right and caret_length > 0:
+            caret_index += caret_length
+        caret_length = 0
+        return True
+
+    def nextWordIndexes(text: str) -> List[Tuple[int, int]]:
+        found = [(i.start(), i.end()) for i in re.finditer(f"[{matchChars}][{matchChars}]*", text)]
+        return found
+
+    def previousWordIndexes(text: str) -> List[Tuple[int, int]]:
+        found = nextWordIndexes(text)
+        found.reverse()
+        return found
 
     while running:
         showSuggestions = True
         tabbed = False
         Key_Up = False
         Key_Down = False
-        for event in pygame.event.get():
+        tmp_events = pygame.event.get()
+        keys_pressed: Dict[int, bool] = pygame.key.get_pressed()
+        for event in tmp_events:
             if event.type == TEXTINPUT:
                 addText(event.text)
             elif event.type == KEYDOWN:
                 if event.key == K_BACKSPACE:
-                    cursor_animation.tick = 0
-                    if not pygame.key.get_pressed()[K_LCTRL]:
-                        if len(cmd[:cursor_index]) > 0:
-                            cmd = cmd[:cursor_index][:-1] + cmd[cursor_index:]
-                            cursor_index -= 1
+                    caret_animation.tick = 0
+                    if caret_length != 0:
+                        addText("")
+                        continue
+                    if not keys_pressed[K_LCTRL]:
+                        if len(cmd[:caret_index]) > 0:
+                            cmd = cmd[:caret_index][:-1] + cmd[caret_index:]
+                            caret_index -= 1
                     else:
-                        rmv = cmd[:cursor_index].rstrip(matchChars)
-                        found = [i.end() for i in re.finditer(f"[{matchChars}][{matchChars}]*", rmv)]
-                        if len(found) > 0:
-                            cmd = cmd[:found[-1]] + cmd[cursor_index:]
-                            cursor_index = found[-1]
+                        found = previousWordIndexes(cmd[:caret_index].rstrip(matchChars))
+                        if len(found) >= 1:
+                            cmd = cmd[:found[0][1]] + cmd[caret_index:]
+                            caret_index = found[0][1]
                         else:
-                            cmd = cmd[cursor_index:]
-                            cursor_index = 0
+                            cmd = cmd[caret_index:]
+                            caret_index = 0
                 elif event.key == K_DELETE:
-                    cursor_animation.tick = 0
-                    if not pygame.key.get_pressed()[K_LCTRL]:
-                        if len(cmd[cursor_index:]) > 0: cmd = cmd[:cursor_index] + cmd[cursor_index:][1:]
+                    caret_animation.tick = 0
+                    if caret_length != 0:
+                        addText("")
+                        continue
+                    if not keys_pressed[K_LCTRL]:
+                        if len(cmd[caret_index:]) > 0:
+                            cmd = cmd[:caret_index] + cmd[caret_index:][1:]
                     else:
-                        rmv = cmd[cursor_index:].lstrip(matchChars)
-                        found = [i.start() for i in re.finditer(f"[{matchChars}][{matchChars}]*", rmv)]
-                        if len(found) > 0: cmd = cmd[:cursor_index] + cmd[cursor_index + found[0] + (len(cmd[cursor_index:]) - len(rmv)):]
-                        else: cmd = cmd[:cursor_index]
+                        rmv = cmd[caret_index:].lstrip(matchChars)
+                        found = nextWordIndexes(rmv)
+                        if len(found) >= 1:
+                            cmd = cmd[:caret_index] + cmd[caret_index + found[0][0] + (len(cmd[caret_index:]) - len(rmv)):]
+                        else:
+                            cmd = cmd[:caret_index]
                 elif event.key == K_RETURN:
                     if not invalid:
                         pygame.key.stop_text_input()
@@ -194,19 +234,59 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     running = False
                     Escaped = True
                 elif event.key == K_LEFT:
-                    cursor_animation.tick = 0
-                    if not pygame.key.get_pressed()[K_LCTRL]: cursor_index = max(cursor_index - 1, 0)
-                    elif cursor_index > 0:
-                        found = [i.end() for i in re.finditer(f"[{matchChars}][{matchChars}]*", f"{cmd[:cursor_index]} ")]
-                        if len(found) > 1: cursor_index = found[-2]
-                        else: cursor_index = 0
+                    caret_animation.tick = 0
+                    if not keys_pressed[K_LSHIFT]:
+                        if resetCaretLength(True, False):
+                            continue
+                        if not keys_pressed[K_LCTRL]:
+                            caret_index = max(caret_index - 1, 0)
+                        elif caret_index > 0:
+                            found = previousWordIndexes(cmd[:caret_index])
+                            if len(found) >= 2:
+                                if caret_index != found[0][1]:
+                                    caret_index = found[0][1] # Fixes caret moving twice if no space before caret
+                                else:
+                                    caret_index = found[1][1]
+                            else:
+                                caret_index = 0
+                        else:
+                            caret_index = 0
+                    else:
+                        if not keys_pressed[K_LCTRL]:
+                            addCaretLength(-1)
+                        else:
+                            found = previousWordIndexes(cmd[:caret_index])
+                            if len(found) >= 2:
+                                if caret_index != found[0][1]:
+                                    addCaretLength(found[0][1] - caret_index) # Fixes caret moving twice if no space before caret
+                                else:
+                                    addCaretLength(found[1][1] - caret_index)
+                            else:
+                                addCaretLength(-caret_index)
                 elif event.key == K_RIGHT:
-                    cursor_animation.tick = 0
-                    if not pygame.key.get_pressed()[K_LCTRL]: cursor_index = min(cursor_index + 1, len(cmd))
-                    elif cursor_index < len(cmd):
-                        found = [i.end() for i in re.finditer(f"[{matchChars}][{matchChars}]*", cmd[cursor_index:])]
-                        if len(found) > 1: cursor_index = len(cmd[:cursor_index]) + found[0]
-                        else: cursor_index = len(cmd)
+                    caret_animation.tick = 0
+                    if not keys_pressed[K_LSHIFT]:
+                        if resetCaretLength(False, True):
+                            continue
+                        if not keys_pressed[K_LCTRL]:
+                            caret_index = min(caret_index + 1, len(cmd))
+                        elif caret_index < len(cmd):
+                            found = nextWordIndexes(cmd[caret_index:])
+                            if len(found) >= 1:
+                                caret_index = len(cmd[:caret_index]) + found[0][1]
+                            else:
+                                caret_index = len(cmd)
+                        else:
+                            caret_index = len(cmd)
+                    else:
+                        if not keys_pressed[K_LCTRL]:
+                            addCaretLength(1)
+                        else:
+                            found = nextWordIndexes(cmd[caret_index:])
+                            if len(found) >= 1:
+                                addCaretLength(found[0][1])
+                            else:
+                                addCaretLength(len(cmd) - caret_index)
                 elif event.key == K_TAB:
                     tabbed = True
                     if tabAdd: suggestionIndex += 1
@@ -219,14 +299,18 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     tabAdd = False
                     suggestionIndex += 1
                     Key_Down = True
-                elif event.key == K_v and pygame.key.get_pressed()[K_LCTRL]:
+                elif event.key == K_a:
+                    if keys_pressed[K_LCTRL]:
+                        caret_index = 0
+                        addCaretLength(len(cmd))
+                elif event.key == K_v and keys_pressed[K_LCTRL]:
                     clipboardText: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
                     if clipboardText != None:
                         if isinstance(clipboardText, bytes):
                             clipboardText = clipboardText.decode("utf-8")
                         addText(clipboardText)
             elif event.type == MOUSEBUTTONDOWN:
-                cursor_animation.tick = 0
+                caret_animation.tick = 0
                 if text_input_rect.collidepoint(pygame.mouse.get_pos()):
                     pygame.key.start_text_input()
                     textInput = True
@@ -238,9 +322,11 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     cmd = ""
                     textInput = False
                     running = False
-                if KDS_Quit != None: KDS_Quit()
+                if KDS_Quit != None:
+                    KDS_Quit()
 
-        while console_font.size(cmd)[0] + cursor_width >= text_rect.width: cmd = cmd[:-1]
+        while console_font.size(cmd)[0] + cursor_width >= text_rect.width:
+            cmd = cmd[:-1]
 
         if lastCmd != cmd:
             suggestionIndex = 0
@@ -428,7 +514,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                                 cmd = "".join(tmpCmd[:-1])
                             cmd += r
                             tabbedCmd = cmd
-                            cursor_index = len(cmd)
+                            caret_index = len(cmd)
                             suggestionsOverride = True
                         else:
                             if len(cmdSplit) > 0:
@@ -467,21 +553,30 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                     oldIndex -= 1
                     if oldIndex < -1: oldIndex = -1
                     cmd = OldCommands[len(OldCommands) - 1 - oldIndex] if oldIndex > -1 else ""
-                cursor_index = len(cmd)
+                caret_index = len(cmd)
 
         if not suggestionsRendered: display.blit(promptRender, (text_input_rect.left, text_input_rect.top - promptRender.get_height()))
         #endregion
 
         #region Text Rendering
         text_render_color = text_color
-        if warning and not invalid:
-            text_render_color = text_warn_color
-            display.blit(warnText, (text_rect.left + console_font.size(cmd)[0] + 5, text_y + (console_font.get_height() - console_font_small.get_height())))
-        if invalid: text_render_color = text_invalid_color
+        if warning or invalid:
+            if not invalid:
+                text_render_color = text_warn_color
+                display.blit(warnText, (text_rect.left + console_font.size(cmd)[0] + 5, text_y + (console_font.get_height() - console_font_small.get_height())))
+            else:
+                text_render_color = text_invalid_color
+
         renderedCmd = console_font.render(cmd, True, text_render_color)
         display.blit(renderedCmd, (text_rect.left, text_y))
-        if textInput and cursor_animation.update() >= 1.0:
-            pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:cursor_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
+        if caret_length != 0:
+            tmp_crt_pos = caret_index + caret_length
+            blueTint = pygame.Surface((console_font.size(cmd[min(caret_index, tmp_crt_pos):max(caret_index, tmp_crt_pos)])[0], console_font.get_height()))
+            blueTint.fill((168, 206, 255))
+            blueTint.set_alpha(192)
+            display.blit(blueTint, (text_rect.left + console_font.size(cmd[:min(caret_index, caret_index + caret_length)])[0], text_y))
+        if textInput and caret_animation.update() >= 1.0:
+            pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:caret_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
 
         """
         overlayColor = KDS.Colors.White
