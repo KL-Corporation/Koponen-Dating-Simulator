@@ -302,6 +302,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                 elif event.key == K_a:
                     if keys_pressed[K_LCTRL]:
                         caret_index = 0
+                        caret_length = 0
                         addCaretLength(len(cmd))
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
