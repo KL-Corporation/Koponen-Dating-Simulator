@@ -468,12 +468,14 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                 if checkType["noSpace"] == True:
                     if " " in cmd:
                         invalid = True
-            elif _type != "commands": KDS.Logging.AutoError("Check Type invalid!")
+            elif _type != "commands":
+                KDS.Logging.AutoError("Check Type invalid!")
         #endregion
 
         #region Commands and Suggestions
         if commands != None:
-            if not tabbed and len(cmd) < 1: showSuggestions = False
+            if not tabbed and len(cmd) < 1:
+                showSuggestions = False
 
             previousCommandsFound = {}
             commandsFound = {}
