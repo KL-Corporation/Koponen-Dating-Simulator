@@ -847,7 +847,8 @@ class Door(KDS.Build.Tile):
         if self.open:
             if self.maxClosingCounter > 0:
                 self.closingCounter += 1
-            else: self.closingCounter = self.maxClosingCounter
+            else:
+                self.closingCounter = self.maxClosingCounter
             if self.closingCounter > self.maxClosingCounter:
                 KDS.Audio.PlaySound(door_opening)
                 self.open = False
@@ -3824,8 +3825,10 @@ while main_running:
     true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]
-    if level_background: screen.blit(level_background_img, (scroll[0] * 0.12 * -1 - 68, scroll[1] * 0.12 * -1 - 68))
-    else: screen.fill((20, 25, 20))
+    if level_background:
+        screen.blit(level_background_img, (scroll[0] * 0.12 * -1 - 68, scroll[1] * 0.12 * -1 - 68))
+    else:
+        screen.fill((20, 25, 20))
     mouse_pos = pygame.mouse.get_pos()
 
     if Player.farting:

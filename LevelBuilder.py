@@ -979,15 +979,18 @@ def resizeGrid(size: Tuple[int, int], grid: list):
     gridSize = size
     return grid
 
-def saveMap(grid: List[List[UnitData]], name: str):
-    #region Map
+def generateMapString(grid: List[List[UnitData]]) -> str:
     outputString = ''
     for row in grid:
         for unit in row:
             outputString += str(unit) + " / "
         outputString = outputString.removesuffix(" / ") + "\n"
+    return outputString
+
+def saveMap(grid: List[List[UnitData]], name: str):
+    #region Map
     with open(name, 'w', encoding="utf-8") as f:
-        f.write(outputString)
+        f.write(generateMapString(grid))
     #endregion
     #region Tile Props
     propertiesPath = os.path.join(os.path.dirname(name), "properties.kdf")
@@ -1027,8 +1030,13 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
     global display, clock
 
     with open(path, 'r') as f:
-        contents = f.read().splitlines()
-        while len(contents[-1]) < 1: contents = contents[:-1]
+        wholeContents = f.read()
+        contents = wholeContents.splitlines()
+        while len(contents) > 0 and (len(contents[-1]) < 1 or contents[-1].isspace()):
+            contents = contents[:-1]
+
+        if len(contents) < 0:
+            KDS.Logging.AutoError("Map contents length is less than one!")
 
     maxWStr = max(contents, key=lambda c: len(c.split("/")))
     maxW = len(maxWStr.split("/"))
@@ -1050,6 +1058,9 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
                 KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
             #endregion
             rUnit.overrideSerial(unit)
+
+    if generateMapString(temporaryGrid) != wholeContents:
+        KDS.Logging.AutoError("Loaded map file does not match generated map file!")
 
     def loadProperties():
         nonlocal temporaryGrid
@@ -1087,7 +1098,6 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
                 if "spawnInverted" in playerData:
                     LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
     loadLevelProp()
-
     return temporaryGrid, temporaryGridSize
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
