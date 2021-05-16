@@ -130,6 +130,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     textInput = True
     caret_index: int = len(cmd)
     caret_length: int = 0
+    selection_color: Tuple[int, int, int, int] = (50, 151, 253, 128)
     caret_animation = KDS.Animator.Value(2.0, 0.0, 64, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
     invalid = False
     warning = False
@@ -586,8 +587,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
         if caret_length != 0:
             tmp_crt_pos = caret_index + caret_length
             blueTint = pygame.Surface((console_font.size(cmd[min(caret_index, tmp_crt_pos):max(caret_index, tmp_crt_pos)])[0], console_font.get_height()))
-            blueTint.fill((168, 206, 255))
-            blueTint.set_alpha(192)
+            blueTint.fill((selection_color[0], selection_color[1], selection_color[2]))
+            blueTint.set_alpha(selection_color[3])
             display.blit(blueTint, (text_rect.left + console_font.size(cmd[:min(caret_index, caret_index + caret_length)])[0], text_y))
         if textInput and caret_animation.update() >= 1.0:
             pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:caret_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
