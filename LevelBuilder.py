@@ -1838,9 +1838,9 @@ def main():
             Drag.Mode = DragMode.Default
             Drag.clear()
 
-        if LevelPropData.KoponenPos != None:
+        if LevelPropData.KoponenPos is not None:
             display.blit(LevelPropData.KoponenTextureRescaled, (LevelPropData.KoponenPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.KoponenPos[1] * scaleMultiplier - scroll[1] * scalesize))
-        if LevelPropData.PlayerPos != None:
+        if LevelPropData.PlayerPos is not None:
             display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if KDS.Debug.Enabled:
