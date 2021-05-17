@@ -22,5 +22,13 @@
     "Elevator Teleport": {
         "serialNumber": 6,
         "path": "elevator.png"
+    },
+    "Hotel Door Teleport": {
+        "serialNumber": 7,
+        "path": "hotel_door_front.png"
+    },
+    "Hotel Door Teleport Mirrored": {
+        "serialNumber": 8,
+        "path": "hotel_door_front_mirrored.png"
     }
 }

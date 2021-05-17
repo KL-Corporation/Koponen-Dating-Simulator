@@ -143,8 +143,8 @@ class Item:
 
     _textures: Dict[int, pygame.Surface] = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
-        self.texture = texture if texture != None else Item._textures[serialNumber]
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        self.texture = Item._textures[serialNumber]
         self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
         self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
         self.serialNumber = serialNumber
@@ -237,8 +237,8 @@ class Weapon(Item):
 
     data: Dict[Type[Weapon], Weapon.WeaponData] = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface) -> None:
-        super().__init__(position, serialNumber, texture=texture)
+    def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
+        super().__init__(position, serialNumber)
 
     #                                                                  ↓  float to pass infinite through
     def internalInit(self, repeat_rate: int, defaultAmmo: Union[int, float], shootTexture: Optional[Union[pygame.Surface, KDS.Animator.Animation]], shootSound: Optional[pygame.mixer.Sound], stopSound: bool = False, allowHold: bool = False) -> None:
@@ -309,8 +309,8 @@ class Weapon(Item):
         Weapon.data.clear()
 
 class Ammo(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
-        super().__init__(position, serialNumber, texture=texture)
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
 
     def internalInit(self, _type: Type[Weapon], addAmmo: int, addScore: int, sound: pygame.mixer.Sound):
         self.sound = sound

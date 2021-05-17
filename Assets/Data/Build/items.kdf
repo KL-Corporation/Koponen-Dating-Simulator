@@ -257,5 +257,12 @@
         "doubleSize": false,
         "supportsInventory": true,
         "isContraband": true
+    },
+    "Hotel Keycard": {
+        "serialNumber": 38,
+        "path": "hotel_keycard.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
     }
 }
