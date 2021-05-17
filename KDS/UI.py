@@ -17,7 +17,7 @@ pygame.init()
 buttonFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 
 class Slider:
-    def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[float, Any] = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 3, custom_path: str = None):
+    def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[float, Any] = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 6, custom_path: str = None):
         """
         1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
         2. slider_rect: The pygame.Rect of the slider.
@@ -88,7 +88,7 @@ class Slider:
         return value
 
 class Button:
-    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Union[pygame.Surface, str] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 3, enabled: bool = True):
+    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Union[pygame.Surface, str] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 6, enabled: bool = True):
         """Instantiates a new Button
 
         Args:
@@ -163,7 +163,7 @@ class Button:
         return executed
 
 class Switch:
-    def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 3, move_lerp_duration: int = 15, custom_path: str = None):
+    def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 6, move_lerp_duration: int = 15, custom_path: str = None):
         """
         1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
         2. switch_rect: The pygame.Rect of the slider.
