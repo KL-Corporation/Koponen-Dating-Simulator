@@ -1,5 +1,3 @@
-from shutil import move
-from turtle import position
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
 import pygame
