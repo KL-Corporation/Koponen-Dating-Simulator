@@ -216,11 +216,13 @@ class LevelPropData:
         LevelPropData.KoponenTextureRescaled = KDS.Convert.AspectScale(LevelPropData.KoponenTexture, (int(LevelPropData.KoponenTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
         LevelPropData.PlayerTextureRescaled = KDS.Convert.AspectScale(LevelPropData.PlayerTexture, (int(LevelPropData.PlayerTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
 
-    KoponenPos: Optional[Tuple[int, int]] = None
+    ShowKoponen: bool = False
+    KoponenPos: Tuple[int, int] = (0, 0)
     KoponenTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/koponen_idle_0.png").convert()
     KoponenTexture.set_colorkey(KDS.Colors.White)
     KoponenTexture.set_alpha(64)
-    PlayerPos: Optional[Tuple[int, int]] = None
+    ShowPlayer: bool = False
+    PlayerPos: Tuple[int, int] = (0, 0)
     PlayerTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
     PlayerTexture.set_colorkey(KDS.Colors.White)
     PlayerTexture.set_alpha(64)
@@ -1073,29 +1075,30 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
     loadProperties()
 
     def loadLevelProp():
+        LevelPropData.ShowKoponen = False
+        LevelPropData.ShowPlayer = False
         lPath = os.path.join(os.path.dirname(path), "levelprop.kdf")
         if not os.path.isfile(lPath):
             return
         with open(lPath, "r", encoding="utf-8") as f:
             lpData: Dict[str, Dict[str, Any]] = json.loads(f.read())
             if "Entities" not in lpData:
-                LevelPropData.KoponenPos = None
-                LevelPropData.PlayerPos = None
                 return
             entityData = lpData["Entities"]
             if "Koponen" in entityData and "startPos" in entityData["Koponen"]:
                 tmpPos = entityData["Koponen"]["startPos"]
                 LevelPropData.KoponenPos = (tmpPos[0], tmpPos[1])
-            else:
-                LevelPropData.KoponenPos = None
+                LevelPropData.ShowKoponen = True
             if "Player" in entityData:
                 playerData = entityData["Player"]
                 if "startPos" in playerData:
                     tmpPos = playerData["startPos"]
                     LevelPropData.PlayerPos = (tmpPos[0], tmpPos[1])
-                else:
-                    LevelPropData.PlayerPos = None
+                    LevelPropData.ShowPlayer = True
                 if "spawnInverted" in playerData:
+                    spawnInverted = playerData["spawnInverted"]
+                    if not isinstance(spawnInverted, bool):
+                        KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
                     LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
     loadLevelProp()
     return temporaryGrid, temporaryGridSize
@@ -1838,9 +1841,9 @@ def main():
             Drag.Mode = DragMode.Default
             Drag.clear()
 
-        if LevelPropData.KoponenPos is not None:
+        if LevelPropData.ShowKoponen:
             display.blit(LevelPropData.KoponenTextureRescaled, (LevelPropData.KoponenPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.KoponenPos[1] * scaleMultiplier - scroll[1] * scalesize))
-        if LevelPropData.PlayerPos is not None:
+        if LevelPropData.ShowPlayer:
             display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if KDS.Debug.Enabled:
