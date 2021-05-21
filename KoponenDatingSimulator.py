@@ -69,7 +69,6 @@ pygame.display.flip()
 clock = pygame.time.Clock()
 
 pygame.event.set_allowed((
-    KEYDOWN,
     MOUSEBUTTONDOWN,
     MOUSEBUTTONUP,
     KEYDOWN,
