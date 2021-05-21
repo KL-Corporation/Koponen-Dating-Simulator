@@ -157,7 +157,7 @@
         "Josif Vissarionovitš Džugašvili": true,
         "Vladimir Iljitš Lenin": false
     },
-    "20-vuotiaalla maalaismiehellä on ongelma. Hänen täytyy toimittaa viiden päivän kuluessa 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Mitä eri tapoja hänellä on hankkia loput rynnäkkökiväärit?": {
+    "20-vuotiaalla maalaismiehellä on ongelma. Hänen täytyy toimittaa viiden päivän kuluessa 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Mitä eri tapoja hänellä on hankkia loput rynnäkkökiväärit? (2)": {
         "Mies ostaa kiväärit Lidlistä": false,
         "Mies varastaa kiväärit Lidlistä": false,
         "Mies kutsuu koskenlaskijaa tuomaan kiväärit": true,
@@ -373,5 +373,50 @@
     "Maailman suurin rahtialus on yli 399 metriä pitkä.": {
         "Totta": true,
         "Tarua": false
+    },
+    "Kuuman vyöhykkeen kasvi, josta valmistetaan mm. suklaata.": {
+        "Kaakao": true,
+        "Tee": false,
+        "Pepsi": false
+    },
+    "Kasvi, josta valmistetaan mm. farkkuja.": {
+        "Puuvilla": true,
+        "Muovivilla": false,
+        "Maitovilla": false,
+        "Metallivilla": false
+    },
+    "Uusiutuva luonnonvara": {
+        "Uraani": false,
+        "Puu": true,
+        "Hiili": false,
+        "Öljy": false,
+        "Rasputin": false
+    },
+    "Metalliesiintymä, jonka louhiminen on taloudellisesti kannattavaa.": {
+        "Malmö": false,
+        "Malmi": true,
+        "Lasi": false,
+        "Hiilikuitu": false,
+        "Flex Tape": false
+    },
+    "Radioaktiiviseen uraaniin perustuva energiamuoto.": {
+        "Maalämpö": false,
+        "Ydinlämpö": false,
+        "Fuusiolämpö": false,
+        "Maavoima": false,
+        "Ydinvoima": true,
+        "Fuusiovoima": false
+    },
+    "Rastita oikeat väittämät. (3)": {
+        "Betoni on uusiutuva luonnonvara": false,
+        "Litiumia tarvitaan nykyisin mm. akuissa.": true,
+        "Kiinalla on paljon luonnonvaroja": true,
+        "Chile on tärkeä kuparintuottaja": true
+    },
+    "Rastita oikeat väittämät. (2)": {
+        "Kivihiili on uusiutuva luonnonvara.": false,
+        "Vesivoiman avulla voidaan tuottaa sähköä.": true,
+        "Fossiilisten polttoaineiden käyttö aiheuttaa ilmastonmuutosta.": true,
+        "Ydinvoimala tuottaa kasvihuonekaasuja.": false
     }
 }
