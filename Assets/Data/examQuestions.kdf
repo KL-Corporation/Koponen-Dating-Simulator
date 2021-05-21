@@ -366,10 +366,12 @@
         "pohjamoreeni": false,
         "lustosavi": true
     },
-    "Kuinka monen desimaalin tarkkuudella NALCalculator pystyy laskemaan lukuja?": {
-        "30": false,
-        "69": false,
-        "420": false,
-        "∞": true
+    "MarineTrafficissa on tietoja yli 650 000 aluksesta.": {
+        "Totta": true,
+        "Tarua": false
+    },
+    "Maailman suurin rahtialus on yli 399 metriä pitkä.": {
+        "Totta": true,
+        "Tarua": false
     }
 }
