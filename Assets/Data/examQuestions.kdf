@@ -63,7 +63,7 @@
         "1879": true
     },
     "Mikä on maailman pisin käärme?": {
-        "Anaconda": false,
+        "Boa": false,
         "Python": true,
         "Mun kyrpä ( ͡° ͜ʖ ͡°)": false
     },
@@ -87,7 +87,7 @@
         "1 989 000 000 000 000 000 000 000 000 000 000g": true,
         "3 094 000 000 000 000 000 000 000 000 000 000g": false
     },
-    "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä on nyt?": {
+    "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä on nyt? (2)": {
         "69 karkkia": false,
         "Diabetes": true,
         "351 karkkia": true
@@ -128,7 +128,7 @@
         "Carl Marx": false,
         "Karl Marz": false
     },
-    "Kuka oli Yhdysvaltain 36. Presidentti?": {
+    "Kuka oli Yhdysvaltain 36. presidentti?": {
         "Lyndon b. Johnson": true,
         "Harry S. Truman": false,
         "Jimmy Carter": false,
@@ -139,7 +139,7 @@
         "Grover Cleveland": false,
         "Donald Trump": false,
         "Osama bin Laden": false,
-        "Matias Broman": true,
+        "Matias Broman": false,
         "Muammar Gaddafi": false,
         "Saddam Hussein": false,
         "Jussi Halla-aho": false,
@@ -205,7 +205,7 @@
         "Syyriassa": false,
         "Neuvostoliitossa": false
     },
-    "Mitkä seuraavista valtioista EI KERÄÄ tuloveroa?": {
+    "Mitkä seuraavista valtioista EI KERÄÄ tuloveroa? (2)": {
         "Yhdistyneet Arabiemiirikunnat": true,
         "Vanuatu": true,
         "Etelä-Afrikka": false,
@@ -289,7 +289,7 @@
         "1,25m": false,
         "1,252m": false
     },
-    "Mitkä hormonit aiheuttavat ihmiskehon pituuskasvun?": {
+    "Mitkä hormonit aiheuttavat ihmiskehon pituuskasvun? (2)": {
         "Somatotropiini": true,
         "Somatropiini": true,
         "Tyroksiini": false,
@@ -301,7 +301,7 @@
         "Seksi": false,
         "GameStop:in osakkeiden ostaminen": true
     },
-    "Mitkä näistä kaupungeista ovat megakaupunkeja?": {
+    "Mitkä näistä kaupungeista ovat megakaupunkeja? (4)": {
         "Tokio": true,
         "Shanghai": true,
         "Delhi": true,
@@ -359,7 +359,7 @@
         "Kala": true,
         "Sammakko": true
     },
-    "Mitkä seuraavista luonnonmaantieteellisistä muodostumista ovat syntyneet jään sulatessa ja jäätikön vetäytyessä?": {
+    "Mitkä seuraavista luonnonmaantieteellisistä muodostumista ovat syntyneet jään sulatessa ja jäätikön vetäytyessä? (2)": {
         "drumliini": false,
         "pitkittäisharju": true,
         "silokallio": false,
