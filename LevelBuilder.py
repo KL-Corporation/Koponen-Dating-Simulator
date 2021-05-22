@@ -21,7 +21,6 @@ import tkinter
 from tkinter import filedialog
 import json
 import traceback
-import sys
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
