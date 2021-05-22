@@ -604,12 +604,12 @@ def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
     return False
 
 class ScreenEffects:
-    class Effects(IntEnum):
-        Flicker = auto()
-        FadeInOut = auto()
-        Glitch = auto()
+    class Effects(IntFlag):
+        Flicker = 1
+        FadeInOut = 2
+        Glitch = 4
 
-    triggered: List[Effects] = []
+    triggered: Effects = Effects(0)
     OnEffectFinish = KDS.Events.Event()
 
     data: Dict[Effects, Dict[str, Any]] = {
@@ -634,11 +634,11 @@ class ScreenEffects:
 
     @staticmethod
     def Queued() -> bool:
-        return len(ScreenEffects.triggered) > 0
+        return ScreenEffects.triggered != 0
 
     @staticmethod
     def Trigger(effect: ScreenEffects.Effects):
-        ScreenEffects.triggered.append(effect)
+        ScreenEffects.triggered |= effect
 
     @staticmethod
     def Get(effect: ScreenEffects.Effects) -> bool:
@@ -646,8 +646,7 @@ class ScreenEffects:
 
     @staticmethod
     def Finish(effect: ScreenEffects.Effects):
-        while effect in ScreenEffects.triggered:
-            ScreenEffects.triggered.remove(effect)
+        ScreenEffects.triggered &= ~effect
         ScreenEffects.OnEffectFinish.Invoke(effect)
 
 #region Animations
@@ -1105,7 +1104,7 @@ class LevelEnderTransparent(KDS.Build.Tile):
                 self.readyToTrigger = False
 
     def update(self) -> Optional[pygame.Surface]:
-        if self.rect.colliderect(Player.rect) and not self.triggered and self.readyToTrigger:
+        if self.rect.colliderect(Player.rect) and self.readyToTrigger and not self.triggered:
             KDS.Missions.Listeners.LevelEnder.Trigger()
             self.triggered = True
         return None
@@ -3093,12 +3092,13 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     Player = PlayerClass()
 
     #region World Data
-    global Items, Explosions, BallisticObjects, Projectiles, Entities
+    global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones
     Items.clear()
     Explosions.clear()
     BallisticObjects.clear()
     Projectiles.clear()
     Entities.clear()
+    Zones.clear()
     #endregion
 
     #region Ammo Resetting
@@ -4106,7 +4106,7 @@ while main_running:
             if data["repeat_index"] > data["repeat_length"]:
                 data["repeat_index"] = 0
                 ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
-        elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut): # No effect stacking
+        if ScreenEffects.Get(ScreenEffects.Effects.FadeInOut):
             data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
             anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
             rev: bool = data["reversed"]
@@ -4122,7 +4122,7 @@ while main_running:
                     data["reversed"] = False
                     data["wait_index"] = 0
                     ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
-        elif ScreenEffects.Get(ScreenEffects.Effects.Glitch):
+        if ScreenEffects.Get(ScreenEffects.Effects.Glitch):
             data = ScreenEffects.data[ScreenEffects.Effects.Glitch]
             data["repeat_index"] = KDS.Math.Repeat(data["repeat_index"] + 1, data["repeat_rate"])
             if data["repeat_index"] == 0:

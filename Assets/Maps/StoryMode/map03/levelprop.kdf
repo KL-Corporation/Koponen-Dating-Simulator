@@ -30,7 +30,7 @@
         },
         "Darkness": {
             "enabled": false,
-            "playerLight": false,
+            "playerLight": true,
             "strength": 0
         }
     }

@@ -54,6 +54,7 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
             if waitTicks > 60 * 3:
                 KDS.School.Certificate(display, clock, BackgroundColor=(20, 25, 20))
                 running = False
+                pygame.event.clear()
         pygame.display.flip()
         clock.tick_busy_loop(60)
     KDS.Audio.Music.Stop()
@@ -64,7 +65,7 @@ class WalkieTalkieEffect:
     phaseIndex = 0
     phaseZeroChannel = None
     phaseOneChannel = None
-    phaseThreeChannel = None
+    phaseThreeStarted: bool = False
     blackSurf = None
     alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
 
@@ -100,7 +101,7 @@ class WalkieTalkieEffect:
                 else:
                     KDS.Logging.AutoError("Walkie talkie not found!")
 
-                KDS.World.Dark.Set(True, 224)
+                KDS.World.Dark.Configure(True, 224)
 
             display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
 
@@ -108,9 +109,9 @@ class WalkieTalkieEffect:
             return False if WalkieTalkieEffect.phaseTwoIndex < 60 * 8 else True
 
         def phaseThree() -> bool:
-            if WalkieTalkieEffect.phaseThreeChannel == None:
-                pass
-            # NO SOUND CREATED   KDS.Audio.PlayFromFile("Assets/Audio/Effects/fadeout tinnitus thingy")
+            if not WalkieTalkieEffect.phaseThreeStarted:
+                KDS.Audio.Music.Play("Assets/Audio/Effects/glitch.ogg")
+                WalkieTalkieEffect.phaseThreeStarted = True
             if WalkieTalkieEffect.blackSurf != None:
                 WalkieTalkieEffect.blackSurf.set_alpha(int(WalkieTalkieEffect.alpha_anim.update()))
                 display.blit(WalkieTalkieEffect.blackSurf, (0, 0))
