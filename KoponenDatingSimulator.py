@@ -886,6 +886,9 @@ class Ladder(KDS.Build.Tile):
             Player.onLadder = True
         return self.texture
 
+    def lateInit(self):
+        self.darkOverlay = None
+
 class Lamp(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)

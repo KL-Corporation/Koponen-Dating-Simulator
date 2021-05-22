@@ -1643,14 +1643,15 @@ def main():
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
-                    if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
+                    if resize_output != None:
+                        grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     tmpBrush = materialMenu(brush.brush)
                     tmpProps: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
                     if tmpBrush[0] == "3":
                         tmpProps = {UnitType.Teleport: {"identifier": 1}}
                     brush.SetValues(tmpBrush, tmpProps)
-                    allowTilePlacement = False
+                    allowTilePlacement = not pygame.mouse.get_pressed()[0]
                 elif event.key == K_DELETE:
                     Selected.Set(UnitData.EMPTYSERIAL)
                     Selected.Update()
