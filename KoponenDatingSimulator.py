@@ -604,12 +604,13 @@ def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
     return False
 
 class ScreenEffects:
-    triggered = []
-    OnEffectFinish = KDS.Events.Event()
-
     class Effects(IntEnum):
         Flicker = auto()
         FadeInOut = auto()
+        Glitch = auto()
+
+    triggered: List[Effects] = []
+    OnEffectFinish = KDS.Events.Event()
 
     data: Dict[Effects, Dict[str, Any]] = {
         Effects.Flicker: {
@@ -623,8 +624,17 @@ class ScreenEffects:
             "wait_index": 0,
             "wait_length": 240,
             "surface": pygame.Surface(screen_size).convert()
+        },
+        Effects.Glitch: {
+            "repeat_rate": 2,
+            "repeat_index": 0,
+            "current_glitch": ((0, 0, 0, 0), (0, 0))
         }
     }
+
+    @staticmethod
+    def Queued() -> bool:
+        return len(ScreenEffects.triggered) > 0
 
     @staticmethod
     def Trigger(effect: ScreenEffects.Effects):
@@ -1072,11 +1082,30 @@ class LevelEnderTransparent(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = None
-        # NoCollision Flag
         self.triggered: bool = False
 
+        self.listener = None
+        self.listenerItem = None
+        self.readyToTrigger: bool = True
+        self.listenerInstance: Optional[Union[KDS.Missions.Listener, KDS.Missions.ItemListener]] = None
+
+    def eventHandler(self, *args: Any):
+        if len(args) < 1 or (isinstance(self.listenerInstance, KDS.Missions.ItemListener) and args[0] != self.listenerItem):
+            return
+        self.listenerInstance.OnTrigger -= self.eventHandler
+        self.listenerInstance = None
+        self.readyToTrigger = True
+
+    def lateInit(self):
+        if self.listener != None:
+            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            if tmpListener != None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem != None):
+                self.listenerInstance = tmpListener
+                self.listenerInstance.OnTrigger += self.eventHandler
+                self.readyToTrigger = False
+
     def update(self) -> Optional[pygame.Surface]:
-        if self.rect.colliderect(Player.rect) and not self.triggered:
+        if self.rect.colliderect(Player.rect) and not self.triggered and self.readyToTrigger:
             KDS.Missions.Listeners.LevelEnder.Trigger()
             self.triggered = True
         return None
@@ -1141,8 +1170,8 @@ class WallLight(KDS.Build.Tile):
         return self.texture
 
 class RespawnAnchor(KDS.Build.Tile):
-    respawnPoint = None
-    active = None
+    respawnPoint: Optional[Tuple[int, int]] = None
+    active: Optional[RespawnAnchor] = None
     rspP_list = []
     respawn_anchor_tip: pygame.Surface = tip_font.render("Set Respawn Point [E]", True, KDS.Colors.White)
 
@@ -1151,30 +1180,24 @@ class RespawnAnchor(KDS.Build.Tile):
         self.texture = t_textures[serialNumber]
         self.ontexture = respawn_anchor_on
         self.checkCollision = False
-        self.sound = random.choice(respawn_anchor_sounds)
         RespawnAnchor.rspP_list.append(self)
 
     def update(self):
-        if RespawnAnchor.active == self:
+        if RespawnAnchor.active is self:
             if KDS.World.Dark.enabled:
                 Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 2400), True))
             else:
-                day_light = KDS.World.Lighting.Shapes.splatter.get(150, 2400).copy()
+                day_light = KDS.World.Lighting.Shapes.circle.get(150, 2400).copy()
                 day_light.fill((255, 255, 255, 32), None, pygame.BLEND_RGBA_MULT)
                 screen.blit(day_light, (self.rect.centerx - scroll[0] - day_light.get_width() // 2, self.rect.centery - scroll[1] - day_light.get_height() // 2))
             return self.ontexture
-        else:
-            if self.rect.colliderect(Player.rect):
-                screen.blit(RespawnAnchor.respawn_anchor_tip, (self.rect.centerx - scroll[0] - RespawnAnchor.respawn_anchor_tip.get_width() // 2, self.rect.top - scroll[1] - 50))
-                if KDS.Keys.functionKey.clicked:
-                    RespawnAnchor.active = self
-                    RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - Player.rect.height + 34)
-                    loopStopper = 0
-                    oldSound = self.sound
-                    while self.sound == oldSound and loopStopper < 10:
-                        self.sound = random.choice(respawn_anchor_sounds)
-                        loopStopper += 1
-                    KDS.Audio.PlaySound(self.sound)
+
+        if self.rect.colliderect(Player.rect):
+            screen.blit(RespawnAnchor.respawn_anchor_tip, (self.rect.centerx - scroll[0] - RespawnAnchor.respawn_anchor_tip.get_width() // 2, self.rect.top - scroll[1] - 50))
+            if KDS.Keys.functionKey.clicked:
+                RespawnAnchor.active = self
+                RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - Player.rect.height + 34)
+                KDS.Audio.PlaySound(random.choice(respawn_anchor_sounds))
         return self.texture
 
 class Spruce(KDS.Build.Tile):
@@ -4070,34 +4093,52 @@ while main_running:
         }, fontOverride=tip_font), (0, 0))
 #endregion
 #region Screen Rendering
-    if ScreenEffects.Get(ScreenEffects.Effects.Flicker):
-        data = ScreenEffects.data[ScreenEffects.Effects.Flicker] # Should be the same instance...
+    if ScreenEffects.Queued():
+        if ScreenEffects.Get(ScreenEffects.Effects.Flicker):
+            data = ScreenEffects.data[ScreenEffects.Effects.Flicker] # Should be the same instance...
 
-        if KDS.Math.Repeat(data["repeat_index"], data["repeat_rate"]) == 0:
-            invPix = pygame.surfarray.pixels2d(screen)
-            invPix ^= 2 ** 32 - 1
-            del invPix
+            if KDS.Math.Repeat(data["repeat_index"], data["repeat_rate"]) == 0:
+                invPix = pygame.surfarray.pixels2d(screen)
+                invPix ^= 2 ** 32 - 1
+                del invPix
 
-        data["repeat_index"] += 1
-        if data["repeat_index"] > data["repeat_length"]:
-            data["repeat_index"] = 0
-            ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
-    elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut): # No effect stacking
-        data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
-        anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
-        rev: bool = data["reversed"]
-        surf = data["surface"]
-        surf.set_alpha(anim.update(rev))
-        screen.blit(surf, (0, 0))
-        if anim.Finished:
-            if not rev:
-                data["wait_index"] += 1
-                if data["wait_index"] > data["wait_length"]:
-                    data["reversed"] = True
-            else:
-                data["reversed"] = False
-                data["wait_index"] = 0
-                ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
+            data["repeat_index"] += 1
+            if data["repeat_index"] > data["repeat_length"]:
+                data["repeat_index"] = 0
+                ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
+        elif ScreenEffects.Get(ScreenEffects.Effects.FadeInOut): # No effect stacking
+            data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
+            anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
+            rev: bool = data["reversed"]
+            surf = data["surface"]
+            surf.set_alpha(anim.update(rev))
+            screen.blit(surf, (0, 0))
+            if anim.Finished:
+                if not rev:
+                    data["wait_index"] += 1
+                    if data["wait_index"] > data["wait_length"]:
+                        data["reversed"] = True
+                else:
+                    data["reversed"] = False
+                    data["wait_index"] = 0
+                    ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
+        elif ScreenEffects.Get(ScreenEffects.Effects.Glitch):
+            data = ScreenEffects.data[ScreenEffects.Effects.Glitch]
+            data["repeat_index"] = KDS.Math.Repeat(data["repeat_index"] + 1, data["repeat_rate"])
+            if data["repeat_index"] == 0:
+                glitchRandX = random.randrange(0, screen_size[0])
+                glitchRandY = random.randrange(0, screen_size[1])
+                # glitchRandW = random.randrange(screen_size[0], screen_size[0] + 1)
+                glitchRandW = screen_size[0]
+                glitchRandH = random.randrange(10, 50)
+                data["current_glitch"] = (
+                    (glitchRandX, glitchRandY, min(glitchRandW, screen_size[0] - glitchRandX), min(glitchRandH, screen_size[1] - glitchRandY)),
+                    (random.randint(-10, 10) + glitchRandX, random.randint(0, 0) + glitchRandY)
+                )
+            current_glitch = data["current_glitch"]
+            glitch_surf = screen.subsurface(current_glitch[0]).copy()
+            if 0 <= current_glitch[1][0] < screen_size[0] and 0 <= current_glitch[1][1] < screen_size[1]:
+                screen.blit(glitch_surf, current_glitch[1])
 
     if screen_overlay != None:
         screen.blit(screen_overlay, (0, 0))
@@ -4108,6 +4149,7 @@ while main_running:
         if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):
             KDS.Missions.SetProgress("explore", "find_walkie_talkie", 1.0)
             WalkieTalkie.storyRunning = False
+            ScreenEffects.Trigger(ScreenEffects.Effects.Glitch)
         else:
             WalkieTalkie.storyRunning = True
         WalkieTalkie.storyTrigger = False
