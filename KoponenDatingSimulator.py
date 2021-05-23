@@ -53,22 +53,21 @@ pygame.mixer.init()
 
 pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
 
-game_icon = pygame.image.load("Assets/Textures/Branding/gameIcon.png")
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
 
-pygame.display.set_icon(game_icon)
+pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/gameIcon.png"))
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
 display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
-display_info = pygame.display.Info()
-screen_size = (600, 400)
-screen = pygame.Surface(screen_size)
 
-CompanyLogo = CompanyLogo.convert()
-
+# LOGO (here to make the blink from starting the window much shorter)
 display.fill(CompanyLogo.get_at((0, 0)))
 display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
 pygame.display.flip()
+# LOGO
+
+screen_size = (600, 400)
+screen = pygame.Surface(screen_size)
 
 clock = pygame.time.Clock()
 
