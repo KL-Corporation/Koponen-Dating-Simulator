@@ -1,11 +1,23 @@
 ﻿#region Importing
 from __future__ import annotations
+
 import os
-#region Startup Config
+# Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-#endregion
+# Startup Config
+
+import datetime
+import json
+import random
+import shutil
+import traceback
+from enum import IntEnum, IntFlag, auto
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
+
 import pygame
+from pygame.locals import *
+
 import KDS.AI
 import KDS.Animator
 import KDS.Audio
@@ -27,21 +39,13 @@ import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.NPC
+import KDS.School
 import KDS.Scores
 import KDS.Story
 import KDS.System
 import KDS.Teachers
 import KDS.UI
 import KDS.World
-import KDS.School
-import random
-import shutil
-import json
-import datetime
-import traceback
-from pygame.locals import *
-from enum import IntEnum, auto, IntFlag
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 #endregion
 #region Priority Initialisation
 pygame.init()
