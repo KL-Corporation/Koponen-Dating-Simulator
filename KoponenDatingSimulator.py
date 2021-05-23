@@ -181,13 +181,8 @@ level_cleared_icon.set_colorkey(KDS.Colors.White)
 pygame.event.pump()
 #region Building Textures
 KDS.Logging.debug("Loading Building Textures...")
-door_open = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
-exit_door_open = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
-respawn_anchor_on = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
-patja_kaatunut = pygame.image.load("Assets/Textures/Tiles/patja_kaatunut.png").convert()
-patja_kaatunut.set_colorkey(KDS.Colors.White)
-blh = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
-blh.set_colorkey(KDS.Colors.White)
+door_open: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
+exit_door_open: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
 KDS.Logging.debug("Building Texture Loading Complete.")
 #endregion
 pygame.event.pump()
@@ -1022,6 +1017,9 @@ class Torch(KDS.Build.Tile):
         return self.texture.update()
 
 class GoryHead(KDS.Build.Tile):
+    blh: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
+    blh.set_colorkey(KDS.Colors.White)
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
@@ -1033,7 +1031,7 @@ class GoryHead(KDS.Build.Tile):
     def update(self):
         if not self.gibbed and HitTargets[self].hitted:
             self.gibbed = True
-            self.texture = blh
+            self.texture = GoryHead.blh
             HitTargets.pop(self)
         return self.texture
 
@@ -1172,6 +1170,8 @@ class WallLight(KDS.Build.Tile):
         return self.texture
 
 class RespawnAnchor(KDS.Build.Tile):
+    respawn_anchor_on: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
+
     respawnPoint: Optional[Tuple[int, int]] = None
     active: Optional[RespawnAnchor] = None
     rspP_list = []
@@ -1180,7 +1180,7 @@ class RespawnAnchor(KDS.Build.Tile):
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
-        self.ontexture = respawn_anchor_on
+        self.ontexture = RespawnAnchor.respawn_anchor_on
         self.checkCollision = False
         RespawnAnchor.rspP_list.append(self)
 
@@ -1424,11 +1424,14 @@ class RoofPlanks(KDS.Build.Tile):
         return self.texture
 
 class Patja(KDS.Build.Tile):
+    kaatunut_texture: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/patja_kaatunut.png").convert()
+    kaatunut_texture.set_colorkey(KDS.Colors.White)
+
     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
         # Rect is handled by trueScale
         self.texture = t_textures[serialNumber]
-        self.kaatunutTexture = patja_kaatunut
+        self.kaatunutTexture = Patja.kaatunut_texture
         self.checkCollision = False
         self.kaatunut = False
         self.kaatumisTrigger = False
