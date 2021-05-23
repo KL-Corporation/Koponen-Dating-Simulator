@@ -833,7 +833,7 @@ class Door(KDS.Build.Tile):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.opentexture = door_open
-        self.rect = pygame.Rect(position[0], position[1] - 34, 5, 68)
+        self.rect = pygame.Rect(position[0], position[1], 5, 68)
         self.open = False
         self.maxClosingCounter = closingCounter
         self.closingCounter = 0
@@ -1668,6 +1668,16 @@ class Nysse(KDS.Build.Tile):
                 self.blinkerIndex = 0
         return self.texture
 
+class Fucking(KDS.Build.Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("fucking", 11, 4, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+
+    def lateInit(self) -> None:
+        self.darkOverlay = None
+
+    def update(self) -> Optional[pygame.Surface]:
+        return self.animation.update()
 
 class BaseTeleport(KDS.Build.Tile):
     class TeleportData:
@@ -1911,7 +1921,8 @@ KDS.Build.Tile.specialTilesClasses = {
     134: FluorescentTube,
     135: Molok,
     145: Kiuas,
-    151: TileFire
+    151: TileFire,
+    155: Fucking
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,

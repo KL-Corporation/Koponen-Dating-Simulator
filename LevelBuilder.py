@@ -502,7 +502,7 @@ class UnitData:
                     if number == UnitData.EMPTY:
                         continue
                     if number in DOORSERIALS:
-                        doorRenders.append((number, normalBlitPos, unit.matchesRefrence))
+                        doorRenders.append((number, (normalBlitPos[0], normalBlitPos[1] + scalesize), unit.matchesRefrence))
                         continue
 
                     UnitData.renderSerial(surface, unit.properties, number, normalBlitPos, unit.matchesRefrence)

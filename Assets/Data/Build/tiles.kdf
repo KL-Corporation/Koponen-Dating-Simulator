@@ -1069,5 +1069,12 @@
         "specialTile": false,
         "noCollision": true,
         "trueScale": true
+    },
+    "Fucking": {
+        "serialNumber": 155,
+        "path": "fucking.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
     }
 }
