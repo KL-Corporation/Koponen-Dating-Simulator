@@ -79,7 +79,7 @@ You can apply for this position at KL Corporation's website.
 <br/>
 <br/>
 
-**Voice Actor** <br/>
+**Voice Actors** <br/>
 Aaro Koljonen <br/>
 Niko Leinonen
 <br/>
