@@ -3988,12 +3988,8 @@ while main_running:
         r2 = B_Object.update(Tiles, screen, scroll)
         if r2:
             for x in range(8):
-                x = -x
-                x /= 8
+                x /= -8
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), True, -1, Tiles, 25, maxDistance=82, slope=x))
-            for x in range(8):
-                x = -x
-                x /= 8
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), False, -1, Tiles, 25, maxDistance=82, slope=x))
 
             KDS.Audio.PlaySound(landmine_explosion)
