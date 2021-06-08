@@ -38,6 +38,9 @@ scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
+ZOOMRANGE = (3, 128)
+DEFAULTZOOM = scalesize
+
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
@@ -1593,7 +1596,7 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
-        newsize = KDS.Math.Clamp(scalesize + add, 3, 128)
+        newsize = KDS.Math.Clamp(scalesize + add, ZOOMRANGE[0], ZOOMRANGE[1])
         if newsize == scalesize:
             return
 
