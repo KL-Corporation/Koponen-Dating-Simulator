@@ -7,7 +7,7 @@ import KDS.System
 import pygame
 import sys
 from datetime import datetime
-from typing import Any, Union
+from typing import Any, Tuple, Union
 
 running = False
 profiler_running = False
@@ -33,11 +33,13 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
         return
 
     display_info = pygame.display.Info()
+    mixer_version: Tuple = pygame.mixer.get_sdl_mixer_version()
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
     - pygame: {pygame.version.ver}
     - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+    - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}
     - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
     - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
 

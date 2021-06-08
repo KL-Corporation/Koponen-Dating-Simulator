@@ -94,13 +94,6 @@ def Remap01(value: float, from1: float, from2: float) -> float:
     Converts a value to another value within the given arguments.
     """
     return Remap(value, from1, 0.0, from2, 1.0)
-
-def Repeat(t: float, length: float) -> float:
-    """Loops the value t, so that it is never larger than length and never smaller than 0.
-
-    This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
-    """
-    return Clamp(t - Floor(t / length) * length, 0.0, length)
 #endregion
 
 #region Rounding

@@ -1,5 +1,8 @@
+from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
+from enum import Enum, auto
 import time
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pygame
 
@@ -8,6 +11,7 @@ import KDS.Audio
 import KDS.ConfigManager
 import KDS.Logging
 import KDS.Math
+import KDS.Gamemode
 
 waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait before updating the next animation
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
@@ -22,60 +26,161 @@ def init():
     global pointSound
     pointSound = pygame.mixer.Sound("Assets/Audio/Effects/point_count.ogg")
 
+class GameTimeTimer(ABC):
+    @abstractmethod
+    def __init__(self) -> None:
+        pass
+
+    @abstractmethod
+    def Start(self) -> None:
+        pass
+
+    @abstractmethod
+    def Pause(self) -> None:
+        pass
+
+    @abstractmethod
+    def Unpause(self) -> None:
+        pass
+
+    @abstractmethod
+    def Stop(self) -> None:
+        pass
+
+    @abstractmethod
+    def GetGameTime(self) -> timedelta:
+        pass
+
+class GameTimeTimerPerfCounter(GameTimeTimer):
+    def __init__(self) -> None:
+        self.start: Optional[float] = None
+        self.end: Optional[float] = None
+        self.pauseStart: Optional[float] = None
+        self.cumPause: float = 0.0
+
+    def Start(self) -> None:
+        self.cumPause = 0.0
+        self.start = time.perf_counter()
+
+    def Pause(self) -> None:
+        if self.pauseStart != None:
+            raise RuntimeError("Calling pause start while paused!")
+        self.pauseStart = time.perf_counter()
+
+    def Unpause(self) -> None:
+        if self.pauseStart == None:
+            # raise RuntimeError("Calling pause end when not paused!")
+            return
+        self.cumPause += time.perf_counter() - self.pauseStart
+        self.pauseStart = None
+
+    def Stop(self) -> None:
+        self.end = time.perf_counter()
+
+    def GetGameTime(self) -> timedelta:
+        if self.start == None or self.end == None:
+            raise RuntimeError("Cannot get game time before stopping the timer!")
+        return timedelta(seconds=self.end - self.start - self.cumPause)
+
+class GameTimeTimerDateTime(GameTimeTimer):
+    def __init__(self) -> None:
+        self.start: Optional[datetime] = None
+        self.end: Optional[datetime] = None
+        self.pauseStart: Optional[datetime] = None
+        self.cumPause: timedelta = timedelta()
+
+    def Start(self) -> None:
+        self.cumPause = timedelta()
+        self.start = datetime.utcnow()
+
+    def Pause(self) -> None:
+        if self.pauseStart != None:
+            raise RuntimeError("Calling pause start while paused!")
+        self.pauseStart = datetime.utcnow()
+
+    def Unpause(self) -> None:
+        if self.pauseStart == None:
+            raise RuntimeError("Calling pause end when not paused!")
+        self.cumPause += datetime.utcnow() - self.pauseStart
+        self.pauseStart = None
+
+    def Stop(self) -> None:
+        self.end = datetime.utcnow()
+
+    def GetGameTime(self) -> timedelta:
+        if self.start == None or self.end == None:
+            raise RuntimeError("Cannot get game time before stopping the timer!")
+        return self.end - self.start
+
+class GameTimerType(Enum):
+    PerfCounter = GameTimeTimerPerfCounter
+    DateTime = GameTimeTimerDateTime
+
 class GameTime:
-    formattedGameTime = "null"
-    gameTime = -1.0
-    startTime = -1.0
-    pauseStartTime = -1.0
-    cumulativePauseTime = 0.0
-    @staticmethod
-    def start():
-        GameTime.gameTime = -1
-        GameTime.cumulativePauseTime = 0
-        GameTime.startTime = time.perf_counter()
+    Timer: Optional[GameTimeTimer] = None
 
     @staticmethod
-    def pause():
-        if GameTime.pauseStartTime == -1:
-            GameTime.pauseStartTime = time.perf_counter()
+    def Start(_type: GameTimerType) -> None:
+        GameTime.Timer = _type.value() # Calling timer constructor
+        GameTime.Timer.Start()
 
     @staticmethod
-    def unpause():
-        GameTime.cumulativePauseTime += time.perf_counter() - GameTime.pauseStartTime
-        GameTime.pauseStartTime = -1
+    def Pause():
+        if GameTime.Timer == None:
+            raise RuntimeError("Cannot pause timer before starting timer!")
+        GameTime.Timer.Pause()
 
     @staticmethod
-    def stop():
-        GameTime.gameTime = time.perf_counter() - GameTime.startTime - GameTime.cumulativePauseTime
-        GameTime.formattedGameTime = GameTime.formatTime(GameTime.gameTime)
+    def Unpause():
+        if GameTime.Timer == None:
+            raise RuntimeError("Cannot unpause timer before starting timer!")
+        GameTime.Timer.Unpause()
 
     @staticmethod
-    def formatTime(seconds: float) -> str:
-        divTime = divmod(seconds, 60)
-        return f"{round(divTime[0]):02d}m {round(divTime[1]):02d}s"
+    def Stop():
+        if GameTime.Timer == None:
+            raise RuntimeError("Cannot stop timer before starting timer!")
+        GameTime.Timer.Stop()
+
+    @staticmethod
+    def GetGameTime() -> timedelta:
+        if GameTime.Timer == None:
+            raise RuntimeError("Cannot get game time before stopping timer!")
+        return GameTime.Timer.GetGameTime()
+
+    @staticmethod
+    def GetFormattedString(secondsOverride: float = None) -> str:
+        totalSeconds = secondsOverride
+        if totalSeconds == None:
+            time = GameTime.GetGameTime()
+            totalSeconds = time.total_seconds()
+        minutes = int(totalSeconds // 60)
+        seconds = round(totalSeconds % 60)
+        return f"{minutes}m {seconds}s"
 
 class ScoreCounter:
     @staticmethod
-    def start():
+    def Start():
         global score, koponen_happiness
         score = 0
         koponen_happiness = 40
-        GameTime.start()
+        storyMode = KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story
+        GameTime.Start(GameTimerType.PerfCounter if not storyMode else GameTimerType.DateTime)
 
     @staticmethod
-    def pause():
-        GameTime.pause()
+    def Pause():
+        GameTime.Pause()
 
     @staticmethod
-    def unpause():
-        GameTime.unpause()
+    def Unpause():
+        GameTime.Unpause()
 
     @staticmethod
-    def stop():
-        GameTime.stop()
+    def Stop():
+        GameTime.Stop()
 
     @staticmethod
-    def calculateScores():
+    def CalculateScores():
         global score, koponen_happiness
         tb_start: int = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/start", None)
         tb_end: int = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/end", None)
@@ -83,9 +188,9 @@ class ScoreCounter:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})")
             tb_start = 1
             tb_end = 2
-        gameTime = KDS.Math.Clamp(GameTime.gameTime, tb_start, tb_end)
-        timeBonusIndex: float = KDS.Math.Remap01(gameTime, tb_start, tb_end)
-        timeBonus: int = round(KDS.Math.Lerp(maxTimeBonus, 0, timeBonusIndex))
+        clampedGameTime = KDS.Math.Clamp(GameTime.GetGameTime().total_seconds(), tb_start, tb_end)
+        timeBonusFloat: float = KDS.Math.Remap(clampedGameTime, tb_start, tb_end, maxTimeBonus, 0)
+        timeBonus = round(timeBonusFloat)
 
         totalScore: int = score + koponen_happiness + timeBonus
 
@@ -100,7 +205,7 @@ class ScoreAnimation:
 
     @staticmethod
     def init():
-        score, koponen_happiness, timeBonus, totalScore = ScoreCounter.calculateScores()
+        score, koponen_happiness, timeBonus, totalScore = ScoreCounter.CalculateScores()
 
         ScoreAnimation.animationIndex = 0
         ScoreAnimation.finished = False

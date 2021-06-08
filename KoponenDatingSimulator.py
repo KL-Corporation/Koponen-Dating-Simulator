@@ -610,25 +610,24 @@ class ScreenEffects:
     triggered: Effects = Effects(0)
     OnEffectFinish = KDS.Events.Event()
 
-    data: Dict[Effects, Dict[str, Any]] = {
-        Effects.Flicker: {
+    class EffectData:
+        Flicker = {
             "repeat_rate": 2,
             "repeat_length": 12,
             "repeat_index": 0
-        },
-        Effects.FadeInOut: {
+        }
+        FadeInOut = {
             "animation": KDS.Animator.Value(0.0, 255.0, 120),
             "reversed": False,
             "wait_index": 0,
             "wait_length": 240,
             "surface": pygame.Surface(screen_size).convert()
-        },
-        Effects.Glitch: {
+        }
+        Glitch = {
             "repeat_rate": 2,
             "repeat_index": 0,
             "current_glitch": ((0, 0, 0, 0), (0, 0))
         }
-    }
 
     @staticmethod
     def Queued() -> bool:
@@ -2027,7 +2026,7 @@ class Knife(KDS.Build.Weapon):
     def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
         output = super().shoot(holderData)
         if output:
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 25, maxDistance=40))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 5, maxDistance=40))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2080,7 +2079,7 @@ class Pistol(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 100))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2100,7 +2099,7 @@ class rk62(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6))
         return output
 
 
@@ -2122,7 +2121,7 @@ class Shotgun(KDS.Build.Weapon):
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25, maxDistance=1400, slope=3 - x / 1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6, maxDistance=1400, slope=3 - x / 1.5))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2156,7 +2155,7 @@ class Plasmarifle(KDS.Build.Weapon):
         if output:
             asset_offset = 70 * -KDS.Convert.ToMultiplier(holderData.direction)
             Lights.append(KDS.World.Lighting.Light((int(holderData.rect.centerx - asset_offset / 1.4), holderData.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, Tiles, 20, plasma_ammo, 2000, random.randint(-1, 1) / 27))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, Tiles, 5, plasma_ammo, 2000, random.randint(-1, 1) / 27))
         return output
 
     def pickup(self) -> None:
@@ -2211,7 +2210,7 @@ class Ppsh41(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 10, slope=random.uniform(-0.5, 0.5)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 3, slope=random.uniform(-0.5, 0.5)))
         return output
 
     def pickup(self) -> None:
@@ -2230,7 +2229,7 @@ class Awm(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(300, 590), slope=0))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(75, 150), slope=0))
         return output
 
     def pickup(self) -> None:
@@ -3146,7 +3145,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     #endregion
 
     main_menu_running = False
-    KDS.Scores.ScoreCounter.start()
+    KDS.Scores.ScoreCounter.Start()
     if reset_scroll: true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
     pygame.event.clear()
     KDS.Keys.Reset()
@@ -3174,8 +3173,10 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
     load_map_names()
 
-    if newSave: KDS.ConfigManager.Save(saveIndex)
-    else: KDS.ConfigManager.Save.Active.save()
+    if newSave:
+        KDS.ConfigManager.Save(saveIndex)
+    else:
+        KDS.ConfigManager.Save.Active.save()
 
     if KDS.ConfigManager.Save.Active.Story.index > KDS.ConfigManager.GetGameData("Story/levelCount"):
         KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
@@ -3183,7 +3184,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
         return
 
     if KDS.ConfigManager.Save.Active.Story.playerName == "<name-error>":
-        playerName = KDS.Console.Start("Enter Name:", True, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=("Name", "name"), noSpace=True)) #Name is invalid because fuck the player. They took "Enter Name" literally.
+        playerName = KDS.Console.Start("Enter name:", True, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=["name"], noSpace=True)) #Name is invalid because fuck the player. They took "Enter Name" literally.
         if len(playerName) < 1:
             KDS.ConfigManager.Save.Active.delete()
             pygame.mouse.set_visible(True)
@@ -3626,13 +3627,12 @@ def main_menu():
                     if data != None:
                         lines = [
                             data["name"],
-                            f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100,
-                            KDS.Math.MidpointRounding.AwayFromZero)}%""",
-                            data["grade"] if data["grade"] > 0 else None,
+                            f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100, KDS.Math.MidpointRounding.AwayFromZero)}%""",
                             None,
                             None,
+                            f"""Exam Grade: {data["grade"]}""" if data["grade"] != -1 else None,
                             f"""Score: {data["score"]}""",
-                            f"""Playtime: {KDS.Scores.GameTime.formatTime(data["playtime"])}"""
+                            f"""Playtime: {KDS.Scores.GameTime.GetFormattedString(data["playtime"])}"""
                         ]
                         for i, line in enumerate(lines):
                             rendered = font.render(line, True, KDS.Colors.White)
@@ -3771,7 +3771,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
             level_f_surf.blit(scoreTexts[i], (menu_rect.left + padding, textY))
 
         if KDS.Scores.ScoreAnimation.finished:
-            timeTakenText = ArialFont.render(f"Time Taken: {KDS.Scores.GameTime.formattedGameTime}", True, score_color)
+            timeTakenText = ArialFont.render(f"Time Taken: {KDS.Scores.GameTime.GetFormattedString()}", True, score_color)
             textY = textStartVertOffset + (len(values) - 1) * textVertOffset + totalVertOffset
             level_f_surf.blit(timeTakenText, (menu_rect.left + padding, textY + timeTakenVertOffset))
 
@@ -4108,9 +4108,9 @@ while main_running:
 #region Screen Rendering
     if ScreenEffects.Queued():
         if ScreenEffects.Get(ScreenEffects.Effects.Flicker):
-            data = ScreenEffects.data[ScreenEffects.Effects.Flicker] # Should be the same instance...
+            data = ScreenEffects.EffectData.Flicker # Should be the same instance...
 
-            if KDS.Math.Repeat(data["repeat_index"], data["repeat_rate"]) == 0:
+            if int(data["repeat_index"]) % int(data["repeat_rate"]) == 0:
                 invPix = pygame.surfarray.pixels2d(screen)
                 invPix ^= 2 ** 32 - 1
                 del invPix
@@ -4120,7 +4120,7 @@ while main_running:
                 data["repeat_index"] = 0
                 ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
         if ScreenEffects.Get(ScreenEffects.Effects.FadeInOut):
-            data = ScreenEffects.data[ScreenEffects.Effects.FadeInOut] # Should be the same instance...
+            data = ScreenEffects.EffectData.FadeInOut # Should be the same instance...
             anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
             rev: bool = data["reversed"]
             surf = data["surface"]
@@ -4136,9 +4136,10 @@ while main_running:
                     data["wait_index"] = 0
                     ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
         if ScreenEffects.Get(ScreenEffects.Effects.Glitch):
-            data = ScreenEffects.data[ScreenEffects.Effects.Glitch]
-            data["repeat_index"] = KDS.Math.Repeat(data["repeat_index"] + 1, data["repeat_rate"])
-            if data["repeat_index"] == 0:
+            data = ScreenEffects.EffectData.Glitch
+            rptIndx = int(data["repeat_index"]) + 1 % int(data["repeat_rate"])
+            data["repeat_index"] = rptIndx
+            if rptIndx == 0:
                 glitchRandX = random.randrange(0, screen_size[0])
                 glitchRandY = random.randrange(0, screen_size[1])
                 # glitchRandW = random.randrange(screen_size[0], screen_size[0] + 1)
@@ -4186,7 +4187,7 @@ while main_running:
         Player.health = 0
         Player.rect.y = len(Tiles) * 34 + 340
     if esc_menu:
-        KDS.Scores.ScoreCounter.pause()
+        KDS.Scores.ScoreCounter.Pause()
         KDS.Audio.Music.Pause()
         KDS.Audio.PauseAllSounds()
         pygame.transform.scale(screen, display_size, display)
@@ -4195,9 +4196,9 @@ while main_running:
         pygame.mouse.set_visible(False)
         KDS.Audio.Music.Unpause()
         KDS.Audio.UnpauseAllSounds()
-        KDS.Scores.ScoreCounter.unpause()
+        KDS.Scores.ScoreCounter.Unpause()
     if level_finished:
-        KDS.Scores.ScoreCounter.stop()
+        KDS.Scores.ScoreCounter.Stop()
         KDS.Audio.StopAllSounds()
         KDS.Audio.Music.Stop()
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
@@ -4216,6 +4217,10 @@ while main_running:
         KDS.Audio.Music.Unpause()
         KDS.Audio.UnpauseAllSounds()
     if go_to_main_menu:
+        if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story and KDS.ConfigManager.Save.Active != None:
+            KDS.Scores.ScoreCounter.Stop()
+            KDS.ConfigManager.Save.Active.save()
+            KDS.ConfigManager.Save.Active = None
         KDS.Audio.StopAllSounds()
         KDS.Audio.Music.Stop()
         main_menu()

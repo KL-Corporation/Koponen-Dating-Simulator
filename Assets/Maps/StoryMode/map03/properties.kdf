@@ -1232,5 +1232,6 @@
 "40-53":{"0":{"checkCollision":false}},
 "41-53":{"0":{"checkCollision":false}},
 "42-53":{"0":{"checkCollision":false}},
-"43-53":{"0":{"checkCollision":false}}
+"43-53":{"0":{"checkCollision":false}},
+"zones":{"52-38-9-4":{"staffOnly":true}}
 }

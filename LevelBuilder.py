@@ -310,6 +310,8 @@ class UnitData:
     EMPTY = "0000"
     SLOTCOUNT = 4
 
+    DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
+
     def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
@@ -488,7 +490,6 @@ class UnitData:
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
-        DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
         doorRenders: List[Tuple[str, Tuple[int, int], bool]] = []
         overlayRenders: List[Tuple[str, Tuple[int, int], bool]] = []
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
@@ -501,7 +502,7 @@ class UnitData:
                 for number in unit.serials:
                     if number == UnitData.EMPTY:
                         continue
-                    if number in DOORSERIALS:
+                    if number in UnitData.DOORSERIALS:
                         doorRenders.append((number, (normalBlitPos[0], normalBlitPos[1] + scalesize), unit.matchesRefrence))
                         continue
 
