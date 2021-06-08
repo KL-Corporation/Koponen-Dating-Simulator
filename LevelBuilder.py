@@ -208,7 +208,7 @@ gridSize: Tuple[int, int] = (0, 0)
 
 refrenceGrid: Optional[List[List[UnitData]]] = None
 refrenceGridSize = (0, 0)
-refrenceScanProgress = [0, 0]
+refrenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 
 zoneMode = False
 
@@ -325,7 +325,7 @@ class UnitData:
     def __eq__(self, other) -> bool:
         """ == operator """
         if isinstance(other, UnitData):
-            return self.pos == other.pos and self.serialNumber == other.serialNumber and self.properties == other.properties
+            return self.Equals(other)
         return False
 
     def __ne__(self, other) -> bool:
@@ -334,6 +334,9 @@ class UnitData:
 
     def __str__(self) -> str:
         return self.serialNumber
+
+    def Equals(self, other: UnitData) -> bool:
+        return self.pos == other.pos and self.serialNumber == other.serialNumber and self.properties == other.properties
 
     def Copy(self) -> UnitData:
         data = UnitData(position=self.pos, serialNumber=self.serialNumber)
@@ -466,7 +469,7 @@ class UnitData:
             telepOverlay = Textures.GetScaledTexture("3001").copy()
             telepOverlay.set_alpha(100)
             surface.blit(telepOverlay, pos)
-        if lightOverlay and textureData.lightOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
+        if lightOverlay: # I don't know if pygame.Surface has a custom equals operator.
             surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
@@ -639,6 +642,17 @@ class UnitData:
 
         UnitData.releasedButtons[0] = not mouse_pressed[0]
         UnitData.releasedButtons[2] = not mouse_pressed[2]
+
+    @staticmethod
+    def refrenceUpdate():
+        global grid, refrenceGrid, gridSize, refrenceGridSize
+        for x in range(min(gridSize[0], refrenceGridSize[0])):
+            if refrenceGridSize == None:
+                return
+            for y in range(min(gridSize[1], refrenceGridSize[1])):
+                if refrenceGrid == None:
+                    return
+                grid[y][x].matchesRefrence = grid[y][x].Equals(refrenceGrid[y][x])
 
 class PropertiesData:
     class ZoneSetting(Enum):
@@ -1124,7 +1138,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
     KDS.Loading.Circle.Start(display, clock)
 
     handle = KDS.Jobs.Schedule(internalLoadMap, path)
-    while not handle.IsComplete():
+    while not handle.IsComplete:
         for event in pygame.event.get():
             if event.type == QUIT:
                 LB_Quit()
@@ -1583,7 +1597,7 @@ def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
 
 allowTilePlacement = True
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode, refrenceGridHandle
 
     menu()
     if not mainRunning: return
@@ -1610,8 +1624,6 @@ def main():
         textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
     inputConsole_output = None
-
-    forceRefrenceCheck: bool = False
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
@@ -1715,8 +1727,6 @@ def main():
                         refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
                         if len(refrencePath) > 0 and not refrencePath.isspace():
                             refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
-                elif event.key == K_F5:
-                    forceRefrenceCheck = True
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LCTRL]:
                     zoom(event.y * 5, scroll, grid)
@@ -1751,25 +1761,14 @@ def main():
             inputConsole_output = None
 
         if refrenceGrid != None:
-            refrenceIters = 100
-            if forceRefrenceCheck:
-                forceRefrenceCheck = False
-                refrenceIters = KDS.Math.MAXVALUE
-                refrenceScanProgress[0] = 0
-                refrenceScanProgress[1] = 0
-
-            for _ in range(refrenceIters):
-                refrenceScanProgress[0] += 1
-                if refrenceScanProgress[0] >= min(refrenceGridSize[0], gridSize[0]):
-                    refrenceScanProgress[0] = 0
-                    refrenceScanProgress[1] += 1
-                    if refrenceScanProgress[1] >= min(refrenceGridSize[1], gridSize[1]):
-                        refrenceScanProgress[1] = 0
-                        break
-                tocheck1 = grid[refrenceScanProgress[1]][refrenceScanProgress[0]]
-                tocheck2 = refrenceGrid[refrenceScanProgress[1]][refrenceScanProgress[0]]
-                match = tocheck1 == tocheck2
-                grid[refrenceScanProgress[1]][refrenceScanProgress[0]].matchesRefrence = match
+            if refrenceGridHandle == None or refrenceGridHandle.IsComplete:
+                if refrenceGridHandle != None:
+                    refrenceGridHandle.Complete()
+                refrenceGridHandle = KDS.Jobs.Schedule(UnitData.refrenceUpdate)
+        elif refrenceGridHandle != None:
+            if refrenceGridHandle.IsComplete:
+                refrenceGridHandle.Complete()
+                refrenceGridHandle = None
 
         display.fill((30, 20, 60))
         UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
@@ -1899,7 +1898,6 @@ KDS.Jobs.quit()
     O: Set Overlay
     G: Select Refrence Map File
     Z: Toggle Zone Mode
-    F5: Force Refrence Check
     CTRL + A: Select All
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As

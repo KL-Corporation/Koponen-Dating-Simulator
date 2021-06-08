@@ -21,6 +21,7 @@ class JobHandle:
     def __init__(self, future: Future) -> None:
         self.future = future
 
+    @property
     def IsComplete(self) -> bool:
         return self.future.done()
 

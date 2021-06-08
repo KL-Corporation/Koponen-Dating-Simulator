@@ -3128,7 +3128,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
 
 
     loadMapHandle = KDS.Jobs.Schedule(WorldData.LoadMap, mapPath)
-    while not loadMapHandle.IsComplete():
+    while not loadMapHandle.IsComplete:
         for event in pygame.event.get(): # No default event handler in loading screen
             if event.type == QUIT:
                 KDS_Quit()
