@@ -148,7 +148,8 @@ REBINDABLEKEYS = {
     "Open Terminal": terminal,
     "Hide UI": hideUI,
     "Take a Screenshot": screenshot,
-    "Toggle Debug Mode": toggleDebug
+    "Toggle Debug Mode": toggleDebug,
+    "Toggle Fullscreen": toggleFullscreen
 }
 
 def LoadCustomBindings():
