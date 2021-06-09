@@ -22,6 +22,7 @@ import KDS.Linq
 import KDS.AI
 import KDS.World
 import KDS.Debug
+import KDS.Keys
 
 import re
 import shlex
@@ -299,7 +300,7 @@ class Talk:
         Talk.running = True
         Talk.autoExit = autoExit
 
-        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.buttonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
+        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.ButtonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
         request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
         return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, "RETURN MISSION")
 
@@ -311,7 +312,7 @@ class Talk:
             c = False
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
-                    if event.key == K_F11:
+                    if event.key in KDS.Keys.toggleFullscreen.Bindings:
                         pygame.display.toggle_fullscreen()
                         KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                     elif event.key == K_F4:

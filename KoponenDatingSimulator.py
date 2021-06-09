@@ -130,6 +130,7 @@ KDS.Koponen.init()
 KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
 KDS.School.init(display, clock)
+KDS.Keys.LoadCustomBindings()
 
 cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
 cursorData = {
@@ -164,8 +165,6 @@ KDS.Logging.debug("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10, bold=0, itealic=0)
-button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
-button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 ArialFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
 ArialTitleFont = pygame.font.SysFont("Arial", 72, bold=0, italic=0)
@@ -592,11 +591,11 @@ def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
         KDS.Audio.Music.OnEnd.Invoke()
         return True
     elif event.type == KEYDOWN:
-        if event.key == K_F3:
+        if event.key in KDS.Keys.toggleDebug.Bindings:
             KDS.Debug.Enabled = not KDS.Debug.Enabled
             KDS.Logging.Profiler(KDS.Debug.Enabled)
             return True
-        elif event.key == K_F11:
+        elif event.key in KDS.Keys.toggleFullscreen.Bindings:
             pygame.display.toggle_fullscreen()
             KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
             return True
@@ -3058,7 +3057,7 @@ def agr():
         tcagr_running = False
 
 
-    agree_button = KDS.UI.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, button_font1.render(
+    agree_button = KDS.UI.Button(pygame.Rect(465, 500, 270, 135), tcagr_agree_function, KDS.UI.ButtonFont.render(
         "I Agree", True, KDS.Colors.White))
 
     while tcagr_running:
@@ -3229,9 +3228,9 @@ def esc_menu_f(oldSurf: pygame.Surface):
 
     aligner = (display_size[0] // 2, display_size[1] // 2 - 200, display_size[1] // 2 + 200)
 
-    resume_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 160, 200, 30), resume, button_font.render("RESUME", True, KDS.Colors.White))
-    settings_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 120, 200, 30), settings_menu, button_font.render("SETTINGS", True, KDS.Colors.White))
-    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 80, 200, 30), goto_main_menu, button_font.render("MAIN MENU", True, KDS.Colors.White))
+    resume_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 160, 200, 30), resume, KDS.UI.ButtonFontSmall.render("RESUME", True, KDS.Colors.White))
+    settings_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 120, 200, 30), settings_menu, KDS.UI.ButtonFontSmall.render("SETTINGS", True, KDS.Colors.White))
+    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 100, aligner[2] - 80, 200, 30), goto_main_menu, KDS.UI.ButtonFontSmall.render("MAIN MENU", True, KDS.Colors.White))
 
     anim_lerp_x = KDS.Animator.Value(0.0, 1.0, 15, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
 
@@ -3295,12 +3294,13 @@ def settings_menu():
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/effect")
     walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), ..., custom_path="Mixer/walkSound")
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
-    reset_settings_button = KDS.UI.Button(pygame.Rect(340, 585, 240, 40), reset_settings, button_font.render("Reset Settings", True, KDS.Colors.White))
-    remove_data_button = KDS.UI.Button(pygame.Rect(620, 585, 240, 40), remove_data, button_font.render("Remove Data", True, KDS.Colors.White))
-    music_volume_text = button_font.render("Music Volume", True, KDS.Colors.White)
-    effect_volume_text = button_font.render("Sound Effect Volume", True, KDS.Colors.White)
-    walk_sound_text = button_font.render("Play footstep sounds", True, KDS.Colors.White)
-    pause_loss_text = button_font.render("Pause On Focus Loss", True, KDS.Colors.White)
+    controls_settings_button = KDS.UI.Button(pygame.Rect(480, 485, 260, 50), lambda: KDS.Keys.StartBindingMenu(display, clock, defaultEventHandler), KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
+    reset_settings_button = KDS.UI.Button(pygame.Rect(340, 595, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White))
+    remove_data_button = KDS.UI.Button(pygame.Rect(620, 595, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White))
+    music_volume_text = KDS.UI.ButtonFontSmall.render("Music Volume", True, KDS.Colors.White)
+    effect_volume_text = KDS.UI.ButtonFontSmall.render("Sound Effect Volume", True, KDS.Colors.White)
+    walk_sound_text = KDS.UI.ButtonFontSmall.render("Play footstep sounds", True, KDS.Colors.White)
+    pause_loss_text = KDS.UI.ButtonFontSmall.render("Pause On Focus Loss", True, KDS.Colors.White)
 
     while settings_running:
         mouse_pos = pygame.mouse.get_pos()
@@ -3311,7 +3311,8 @@ def settings_menu():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-                elif event.key == K_ESCAPE:
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
                     settings_running = False
 
         display.blit(settings_background, (0, 0))
@@ -3329,6 +3330,7 @@ def settings_menu():
         pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)
 
         return_button.update(display, mouse_pos, c)
+        controls_settings_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
         remove_data_button.update(display, mouse_pos, c)
         if KDS.Debug.Enabled:
@@ -3447,7 +3449,7 @@ def main_menu():
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
     #endregion
-    return_text = button_font1.render("RETURN", True, (KDS.Colors.AviatorRed))
+    return_text = KDS.UI.ButtonFont.render("RETURN", True, (KDS.Colors.AviatorRed))
     return_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 150, 300, 100), menu_mode_selector, return_text)
     #region Story Menu
     story_new_save_override = False
@@ -3475,7 +3477,7 @@ def main_menu():
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
-    campaign_play_text = button_font1.render("START", True, KDS.Colors.EmeraldGreen)
+    campaign_play_text = KDS.UI.ButtonFont.render("START", True, KDS.Colors.EmeraldGreen)
 
     def campaign_play_handler():
         if current_map_int != 0:
@@ -3597,7 +3599,7 @@ def main_menu():
             story_save_button_1.update(display, mouse_pos, c, 1)
             story_save_button_2.update(display, mouse_pos, c, 2)
 
-            story_new_save_button.overlay = button_font1.render("NEW SAVE", True, KDS.Colors.EmeraldGreen if not story_new_save_override else KDS.Colors.AviatorRed)
+            story_new_save_button.overlay = KDS.UI.ButtonFont.render("NEW SAVE", True, KDS.Colors.EmeraldGreen if not story_new_save_override else KDS.Colors.AviatorRed)
             story_new_save_button.update(display, mouse_pos, c)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
 
@@ -3640,7 +3642,7 @@ def main_menu():
             if current_map_int > 0: render_map_name = f"{current_map} - {current_map_name}"
             elif current_map_int == 0: render_map_name = "<= Custom                Campaign =>"
             else: render_map_name = f"CUSTOM - {current_map_name}"
-            level_text = button_font1.render(render_map_name, True, (0, 0, 0))
+            level_text = KDS.UI.ButtonFont.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
             skip_render_this_frame = campaign_play_button.update(display, mouse_pos, c)
@@ -3698,8 +3700,8 @@ def level_finished_menu(oldSurf: pygame.Surface):
 
     next_level_bool = int(current_map) < int(KDS.System.GetLineCount("Assets/Maps/StoryMode/names.dat"))
 
-    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, button_font.render("Main Menu", True, KDS.Colors.White))
-    next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, button_font.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
+    main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, KDS.UI.ButtonFontSmall.render("Main Menu", True, KDS.Colors.White))
+    next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, KDS.UI.ButtonFontSmall.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
 
     pre_rendered_scores = {}
 
@@ -3806,17 +3808,17 @@ while main_running:
                     Player.farting = True
                     KDS.Audio.PlaySound(fart)
                     KDS.Missions.SetProgress("tutorial", "fart", 1.0)
-            elif event.key == K_DOWN:
+            elif event.key in KDS.Keys.altDown.Bindings:
                 KDS.Keys.altDown.SetState(True)
-            elif event.key == K_UP:
+            elif event.key in KDS.Keys.altUp.Bindings:
                 KDS.Keys.altUp.SetState(True)
-            elif event.key == K_LEFT:
+            elif event.key in KDS.Keys.altLeft.Bindings:
                 KDS.Keys.altLeft.SetState(True)
-            elif event.key == K_RIGHT:
+            elif event.key in KDS.Keys.altRight.Bindings:
                 KDS.Keys.altRight.SetState(True)
-            elif event.key == K_F1:
+            elif event.key in KDS.Keys.hideUI.Bindings:
                 renderUI = not renderUI
-            elif event.key == K_t:
+            elif event.key in KDS.Keys.terminal.Bindings:
                 if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Debug.IsVSCodeDebugging(): # Console is disabled in story mode if application is not run on VSCode debug mode.
                     go_to_console = True
                 else:
@@ -3827,7 +3829,7 @@ while main_running:
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
                     KDS_Quit()
-            elif event.key == K_F12:
+            elif event.key in KDS.Keys.screenshot.Bindings:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
         elif event.type == MOUSEBUTTONDOWN:
@@ -3835,29 +3837,25 @@ while main_running:
                 KDS.Keys.mainKey.SetState(True)
                 rk62_sound_cooldown = 11
         elif event.type == KEYUP:
-            if event.key == K_d:
+            if event.key in KDS.Keys.moveRight.Bindings:
                 KDS.Keys.moveRight.SetState(False)
-            elif event.key == K_a:
+            elif event.key in KDS.Keys.moveLeft.Bindings:
                 KDS.Keys.moveLeft.SetState(False)
-            elif event.key == K_w:
+            elif event.key in KDS.Keys.moveUp.Bindings:
                 KDS.Keys.moveUp.SetState(False)
-            elif event.key == K_s:
+            elif event.key in KDS.Keys.moveDown.Bindings:
                 KDS.Keys.moveDown.SetState(False)
-            elif event.key == K_SPACE:
-                KDS.Keys.moveUp.SetState(False)
-            elif event.key == K_LCTRL:
-                KDS.Keys.moveDown.SetState(False)
-            elif event.key == K_LSHIFT:
+            elif event.key in KDS.Keys.moveRun.Bindings:
                 KDS.Keys.moveRun.SetState(False)
-            elif event.key == K_e:
+            elif event.key in KDS.Keys.functionKey.Bindings:
                 KDS.Keys.functionKey.SetState(False)
-            elif event.key == K_DOWN:
+            elif event.key in KDS.Keys.altDown.Bindings:
                 KDS.Keys.altDown.SetState(False)
-            elif event.key == K_UP:
+            elif event.key in KDS.Keys.altUp.Bindings:
                 KDS.Keys.altUp.SetState(False)
-            elif event.key == K_LEFT:
+            elif event.key in KDS.Keys.altLeft.Bindings:
                 KDS.Keys.altLeft.SetState(False)
-            elif event.key == K_RIGHT:
+            elif event.key in KDS.Keys.altRight.Bindings:
                 KDS.Keys.altRight.SetState(False)
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
@@ -3872,7 +3870,7 @@ while main_running:
             if pauseOnFocusLoss: esc_menu = True
 #endregion
 #region Data
-    display.fill((20, 25, 20))
+    display.fill(KDS.Colors.DefaultBackground)
     screen_overlay = None
 
     Lights.clear()
@@ -3884,7 +3882,7 @@ while main_running:
     if level_background_img != None:
         screen.blit(level_background_img, (scroll[0] * 0.12 * -1 - 68, scroll[1] * 0.12 * -1 - 68))
     else:
-        screen.fill((20, 25, 20))
+        screen.fill(KDS.Colors.DefaultBackground)
     mouse_pos = pygame.mouse.get_pos()
 
     if Player.farting:

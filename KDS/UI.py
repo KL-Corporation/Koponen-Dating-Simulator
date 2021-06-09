@@ -12,7 +12,8 @@ import KDS.Math
 slider_dragged = None
 
 pygame.init()
-buttonFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
+ButtonFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
+ButtonFontSmall = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 
 class Slider:
     def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[float, Any] = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = (0, 120, 0), handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 6, custom_path: str = None):
@@ -102,7 +103,7 @@ class Button:
         """
         self.rect = rect
         self.function = function
-        self.overlay = overlay if not isinstance(overlay, str) else buttonFont.render(overlay, True, KDS.Colors.White)
+        self.overlay = overlay if not isinstance(overlay, str) else ButtonFont.render(overlay, True, KDS.Colors.White)
         self.button_default_color = button_default_color
         self.button_highlighted_color = button_highlighted_color
         self.button_pressed_color = button_pressed_color

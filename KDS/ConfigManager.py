@@ -41,6 +41,9 @@ class JSON:
 
     @staticmethod
     def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True, encoding: str = None) ->  Union[Any, None]:
+        if value == JSON.EMPTY:
+            value = {}
+
         config: Dict[str, Any] = {}
         if os.path.isfile(filePath):
             try:
@@ -66,8 +69,6 @@ class JSON:
                 else:
                     return value
         elif config != value:
-            if value == JSON.EMPTY:
-                value = {}
             config = value
         else:
             return value
@@ -119,13 +120,13 @@ class JSON:
         KDS.Logging.AutoError("Unknown Error! This code should never execute.")
         return defaultValue
 
-def GetSetting(path: str, default: Any):
+def GetSetting(path: str, default: Any, writeMissingOverride: Optional[bool] = None, warnMissingOverride: Optional[bool] = None):
     """
     1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    output = JSON.Get(SettingsPath, path, default, warnMissing=True, writeMissing=default is not ..., encoding="utf-8")
+    output = JSON.Get(SettingsPath, path, default, warnMissing=True if warnMissingOverride == None else warnMissingOverride, writeMissing=default is not ... if writeMissingOverride == None else writeMissingOverride, encoding="utf-8")
     if default is not ... or output is not ...:
         return output
 

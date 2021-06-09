@@ -15,6 +15,7 @@ import KDS.Logging
 import KDS.Debug
 import KDS.UI
 import KDS.Linq
+import KDS.Keys
 import datetime
 
 class Timer:
@@ -339,7 +340,7 @@ def Exam(showtitle = True):
                 elif event.type == MOUSEBUTTONDOWN:
                     if event.button == 1: c = True
                 elif event.type == KEYDOWN:
-                    if event.key == K_F11:
+                    if event.key in KDS.Keys.toggleFullscreen.Bindings:
                         pygame.display.toggle_fullscreen()
                         KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
                 elif event.type == KEYUP:

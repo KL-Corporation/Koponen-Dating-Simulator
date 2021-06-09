@@ -32,10 +32,10 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
     mdHorizontalPadding = (10, 10)
 
     mdSurf = pygame.Surface((display.get_width() - mdHorizontalPadding[0] - mdHorizontalPadding[1], 4000))
-    mdSurf.fill((20, 25, 20))
+    mdSurf.fill(KDS.Colors.DefaultBackground)
 
     md.set_area(mdSurf, 0, 0)
-    md.set_color_background(20, 25, 20) # Default background color of KDS maps.
+    md.set_color_background(*KDS.Colors.DefaultBackground) # Default background color of KDS maps.
     md.display([], 0, 0, [False for _ in range(10)])
 
     waitTicks = 0
@@ -45,14 +45,14 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
 
     running = True
     while running:
-        display.fill((20, 25, 20))
+        display.fill(KDS.Colors.DefaultBackground)
         pygame.event.get() # Because Windows thinks this app has frozen
         display.blit(mdSurf, (mdHorizontalPadding[0], display.get_height() - mdScroll.update() * mdSurf.get_height()))
         if mdScroll.Finished and not KDS.Audio.Music.GetPlaying():
             pygame.mouse.set_visible(True)
             waitTicks += 1
             if waitTicks > 60 * 3:
-                KDS.School.Certificate(display, clock, BackgroundColor=(20, 25, 20))
+                KDS.School.Certificate(display, clock, BackgroundColor=KDS.Colors.DefaultBackground)
                 running = False
                 pygame.event.clear()
         pygame.display.flip()
