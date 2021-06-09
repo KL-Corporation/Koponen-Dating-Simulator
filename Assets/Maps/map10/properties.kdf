@@ -28,7 +28,7 @@
 "16-8":{"0":{"collisionDirection":"Top"},"9":{"overlay":"0002"}},
 "24-8":{"1":{"clip":"Assets/Audio/Effects/walkie_talkie.ogg","allowDrop":false,"clipVolume":0.25}},
 "29-8":{"0":{"collisionDirection":"Vertical"}},
-"42-8":{"3":{"identifier":420,"message":"Tie mystiseen maailmaan"}},
+"42-8":{"3":{"identifier":420,"message":"\u00e4hl\u00e4m 69420 penis haha"}},
 "47-8":{"3":{"identifier":69,"locked":true}},
 "52-8":{"0":{"filepath":"Assets/Audio/Effects/spooky.ogg","clip_volume":0.3}},
 "73-8":{"3":{"identifier":420}},

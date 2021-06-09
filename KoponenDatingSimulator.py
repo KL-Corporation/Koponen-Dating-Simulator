@@ -163,7 +163,7 @@ pygame.event.pump()
 KDS.Logging.debug("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
-message_font = pygame.font.Font("Assets/Fonts/gamefont3.otf", 12, bold=0, italic=0)
+teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10, bold=0, itealic=0)
 button_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26, bold=0, italic=0)
 button_font1 = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52, bold=0, italic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
@@ -585,7 +585,7 @@ del default_paths, sounds
 KDS.Build.init(tileData, itemData, t_textures, i_textures)
 
 def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
-    if event in ignore:
+    if event.type in ignore:
         return False
 
     if event.type == KDS.Audio.MUSICENDEVENT:
@@ -595,6 +595,10 @@ def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
         if event.key == K_F3:
             KDS.Debug.Enabled = not KDS.Debug.Enabled
             KDS.Logging.Profiler(KDS.Debug.Enabled)
+            return True
+        elif event.key == K_F11:
+            pygame.display.toggle_fullscreen()
+            KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
             return True
     elif event.type == QUIT:
         KDS_Quit(confirm=True)
@@ -871,7 +875,7 @@ class Landmine(KDS.Build.Tile):
             if KDS.Math.getDistance(Player.rect.center, self.rect.center) < 100:
                 Player.health -= 100 - KDS.Math.getDistance(Player.rect.center, self.rect.center)
             for entity in Entities:
-                if KDS.Math.getDistance(entity.rect.center, self.rect.center) < 100 and entity.enabled:
+                if KDS.Math.getDistance(entity.rect.center, self.rect.center) < 100:
                     entity.health -= 120 - round(KDS.Math.getDistance(entity.rect.center, self.rect.center))
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (self.rect.x - 60, self.rect.y - 60)))
@@ -1729,7 +1733,7 @@ class BaseTeleport(KDS.Build.Tile):
 
     def lateInit(self):
         if self.message != None:
-            self.renderedMessage = message_font.render(self.message, True, KDS.Colors.White)
+            self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
         if self.identifier != None:
             if self.identifier not in BaseTeleport.teleportDatas:
                 BaseTeleport.teleportDatas[self.identifier] = BaseTeleport.TeleportData()
@@ -3062,13 +3066,6 @@ def agr():
         for event in pygame.event.get():
             if defaultEventHandler(event, QUIT):
                 continue
-            elif event.type == KEYDOWN:
-                if event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                elif event.key == K_F4:
-                    if pygame.key.get_pressed()[K_LALT]:
-                        KDS_Quit()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -3247,14 +3244,8 @@ def esc_menu_f(oldSurf: pygame.Surface):
             if defaultEventHandler(event):
                 continue
             elif event.type == KEYDOWN:
-                if event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                elif event.key == K_ESCAPE:
+                if event.key == K_ESCAPE:
                     esc_menu = False
-                elif event.key == K_F4:
-                    if pygame.key.get_pressed()[K_LALT]:
-                        KDS_Quit()
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -3320,13 +3311,6 @@ def settings_menu():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
-            elif event.type == KEYDOWN:
-                if event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                elif event.key == K_F4:
-                    if pygame.key.get_pressed()[K_LALT]:
-                        KDS_Quit()
                 elif event.key == K_ESCAPE:
                     settings_running = False
 
@@ -3513,13 +3497,7 @@ def main_menu():
                 if event.button == 1:
                     c = True
             elif event.type == KEYDOWN:
-                if event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                elif event.key == K_F4:
-                    if pygame.key.get_pressed()[K_LALT]:
-                        KDS_Quit()
-                elif event.key == K_ESCAPE:
+                if event.key == K_ESCAPE:
                     if MenuMode == Mode.ModeSelectionMenu or MenuMode == Mode.MainMenu:
                         MenuMode = Mode.MainMenu
                     else:
@@ -3527,12 +3505,14 @@ def main_menu():
                 elif event.key == K_F5:
                     KDS.Audio.MusicMixer.pause()
                     certQuit = KDS.School.Certificate(display, clock)
-                    if certQuit: KDS_Quit()
+                    if certQuit:
+                        KDS_Quit()
                     KDS.Audio.MusicMixer.unpause()
                 elif event.key == K_F6:
                     KDS.Audio.Music.Stop()
                     certQuit = KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
-                    if certQuit: KDS_Quit()
+                    if certQuit:
+                        KDS_Quit()
                     KDS.Audio.Music.Play("Assets/Audio/music/lobbymusic.ogg")
             elif event.type == QUIT:
                 KDS_Quit()
@@ -3733,13 +3713,6 @@ def level_finished_menu(oldSurf: pygame.Surface):
         for event in pygame.event.get():
             if defaultEventHandler(event):
                 continue
-            elif event.type == KEYDOWN:
-                if event.key == K_F11:
-                    pygame.display.toggle_fullscreen()
-                    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                elif event.key == K_F4:
-                    if pygame.key.get_pressed()[K_LALT]:
-                        KDS_Quit()
             elif event.type == KEYUP:
                 if event.key in (K_SPACE, K_RETURN, K_ESCAPE):
                     KDS.Scores.ScoreAnimation.skip()
@@ -3802,28 +3775,24 @@ while main_running:
         if defaultEventHandler(event):
             continue
         elif event.type == KEYDOWN:
-            if event.key == K_d:
+            if event.key in KDS.Keys.moveRight.Bindings:
                 KDS.Keys.moveRight.SetState(True)
-            elif event.key == K_a:
+            elif event.key in KDS.Keys.moveLeft.Bindings:
                 KDS.Keys.moveLeft.SetState(True)
-            elif event.key == K_w:
+            elif event.key in KDS.Keys.moveUp.Bindings:
                 KDS.Keys.moveUp.SetState(True)
-            elif event.key == K_s:
+            elif event.key in KDS.Keys.moveDown.Bindings:
                 KDS.Keys.moveDown.SetState(True)
-            elif event.key == K_SPACE:
-                KDS.Keys.moveUp.SetState(True)
-            elif event.key == K_LCTRL:
-                KDS.Keys.moveDown.SetState(True)
-            elif event.key == K_LSHIFT:
+            elif event.key in KDS.Keys.moveRun.Bindings:
                 if not KDS.Keys.moveDown.pressed:
                     KDS.Keys.moveRun.SetState(True)
-            elif event.key == K_e:
+            elif event.key in KDS.Keys.functionKey.Bindings:
                 KDS.Keys.functionKey.SetState(True)
             elif event.key == K_ESCAPE:
                 esc_menu = True
-            elif event.key in KDS.Keys.INVENTORYKEYS:
-                Player.inventory.pickSlot(KDS.Keys.INVENTORYKEYS.index(event.key))
-            elif event.key == K_q:
+            elif (matchingInventoryKey := KDS.Linq.FirstOrNone(KDS.Keys.INVENTORYKEYS, lambda ik: event.key in ik.Bindings)) != None:
+                Player.inventory.pickSlot(matchingInventoryKey.index)
+            elif event.key in KDS.Keys.dropItem.Bindings:
                 if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
                     droppedItem: Any = Player.inventory.dropItem()
                     if droppedItem != None:
@@ -3831,7 +3800,7 @@ while main_running:
                         droppedItem.physics = True
                         droppedItem.momentum = 0
                         Items.append(droppedItem)
-            elif event.key == K_f:
+            elif event.key in KDS.Keys.fart.Bindings:
                 if Player.stamina == 100:
                     Player.stamina = -1000.0
                     Player.farting = True
@@ -3850,9 +3819,6 @@ while main_running:
             elif event.key == K_t:
                 if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Debug.IsVSCodeDebugging(): # Console is disabled in story mode if application is not run on VSCode debug mode.
                     go_to_console = True
-            elif event.key == K_F4:
-                if pygame.key.get_pressed()[K_LALT]:
-                    KDS_Quit()
                 else:
                     Player.health = 0
             elif event.key == K_F5:
@@ -3861,9 +3827,6 @@ while main_running:
                 KDS.Audio.MusicMixer.unpause()
                 if quit_temp:
                     KDS_Quit()
-            elif event.key == K_F11:
-                pygame.display.toggle_fullscreen()
-                KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
             elif event.key == K_F12:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
@@ -3932,7 +3895,7 @@ while main_running:
             Player.farting = False
             Player.fart_counter = 0
             for entity in Entities:
-                if KDS.Math.getDistance(entity.rect.center, Player.rect.center) <= 800 and entity.enabled:
+                if KDS.Math.getDistance(entity.rect.center, Player.rect.center) <= 800:
                     entity.health -= random.randint(500, 1000)
 #endregion
 #region Rendering
@@ -4018,7 +3981,8 @@ while main_running:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
     if Player.visible:
         screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
-    if Koponen.enabled: Koponen.render(screen, scroll)
+    if Koponen.enabled:
+        Koponen.render(screen, scroll)
 
     #Overlayt
     for ov in overlays:

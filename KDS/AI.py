@@ -227,6 +227,9 @@ class HostileEnemy:
 
     @health.setter
     def health(self, value: int):
+        if not self.enabled:
+            return
+
         if value < self._health and value > 0:
             self.sleep = False
 

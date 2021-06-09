@@ -43,6 +43,9 @@ class NPC:
 
     @health.setter
     def health(self, value: int):
+        if not self.enabled:
+            return
+
         if value < self._health:
             self.onDamage()
         self._health = max(value, 0)
