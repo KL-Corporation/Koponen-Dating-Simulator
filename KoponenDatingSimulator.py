@@ -1684,6 +1684,22 @@ class Fucking(KDS.Build.Tile):
     def update(self) -> Optional[pygame.Surface]:
         return self.animation.update()
 
+class Shower(KDS.Build.Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.particleTick = 0
+        self.particleWait = 60
+
+    def lateInit(self) -> None:
+        self.darkOverlay = None
+
+    def update(self) -> Optional[pygame.Surface]:
+        self.particleTick = (self.particleTick + 1) % self.particleWait
+        if self.particleTick == 0:
+            Particles.append(KDS.World.Lighting.WaterParticle((self.rect.right - 3 - random.randint(0, 10), self.rect.top + 6), random.randint(1, 3), 3, random.randint(60, 120), Tiles, (0, 0, 255)))
+        return self.texture
+
+
 class BaseTeleport(KDS.Build.Tile):
     class TeleportData:
         def __init__(self) -> None:
@@ -1927,7 +1943,8 @@ KDS.Build.Tile.specialTilesClasses = {
     135: Molok,
     145: Kiuas,
     151: TileFire,
-    155: Fucking
+    155: Fucking,
+    157: Shower
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -3968,12 +3985,17 @@ while main_running:
 
     #Partikkelit
     #Particles.append(KDS.World.Lighting.Sparkparticle((Player.rect.x, Player.rect.y - 20), random.randint(1, 20), random.randint(1, 20), random.randint(1, 9)))
-    while len(Particles) > maxParticles:
-        Particles.pop(0)
+    if len(Particles) > maxParticles:
+        Particles = Particles[maxParticles:]
+    renderedParticleCount = len(Particles)
     for particle in Particles:
         result = particle.update(screen, scroll)
-        if isinstance(result, pygame.Surface): Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
-        else: Particles.remove(particle)
+        if isinstance(result, pygame.Surface):
+            Lights.append(KDS.World.Lighting.Light((particle.rect.x, particle.rect.y), result))
+        elif result == KDS.World.Lighting.Particle.UpdateAction.KillParticle:
+            Particles.remove(particle)
+        elif result != KDS.World.Lighting.Particle.UpdateAction.NoLight:
+            KDS.Logging.AutoError("Invalid particle update return value!")
 
     if KDS.Debug.Enabled:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
@@ -4056,17 +4078,6 @@ while main_running:
     ##################################################################################################################################################################
 
 #endregion
-#region Debug Mode
-    if KDS.Debug.Enabled:
-        screen.blit(KDS.Debug.RenderData({
-            "FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero),
-            "Player Position": Player.rect.topleft,
-            "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
-            "Entities": f"{Entity.total - Entity.death_count} / {Entity.total} | Agro: {Entity.agro_count}",
-            "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio.SoundMixer.get_num_channels()}",
-            "Lights Rendering": len(Lights)
-        }, fontOverride=tip_font), (0, 0))
-#endregion
 #region Screen Rendering
     if ScreenEffects.Queued():
         if ScreenEffects.Get(ScreenEffects.Effects.Flicker):
@@ -4120,6 +4131,19 @@ while main_running:
         screen.blit(screen_overlay, (0, 0))
 
     pygame.transform.scale(screen, display_size, display)
+
+    #region Debug Mode
+    if KDS.Debug.Enabled:
+        display.blit(KDS.Debug.RenderData({
+            "FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero),
+            "Player Position": Player.rect.topleft,
+            "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
+            "Entities": f"{Entity.total - Entity.death_count} / {Entity.total} | Agro: {Entity.agro_count}",
+            "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio.SoundMixer.get_num_channels()}",
+            "Lights Rendering": len(Lights),
+            "Particles Rendering": f"{renderedParticleCount} / {maxParticles}"
+        }), (0, 0))
+    #endregion
 
     if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
         if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):

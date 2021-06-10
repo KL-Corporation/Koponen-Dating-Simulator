@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
 
 import pygame
 from pygame.locals import *
@@ -24,7 +24,7 @@ import KDS.Debug
 
 import dataclasses
 
-from enum import auto, IntFlag
+from enum import IntEnum, auto, IntFlag
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -203,14 +203,42 @@ class Lighting:
             else: self.position = (position[0] - shape.get_width() // 2, position[1] - shape.get_height() // 2)
 
     class Particle:
+        class UpdateAction(IntEnum):
+            KillParticle = auto()
+            NoLight = auto()
+            Error = auto()
+
         def __init__(self, position, size):
             self.rect = pygame.Rect(position[0], position[1], size, size)
             self.size = size
             self.pos = position
 
-        def update(self, Surface, scroll):
+        def update(self, Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
+            return Lighting.Particle.UpdateAction.Error
 
-            return "null"
+    class WaterParticle(Particle):
+        def __init__(self, position: Tuple[int, int], size: int, speed: int, waitTicks: int, tileListInstance: List[List[List[KDS.Build.Tile]]], color: Tuple[float, float, float] = (0, 180, 0)):
+            super().__init__(position, size)
+            self.speed = speed
+            self.mover = EntityMover()
+            self.startY = self.rect.y
+            self.wait = waitTicks
+            self.tilesInstance = tileListInstance
+            self.bsurf = Lighting.circle_surface(size, color)
+
+        def update(self, Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
+            self.wait = max(self.wait - 1, 0)
+            if self.wait == 0:
+                collisions = self.mover.move(self.rect, (0, self.speed), self.tilesInstance)
+                if collisions.bottom:
+                    return Lighting.Particle.UpdateAction.KillParticle
+                if self.startY + 1000 < self.rect.y:
+                    return Lighting.Particle.UpdateAction.KillParticle
+
+            self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
+            Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+            return Lighting.Particle.UpdateAction.NoLight
 
     class Fireparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
@@ -221,12 +249,13 @@ class Lighting:
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
 
-        def update(self, Surface: pygame.Surface, scroll: List[int]):
+        def update(self, Surface: pygame.Surface, scroll: List[int]) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
             self.rect.y -= self.speed
             self.rect.x += random.randint(-1, 1)
             self.size -= self.dying_speed
 
-            if self.size < 0: return None
+            if self.size < 0:
+                return Lighting.Particle.UpdateAction.KillParticle
 
             self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
             Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
@@ -240,7 +269,7 @@ class Lighting:
             super().__init__(position, size)
             self.speed = speed
             self.size = size
-            self.lifetime =lifetime
+            self.lifetime = lifetime
             self.color = color
             self.direction = direction
             self.slope = slope
@@ -252,13 +281,14 @@ class Lighting:
             self.tsurf = Lighting.circle_surface(size*2, color)
             self.tsurf.fill(color)
 
-        def update(self, Surface: pygame.Surface, scroll):
+        def update(self, Surface: pygame.Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
             self.relativeX += self.direction * self.speed
             self.relativeY = self.relativeX * self.slope
             self.rect.x = self.pos[0] + round(self.relativeX)
             self.rect.y = self.pos[1] + round(self.relativeY)
             self.size -= self.dying_speed
-            if self.size < 0: return None
+            if self.size < 0:
+                return Lighting.Particle.UpdateAction.KillParticle
 
             self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size/2), round(self.size*2)))
             Surface.blit(self.bsurf, (self.rect.centerx - self.bsurf.get_width()/2 - scroll[0], self.rect.centery - self.bsurf.get_height()/2 - scroll[1]))

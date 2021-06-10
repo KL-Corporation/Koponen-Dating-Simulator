@@ -1076,5 +1076,26 @@
         "specialTile": true,
         "noCollision": true,
         "trueScale": true
+    },
+    "White": {
+        "serialNumber": 156,
+        "path": "white.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Shower": {
+        "serialNumber": 157,
+        "path": "shower.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "Sink": {
+        "serialNumber": 158,
+        "path": "sink.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
     }
 }
