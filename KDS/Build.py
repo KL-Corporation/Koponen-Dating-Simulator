@@ -134,7 +134,7 @@ class Item:
 
     tipItem = None
 
-    fall_speed: float = 1.0
+    fall_speed: float = 0.4
     fall_max_velocity: float = 8.0
 
     inventoryItems: Set[int] = set()
@@ -149,7 +149,8 @@ class Item:
         self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
         self.serialNumber = serialNumber
         self.physics = False
-        self.momentum = 0
+        self.vertical_momentum: float = 0.0
+        self.horizontal_momentum: float = 0.0
         self.doubleSize: bool = self.serialNumber in Item.inventoryDoubles
         self.supportsInventory = self.serialNumber in Item.inventoryItems
 
@@ -162,12 +163,15 @@ class Item:
             if renderable.texture != None:
                 Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
             if renderable.physics:
-                renderable.momentum = min(renderable.momentum + Item.fall_speed, Item.fall_max_velocity)
-                renderable.rect.y += int(renderable.momentum)
-                collisions = KDS.World.collision_test(renderable.rect, Tile_list)
-                if len(collisions) > 0:
-                    renderable.rect.bottom = collisions[0].rect.top
+                renderable.vertical_momentum = min(renderable.vertical_momentum + Item.fall_speed, Item.fall_max_velocity)
+                collisions = KDS.World.EntityMover().move(renderable.rect, (renderable.horizontal_momentum, renderable.vertical_momentum), Tile_list)
+                if collisions.bottom:
                     renderable.physics = False
+#                 renderable.rect.y += int(renderable.vertical_momentum)
+#                 collisions = KDS.World.collision_test(renderable.rect, Tile_list)
+#                 if len(collisions) > 0:
+#                     renderable.rect.bottom = collisions[0].rect.top
+#                     renderable.physics = False
 
     @staticmethod
     def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory):

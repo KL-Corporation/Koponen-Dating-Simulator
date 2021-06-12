@@ -1238,11 +1238,11 @@ class Methtable(KDS.Build.Tile):
     o_sounds = [pygame.mixer.Sound("Assets/Audio/Tiles/methtable_0.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/methtable_1.ogg"), pygame.mixer.Sound("Assets/Audio/Tiles/methtable_2.ogg")]
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.animation = KDS.Animator.Animation("methtable", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        for index, im in enumerate(self.animation.images):
-            self.animation.images[index] = pygame.transform.scale(im, (round(im.get_width() / 2.5), round(im.get_height() / 2.5))) # WTF????
-        self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
-        self.checkCollision = False
+        self.animation = KDS.Animator.Animation("methtable_rescaled", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        # for index, im in enumerate(self.animation.images):
+        #     self.animation.images[index] = pygame.transform.scale(im, (round(im.get_width() / 2.5), round(im.get_height() / 2.5))) # WTF????
+        # self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
+        # self.checkCollision = False
 
     def update(self):
         if random.randint(0, 105) == 50 and KDS.Math.getDistance(self.rect.center, Player.rect.center) < 355:
@@ -3813,11 +3813,12 @@ while main_running:
                 Player.inventory.pickSlot(matchingInventoryKey.index)
             elif event.key in KDS.Keys.dropItem.Bindings:
                 if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
-                    droppedItem: Any = Player.inventory.dropItem()
+                    droppedItem: Optional[KDS.Build.Item] = Player.inventory.dropItem()
                     if droppedItem != None:
                         droppedItem.rect.center = Player.rect.center
                         droppedItem.physics = True
-                        droppedItem.momentum = 0
+                        droppedItem.vertical_momentum = Player.vertical_momentum
+                        droppedItem.horizontal_momentum = Player.movement[0]
                         Items.append(droppedItem)
             elif event.key in KDS.Keys.fart.Bindings:
                 if Player.stamina == 100:

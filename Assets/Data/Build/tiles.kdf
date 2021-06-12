@@ -540,10 +540,10 @@
     },
     "Meth Table": {
         "serialNumber": 78,
-        "path": "methtable.png",
+        "path": "methtable_rescaled.png",
         "specialTile": true,
-        "noCollision": false,
-        "trueScale": false
+        "noCollision": true,
+        "trueScale": true
     },
     "Clear Tiles": {
         "serialNumber": 79,
