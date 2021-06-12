@@ -838,6 +838,7 @@ class Door(KDS.Build.Tile):
 
     def lateInit(self):
         self.darkOverlay = None
+        self.checkCollision = not self.open
 
     def update(self):
         self.checkCollision = not self.open
@@ -3129,6 +3130,11 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     Entities.clear()
     Zones.clear()
     #endregion
+    #region Class Data
+    KDS.NPC.NPC.InstanceList.clear()
+    KDS.Teachers.Teacher.InstanceList.clear()
+    KDS.World.Zone.StaffOnlyCollisions = 0
+    #endregion
 
     #region Ammo Resetting
     for c in KDS.Build.Item.serialNumbers.values():
@@ -3839,8 +3845,6 @@ while main_running:
             elif event.key in KDS.Keys.terminal.Bindings:
                 if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Debug.IsVSCodeDebugging(): # Console is disabled in story mode if application is not run on VSCode debug mode.
                     go_to_console = True
-                else:
-                    Player.health = 0
             elif event.key == K_F5:
                 KDS.Audio.MusicMixer.pause()
                 quit_temp, exam_score = KDS.School.Exam()

@@ -1,4 +1,9 @@
 {
 "40-0":{"3":{"identifier":1}},
-"40-254":{"3":{"identifier":1}}
+"18-3":{"0":{"checkCollision":false}},
+"27-3":{"0":{"checkCollision":false}},
+"18-4":{"0":{"checkCollision":false}},
+"27-4":{"0":{"checkCollision":false}},
+"40-254":{"3":{"identifier":1}},
+"zones":{"43-10-11-15":{"staffOnly":true,"darkness":255}}
 }

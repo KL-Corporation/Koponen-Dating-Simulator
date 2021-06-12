@@ -86,7 +86,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
 
             KDS.Missions.InitialiseMission("laittomuuksia", "Laittomuuksia")
             KDS.Missions.InitialiseTask("laittomuuksia", "search", "Etsi jotain epäilyttävää kemiavarastosta")
-            KDS.Missions.InitialiseKoponenTask("laittomuuksia", "search", "Palauta se Koposelle", "jotain epäilyttävää", "jotain epäilyttävää", 27)
+            KDS.Missions.InitialiseKoponenTask("laittomuuksia", "return", "Palauta se Koposelle", "jotain epäilyttävää", "jotain epäilyttävää", 27)
 
             KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen)
             KDS.Koponen.Talk.Conversation.schedule("Jatketaanpas sitten tuntia…\nEnsimmäisen asteen yhtälössä esiintyy muuttujan ensimmäinen potenssi, mutta ei korkeampia potensseja. Ensimmäisen asteen yhtälöitä ovat esimerkiksi\n2x − 1 = 3 ja\n4x + 6 = -x – 11\nToisen asteen yhtälössä taas esiintyy muuttujan toinen potenssi, mutta ei korkeampia potensseja. Toisen asteen yhtälöitä ovat esimerkiksi\nx² = 7” ja\n4x² + 3x – 1 = 0", KDS.Koponen.Prefixes.koponen, True)

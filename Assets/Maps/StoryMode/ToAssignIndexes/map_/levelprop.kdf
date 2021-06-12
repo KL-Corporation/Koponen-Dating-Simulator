@@ -12,6 +12,7 @@
                 0
             ],
             "enabled": true,
+			"talk": true,
             "forceTalk": true
         },
         "Player": {

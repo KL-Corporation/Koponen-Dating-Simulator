@@ -1401,6 +1401,8 @@ def generateLevelProp():
         #region Defaults
         KDS.ConfigManager.JSON.Set(savePath, "Data/infiniteAmmo", False)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceTalk", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceIdle", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/talk", False)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/lscript", [])
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/listeners", [])
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/Inventory", {})

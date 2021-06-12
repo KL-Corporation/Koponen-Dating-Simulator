@@ -10,11 +10,13 @@
         "Koponen": {
             "enabled": true,
             "forceTalk": false,
+            "forceIdle": true,
+            "talk": true,
             "listeners": [],
             "lscript": [],
             "startPos": [
-                1088,
-                1394
+                1190,
+                1360
             ]
         },
         "Player": {
@@ -22,7 +24,7 @@
             "spawnInverted": false,
             "startPos": [
                 1054,
-                1394
+                1360
             ]
         }
     },
