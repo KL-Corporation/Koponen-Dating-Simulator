@@ -141,7 +141,7 @@ class Talk:
     mask = pygame.mask.Mask(conversation_rect.size, True)
     display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
     display_size = display.get_size()
-    lineCount = KDS.Math.FloorToInt((display.get_height() - text_padding.top - text_padding.bottom) / text_font.size(" ")[1])
+    lineCount = KDS.Math.FloorToInt((display.get_height() - text_padding.top - text_padding.bottom) / line_spacing)
     audioChannel = None
     soundPlaying = None
     autoExit = False
@@ -164,15 +164,18 @@ class Talk:
         newAnimation = False
 
         @staticmethod
-        def schedule(text: str, prefix: str = Prefixes.player, forcePrefix: bool = False):
+        def schedule(text: str, prefix: Optional[str], forcePrefix: bool = False):
             if "\n" in text:
+                prefixForced: bool = False
                 for newLine in text.splitlines():
-                    Talk.Conversation.schedule(newLine)
+                    Talk.Conversation.schedule(newLine, prefix, forcePrefix and not prefixForced)
+                    prefixForced = True
                 return
 
             if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT):
                 Talk.scheduled.append(text)
                 return
+            assert prefix != None, "A prefix must be specified if text is not an event like WAITFORMISSIONREQUEST."
             prefixWidth = _renderedPrefixes[prefix].get_width()
             lineSplit = KDS.Convert.ToLines(text, text_font, Talk.display_size[0] - text_padding.left - text_padding.right - prefixWidth)
             for i in range(len(lineSplit)):
@@ -192,12 +195,11 @@ class Talk:
                     toShow = toShow.replace(token, getattr(KDS.ConfigManager.Save.Active.Story, token[1:-1], f"<story_attribute_error ({token[1:-1]})>"))
                 Talk.lines.append(toShow)
                 Talk.Conversation.newAnimation = True
-                deleteCount = 0
-                while len(Talk.lines) > 50:
-                    del Talk.lines[0]
-                    deleteCount += 1
-                if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index: Talk.Conversation.scrollToBottom()
-                else: Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
+                Talk.Conversation.scrollToBottom()
+#                 if len(Talk.lines) - Talk.Conversation.scroll <= Talk.lineCount + auto_scroll_offset_index:
+#                     Talk.Conversation.scrollToBottom()
+#                 else:
+#                     Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
             elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT)) and Talk.Conversation.animationProgress == -1:
                 if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
                     pygame.time.delay(500)
@@ -216,7 +218,7 @@ class Talk:
                         Talk.stop(forceExit=True)
 
         @staticmethod
-        def render(mouse_pos: Tuple[int, int], clicked: bool):
+        def render(mouse_pos: Tuple[int, int], clicked: bool) -> pygame.Surface:
             Talk.display.fill((0, 0, 0, 0))
             pygame.draw.rect(Talk.display, background_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), 0, conversation_border_radius)
 
@@ -236,7 +238,8 @@ class Talk:
 
                 # if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.display, mouse_pos, clicked)
 
-                if i == len(Talk.lines) - 1: lastIncluded = True
+                if i == len(Talk.lines) - 1:
+                    lastIncluded = True
 
             if len(Talk.lines) > 0:
                 lastLine = Talk.lines[-1]
@@ -320,16 +323,13 @@ class Talk:
                             KDS_Quit()
                     elif event.key == K_ESCAPE:
                         Talk.stop()
-                elif event.type == MOUSEBUTTONDOWN:
-                    if event.button == 4:
-                        Talk.Conversation.scroll = max(Talk.Conversation.scroll - line_scroll_speed, 0)
-                    elif event.button == 5:
-                        Talk.Conversation.scroll = min(Talk.Conversation.scroll + line_scroll_speed, max(len(Talk.lines) - Talk.lineCount, 0))
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True
                 elif event.type == QUIT:
                     KDS_Quit()
+                elif event.type == MOUSEWHEEL:
+                    Talk.Conversation.scroll = KDS.Math.Clamp(Talk.Conversation.scroll - line_scroll_speed * event.y, 0, max(len(Talk.lines) - Talk.lineCount, 0))
 
             Talk.renderMenu(display, mouse_pos, c)
 

@@ -63,14 +63,14 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
 
             KDS.Koponen.Talk.Conversation.schedule("Hei! Siinä sinä oletkin. Halusinkin kertoa sinulle uudesta tavasta nostaa num... Hetkinen, ethän sinä ole tyttö... tai edes oppilaani. No jaa, näytät kuitenkin ihan fiksulta kaverilta.", KDS.Koponen.Prefixes.koponen)
             KDS.Koponen.Talk.Conversation.schedule("Voit nostaa numeroasi suorittamalla tehtäviä. Voisit aloittaa pyytämällä tehtävää.", KDS.Koponen.Prefixes.koponen)
-            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
             KDS.Koponen.Talk.Conversation.schedule("Kahvikuppini taitaa olla hukassa... Olisitko kiltti ja etsisit sen?", KDS.Koponen.Prefixes.koponen, True)
 
             KDS.Missions.InitialiseMission("coffee_mission", "Kuumaa Kamaa")
             KDS.Missions.InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi", (KDS.Missions.Listeners.ItemPickup, 3, 1.0))
             KDS.Missions.InitialiseKoponenTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi", "kahvikuppi", "kahvikupin", 3)
 
-            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
             KDS.Koponen.Talk.Conversation.schedule("Hienoa työtä ystäväiseni.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Voit nyt hetken rauhassa tutkia uutta kouluasi. Kokeile vaikka löytää saunavessa, sieltä pääset jatkamaan koulupolkuasi.", KDS.Koponen.Prefixes.koponen)
 
@@ -79,18 +79,27 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         elif index == 2:
             Presets.KoponenMissionRequest()
 
-            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST)
-            KDS.Koponen.Talk.Conversation.schedule("Sattuisiko sinulla olemaan mitään tehtävää minulle?")
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Sattuisiko sinulla olemaan mitään tehtävää minulle?", KDS.Koponen.Prefixes.player)
             KDS.Koponen.Talk.Conversation.schedule("Olen kuullut, että fysiikan opettaja keittelee laittomuuksia kemiavarastossa. Voisitko tuoda minulle mahdollisesti todisteen siitä?", KDS.Koponen.Prefixes.koponen)
-            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
 
             KDS.Missions.InitialiseMission("laittomuuksia", "Laittomuuksia")
-            KDS.Missions.InitialiseTask("laittomuuksia", "search", "Etsi jotain epäilyttävää kemiavarastosta")
+            KDS.Missions.InitialiseTask("laittomuuksia", "search", "Etsi jotain epäilyttävää kemiavarastosta", (KDS.Missions.Listeners.ItemPickup, 27, 1.0))
             KDS.Missions.InitialiseKoponenTask("laittomuuksia", "return", "Palauta se Koposelle", "jotain epäilyttävää", "jotain epäilyttävää", 27)
 
-            KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen)
-            KDS.Koponen.Talk.Conversation.schedule("Jatketaanpas sitten tuntia…\nEnsimmäisen asteen yhtälössä esiintyy muuttujan ensimmäinen potenssi, mutta ei korkeampia potensseja. Ensimmäisen asteen yhtälöitä ovat esimerkiksi\n2x − 1 = 3 ja\n4x + 6 = -x – 11\nToisen asteen yhtälössä taas esiintyy muuttujan toinen potenssi, mutta ei korkeampia potensseja. Toisen asteen yhtälöitä ovat esimerkiksi\nx² = 7” ja\n4x² + 3x – 1 = 0", KDS.Koponen.Prefixes.koponen, True)
-            KDS.Koponen.Talk.Conversation.schedule("Miten vitussa sä jaksoit lukee tätä tänne asti? Nyt perkele jatka pelin pelaamista äläkä lue tällästä turhaa paskaa.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("""Jatketaanpas sitten tuntia…
+Ensimmäisen asteen yhtälössä esiintyy muuttujan ensimmäinen potenssi, mutta ei korkeampia potensseja. Ensimmäisen asteen yhtälöitä ovat esimerkiksi
+2x − 1 = 3 ja
+4x + 6 = -x – 11
+Toisen asteen yhtälössä taas esiintyy muuttujan toinen potenssi, mutta ei korkeampia potensseja. Toisen asteen yhtälöitä ovat esimerkiksi
+x^2 = 7 ja
+4x^2 + 3x – 1 = 0
+Kolmannen asteen yhtälöitä taas ovat esimerkiksi
+x^3 = 69 ja
+420x^3 + 13x – 69 = 69420
+Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Koposen sanottavaks...""", KDS.Koponen.Prefixes.koponen, True)
         elif index == 3:
             KDS.Missions.InitialiseMission("explore", "Kummituksia", NoSound=True)
             KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta")
@@ -105,7 +114,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseTask("lunch", "go_to_canteen", "Mene Ruokalaan")
             Presets.KoponenMissionRequest()
 
-            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
             KDS.Koponen.Talk.Conversation.schedule("Onko sinulla tehtävää minulle?", KDS.Koponen.Prefixes.player, True)
             KDS.Koponen.Talk.Conversation.schedule("Olen kuullut, että fysiikan opettaja keittelee laittomuuksia alakerrassa. Voisitko tuoda minulle mahdollisesti todisteen siitä?", KDS.Koponen.Prefixes.koponen)
             KDS.Koponen.Talk.Conversation.schedule("Missä on \"alakerta\"?", KDS.Koponen.Prefixes.player)
@@ -116,7 +125,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseTask("physics_teacher_blood", "something_suspicious", "Etsi Jotain Epäilyttävää")
             KDS.Missions.InitialiseTask("physics_teacher_blood", "return_suspicious", "Palauta Tämä Koposelle")
 
-            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
             KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Oho perkele... Tuntisi alkaa kohta. Hopi hopi!", KDS.Koponen.Prefixes.koponen)
 

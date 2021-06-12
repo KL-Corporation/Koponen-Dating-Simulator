@@ -1246,8 +1246,12 @@ class Methtable(KDS.Build.Tile):
         # self.checkCollision = False
 
     def update(self):
-        if random.randint(0, 105) == 50 and KDS.Math.getDistance(self.rect.center, Player.rect.center) < 355:
-            KDS.Audio.PlaySound(random.choice(Methtable.o_sounds))
+        if random.randint(0, 105) == 50:
+            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 200 # Bigger value means volume gets smaller at a smaller rate
+            sound_volume = KDS.Math.Clamp01(KDS.Math.Lerp(1, 0, lerp_multiplier))
+            sound = random.choice(Methtable.o_sounds)
+            sound.set_volume(sound_volume)
+            KDS.Audio.PlaySound(sound)
         return self.animation.update()
 
 class FlickerTrigger(KDS.Build.Tile):
