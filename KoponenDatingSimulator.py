@@ -2518,7 +2518,8 @@ class Enemy:
         7: KDS.AI.CaveMonster,
         8: KDS.AI.Mummy,
         9: KDS.AI.SecurityGuard,
-        10: KDS.AI.Bulldog
+        10: KDS.AI.Bulldog,
+        11: KDS.AI.Zombie
     }
 
     death_count = 0

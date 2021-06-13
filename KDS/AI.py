@@ -316,12 +316,16 @@ class HostileEnemy:
                     dropItems.append(item)
             self.playDeathSound = False
 
+        self.onBeforeRender()
         if KDS.Debug.Enabled:
             pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
 
     def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
+        return
+
+    def onBeforeRender(self):
         return
 
     def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
@@ -787,5 +791,42 @@ class Bulldog(HostileEnemy):
 
     def attack(self, slope, env_obstacles: List[List[List[KDS.Build.Tile]]], target: pygame.Rect, *args) -> List[KDS.World.Bullet]:
         if random.randint(0, 30) == 0:
-            return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + KDS.Math.CeilToInt(((self.rect.width + 11) * KDS.Convert.ToMultiplier(self.direction)) / 2), self.rect.y, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
+            return [KDS.World.Bullet(pygame.Rect((self.rect.centerx + (KDS.Math.Ceil(self.rect.width / 2) + 6) * KDS.Convert.ToMultiplier(self.direction)) - 5, self.rect.centery, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
+        return []
+
+class Zombie(HostileEnemy):
+    def __init__(self, pos):
+        health = 25
+        w_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        d_anim = KDS.Animator.Animation("z_death", 5, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0], pos[1] - 36, 34, 55)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=None, death_sound=None, health=health, mv=[1, 8], attackPropability=40)
+        self.manualAttackHandling = True
+        self.sleep = False
+        self.movementBeforeFreeze = self.movement
+        self.attackAnim = False
+
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
+        bullets: List[KDS.World.Bullet] = []
+        self.attackAnim = False
+        if self.health > 0 and self.rect.colliderect(targetRect):
+            if self.movement[0] != 0:
+                self.movementBeforeFreeze = self.movement
+            self.movement = [0, 8]
+            bullets = self.attack(69, tiles, targetRect)
+            self.attackAnim = True
+        elif self.movement[0] == 0:
+            self.movement = self.movementBeforeFreeze
+        super().update(Surface, scroll, tiles, targetRect)
+        return bullets, []
+
+    def onBeforeRender(self):
+        if self.attackAnim:
+            self.animation.trigger("attack")
+
+    def attack(self, slope, env_obstacles, target, *args):
+        if random.randint(0, 60) == 0:
+            return [KDS.World.Bullet(pygame.Rect((self.rect.centerx + (KDS.Math.Ceil(self.rect.width / 2) + 6) * KDS.Convert.ToMultiplier(self.direction)) - 5, self.rect.centery, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
         return []

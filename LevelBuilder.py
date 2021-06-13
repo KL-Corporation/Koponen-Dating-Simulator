@@ -193,6 +193,7 @@ Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0
 Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy", (0, 0))
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", (0, 0))
 Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog", (0, 0))
+Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie", (0, 0))
 
 Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
 Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
@@ -1049,7 +1050,7 @@ def saveMapName():
 def loadLevelProp(dirPath: str):
     LevelPropData.ShowKoponen = False
     LevelPropData.ShowPlayer = False
-    lPath = os.path.join(os.path.dirname(dirPath), "levelprop.kdf")
+    lPath = os.path.join(dirPath, "levelprop.kdf")
     if not os.path.isfile(lPath):
         return
     with open(lPath, "r", encoding="utf-8") as f:
@@ -1119,7 +1120,7 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
             PropertiesData.Deserialize(f.read(), temporaryGrid)
 
     loadProperties()
-    loadLevelProp(path)
+    loadLevelProp(os.path.dirname(path))
     return temporaryGrid, temporaryGridSize
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
