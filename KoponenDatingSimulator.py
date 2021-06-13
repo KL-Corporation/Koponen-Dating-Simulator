@@ -7,11 +7,11 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 # Startup Config
 
-import datetime
 import json
 import random
 import shutil
 import traceback
+from datetime import datetime
 from enum import IntEnum, IntFlag, auto
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 
@@ -3856,7 +3856,7 @@ while main_running:
                 if quit_temp:
                     KDS_Quit()
             elif event.key in KDS.Keys.screenshot.Bindings:
-                pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
+                pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:

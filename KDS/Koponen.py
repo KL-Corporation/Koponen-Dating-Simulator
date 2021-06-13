@@ -71,6 +71,8 @@ talk_ad = talk_ads[0]
 
 randChance: Callable[[int], bool] = lambda v: random.uniform(0, 1) <= 1 / v
 
+requestReturnAlt: Optional[str] = None
+
 class Prefixes:
     player = "p:"
     koponen = "k:"
@@ -88,7 +90,7 @@ def init():
     for ad in os.listdir("Assets/Textures/KoponenTalk/ads"): talk_ads.append(pygame.image.load(f"Assets/Textures/KoponenTalk/ads/{ad}").convert_alpha())
     random.shuffle(talk_ads)
     ambientTalkAudios = [
-        # No ambient talk audios because it distracts the player and we want them to live in the moment.
+        # Distracts the player and currently plays when player says something...
         # pygame.mixer.Sound("Assets/Audio/Koponen/talk_0.ogg"),
         # pygame.mixer.Sound("Assets/Audio/Koponen/talk_1.ogg"),
         # pygame.mixer.Sound("Assets/Audio/Koponen/talk_2.ogg")
@@ -288,6 +290,7 @@ class Talk:
 
     @staticmethod
     def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
+        global requestReturnAlt
         pygame.mouse.set_visible(True)
         Talk.storyTrigger = False
         global talk_ad, old_ads
@@ -304,8 +307,9 @@ class Talk:
         Talk.autoExit = autoExit
 
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.ButtonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
-        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, "REQUEST MISSION")
-        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, "RETURN MISSION")
+        ReqRet = "MISSION" if requestReturnAlt == None else requestReturnAlt
+        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, f"REQUEST {ReqRet}")
+        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, f"RETURN {ReqRet}")
 
         KDS.Missions.Listeners.KoponenTalk.Trigger()
 

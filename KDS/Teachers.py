@@ -250,7 +250,8 @@ class Teacher:
             self.render(surface, scroll)
             return enemyProjectiles, dropItems
         #endregion
-        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, self.rect, self.direction, surface, scroll, tiles, maxSearchUnits=10)
+        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, pygame.Rect(self.rect.left, self.rect.top - 10, self.rect.width, self.rect.height),
+                                                self.direction, surface, scroll, tiles, maxSearchUnits=10)
         self.noSightTime += 1
         if self.lineOfSight:
             self.noSightTime = 0

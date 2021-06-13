@@ -177,6 +177,31 @@ def GetAngle(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
         KDS.Logging.AutoError(e)
         return NAN
 
+def GetAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
+        """Calculates the angle between two vectors.
+        Args:
+            p1 (tuple): First vector
+            p2 (tuple): Secod vector
+        Returns:
+            float: The angle between the vectors
+        """
+        try:
+            q = p1[0] - p2[0]
+            w = p1[1] - p2[1]
+            if w == 0:
+                w = 1
+            r = q / w
+
+            a = Atan(r) * RAD2DEG
+            #a = 360 - a
+            #while a >= 360:
+            #    a = a - 360
+
+            return a
+        except Exception as e:
+            KDS.Logging.AutoError(e)
+            return 0.0
+
 def DeltaAngle(current: float, target: float):
     return ((target - current) + 180) % 360 - 180
 #endregion
