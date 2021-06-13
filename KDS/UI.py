@@ -228,8 +228,10 @@ class Switch:
         switch_color = (KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move), KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move), KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move))
         pygame.draw.rect(surface, switch_color, self.switch_rect)
         pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
-        if self.custom_path == None: KDS.ConfigManager.SetSetting(f"UI/Switches/{self.safe_name}", self.state)
-        else: KDS.ConfigManager.SetSetting(self.custom_path, self.state)
+        if self.custom_path == None:
+            KDS.ConfigManager.SetSetting(f"UI/Switches/{self.safe_name}", self.state)
+        else:
+            KDS.ConfigManager.SetSetting(self.custom_path, self.state)
         return self.state
 
 # One-instance. Do not copy between pygame-projects

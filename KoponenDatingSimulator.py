@@ -3175,7 +3175,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.Logging.debug("Game Loaded.")
     if show_loading: KDS.Loading.Circle.Stop()
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
-    if auto_play_music and KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
+    if auto_play_music and KDS.Audio.Music.Loaded != None:
+        KDS.Audio.Music.Play()
 
 def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
     pygame.mouse.set_visible(False)
@@ -3223,7 +3224,8 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
     KDS.Koponen.setPlayerPrefix(KDS.ConfigManager.Save.Active.Story.playerName)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride, auto_play_music=False)
     KDS.Loading.Story.WaitForExit()
-    if KDS.Audio.Music.Loaded != None: KDS.Audio.Music.Play()
+    if KDS.Audio.Music.Loaded != None:
+        KDS.Audio.Music.Play()
 
 def respawn_function():
     global level_finished
@@ -3320,13 +3322,16 @@ def settings_menu():
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/effect")
     walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), ..., custom_path="Mixer/walkSound")
-    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 360, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
+    legacy_lobbymusic_switch = KDS.UI.Switch("legacyLobbyMusic", pygame.Rect(450, 305, 100, 30), (30, 50), ..., custom_path="Mixer/legacyLobbyMusic")
+    lastLobbymusicState = legacy_lobbymusic_switch.state
+    pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 375, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
     controls_settings_button = KDS.UI.Button(pygame.Rect(480, 485, 260, 50), lambda: KDS.Keys.StartBindingMenu(display, clock, defaultEventHandler), KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
     reset_settings_button = KDS.UI.Button(pygame.Rect(340, 595, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White))
     remove_data_button = KDS.UI.Button(pygame.Rect(620, 595, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White))
     music_volume_text = KDS.UI.ButtonFontSmall.render("Music Volume", True, KDS.Colors.White)
     effect_volume_text = KDS.UI.ButtonFontSmall.render("Sound Effect Volume", True, KDS.Colors.White)
     walk_sound_text = KDS.UI.ButtonFontSmall.render("Play footstep sounds", True, KDS.Colors.White)
+    legacy_lobbymusic_text = KDS.UI.ButtonFontSmall.render("Play Legacy Menu Music", True, KDS.Colors.White)
     pause_loss_text = KDS.UI.ButtonFontSmall.render("Pause On Focus Loss", True, KDS.Colors.White)
 
     while settings_running:
@@ -3350,10 +3355,15 @@ def settings_menu():
         display.blit(music_volume_text, (50, 135))
         display.blit(effect_volume_text, (50, 185))
         display.blit(walk_sound_text, (50, 235))
-        display.blit(pause_loss_text, (50, 360))
+        display.blit(legacy_lobbymusic_text, (50, 305))
+        display.blit(pause_loss_text, (50, 375))
         KDS.Audio.Music.SetVolume(music_volume_slider.update(display, mouse_pos))
         KDS.Audio.SetVolume(effect_volume_slider.update(display, mouse_pos))
         play_walk_sound = walk_sound_switch.update(display, mouse_pos, c)
+        tmp = legacy_lobbymusic_switch.update(display, mouse_pos, c)
+        if tmp != lastLobbymusicState:
+            lastLobbymusicState = tmp
+            KDS.Audio.Music.Play("Assets/Audio/Music/lobbymusic.ogg" if lastLobbymusicState == False else "Assets/Audio/Music/Legacy/lobbymusic.ogg")
         pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)
 
         return_button.update(display, mouse_pos, c)
@@ -3389,7 +3399,7 @@ def main_menu():
     c = False
     skip_render_this_frame = False
 
-    KDS.Audio.Music.Play("Assets/Audio/music/lobbymusic.ogg")
+    KDS.Audio.Music.Play("Assets/Audio/Music/lobbymusic.ogg" if KDS.ConfigManager.GetSetting("Mixer/legacyLobbyMusic", False) == False else "Assets/Audio/Music/Legacy/lobbymusic.ogg")
 
     map_names: Dict[int, str] = {}
     custom_maps_names = {}
@@ -3531,18 +3541,6 @@ def main_menu():
                         MenuMode = Mode.MainMenu
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
-                elif event.key == K_F5:
-                    KDS.Audio.MusicMixer.pause()
-                    certQuit = KDS.School.Certificate(display, clock)
-                    if certQuit:
-                        KDS_Quit()
-                    KDS.Audio.MusicMixer.unpause()
-                elif event.key == K_F6:
-                    KDS.Audio.Music.Stop()
-                    certQuit = KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
-                    if certQuit:
-                        KDS_Quit()
-                    KDS.Audio.Music.Play("Assets/Audio/music/lobbymusic.ogg")
             elif event.type == QUIT:
                 KDS_Quit()
 

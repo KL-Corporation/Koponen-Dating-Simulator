@@ -14,7 +14,8 @@
             "music": 0.25,
             "effect": 0.75
         },
-        "walkSound": false
+        "walkSound": false,
+        "legacyLobbyMusic": false
     },
     "Renderer": {
         "fullscreen": false,
