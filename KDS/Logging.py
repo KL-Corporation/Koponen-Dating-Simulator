@@ -34,6 +34,7 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
 
     display_info = pygame.display.Info()
     mixer_version: Tuple = pygame.mixer.get_sdl_mixer_version()
+    windows_version = sys.getwindowsversion()
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
@@ -41,7 +42,7 @@ I=====[ DEBUG INFO ]=====I
     - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
     - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}
     - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
+    - Windows {windows_version.major}{f".{windows_version.minor}" if windows_version.minor != 0 else ""}: {windows_version.build}
 
     [Video Info]
     - SDL Video Driver: {pygame.display.get_driver()}

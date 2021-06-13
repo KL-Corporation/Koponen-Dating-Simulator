@@ -13,6 +13,7 @@ import KDS.Events
 import KDS.Gamemode
 import KDS.Koponen
 import KDS.Logging
+import KDS.NPC
 import KDS.Math
 import KDS.Linq
 
@@ -142,9 +143,34 @@ class KoponenTask(Task):
         super().__init__(missionName, safeName, text)
         koponenTaskCount = 0
         for task in Missions.GetMission(missionName).GetTaskList():
-            if isinstance(task, KoponenTask): koponenTaskCount += 1
-        if koponenTaskCount > 1: KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
+            if isinstance(task, KoponenTask):
+                koponenTaskCount += 1
+        if koponenTaskCount > 1:
+            KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
         self.items = itemIDs
+
+class StudentTask(Task):
+    def __init__(self, missionName: str, safeName: str, text: str, interactCount: int, interactPrompt: str) -> None:
+        super().__init__(missionName, safeName, text)
+        studentTaskCount = 0
+        for task in Missions.GetMission(missionName).GetTaskList():
+            if isinstance(task, StudentTask):
+                studentTaskCount += 1
+        if studentTaskCount:
+            KDS.Logging.AutoError("Only one Student Task allowed per mission!")
+        self.interacted = 0
+        self.interactCount = interactCount
+        self.interactedStudents: List[KDS.NPC.StudentNPC] = []
+        self.prompt = TipFont.render(interactPrompt, True, KDS.Colors.White)
+
+    def HasInteracted(self, student: KDS.NPC.StudentNPC) -> bool:
+        return student in self.interactedStudents
+
+    def Interact(self, student: KDS.NPC.StudentNPC):
+        self.interactedStudents.append(student)
+        self.interacted += 1
+        self.Progress(self.interacted / self.interactCount)
+
 
 class Mission:
     def __init__(self, safeName: str, text: str, playSound: bool) -> None:
@@ -260,7 +286,8 @@ Missions = MissionHolder()
 #region init
 Active_Mission: str
 def init():
-    global MissionFont, TaskFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
+    global MissionFont, TaskFont, TipFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
+    TipFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
     MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
     TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
     TaskFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_finish.ogg")

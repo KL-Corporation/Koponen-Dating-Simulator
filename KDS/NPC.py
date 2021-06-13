@@ -12,6 +12,7 @@ import KDS.Build
 import KDS.Jobs
 import KDS.Convert
 import KDS.Debug
+import KDS.Missions
 
 import os
 import random
@@ -149,6 +150,8 @@ class NPC:
                 npc.panicked = True
 
 class StudentNPC(NPC):
+    Task: Optional[KDS.Missions.StudentTask] = None
+
     def __init__(self, pos: Tuple[int, int]) -> None:
         randomPerson_dir = random.choice(os.listdir("Assets/Textures/NPC/Static"))
         idle_anim_dir = os.path.join("NPC/Static", randomPerson_dir)
@@ -157,6 +160,12 @@ class StudentNPC(NPC):
         rect = pygame.Rect(pos[0], pos[1] + (34 - idle_anim_size[1]), idle_anim_size[0], idle_anim_size[1])
         self.internalInit(rect, Type.Idle, idle_anim, idle_anim, idle_anim, idle_anim, 100, 0, 0)
         self.noPanick = True
+
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+        output = super().update(surface, scroll, tiles, player)
+        if StudentNPC.Task != None and self.rect.colliderect(player.rect):
+            surface.blit(StudentNPC.Task.prompt, (self.rect.centerx - StudentNPC.Task.prompt.get_width() // 2, self.rect.y - 10))
+        return output
 
 
 # region OLD NPC CODE
