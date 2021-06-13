@@ -203,6 +203,7 @@ Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png"
 
 scroll: List[int] = [0, 0]
 currentSaveName = ''
+currentLoadName = ''
 grid: List[List[UnitData]] = [[]]
 gridSize: Tuple[int, int] = (0, 0)
 
@@ -1045,8 +1046,36 @@ def saveMapName():
         currentSaveName = savePath
         saveMap(grid, currentSaveName)
 
+def loadLevelProp(dirPath: str):
+    LevelPropData.ShowKoponen = False
+    LevelPropData.ShowPlayer = False
+    lPath = os.path.join(os.path.dirname(dirPath), "levelprop.kdf")
+    if not os.path.isfile(lPath):
+        return
+    with open(lPath, "r", encoding="utf-8") as f:
+        lpData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+        if "Entities" not in lpData:
+            return
+        entityData = lpData["Entities"]
+        if "Koponen" in entityData and "startPos" in entityData["Koponen"]:
+            tmpPos = entityData["Koponen"]["startPos"]
+            LevelPropData.KoponenPos = (tmpPos[0], tmpPos[1])
+            LevelPropData.ShowKoponen = True
+        if "Player" in entityData:
+            playerData = entityData["Player"]
+            if "startPos" in playerData:
+                tmpPos = playerData["startPos"]
+                LevelPropData.PlayerPos = (tmpPos[0], tmpPos[1])
+                LevelPropData.ShowPlayer = True
+            if "spawnInverted" in playerData:
+                spawnInverted = playerData["spawnInverted"]
+                if not isinstance(spawnInverted, bool):
+                    KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
+                LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
+
 def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
-    global display, clock
+    global display, clock, currentLoadName
+    currentLoadName = path
 
     with open(path, 'r') as f:
         wholeContents = f.read()
@@ -1090,34 +1119,7 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
             PropertiesData.Deserialize(f.read(), temporaryGrid)
 
     loadProperties()
-
-    def loadLevelProp():
-        LevelPropData.ShowKoponen = False
-        LevelPropData.ShowPlayer = False
-        lPath = os.path.join(os.path.dirname(path), "levelprop.kdf")
-        if not os.path.isfile(lPath):
-            return
-        with open(lPath, "r", encoding="utf-8") as f:
-            lpData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-            if "Entities" not in lpData:
-                return
-            entityData = lpData["Entities"]
-            if "Koponen" in entityData and "startPos" in entityData["Koponen"]:
-                tmpPos = entityData["Koponen"]["startPos"]
-                LevelPropData.KoponenPos = (tmpPos[0], tmpPos[1])
-                LevelPropData.ShowKoponen = True
-            if "Player" in entityData:
-                playerData = entityData["Player"]
-                if "startPos" in playerData:
-                    tmpPos = playerData["startPos"]
-                    LevelPropData.PlayerPos = (tmpPos[0], tmpPos[1])
-                    LevelPropData.ShowPlayer = True
-                if "spawnInverted" in playerData:
-                    spawnInverted = playerData["spawnInverted"]
-                    if not isinstance(spawnInverted, bool):
-                        KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
-                    LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
-    loadLevelProp()
+    loadLevelProp(path)
     return temporaryGrid, temporaryGridSize
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
@@ -1739,6 +1741,8 @@ def main():
                         refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
                         if len(refrencePath) > 0 and not refrencePath.isspace():
                             refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
+                elif event.key == K_F5:
+                    loadLevelProp(os.path.dirname(currentLoadName))
             elif event.type == MOUSEWHEEL:
                 if keys_pressed[K_LCTRL]:
                     zoom(event.y * 5, scroll, grid)
@@ -1914,6 +1918,7 @@ KDS.Jobs.quit()
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As
     CTRL + O: Open Project
+    F5: Reload LevelProp
 
     [Material Menu]
     Escape: Close Material Menu
