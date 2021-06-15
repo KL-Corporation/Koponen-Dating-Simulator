@@ -677,7 +677,7 @@ class PropertiesData:
 
         def RemoveCollidePoint(self, mouse_pos: Tuple[int, int]) -> None:
             mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
-            for zone in self.zones:
+            for zone in reversed(self.zones):
                 if zone[0].collidepoint(mouse_pos_scaled):
                     self.zones.remove(zone)
                     return
@@ -1844,7 +1844,7 @@ def main():
                     lineWidth = max(scalesize // 8, 1)
                     line_45 = ((0, 0), zoneRectScaled.size)
                     lineLength = max(zoneRectScaled.width, zoneRectScaled.height)
-                    for y in range(-lineLength, lineLength, lineWidth * 3):
+                    for y in range( -lineLength, lineLength, lineWidth * 3):
                         pygame.draw.line(zoneSurf, KDS.Colors.Black, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
 
                 if PropertiesData.ZoneSetting.LevelEnder in zoneData and zoneData[PropertiesData.ZoneSetting.LevelEnder] == True:
@@ -1859,6 +1859,7 @@ def main():
                 if keys_pressed[K_p] and zoneRectScaled.collidepoint(*mouse_pos):
                     zone_command_tree = {
                         "staffOnly": {"true": "break", "false": "break", "null": "break"},
+                        "levelEnder": {"true": "break", "false": "break", "null": "break"},
                         "darkness": {"[int]": "break", "null": "break"}
                     }
                     zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)

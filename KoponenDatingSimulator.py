@@ -2222,6 +2222,10 @@ class Turboneedle(KDS.Build.Item):
     def use(self):
         return self.texture
 
+    def pickup(self) -> None:
+        KDS.Audio.PlaySound(item_pickup)
+        Player.stamina += 100
+
 class Ppsh41(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -3210,7 +3214,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
         return
 
     if KDS.ConfigManager.Save.Active.Story.playerName == "<name-error>":
-        playerName = KDS.Console.Start("Enter name:", True, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=["name"], noSpace=True)) #Name is invalid because fuck the player. They took "Enter Name" literally.
+        playerName = KDS.Console.Start("Enter name:", True, KDS.Console.CheckTypes.String(20, invalidStrings=("<name-error>"), funnyStrings=["name"], noSpace=True), background=pygame.image.load("Assets/Textures/UI/tutorial.png").convert()) #Name is invalid because fuck the player. They took "Enter Name" literally.
         if len(playerName) < 1:
             KDS.ConfigManager.Save.Active.delete()
             pygame.mouse.set_visible(True)

@@ -34,7 +34,7 @@
         "supportsInventory": false,
         "isContraband": false
     },
-    "iPuhelin™": {
+    "iPuhelin": {
         "serialNumber": 6,
         "path": "iPuhelin.png",
         "doubleSize": false,
