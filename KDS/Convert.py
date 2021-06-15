@@ -1,3 +1,4 @@
+import datetime
 from enum import IntEnum, auto
 from typing import Any, Literal, Sequence, Tuple, TypeVar, Union, cast, Optional
 
@@ -33,6 +34,51 @@ class String:
         elif not hideError:
             KDS.Logging.AutoError(f"Cannot convert \"{string}\" to bool.")
         return fallback
+
+class DateTime:
+    @staticmethod
+    def Humanize(value: datetime.datetime) -> str:
+        """Return a natural day.
+        For date values that are tomorrow, today or yesterday compared to
+        present day return representing string. Otherwise, return a string
+        with format `x days ago`
+        """
+        now = datetime.datetime.now()
+        delta = now - value
+        seconds = delta.seconds
+        days = delta.days
+
+        if days == 0:
+            if seconds < 10:
+                return "just now"
+            if seconds < 60:
+                return f"{seconds} seconds ago"
+            if seconds < 120:
+                return "a minute ago"
+            if seconds < 3600:
+                return f"{KDS.Math.FloorToInt(seconds / 60)} minutes ago"
+            if seconds < 7200:
+                return "an hour ago"
+            if seconds < 86400:
+                return f"{KDS.Math.FloorToInt(seconds / 3600)} hours ago"
+            return "<error>"
+        if days == 1:
+            return "yesterday"
+        if days < 7:
+            return f"{days} days ago"
+        if days < 31:
+            return f"{KDS.Math.FloorToInt(days / 7)} weeks ago"
+        if days < 365:
+            return f"{KDS.Math.FloorToInt(days / 30)} months ago"
+        return f"{KDS.Math.FloorToInt(days / 365)} years ago"
+
+#         if delta.days == 0:
+#             return "today"
+#         elif delta.days == 1:
+#             return "tomorrow"
+#         elif delta.days == -1:
+#             return "yesterday"
+#         return value.strftime(format)
 
 # The shittier version of String.ToBool
 def ToBool2(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:

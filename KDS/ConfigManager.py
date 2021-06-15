@@ -1,4 +1,5 @@
 #region Importing
+from datetime import datetime
 import json
 import os
 import shutil
@@ -203,7 +204,8 @@ class Save:
                     "progress": ((JSON.Get(path, "Story/index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
                     "grade": JSON.Get(path, "Story/examGrade", -1, False, True),
                     "score": JSON.Get(path, "Stats/score", -1, False, True),
-                    "playtime": JSON.Get(path, "Stats/playtime", -1, False, True)
+                    "playtime": JSON.Get(path, "Stats/playtime", -1, False, True),
+                    "lastPlayedTimestamp": JSON.Get(path, "Stats/lastPlayed", -1, False, True)
                 })
             else:
                 retu.append(None)
@@ -220,6 +222,7 @@ class Save:
         def __init__(self) -> None:
             self.playtime: float = 0
             self.score: int = 0
+            self.lastPlayed: float = -1
 
     def __init__(self, index: int) -> None:
         Save.Active = self
@@ -250,6 +253,7 @@ class Save:
                     except Exception as e:
                         KDS.Logging.AutoError(e)
             self.Stats.score += KDS.Scores.score
+            self.Stats.lastPlayed = datetime.now().timestamp()
 
         data = {"Story": self.Story.__dict__, "Stats": self.Stats.__dict__}
         with open(path, "w") as f:

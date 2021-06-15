@@ -382,6 +382,7 @@ def SetFinished(MissionName: str):
         task.Progress(100)
 def Clear():
     global Missions
+    KDS.Koponen.Mission.Task = None
     for l in Listeners.__dict__.values():
         if isinstance(l, Listener) or isinstance(l, ItemListener):
             l.Clear()

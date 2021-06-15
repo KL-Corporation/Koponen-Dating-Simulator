@@ -3145,6 +3145,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.NPC.NPC.InstanceList.clear()
     KDS.Teachers.Teacher.InstanceList.clear()
     KDS.World.Zone.StaffOnlyCollisions = 0
+    BaseTeleport.teleportDatas = {}
     #endregion
 
     #region Ammo Resetting
@@ -3650,7 +3651,8 @@ def main_menu():
                             None,
                             f"""Exam Grade: {data["grade"]}""" if data["grade"] != -1 else None,
                             f"""Score: {data["score"]}""",
-                            f"""Playtime: {KDS.Scores.GameTime.GetFormattedString(data["playtime"])}"""
+                            f"""Playtime: {KDS.Scores.GameTime.GetFormattedString(data["playtime"])}""",
+                            f"""Last Played: {KDS.Convert.DateTime.Humanize(datetime.fromtimestamp(data["lastPlayedTimestamp"]))}"""
                         ]
                         for i, line in enumerate(lines):
                             rendered = font.render(line, True, KDS.Colors.White)
