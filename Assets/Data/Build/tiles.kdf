@@ -933,9 +933,9 @@
     "Molok": {
         "serialNumber": 135,
         "path": "molok.png",
-        "specialTile": true,
+        "specialTile": false,
         "noCollision": false,
-        "trueScale": false
+        "trueScale": true
     },
     "Yellow Wall": {
         "serialNumber": 136,

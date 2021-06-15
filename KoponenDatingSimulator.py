@@ -1630,14 +1630,6 @@ class FluorescentTube(KDS.Build.Tile):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.y + 170 // 2 + 5), KDS.World.Lighting.Shapes.fluorecent.get(170, 9500), True))
         return self.texture
 
-class Molok(KDS.Build.Tile):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
-        super().__init__(position, serialNumber)
-        self.rect = pygame.Rect(position[0], position[1], 90, 59)
-
-    def update(self):
-        return self.texture
-
 class Kiuas(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1755,8 +1747,7 @@ class BaseTeleport(KDS.Build.Tile):
         self.nonInteractableSound: Optional[pygame.mixer.Sound] = None
         self.messageOffset: Tuple[int, int] = (0, 0)
 
-        self.ignorex: bool = False
-        self.ignorey: bool = False
+        self.usetop: bool = False
 
     def lateInit(self):
         if self.message != None:
@@ -1791,10 +1782,10 @@ class BaseTeleport(KDS.Build.Tile):
             KDS.Audio.PlaySound(self.teleportSound)
         # Executing teleporting process
         t.onTeleport()
-        if not self.ignorex:
-            Player.rect.centerx = t.rect.centerx
-        if not self.ignorey:
-            Player.rect.bottom = t.rect.bottom
+        if not self.usetop:
+            Player.rect.midbottom = t.rect.midbottom
+        else:
+            Player.rect.midtop = t.rect.midtop
         # Reseting scroll
         if self.resetScroll:
             true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
@@ -1955,7 +1946,6 @@ KDS.Build.Tile.specialTilesClasses = {
     131: Sound,
     132: DoorFrontMirrored,
     134: FluorescentTube,
-    135: Molok,
     145: Kiuas,
     151: TileFire,
     155: Fucking,
@@ -1965,7 +1955,7 @@ BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
     2: WoodDoorTeleport,
     3: WoodDoorTeleport,
-    4: DoorTeleport,
+    4: WoodDoorTeleport,
     5: LargeDoorTeleport,
     6: Elevator,
     7: HotelDoor,

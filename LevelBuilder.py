@@ -1393,7 +1393,6 @@ def generateLevelProp():
         #region User-defined
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
         KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
-        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/enabled", k_enabled)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startPos", k_start_pos)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/startPos", p_start_pos)
