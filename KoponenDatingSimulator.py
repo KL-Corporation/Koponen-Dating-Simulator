@@ -1948,7 +1948,8 @@ KDS.Build.Tile.specialTilesClasses = {
     145: Kiuas,
     151: TileFire,
     155: Fucking,
-    157: Shower
+    157: Shower,
+    160: LevelEnderDoor
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -2224,7 +2225,7 @@ class Turboneedle(KDS.Build.Item):
 
     def pickup(self) -> None:
         KDS.Audio.PlaySound(item_pickup)
-        Player.stamina += 100
+        Player.stamina = 250
 
 class Ppsh41(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int):

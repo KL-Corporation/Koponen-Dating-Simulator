@@ -1104,5 +1104,12 @@
         "specialTile": false,
         "noCollision": true,
         "trueScale": true
+    },
+    "Level Ender Door Mirrored": {
+        "serialNumber": 160,
+        "path": "door_front_mirrored.png",
+        "specialTile": true,
+        "noCollision": false,
+        "trueScale": false
     }
 }
