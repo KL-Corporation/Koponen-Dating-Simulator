@@ -59,8 +59,9 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         if index == 1:
             Presets.Tutorial()
             KDS.Missions.InitialiseMission("enter_school", "Mene Kouluun")
-            KDS.Missions.InitialiseTask("enter_school", "enter", "Avaa koulun ovi painamalla: E", (KDS.Missions.Listeners.Teleport, 1.0))
+            KDS.Missions.InitialiseTask("enter_school", "enter", "Avaa koulun ovi painamalla: E", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
+        elif index == 2:
             Presets.KoponenIntroduction()
 
             KDS.Koponen.Talk.Conversation.schedule("Hei! Siinä sinä oletkin. Halusinkin kertoa sinulle uudesta tavasta nostaa num... Hetkinen, ethän sinä ole tyttö... tai edes oppilaani. No jaa, näytät kuitenkin ihan fiksulta kaverilta.", KDS.Koponen.Prefixes.koponen)
