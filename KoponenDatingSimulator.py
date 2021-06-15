@@ -857,8 +857,10 @@ class Door(KDS.Build.Tile):
                 self.closingCounter = 0
                 self.open = not self.open
                 if not self.open:
-                    if self.rect.centerx - Player.rect.centerx > 0: Player.rect.right = self.rect.left
-                    else: Player.rect.left = self.rect.right
+                    if self.rect.centerx - Player.rect.centerx > 0:
+                        Player.rect.right = self.rect.left
+                    else:
+                        Player.rect.left = self.rect.right
             else:
                 KDS.Audio.PlaySound(door_locked)
         return self.texture if not self.open else self.opentexture
