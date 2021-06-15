@@ -429,6 +429,8 @@ class WorldData:
         if len(koponen_script) > 0:
             Koponen.loadScript(koponen_script)
 
+        KDS.UI.Indicator.Enabled = KDS.ConfigManager.LevelProp.Get("Rendering/Indicator/enabled", True)
+
         Enemy.total = 0
         Enemy.death_count = 0
         Entity.total = 0
@@ -1753,6 +1755,9 @@ class BaseTeleport(KDS.Build.Tile):
         self.nonInteractableSound: Optional[pygame.mixer.Sound] = None
         self.messageOffset: Tuple[int, int] = (0, 0)
 
+        self.ignorex: bool = False
+        self.ignorey: bool = False
+
     def lateInit(self):
         if self.message != None:
             self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
@@ -1786,7 +1791,10 @@ class BaseTeleport(KDS.Build.Tile):
             KDS.Audio.PlaySound(self.teleportSound)
         # Executing teleporting process
         t.onTeleport()
-        Player.rect.midbottom = t.rect.midbottom
+        if not self.ignorex:
+            Player.rect.centerx = t.rect.centerx
+        if not self.ignorey:
+            Player.rect.bottom = t.rect.bottom
         # Reseting scroll
         if self.resetScroll:
             true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
@@ -2577,6 +2585,8 @@ class Entity:
     @staticmethod
     def update(Entity_List: Sequence[Union[KDS.Teachers.Teacher, KDS.NPC.NPC, KDS.AI.HostileEnemy]]):
         for entity in Entity_List:
+            if not entity.enabled:
+                continue
             if KDS.Math.getDistance(Player.rect.center, entity.rect.center) < 1200:
                 if isinstance(entity, KDS.AI.HostileEnemy):
                     Enemy._internalEnemyHandler(entity)
@@ -3216,6 +3226,8 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
             KDS.ConfigManager.Save.Active.delete()
             pygame.mouse.set_visible(True)
             return
+        if len(playerName) > 1:
+            playerName = playerName[0].upper() + playerName[1:]
         KDS.ConfigManager.Save.Active.Story.playerName = playerName
         KDS.ConfigManager.Save.Active.save(updateStats=False)
 
@@ -3234,8 +3246,10 @@ def respawn_function():
     global level_finished
     Player.reset(clear_inventory=False)
     level_finished = False
-    if RespawnAnchor.active != None: Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
-    else: Player.rect.topleft = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
+    if RespawnAnchor.active != None:
+        Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
+    else:
+        Player.rect.topleft = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
     KDS.Audio.Music.Stop()
 #endregion
 #region Menus

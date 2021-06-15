@@ -236,6 +236,8 @@ class Switch:
 
 # One-instance. Do not copy between pygame-projects
 class Indicator:
+    Enabled: bool = True
+
     combat = False
     searching = False
     trespassing = False
@@ -255,6 +257,9 @@ class Indicator:
 
     @staticmethod
     def render(surface: pygame.Surface):
+        if not Indicator.Enabled:
+            return
+
         surface_size = surface.get_size()
 
         #region Texture Loading

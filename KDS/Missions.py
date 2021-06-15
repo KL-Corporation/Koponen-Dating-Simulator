@@ -84,6 +84,7 @@ class Listeners:
     KoponenTalk = Listener()
     KoponenRequestMission = Listener()
     KoponenReturnMission = Listener()
+    KoponenTalkEnd = Listener()
     LevelEnder = Listener()
     Teleport = Listener()
     TentSleepStart = Listener()

@@ -341,7 +341,7 @@ class Bullet:
                         return "wall", player_health
 
                 for target in targets:
-                    if self.rect.colliderect(target.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
+                    if self.rect.colliderect(target.rect) and target.health > 0 and target.enabled:
                         target.health -= self.damage
                         Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
                         return "wall", player_health
@@ -368,7 +368,7 @@ class Bullet:
                     return "wall", player_health
 
             for target in targets:
-                if target.rect.colliderect(self.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
+                if target.rect.colliderect(self.rect) and target.health > 0 and target.enabled:
                     if isinstance(target, KDS.AI.HostileEnemy):
                         target.sleep = False
                     target.health -= self.damage

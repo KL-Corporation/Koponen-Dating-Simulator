@@ -1412,6 +1412,7 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/spawnInverted", False)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/enabled", False)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/tint", (0, 0, 0))
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Indicator/enabled", True) # Story-only
         #endregion
 
 def upgradeTileProp():

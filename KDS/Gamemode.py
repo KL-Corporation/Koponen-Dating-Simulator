@@ -111,6 +111,18 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("fuck", "bail", "Pakene koulusta", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
         elif index == 7:
+            Presets.KoponenMissionRequest()
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Minulla on tylsää... Olisiko sinulla jotain tehtävää minulle?", KDS.Koponen.Prefixes.player)
+            KDS.Koponen.Talk.Conversation.schedule("Kyllähän näitä aina löytyy... Mietitäänpäs...", KDS.Koponen.Prefixes.koponen, forcePrefix=True)
+            KDS.Koponen.Talk.Conversation.schedule("Olen kuullut muutamalta oppilaalta, että tänne koulun pihalle tulisi yön aikana vartijoita kiusaamaan kilttejä oppilaita. Voisitko jäädä tänne yöksi selvittämään asiaa?", KDS.Koponen.Prefixes.koponen, forcePrefix=True)
+            KDS.Koponen.Talk.Conversation.schedule("Ehdottomasti. Mitä vain omalle Koposelleni.", KDS.Koponen.Prefixes.player)
+
+            KDS.Missions.InitialiseMission("listen", "Kuuntele")
+            KDS.Missions.InitialiseTask("listen", "listenTask", "Kuuntele mitä Koponen sanoo", (KDS.Missions.Listeners.KoponenTalkEnd, 1.0))
+
+        elif index == 8:
             KDS.Missions.InitialiseMission("t", "Telttailua")
             KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleepStart, 1.0))
 
@@ -124,7 +136,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
             KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
-        elif index == 8:
+        elif index == 9:
             KDS.Missions.InitialiseMission("principal_name", "Rehtoripilailua")
             KDS.Missions.InitialiseTask("principal_name", "name_it", "Keksi rehtorille pilanimi")
 

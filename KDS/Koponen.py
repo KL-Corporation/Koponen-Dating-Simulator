@@ -202,20 +202,24 @@ class Talk:
 #                     Talk.Conversation.scrollToBottom()
 #                 else:
 #                     Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
+
+#           WTF IS THIS IF ELSE SHIT?? IT'S EASIER TO READ A FUCKING STONE AGE POEM
             elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT)) and Talk.Conversation.animationProgress == -1:
                 if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
                     pygame.time.delay(500)
                     Talk.scheduled.pop(0)
                     tmpSurf = pygame.Surface(surfSize)
-                    Talk.renderMenu(tmpSurf, (0, 0), False, updateConversation=False)
-                    nameSuggestion: str = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<principal-name-error>")), background=tmpSurf)
-                    if nameSuggestion[0].islower: nameSuggestion = nameSuggestion[0].upper() + nameSuggestion[1:]
+                    Talk.renderMenu(tmpSurf, (0, 0), False, updateConversation=False)                          # funnyStrings=["name"] removed, because the joke isn't as funny the second time
+                    nameSuggestion: str = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<principal-name-error>"), noSpace=True), background=tmpSurf)
+                    if len(nameSuggestion) > 1:
+                        nameSuggestion = nameSuggestion[0].upper() + nameSuggestion[1:]
                     KDS.ConfigManager.Save.Active.Story.principalName = nameSuggestion
                     Talk.storyTrigger = True
                 else:
                     Talk.audioChannel = None
                     for audio in ambientTalkAudios:
                         audio.stop()
+                    KDS.Missions.Listeners.KoponenTalkEnd.Trigger() # I hope this is in the correct place ffs
                     if Talk.autoExit:
                         Talk.stop(forceExit=True)
 
