@@ -77,7 +77,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule("Voit nyt hetken rauhassa tutkia uutta kouluasi. Kokeile vaikka löytää saunavessa, sieltä pääset jatkamaan koulupolkuasi.", KDS.Koponen.Prefixes.koponen)
 
             KDS.Missions.InitialiseMission("sauna_and_exit", "Suuret Haaveet")
-            KDS.Missions.InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (KDS.Missions.Listeners.LevelEnder, 1.0))
+            KDS.Missions.InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi saunavessa koulupolkusi jatkamiseksi", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
         elif index == 4:
             Presets.KoponenMissionRequest()
@@ -118,9 +118,6 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Koponen.Talk.Conversation.schedule("Kyllähän näitä aina löytyy... Mietitäänpäs...", KDS.Koponen.Prefixes.koponen, forcePrefix=True)
             KDS.Koponen.Talk.Conversation.schedule("Olen kuullut muutamalta oppilaalta, että tänne koulun pihalle tulisi yön aikana vartijoita kiusaamaan kilttejä oppilaita. Voisitko jäädä tänne yöksi selvittämään asiaa?", KDS.Koponen.Prefixes.koponen, forcePrefix=True)
             KDS.Koponen.Talk.Conversation.schedule("Ehdottomasti. Mitä vain omalle Koposelleni.", KDS.Koponen.Prefixes.player)
-
-            KDS.Missions.InitialiseMission("listen", "Kuuntele")
-            KDS.Missions.InitialiseTask("listen", "listenTask", "Kuuntele mitä Koponen sanoo", (KDS.Missions.Listeners.KoponenTalkEnd, 1.0))
 
         elif index == 8:
             KDS.Missions.InitialiseMission("t", "Telttailua")

@@ -219,7 +219,6 @@ class Talk:
                     Talk.audioChannel = None
                     for audio in ambientTalkAudios:
                         audio.stop()
-                    KDS.Missions.Listeners.KoponenTalkEnd.Trigger() # I hope this is in the correct place ffs
                     if Talk.autoExit:
                         Talk.stop(forceExit=True)
 
