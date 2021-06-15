@@ -5321,5 +5321,5 @@
 "117-240":{"0":{"checkCollision":false}},
 "118-240":{"0":{"checkCollision":false}},
 "119-240":{"0":{"checkCollision":false}},
-"zones":{"197-136-7-6":{"darkness":128},"168-134-37-10":{"darkness":100}}
+"zones":{"168-134-28-10":{"darkness":100},"196-134-9-10":{"darkness":192}}
 }
