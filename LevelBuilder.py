@@ -660,6 +660,7 @@ class PropertiesData:
     class ZoneSetting(Enum):
         StaffOnly = "staffOnly"
         Darkness = "darkness"
+        LevelEnder = "levelEnder"
 
     class ZoneData:
         def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
@@ -1261,7 +1262,7 @@ def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
         PropertiesData.Zones.RemoveSetting(zoneRect, command_setting)
         return
 
-    if command_setting == PropertiesData.ZoneSetting.StaffOnly:
+    if command_setting == PropertiesData.ZoneSetting.StaffOnly or command_setting == PropertiesData.ZoneSetting.LevelEnder:
         parsedBool = KDS.Convert.String.ToBool(commandlist[1], hideError=True)
         if parsedBool == None:
             KDS.Logging.info(f"{commandlist[1]} is not a valid bool.", consoleVisible=True)
@@ -1273,7 +1274,7 @@ def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
             return
         intDarkness = int(commandlist[1])
         if intDarkness < 0 or intDarkness > 255:
-            KDS.Logging.info(f"{intDarkness} is over the range [0 - 255] of darkness.", consoleVisible=True)
+            KDS.Logging.info(f"{intDarkness} is not in the range [0 - 255] of darkness.", consoleVisible=True)
             return
         PropertiesData.Zones.SetSetting(zoneRect, command_setting, intDarkness)
 
@@ -1845,6 +1846,13 @@ def main():
                     lineLength = max(zoneRectScaled.width, zoneRectScaled.height)
                     for y in range(-lineLength, lineLength, lineWidth * 3):
                         pygame.draw.line(zoneSurf, KDS.Colors.Black, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
+
+                if PropertiesData.ZoneSetting.LevelEnder in zoneData and zoneData[PropertiesData.ZoneSetting.LevelEnder] == True:
+                    lineWidth = max(scalesize // 8, 1)
+                    line_45 = ((zoneRectScaled.width, 0), (0, zoneRectScaled.height))
+                    lineLength = max(zoneRectScaled.width, zoneRectScaled.height)
+                    for y in range(-lineLength, lineLength, lineWidth * 3):
+                        pygame.draw.line(zoneSurf, KDS.Colors.RiverBlue, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
 
                 zoneScreen.blit(zoneSurf, zoneRectScaled.topleft)
 

@@ -130,7 +130,7 @@
         "path": "jukebox.png",
         "specialTile": true,
         "noCollision": false,
-        "trueScale": false
+        "trueScale": true
     },
     "Concrete 1": {
         "serialNumber": 20,
@@ -984,7 +984,7 @@
         "path": "bench.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false
+        "trueScale": true
     },
     "Wood 3": {
         "serialNumber": 143,
@@ -998,7 +998,7 @@
         "path": "projector.png",
         "specialTile": false,
         "noCollision": false,
-        "trueScale": false
+        "trueScale": true
     },
     "Kiuas": {
         "serialNumber": 145,
@@ -1094,6 +1094,13 @@
     "Sink": {
         "serialNumber": 158,
         "path": "sink.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "Arto": {
+        "serialNumber": 159,
+        "path": "arto.png",
         "specialTile": false,
         "noCollision": true,
         "trueScale": true

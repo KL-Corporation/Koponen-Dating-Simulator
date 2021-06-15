@@ -781,7 +781,6 @@ class Jukebox(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__((0, 0), serialNumber)
         self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0] - 4, position[1] - 24, 38, 58) # -4 so that the texture isn't blocked by the tile on the right
         self.checkCollision = False
         self.playing = -1
         self.lastPlayed = [-69 for _ in range(5)]

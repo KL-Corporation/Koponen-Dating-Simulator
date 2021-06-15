@@ -489,6 +489,7 @@ class Zone:
         self.rect = rect
         self.playerInside: bool = False
         self.staffOnly = bool("staffOnly" in properties and properties["staffOnly"] == True)
+        self.levelEnder = bool("levelEnder" in properties and properties["levelEnder"] == True)
         self.darkness: Optional[int] = None
         if "darkness" in properties:
             setDark = properties["darkness"]
@@ -500,6 +501,8 @@ class Zone:
             Dark.Set(True, self.darkness)
         if self.staffOnly:
             Zone.StaffOnlyCollisions += 1
+        if self.levelEnder:
+            KDS.Missions.Listeners.LevelEnder.Trigger()
 
     def onExit(self):
         if self.darkness != None:
