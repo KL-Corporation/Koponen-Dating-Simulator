@@ -244,11 +244,7 @@ class Save:
                 try:
                     self.Stats.playtime += KDS.Scores.GameTime.Timer.GetGameTime().total_seconds()
                 except Exception as e:
-                    try:
-                        KDS.Scores.ScoreCounter.Stop()
-                        self.Stats.playtime += KDS.Scores.GameTime.Timer.GetGameTime().total_seconds()
-                    except Exception as e:
-                        KDS.Logging.AutoError(e)
+                    KDS.Logging.AutoError(e)
             self.Stats.score += KDS.Scores.score
 
         data = {"Story": self.Story.__dict__, "Stats": self.Stats.__dict__}

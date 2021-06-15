@@ -71,18 +71,18 @@ class Inventory:
     def moveRight(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex += 1
-        if self.storage[self.SIndex] == DOUBLEITEM:
-            self.SIndex += 1
         if self.SIndex >= self.size:
             self.SIndex = 0
+        if self.storage[self.SIndex] == DOUBLEITEM:
+            self.SIndex += 1
 
     def moveLeft(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
         self.SIndex -= 1
-        if self.storage[self.SIndex] == DOUBLEITEM:
-            self.SIndex -= 1
         if self.SIndex < 0:
             self.SIndex = self.size - 1
+        if self.storage[self.SIndex] == DOUBLEITEM:
+            self.SIndex -= 1
 
     def pickSlot(self, index: int):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
