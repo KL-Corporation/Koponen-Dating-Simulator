@@ -412,11 +412,5 @@
         "Litiumia tarvitaan nykyisin mm. akuissa.": true,
         "Kiinalla on paljon luonnonvaroja": true,
         "Chile on tärkeä kuparintuottaja": true
-    },
-    "Rastita oikeat väittämät. (2)": {
-        "Kivihiili on uusiutuva luonnonvara.": false,
-        "Vesivoiman avulla voidaan tuottaa sähköä.": true,
-        "Fossiilisten polttoaineiden käyttö aiheuttaa ilmastonmuutosta.": true,
-        "Ydinvoimala tuottaa kasvihuonekaasuja.": false
     }
 }

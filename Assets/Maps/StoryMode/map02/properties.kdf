@@ -5230,7 +5230,7 @@
 "84-205":{"0":{"checkCollision":false}},
 "85-205":{"0":{"checkCollision":false}},
 "86-205":{"0":{"checkCollision":false}},
-"87-205":{"0":{"checkCollision":false},"9":{"overlay":"0112"}},
+"87-205":{"9":{"overlay":"0112"},"0":{"checkCollision":false}},
 "88-205":{"0":{"checkCollision":false}},
 "89-205":{"0":{"checkCollision":false}},
 "90-205":{"0":{"checkCollision":false}},
@@ -5605,8 +5605,8 @@
 "57-234":{"0":{"checkCollision":false}},
 "58-234":{"0":{"checkCollision":false}},
 "59-234":{"0":{"checkCollision":false}},
-"60-234":{"0":{"checkCollision":false},"3":{"identifier":1,"message":"Biologian luokka","interactable":false}},
-"61-234":{"0":{"checkCollision":false}},
+"60-234":{"0":{"checkCollision":false}},
+"61-234":{"0":{"checkCollision":false,"message":"Biologian luokka"}},
 "62-234":{"0":{"checkCollision":false}},
 "63-234":{"0":{"checkCollision":false}},
 "64-234":{"0":{"checkCollision":false},"3":{"identifier":115,"message":"Jeesiveski Pojat"}},
@@ -6069,5 +6069,5 @@
 "117-240":{"0":{"checkCollision":false}},
 "118-240":{"0":{"checkCollision":false}},
 "119-240":{"0":{"checkCollision":false}},
-"zones":{"46-188-59-5":{"staffOnly":true},"39-156-80-6":{"staffOnly":true},"44-104-73-6":{"staffOnly":true},"168-134-37-10":{"darkness":128,"staffOnly":true},"61-0-153-23":{"staffOnly":true}}
+"zones":{"46-188-59-5":{"staffOnly":true},"39-156-80-6":{"staffOnly":true},"44-104-73-6":{"staffOnly":true},"168-134-37-10":{"darkness":128,"staffOnly":true},"61-0-153-23":{"staffOnly":true},"67-201-53-5":{"levelEnder":true}}
 }

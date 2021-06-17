@@ -763,7 +763,7 @@ class SecurityGuard(HostileEnemy):
 
 class Bulldog(HostileEnemy):
     def __init__(self, pos: Tuple[int, int]):
-        health = KDS.Math.MAXVALUE # They are 30 pixels tall so player should not be able to shoot them
+        health = 10
         w_anim = KDS.Animator.Animation("bulldog", 5, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = w_anim
         a_anim = w_anim

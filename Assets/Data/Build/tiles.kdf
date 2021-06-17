@@ -1111,5 +1111,12 @@
         "specialTile": true,
         "noCollision": false,
         "trueScale": false
+    },
+    "Pistokoe Door": {
+        "serialNumber": 161,
+        "path": "kuuma_door.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
     }
 }

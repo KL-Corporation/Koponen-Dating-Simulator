@@ -6,6 +6,7 @@ import pygame
 
 import KDS.Animator
 import KDS.Audio
+import KDS.Build
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
@@ -150,27 +151,32 @@ class KoponenTask(Task):
         self.items = itemIDs
 
 class StudentTask(Task):
-    def __init__(self, missionName: str, safeName: str, text: str, interactCount: int, interactPrompt: str) -> None:
+    def __init__(self, missionName: str, safeName: str, text: str, interactCount: int, interactPrompt: str, completedItem: int) -> None:
         super().__init__(missionName, safeName, text)
         studentTaskCount = 0
         for task in Missions.GetMission(missionName).GetTaskList():
             if isinstance(task, StudentTask):
                 studentTaskCount += 1
-        if studentTaskCount:
+        if studentTaskCount > 1:
             KDS.Logging.AutoError("Only one Student Task allowed per mission!")
-        self.interacted = 0
-        self.interactCount = interactCount
+        self.interacted: int = 0
+        self.interactCount: int = interactCount
         self.interactedStudents: List[KDS.NPC.StudentNPC] = []
-        self.prompt = TipFont.render(interactPrompt, True, KDS.Colors.White)
+        self.prompt: pygame.Surface = TipFont.render(interactPrompt, True, KDS.Colors.White)
+        self.item = completedItem
+        self.itemGiven: bool = False
 
     def HasInteracted(self, student: KDS.NPC.StudentNPC) -> bool:
         return student in self.interactedStudents
 
-    def Interact(self, student: KDS.NPC.StudentNPC):
+    def Interact(self, student: KDS.NPC.StudentNPC) -> Optional[KDS.Build.Item]:
         self.interactedStudents.append(student)
         self.interacted += 1
         self.Progress(self.interacted / self.interactCount)
-
+        if self.interacted >= self.interactCount and not self.itemGiven:
+            self.itemGiven = True
+            return KDS.Build.Item(student.rect.center, self.item)
+        return None
 
 class Mission:
     def __init__(self, safeName: str, text: str, playSound: bool) -> None:
@@ -219,11 +225,13 @@ class Mission:
 
             if isinstance(task, KoponenTask):
                 KDS.Koponen.Mission.Task = task
-                taskAssigned = True
+            elif isinstance(task, StudentTask):
+                KDS.NPC.StudentNPC.Task = task
 
             if notFinished > 0:
                 self._playTaskSound = True
-                if taskAssigned: break
+                if taskAssigned:
+                    break
         del notFinished, taskAssigned
 
         if self.finished:
@@ -319,6 +327,9 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
 
 def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, *itemIDs: int):
     KoponenTask(MissionName, SafeName, Text, itemIDs)
+
+def InitialiseStudentTask(MissionName: str, SafeName: str, Text: str, InteractCount: int, Prompt: str, CompletedItem: int):
+    StudentTask(MissionName, SafeName, Text, InteractCount, Prompt, CompletedItem)
 
 def InitialiseMission(SafeName: str, Text: str, NoSound: bool = False):
     """Initialises a mission.

@@ -1,4 +1,4 @@
-from typing import Callable, List, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from enum import IntEnum, auto
 
@@ -115,17 +115,20 @@ class Animation:
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
-        self.animations = animations
-        self.active = None
+        self.animations: Dict[str, Animation] = animations
+        self.active: Optional[Animation] = None
+        self.active_key: Optional[str] = None
         for key in animations:
             if self.active == None:
                 self.active = animations[key]
+                self.active_key = key
             else:
                 break
 
     def trigger(self, animation_trigger: str):
         if animation_trigger in self.animations:
             self.active = self.animations[animation_trigger]
+            self.active_key = animation_trigger
         else:
             KDS.Logging.AutoError("MultiAnimation trigger invalid.")
 
@@ -208,7 +211,7 @@ class Value:
     }
 
     def __init__(self, From: float, To: float, Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
-        """Initialises a float animation.
+        """Initialises a value animation.
 
         Args:
             From (float): The starting point of the float animation.

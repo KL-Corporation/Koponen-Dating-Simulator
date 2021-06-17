@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict, List, Optional, Set, SupportsFloat, Tuple
 import pygame
 from pygame.locals import *
@@ -281,7 +282,8 @@ def Exam(showtitle = True):
                     timer_finished = True
                     timer3.start()
                     exam_returned.stop()
-                    if score < passLine: score_formatted = scoreRational(4)
+                    if score < passLine:
+                        score_formatted = scoreRational(4)
                     else:
                         grade_slope = (10 - 4) / (1 - passLine)
                         f_score = 4 + grade_slope * (score - passLine)

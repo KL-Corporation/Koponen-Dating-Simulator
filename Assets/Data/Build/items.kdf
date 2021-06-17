@@ -264,5 +264,12 @@
         "doubleSize": false,
         "supportsInventory": true,
         "isContraband": false
+    },
+    "Survey Answers": {
+        "serialNumber": 39,
+        "path": "misc_paper.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
     }
 }

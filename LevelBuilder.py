@@ -162,6 +162,7 @@ class TextureHolder:
 #region Textures
 Textures = TextureHolder()
 trueScale: Set[str] = set()
+noCollision: Set[str] = set()
 
 with open("Assets/Data/Build/tiles.kdf") as f:
     tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
@@ -170,6 +171,8 @@ for dName, d in tileData.items():
     Textures.AddTexture(srl, f"""Assets/Textures/Tiles/{d["path"]}""", dName, colorkey=KDS.Colors.White if srl != "0128" else KDS.Colors.Cyan, alpha= -1 if srl != "0102" else 30)
     if d["trueScale"] == True:
         trueScale.add(srl)
+    if d["noCollision"] == True:
+        noCollision.add(srl)
 
 with open("Assets/Data/Build/items.kdf") as f:
     itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
@@ -197,6 +200,7 @@ Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie",
 
 Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
 Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
+Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa")
 Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
 #endregion
 
@@ -463,7 +467,7 @@ class UnitData:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
-                    if textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
+                    if textureData.serialNumber not in noCollision and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
                         surface.blit(textureData.darkOverlay, blitPos)
                 else:
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)

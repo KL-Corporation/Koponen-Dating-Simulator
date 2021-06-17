@@ -9,6 +9,7 @@ import KDS.ConfigManager
 import KDS.Colors
 import KDS.World
 import KDS.Build
+import KDS.Keys
 import KDS.Jobs
 import KDS.Convert
 import KDS.Debug
@@ -85,7 +86,7 @@ class NPC:
             pygame.draw.rect(surface, KDS.Colors.Magenta if self.panicked else KDS.Colors.Green, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def panickBehaviour():
             self.animation.trigger("run")
             if self.direction:
@@ -161,10 +162,23 @@ class StudentNPC(NPC):
         self.internalInit(rect, Type.Idle, idle_anim, idle_anim, idle_anim, idle_anim, 100, 0, 0)
         self.noPanick = True
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
-        output = super().update(surface, scroll, tiles, player)
-        if StudentNPC.Task != None and self.rect.colliderect(player.rect):
-            surface.blit(StudentNPC.Task.prompt, (self.rect.centerx - StudentNPC.Task.prompt.get_width() // 2, self.rect.y - 10))
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+        output = super().update(surface, scroll, tiles, items, player)
+        if StudentNPC.Task != None and self.rect.colliderect(player.rect) and not StudentNPC.Task.HasInteracted(self):
+            surface.blit(StudentNPC.Task.prompt, (self.rect.centerx - StudentNPC.Task.prompt.get_width() // 2 - scroll[0], self.rect.y - 15 - scroll[1]))
+            if KDS.Keys.functionKey.clicked:
+                item = StudentNPC.Task.Interact(self)
+                if item != None:
+                    dropped = player.inventory.dropItem()
+                    if dropped != None:
+                        # Drop should be in parity with main code drop code, because yeah... I have no motivation with this shitty project anymore
+                        dropped.rect.center = player.rect.center
+                        dropped.physics = True
+                        dropped.vertical_momentum = player.vertical_momentum
+                        dropped.horizontal_momentum = player.movement[0]
+                        items.append(dropped)
+
+                    player.inventory.pickupItem(item, force=True)
         return output
 
 

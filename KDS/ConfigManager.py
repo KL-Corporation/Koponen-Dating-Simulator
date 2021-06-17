@@ -202,7 +202,7 @@ class Save:
                 retu.append({
                     "name": JSON.Get(path, "Story/playerName", "<name-error>", False, True),
                     "progress": ((JSON.Get(path, "Story/index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
-                    "grade": JSON.Get(path, "Story/examGrade", -1, False, True),
+                    "grade": JSON.Get(path, "Story/examGrade", -1.0, False, True),
                     "score": JSON.Get(path, "Stats/score", -1, False, True),
                     "playtime": JSON.Get(path, "Stats/playtime", -1, False, True),
                     "lastPlayedTimestamp": JSON.Get(path, "Stats/lastPlayed", -1, False, True)
@@ -215,7 +215,7 @@ class Save:
         def __init__(self) -> None:
             self.playerName: str = "<name-error>"
             self.index: int = 1
-            self.examGrade: int = -1
+            self.examGrade: float = -1.0
             self.principalName: str = "<principal-name-error>"
 
     class StatsData:

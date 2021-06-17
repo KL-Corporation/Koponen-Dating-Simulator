@@ -3,6 +3,9 @@ import KDS.ConfigManager
 import KDS.Koponen
 import KDS.Story
 import KDS.Logging
+import KDS.Keys
+
+import pygame
 from enum import IntEnum
 
 class Modes(IntEnum):
@@ -79,7 +82,32 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseMission("sauna_and_exit", "Suuret Haaveet")
             KDS.Missions.InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi saunavessa koulupolkusi jatkamiseksi", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
-        elif index == 4:
+        elif index == 2:
+            KDS.Missions.InitialiseMission("story_exam", "Biologian Tunti", True)
+            KDS.Missions.InitialiseTask("story_exam", "go_to_class", "Mene biologian tunnille")
+
+            KDS.Missions.InitialiseMission("food", "Ruokailu", False)
+            KDS.Missions.InitialiseTask("food", "go_to_eat", "Mene Ruokalaan", (KDS.Missions.Listeners.LevelEnder, 1.0))
+
+            Presets.KoponenMissionRequest()
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Onko sinulla tehtävää minulle?", KDS.Koponen.Prefixes.player)
+            KDS.Koponen.Talk.Conversation.schedule("Tulit juuri sopivaan aikaan. Haluaisin tehdä tutkimuksen siitä kuka olisi koulun paras opettaja... Siis minun lisäkseni tietenkin... Kävisitkö kyselemässä tätä muutamalta oppilaalta?", KDS.Koponen.Prefixes.koponen)
+
+            KDS.Missions.InitialiseMission("research", "Tutkimus")
+            KDS.Missions.InitialiseStudentTask("research", "ask","Kysy oppilaiden mielipidettä", 10, f"Kysy mielipidetta [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", 39)
+            KDS.Missions.InitialiseKoponenTask("research", "answers", "Palauta kyselypaperi", 39)
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
+            KDS.Koponen.Talk.Conversation.schedule("Tässä ovat tulokseni", KDS.Koponen.Prefixes.player)
+            KDS.Koponen.Talk.Conversation.schedule("Ohhoh... Kiitoksia. Katsotaanpas...", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Hetkinen... Miksi olet merkinnyt tähän kaikille saman määrän ääniä?", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Koulumme opettajat olivat niin hyviä, ettei kukaan osannut päättää.", KDS.Koponen.Prefixes.player)
+            KDS.Koponen.Talk.Conversation.schedule("Hmm... Kiinnostavaa. Hyvää työtä {playerName}", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("En muuten nähnyt musiikin opettajaa listassa... Ehkä se saattaisi muuttaa tuloksia.", KDS.Koponen.Prefixes.player)
+
+        elif index == 3:
             Presets.KoponenMissionRequest()
 
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
@@ -103,7 +131,7 @@ Kolmannen asteen yhtälöitä taas ovat esimerkiksi
 x^3 = 69 ja
 420x^3 + 13x – 69 = 69420
 Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Koposen sanottavaks...""", KDS.Koponen.Prefixes.koponen, True)
-        elif index == 3:
+        elif index == 5:
             KDS.Missions.InitialiseMission("explore", "Kummituksia", NoSound=True)
             KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta")
 
