@@ -30,5 +30,9 @@
     "Hotel Door Teleport Mirrored": {
         "serialNumber": 8,
         "path": "hotel_door_front_mirrored.png"
+    },
+    "Door Teleport Left Side": {
+        "serialNumber": 9,
+        "path": "door_closed.png"
     }
 }

@@ -540,14 +540,14 @@ class KoponenEntity:
 
     def listenerTrigger_0(self):
         if self.task_counter == 1:
-            self.listenerInstances["TentSleepEnd"].OnTrigger -= self.listenerTrigger_0
+            self.listenerInstances["TileSleepEnd"].OnTrigger -= self.listenerTrigger_0
             self.enabled = True
         else:
             self.task_counter += 1
 
     def setListeners(self, listener_names: List[str] = []):
         for listener in listener_names:
-            if listener == "TentSleepEnd":
+            if listener == "TileSleepEnd":
                 self.enabled = False
                 tempListener = getattr(KDS.Missions.Listeners, listener, None)
                 if tempListener != None:

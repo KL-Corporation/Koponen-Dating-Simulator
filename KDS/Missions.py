@@ -87,8 +87,8 @@ class Listeners:
     KoponenReturnMission = Listener()
     LevelEnder = Listener()
     Teleport = Listener()
-    TentSleepStart = Listener()
-    TentSleepEnd = Listener()
+    TileSleepStart = Listener()
+    TileSleepEnd = Listener()
     EnemyDeath = Listener()
     TeacherAgro = Listener() # Not implemented
     TeacherDeath = Listener() # Not implemented

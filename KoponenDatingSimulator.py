@@ -1530,12 +1530,12 @@ class Tent(KDS.Build.Tile):
 
         self.inTent = not self.inTent
         if self.inTent:
-            KDS.Missions.Listeners.TentSleepStart.Trigger()
+            KDS.Missions.Listeners.TileSleepStart.Trigger()
             KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
         else:
-            KDS.Missions.Listeners.TentSleepEnd.Trigger()
+            KDS.Missions.Listeners.TileSleepEnd.Trigger()
         #region Position Player Correctly
         Player.rect.bottomright = (self.rect.right - (34 - Player.rect.width) // 2, self.rect.bottom) # The camera will follow the player, but whatever... This is done so that Story enemy makes it's sound correctly
         Player.direction = False
@@ -1546,7 +1546,7 @@ class Tent(KDS.Build.Tile):
     def update(self):
         if self.rect.colliderect(Player.rect):
             screen.blit(Tent.tentTip, (self.rect.centerx - Tent.tentTip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-            if KDS.Keys.functionKey.clicked and (not self.forceTentTask or KDS.Missions.Listeners.TentSleepStart.ContainsActiveTask()):
+            if KDS.Keys.functionKey.clicked and (not self.forceTentTask or KDS.Missions.Listeners.TileSleepStart.ContainsActiveTask()):
                 if self.autoOut:
                     ScreenEffects.OnEffectFinish += self.toggleTent
                     if not self.inTent:
@@ -1932,6 +1932,11 @@ class HotelDoorMirrored(HotelDoor):
         super().__init__(position, serialNumber)
         self.lightPos = (self.rect.x + 9, self.rect.y + 25)
 
+class WoodDoorSideTeleport(WoodDoorTeleport):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.rect = pygame.Rect(position[0] - 2, position[1], 2, 68)
+
 KDS.Build.Tile.specialTilesClasses = {
     15: Toilet,
     16: Trashcan,
@@ -1997,7 +2002,8 @@ BaseTeleport.serialNumbers = {
     5: LargeDoorTeleport,
     6: Elevator,
     7: HotelDoor,
-    8: HotelDoorMirrored
+    8: HotelDoorMirrored,
+    9: WoodDoorSideTeleport
 }
 
 KDS.Logging.debug("Tile Loading Complete.")

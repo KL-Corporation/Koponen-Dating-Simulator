@@ -149,13 +149,13 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
 
         elif index == 8:
             KDS.Missions.InitialiseMission("t", "Telttailua")
-            KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TentSleepStart, 1.0))
+            KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
 
             KDS.Missions.InitialiseMission("o", "O'ou")
             KDS.Missions.InitialiseTask("o", "kill", "Hankkiudu Eroon Vartijasta", (KDS.Missions.Listeners.EnemyDeath, 1.0))
 
             KDS.Missions.InitialiseMission("s", "Kuin Tukki")
-            KDS.Missions.InitialiseTask("s", "sleep_again", "Nuku aamuun asti", (KDS.Missions.Listeners.TentSleepStart, 0.5))
+            KDS.Missions.InitialiseTask("s", "sleep_again", "Nuku aamuun asti", (KDS.Missions.Listeners.TileSleepStart, 0.5))
 
             KDS.Missions.InitialiseMission("wait", "Odota")
             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
@@ -175,6 +175,39 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
 
         elif index == 10:
             KDS.Koponen.requestReturnAlt = "CARD"
+
+            KDS.Missions.InitialiseMission("rules", "Ohjeistus")
+            KDS.Missions.InitialiseTask("rules", "listen", "Kuuntele Koposen ohjeistus", (KDS.Missions.Listeners.KoponenTalk, 1.0))
+
+            KDS.Koponen.Talk.Conversation.schedule("Tervetuloa Clarioniin. Ennen huoneisiin lähtöä haluaisin kertoa teille hieman turvallisuussäännöistä. Seuraa tätä tarkkaan, sillä tulen esittämään teille hotellimme turvaominaisuudet.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Älypuhelimia ja muita kannettavia elektronisia laitteita voidaan käyttää aulasta huoneisiin hotellitilassa ja normaalitilassa huoneisiin pääsyn jälkeen.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Muut elektroniset laitteet, kuten kannettavat tietokoneet täytyy sammuttaa ja pakata huoneeseen menemisen ajaksi.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Varmista, että jalkasi ovat kävelyasennossa ja silmäsi ovat auki. Nosta selkäsi pystyasentoon ja pakkaa reppusi.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Reppusi suljetaan vetämällä vetoketjusi kiinni. Avataksesi repun, vedä vetoketju auki.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Reppusi täytyy olla kiinni hotellihuoneeseen menon ja -paluun aikana ja -aina hotellihuoneessa, kun reppuvalo on päällä.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Reissumme on päihteetön ja hotellilain mukaan, päihteiden käyttäminen on kielletty vessoissa. Tämä pätee myös kannabikseen.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Hotellihenkilökuntasi on koulutettu takaamaan turvallisuutesi hotellissa. Sinun täytyy aina noudattaa heidän antamiaan ohjeita.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Jos hotellin paine tippuu, happimaskit tippuvat automaattisesti katosta. Ota lähin maski ja pue se päällesi. Pussi ei välttämättä täyty, vaikka happea virtaa. Pistä aina oma maskisi ensimmäiseksi ja auta vasta sen jälkeen muita.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Jos asut bisneshuoneessa, pelastusliivisi on sänkysi alla lokerossa. Turistihuoneessa pelastusliivisi on sänkysi alla pussissa.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Pistä liivi kaulasi ympärille ja kiristä sopivasti. Täytä pelastusliivi ainoastaan, kun poistut hotellista.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Tässä hotellissa on kahdeksan hätäpoistumistietä, jotka ovat kaikki merkattu vihervalkoisilla \"EXIT\" -kylteillä. Kaikki poistumistiet on varustettu liukumäillä. Lattiatason valot johtavat näihin uloskäynteihin.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Sinun täytyy mennä välittömästi hätäasentoon, kun sinua ohjeistetaan tekemään näin. Siinä on tärkeää taipua eteenpäin ja mahdollisimman alas. Hätätilanteessa on myös äärimmäisen tärkeää jättää kaikki käsimatkatavarat hotelliin.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Tämän hotellin turvallisuussäännöt löytyvät myös turvallisuuskortista, joka sijaitsee sängyn taskussa.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Jos teillä on joitain huolia tai murheita, kuten esimerkiksi tiputte yöllä sängystä ja murratte jalkanne, niin minut löytää huoneesta 210.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Jos teillä taas on suuri koti-ikävä, niin uima-allas on ylimmässä kerroksessa, jossa kyyneleenne eivät aiheuta vesivahinkoa.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Ja muistakaa, että lisääntyminen on sitten kiellettyä.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Nyt saatte mennä huoneisiinne heti, kun olette hakeneet korttinne minulta.", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("rm", "Huoneeseen")
+            KDS.Missions.InitialiseTask("rm", "card", "Pyydä huoneesi avainkortti Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 1.0))
+            KDS.Missions.InitialiseTask("rm", "go", "Mene huoneeseesi", (KDS.Missions.Listeners.LevelEnder, 1.0))
+
+            KDS.Missions.InitialiseMission("slp", "Hohhoijaa")
+            KDS.Missions.InitialiseTask("slp", "sleep", "Mene nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Tässä. Huoneesi on 311.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Kiitos", KDS.Koponen.Prefixes.player, True)
 
 
 #region Biology Exam

@@ -22,7 +22,7 @@
                 "exec:SetSelfProperty('enabled', False)"
             ],
             "listeners" : [
-                "TentSleepEnd"
+                "TileSleepEnd"
             ]
         },
         "Player": {
