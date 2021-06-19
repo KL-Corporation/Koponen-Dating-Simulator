@@ -1358,7 +1358,6 @@ class TileFire(KDS.Build.Tile):
         self.animationOffset = random.randint(0, TileFire.cachedAnimation.ticks - 1)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
-        self.sound = pygame.mixer.Sound("Assets/Audio/Effects/fire.ogg")
         self.randomSoundWait()
         self.randomSpreadWait()
 
@@ -1383,9 +1382,8 @@ class TileFire(KDS.Build.Tile):
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
             volume_modifier = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
             volume = (random.random() / 4) * volume_modifier
-            self.sound.set_volume(volume)
             if volume > 0:
-                KDS.Audio.PlaySound(self.sound)
+                KDS.Audio.PlayFromFile("Assets/Audio/Effects/fire.ogg", clip_volume=volume)
             self.randomSoundWait()
 
         self.spreadWait -= 1
@@ -1507,31 +1505,29 @@ class DoorFrontMirrored(DoorFront):
     def update(self):
         return super().update()
 
-class Tent(KDS.Build.Tile):
-    tentTip: pygame.Surface = tip_font.render(f"Toggle Sleep [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+class Sleepable(KDS.Build.Tile):
+    tip = tip_font.render(f"Toggle Sleep [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
-        #Rect will be set automatically with trueScale.
-        self.checkCollision = False
-        self.inTent: bool = False
+        self.sleeping: bool = False
         self.fadeAnimation: bool = False
-        self.autoOut: bool = False # Works only with fadeAnimation
-        self.forceTentTask: bool = False
+        self.sleepAutoEnd: bool = False # Works only with fadeAnimation
+        self.requireTileSleepTask: bool = False
+        self.audiofile: str = "Assets/Audio/Effects/zipper.ogg"
 
-    def toggleTent(self, effect: ScreenEffects.Effects = None):
+    def toggleSleep(self, effect: ScreenEffects.Effects = None):
         global Player
         if effect != None:
             if effect == ScreenEffects.Effects.FadeInOut:
-                ScreenEffects.OnEffectFinish -= self.toggleTent
+                ScreenEffects.OnEffectFinish -= self.toggleSleep
             else:
                 return
 
-        self.inTent = not self.inTent
-        if self.inTent:
+        self.sleeping = not self.sleeping
+        if self.sleeping:
             KDS.Missions.Listeners.TileSleepStart.Trigger()
-            KDS.Audio.PlayFromFile("Assets/Audio/Effects/zipper.ogg")
+            KDS.Audio.PlayFromFile(self.audiofile)
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
         else:
@@ -1545,15 +1541,39 @@ class Tent(KDS.Build.Tile):
 
     def update(self):
         if self.rect.colliderect(Player.rect):
-            screen.blit(Tent.tentTip, (self.rect.centerx - Tent.tentTip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-            if KDS.Keys.functionKey.clicked and (not self.forceTentTask or KDS.Missions.Listeners.TileSleepStart.ContainsActiveTask()):
-                if self.autoOut:
-                    ScreenEffects.OnEffectFinish += self.toggleTent
-                    if not self.inTent:
-                        self.toggleTent()
-                else: self.toggleTent()
+            screen.blit(Sleepable.tip, (self.rect.centerx - Sleepable.tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if KDS.Keys.functionKey.clicked and (not self.requireTileSleepTask or KDS.Missions.Listeners.TileSleepStart.ContainsActiveTask()):
+                if self.sleepAutoEnd:
+                    ScreenEffects.OnEffectFinish += self.toggleSleep
+                    if not self.sleeping:
+                        self.toggleSleep()
+                else:
+                    self.toggleSleep()
 
         return self.texture
+
+class Tent(Sleepable):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.texture = t_textures[serialNumber]
+        #Rect will be set automatically with trueScale.
+        self.checkCollision = False
+        self.inTent: bool = False
+        self.fadeAnimation: bool = False # Redundant
+        self.autoOut: bool = False # Works only with fadeAnimation
+        self.forceTentTask: bool = False
+        self.audiofile: str = "Assets/Audio/Effects/zipper.ogg"
+
+    def lateInit(self) -> None:
+        self.sleeping = self.inTent
+        self.sleepAutoEnd = self.autoOut
+        self.requireTileSleepTask = self.forceTentTask
+        super().lateInit()
+
+class HotelBed(Sleepable):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.audiofile = "Assets/Audio/Tiles/hotel_bed.ogg"
 
 class AvarnCar(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
@@ -1992,7 +2012,8 @@ KDS.Build.Tile.specialTilesClasses = {
     155: Fucking,
     157: Shower,
     160: LevelEnderDoor,
-    161: PistokoeDoor
+    161: PistokoeDoor,
+    162: HotelBed
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,

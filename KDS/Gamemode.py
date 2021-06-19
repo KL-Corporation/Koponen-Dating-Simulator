@@ -202,12 +202,12 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("rm", "card", "Pyydä huoneesi avainkortti Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 1.0))
             KDS.Missions.InitialiseTask("rm", "go", "Mene huoneeseesi", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
-            KDS.Missions.InitialiseMission("slp", "Hohhoijaa")
-            KDS.Missions.InitialiseTask("slp", "sleep", "Mene nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
-
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
             KDS.Koponen.Talk.Conversation.schedule("Tässä. Huoneesi on 311.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Kiitos", KDS.Koponen.Prefixes.player, True)
+
+            KDS.Missions.InitialiseMission("slp", "Hohhoijaa")
+            KDS.Missions.InitialiseTask("slp", "sleep", "Mene nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
 
 
 #region Biology Exam

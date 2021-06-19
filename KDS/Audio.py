@@ -87,7 +87,8 @@ def quit():
 
 def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    if volume == -1.0: volume = EffectVolume
+    if volume == -1.0:
+        volume = EffectVolume
     play_channel = SoundMixer.find_channel(True) # Won't return None, because force is true
     play_channel.play(sound, loops, fade_ms)
     play_channel.set_volume(volume)

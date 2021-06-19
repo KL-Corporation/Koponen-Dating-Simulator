@@ -1118,5 +1118,19 @@
         "specialTile": true,
         "noCollision": true,
         "trueScale": true
+    },
+    "Bed End": {
+        "serialNumber": 162,
+        "path": "bed_end.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "Nightstand": {
+        "serialNumber": 163,
+        "path": "nightstand.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
     }
 }

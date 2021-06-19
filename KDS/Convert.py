@@ -39,9 +39,6 @@ class DateTime:
     @staticmethod
     def Humanize(value: datetime.datetime) -> str:
         """Return a natural day.
-        For date values that are tomorrow, today or yesterday compared to
-        present day return representing string. Otherwise, return a string
-        with format `x days ago`
         """
         now = datetime.datetime.now()
         delta = now - value
