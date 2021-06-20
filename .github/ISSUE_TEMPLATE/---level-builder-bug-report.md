@@ -24,8 +24,9 @@ If applicable, add screenshots here to help explain your problem.
  - Version: [e.g. 20H2]
  - Type: [e.g. 64bit]
 
-**Game (Game information, not Level Builder):**
+**Level Builder (please complete the following information):**
  - Version [e.g. 0.0.1-dev]
+ - Log File: [Your latest log file located in: `%AppData%/KL Corporation/KDS Level Builder/logs`]
 
-**Additional context**
+**Additional context** 
 Add any other context about the problem here.
