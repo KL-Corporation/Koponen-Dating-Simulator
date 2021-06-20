@@ -6,6 +6,7 @@ import ctypes
 import os
 import shutil
 import subprocess
+import webbrowser
 
 import KDS.Logging
 
@@ -199,3 +200,6 @@ def GetUserNameEx(NameDisplay: EXTENDED_NAME_FORMAT):
     nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
     GetUserNameEx(NameDisplay.value, nameBuffer, size)
     return nameBuffer.value
+
+def OpenURL(url: str):
+    webbrowser.open_new_tab(url)

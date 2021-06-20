@@ -1398,6 +1398,7 @@ class TileFire(KDS.Build.Tile):
 
     @staticmethod
     def createInstanceAtPosition(gridPos: Tuple[int, int]) -> bool:
+        global Tiles
         clampPos = KDS.Math.Clamp(gridPos[0], 0, WorldData.MapSize[0]), KDS.Math.Clamp(gridPos[1], 0, WorldData.MapSize[1])
         unit = Tiles[clampPos[1]][clampPos[0]]
         for t in unit:
@@ -3407,8 +3408,9 @@ def settings_menu():
     lastLobbymusicState = legacy_lobbymusic_switch.state
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 375, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
     controls_settings_button = KDS.UI.Button(pygame.Rect(480, 485, 260, 50), lambda: KDS.Keys.StartBindingMenu(display, clock, defaultEventHandler), KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
-    reset_settings_button = KDS.UI.Button(pygame.Rect(340, 595, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White))
-    remove_data_button = KDS.UI.Button(pygame.Rect(620, 595, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White))
+    reset_settings_button = KDS.UI.Button(pygame.Rect(220, 595, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White))
+    give_feedback_button = KDS.UI.Button(pygame.Rect(480, 595, 240, 40), lambda: KDS.System.OpenURL("https://github.com/KL-Corporation/Koponen-Dating-Simulator/issues"), KDS.UI.ButtonFontSmall.render("Give Feedback", True, KDS.Colors.EmeraldGreen))
+    remove_data_button = KDS.UI.Button(pygame.Rect(740, 595, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White))
     music_volume_text = KDS.UI.ButtonFontSmall.render("Music Volume", True, KDS.Colors.White)
     effect_volume_text = KDS.UI.ButtonFontSmall.render("Sound Effect Volume", True, KDS.Colors.White)
     walk_sound_text = KDS.UI.ButtonFontSmall.render("Play footstep sounds", True, KDS.Colors.White)
@@ -3451,6 +3453,7 @@ def settings_menu():
         controls_settings_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
         remove_data_button.update(display, mouse_pos, c)
+        give_feedback_button.update(display, mouse_pos, c)
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
 
