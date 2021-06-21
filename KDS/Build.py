@@ -17,6 +17,7 @@ import KDS.Teachers
 import KDS.Audio
 import KDS.Animator
 import KDS.Debug
+import KDS.NPC
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass
@@ -236,7 +237,7 @@ class Weapon(Item):
             return Weapon.WeaponHolderData(player.rect, player.direction)
 
         @staticmethod
-        def fromEntity(entity: KDS.Teachers.Teacher) -> Weapon.WeaponHolderData:
+        def fromEntity(entity: Union[KDS.Teachers.Teacher, KDS.NPC.DoorGuardNPC]) -> Weapon.WeaponHolderData:
             return Weapon.WeaponHolderData(entity.rect, entity.direction, entity.weaponData)
 
     data: Dict[Type[Weapon], Weapon.WeaponData] = {}

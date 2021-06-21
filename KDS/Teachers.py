@@ -40,7 +40,7 @@ class Teacher:
         pass
 
     def lateInit(self) -> None:
-        self.lastTargetDirection = self.direction
+        pass
 
     @property
     def health(self) -> int:
@@ -245,9 +245,9 @@ class Teacher:
             self.inventory.pickSlot(0)
             if not self.deathHandled and self.death_sound != None:
                 KDS.Audio.PlaySound(self.death_sound)
-                items = self.onDeath()
-                KDS.Missions.Listeners.EnemyDeath.Trigger()
-                for item in items:
+                tmpdrItems: List[int] = self.onDeath()
+                KDS.Missions.Listeners.TeacherDeath.Trigger()
+                for item in tmpdrItems:
                     if item:
                         dropItems.append(item)
                 self.deathHandled = True

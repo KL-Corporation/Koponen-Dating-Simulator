@@ -84,7 +84,8 @@ class NPC:
     def render(self, surface: pygame.Surface, scroll: Sequence[int]):
         if KDS.Debug.Enabled:
             pygame.draw.rect(surface, KDS.Colors.Magenta if self.panicked else KDS.Colors.Green, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
-        surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        renderOutput = self.customRenderer()
+        surface.blit(renderOutput[0], (renderOutput[1][0] - scroll[0], renderOutput[1][1] - scroll[1]))
 
     def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def panickBehaviour():
@@ -144,6 +145,9 @@ class NPC:
             self.panicked = True
         KDS.Jobs.Schedule(NPC.panickNearby, self.rect) # Threaded to not cause a massive lag spike even though I'm not sure if it's gonna even happen, but still... We will have a lot of NPC's
 
+    def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]: # No scroll
+        return pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x, self.rect.y)
+
     @staticmethod
     def panickNearby(rect: pygame.Rect):
         for npc in NPC.InstanceList:
@@ -181,6 +185,40 @@ class StudentNPC(NPC):
                     player.inventory.pickupItem(item, force=True)
         return output
 
+class DoorGuardNPC(NPC):
+    def __init__(self, pos: Tuple[int, int]) -> None:
+        rect = pygame.Rect(pos[0], pos[1] - 34, 21, 68)
+        idle_anim = KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="NPC/DoorGuard")
+        die_anim = KDS.Animator.Animation("die", 9, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="NPC/DoorGuard")
+        self.internalInit(rect, Type.Idle, idle_anim, idle_anim, die_anim, idle_anim, 100, 0, 0)
+        self.noPanick = True
+        self.guardAgro: bool = False
+
+        weapon = KDS.Build.Item.serialNumbers[10]((0, 0), 10)
+        assert isinstance(weapon, KDS.Build.Weapon), "Door Guard weapon should be a pistol!"
+        self.weapon = weapon
+        self.weaponData = self.weapon.CreateWeaponData()
+        self.weaponData.ammo = KDS.Math.INFINITY
+        self.weaponData.counter = 0
+
+    def onDamage(self):
+        super().onDamage()
+        self.guardAgro = True
+
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+        output = super().update(surface, scroll, tiles, items, player)
+        if self.guardAgro:
+            distance = self.rect.centerx - player.rect.centerx
+            targetDirection = True if distance >= 0 else False
+            if targetDirection != self.direction:
+                self.direction = not self.direction
+
+            self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
+            self.weaponData.counter += 1
+        return output
+
+    def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]:
+        return pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - (47 if self.direction and self.animation.active_key == "death" else 0), self.rect.y)
 
 # region OLD NPC CODE
 #

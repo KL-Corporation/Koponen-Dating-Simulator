@@ -2606,7 +2606,7 @@ class Enemy:
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
         projectiles, items = enemy.update(screen, scroll, Tiles, Player.rect)
-        if enemy.health > 0:
+        if enemy.health > 0 and not KDS.Math.IsPositiveInfinity(entity.health):
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
         for r in projectiles:
@@ -2636,7 +2636,7 @@ class Entity:
     @staticmethod
     def _internalEntityHandler(entity: Union[KDS.Teachers.Teacher, KDS.NPC.NPC]):
         projectiles, items = entity.update(screen, scroll, Tiles, Items, Player)
-        if ((isinstance(entity, KDS.Teachers.Teacher) and KDS.Teachers.TeacherState.Combat in entity.state) or (isinstance(entity, KDS.NPC.NPC) and entity.panicked)) and entity.health > 0:
+        if ((isinstance(entity, KDS.Teachers.Teacher) and KDS.Teachers.TeacherState.Combat in entity.state) or (isinstance(entity, KDS.NPC.NPC) and entity.panicked)) and entity.health > 0 and not KDS.Math.IsPositiveInfinity(entity.health):
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
         for r in projectiles:
