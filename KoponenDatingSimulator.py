@@ -780,7 +780,7 @@ class Jukebox(KDS.Build.Tile):
     del tmp_jukebox_data, tmp_jukebox_data2
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
-        super().__init__((0, 0), serialNumber)
+        super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.checkCollision = False
         self.playing = -1
@@ -1953,6 +1953,66 @@ class HotelDoorMirrored(HotelDoor):
         super().__init__(position, serialNumber)
         self.lightPos = (self.rect.x + 9, self.rect.y + 25)
 
+class HotelGuardDoor(DoorTeleport):
+    tip_render: pygame.Surface = tip_font.render(f"Knock [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    alt_tip_render: pygame.Surface = tip_font.render(f"Enter [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.currentOpenTicks: int = 0
+        self.targetOpenTicks: int = 10 * 60
+        self.open: bool = False
+        self.waitOpenTicks: int = -1
+        self.opentexture = exit_door_open
+        e = KDS.NPC.DoorGuardNPC((self.rect.right, self.rect.top + 34))
+        e.enabled = False
+        self.entity = e
+        global Entities
+        Entities.append(e)
+
+    def update(self) -> Optional[pygame.Surface]:
+        if self.rect.colliderect(Player.rect):
+            self.renderMessage()
+
+            messageSize = self.renderedMessage.get_size() if self.renderedMessage != None else (0, 0)
+            normalMessagePos = (self.rect.centerx - messageSize[0] // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - messageSize[1] // 2 - scroll[1] + self.messageOffset[1])
+            if not self.open:
+                screen.blit(HotelGuardDoor.tip_render, (self.rect.centerx - HotelGuardDoor.tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
+            elif self.entity.health <= 0:
+                screen.blit(HotelGuardDoor.alt_tip_render, (self.rect.centerx - HotelGuardDoor.alt_tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
+
+            if KDS.Keys.functionKey.clicked and self.interactable:
+                if not self.open:
+                    KDS.Audio.PlayFromFile("Assets/Audio/Tiles/guard_door_knock.ogg")
+                    if self.waitOpenTicks == -1:
+                        # Knock mission progress
+                        self.waitOpenTicks = 3 * 60
+                    else:
+                        self.waitOpenTicks -= 30
+                elif self.entity.health <= 0:
+                    self.teleport()
+
+        if self.waitOpenTicks != -1:
+            self.waitOpenTicks -= 1
+            if self.waitOpenTicks <= 0:
+                KDS.Audio.PlaySound(door_opening)
+                self.waitOpenTicks = -1
+                self.open = True
+                self.entity.enabled = True
+                KDS.Missions.Listeners.DoorGuardNPCEnable.Trigger()
+
+        if self.open:
+            if self.entity.health > 0:
+                self.currentOpenTicks += 1
+                if self.currentOpenTicks > self.targetOpenTicks:
+                    KDS.Audio.PlaySound(door_opening)
+                    self.currentOpenTicks = 0
+                    self.entity.enabled = False
+                    self.open = False
+                    KDS.Missions.Listeners.DoorGuardNPCDisable.Trigger()
+            return self.opentexture
+        return self.texture
+
 class WoodDoorSideTeleport(WoodDoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -2025,7 +2085,8 @@ BaseTeleport.serialNumbers = {
     6: Elevator,
     7: HotelDoor,
     8: HotelDoorMirrored,
-    9: WoodDoorSideTeleport
+    9: WoodDoorSideTeleport,
+    10: HotelGuardDoor
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
@@ -2605,13 +2666,14 @@ class Enemy:
 
     @staticmethod
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
-        projectiles, items = enemy.update(screen, scroll, Tiles, Player.rect)
-        if enemy.health > 0 and not KDS.Math.IsPositiveInfinity(entity.health):
+        global Items
+        projectiles, itms = enemy.update(screen, scroll, Tiles, Player.rect)
+        if enemy.health > 0 and not KDS.Math.IsPositiveInfinity(enemy.health):
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
         for r in projectiles:
             Projectiles.append(r)
-        for serialNumber in items:
+        for serialNumber in itms:
             tempItem = KDS.Build.Item.serialNumbers[serialNumber](enemy.rect.center, serialNumber=serialNumber)
             tempItem.physics = True
             Items.append(tempItem)
@@ -2635,14 +2697,15 @@ class Entity:
 
     @staticmethod
     def _internalEntityHandler(entity: Union[KDS.Teachers.Teacher, KDS.NPC.NPC]):
-        projectiles, items = entity.update(screen, scroll, Tiles, Items, Player)
+        global Items
+        projectiles, itms = entity.update(screen, scroll, Tiles, Items, Player)
         if ((isinstance(entity, KDS.Teachers.Teacher) and KDS.Teachers.TeacherState.Combat in entity.state) or (isinstance(entity, KDS.NPC.NPC) and entity.panicked)) and entity.health > 0 and not KDS.Math.IsPositiveInfinity(entity.health):
             healthTxt = score_font.render(str(entity.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (entity.rect.centerx - healthTxt.get_width() // 2 - scroll[0], entity.rect.top - 20 - scroll[1]))
         for r in projectiles:
             Projectiles.append(r)
-        for serialNumber in items:
-            tempItem = KDS.Build.Item(entity.rect.center, serialNumber=serialNumber)
+        for serialNumber in itms:
+            tempItem = KDS.Build.Item.serialNumbers[serialNumber](entity.rect.center, serialNumber=serialNumber)
             tempItem.physics = True
             Items.append(tempItem)
 

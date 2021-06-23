@@ -14,6 +14,7 @@ import KDS.Jobs
 import KDS.Convert
 import KDS.Debug
 import KDS.Missions
+import KDS.Inventory
 
 import os
 import random
@@ -189,13 +190,13 @@ class DoorGuardNPC(NPC):
     def __init__(self, pos: Tuple[int, int]) -> None:
         rect = pygame.Rect(pos[0], pos[1] - 34, 21, 68)
         idle_anim = KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="NPC/DoorGuard")
-        die_anim = KDS.Animator.Animation("die", 9, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="NPC/DoorGuard")
+        die_anim = KDS.Animator.Animation("die", 9, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="NPC/DoorGuard")
         self.internalInit(rect, Type.Idle, idle_anim, idle_anim, die_anim, idle_anim, 100, 0, 0)
         self.noPanick = True
         self.guardAgro: bool = False
 
         weapon = KDS.Build.Item.serialNumbers[10]((0, 0), 10)
-        assert isinstance(weapon, KDS.Build.Weapon), "Door Guard weapon should be a pistol!"
+        assert isinstance(weapon, KDS.Build.Weapon), "Door Guard weapon should be a pistol...?"
         self.weapon = weapon
         self.weaponData = self.weapon.CreateWeaponData()
         self.weaponData.ammo = KDS.Math.INFINITY
@@ -204,10 +205,12 @@ class DoorGuardNPC(NPC):
     def onDamage(self):
         super().onDamage()
         self.guardAgro = True
+        if self.health <= 0:
+            KDS.Missions.Listeners.DoorGuardNPCDeath.Trigger()
 
     def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         output = super().update(surface, scroll, tiles, items, player)
-        if self.guardAgro:
+        if self.guardAgro and abs(self.rect.centery - player.rect.centery) < 3 * 68 and self.health > 0:
             distance = self.rect.centerx - player.rect.centerx
             targetDirection = True if distance >= 0 else False
             if targetDirection != self.direction:
@@ -215,6 +218,8 @@ class DoorGuardNPC(NPC):
 
             self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
             self.weaponData.counter += 1
+            KDS.Inventory.Inventory.renderItemTexture(self.weapon.texture, self.rect, self.direction, surface, scroll)
+
         return output
 
     def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]:

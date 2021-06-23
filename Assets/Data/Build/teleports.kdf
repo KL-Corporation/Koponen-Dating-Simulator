@@ -34,5 +34,9 @@
     "Door Teleport Left Side": {
         "serialNumber": 9,
         "path": "door_closed.png"
+    },
+    "Guard Hotel Door Teleport": {
+        "serialNumber": 10,
+        "path": "hotel_door_front.png"
     }
 }

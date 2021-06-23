@@ -90,8 +90,11 @@ class Listeners:
     TileSleepStart = Listener()
     TileSleepEnd = Listener()
     EnemyDeath = Listener()
-    TeacherAgro = Listener() # Not implemented
-    TeacherDeath = Listener() # Not implemented
+    TeacherAgro = Listener()
+    TeacherDeath = Listener()
+    DoorGuardNPCDeath = Listener()
+    DoorGuardNPCEnable = Listener()
+    DoorGuardNPCDisable = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
 #endregion

@@ -25,12 +25,15 @@ class Music:
     OnEnd = KDS.Events.Event()
 
     @staticmethod
-    def Play(path: str = None, loops: int = -1):
+    def Play(path: str = None, loops: int = -1, reserve_position: bool = False):
         global MusicMixer, MusicVolume
+        pos: float = 0.0
+        if reserve_position:
+            pos = MusicMixer.get_pos() / 1000 # Returns ms
         if path != None and len(path) > 0:
             Music.Load(path=path)
         if Music.Loaded != None:
-            MusicMixer.play(loops)
+            MusicMixer.play(loops, start=pos)
             MusicMixer.set_volume(MusicVolume)
         else:
             KDS.Logging.AutoError("No music track has been loaded to play!")
