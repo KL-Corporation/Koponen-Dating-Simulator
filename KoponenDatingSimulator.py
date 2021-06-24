@@ -1099,13 +1099,14 @@ class LevelEnderTransparent(KDS.Build.Tile):
     def eventHandler(self, *args: Any):
         if len(args) < 1 or (isinstance(self.listenerInstance, KDS.Missions.ItemListener) and args[0] != self.listenerItem):
             return
+        assert self.listenerInstance != None
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None
         self.readyToTrigger = True
 
     def lateInit(self):
         if self.listener != None:
-            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            tmpListener: Optional[KDS.Missions.Listener] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem != None):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
@@ -1282,13 +1283,14 @@ class FlickerTrigger(KDS.Build.Tile):
     def eventHandler(self, *args: Any):
         if len(args) < 1 or (isinstance(self.listenerInstance, KDS.Missions.ItemListener) and args[0] != self.listenerItem):
             return
+        assert self.listenerInstance != None
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None
         self.readyToTrigger = True
 
     def lateInit(self):
         if self.listener != None:
-            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            tmpListener: Optional[KDS.Missions.Listener] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem != None):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
@@ -1579,6 +1581,7 @@ class HotelBed(Sleepable):
 class AvarnCar(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
+        assert self.texture != None
         self.texture.set_colorkey(KDS.Colors.Cyan)
         self.checkCollision = False
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
@@ -1590,6 +1593,7 @@ class AvarnCar(KDS.Build.Tile):
         self.cachedDarkOverlay = None
 
     def eventHandler(self):
+        assert self.listenerInstance != None
         self.listenerInstance.OnTrigger -= self.eventHandler
         self.listenerInstance = None
         self.hidden = False
@@ -1598,7 +1602,7 @@ class AvarnCar(KDS.Build.Tile):
 
     def lateInit(self):
         if self.listener != None:
-            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            tmpListener: Optional[KDS.Missions.Listener] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None:
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
@@ -1753,7 +1757,10 @@ class PistokoeDoor(KDS.Build.Tile):
                     if quit_temp:
                         KDS_Quit()
                     elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-                        KDS.ConfigManager.Save.Active.Story.examGrade = exam_grade
+                        if KDS.ConfigManager.Save.Active != None:
+                            KDS.ConfigManager.Save.Active.Story.examGrade = exam_grade
+                        else:
+                            KDS.Logging.AutoError("Could not save exam grade. No save active when gamemode is story.")
         return self.animation.update()
 
 
@@ -1965,11 +1972,20 @@ class HotelGuardDoor(DoorTeleport):
         self.waitOpenTicks: int = -1
         self.opentexture = exit_door_open
         self.playerInsideRoom: bool = False
+        self.song: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/jumputus.ogg")
+        self.song.set_volume(0.0)
+        self.song_muffled: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/jumputus_lowpass.ogg")
+        self.song_muffled.set_volume(0.05)
         e = KDS.NPC.DoorGuardNPC((self.rect.right, self.rect.top + 34))
         e.enabled = False
         self.entity = e
         global Entities
         Entities.append(e)
+
+    def lateInit(self):
+        super().lateInit()
+        KDS.Audio.PlaySound(self.song, loops=-1)
+        KDS.Audio.PlaySound(self.song_muffled, loops=-1)
 
     def update(self) -> Optional[pygame.Surface]:
         if self.rect.colliderect(Player.rect):
@@ -2001,6 +2017,17 @@ class HotelGuardDoor(DoorTeleport):
                 self.open = True
                 self.entity.enabled = True
                 KDS.Missions.Listeners.DoorGuardNPCEnable.Trigger()
+
+        if self.playerInsideRoom:
+            self.song.set_volume(1.0)
+            self.song_muffled.set_volume(0.0)
+        else:
+            self.song.set_volume(0.0)
+            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
+            muffled_volume = KDS.Math.Lerp(0.5, 0.05, lerp_multiplier)
+            if self.open:
+                muffled_volume *= 2
+            self.song_muffled.set_volume(muffled_volume)
 
         if self.open:
             if self.entity.health > 0:
@@ -3259,15 +3286,20 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     if show_loading:
         KDS.Loading.Circle.Start(display, clock)
 
+    level_index: int
     if gamemode == KDS.Gamemode.Modes.CustomCampaign:
         mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
         gamemode = KDS.Gamemode.Modes.Campaign
+        level_index = int(current_map)
     elif gamemode == KDS.Gamemode.Modes.Story:
+        assert KDS.ConfigManager.Save.Active != None, "Could not load story mode map! No save active."
         mapPath = os.path.join("Assets", "Maps", "StoryMode", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
+        level_index = KDS.ConfigManager.Save.Active.Story.index
     else:
         mapPath = os.path.join("Assets", "Maps", f"map{current_map}")
+        level_index = int(current_map)
 
-    KDS.Gamemode.SetGamemode(gamemode, int(current_map) if gamemode != KDS.Gamemode.Modes.Story else KDS.ConfigManager.Save.Active.Story.index)
+    KDS.Gamemode.SetGamemode(gamemode, level_index)
     KDS.World.Lighting.Shapes.clear()
 
     global Player
@@ -3349,7 +3381,10 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
     if newSave:
         KDS.ConfigManager.Save(saveIndex)
     else:
+        assert KDS.ConfigManager.Save.Active != None, "Could not save story. No save loaded."
         KDS.ConfigManager.Save.Active.save()
+
+    assert KDS.ConfigManager.Save.Active != None, "play_story function failed. No save loaded."
 
     if KDS.ConfigManager.Save.Active.Story.index > KDS.ConfigManager.GetGameData("Story/levelCount"):
         KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
@@ -4328,6 +4363,7 @@ while main_running:
 #region Conditional Events
     if Player.deathWait > 240:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            assert KDS.ConfigManager.Save.Active != None, "Cannot respawn player! No save loaded while in story mode!"
             play_story(KDS.ConfigManager.Save.Active.index, newSave=False, oldSurf=screen)
         else:
             respawn_function()
@@ -4350,6 +4386,7 @@ while main_running:
         KDS.Audio.StopAllSounds()
         KDS.Audio.Music.Stop()
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+            assert KDS.ConfigManager.Save.Active != None, "Cannot finish level! No save loaded while in story mode."
             KDS.ConfigManager.Save.Active.Story.index += 1
             play_story(KDS.ConfigManager.Save.Active.Story.index, newSave=False, oldSurf=screen)
         else:

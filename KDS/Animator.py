@@ -115,15 +115,12 @@ class Animation:
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
+        if len(animations) < 1:
+            raise ValueError("MultiAnimation requires atleast one animation to function!")
         self.animations: Dict[str, Animation] = animations
-        self.active: Optional[Animation] = None
-        self.active_key: Optional[str] = None
-        for key in animations:
-            if self.active == None:
-                self.active = animations[key]
-                self.active_key = key
-            else:
-                break
+        firstKV = next(iter(animations.items()))
+        self.active: Animation = firstKV[1]
+        self.active_key: str = firstKV[0]
 
     def trigger(self, animation_trigger: str):
         if animation_trigger in self.animations:
