@@ -1964,6 +1964,7 @@ class HotelGuardDoor(DoorTeleport):
         self.open: bool = False
         self.waitOpenTicks: int = -1
         self.opentexture = exit_door_open
+        self.playerInsideRoom: bool = False
         e = KDS.NPC.DoorGuardNPC((self.rect.right, self.rect.top + 34))
         e.enabled = False
         self.entity = e
@@ -2012,6 +2013,13 @@ class HotelGuardDoor(DoorTeleport):
                     KDS.Missions.Listeners.DoorGuardNPCDisable.Trigger()
             return self.opentexture
         return self.texture
+
+    def teleport(self):
+        self.playerInsideRoom = True
+        return super().teleport()
+
+    def onTeleport(self):
+        self.playerInsideRoom = False
 
 class WoodDoorSideTeleport(WoodDoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
