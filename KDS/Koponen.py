@@ -22,6 +22,7 @@ import KDS.Linq
 import KDS.AI
 import KDS.World
 import KDS.Debug
+import KDS.Clock
 import KDS.Keys
 
 import re
@@ -194,6 +195,7 @@ class Talk:
                     Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying, volume=KDS.Audio.EffectVolume / 4)
                 toShow = Talk.scheduled.pop(0)
                 for token in re.findall(r"\{.+?\}", toShow):
+                    assert KDS.ConfigManager.Save.Active != None, "No save loaded to replace tokens!"
                     toShow = toShow.replace(token, getattr(KDS.ConfigManager.Save.Active.Story, token[1:-1], f"<story_attribute_error ({token[1:-1]})>"))
                 Talk.lines.append(toShow)
                 Talk.Conversation.newAnimation = True
@@ -206,13 +208,14 @@ class Talk:
 #           WTF IS THIS IF ELSE SHIT?? IT'S EASIER TO READ A FUCKING STONE AGE POEM
             elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT)) and Talk.Conversation.animationProgress == -1:
                 if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
-                    pygame.time.delay(500)
+                    KDS.Clock.Sleep(500)
                     Talk.scheduled.pop(0)
                     tmpSurf = pygame.Surface(surfSize)
                     Talk.renderMenu(tmpSurf, (0, 0), False, updateConversation=False)                          # funnyStrings=["name"] removed, because the joke isn't as funny the second time
                     nameSuggestion: str = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<principal-name-error>"), noSpace=True), background=tmpSurf)
                     if len(nameSuggestion) > 1:
                         nameSuggestion = nameSuggestion[0].upper() + nameSuggestion[1:]
+                    assert KDS.ConfigManager.Save.Active != None, "No save loaded to suggest principal name!"
                     KDS.ConfigManager.Save.Active.Story.principalName = nameSuggestion
                     Talk.storyTrigger = True
                 else:
@@ -292,7 +295,7 @@ class Talk:
                 audio.stop()
 
     @staticmethod
-    def start(display: pygame.Surface, player_inventory, KDS_Quit, clock: pygame.time.Clock, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
+    def start(display: pygame.Surface, player_inventory, KDS_Quit, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
         global requestReturnAlt
         pygame.mouse.set_visible(True)
         Talk.storyTrigger = False
@@ -346,7 +349,7 @@ class Talk:
 
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
-            clock.tick_busy_loop(60)
+            KDS.Clock.Tick()
 
         pygame.mouse.set_visible(False)
         return Talk.storyTrigger
@@ -389,11 +392,11 @@ class KoponenEntity:
 
         self.mover = KDS.World.EntityMover()
 
-    def update(self, tiles, display, quitHandler, clock):
+    def update(self, tiles, display, quitHandler):
         if self._move and not self.forceIdle:
             #region Handling randomisation
             if self._path_finder_on:
-                pass #The pathfinding thing
+                raise NotImplementedError("Path finding will most likely not be implemented for Koponen") #The pathfinding thing
             elif self._aut_moving: #Handling AI movements
                 if self._aut_idle_time >= KOPONEN_MIN_AUT_IDLE_TIME:
                     self._aut_idle_time = 0
@@ -415,7 +418,8 @@ class KoponenEntity:
             #endregion
             self.collisions = self.mover.move(self.rect, self.movement, tiles)
         else:
-            if not self.forceIdle: self.collisions = self.mover.move(self.rect, self.movement, tiles)
+            if not self.forceIdle:
+                self.collisions = self.mover.move(self.rect, self.movement, tiles)
 
         self.handleInstructions(tiles)
         if self.collisions.left or self.collisions.right:
@@ -425,14 +429,17 @@ class KoponenEntity:
         if self.collisions.bottom:
             self.air_time = 0
             self.y_velocity = 0
-        else: self.air_time += 1
+        else:
+            self.air_time += 1
 
         self.y_velocity += 0.5
         self.y_velocity = min(8.0, self.y_velocity)
         self.movement[1] = self.y_velocity
 
-        if self.movement[0] != 0 and self._move and not self.forceIdle: self.animations.trigger("walk")
-        else: self.animations.trigger("idle")
+        if self.movement[0] != 0 and self._move and not self.forceIdle:
+            self.animations.trigger("walk")
+        else:
+            self.animations.trigger("idle")
 
     def handleInstructions(self, tiles: List[List[List]]):
         class execFuncs:

@@ -12,6 +12,7 @@ import KDS.School
 import KDS.Missions
 import KDS.Logging
 import KDS.World
+import KDS.Clock
 
 from typing import Any, Callable, TYPE_CHECKING, Type
 
@@ -24,7 +25,7 @@ class EndingType(IntEnum):
     Happy = auto()
     Sad = auto()
 
-def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: EndingType) -> bool: # Returns True if application should quit.
+def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Returns True if application should quit.
     md = MarkdownRenderer()
     md.set_markdown("Assets/Data/credits.md", extensions=['nl2br'])
 
@@ -40,8 +41,7 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
 
     waitTicks = 0
 
-    if endingType == EndingType.Happy:
-        KDS.Audio.Music.Play("Assets/Audio/Music/Prologue.ogg", 0)
+    KDS.Audio.Music.Play("Assets/Audio/Music/Prologue.ogg", 0)
 
     running = True
     while running:
@@ -52,11 +52,11 @@ def EndCredits(display: pygame.Surface, clock: pygame.time.Clock, endingType: En
             pygame.mouse.set_visible(True)
             waitTicks += 1
             if waitTicks > 60 * 3:
-                KDS.School.Certificate(display, clock, BackgroundColor=KDS.Colors.DefaultBackground)
+                KDS.School.Certificate(display, BackgroundColor=KDS.Colors.DefaultBackground)
                 running = False
                 pygame.event.clear()
         pygame.display.flip()
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
     KDS.Audio.Music.Stop()
     return False
 

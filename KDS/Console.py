@@ -10,6 +10,7 @@ import KDS.Colors
 import KDS.Convert
 import KDS.Logging
 import KDS.Math
+import KDS.Clock
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -36,13 +37,12 @@ feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
-def init(_window: pygame.Surface, _display: pygame.Surface, _clock: pygame.time.Clock, _Offset: Tuple[int, int] = None, _KDS_Quit: Callable[[], None] = None):
-    global window, display, display_size, clock, defaultBackground, KDS_Quit, rndrOffset
+def init(_window: pygame.Surface, _display: pygame.Surface, _Offset: Tuple[int, int] = None, _KDS_Quit: Callable[[], None] = None):
+    global window, display, display_size, defaultBackground, KDS_Quit, rndrOffset
     window = _window
     display = _display
     display_size = display.get_size()
     rndrOffset = _Offset if _Offset != None else (0, 0)
-    clock = _clock
     defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
     KDS_Quit = _KDS_Quit
     pygame.scrap.init()
@@ -614,7 +614,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)

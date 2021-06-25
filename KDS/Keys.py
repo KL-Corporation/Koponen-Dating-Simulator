@@ -9,6 +9,7 @@ import KDS.UI
 import KDS.ConfigManager
 import KDS.Colors
 import KDS.System
+import KDS.Clock
 import KDS.Logging
 
 from pygame.locals import *
@@ -168,7 +169,7 @@ def Reset():
     for key in baseKeyList:
         key.SetState(False)
 
-def StartBindingMenu(display: pygame.Surface, clock: pygame.time.Clock, eventHandler: Callable[[Any], bool]):
+def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool]):
     def bindKey(key: Key, isAlt: bool):
         def setBindingValue(value: Optional[int]):
             if isAlt:
@@ -298,4 +299,4 @@ def StartBindingMenu(display: pygame.Surface, clock: pygame.time.Clock, eventHan
         return_button.rect.centery -= scroll
 
         pygame.display.flip()
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()

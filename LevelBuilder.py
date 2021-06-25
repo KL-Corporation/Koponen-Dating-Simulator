@@ -4,6 +4,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
 from pygame.locals import *
+import KDS.Clock
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Console
@@ -56,7 +57,6 @@ os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
 KDS.Jobs.init()
 
-clock = pygame.time.Clock()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
@@ -308,7 +308,7 @@ def LB_Quit():
     btn_menu = False
     mainRunning = False
 
-KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
+KDS.Console.init(display, pygame.Surface((1200, 800)), _Offset=(200, 0), _KDS_Quit = LB_Quit)
 
 ####################################################################################################
 
@@ -1145,7 +1145,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         else:
             saveMap(grid, currentSaveName)
 
-    KDS.Loading.Circle.Start(display, clock)
+    KDS.Loading.Circle.Start(display)
 
     handle = KDS.Jobs.Schedule(internalLoadMap, path)
     while not handle.IsComplete:
@@ -1367,10 +1367,10 @@ def materialMenu(previousMaterial: str) -> str:
                 cumHeight += tip.get_height() + 8
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         pygame.display.flip()
-        clock.tick()
+        KDS.Clock.Tick(-1)
 
     return previousMaterial
 
@@ -1498,11 +1498,11 @@ def menu():
         display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, 50))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         if btn_menu:
             pygame.display.flip()
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
 
 class Selected:
     units: List[UnitData] = []
@@ -1882,10 +1882,10 @@ def main():
             display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         pygame.display.flip()
-        clock.tick()
+        KDS.Clock.Tick(-1)
 
 mainRunning = True
 try:

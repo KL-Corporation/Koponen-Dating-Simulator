@@ -22,6 +22,7 @@ import KDS.AI
 import KDS.Animator
 import KDS.Audio
 import KDS.Build
+import KDS.Clock
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Console
@@ -68,8 +69,6 @@ pygame.display.flip()
 
 screen_size = (600, 400)
 screen = pygame.Surface(screen_size)
-
-clock = pygame.time.Clock()
 
 pygame.event.set_allowed((
     MOUSEBUTTONDOWN,
@@ -128,8 +127,8 @@ KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init()
 KDS.Logging.debug("KDS modules initialised.")
-KDS.Console.init(display, display, clock, _KDS_Quit = KDS_Quit)
-KDS.School.init(display, clock)
+KDS.Console.init(display, display, _KDS_Quit = KDS_Quit)
+KDS.School.init(display)
 KDS.Keys.LoadCustomBindings()
 
 cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
@@ -289,7 +288,6 @@ pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", .
 remove_data_on_quit = False
 
 main_running = True
-tick = 0
 currently_on_mission = False
 current_mission = "none"
 shoot = False
@@ -2043,6 +2041,7 @@ class HotelGuardDoor(DoorTeleport):
 
     def teleport(self):
         self.playerInsideRoom = True
+        KDS.Missions.SetProgress("story_index_11_mission_door_blockage", "story_index_11_mission_task_goin", 1.0)
         return super().teleport()
 
     def onTeleport(self):
@@ -3284,7 +3283,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.Audio.Music.Stop()
 
     if show_loading:
-        KDS.Loading.Circle.Start(display, clock)
+        KDS.Loading.Circle.Start(display)
 
     level_index: int
     if gamemode == KDS.Gamemode.Modes.CustomCampaign:
@@ -3387,7 +3386,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
     assert KDS.ConfigManager.Save.Active != None, "play_story function failed. No save loaded."
 
     if KDS.ConfigManager.Save.Active.Story.index > KDS.ConfigManager.GetGameData("Story/levelCount"):
-        KDS.Story.EndCredits(display, clock, KDS.Story.EndingType.Happy)
+        KDS.Story.EndCredits(display, KDS.Story.EndingType.Happy)
         main_menu()
         return
 
@@ -3406,7 +3405,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
 
     animationOverride = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
     if animationOverride and show_loading:
-        KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], clock, ArialTitleFont, ArialFont)
+        KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], ArialTitleFont, ArialFont)
     KDS.Koponen.setPlayerPrefix(KDS.ConfigManager.Save.Active.Story.playerName)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride, auto_play_music=False)
     KDS.Loading.Story.WaitForExit()
@@ -3479,13 +3478,13 @@ def esc_menu_f(oldSurf: pygame.Surface):
         esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(esc_surface, (0, 0))
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         display.blit(pygame.transform.scale(display, display_size), (0, 0))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         c = False
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
 
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, pauseOnFocusLoss, play_walk_sound
@@ -3513,7 +3512,7 @@ def settings_menu():
     legacy_lobbymusic_switch = KDS.UI.Switch("legacyLobbyMusic", pygame.Rect(450, 305, 100, 30), (30, 50), ..., custom_path="Mixer/legacyLobbyMusic")
     lastLobbymusicState = legacy_lobbymusic_switch.state
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 375, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
-    controls_settings_button = KDS.UI.Button(pygame.Rect(480, 485, 260, 50), lambda: KDS.Keys.StartBindingMenu(display, clock, defaultEventHandler), KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
+    controls_settings_button = KDS.UI.Button(pygame.Rect(480, 485, 260, 50), lambda: KDS.Keys.StartBindingMenu(display, defaultEventHandler), KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
     reset_settings_button = KDS.UI.Button(pygame.Rect(220, 595, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White))
     give_feedback_button = KDS.UI.Button(pygame.Rect(480, 595, 240, 40), lambda: KDS.System.OpenURL("https://github.com/KL-Corporation/Koponen-Dating-Simulator/issues"), KDS.UI.ButtonFontSmall.render("Give Feedback", True, KDS.Colors.EmeraldGreen))
     remove_data_button = KDS.UI.Button(pygame.Rect(740, 595, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White))
@@ -3561,12 +3560,12 @@ def settings_menu():
         remove_data_button.update(display, mouse_pos, c)
         give_feedback_button.update(display, mouse_pos, c)
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         c = False
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
 
 def main_menu():
     global current_map, current_map_name
@@ -3867,7 +3866,7 @@ def main_menu():
             campaign_right_button.update(display, mouse_pos, c)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         c = False
         if not skip_render_this_frame:
@@ -3875,7 +3874,7 @@ def main_menu():
         else:
             skip_render_this_frame = False
         display.fill(KDS.Colors.Black)
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
 
 def level_finished_menu(oldSurf: pygame.Surface):
     global level_finished_running
@@ -3972,10 +3971,10 @@ def level_finished_menu(oldSurf: pygame.Surface):
         level_f_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(level_f_surf, (0, 0))
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()
 #endregion
 #region Check Terms
 pygame.event.clear()
@@ -4131,7 +4130,7 @@ while main_running:
                     KDS.Keys.Reset()
                     talk = True
         if talk:
-            result = KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, clock, autoExit=Koponen.force_talk)
+            result = KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, autoExit=Koponen.force_talk)
             if result:
                 KDS.Missions.ForceFinish()
                 tmp = pygame.Surface(display_size)
@@ -4139,7 +4138,7 @@ while main_running:
                 screen_overlay = pygame.transform.scale(tmp, screen_size)
         else: Koponen.continueAutoMove()
 
-        Koponen.update(Tiles, display, KDS_Quit, clock)
+        Koponen.update(Tiles, display, KDS_Quit)
     #endregion
     KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll)
     Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
@@ -4317,7 +4316,7 @@ while main_running:
                 glitchRandH = random.randrange(10, 50)
                 data["current_glitch"] = (
                     (glitchRandX, glitchRandY, min(glitchRandW, screen_size[0] - glitchRandX), min(glitchRandH, screen_size[1] - glitchRandY)),
-                    (random.randint(-10, 10) + glitchRandX, random.randint(0, 0) + glitchRandY)
+                    (random.randint(-10, 10) + glitchRandX, glitchRandY) # random.randint(0, 0) + glitchRandY)
                 )
             current_glitch = data["current_glitch"]
             glitch_surf = screen.subsurface(current_glitch[0]).copy()
@@ -4332,7 +4331,7 @@ while main_running:
     #region Debug Mode
     if KDS.Debug.Enabled:
         display.blit(KDS.Debug.RenderData({
-            "FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero),
+            "FPS": KDS.Clock.GetFPS(3),
             "Player Position": Player.rect.topleft,
             "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
             "Entities": f"{Entity.total - Entity.death_count} / {Entity.total} | Agro: {Entity.agro_count}",
@@ -4411,10 +4410,7 @@ while main_running:
         main_menu()
 #endregion
 #region Ticks
-    tick += 1
-    if tick > 60:
-        tick = 0
-    clock.tick_busy_loop(60)
+    KDS.Clock.Tick()
 #endregion
 #endregion
 #region Application Quitting

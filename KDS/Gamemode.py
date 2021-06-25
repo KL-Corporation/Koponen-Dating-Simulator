@@ -209,6 +209,21 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseMission("slp", "Hohhoijaa")
             KDS.Missions.InitialiseTask("slp", "sleep", "Mene nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
 
+        elif index == 11:
+            KDS.Missions.InitialiseMission("music", "Karseeta Jumputusmusaa")
+            KDS.Missions.InitialiseTask("music", "findout", "Selvitä musiikin lähtöperä", (KDS.Missions.Listeners.LevelEnder, 1.0))
+
+            KDS.Missions.InitialiseMission("more", "Lisää Selvitystä")
+            KDS.Missions.InitialiseTask("more", "knock", "Koputa huoneen ovea", (KDS.Missions.Listeners.DoorGuardNPCEnable, 1.0), (KDS.Missions.Listeners.DoorGuardNPCDisable, -1.0))
+
+            KDS.Missions.InitialiseMission("story_index_11_mission_door_blockage", "Ärsyttävä Este")
+            KDS.Missions.InitialiseTask("story_index_11_mission_door_blockage", "annoying", "Tapa huoneen ovenvartija", (KDS.Missions.Listeners.DoorGuardNPCDeath, 1.0))
+            KDS.Missions.InitialiseTask("story_index_11_mission_door_blockage", "story_index_11_mission_task_goin", "Mene huoneeseen") # Progress set by HotelGuardDoor class
+
+            KDS.Missions.InitialiseMission("heck", "Hitto...")
+            KDS.Missions.InitialiseTask("heck", "goslp", "Mene takaisin nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
+            KDS.Missions.InitialiseTask("heck", "donttell", "(et kerro sitten tästä kenellekään)", (KDS.Missions.Listeners.TileSleepStart, 1.0))
+
 
 #region Biology Exam
 #     KDS.Missions.InitialiseMission("biology_exam", "Biologian Tunti")

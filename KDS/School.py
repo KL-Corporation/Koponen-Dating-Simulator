@@ -17,6 +17,7 @@ import KDS.Debug
 import KDS.UI
 import KDS.Linq
 import KDS.Keys
+import KDS.Clock
 import datetime
 
 class Timer:
@@ -34,10 +35,9 @@ class Timer:
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
 
-def init(display: pygame.Surface, clock: pygame.time.Clock):
-    global Display, Clock, Surnames, SurnamesSet, GradeWeights
+def init(display: pygame.Surface):
+    global Display, Surnames, SurnamesSet, GradeWeights
     Display = display
-    Clock = clock
 
     try:
         with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
@@ -146,7 +146,7 @@ def Exam(showtitle = True):
             if val < 1.0: _title.set_alpha(int(val * 255))
             Display.blit(_title, (KDS.Math.FloorToInt(relative_position[0]), KDS.Math.FloorToInt(relative_position[1])))
             pygame.display.flip()
-            Clock.tick_busy_loop(60)
+            KDS.Clock.Tick()
             counter += 1
 
     def checkAnswers(lstc: List[List[Question]]) -> float:
@@ -256,13 +256,9 @@ def Exam(showtitle = True):
             score = checkAnswers(pages)
             score_formatted = None
             passLine = KDS.ConfigManager.GetGameData("Exam/passLine")
-            passed_stamp = pygame.image.load("Assets/Textures/UI/passed_stamp.png").convert(); passed_stamp.set_colorkey(KDS.Colors.White)
-            failed_stamp = pygame.image.load("Assets/Textures/UI/failed_stamp.png").convert(); failed_stamp.set_colorkey(KDS.Colors.White)
-            stamp = None
             scoreSurf = pygame.Surface((0, 0))
-            stamp_size = (270, 125)
-            passed_stamp = pygame.transform.scale(passed_stamp, stamp_size); failed_stamp = pygame.transform.scale(failed_stamp, stamp_size)
-            #Ethän vielä poista noita stamp rivejä, jos satut tänne tekemään jotain
+            # Ethän vielä poista noita stamp rivejä, jos satut tänne tekemään jotain
+            # Hups... T: Niko
             timer2 = Timer(7.5)
             timer3 = Timer(6)
             timer2.start()
@@ -381,15 +377,15 @@ def Exam(showtitle = True):
                     Display.blit(oldSurf, (0, 0))
                     Display.blit(time_ended, (x - time_ended.get_width() + 10, Display.get_height() / 2 - time_ended.get_height() / 2))
                     pygame.display.flip()
-                    Clock.tick_busy_loop(60)
+                    KDS.Clock.Tick()
                 return_exam()
             Display.blit(timerFont.render(strtime, False, KDS.Colors.Red), (10, 10))
 
             if KDS.Debug.Enabled:
-                Display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(Clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+                Display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
             pygame.display.flip()
-            Clock.tick_busy_loop(60)
+            KDS.Clock.Tick()
             c = False
 
         exam_music.stop()
@@ -399,7 +395,7 @@ def Exam(showtitle = True):
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, clock: pygame.time.Clock, BackgroundColor: Tuple[int, int, int] = None) -> bool:
+def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] = None) -> bool:
     pygame.key.set_repeat(500, 31) #temp
     displaySize = display.get_size()
 
@@ -449,7 +445,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, BackgroundCol
         elif (KDS.ConfigManager.Save.Active == None or KDS.ConfigManager.Save.Active.Story.examGrade < 0):
             return -1
 
-        ref = KDS.Math.RoundCustomInt(KDS.ConfigManager.Save.Active.Story.examGrade if refrenceOverride == None else refrenceOverride, KDS.Math.MidpointRounding.AwayFromZero)
+        ref = KDS.Math.RoundCustomInt((KDS.ConfigManager.Save.Active.Story.examGrade if KDS.ConfigManager.Save.Active != None else -404) if refrenceOverride == None else refrenceOverride, KDS.Math.MidpointRounding.AwayFromZero)
         gradeList = random.choices(
             population=(ref - 2, ref - 1, ref, ref + 1, ref + 2),
             weights=GradeWeights,
@@ -530,7 +526,7 @@ def Certificate(display: pygame.Surface, clock: pygame.time.Clock, BackgroundCol
         exitButton.update(display, mousePos, c)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         pygame.display.flip()
-        clock.tick_busy_loop(60)
+        KDS.Clock.Tick()

@@ -12,6 +12,7 @@ import KDS.ConfigManager
 import KDS.Logging
 import KDS.Math
 import KDS.Gamemode
+import KDS.Clock
 
 waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait before updating the next animation
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
@@ -121,7 +122,8 @@ class GameTime:
 
     @staticmethod
     def Start(_type: GameTimerType) -> None:
-        GameTime.Timer = _type.value() # Calling timer constructor
+        tmpTmr: GameTimeTimer = _type.value() # Calling timer constructor
+        GameTime.Timer = tmpTmr
         GameTime.Timer.Start()
 
     @staticmethod
@@ -224,7 +226,7 @@ class ScoreAnimation:
             animation = ScoreAnimation.animationList[ScoreAnimation.animationIndex]
             animation.update()
             if animation.Finished:
-                pygame.time.delay(waitMilliseconds)
+                KDS.Clock.Sleep(waitMilliseconds)
                 ScoreAnimation.animationIndex += 1
                 if ScoreAnimation.animationIndex >= len(ScoreAnimation.animationList):
                     ScoreAnimation.finished = True
