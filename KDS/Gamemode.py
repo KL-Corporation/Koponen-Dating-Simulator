@@ -203,6 +203,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("rm", "go", "Mene huoneeseesi", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.GIVEHOTELCARD, None)
             KDS.Koponen.Talk.Conversation.schedule("Tässä. Huoneesi on 311.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Kiitos", KDS.Koponen.Prefixes.player, True)
 

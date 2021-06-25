@@ -2050,5 +2050,5 @@
 "198-32":{"0":{"checkCollision":false}},
 "196-33":{"0":{"checkCollision":false}},
 "198-33":{"0":{"checkCollision":false}},
-"zones":{"92-6-70-4":{"darkness":96}}
+"zones":{"92-6-70-4":{"darkness":96},"179-0-14-14":{"levelEnder":true}}
 }

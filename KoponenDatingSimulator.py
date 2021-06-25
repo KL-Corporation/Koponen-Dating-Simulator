@@ -1808,6 +1808,7 @@ class BaseTeleport(KDS.Build.Tile):
         self.teleportSound: Optional[pygame.mixer.Sound] = None
         self.nonInteractableSound: Optional[pygame.mixer.Sound] = None
         self.messageOffset: Tuple[int, int] = (0, 0)
+        self.teleportOffset: Tuple[int, int] = (0, 0)
 
         self.usetop: bool = False
 
@@ -1844,10 +1845,11 @@ class BaseTeleport(KDS.Build.Tile):
             KDS.Audio.PlaySound(self.teleportSound)
         # Executing teleporting process
         t.onTeleport()
+        Player.rect.centerx = t.rect.centerx + t.teleportOffset[0]
         if not self.usetop:
-            Player.rect.midbottom = t.rect.midbottom
+            Player.rect.bottom = t.rect.bottom + t.teleportOffset[1]
         else:
-            Player.rect.midtop = t.rect.midtop
+            Player.rect.top = t.rect.top + t.teleportOffset[1]
         # Reseting scroll
         if self.resetScroll:
             true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
@@ -1928,8 +1930,9 @@ class HotelDoor(DoorTeleport):
 
     def update(self) -> Optional[pygame.Surface]:
         if self.rect.colliderect(Player.rect):
-            self.renderMessage()
+            self.messageOffset = (0, -50)
             if isinstance(Player.inventory.getHandItem(), HotelKeycard):
+                self.messageOffset = (0, -50 - teleport_message_font.get_height() - 5)
                 messageSize = self.renderedMessage.get_size() if self.renderedMessage != None else (0, 0)
                 normalMessagePos = (self.rect.centerx - messageSize[0] // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - messageSize[1] // 2 - scroll[1] + self.messageOffset[1])
                 screen.blit(HotelDoor.tip_render, (self.rect.centerx - HotelDoor.tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
@@ -1940,6 +1943,7 @@ class HotelDoor(DoorTeleport):
                         KDS.Audio.PlaySound(HotelDoor.acceptSound)
                     else:
                         self.state = HotelDoor.DoorState.Decline
+            self.renderMessage()
 
         if self.state != HotelDoor.DoorState.Default:
             Lights.append(KDS.World.Lighting.Light(self.lightPos, KDS.World.Lighting.Shapes.circle_hard.getColor(10, 120 if self.state == HotelDoor.DoorState.Accept else 0, 1.0, 1.0), True))
@@ -2050,7 +2054,8 @@ class HotelGuardDoor(DoorTeleport):
 class WoodDoorSideTeleport(WoodDoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.rect = pygame.Rect(position[0] - 2, position[1], 2, 68)
+        self.rect = pygame.Rect(position[0] + 27, position[1] - 34, 7, 68)
+        self.teleportOffset = (-KDS.Math.CeilToInt(stand_size[0] / 2 + self.rect.width / 2), 0)
 
 KDS.Build.Tile.specialTilesClasses = {
     15: Toilet,
@@ -4134,7 +4139,7 @@ while main_running:
             if result:
                 KDS.Missions.ForceFinish()
                 tmp = pygame.Surface(display_size)
-                KDS.Koponen.Talk.renderMenu(tmp, (0, 0), False, updateConversation=False)
+                KDS.Koponen.Talk.renderMenu(tmp, (0, 0), False, Player.inventory, updateConversation=False)
                 screen_overlay = pygame.transform.scale(tmp, screen_size)
         else: Koponen.continueAutoMove()
 

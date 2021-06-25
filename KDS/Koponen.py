@@ -20,10 +20,12 @@ import KDS.Missions
 import KDS.UI
 import KDS.Linq
 import KDS.AI
+import KDS.Inventory
 import KDS.World
 import KDS.Debug
 import KDS.Clock
 import KDS.Keys
+import KDS.Build
 
 import re
 import shlex
@@ -158,6 +160,7 @@ class Talk:
         WAITFORMISSIONREQUEST = "<wait-for-mission-request>"
         WAITFORMISSIONRETURN = "<wait-for-mission-return>"
         PRINCIPALNAMEINPUT = "<rehtori-name-input>"
+        GIVEHOTELCARD = "<give-hotel-card>"
         @staticmethod
         def scrollToBottom():
             Talk.Conversation.scroll = max(len(Talk.lines) - Talk.lineCount, 0)
@@ -175,7 +178,7 @@ class Talk:
                     prefixForced = True
                 return
 
-            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT):
+            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD):
                 Talk.scheduled.append(text)
                 return
             assert prefix != None, "A prefix must be specified if text is not an event like WAITFORMISSIONREQUEST."
@@ -188,8 +191,8 @@ class Talk:
                     Talk.scheduled.append(prefix + lineSplit[i])
 
         @staticmethod
-        def update(surfSize: Tuple[int, int]):
-            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT):
+        def update(surfSize: Tuple[int, int], playerInventory: KDS.Inventory.Inventory):
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD):
                 if len(ambientTalkAudios) > 0 and (Talk.audioChannel == None or not Talk.audioChannel.get_busy() or Talk.audioChannel.get_sound() != Talk.soundPlaying):
                     Talk.soundPlaying = random.choice(ambientTalkAudios)
                     Talk.audioChannel = KDS.Audio.PlaySound(Talk.soundPlaying, volume=KDS.Audio.EffectVolume / 4)
@@ -206,18 +209,21 @@ class Talk:
 #                     Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
 
 #           WTF IS THIS IF ELSE SHIT?? IT'S EASIER TO READ A FUCKING STONE AGE POEM
-            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT)) and Talk.Conversation.animationProgress == -1:
+            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD)) and Talk.Conversation.animationProgress == -1:
                 if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
                     KDS.Clock.Sleep(500)
                     Talk.scheduled.pop(0)
                     tmpSurf = pygame.Surface(surfSize)
-                    Talk.renderMenu(tmpSurf, (0, 0), False, updateConversation=False)                          # funnyStrings=["name"] removed, because the joke isn't as funny the second time
+                    Talk.renderMenu(tmpSurf, (0, 0), False, playerInventory, updateConversation=False)                          # funnyStrings=["name"] removed, because the joke isn't as funny the second time
                     nameSuggestion: str = KDS.Console.Start("Enter Name:", False, KDS.Console.CheckTypes.String(20, invalidStrings=("<principal-name-error>"), noSpace=True), background=tmpSurf)
                     if len(nameSuggestion) > 1:
                         nameSuggestion = nameSuggestion[0].upper() + nameSuggestion[1:]
                     assert KDS.ConfigManager.Save.Active != None, "No save loaded to suggest principal name!"
                     KDS.ConfigManager.Save.Active.Story.principalName = nameSuggestion
                     Talk.storyTrigger = True
+                elif len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.GIVEHOTELCARD:
+                    playerInventory.pickupItem(KDS.Build.Item.serialNumbers[38]((0, 0), 38), force=True)
+                    Talk.scheduled.pop(0)
                 else:
                     Talk.audioChannel = None
                     for audio in ambientTalkAudios:
@@ -279,11 +285,11 @@ class Talk:
             Talk.scheduled.clear()
 
     @staticmethod
-    def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, updateConversation: bool = True):
+    def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, playerInventory: KDS.Inventory.Inventory, updateConversation: bool = True):
         surface.blit(talk_background, (0, 0))
         surface.blit(talk_ad, (40, 474))
         if updateConversation:
-            Talk.Conversation.update(surface.get_size())
+            Talk.Conversation.update(surface.get_size(), playerInventory)
         surface.blit(Talk.Conversation.render(mouse_pos, clicked), conversation_rect.topleft)
 
     @staticmethod
@@ -295,7 +301,7 @@ class Talk:
                 audio.stop()
 
     @staticmethod
-    def start(display: pygame.Surface, player_inventory, KDS_Quit, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
+    def start(display: pygame.Surface, player_inventory: KDS.Inventory.Inventory, KDS_Quit: Callable, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
         global requestReturnAlt
         pygame.mouse.set_visible(True)
         Talk.storyTrigger = False
@@ -341,7 +347,7 @@ class Talk:
                 elif event.type == MOUSEWHEEL:
                     Talk.Conversation.scroll = KDS.Math.Clamp(Talk.Conversation.scroll - line_scroll_speed * event.y, 0, max(len(Talk.lines) - Talk.lineCount, 0))
 
-            Talk.renderMenu(display, mouse_pos, c)
+            Talk.renderMenu(display, mouse_pos, c, player_inventory)
 
             exit_button.update(display, mouse_pos, c)
             request_mission_button.update(display, mouse_pos, c)
