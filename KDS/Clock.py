@@ -13,7 +13,7 @@ def Tick(framerate: int = 60):
         _tick = -1
     _clock.tick_busy_loop(framerate)
 
-def GetTick() -> int:
+def GetTick() -> int: # Not used, but good to have.
     global _tick
     return _tick
 
@@ -23,7 +23,7 @@ def GetFPS(roundingDigits: Optional[int] = None) -> float:
         return KDS.Math.RoundCustom(fps, roundingDigits, KDS.Math.MidpointRounding.AwayFromZero)
     return fps
 
-def GetDeltaTime() -> float:
+def GetDeltaTime() -> float: # Would've been useful in variable framerate, but that was not possible.
     """The interval in seconds from the last frame to the current one."""
     return _clock.get_time() / 1000
 
