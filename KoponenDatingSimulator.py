@@ -2109,7 +2109,7 @@ KDS.Build.Tile.specialTilesClasses = {
     157: Shower,
     160: LevelEnderDoor,
     161: PistokoeDoor,
-    162: HotelBed
+    164: HotelBed
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -3293,10 +3293,10 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         level_index = int(current_map)
     elif gamemode == KDS.Gamemode.Modes.Story:
         assert KDS.ConfigManager.Save.Active != None, "Could not load story mode map! No save active."
-        mapPath = os.path.join("Assets", "Maps", "StoryMode", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
+        mapPath = os.path.join("Assets/Maps/Story", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
         level_index = KDS.ConfigManager.Save.Active.Story.index
     else:
-        mapPath = os.path.join("Assets", "Maps", f"map{current_map}")
+        mapPath = os.path.join("Assets/Maps/Campaign", f"map{current_map}")
         level_index = int(current_map)
 
     KDS.Gamemode.SetGamemode(gamemode, level_index)
@@ -3367,7 +3367,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
         nonlocal map_names
         map_names = {}
         try:
-            with open("Assets/Maps/StoryMode/names.dat", "r", encoding="utf-8") as file:
+            with open("Assets/Maps/Story/names.dat", "r", encoding="utf-8") as file:
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
@@ -3598,7 +3598,7 @@ def main_menu():
         map_names = {}
         custom_maps_names = {}
         try:
-            with open("Assets/Maps/names.dat", "r") as file:
+            with open("Assets/Maps/Campaign/names.dat", "r") as file:
                 tmp = file.read().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
@@ -3914,7 +3914,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
         current_map = f"{int(current_map) + 1:02}"
         play_function(KDS.Gamemode.Modes.Campaign, True)
 
-    next_level_bool = int(current_map) < int(KDS.System.GetLineCount("Assets/Maps/StoryMode/names.dat"))
+    next_level_bool = int(current_map) < int(KDS.System.GetLineCount("Assets/Maps/Story/names.dat"))
 
     main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, KDS.UI.ButtonFontSmall.render("Main Menu", True, KDS.Colors.White))
     next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, KDS.UI.ButtonFontSmall.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)

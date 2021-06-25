@@ -688,14 +688,16 @@ class PropertiesData:
 
         @staticmethod
         def NewDragRect():
-            PropertiesData.Zones.zones.append((cast(pygame.Rect, Drag.Rect.copy()), {}))
+            assert Drag.Rect != None, "NewDragRect from null!"
+            PropertiesData.Zones.zones.append((pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), {}))
             Undo.overflowCount += 1
 
         @staticmethod
         def UpdateDragRect():
             if len(PropertiesData.Zones.zones) < 1:
                 return
-            PropertiesData.Zones.zones[-1] = (cast(pygame.Rect, Drag.Rect.copy()), PropertiesData.Zones.zones[-1][1])
+            assert Drag.Rect != None, "UpdateDragRect from null!"
+            PropertiesData.Zones.zones[-1] = (pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), PropertiesData.Zones.zones[-1][1])
 
         def _returnCorrectZone(self, zoneRect: pygame.Rect) -> Optional[Dict[PropertiesData.ZoneSetting, str | int | float | bool]]:
             for zone in self.zones:
@@ -1897,8 +1899,8 @@ except Exception as e:
         except Exception:
             KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
 
-pygame.quit()
 KDS.Jobs.quit()
+pygame.quit()
 
 """ KEYMAP
     [Normal]

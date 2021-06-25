@@ -112,7 +112,10 @@ class Task:
         self.finished = False
         self.lastFinished = False
         self.color = KDS.Animator.Color(TaskColor, TaskColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
-        Missions.GetMission(missionName).AddTask(safeName, self)
+
+        tmpMsn = Missions.GetMission(missionName)
+        assert tmpMsn != None, "Cannot add task to a non-existing mission!"
+        tmpMsn.AddTask(safeName, self)
 
     def Progress(self, Value: float, Add: bool = False):
         self.progress = (self.progress + Value if Add else Value)
@@ -146,7 +149,9 @@ class KoponenTask(Task):
     def __init__(self, missionName: str, safeName: str, text: str, itemIDs: Iterable[int]) -> None:
         super().__init__(missionName, safeName, text)
         koponenTaskCount = 0
-        for task in Missions.GetMission(missionName).GetTaskList():
+        tmpMsn = Missions.GetMission(missionName)
+        assert tmpMsn != None, "Cannot add Koponen task to a non-existing mission!"
+        for task in tmpMsn.GetTaskList():
             if isinstance(task, KoponenTask):
                 koponenTaskCount += 1
         if koponenTaskCount > 1:
@@ -157,7 +162,9 @@ class StudentTask(Task):
     def __init__(self, missionName: str, safeName: str, text: str, interactCount: int, interactPrompt: str, completedItem: int) -> None:
         super().__init__(missionName, safeName, text)
         studentTaskCount = 0
-        for task in Missions.GetMission(missionName).GetTaskList():
+        tmpMsn = Missions.GetMission(missionName)
+        assert tmpMsn != None, "Cannot add student task to a non-existing mission!"
+        for task in tmpMsn.GetTaskList():
             if isinstance(task, StudentTask):
                 studentTaskCount += 1
         if studentTaskCount > 1:
@@ -275,8 +282,10 @@ class MissionHolder:
         self.finished: bool = False
 
     def GetMission(self, safeName: str) -> Union[Mission, None]:
-        if safeName in self.missions: return self.missions[safeName]
-        else: return None
+        if safeName in self.missions:
+            return self.missions[safeName]
+        else:
+            return None
 
     def GetMissionList(self) -> List[Mission]:
         return list(self.missions.values())
@@ -290,7 +299,8 @@ class MissionHolder:
     def AddMission(self, safeName: str, mission: Mission):
         if safeName not in self.missions:
             self.missions[safeName] = mission
-        else: KDS.Logging.AutoError("SafeName is already occupied!")
+        else:
+            KDS.Logging.AutoError("SafeName is already occupied!")
 
 Missions = MissionHolder()
 #endregion
@@ -357,8 +367,12 @@ def Render(surface: pygame.Surface):
         return
 
     Missions.finished = False
-    rendered, offset = Missions.GetMission(Active_Mission).Render()
-    surface.blit(rendered, (surface.get_width() - offset, 0))
+    tmpMsn = Missions.GetMission(Active_Mission)
+    if tmpMsn != None:
+        rendered, offset = tmpMsn.Render()
+        surface.blit(rendered, (surface.get_width() - offset, 0))
+    else:
+        KDS.Logging.AutoError("Tried to render a non-existing mission!")
 #endregion
 #region Progress
 def SetProgress(MissionName: str, TaskName: str, SetValue: float):
@@ -392,8 +406,12 @@ def GetFinished():
     return Missions.finished
 def SetFinished(MissionName: str):
     global Missions
-    for task in Missions.GetMission(MissionName).GetTaskList():
-        task.Progress(100)
+    tmpMsn = Missions.GetMission(MissionName)
+    if tmpMsn != None:
+        for task in tmpMsn.GetTaskList():
+            task.Progress(100)
+    else:
+        KDS.Logging.AutoError("Tried to set finished for a non-existing mission!")
 def Clear():
     global Missions
     KDS.Koponen.Mission.Task = None

@@ -35,8 +35,8 @@
         "serialNumber": 9,
         "path": "door_closed.png"
     },
-    "Guard Hotel Door Teleport": {
+    "Guard Hotel Door Teleport Mirrored": {
         "serialNumber": 10,
-        "path": "hotel_door_front.png"
+        "path": "hotel_door_front_mirrored.png"
     }
 }
