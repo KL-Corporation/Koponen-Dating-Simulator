@@ -665,6 +665,7 @@ class PropertiesData:
         StaffOnly = "staffOnly"
         Darkness = "darkness"
         LevelEnder = "levelEnder"
+        Disco = "disco"
 
     class ZoneData:
         def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
@@ -1268,7 +1269,7 @@ def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
         PropertiesData.Zones.RemoveSetting(zoneRect, command_setting)
         return
 
-    if command_setting == PropertiesData.ZoneSetting.StaffOnly or command_setting == PropertiesData.ZoneSetting.LevelEnder:
+    if command_setting in (PropertiesData.ZoneSetting.StaffOnly, PropertiesData.ZoneSetting.LevelEnder, PropertiesData.ZoneSetting.Disco):
         parsedBool = KDS.Convert.String.ToBool(commandlist[1], hideError=True)
         if parsedBool == None:
             KDS.Logging.info(f"{commandlist[1]} is not a valid bool.", consoleVisible=True)
@@ -1837,6 +1838,21 @@ def main():
 
                 zoneSurf = pygame.Surface(zoneRectScaled.size)
                 zoneSurf.fill(KDS.Colors.Gray)
+
+                if PropertiesData.ZoneSetting.Disco in zoneData and zoneData[PropertiesData.ZoneSetting.Disco] == True:
+                    disco_colors = (
+                        KDS.Colors.Red,
+                        KDS.Colors.Orange,
+                        KDS.Colors.Yellow,
+                        KDS.Colors.Green,
+                        KDS.Colors.Blue,
+                        KDS.Colors.Purple,
+                        KDS.Colors.Magenta
+                    )
+                    disco_w = 40
+                    for i in range(0, zoneRectScaled.width, disco_w):
+                        pygame.draw.rect(zoneSurf, disco_colors[i // disco_w % len(disco_colors)], (i, 0, disco_w, zoneRectScaled.height))
+
                 if PropertiesData.ZoneSetting.Darkness in zoneData:
                     zoneDarkness = zoneData[PropertiesData.ZoneSetting.Darkness]
                     if isinstance(zoneDarkness, int):
@@ -1866,6 +1882,7 @@ def main():
                     zone_command_tree = {
                         "staffOnly": {"true": "break", "false": "break", "null": "break"},
                         "levelEnder": {"true": "break", "false": "break", "null": "break"},
+                        "disco": {"true": "break", "false": "break", "null": "break"},
                         "darkness": {"[int]": "break", "null": "break"}
                     }
                     zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)

@@ -398,6 +398,10 @@ class WorldData:
         max_map_width = len(max(map_data))
         WorldData.MapSize = (max_map_width, len(map_data))
 
+        for _r in Tiles:
+            for _t in _r:
+                for _u in _t:
+                    _u.onDestroy()
         Tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
 
@@ -1801,6 +1805,8 @@ class BaseTeleport(KDS.Build.Tile):
         super().__init__(position, -1)
         self.serialNumber: int = serialNumber
         self.texture: Optional[pygame.Surface] = telep_textures[self.serialNumber]
+        if self.texture != None:
+            self.texture.set_colorkey(KDS.Colors.White)
         self.checkCollision: bool = False
         self.specialTileFlag: bool = True
         self.resetScroll: bool = True
@@ -1974,15 +1980,18 @@ class HotelGuardDoor(DoorTeleport):
         self.waitOpenTicks: int = -1
         self.opentexture = exit_door_open
         self.playerInsideRoom: bool = False
+        self.deathListenerTriggered: bool = False
         self.song: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/jumputus.ogg")
         self.song.set_volume(0.0)
         self.song_muffled: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/jumputus_lowpass.ogg")
-        self.song_muffled.set_volume(0.05)
+        self.song_muffled.set_volume(0.15)
         e = KDS.NPC.DoorGuardNPC((self.rect.right, self.rect.top + 34))
         e.enabled = False
         self.entity = e
         global Entities
         Entities.append(e)
+
+        self.messageOffset = (0, -50 - teleport_message_font.get_height() - 5)
 
     def lateInit(self):
         super().lateInit()
@@ -2026,7 +2035,7 @@ class HotelGuardDoor(DoorTeleport):
         else:
             self.song.set_volume(0.0)
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
-            muffled_volume = KDS.Math.Lerp(0.5, 0.05, lerp_multiplier)
+            muffled_volume = KDS.Math.Lerp(0.75, 0.15, lerp_multiplier)
             if self.open:
                 muffled_volume *= 2
             self.song_muffled.set_volume(muffled_volume)
@@ -2040,6 +2049,10 @@ class HotelGuardDoor(DoorTeleport):
                     self.entity.enabled = False
                     self.open = False
                     KDS.Missions.Listeners.DoorGuardNPCDisable.Trigger()
+            elif not self.deathListenerTriggered:
+                KDS.Missions.Listeners.DoorGuardNPCDeath.Trigger()
+                self.deathListenerTriggered = True
+
             return self.opentexture
         return self.texture
 
@@ -2050,6 +2063,10 @@ class HotelGuardDoor(DoorTeleport):
 
     def onTeleport(self):
         self.playerInsideRoom = False
+
+    def onDestroy(self):
+        self.song.stop()
+        self.song_muffled.stop()
 
 class WoodDoorSideTeleport(WoodDoorTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -4217,7 +4234,23 @@ while main_running:
 
     #Valojen käsittely
     if KDS.World.Dark.enabled:
-        black_tint.fill(KDS.World.Dark.darkness)
+        if not KDS.World.Dark.Disco.enabled:
+            black_tint.fill(KDS.World.Dark.darkness)
+        else:
+            black_tint.fill(KDS.World.Dark.Disco.colorAnimation.update())
+            if KDS.World.Dark.Disco.colorAnimation.Finished:
+                KDS.World.Dark.Disco.colorIndex = (KDS.World.Dark.Disco.colorIndex + 1) % len(KDS.World.Dark.Disco.colors)
+                KDS.World.Dark.Disco.colorAnimation.From = KDS.World.Dark.Disco.colors[KDS.World.Dark.Disco.colorIndex]
+                KDS.World.Dark.Disco.colorAnimation.To = KDS.World.Dark.Disco.colors[(KDS.World.Dark.Disco.colorIndex + 1) % len(KDS.World.Dark.Disco.colors)]
+                KDS.World.Dark.Disco.colorAnimation.tick = 0
+            circleSize: int = 20
+            circleSpacing: int = 10
+            circleSpeed: int = 1
+            KDS.World.Dark.Disco.circleX = (KDS.World.Dark.Disco.circleX + circleSpeed) % (circleSize + circleSpacing)
+            for x in range(KDS.World.Dark.Disco.circleX - (circleSize + circleSpeed), black_tint.get_width(), (circleSize + circleSpeed)):
+                for y in range(circleSpacing, black_tint.get_height() - circleSpacing - circleSize, (circleSpacing + circleSize)):
+                    black_tint.blit(KDS.World.Lighting.Shapes.circle_hard.get(circleSize // 2, 6000), (x, y))
+
         if Player.light and Player.visible:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), True))
         for light in Lights:

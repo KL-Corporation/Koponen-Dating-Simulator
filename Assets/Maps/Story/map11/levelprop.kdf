@@ -20,11 +20,14 @@
             "talk": true
         },
         "Player": {
-            "Inventory": {},
+            "Inventory": {
+                "1": 10,
+                "2": 38
+            },
             "spawnInverted": true,
             "startPos": [
-                4624,
-                918
+                6256,
+                68
             ]
         }
     },
@@ -38,9 +41,9 @@
             ]
         },
         "Darkness": {
-            "enabled": false,
+            "enabled": true,
             "playerLight": false,
-            "strength": 0
+            "strength": 224
         },
         "Indicator": {
             "enabled": true

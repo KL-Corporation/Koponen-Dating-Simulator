@@ -201,23 +201,24 @@ class DoorGuardNPC(NPC):
         self.weaponData = self.weapon.CreateWeaponData()
         self.weaponData.ammo = KDS.Math.INFINITY
         self.weaponData.counter = 0
+        self.counterSlowdowner = 0
 
     def onDamage(self):
         super().onDamage()
         self.guardAgro = True
-        if self.health <= 0:
-            KDS.Missions.Listeners.DoorGuardNPCDeath.Trigger()
 
     def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         output = super().update(surface, scroll, tiles, items, player)
         if self.guardAgro and abs(self.rect.centery - player.rect.centery) < 3 * 68 and self.health > 0:
             distance = self.rect.centerx - player.rect.centerx
-            targetDirection = True if distance >= 0 else False
+            targetDirection = distance >= 0
             if targetDirection != self.direction:
                 self.direction = not self.direction
 
             self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
-            self.weaponData.counter += 1
+            self.counterSlowdowner = (self.counterSlowdowner + 1) % 2
+            if self.counterSlowdowner == 0:
+                self.weaponData.counter += 1
             KDS.Inventory.Inventory.renderItemTexture(self.weapon.texture, self.rect, self.direction, surface, scroll)
 
         return output

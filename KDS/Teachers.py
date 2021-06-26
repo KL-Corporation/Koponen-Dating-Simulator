@@ -227,6 +227,9 @@ class Teacher:
             if not isinstance(hItem, KDS.Build.Weapon):
                 KDS.Logging.AutoError(f"Unexpected hand item of type: {type(hItem).__name__}, expected: {KDS.Build.Weapon.__name__}")
                 return
+            elif self.weaponData == None:
+                KDS.Logging.AutoError("Weapon data should not be None!")
+                return
             if self.lineOfSight:
                 hItem.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
                 self.weaponData.counter += 1

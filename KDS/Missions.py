@@ -132,11 +132,13 @@ class Task:
             if self.finished:
                 if PlaySound:
                     KDS.Audio.PlaySound(TaskFinishSound)
-                self.color.changeValues(TaskColor, TaskFinishedColor)
+                self.color.From = TaskColor
+                self.color.To = TaskFinishedColor
             else:
                 if PlaySound:
                     KDS.Audio.PlaySound(TaskUnFinishSound)
-                self.color.changeValues(TaskColor, TaskUnFinishedColor)
+                self.color.From = TaskColor
+                self.color.To = TaskUnFinishedColor
 
         surface = pygame.Surface((Width, Height))
         surface.fill(self.color.update(not self.finished))
@@ -256,11 +258,15 @@ class Mission:
 
         if self.lastFinished != self.finished:
             if self.finished:
-                if self.playSound: KDS.Audio.PlaySound(MissionFinishSound)
-                self.color.changeValues(MissionColor, MissionFinishedColor)
+                if self.playSound:
+                    KDS.Audio.PlaySound(MissionFinishSound)
+                self.color.From = MissionColor
+                self.color.To = MissionFinishedColor
             else:
-                if self.playSound: KDS.Audio.PlaySound(MissionUnFinishSound)
-                self.color.changeValues(MissionColor, MissionUnFinishedColor)
+                if self.playSound:
+                    KDS.Audio.PlaySound(MissionUnFinishSound)
+                self.color.From = MissionColor
+                self.color.To = MissionUnFinishedColor
         self.lastFinished = self.finished
 
     def Render(self) -> Tuple[pygame.Surface, int]:

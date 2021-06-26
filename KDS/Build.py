@@ -67,6 +67,7 @@ class Tile:
         self.serialNumber = serialNumber
         self.texture = Tile._textures[self.serialNumber] if serialNumber != -1 else None
         if serialNumber in Tile.trueScale:
+            assert self.texture != None, f"Truescale tile's serialNumber is -1?? Serial: {self.serialNumber}"
             self.rect = pygame.Rect(position[0] - self.texture.get_width() + 34, position[1] - self.texture.get_height() + 34, self.texture.get_width(), self.texture.get_height())
         else:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -126,6 +127,9 @@ class Tile:
         return self.texture
 
     def lateInit(self) -> None:
+        pass
+
+    def onDestroy(self) -> None:
         pass
 
 class Item:
