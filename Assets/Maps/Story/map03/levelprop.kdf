@@ -9,25 +9,22 @@
     "Entities": {
         "Koponen": {
             "enabled": true,
-            "forceIdle": true,
             "forceTalk": false,
+            "forceIdle": true,
+            "talk": true,
             "listeners": [],
             "lscript": [],
             "startPos": [
-                3842,
-                923
-            ],
-            "talk": true
+                1190,
+                1360
+            ]
         },
         "Player": {
-            "Inventory": {
-                "1": 10,
-                "2": 38
-            },
-            "spawnInverted": true,
+            "Inventory": {},
+            "spawnInverted": false,
             "startPos": [
-                6256,
-                68
+                1054,
+                1360
             ]
         }
     },
@@ -41,12 +38,9 @@
             ]
         },
         "Darkness": {
-            "enabled": true,
+            "enabled": false,
             "playerLight": false,
-            "strength": 224
-        },
-        "Indicator": {
-            "enabled": true
+            "strength": 0
         }
     }
 }

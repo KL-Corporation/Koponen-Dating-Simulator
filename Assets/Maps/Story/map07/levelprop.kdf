@@ -4,28 +4,37 @@
             "end": 2,
             "start": 1
         },
-        "infiniteAmmo": false
+        "infiniteAmmo": true
     },
     "Entities": {
         "Koponen": {
             "enabled": true,
-            "forceIdle": false,
-            "forceTalk": false,
-            "listeners": [],
-            "lscript": [],
-            "startPos": [
-                3094,
-                5202
+            "startPos" : [
+                2550,
+                517
             ],
-            "talk": true
+            "lscript" : [
+                "move:715,525",
+                "exec:SetSelfProperty('forceIdle', True)",
+                "exec:SetTileProperty(21, 16, -1, 'interactable', True)",
+                "exec:SetTileProperty(21, 16, -1, 'propOpen', True)",
+                "exec:SetMissionProgress('wait', 'unlock_door', 1.0)",
+                "exec:SetSelfProperty('enabled', False)"
+            ],
+            "listeners" : [
+                "TileSleepEnd"
+            ]
         },
         "Player": {
-            "Inventory": {},
-            "spawnInverted": false,
             "startPos": [
-                2924,
-                5202
-            ]
+                3162,
+                412
+            ],
+            "Inventory": {
+                "0": 10,
+                "1": 7
+            },
+            "spawnInverted": true
         }
     },
     "Rendering": {
@@ -38,9 +47,12 @@
             ]
         },
         "Darkness": {
-            "enabled": false,
-            "playerLight": false,
-            "strength": 0
+            "enabled": true,
+            "playerLight": true,
+            "strength": 235
+        },
+        "Indicator": {
+            "enabled": false
         }
     }
 }

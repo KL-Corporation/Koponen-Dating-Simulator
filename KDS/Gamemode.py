@@ -131,6 +131,17 @@ Kolmannen asteen yhtälöitä taas ovat esimerkiksi
 x^3 = 69 ja
 420x^3 + 13x – 69 = 69420
 Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Koposen sanottavaks...""", KDS.Koponen.Prefixes.koponen, True)
+        elif index == 4:
+            Presets.KoponenMissionRequest()
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Jotkut ovat raportoineet, että vanhassa koulurakennuksessamme on havaittu kummituksia... Kävisitkö tutkimassa asiaa?", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule("Pelkään kummituksia...", KDS.Koponen.Prefixes.player)
+            KDS.Koponen.Talk.Conversation.schedule("Niin minäkin... Sinähän halusit matikasta kympin, vai mitä?", KDS.Koponen.Prefixes.koponen)
+            KDS.Koponen.Talk.Conversation.schedule("Kyllä Koponen...", KDS.Koponen.Prefixes.player)
+
+            KDS.Missions.InitialiseMission("go", "Kohti Vanhaa")
+            KDS.Missions.InitialiseTask("go", "bus", "Nouse linja-auton kyytiin", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 5:
             KDS.Missions.InitialiseMission("explore", "Kummituksia", NoSound=True)
             KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta")
@@ -138,7 +149,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseMission("fuck", "Mitä vittua?")
             KDS.Missions.InitialiseTask("fuck", "bail", "Pakene koulusta", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
-        elif index == 7:
+        elif index == 6:
             Presets.KoponenMissionRequest()
 
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
@@ -147,7 +158,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Koponen.Talk.Conversation.schedule("Olen kuullut muutamalta oppilaalta, että tänne koulun pihalle tulisi yön aikana vartijoita kiusaamaan kilttejä oppilaita. Voisitko jäädä tänne yöksi selvittämään asiaa?", KDS.Koponen.Prefixes.koponen, forcePrefix=True)
             KDS.Koponen.Talk.Conversation.schedule("Ehdottomasti. Mitä vain omalle Koposelleni.", KDS.Koponen.Prefixes.player)
 
-        elif index == 8:
+        elif index == 7:
             KDS.Missions.InitialiseMission("t", "Telttailua")
             KDS.Missions.InitialiseTask("t", "tent", "Mene telttaan nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
 
@@ -161,7 +172,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("wait", "unlock_door", "Odota Koposta, kunnes hän tulee avaamaan oven")
             KDS.Missions.InitialiseTask("wait", "follow", "Seuraa Koposta kouluun", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
-        elif index == 9:
+        elif index == 8:
             KDS.Missions.InitialiseMission("principal_name", "Rehtoripilailua")
             KDS.Missions.InitialiseTask("principal_name", "name_it", "Keksi rehtorille pilanimi")
 
@@ -173,7 +184,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Koponen.Talk.Conversation.schedule("Hahaha, tuo on täydellinen.", KDS.Koponen.Prefixes.koponen)
             KDS.Koponen.Talk.Conversation.schedule("Pitää alkaa kutsumaan häntä tuolla nimellä.", KDS.Koponen.Prefixes.koponen)
 
-        elif index == 10:
+        elif index == 9:
             KDS.Koponen.requestReturnAlt = "CARD"
 
             KDS.Missions.InitialiseMission("rules", "Ohjeistus")
@@ -210,7 +221,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseMission("slp", "Hohhoijaa")
             KDS.Missions.InitialiseTask("slp", "sleep", "Mene nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
 
-        elif index == 11:
+        elif index == 10:
             KDS.Missions.InitialiseMission("music", "Karseeta Jumputusmusaa")
             KDS.Missions.InitialiseTask("music", "findout", "Selvitä musiikin lähtöperä", (KDS.Missions.Listeners.LevelEnder, 1.0))
 

@@ -628,7 +628,7 @@
 "106-9":{"0":{"checkCollision":false}},
 "107-9":{"3":{"identifier":1,"interactable":false,"message":"Huone: 308"}},
 "108-9":{"0":{"checkCollision":false}},
-"109-9":{"3":{"identifier":69,"interactable":false,"message":"Huone: 309"}},
+"109-9":{"3":{"identifier":69,"message":"Huone: 309"}},
 "110-9":{"0":{"checkCollision":false}},
 "111-9":{"0":{"checkCollision":false}},
 "112-9":{"0":{"checkCollision":false}},
@@ -2050,5 +2050,5 @@
 "198-32":{"0":{"checkCollision":false}},
 "196-33":{"0":{"checkCollision":false}},
 "198-33":{"0":{"checkCollision":false}},
-"zones":{"92-6-70-4":{"darkness":96},"179-0-14-14":{"levelEnder":true}}
+"zones":{"92-6-70-4":{"darkness":96},"115-8-1-1":{},"179-21-14-5":{"staffOnly":true,"disco":true},"108-6-3-4":{"levelEnder":true}}
 }

@@ -4158,7 +4158,8 @@ while main_running:
                 tmp = pygame.Surface(display_size)
                 KDS.Koponen.Talk.renderMenu(tmp, (0, 0), False, Player.inventory, updateConversation=False)
                 screen_overlay = pygame.transform.scale(tmp, screen_size)
-        else: Koponen.continueAutoMove()
+        else:
+            Koponen.continueAutoMove()
 
         Koponen.update(Tiles, display, KDS_Quit)
     #endregion
@@ -4344,7 +4345,7 @@ while main_running:
                     ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
         if ScreenEffects.Get(ScreenEffects.Effects.Glitch):
             data = ScreenEffects.EffectData.Glitch
-            rptIndx = int(data["repeat_index"]) + 1 % int(data["repeat_rate"])
+            rptIndx = (int(data["repeat_index"]) + 1) % int(data["repeat_rate"])
             data["repeat_index"] = rptIndx
             if rptIndx == 0:
                 glitchRandX = random.randrange(0, screen_size[0])
