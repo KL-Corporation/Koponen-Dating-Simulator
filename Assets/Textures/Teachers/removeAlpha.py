@@ -7,6 +7,7 @@ while True:
         image = im.convert("RGBA")
 
     pixels = image.load()
+    assert pixels != None, "No image loaded."
     for x in range(image.size[0]):
         for y in range(image.size[1]):
             pxl = pixels[x, y]

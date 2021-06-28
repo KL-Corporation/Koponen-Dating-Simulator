@@ -1139,5 +1139,26 @@
         "specialTile": true,
         "noCollision": true,
         "trueScale": true
+    },
+    "Hatanpään Koulu Sign": {
+        "serialNumber": 165,
+        "path": "hat_logo.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "SS-Market Sign": {
+        "serialNumber": 166,
+        "path": "ssmarket.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
+    },
+    "SS-Market Wall": {
+        "serialNumber": 167,
+        "path": "sswall.png",
+        "specialTile": false,
+        "noCollision": true,
+        "trueScale": true
     }
 }
