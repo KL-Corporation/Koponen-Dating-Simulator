@@ -38,5 +38,9 @@
     "Guard Hotel Door Teleport Mirrored": {
         "serialNumber": 10,
         "path": "hotel_door_front_mirrored.png"
+    },
+    "Nysse Teleport": {
+        "serialNumber": 11,
+        "path": "Nysse.png"
     }
 }

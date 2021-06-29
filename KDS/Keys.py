@@ -89,6 +89,13 @@ class Key(BaseKey):
     def Bindings(self) -> Sequence[int]:
         return tuple([b for b in (self.binding, self.secondaryBinding) if b != None])
 
+    @property
+    def BindingDisplayName(self) -> str:
+        if self.binding != None or self.secondaryBinding != None:
+            name: str = pygame.key.name(self.binding if self.binding != None else self.secondaryBinding)
+            return name.capitalize()
+        return "null"
+
 class InventoryKey(Key):
     def __init__(self, defaultBinding: int, inventory_index: int) -> None:
         super().__init__(f"inventory{inventory_index}", defaultBinding, None)
@@ -231,7 +238,7 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
         nonlocal keyDatas, keyMaxY
 
         def renderBindingText(binding: Optional[int]) -> pygame.Surface:
-            return ArialFont.render(pygame.key.name(binding) if binding != None else "Unassigned", True, KDS.Colors.White if binding != None else KDS.Colors.LightGray)
+            return ArialFont.render(pygame.key.name(binding).capitalize() if binding != None else "Unassigned", True, KDS.Colors.White if binding != None else KDS.Colors.LightGray)
         keyDatas.clear()
 
         for index, (keyName, key) in enumerate(REBINDABLEKEYS.items()):

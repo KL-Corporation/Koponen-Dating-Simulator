@@ -141,7 +141,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Koponen.Talk.Conversation.schedule("Kyllä Koponen...", KDS.Koponen.Prefixes.player)
 
             KDS.Missions.InitialiseMission("go", "Kohti Vanhaa")
-            KDS.Missions.InitialiseTask("go", "bus", "Nouse linja-auton kyytiin", (KDS.Missions.Listeners.LevelEnder, 1.0))
+            KDS.Missions.InitialiseTask("go", "bus", "Nouse bussin kyytiin", (KDS.Missions.Listeners.LevelEnder, 1.0))
         elif index == 5:
             KDS.Missions.InitialiseMission("explore", "Kummituksia", NoSound=True)
             KDS.Missions.InitialiseTask("explore", "find_walkie_talkie", "Tutki vanhaa koulurakennusta")

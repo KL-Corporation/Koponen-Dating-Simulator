@@ -342,7 +342,7 @@ jump_velocity = 2.0
 
 Koponen = KDS.Koponen.KoponenEntity((0, 0), (0, 0))
 
-koponen_talk_tip = tip_font.render(f"Puhu Koposelle [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+koponen_talk_tip = tip_font.render(f"Puhu Koposelle [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
 KDS.Logging.debug("Variable Defining Complete.")
 #endregion
@@ -615,7 +615,7 @@ class ScreenEffects:
         FadeInOut = 2
         Glitch = 4
 
-    triggered: Effects = Effects(0)
+    triggered: Effects
     OnEffectFinish = KDS.Events.Event()
 
     class EffectData:
@@ -653,6 +653,11 @@ class ScreenEffects:
     def Finish(effect: ScreenEffects.Effects):
         ScreenEffects.triggered &= ~effect
         ScreenEffects.OnEffectFinish.Invoke(effect)
+
+    @staticmethod
+    def Clear():
+        ScreenEffects.triggered = ScreenEffects.Effects(0)
+ScreenEffects.Clear()
 
 #region Animations
 koponen_animations = KDS.Animator.MultiAnimation(
@@ -774,8 +779,8 @@ class Jukebox(KDS.Build.Tile):
     random.shuffle(songs)
     del __musikerna, __musiken
 
-    tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
-    tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     jukebox_tip: pygame.Surface = pygame.Surface((max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height()), SRCALPHA)
     jukebox_tip.blit(tmp_jukebox_data, ((tmp_jukebox_data2.get_width() - tmp_jukebox_data.get_width()) / 2, 0))
     jukebox_tip.blit(tmp_jukebox_data2, ((tmp_jukebox_data.get_width() - tmp_jukebox_data2.get_width()) / 2, tmp_jukebox_data.get_height()))
@@ -946,7 +951,7 @@ class LampChain(KDS.Build.Tile):
         return self.texture
 
 class DecorativeHead(KDS.Build.Tile):
-    decorative_head_tip: pygame.Surface = tip_font.render(f"Activate Head [Hold: {pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    decorative_head_tip: pygame.Surface = tip_font.render(f"Activate Head [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1045,7 +1050,7 @@ class GoryHead(KDS.Build.Tile):
         return self.texture
 
 class LevelEnder(KDS.Build.Tile):
-    level_ender_tip: pygame.Surface = tip_font.render(f"Finish level [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    level_ender_tip: pygame.Surface = tip_font.render(f"Finish level [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
@@ -1185,7 +1190,7 @@ class RespawnAnchor(KDS.Build.Tile):
     respawnPoint: Optional[Tuple[int, int]] = None
     active: Optional[RespawnAnchor] = None
     rspP_list = []
-    respawn_anchor_tip: pygame.Surface = tip_font.render(f"Set Respawn Point [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    respawn_anchor_tip: pygame.Surface = tip_font.render(f"Set Respawn Point [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1328,16 +1333,13 @@ class ImpaledBody(KDS.Build.Tile):
 class Barrier(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        self.checkCollision = True
-        self.texture = None
 
     def lateInit(self) -> None:
         self.checkCollision = True
         self.darkOverlay = None
 
     def update(self):
-        return self.texture
+        return None
 
 class GroundFire(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
@@ -1511,7 +1513,7 @@ class DoorFrontMirrored(DoorFront):
         return super().update()
 
 class Sleepable(KDS.Build.Tile):
-    tip = tip_font.render(f"Toggle Sleep [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    tip = tip_font.render(f"Toggle Sleep [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1676,6 +1678,8 @@ class Kiuas(KDS.Build.Tile):
         return self.animation.update()
 
 class Nysse(KDS.Build.Tile):
+    tip: pygame.Surface = tip_font.render(f"Matkusta bussilla [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         # TrueScale flag
@@ -1684,6 +1688,7 @@ class Nysse(KDS.Build.Tile):
         self.blinkerIndex = 0
         self.blinkerRepeatRate = 180 # beats per minute
         self.blinkerLight: bool = False
+        self.levelEnder: bool = False
 
     def lateInit(self) -> None:
         self.darkOverlay = None
@@ -1700,6 +1705,10 @@ class Nysse(KDS.Build.Tile):
             self.blinkerIndex += self.blinkerRepeatRate
             if self.blinkerIndex > 3600:
                 self.blinkerIndex = 0
+        if self.levelEnder and self.rect.colliderect(Player.rect):
+            screen.blit(Nysse.tip, (self.rect.centerx - Nysse.tip.get_width() // 2 - scroll[0], self.rect.y - 5 - Nysse.tip.get_height() - scroll[1]))
+            if KDS.Keys.functionKey.clicked:
+                KDS.Missions.Listeners.LevelEnder.Trigger()
         return self.texture
 
 class Fucking(KDS.Build.Tile):
@@ -1729,7 +1738,7 @@ class Shower(KDS.Build.Tile):
         return self.texture
 
 class PistokoeDoor(KDS.Build.Tile):
-    tip: pygame.Surface = tip_font.render(f"Vaita peseneesi kadet [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    tip: pygame.Surface = tip_font.render(f"Vaita peseneesi kadet [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1925,7 +1934,7 @@ class HotelDoor(DoorTeleport):
         Accept = auto()
         Decline = auto()
 
-    tip_render: pygame.Surface = tip_font.render(f"Use Keycard [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    tip_render: pygame.Surface = tip_font.render(f"Use Keycard [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     acceptSound = pygame.mixer.Sound("Assets/Audio/Tiles/hotel_door_accept.ogg")
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -1969,8 +1978,8 @@ class HotelDoorMirrored(HotelDoor):
         self.lightPos = (self.rect.x + 9, self.rect.y + 25)
 
 class HotelGuardDoor(DoorTeleport):
-    tip_render: pygame.Surface = tip_font.render(f"Knock [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
-    alt_tip_render: pygame.Surface = tip_font.render(f"Enter [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+    tip_render: pygame.Surface = tip_font.render(f"Knock [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    alt_tip_render: pygame.Surface = tip_font.render(f"Enter [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -2074,6 +2083,38 @@ class WoodDoorSideTeleport(WoodDoorTeleport):
         self.rect = pygame.Rect(position[0] + 27, position[1] - 34, 7, 68)
         self.teleportOffset = (-KDS.Math.CeilToInt(stand_size[0] / 2 + self.rect.width / 2), 0)
 
+class NysseTeleport(BaseTeleport):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        assert self.texture != None, "Nysse teleport should have a texture!"
+        self.rect = pygame.Rect(position[0], position[1] - (34 - self.texture.get_height()), self.texture.get_width(), self.texture.get_height())
+        self.blinker: bool = True
+        self.headlights: bool = True
+        self.blinkerIndex = 0
+        self.blinkerRepeatRate = 180 # beats per minute
+        self.blinkerLight: bool = False
+
+    def lateInit(self) -> None:
+        self.darkOverlay = None
+
+    def update(self) -> Optional[pygame.Surface]:
+        if self.headlights:
+            Lights.append(KDS.World.Lighting.Light((self.rect.x + 23, self.rect.y + 71), KDS.World.Lighting.Shapes.circle_harder.get(50, 5000), True))
+            Lights.append(KDS.World.Lighting.Light((self.rect.x + 99, self.rect.y + 71), KDS.World.Lighting.Shapes.circle_harder.get(50, 5000), True))
+        if self.blinker:
+            if self.blinkerIndex == 0:
+                self.blinkerLight = not self.blinkerLight
+            if self.blinkerLight:
+                Lights.append(KDS.World.Lighting.Light((self.rect.x + 18, self.rect.y + 68), KDS.World.Lighting.Shapes.circle_hard.get(10, 2550), True))
+            self.blinkerIndex += self.blinkerRepeatRate
+            if self.blinkerIndex > 3600:
+                self.blinkerIndex = 0
+        if self.rect.colliderect(Player.rect):
+            screen.blit(Nysse.tip, (self.rect.centerx - Nysse.tip.get_width() // 2 - scroll[0], self.rect.y - 5 - Nysse.tip.get_height() - scroll[1]))
+            if KDS.Keys.functionKey.clicked:
+                self.teleport()
+        return self.texture
+
 KDS.Build.Tile.specialTilesClasses = {
     15: Toilet,
     16: Trashcan,
@@ -2142,14 +2183,15 @@ BaseTeleport.serialNumbers = {
     7: HotelDoor,
     8: HotelDoorMirrored,
     9: WoodDoorSideTeleport,
-    10: HotelGuardDoor
+    10: HotelGuardDoor,
+    11: NysseTeleport
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
 #endregion
 #region Items
 KDS.Logging.debug("Loading Items...")
-itemTip: pygame.Surface = tip_font.render(f"Nosta Esine [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", True, KDS.Colors.White)
+itemTip: pygame.Surface = tip_font.render(f"Nosta Esine [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
 class BlueKey(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -3340,6 +3382,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.Teachers.Teacher.InstanceList.clear()
     KDS.World.Zone.StaffOnlyCollisions = 0
     BaseTeleport.teleportDatas = {}
+    ScreenEffects.Clear()
     #endregion
 
     #region Ammo Resetting
