@@ -1160,5 +1160,12 @@
         "specialTile": false,
         "noCollision": true,
         "trueScale": true
+    },
+    "Cash Register": {
+        "serialNumber": 168,
+        "path": "cashRegister.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
     }
 }

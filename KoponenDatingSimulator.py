@@ -1774,6 +1774,55 @@ class PistokoeDoor(KDS.Build.Tile):
                             KDS.Logging.AutoError("Could not save exam grade. No save active when gamemode is story.")
         return self.animation.update()
 
+class CashRegister(KDS.Build.Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.items: List[KDS.Build.Item] = []
+        self.itemIndexes: Dict[KDS.Build.Item, int] = {}
+        self._items_cost: int = 0
+        self.renderCost()
+
+    @property
+    def ItemsCost(self) -> int:
+        return self._items_cost
+
+    @ItemsCost.setter
+    def ItemsCost(self, value: int):
+        self._items_cost = value
+        self.renderCost()
+
+    def renderCost(self):
+        self.cost_text: pygame.Surface = tip_font.render(f"€{self.ItemsCost}.00", True, KDS.Colors.Green)
+
+    def lateInit(self) -> None:
+        self.darkOverlay = None
+
+    def update(self) -> Optional[pygame.Surface]:
+        for item in self.items:
+            if item not in self.itemIndexes or self.itemIndexes[item] > len(Items) or Items[self.itemIndexes[item]] is not item:
+                if item in Items:
+                    self.itemIndexes[item] = Items.index(item) # Index saved, because checking if Item exists would rape the FPS so hard that Python would commit suicide
+                else:
+                    KDS.Missions.Listeners.Shoplifting.Trigger()
+
+        return self.texture
+
+    def payEuro(self) -> bool:
+        if self.ItemsCost - 1 < 0:
+            return False
+        self.ItemsCost -= 1
+        if self.ItemsCost == 0:
+            for item in self.items:
+                item.storePrice = None
+        return True
+
+    def addItem(self, item: KDS.Build.Item) -> bool:
+        if item.storePrice == None:
+            return False
+        self.items.append(item)
+        self.ItemsCost += item.storePrice
+        return True
+
 
 
 class BaseTeleport(KDS.Build.Tile):
@@ -2696,6 +2745,10 @@ class SurveyAnswers(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
 
+class Euro(KDS.Build.Item):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+
 KDS.Build.Item.serialNumbers = {
     1: BlueKey,
     2: Cell,
@@ -2718,8 +2771,8 @@ KDS.Build.Item.serialNumbers = {
     19: SSBonuscard,
     20: Turboneedle,
     21: Ppsh41,
-    # 22: "",
-    # 23: "",
+    # 22: "", # 55 S 55???
+    # 23: "", # 55 S 55???
     24: Awm,
     25: AwmMag,
     26: EmptyFlask,
@@ -2735,7 +2788,8 @@ KDS.Build.Item.serialNumbers = {
     36: WalkieTalkie,
     37: BucketOfBlood,
     38: HotelKeycard,
-    39: SurveyAnswers
+    39: SurveyAnswers,
+    40: Euro
 }
 KDS.Logging.debug("Item Loading Complete.")
 #endregion

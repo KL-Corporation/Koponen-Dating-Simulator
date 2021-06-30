@@ -95,6 +95,7 @@ class Listeners:
     DoorGuardNPCDeath = Listener()
     DoorGuardNPCEnable = Listener()
     DoorGuardNPCDisable = Listener()
+    Shoplifting = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
 #endregion

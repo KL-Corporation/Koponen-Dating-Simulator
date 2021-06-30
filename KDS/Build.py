@@ -158,6 +158,7 @@ class Item:
         self.horizontal_momentum: float = 0.0
         self.doubleSize: bool = self.serialNumber in Item.inventoryDoubles
         self.supportsInventory = self.serialNumber in Item.inventoryItems
+        self.storePrice: Optional[int] = None
 
     @staticmethod
     # Item_list is a list

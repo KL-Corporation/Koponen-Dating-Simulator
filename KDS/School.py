@@ -46,6 +46,7 @@ def init(display: pygame.Surface):
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
         Surnames = None
+        SurnamesSet: Set[str] = set()
 
     GradeWeights = tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values())
 

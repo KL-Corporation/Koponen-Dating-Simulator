@@ -271,5 +271,12 @@
         "doubleSize": false,
         "supportsInventory": true,
         "isContraband": false
+    },
+    "Euro": {
+        "serialNumber": 40,
+        "path": "euro.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
     }
 }
