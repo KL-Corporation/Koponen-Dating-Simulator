@@ -34,9 +34,13 @@ class Timer:
         time = divmod(int(self.time), 60)
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
+SurnamesSet: Set[str]
+WomenFornamesSet: Set[str]
+Surnames: Optional[List[str]]
+GradeWeights: Tuple[int, ...]
 
 def init(display: pygame.Surface):
-    global Display, Surnames, SurnamesSet, GradeWeights
+    global Display, Surnames, SurnamesSet, WomenFornamesSet, GradeWeights
     Display = display
 
     try:
@@ -46,7 +50,13 @@ def init(display: pygame.Surface):
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
         Surnames = None
-        SurnamesSet: Set[str] = set()
+        SurnamesSet = set()
+
+    try:
+        with open("Assets/Data/women_fornames.txt", encoding="utf-8") as f:
+            WomenFornamesSet = set(f.read().splitlines())
+    except Exception as e:
+        WomenFornamesSet = set()
 
     GradeWeights = tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values())
 
@@ -430,7 +440,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name-error>") if not AlignOverride else "[ALIGN Forename]"
     name = f"{surname} {forename}"
 
-    def randomBirthday() -> str:
+    def randomBirthday() -> datetime.date:
         start_date = datetime.date(2005, 1, 1)
         end_date = datetime.date(2005, 12, 31)
 
@@ -438,7 +448,25 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
         days_between_dates = time_between_dates.days
         random_number_of_days = random.randrange(days_between_dates)
         random_date = start_date + datetime.timedelta(days=random_number_of_days)
-        return f"{random_date.day}.{random_date.month}.{random_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]" # Teki niin mieli laittaa 6.9.2005
+        return random_date  # Teki niin mieli laittaa 6.9.2005
+
+    def randomSocialSecurityNumber(forename: str, birthday: datetime.date) -> str:
+        TARKISTUSMERKIT: str = "0123456789ABCDEFHJKLMNPRSTUVWXY"
+
+        yksiloNro = random.randint(0, 999)
+        yksiloNroEven = yksiloNro % 2 == 0
+        woman = forename in WomenFornamesSet # Prefers males, but they are more likely to put a name like Xx_PENISMIES69_xX
+        if woman:
+            if not yksiloNroEven:
+                yksiloNro += 1
+        elif yksiloNroEven:
+            yksiloNro -= 1
+
+        tarkistusMerkkiSearchStr = f"{birthday.day:02d}{birthday.month:02d}{birthday.year:02d}{yksiloNro:03d}"
+        tarkistusmerkki = TARKISTUSMERKIT[int(tarkistusMerkkiSearchStr) % 31]
+
+        return f"{birthday.day:02d}{birthday.month:02d}{birthday.year:02d}A{yksiloNro:03d}{tarkistusmerkki}"
+
 
     def randomGrade(refrenceOverride: float = None) -> int:
         if GlobalRefrenceOverride != None and (4 <= GlobalRefrenceOverride <= 10):
@@ -454,7 +482,9 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
         )
         return KDS.Math.Clamp(gradeList[0], 4, 10)
 
-    birthday = randomBirthday()
+    birthday_date = randomBirthday()
+    birthday = f"{birthday_date.day}.{birthday_date.month}.{birthday_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]"
+    socialSecurityNumber = randomSocialSecurityNumber(forename, birthday_date)
 
     grades = [randomGrade() for _ in range(12)]
     average = sum(grades) / len(grades)

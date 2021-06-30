@@ -3515,8 +3515,16 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
             KDS.ConfigManager.Save.Active.delete()
             pygame.mouse.set_visible(True)
             return
-        if len(playerName) > 1:
-            playerName = playerName[0].upper() + playerName[1:]
+
+        newName = ""
+        for name in playerName.split('-'):
+            if len(name) > 0:
+                newName += name[0].upper()
+                if len(name) > 1:
+                    newName += name[1:]
+            newName += '-'
+        playerName = newName[:-1]
+
         KDS.ConfigManager.Save.Active.Story.playerName = playerName
         KDS.ConfigManager.Save.Active.save(updateStats=False)
 
