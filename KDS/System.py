@@ -6,6 +6,7 @@ import ctypes
 import os
 import shutil
 import subprocess
+import platform
 import webbrowser
 
 import KDS.Logging
@@ -20,6 +21,9 @@ def hide(path: str):
     Args:
         path (str): The path to the file or directory to be hidden.
     """
+    if platform.system() == "Linux":
+        return
+
     subprocess.call(["attrib", "+H", path])
 
 def unhide(path: str):
@@ -28,6 +32,9 @@ def unhide(path: str):
     Args:
         path (str): The path to the file or directory to be unhidden.
     """
+    if platform.system() == "Linux":
+        return
+
     subprocess.call(["attrib", "-H", path])
 
 def emptdir(dirpath: str):
@@ -47,7 +54,7 @@ def emptdir(dirpath: str):
 
 def GetLineCount(path: str) -> int:
     with open(path, "r") as f:
-        lines = f.read().split("\n")
+        lines = f.read().splitlines()
 
     while len(lines) > 0 and len(lines[-1]) < 1:
         lines.pop(-1)

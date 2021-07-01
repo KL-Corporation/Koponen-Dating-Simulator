@@ -243,8 +243,9 @@ class HostileEnemy:
         if self.listener != None and not self.listenerRegistered:
             self.enabled = False
             self.listenerRegistered = True
-            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            tmpListener: Optional[Union[KDS.Missions.Listener, KDS.Missions.ItemListener]] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None and not isinstance(tmpListener, KDS.Missions.ItemListener):
+                tmpListener
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.listenerTrigger
         if self.direction:
@@ -259,6 +260,7 @@ class HostileEnemy:
 
     def listenerTrigger(self):
         self.enabled = True
+        assert self.listenerInstance != None, "Why have we been triggered by a listener when listenerInstance is None????"
         self.listenerInstance.OnTrigger -= self.listenerTrigger
         self.listenerInstance = None
 

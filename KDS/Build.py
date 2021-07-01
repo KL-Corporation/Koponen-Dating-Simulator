@@ -159,6 +159,7 @@ class Item:
         self.doubleSize: bool = self.serialNumber in Item.inventoryDoubles
         self.supportsInventory = self.serialNumber in Item.inventoryItems
         self.storePrice: Optional[int] = None
+        self.storeDiscountPrice: Optional[int] = None
 
     @staticmethod
     # Item_list is a list

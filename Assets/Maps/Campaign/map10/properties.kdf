@@ -34,6 +34,8 @@
 "73-8":{"3":{"identifier":420}},
 "98-8":{"3":{"identifier":1,"order":3}},
 "115-8":{"3":{"identifier":1,"order":4}},
+"147-8":{"2":{"listener":"Shoplifting"}},
+"148-8":{"2":{"listener":"Shoplifting"}},
 "22-9":{"0":{"checkCollision":false}},
 "12-10":{"0":{"checkCollision":false}},
 "13-10":{"0":{"checkCollision":false}},
