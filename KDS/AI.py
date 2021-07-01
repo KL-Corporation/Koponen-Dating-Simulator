@@ -245,7 +245,6 @@ class HostileEnemy:
             self.listenerRegistered = True
             tmpListener: Optional[Union[KDS.Missions.Listener, KDS.Missions.ItemListener]] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None and not isinstance(tmpListener, KDS.Missions.ItemListener):
-                tmpListener
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.listenerTrigger
         if self.direction:
@@ -777,6 +776,7 @@ class Bulldog(HostileEnemy):
 
     def lateInit(self):
         self.normalMovement = self.movement
+        super().lateInit()
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         bullets: List[KDS.World.Bullet] = []

@@ -1775,58 +1775,30 @@ class PistokoeDoor(KDS.Build.Tile):
         return self.animation.update()
 
 class CashRegister(KDS.Build.Tile):
-    dropItemTip: pygame.Surface = tip_font.render(f"Aseta ostos [{KDS.Keys.functionKey.BindingDisplayName}]")
-    payTip: pygame.Surface = tip_font.render(f"Maksa euro [{KDS.Keys.functionKey.BindingDisplayName}]")
-    ssCardTip: pygame.Surface = tip_font.render(f"Näytä SS-Etukortti [{KDS.Keys.functionKey.BindingDisplayName}]")
+    dropItemTip: pygame.Surface = tip_font.render(f"Aseta ostos [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    payTip: pygame.Surface = tip_font.render(f"Maksa euro [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    ssCardTip: pygame.Surface = tip_font.render(f"Nayta SS-Etukortti [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Tiles/cashregister.ogg")
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.items: List[KDS.Build.Item] = []
         self.itemIndexes: Dict[KDS.Build.Item, int] = {}
-        self._items_cost: int = 0
-        self._discount_items_cost: int = 0
-        self.renderCost()
+        self.items_cost: int = 0
+        self.discount_items_cost: int = 0
+        self.ssBonuscardShown: bool = False
         self.dropItemsRect: pygame.Rect = pygame.Rect(124 + self.rect.x, 0 + self.rect.y, 80, 102)
         self.payRect: pygame.Rect = pygame.Rect(57 + self.rect.x, 0 + self.rect.y, 41, 102)
         self.itemsBottomTarget: int = 72 + self.rect.y
         self.itemsLeftMoveRange: Tuple[int, int] = (45 + self.rect.x, 4 + self.rect.x)
-        self.itemsMoveSpeed: int = 1
-        self._ssShown: bool = False
+        self.itemsMoveSpeed: int = -1
 
     @property
-    def SsBonuscardShown(self) -> bool:
-        return self._ssShown
-
-    @SsBonuscardShown.setter
-    def SsBonuscardShown(self, value: bool):
-        self._ssShown = value
-        self._discount_items_cost = max(0, self._discount_items_cost)
-        self._items_cost = max(0, self._items_cost)
-        self.renderCost()
-
-    @property
-    def ItemsCost(self) -> int:
-        if not self.SsBonuscardShown:
-            return self._items_cost
+    def Cost(self) -> int:
+        if not self.ssBonuscardShown:
+            return max(self.items_cost, 0)
         else:
-            return self._discount_items_cost
-
-    @ItemsCost.setter
-    def ItemsCost(self, value: int):
-        self._items_cost = value
-        self.renderCost()
-
-    @property
-    def DiscountItemsCost(self) -> int:
-        return self.ItemsCost
-
-    @DiscountItemsCost.setter
-    def DiscountItemsCost(self, value: int):
-        self._discount_items_cost = value
-        self.renderCost()
-
-    def renderCost(self):
-        self.cost_text: pygame.Surface = tip_font.render(f"€{self.ItemsCost}.00", True, KDS.Colors.Green)
+            return max(self.discount_items_cost, 0)
 
     def lateInit(self) -> None:
         self.darkOverlay = None
@@ -1834,7 +1806,7 @@ class CashRegister(KDS.Build.Tile):
     def update(self) -> Optional[pygame.Surface]:
         toRm: List[KDS.Build.Item] = []
         for item in self.items:
-            if item not in self.itemIndexes or self.itemIndexes[item] > len(Items) or Items[self.itemIndexes[item]] is not item:
+            if item not in self.itemIndexes or self.itemIndexes[item] >= len(Items) or Items[self.itemIndexes[item]] is not item:
                 if item in Items:
                     self.itemIndexes[item] = Items.index(item) # Index saved, because checking if Item exists would rape the FPS so hard that Python would commit suicide
                 else:
@@ -1846,38 +1818,97 @@ class CashRegister(KDS.Build.Tile):
 
         for item in self.items: # Maybe don't need this one, but I still put it just in case
             if item.rect.left > self.itemsLeftMoveRange[1]:
-                penissss
+                item.rect.left += self.itemsMoveSpeed
 
-        if self.dropItemsRect.colliderect(Player.rect):
+        if self.payRect.colliderect(Player.rect):
+            hndItm = Player.inventory.getHandItem()
+            if isinstance(hndItm, Euro):
+                screen.blit(CashRegister.payTip, (self.payRect.centerx - CashRegister.payTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
+                if KDS.Keys.functionKey.clicked and self.payEuro():
+                    drpd = Player.inventory.dropItem()
+                    if drpd == None:
+                        KDS.Logging.AutoError("Could not drop Euro coin!")
+            elif isinstance(hndItm, SSBonuscard):
+                screen.blit(CashRegister.ssCardTip, (self.payRect.centerx - CashRegister.ssCardTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
+                if KDS.Keys.functionKey.clicked:
+                    self.ssBonuscardShown = True
+        elif self.dropItemsRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
             if isinstance(hndItm, KDS.Build.Item) and hndItm.storePrice != None:
-                screen.blit(CashRegister.dropItemTip, (self.dropItemsRect.centerx - CashRegister.dropItemTip.get_width() // 2, self.dropItemsRect.y - 5 - CashRegister.dropItemTip.get_height()))
+                screen.blit(CashRegister.dropItemTip, (self.dropItemsRect.centerx - CashRegister.dropItemTip.get_width() // 2 - scroll[0], self.dropItemsRect.y + 20 - scroll[1]))
                 if KDS.Keys.functionKey.clicked:
                     drpd = Player.inventory.dropItem()
                     if drpd != None:
-                        self.addItem(drpd)
+                        if self.addItem(drpd):
+                            KDS.Audio.PlaySound(CashRegister.sound)
+                        else:
+                            Player.inventory.pickupItem(drpd)
 
-        return self.texture
+        assert self.texture != None, "Cash register texture should not be None!"
+        screen.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        screen.blit(tip_font.render(f"{self.Cost}.00", True, KDS.Colors.Green), (self.rect.x - scroll[0] + 67, self.rect.y - scroll[1] + 51))
+
+        return None
 
     def payEuro(self) -> bool:
-        if self.ItemsCost - 1 < 0:
+        if self.Cost - 1 < 0:
             return False
-        self.ItemsCost -= 1
-        self.DiscountItemsCost -= 1
-        if self.ItemsCost == 0:
-            for item in self.items:
-                item.storePrice = None
+        self.items_cost -= 1
+        self.discount_items_cost -= 1
+        self.moneyUpdate()
         return True
 
+    def moneyUpdate(self):
+        if self.Cost <= 0:
+            for item in self.items:
+                item.storePrice = None
+                item.storeDiscountPrice = None
+            self.items.clear()
+        else:
+            for item in self.items:
+                item.storePrice = 0
+
     def addItem(self, item: KDS.Build.Item) -> bool:
+        global Items
         if item.storePrice == None:
             return False
         self.items.append(item)
-        self.ItemsCost += item.storePrice
-        self.DiscountItemsCost += item.storeDiscountPrice if item.storeDiscountPrice != None else item.storePrice
+        Items.append(item)
+        self.items_cost += item.storePrice
+        self.discount_items_cost += item.storeDiscountPrice if item.storeDiscountPrice != None else item.storePrice
         item.rect.bottomleft = (self.itemsLeftMoveRange[0], self.itemsBottomTarget)
+        self.moneyUpdate()
         return True
 
+class TheftDetector(KDS.Build.Tile):
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("theft_detector", 2, 15, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.sound = pygame.mixer.Sound("Assets/Audio/Tiles/theft_detector.ogg")
+        self.sound.set_volume(0.5)
+        self.alarmTicks: int = 0
+        self.alarmWaitTicks: int = 180
+
+    def update(self) -> Optional[pygame.Surface]:
+        if self.alarmTicks <= 0:
+            self.sound.stop()
+            self.animation.tick = 0
+
+            if self.rect.colliderect(Player.rect):
+                for item in Player.inventory:
+                    if item != None and item.storePrice != None:
+                        self.alarmTicks = self.alarmWaitTicks
+                        KDS.Audio.PlaySound(self.sound, loops=-1)
+                        KDS.Missions.Listeners.Shoplifting.Trigger()
+                        break
+            return self.texture
+
+        self.alarmTicks -= 1
+
+        if abs(self.rect.centerx - Player.rect.centerx) > screen_size[0] / 2: # To stop sound playing infinitely
+            self.alarmTicks = 0
+
+        return self.animation.update()
 
 
 class BaseTeleport(KDS.Build.Tile):
@@ -2275,7 +2306,9 @@ KDS.Build.Tile.specialTilesClasses = {
     157: Shower,
     160: LevelEnderDoor,
     161: PistokoeDoor,
-    164: HotelBed
+    164: HotelBed,
+    168: CashRegister,
+    169: TheftDetector
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -4391,7 +4424,11 @@ while main_running:
 
     #Item Tip
     if KDS.Build.Item.tipItem != None:
-        screen.blit(itemTip, (KDS.Build.Item.tipItem.rect.centerx - itemTip.get_width() // 2 - scroll[0], KDS.Build.Item.tipItem.rect.bottom - 45 - scroll[1]))
+        tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - itemTip.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
+        screen.blit(itemTip, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
+        if KDS.Build.Item.tipItem.storePrice != None:
+            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 " + f"[{KDS.Build.Item.tipItem.storeDiscountPrice}.00]" if KDS.Build.Item.tipItem.storeDiscountPrice != None else "", True, KDS.Colors.White)
+            screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + itemTip.get_height() - scroll[1]))
 
     #Valojen käsittely
     if KDS.World.Dark.enabled:

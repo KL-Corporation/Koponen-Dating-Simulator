@@ -1167,5 +1167,12 @@
         "specialTile": true,
         "noCollision": true,
         "trueScale": true
+    },
+    "Theft Detector": {
+        "serialNumber": 169,
+        "path": "theft_detector.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
     }
 }
