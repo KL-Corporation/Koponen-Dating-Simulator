@@ -3945,6 +3945,11 @@ def main_menu():
                         MenuMode = Mode.MainMenu
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
+                elif event.key == K_F5:
+                    if KDS.Debug.IsVSCodeDebugging():
+                        KDS.Audio.Music.Pause()
+                        KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
+                        KDS.Audio.Music.Unpause()
             elif event.type == QUIT:
                 KDS_Quit()
 

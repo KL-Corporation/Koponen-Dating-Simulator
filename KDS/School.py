@@ -1,4 +1,5 @@
-import re
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional, Set, SupportsFloat, Tuple
 import pygame
 from pygame.locals import *
@@ -407,7 +408,7 @@ def Exam(showtitle = True):
     return _quit, exam_score
 
 def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] = None) -> bool:
-    pygame.key.set_repeat(500, 31) #temp
+    pygame.key.set_repeat(500, 31) #temp... Fuck... Apparently not
     displaySize = display.get_size()
 
     #region Settings
@@ -418,8 +419,9 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     #endregion
 
     class Fonts:
-        INFO = pygame.font.SysFont("ArialBD", 27)
-        GRADE = pygame.font.SysFont("Arial", 18, bold=0)
+        NAME = pygame.font.SysFont("ArialBD", 26)
+        SSN = pygame.font.SysFont("Arial", 18)
+        GRADE = pygame.font.SysFont("Arial", 18)
 
     surname = None
     if Surnames != None:
@@ -453,19 +455,19 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     def randomSocialSecurityNumber(forename: str, birthday: datetime.date) -> str:
         TARKISTUSMERKIT: str = "0123456789ABCDEFHJKLMNPRSTUVWXY"
 
-        yksiloNro = random.randint(0, 999)
+        yksiloNro = random.randint(2, 999)
         yksiloNroEven = yksiloNro % 2 == 0
         woman = forename in WomenFornamesSet # Prefers males, but they are more likely to put a name like Xx_PENISMIES69_xX
         if woman:
             if not yksiloNroEven:
-                yksiloNro += 1
+                yksiloNro -= 1
         elif yksiloNroEven:
             yksiloNro -= 1
 
-        tarkistusMerkkiSearchStr = f"{birthday.day:02d}{birthday.month:02d}{birthday.year:02d}{yksiloNro:03d}"
+        tarkistusMerkkiSearchStr = f"{birthday.day:02d}{birthday.month:02d}05{yksiloNro:03d}"
         tarkistusmerkki = TARKISTUSMERKIT[int(tarkistusMerkkiSearchStr) % 31]
 
-        return f"{birthday.day:02d}{birthday.month:02d}{birthday.year:02d}A{yksiloNro:03d}{tarkistusmerkki}"
+        return f"{birthday.day:02d}{birthday.month:02d}05A{yksiloNro:03d}{tarkistusmerkki}"
 
 
     def randomGrade(refrenceOverride: float = None) -> int:
@@ -483,49 +485,66 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
         return KDS.Math.Clamp(gradeList[0], 4, 10)
 
     birthday_date = randomBirthday()
-    birthday = f"{birthday_date.day}.{birthday_date.month}.{birthday_date.year}" if not AlignOverride else "[ALIGN Day].[ALIGN Month].[ALIGN Year]"
-    socialSecurityNumber = randomSocialSecurityNumber(forename, birthday_date)
+    socialSecurityNumber = randomSocialSecurityNumber(forename, birthday_date) if not AlignOverride else "[ALIGN Social Security Number]"
 
-    grades = [randomGrade() for _ in range(12)]
+    grades = [randomGrade() for _ in range(17)]
     average = sum(grades) / len(grades)
 
     if GradeExtras:
         # PE grade lowers depending on average.
-        grades[-1] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
+        grades[-2] = randomGrade(KDS.Math.Remap(average, 4, 10, 10, 6))
 
     if StoryExtras:
         # Because of KDS Story Mode,
         # this will ensure that the maths grade is always 10.
-        grades[4] = 10
+        grades[3] = 10
 
     certificate: pygame.Surface = pygame.image.load("Assets/Textures/UI/certificate.png").convert()
     certificateSize = certificate.get_size()
     if not AlignOverride:
-        pygame.draw.rect(certificate, KDS.Colors.White, (60, 170, 500, 90))
-        pygame.draw.rect(certificate, KDS.Colors.White, (700, 300, 150, certificateSize[1] - 300))
-    certificate.blit(Fonts.INFO.render(name, True, KDS.Colors.Black), (67, 175))
-    certificate.blit(Fonts.INFO.render(birthday, True, KDS.Colors.Black), (67, 210))
+        pygame.draw.rect(certificate, KDS.Colors.White, (60, 165, 350, 60))
+        pygame.draw.rect(certificate, KDS.Colors.White, (690, 280, 275, 420)) # 690 and 420 were purely coincidental (no joking, seriously)
+    certificate.blit(Fonts.NAME.render(name, True, KDS.Colors.Black), (66, 170))
+    certificate.blit(Fonts.SSN.render(socialSecurityNumber, True, KDS.Colors.Black), (65, 189))
 
-    posList = [
-        305,
-        353,
-        401,
-        450,
-        479,
-        508,
-        537,
-        566,
-        595,
-        624,
-        653,
-        682
+    yList: List[int] = [
+        302,
+        342,
+        382,
+        404,
+        425,
+        447,
+        468,
+        490,
+        511,
+        532,
+        554,
+        575,
+        597,
+        618,
+        640,
+        661,
+        683
     ]
+    verbalGrades: Dict[int, str] = {
+        4: "Hylätty",
+        5: "Välttävä",
+        6: "Kohtalainen",
+        7: "Tyydyttävä",
+        8: "Hyvä",
+        9: "Kiitettävä",
+        10: "Erinomainen"
+    }
     for i in range(len(grades)):
         gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", True, KDS.Colors.Black)
-        certificate.blit(gradeRender, (738, posList[i]))
+        verbalGradeRender = Fonts.GRADE.render((verbalGrades[grades[i]] if grades[i] in verbalGrades else "<error>") if not AlignOverride else "[ALIGN-WORD]", True, KDS.Colors.Black)
+        y = yList[i] - 5
+        certificate.blit(gradeRender, (706, y))
+        certificate.blit(verbalGradeRender, (783, y))
 
     animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
-    if BackgroundColor == None: BackgroundColor = KDS.Colors.Black
+    if BackgroundColor == None:
+        BackgroundColor = KDS.Colors.Black
 
     exitV = False
 
