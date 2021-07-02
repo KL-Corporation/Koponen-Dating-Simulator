@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import platform
+import sys
 import webbrowser
 
 import KDS.Logging
@@ -15,13 +16,15 @@ from enum import IntEnum
 
 BASEDIR = str(os.path.dirname(os.path.abspath(__file__)))
 
+ISLINUX = platform.system() == "Linux"
+
 def hide(path: str):
     """Hides the file or directory specified by path.
 
     Args:
         path (str): The path to the file or directory to be hidden.
     """
-    if platform.system() == "Linux":
+    if ISLINUX:
         return
 
     subprocess.call(["attrib", "+H", path])
@@ -32,7 +35,7 @@ def unhide(path: str):
     Args:
         path (str): The path to the file or directory to be unhidden.
     """
-    if platform.system() == "Linux":
+    if ISLINUX:
         return
 
     subprocess.call(["attrib", "-H", path])

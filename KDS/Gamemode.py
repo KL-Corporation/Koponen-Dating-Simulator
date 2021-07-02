@@ -236,6 +236,57 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("heck", "goslp", "Mene takaisin nukkumaan", (KDS.Missions.Listeners.TileSleepStart, 1.0))
             KDS.Missions.InitialiseTask("heck", "donttell", "(et kerro sitten tästä kenellekään)", (KDS.Missions.Listeners.TileSleepStart, 1.0))
 
+        elif index == 11:
+            # Auto open KoponenTalk
+            KDS.Koponen.Talk.Conversation.schedule("Mitä vittua oikeesti?", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Hei arvaas mitä?", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("{principalName} antoi minulle potkut!", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Mukamas \"oppilaiden viihdyttäminen oppitunneilla on ehdottomasti kielletty tässä koulussa\" sekä \"kiusaamistilanteeseen ei saa missään nimessä puuttua\".", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Kostan tämän hänelle...", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Polttaisin tämän koulun, mutta minulla on vain kaksi euroa ja halvimmat sytytyspalat maksavat kolme euroa.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Hetkinen... Televisiossahan oli hetki sitten mainos tarjouksesta SS-Etukortin omistajalle... Olen varma, että biologian opettajalla on sellainen. Olen nähnyt hänet useasti käyttämässä sitä ostaessaan materiaaleja oppitunneillensa.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Ostavatko opettajat materiaaleja oppitunneillensa?.", KDS.Koponen.Prefixes.player, True)
+            KDS.Koponen.Talk.Conversation.schedule("Pakkohan sitä, kun koulu ei voi maksaa...", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Mutta kuitenkin... Koita keksiä joku tapa hankkia biologian opettajan SS-Etukortti. Jos joudut varautumaan voimakeinoihin, niin muista edes piilottaa ruumis. Tai noh... Totta puhuen minua ei kyllä kiinnosta onko se piilotettu.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Kortin saatuasi voisit mennä vanhan koulurakennuksen kautta SS-Marketille.", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("hot", "Kuumat Paikat")
+            KDS.Missions.InitialiseTask("hot", "kill", "Murhaa biologian opettaja", (KDS.Missions.Listeners.KuuMaDeath, 1.0))
+            KDS.Missions.InitialiseTask("hot", "item", "Ota SS-Etukortti", (KDS.Missions.Listeners.ItemPickup, 19, 1.0))
+
+            KDS.Missions.InitialiseMission("end", "Kaiken Loppu?")
+            KDS.Missions.InitialiseTask("end", "goto_ss", "Mene SS-Marketille", (KDS.Missions.Listeners.LevelEnder, 1.0))
+            KDS.Missions.InitialiseTask("end", "buy", "Osta Lappi Sytytyspalat", (KDS.Missions.Listeners.ItemPurchase, 8, 1.0))
+            KDS.Missions.InitialiseKoponenTask("end", "return", "Anna sytytyspalat Koposelle", 8, removeItems=False)
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
+            KDS.Koponen.Talk.Conversation.schedule("Ei sinun tarvitse noita minulle antaa... Sinä saat kunnian tehdä tämän.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Oletko varma?", KDS.Koponen.Prefixes.player, True)
+            KDS.Koponen.Talk.Conversation.schedule("Olen täysin varma.", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("the_last_straw", "Viimeinen Oljenkorsi")
+            KDS.Missions.InitialiseTask("the_last_straw", "ignite", "Sytytä tuli pääkäytävään", (KDS.Missions.Listeners.TileFireCreated, 1.0))
+
+            KDS.Missions.InitialiseMission("fire", "TULTA!")
+            KDS.Missions.InitialiseTask("fire", "tell", "Kerro Koposelle tulesta", (KDS.Missions.Listeners.KoponenTalkEmbed0, 1.0))
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORTILEFIRE, None)
+            KDS.Koponen.Talk.Conversation.schedule("Sytytin tulen. Poistutaan.", KDS.Koponen.Prefixes.player, True)
+            KDS.Koponen.Talk.Conversation.schedule("Ei. Minä jään tänne.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Miksi? Sinähän kuolet!", KDS.Koponen.Prefixes.player, True)
+            KDS.Koponen.Talk.Conversation.schedule("Nimenomaan.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Ei! Älä tee näin!", KDS.Koponen.Prefixes.player, True)
+            KDS.Koponen.Talk.Conversation.schedule("Minun elämälläni ei ole enää merkitystä. Juokse nyt pois ennen kuin se on myöhäistä!", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.TRIGGERLISTENER0, None)
+
+            KDS.Missions.InitialiseMission("exit", "Pakene Tulta")
+            KDS.Missions.InitialiseTask("exit", "run", "Juokse pois koulusta", (KDS.Missions.Listeners.KoponenTalkEmbed1, 1.0))
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.TRIGGERLISTENER1, None)
+            KDS.Koponen.Talk.Conversation.schedule("Koponen! Sinunhan piti kuolla?", KDS.Koponen.Prefixes.player, True)
+            KDS.Koponen.Talk.Conversation.schedule("Nähtyäni surusi tajusin jotain... Sinä olet elämäni tarkoitus. Sinä tuot merkitystä elämääni. Olet ollut ihana minulle enkä minä saa tuottaa sinulle pettymystä.", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Saatan olla rakastunus sinuun...", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Tulisitko kanssani treffeille?", KDS.Koponen.Prefixes.koponen, True)
+
 
 #region Biology Exam
 #     KDS.Missions.InitialiseMission("biology_exam", "Biologian Tunti")

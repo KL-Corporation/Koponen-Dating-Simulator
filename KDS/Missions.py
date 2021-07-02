@@ -92,12 +92,18 @@ class Listeners:
     EnemyDeath = Listener()
     TeacherAgro = Listener()
     TeacherDeath = Listener()
+    KuuMaDeath = Listener()
     DoorGuardNPCDeath = Listener()
     DoorGuardNPCEnable = Listener()
     DoorGuardNPCDisable = Listener()
     Shoplifting = Listener()
+    TileFireCreated = Listener()
+    KoponenTalkEmbed0 = Listener()
+    KoponenTalkEmbed1 = Listener()
+    KoponenTalkEmbed2 = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
+    ItemPurchase = ItemListener()
 #endregion
 #region Classes
 class Task:
@@ -149,7 +155,7 @@ class Task:
         return surface
 
 class KoponenTask(Task):
-    def __init__(self, missionName: str, safeName: str, text: str, itemIDs: Iterable[int]) -> None:
+    def __init__(self, missionName: str, safeName: str, text: str, itemIDs: Iterable[int], removeItems: bool) -> None:
         super().__init__(missionName, safeName, text)
         koponenTaskCount = 0
         tmpMsn = Missions.GetMission(missionName)
@@ -160,6 +166,7 @@ class KoponenTask(Task):
         if koponenTaskCount > 1:
             KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
         self.items = itemIDs
+        self.removeItems = removeItems
 
 class StudentTask(Task):
     def __init__(self, missionName: str, safeName: str, text: str, interactCount: int, interactPrompt: str, completedItem: int) -> None:
@@ -345,8 +352,8 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
             data[0].Add(cast(int, data[1]), MissionName, SafeName, cast(float, data[2]))
         else: raise ValueError("Invalid arguments were given.")
 
-def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, *itemIDs: int):
-    KoponenTask(MissionName, SafeName, Text, itemIDs)
+def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, *itemIDs: int, removeItems: bool = True):
+    KoponenTask(MissionName, SafeName, Text, itemIDs, removeItems)
 
 def InitialiseStudentTask(MissionName: str, SafeName: str, Text: str, InteractCount: int, Prompt: str, CompletedItem: int):
     StudentTask(MissionName, SafeName, Text, InteractCount, Prompt, CompletedItem)

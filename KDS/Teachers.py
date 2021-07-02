@@ -338,5 +338,10 @@ class KuuMa(Teacher):
                           None, None, 750, 10, 1, 3
                           )
 
+    def onDeath(self) -> List[int]:
+        output = super().onDeath()
+        KDS.Missions.Listeners.KuuMaDeath.Trigger()
+        return output
+
     def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]:
         return pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - (51 if self.direction and self.animation.active_key == "death" else 0), self.rect.y)

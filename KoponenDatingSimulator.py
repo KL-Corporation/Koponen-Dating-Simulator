@@ -340,7 +340,7 @@ stand_size = (28, 63)
 crouch_size = (28, 34)
 jump_velocity = 2.0
 
-Koponen = KDS.Koponen.KoponenEntity((0, 0), (0, 0))
+Koponen: KDS.Koponen.KoponenEntity = KDS.Koponen.KoponenEntity((0, 0), (0, 0))
 
 koponen_talk_tip = tip_font.render(f"Puhu Koposelle [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
@@ -427,6 +427,7 @@ class WorldData:
         Koponen.forceIdle = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceIdle", False)
         Koponen.allow_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/talk", False)
         Koponen.force_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/forceTalk", False)
+        Koponen.start_with_talk = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startWithTalk", False)
         Koponen.setListeners(KDS.ConfigManager.LevelProp.Get("Entities/Koponen/listeners", []))
         koponen_script = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/lscript", [])
         if len(koponen_script) > 0:
@@ -1411,6 +1412,7 @@ class TileFire(KDS.Build.Tile):
             if isinstance(t, TileFire):
                 return False
         unit.append(TileFire((clampPos[0] * 34, clampPos[1] * 34), 151))
+        KDS.Missions.Listeners.TileFireCreated.Trigger()
         return True
 
 class GlassPane(KDS.Build.Tile):
@@ -1863,6 +1865,7 @@ class CashRegister(KDS.Build.Tile):
             for item in self.items:
                 item.storePrice = None
                 item.storeDiscountPrice = None
+                KDS.Missions.Listeners.ItemPurchase.Trigger(item.serialNumber)
             self.items.clear()
         else:
             for item in self.items:
@@ -4341,7 +4344,7 @@ while main_running:
 
     #region Koponen
     if Koponen.enabled:
-        talk = Koponen.force_talk
+        talk = Koponen.force_talk or Koponen.start_with_talk
         if Koponen.rect.colliderect(Player.rect):
             Koponen.stopAutoMove()
             if Koponen.allow_talk:
@@ -4350,6 +4353,7 @@ while main_running:
                     KDS.Keys.Reset()
                     talk = True
         if talk:
+            Koponen.start_with_talk = False
             result = KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, autoExit=Koponen.force_talk)
             if result:
                 KDS.Missions.ForceFinish()
@@ -4432,7 +4436,7 @@ while main_running:
         tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - itemTip.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
         screen.blit(itemTip, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
         if KDS.Build.Item.tipItem.storePrice != None:
-            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 " + f"[{KDS.Build.Item.tipItem.storeDiscountPrice}.00]" if KDS.Build.Item.tipItem.storeDiscountPrice != None else "", True, KDS.Colors.White)
+            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 euroa " + f"[SS-Etukortilla: {KDS.Build.Item.tipItem.storeDiscountPrice}.00]" if KDS.Build.Item.tipItem.storeDiscountPrice != None else "", True, KDS.Colors.White)
             screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + itemTip.get_height() - scroll[1]))
 
     #Valojen käsittely
