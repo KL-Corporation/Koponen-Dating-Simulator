@@ -4616,7 +4616,6 @@ while main_running:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             if KDS.ConfigManager.Save.Active != None and KDS.ConfigManager.Save.Active.Story.badEndingTrigger:
                 KDS.Scores.ScoreCounter.Stop()
-                KDS.ConfigManager.Save.Active.index += 1
                 KDS.ConfigManager.Save.Active.save()
                 KDS.ConfigManager.Save.Active = None
 
