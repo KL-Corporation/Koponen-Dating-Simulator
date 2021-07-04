@@ -4438,7 +4438,7 @@
 "108-192":{"0":{"checkCollision":false}},
 "109-192":{"0":{"checkCollision":false}},
 "110-192":{"0":{"checkCollision":false}},
-"111-192":{"3":{"identifier":111000111,"message":"Kouluterveydenhuolto","interactable":false}},
+"111-192":{"3":{"identifier":111000111,"message":"Kouluterveydenhuolto"}},
 "112-192":{"0":{"checkCollision":false}},
 "113-192":{"0":{"checkCollision":false}},
 "114-192":{"0":{"checkCollision":false}},

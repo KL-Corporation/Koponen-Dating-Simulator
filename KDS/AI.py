@@ -773,6 +773,22 @@ class Bulldog(HostileEnemy):
 
         self.internalInit(rect, w_anim, a_anim, d_anim, i_anim, None, None, health, [5, 8], KDS.Math.MAXVALUE)
         self.manualAttackHandling = True
+        self.disableDamage: bool = False
+
+    @property
+    def health(self) -> int:
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        if not self.enabled:
+            return
+
+        if value < self._health and value > 0:
+            self.sleep = False
+
+        if not self.disableDamage:
+            self._health = max(value, 0)
 
     def lateInit(self):
         self.normalMovement = self.movement

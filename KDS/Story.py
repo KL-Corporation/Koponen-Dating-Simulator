@@ -13,8 +13,10 @@ import KDS.Missions
 import KDS.Logging
 import KDS.World
 import KDS.Clock
+import KDS.Debug
+import KDS.UI
 
-from typing import Any, Callable, TYPE_CHECKING, Type
+from typing import Any, Callable, TYPE_CHECKING, Tuple, Type
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass
@@ -46,19 +48,64 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
     running = True
     while running:
         display.fill(KDS.Colors.DefaultBackground)
-        pygame.event.get() # Because Windows thinks this app has frozen
+        pygame.event.get() # Because Windows thinks this app has frozen. DO NOT LET PEOPLE CLOSE THE CREDITS
         display.blit(mdSurf, (mdHorizontalPadding[0], display.get_height() - mdScroll.update() * mdSurf.get_height()))
         if mdScroll.Finished and not KDS.Audio.Music.GetPlaying():
             pygame.mouse.set_visible(True)
             waitTicks += 1
             if waitTicks > 60 * 3:
-                KDS.School.Certificate(display, BackgroundColor=KDS.Colors.DefaultBackground)
+                if endingType == EndingType.Happy:
+                    KDS.School.Certificate(display, BackgroundColor=KDS.Colors.DefaultBackground)
+                else:
+                    Tombstones(display, BackgroundColor=KDS.Colors.DefaultBackground)
                 running = False
                 pygame.event.clear()
         pygame.display.flip()
         KDS.Clock.Tick()
     KDS.Audio.Music.Stop()
     return False
+
+def Tombstones(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] = None) -> bool:
+    displaySize = display.get_size()
+
+    if BackgroundColor == None:
+        BackgroundColor = KDS.Colors.Black
+
+    exitV = False
+
+    def exitFunc():
+        nonlocal exitV
+        exitV = True
+
+    exitButton = KDS.UI.Button(pygame.Rect(displaySize[0] // 2 - 100, 25, 200, 50), exitFunc, "EXIT")
+    animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
+
+    KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
+    while True:
+        display.fill(BackgroundColor)
+        c = False
+        mousePos = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                return True
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    return False
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    c = True
+
+        if exitV:
+            return False
+
+        display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
+        exitButton.update(display, mousePos, c)
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+
+        pygame.display.flip()
+        KDS.Clock.Tick()
 
 class WalkieTalkieEffect:
     phaseTwoIndex = 0

@@ -176,12 +176,7 @@ class StudentNPC(NPC):
                 if item != None:
                     dropped = player.inventory.dropItem()
                     if dropped != None:
-                        # Drop should be in parity with main code drop code, because yeah... I have no motivation with this shitty project anymore
-                        dropped.rect.center = player.rect.center
-                        dropped.physics = True
-                        dropped.vertical_momentum = player.vertical_momentum
-                        dropped.horizontal_momentum = player.movement[0]
-                        items.append(dropped)
+                        KDS.Build.Item.modDroppedPropertiesAndAddToList(items, dropped, player)
 
                     player.inventory.pickupItem(item, force=True)
         return output

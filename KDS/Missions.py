@@ -101,6 +101,7 @@ class Listeners:
     KoponenTalkEmbed0 = Listener()
     KoponenTalkEmbed1 = Listener()
     KoponenTalkEmbed2 = Listener()
+    AnyWeaponPickup = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
     ItemPurchase = ItemListener()

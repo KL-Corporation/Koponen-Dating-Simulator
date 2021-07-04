@@ -135,6 +135,16 @@ class Mission:
 #        else:
 #            Talk.Conversation.schedulePriority("Sinulla ei ole mitään palautettavaa tehtävää.", Prefixes.koponen)
 
+def TriggerStoryEnding(koponen: KoponenEntity):
+    if Talk.scheduled[0] != Talk.Conversation.WAITFORSTORYENDING:
+        return
+
+    koponen.rect.topleft = (1700, 514)
+    assert KDS.ConfigManager.Save.Active != None, "How can I trigger story ending without any save loaded?"
+    KDS.ConfigManager.Save.Active.Story.badEndingTrigger = True
+    Talk.lines.clear()
+    Talk.scheduled.pop(0)
+
 class Talk:
     running = False
     mask = pygame.mask.Mask(conversation_rect.size, True)
@@ -153,6 +163,7 @@ class Talk:
         WAITFORMISSIONREQUEST = "<wait-for-mission-request>"
         WAITFORMISSIONRETURN = "<wait-for-mission-return>"
         WAITFORTILEFIRE = "<wait-for-tile_fire>"
+        WAITFORSTORYENDING = "<wait-for-story-ending>"
         _INTERNALTILEFIREEVENT = "<wait-for-internal_tile_fire>"
         PRINCIPALNAMEINPUT = "<rehtori-name-input>"
         GIVEHOTELCARD = "<give-hotel-card>"
@@ -171,7 +182,7 @@ class Talk:
         @staticmethod
         def _handleTileFire():
             KDS.Missions.Listeners.TileFireCreated.OnTrigger -= Talk.Conversation._handleTileFire
-            Talk.scheduled.pop(-1)
+            Talk.scheduled.pop(0)
 
         @staticmethod
         def schedule(text: str, prefix: Optional[str], forcePrefix: bool = False):
@@ -182,7 +193,7 @@ class Talk:
                     prefixForced = True
                 return
 
-            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2):
+            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation.WAITFORSTORYENDING, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2):
                 Talk.scheduled.append(text)
                 return
             assert prefix != None, "A prefix must be specified if text is not an event (for example: WAITFORMISSIONREQUEST)."
@@ -196,7 +207,7 @@ class Talk:
 
         @staticmethod
         def update(surfSize: Tuple[int, int], playerInventory: KDS.Inventory.Inventory):
-            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2):
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation.WAITFORSTORYENDING, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2):
                 toShow = Talk.scheduled.pop(0)
                 for token in re.findall(r"\{.+?\}", toShow):
                     assert KDS.ConfigManager.Save.Active != None, "No save loaded to replace tokens!"
@@ -210,7 +221,7 @@ class Talk:
 #                     Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
 
 #           WTF IS THIS IF ELSE SHIT?? IT'S EASIER TO READ A FUCKING STONE AGE POEM
-            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2)) and Talk.Conversation.animationProgress == -1:
+            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation.WAITFORSTORYENDING, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2)) and Talk.Conversation.animationProgress == -1:
                 if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
                     KDS.Clock.Sleep(500)
                     Talk.scheduled.pop(0)

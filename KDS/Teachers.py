@@ -113,7 +113,7 @@ class Teacher:
         return False
 
     def onDeath(self) -> List[int]:
-        return [x.serialNumber for x in self.inventory if x != None]
+        return [x.serialNumber for x in self.inventory.storage if isinstance(x, KDS.Build.Item)]
 
     def startAgro(self):
         if TeacherState.Combat not in self.state:
@@ -246,13 +246,13 @@ class Teacher:
         if self.health <= 0:
             self.animation.trigger("death")
             self.inventory.pickSlot(0)
-            if not self.deathHandled and self.death_sound != None:
-                KDS.Audio.PlaySound(self.death_sound)
+            if not self.deathHandled:
+                if self.death_sound != None:
+                    KDS.Audio.PlaySound(self.death_sound)
                 tmpdrItems: List[int] = self.onDeath()
                 KDS.Missions.Listeners.TeacherDeath.Trigger()
                 for item in tmpdrItems:
-                    if item:
-                        dropItems.append(item)
+                    dropItems.append(item)
                 self.deathHandled = True
             self.render(surface, scroll)
             return enemyProjectiles, dropItems
@@ -337,6 +337,7 @@ class KuuMa(Teacher):
                           KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/KuuMa"),
                           None, None, 750, 10, 1, 3
                           )
+        self.inventory.storage[2] = KDS.Build.Item.serialNumbers[19]((0, 0), 19)
 
     def onDeath(self) -> List[int]:
         output = super().onDeath()

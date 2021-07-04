@@ -217,6 +217,7 @@ class Save:
             self.index: int = 1
             self.examGrade: float = -1.0
             self.principalName: str = "<principal-name-error>"
+            self.badEndingTrigger: bool = False
 
     class StatsData:
         def __init__(self) -> None:

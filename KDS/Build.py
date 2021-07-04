@@ -149,6 +149,8 @@ class Item:
     _textures: Dict[int, pygame.Surface] = {}
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
+        if not isinstance(self, Item.serialNumbers[serialNumber]):
+            raise TypeError(f"Invalid type {type(self).__name__} for item with serial {serialNumber}")
         self.texture = Item._textures[serialNumber]
         self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
         self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
@@ -184,15 +186,8 @@ class Item:
     def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory):
         def interactionLogic(item: Item):
             if item.supportsInventory:
-                if inventory.storage[inventory.SIndex] != KDS.Inventory.EMPTYSLOT:
+                if inventory.pickupItem(item) == False: # Return if cannot pickup
                     return
-                if item.doubleSize:
-                    if inventory.SIndex >= len(inventory) - 1 or inventory.storage[inventory.SIndex + 1] != KDS.Inventory.EMPTYSLOT:
-                        return
-
-                inventory.storage[inventory.SIndex] = item
-                if item.doubleSize:
-                    inventory.storage[inventory.SIndex + 1] = KDS.Inventory.DOUBLEITEM
 
             item.pickup()
             Item_list.remove(item) # Remove seems to search for instance and not equality
@@ -213,6 +208,14 @@ class Item:
             return
         if KDS.Keys.functionKey.pressed:
             interactionLogic(shortest_collision_item)
+
+    @staticmethod
+    def modDroppedPropertiesAndAddToList(Item_list: List[Item], item: Item, player: PlayerClass):
+        item.rect.center = player.rect.center
+        item.physics = True
+        item.vertical_momentum = player.vertical_momentum
+        item.horizontal_momentum = player.movement[0]
+        Item_list.append(item)
 
     def pickup(self) -> None:
         pass
@@ -306,7 +309,8 @@ class Weapon(Item):
         Weapon.data[type(self)].counter = self.repeat_rate + 1
         if isinstance(self.f_texture, KDS.Animator.Animation):
             self.f_texture.tick = 0
-        return super().pickup()
+        KDS.Missions.Listeners.AnyWeaponPickup.Trigger()
+        return None
 
     def getAmmo(self) -> Union[int, float]:
         return Weapon.data[type(self)].ammo

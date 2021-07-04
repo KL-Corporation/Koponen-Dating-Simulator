@@ -1892,6 +1892,9 @@ class TheftDetector(KDS.Build.Tile):
         self.alarmTicks: int = 0
         self.alarmWaitTicks: int = 180
 
+    def lateInit(self) -> None:
+        self.darkOverlay = None
+
     def update(self) -> Optional[pygame.Surface]:
         if self.alarmTicks <= 0:
             self.sound.stop()
@@ -1965,6 +1968,8 @@ class BaseTeleport(KDS.Build.Tile):
 
         self.usetop: bool = False
 
+        self.triggerStoryEnding: bool = False
+
     def lateInit(self):
         if self.message != None:
             self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
@@ -1993,6 +1998,9 @@ class BaseTeleport(KDS.Build.Tile):
         t = BaseTeleport.teleportDatas[self.identifier].Next(self)
         if t == None:
             return
+
+        if self.triggerStoryEnding:
+            KDS.Koponen.TriggerStoryEnding(Koponen)
 
         if self.teleportSound != None:
             KDS.Audio.PlaySound(self.teleportSound)
@@ -2225,7 +2233,7 @@ class NysseTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         assert self.texture != None, "Nysse teleport should have a texture!"
-        self.rect = pygame.Rect(position[0], position[1] - (34 - self.texture.get_height()), self.texture.get_width(), self.texture.get_height())
+        self.rect = pygame.Rect(position[0], position[1] - self.texture.get_height() + 34, self.texture.get_width(), self.texture.get_height())
         self.blinker: bool = True
         self.headlights: bool = True
         self.blinkerIndex = 0
@@ -2233,6 +2241,7 @@ class NysseTeleport(BaseTeleport):
         self.blinkerLight: bool = False
 
     def lateInit(self) -> None:
+        super().lateInit()
         self.darkOverlay = None
 
     def update(self) -> Optional[pygame.Surface]:
@@ -2781,6 +2790,7 @@ class Chainsaw(KDS.Build.Item):
 
     def pickup(self) -> None:
         KDS.Audio.PlaySound(Chainsaw.pickup_sound)
+        KDS.Missions.Listeners.AnyWeaponPickup.Trigger()
 
 class GasCanister(KDS.Build.Item):
     pickup_sound = pygame.mixer.Sound("assets/Audio/Items/gascanister_shake.ogg")
@@ -2917,7 +2927,7 @@ class Enemy:
         for r in projectiles:
             Projectiles.append(r)
         for serialNumber in itms:
-            tempItem = KDS.Build.Item.serialNumbers[serialNumber](enemy.rect.center, serialNumber=serialNumber)
+            tempItem = KDS.Build.Item.serialNumbers[serialNumber](enemy.rect.center, serialNumber)
             tempItem.physics = True
             Items.append(tempItem)
 KDS.Missions.Listeners.EnemyDeath.OnTrigger += Enemy._addDeath
@@ -2948,7 +2958,7 @@ class Entity:
         for r in projectiles:
             Projectiles.append(r)
         for serialNumber in itms:
-            tempItem = KDS.Build.Item.serialNumbers[serialNumber](entity.rect.center, serialNumber=serialNumber)
+            tempItem = KDS.Build.Item.serialNumbers[serialNumber](entity.rect.center, serialNumber)
             tempItem.physics = True
             Items.append(tempItem)
 
@@ -4236,11 +4246,7 @@ while main_running:
                 if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
                     droppedItem: Optional[KDS.Build.Item] = Player.inventory.dropItem()
                     if droppedItem != None:
-                        droppedItem.rect.center = Player.rect.center
-                        droppedItem.physics = True
-                        droppedItem.vertical_momentum = Player.vertical_momentum
-                        droppedItem.horizontal_momentum = Player.movement[0]
-                        Items.append(droppedItem)
+                        KDS.Build.Item.modDroppedPropertiesAndAddToList(Items, droppedItem, Player)
             elif event.key in KDS.Keys.fart.Bindings:
                 if Player.stamina == 100:
                     Player.stamina = -1000.0
@@ -4436,7 +4442,8 @@ while main_running:
         tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - itemTip.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
         screen.blit(itemTip, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
         if KDS.Build.Item.tipItem.storePrice != None:
-            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 euroa " + f"[SS-Etukortilla: {KDS.Build.Item.tipItem.storeDiscountPrice}.00]" if KDS.Build.Item.tipItem.storeDiscountPrice != None else "", True, KDS.Colors.White)
+            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 euroa " + (f"""[SS-Etukortilla: {KDS.Build.Item.tipItem.storeDiscountPrice}.00{" ostoksen ohessa" if KDS.Build.Item.tipItem.storeDiscountPrice == 0 else ""}]""" if KDS.Build.Item.tipItem.storeDiscountPrice != None else ""), True, KDS.Colors.White)
+            #                           if storePrice == 0, bulldogs will be angry if nothing else of value was bought
             screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + itemTip.get_height() - scroll[1]))
 
     #Valojen käsittely
@@ -4493,7 +4500,7 @@ while main_running:
                 if not KDS.Math.IsInfinity(tmpAmmo):
                     ammoOffset = 10
                     if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-                        ammoOffset = KDS.UI.Indicator.TEXTURESIZE[1] - (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0) + 10
+                        ammoOffset = KDS.UI.Indicator.TEXTURESIZE[1] + (KDS.UI.Indicator.red_y_anim.get_value() if KDS.UI.Indicator.red_visible else 0) + 10
                     ammoRender: pygame.Surface = harbinger_font.render(f"""AMMO: {tmpAmmo if not KDS.Build.Item.infiniteAmmo else "INFINITE"}""", True, KDS.Colors.White)
                     screen.blit(ammoRender, (10, screen_size[1] - ammoRender.get_height() - ammoOffset))
 
@@ -4607,8 +4614,20 @@ while main_running:
 #region Conditional Events
     if Player.deathWait > 240:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            assert KDS.ConfigManager.Save.Active != None, "Cannot respawn player! No save loaded while in story mode!"
-            play_story(KDS.ConfigManager.Save.Active.index, newSave=False, oldSurf=screen)
+            if KDS.ConfigManager.Save.Active != None and KDS.ConfigManager.Save.Active.Story.badEndingTrigger:
+                KDS.Scores.ScoreCounter.Stop()
+                KDS.ConfigManager.Save.Active.index += 1
+                KDS.ConfigManager.Save.Active.save()
+                KDS.ConfigManager.Save.Active = None
+
+                KDS.Audio.StopAllSounds()
+                KDS.Audio.Music.Stop()
+
+                KDS.Story.EndCredits(display, KDS.Story.EndingType.Sad)
+                main_menu()
+            else:
+                assert KDS.ConfigManager.Save.Active != None, "Cannot respawn player! No save loaded while in story mode!"
+                play_story(KDS.ConfigManager.Save.Active.index, newSave=False, oldSurf=screen)
         else:
             respawn_function()
     if Player.rect.y > len(Tiles) * 34 + 340:
