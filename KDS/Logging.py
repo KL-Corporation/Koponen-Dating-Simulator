@@ -3,7 +3,9 @@ import inspect
 import logging
 import os
 import pstats
+import platform
 import KDS.System
+import KDS.Linq
 import pygame
 import sys
 from datetime import datetime
@@ -19,7 +21,7 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
     AppDataPath = _AppDataPath
     LogPath = _LogPath
 
-    while len(logFiles := os.listdir(LogPath)) > 4:
+    while len(logFiles := list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".log"))) > 4:
         os.remove(os.path.join(LogPath, logFiles[0]))
 
     fileTimeFormat = "%Y-%m-%d-%H-%M-%S"
@@ -34,9 +36,7 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
 
     display_info = pygame.display.Info()
     mixer_version: Tuple = pygame.mixer.get_sdl_mixer_version()
-    windows_version = None
-    if not KDS.System.ISLINUX:
-        windows_version = sys.getwindowsversion()
+    platform_info: Tuple[str, str, str, str, str, str] = platform.uname()
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
@@ -44,7 +44,7 @@ I=====[ DEBUG INFO ]=====I
     - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
     - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}
     - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-    - Windows {windows_version.major if windows_version != None else "<linux-compat-mode>"}{f".{windows_version.minor}" if windows_version != None and windows_version.minor != 0 else ""}: {windows_version.build if windows_version != None else "<linux-compat-mode>"}
+    - {platform_info[0]} {platform_info[2]}: {platform_info[3]}
 
     [Video Info]
     - SDL Video Driver: {pygame.display.get_driver()}
@@ -58,6 +58,10 @@ I=====[ DEBUG INFO ]=====I
     - Masks: {display_info.masks}
     - Shifts: {display_info.shifts}
     - Losses: {display_info.losses}
+
+    [Platform Info]
+    - Architecture: {platform_info[4]}
+    - Processor: {platform_info[5]}
 
     [Hardware Acceleration]
     - Hardware Blitting: {bool(display_info.blit_hw)}
