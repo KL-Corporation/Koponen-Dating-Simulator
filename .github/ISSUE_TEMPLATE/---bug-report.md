@@ -26,7 +26,8 @@ If applicable, add screenshots here to help explain your problem.
 
 **Game (please complete the following information):**
  - Version [e.g. 0.0.1-dev]
- - Log File: [Your latest log file located in: `%AppData%/KL Corporation/Koponen Dating Simulator/logs`]
+ - Log File: [Your latest .log file located in: `%AppData%/KL Corporation/Koponen Dating Simulator/logs`]
+ - Error Log File: [Your latest .errorlog file located in: `%AppData%/KL Corporation/Koponen Dating Simulator/logs` if there are any]
 
 **Additional context**
 Add any other context about the problem here.
