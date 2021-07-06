@@ -5,23 +5,8 @@ import os
 #region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-
-class PersistentPaths:
-    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
-    Cache = os.path.join(AppData, "cache")
-    Saves = os.path.join(AppData, "saves")
-    Logs = os.path.join(AppData, "logs")
-    Screenshots = os.path.join(AppData, "screenshots")
-    CustomMaps = os.path.join(AppData, "custom_maps")
 #endregion
-import faulthandler
-import sys
 from datetime import datetime
-#region Faulthandler Config
-stderrPath = os.path.join(PersistentPaths.Logs, f"""{datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}.errorlog""")
-sys.stderr = open(stderrPath, "w") # Will leave this file open if app crashes, but should not cause too much harm? Especially because now we actually get exceptions logged as well...
-faulthandler.enable(all_threads=True)
-#endregion
 
 import json
 import random
@@ -109,6 +94,13 @@ def KDS_Quit(confirm: bool = False, remove_data_s: bool = False):
         level_finished_running = False
 #endregion
 #region Initialisation
+class PersistentPaths:
+    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
+    Cache = os.path.join(AppData, "cache")
+    Saves = os.path.join(AppData, "saves")
+    Logs = os.path.join(AppData, "logs")
+    Screenshots = os.path.join(AppData, "screenshots")
+    CustomMaps = os.path.join(AppData, "custom_maps")
 os.makedirs(PersistentPaths.AppData, exist_ok=True)
 os.makedirs(PersistentPaths.Cache, exist_ok=True)
 KDS.System.emptdir(PersistentPaths.Cache)
@@ -4689,8 +4681,6 @@ KDS.Jobs.quit()
 KDS.Audio.Music.Unload()
 KDS.System.emptdir(PersistentPaths.Cache)
 KDS.Logging.quit()
-sys.stderr.close()
-os.remove(stderrPath)
 pygame.mixer.quit()
 pygame.display.quit()
 pygame.quit()

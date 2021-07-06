@@ -8,35 +8,61 @@ import KDS.System
 import KDS.Linq
 import pygame
 import sys
+import faulthandler
+import re
+import psutil
 from datetime import datetime
-from typing import Any, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 running = False
 profiler_running = False
 profile = cProfile.Profile()
 
-def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
-    global running, AppDataPath, LogPath, logFileName
+faultHandlerEnabled: bool = False
+stderrPath: Optional[str] = None
+
+def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler: bool = True):
+    global running, AppDataPath, LogPath, stderrPath, faultHandlerEnabled, logFileName
     running = True
     AppDataPath = _AppDataPath
     LogPath = _LogPath
 
-    while len(logFiles := list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".log"))) > 4:
-        os.remove(os.path.join(LogPath, logFiles[0]))
+    logFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".log"))
+    logFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
+    while len(logFiles) > 4:
+        os.remove(os.path.join(LogPath, logFiles.pop(0)))
 
-    fileTimeFormat = "%Y-%m-%d-%H-%M-%S"
-    logTimeFormat = "%H:%M:%S"
-    logFormat = "%(levelname)s-%(asctime)s: %(message)s"
-    logFileName = os.path.join(LogPath, f"log_{datetime.now().strftime(fileTimeFormat)}.log")
-    logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
+    errorlogFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".errorlog"))
+    errorlogFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
+    for errorlog in errorlogFiles:
+        wholeErrorlogPath = os.path.join(LogPath, errorlog)
+        rmErrorlog: bool = False
+        with open(wholeErrorlogPath, "r") as f:
+            if len(f.read()) < 1:
+                rmErrorlog = True
+        if rmErrorlog:
+            os.remove(wholeErrorlogPath)
+
+    logtime: str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    logFileName = os.path.join(LogPath, f"log_{logtime}.log")
+    logging.basicConfig(filename=logFileName, format="%(levelname)s-%(asctime)s: %(message)s", level=logging.NOTSET, datefmt="%H:%M:%S")
     debug(f"Created log file: {logFileName}")
+
+    faultHandlerEnabled = _faultHandler
+    if faultHandlerEnabled:
+        stderrPath = os.path.join(LogPath, f"""errorlog_{logtime}.errorlog""")
+        sys.stderr = open(stderrPath, "w")
+        debug(f"Created errorlog file: {stderrPath}")
+        faulthandler.enable(sys.stderr, all_threads=True)
+        debug(f"Enabled faulthandler.")
 
     if not debugInfo:
         return
 
     display_info = pygame.display.Info()
     mixer_version: Tuple = pygame.mixer.get_sdl_mixer_version()
-    platform_info: Tuple[str, str, str, str, str, str] = platform.uname()
+    platform_info = platform.uname()
+    memory_info = psutil.virtual_memory()
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
@@ -44,7 +70,7 @@ I=====[ DEBUG INFO ]=====I
     - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
     - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}
     - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-    - {platform_info[0]} {platform_info[2]}: {platform_info[3]}
+    - {platform_info.system} {platform_info.release}: {platform_info.version}
 
     [Video Info]
     - SDL Video Driver: {pygame.display.get_driver()}
@@ -59,9 +85,10 @@ I=====[ DEBUG INFO ]=====I
     - Shifts: {display_info.shifts}
     - Losses: {display_info.losses}
 
-    [Platform Info]
-    - Architecture: {platform_info[4]}
-    - Processor: {platform_info[5]}
+    [System Info]
+    - Architecture: {platform_info.machine}
+    - Processor (Cores: {psutil.cpu_count(logical=False)}, Threads: {psutil.cpu_count(logical=True)}): {platform_info.processor}
+    - RAM: {memory_info.available / 1_000_000_000} GB Available ({memory_info.total / 1_000_000_000} GB Total)
 
     [Hardware Acceleration]
     - Hardware Blitting: {bool(display_info.blit_hw)}
@@ -129,7 +156,17 @@ def Profiler(enabled: bool = True):
         except IOError as e: AutoError(f"IO Error! Details: {e}")
 
 def quit():
-    global running
+    global running, faultHandlerEnabled
+    if faultHandlerEnabled:
+        faultHandlerEnabled = False
+        faulthandler.disable()
+        sys.stderr.close()
+        if stderrPath != None:
+            os.remove(stderrPath)
+        else:
+            AutoError("stderrPath is none when faulthandler is enabled!")
+
     running = False
+
     logging.shutdown()
     Profiler(False)
