@@ -426,10 +426,11 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     surname = None
     if Surnames != None:
         username = KDS.System.GetUserNameEx(KDS.System.EXTENDED_NAME_FORMAT.NameDisplay)
-        for check in reversed(username.split(" ")): # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
-            if check in SurnamesSet: # Will be case sensitive, but case insensitivity would be too demanding to process.
-                surname = check
-                break
+        if username != None:
+            for check in reversed(username.split(" ")): # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
+                if check in SurnamesSet: # Will be case sensitive, but case insensitivity would be too demanding to process.
+                    surname = check
+                    break
         if surname == None:
             surname = random.choice(Surnames[0:50])
             KDS.Logging.info(f"Username: {username} did not contain a surname.", True)

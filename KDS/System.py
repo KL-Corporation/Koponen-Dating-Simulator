@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import platform
 import sys
+from typing import Dict, Optional
 import webbrowser
 
 import KDS.Logging
@@ -104,12 +105,39 @@ class MessageBox:
 
     @staticmethod
     def Show(title: str, text: str, buttons: MessageBox.Buttons = None, icon: MessageBox.Icon = None, defaultButton: MessageBox.DefaultButton = None, *args: int) -> MessageBox.Responses:
+        if ISLINUX:
+            MessageBox._sendLinuxNotification(title, text, icon)
+            return MessageBox.Responses.OK # notify doesn't have buttons so we will return this same response... Shut up, I know this is stupid.
+
         argVal = buttons.value if buttons != None else 0
         argVal += icon.value if icon != None else 0
         argVal += defaultButton.value if defaultButton != None else 0
         argVal += sum(args)
         response = ctypes.windll.user32.MessageBoxW(0, text, title, argVal)
         return MessageBox.Responses(response)
+
+    @staticmethod
+    def _sendLinuxNotification(title: str, text: str, icon: MessageBox.Icon = None):
+        icons: Dict[Optional[MessageBox.Icon], Optional[str]] = {
+            MessageBox.Icon.EXCLAMATION: "error",
+            MessageBox.Icon.WARNING: "dialog-warning",
+            MessageBox.Icon.INFORMATION: "info",
+            MessageBox.Icon.ASTERISK: "info",
+            MessageBox.Icon.QUESTION: "help",
+            MessageBox.Icon.STOP: "stop",
+            MessageBox.Icon.ERROR: "stop",
+            MessageBox.Icon.HAND: "stop",
+            None: None
+        }
+        cmd = ["/usr/bin/notify-send"]
+
+        tmpicon = icons[icon]
+        if tmpicon != None:
+            cmd.append(f"--icon={tmpicon}")
+
+        cmd.append(title)
+        cmd.append(text)
+        subprocess.run(cmd)
 
 class Console:
     ATTRIBUTES = dict(
@@ -201,7 +229,11 @@ class EXTENDED_NAME_FORMAT(IntEnum):
     NameServicePrincipal = 10,
     NameDnsDomain = 12
 
-def GetUserNameEx(NameDisplay: EXTENDED_NAME_FORMAT):
+def GetUserNameEx(NameDisplay: EXTENDED_NAME_FORMAT) -> Optional[str]:
+    if ISLINUX:
+        lgin = os.getlogin()
+        return lgin if len(lgin) > 0 else None
+
     GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
 
     size = ctypes.pointer(ctypes.c_ulong(0))
