@@ -317,7 +317,10 @@ class Weapon(Item):
 
     @staticmethod
     def addAmmo(_type: Type[Weapon], amount: Union[int, float]) -> None:
-        Weapon.data[_type].ammo += amount
+        if _type in Weapon.data:
+            Weapon.data[_type].ammo += amount
+        else:
+            KDS.Logging.warning("Adding ammo to a weapon that does not exist in this level.", True, True)
 
     @staticmethod
     def reset() -> None:

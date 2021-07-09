@@ -6,13 +6,16 @@ import KDS.Logging
 
 MUSICENDEVENT = pygame.event.custom_type()
 
-def init(_mixer):
-    global MusicMixer, MusicVolume, EffectVolume, EffectChannels, SoundMixer
-    MusicMixer = _mixer.music
-    MusicMixer.set_endevent(MUSICENDEVENT)
-    SoundMixer = _mixer
+SoundMixer = pygame.mixer
+MusicMixer = pygame.mixer.music
 
-    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", ...))
+def init():
+    global MusicVolume, EffectVolume, EffectChannels
+    pygame.mixer.init()
+
+    MusicMixer.set_endevent(MUSICENDEVENT)
+
+    SoundMixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", ...))
 
     MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", ...)
     EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", ...)
@@ -30,7 +33,7 @@ class Music:
         if path != None and len(path) > 0:
             Music.Load(path=path)
         if Music.Loaded != None:
-            MusicMixer.play(loops)
+            MusicMixer.play(loops=loops)
             MusicMixer.set_volume(MusicVolume)
         else:
             KDS.Logging.AutoError("No music track has been loaded to play!")

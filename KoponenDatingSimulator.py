@@ -50,7 +50,6 @@ import KDS.World
 #endregion
 #region Priority Initialisation
 pygame.init()
-pygame.mixer.init()
 
 pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
 
@@ -119,7 +118,7 @@ if KDS.ConfigManager.GetSetting("Renderer/fullscreen", ...):
     pygame.display.toggle_fullscreen()
 
 KDS.Logging.debug("Initialising KDS modules...")
-KDS.Audio.init(pygame.mixer)
+KDS.Audio.init()
 KDS.Jobs.init()
 KDS.AI.init()
 KDS.World.init()
@@ -3188,7 +3187,7 @@ class PlayerClass:
             if not self.deathAnimFinished:
                 self.dead = True
                 KDS.Audio.Music.Stop()
-                pygame.mixer.Sound.play(self.deathSound)
+                KDS.Audio.PlaySound(self.deathSound)
                 self.deathSound.set_volume(0.5)
                 self.deathAnimFinished = True
             else:
@@ -3574,7 +3573,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
-    if show_loading: KDS.Loading.Circle.Stop()
+    if show_loading:
+        KDS.Loading.Circle.Stop()
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
     if auto_play_music and KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
@@ -3630,7 +3630,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
         KDS.ConfigManager.Save.Active.Story.playerName = playerName
         KDS.ConfigManager.Save.Active.save(updateStats=False)
 
-    pygame.mixer.music.stop()
+    KDS.Audio.Music.Stop()
 
     animationOverride = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
     if animationOverride and show_loading:
@@ -3648,7 +3648,7 @@ def respawn_function():
     if WorldData.PlayerStartPos[0] == -1 and WorldData.PlayerStartPos[1] == -1:
         KDS.Logging.AutoError("PlayerStartPos is (-1, -1)!")
     Player.rect.topleft = WorldData.PlayerStartPos if RespawnAnchor.active == None else RespawnAnchor.active.rect.bottomleft
-    KDS.Audio.Music.Stop()
+    KDS.Audio.Music.Play()
 #endregion
 #region Menus
 def esc_menu_f(oldSurf: pygame.Surface):

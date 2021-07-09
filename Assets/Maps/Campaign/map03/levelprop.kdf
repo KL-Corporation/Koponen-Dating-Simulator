@@ -2,7 +2,7 @@
     "Data": {
         "TimeBonus": {
             "end": 600,
-            "start": 300
+            "start": 150
         }
     },
     "Entities": {
