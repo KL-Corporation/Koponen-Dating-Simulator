@@ -365,6 +365,8 @@ except:
 #region World Data
 class WorldData:
     MapSize = (0, 0)
+    PlayerStartPos = (-1, -1)
+
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
         global Items, Tiles, Enemies, Projectiles, overlays, Player, Zones
@@ -419,7 +421,7 @@ class WorldData:
                 KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
         KDS.Build.Item.infiniteAmmo = KDS.ConfigManager.LevelProp.Get("Data/infiniteAmmo", False)
 
-        p_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
+        WorldData.PlayerStartPos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
         k_start_pos: Tuple[int, int] = KDS.ConfigManager.LevelProp.Get("Entities/Koponen/startPos", (200, 200))
         global Koponen
         Koponen = KDS.Koponen.KoponenEntity(k_start_pos, (24, 64))
@@ -550,7 +552,7 @@ class WorldData:
             KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
         else:
             KDS.Audio.Music.Unload()
-        return p_start_pos, k_start_pos
+        return WorldData.PlayerStartPos, k_start_pos
 #endregion
 #region Data
 KDS.Logging.debug("Loading Data...")
@@ -1188,7 +1190,6 @@ class WallLight(KDS.Build.Tile):
 class RespawnAnchor(KDS.Build.Tile):
     respawn_anchor_on: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/respawn_anchor_on.png").convert()
 
-    respawnPoint: Optional[Tuple[int, int]] = None
     active: Optional[RespawnAnchor] = None
     rspP_list = []
     respawn_anchor_tip: pygame.Surface = tip_font.render(f"Set Respawn Point [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
@@ -1214,7 +1215,6 @@ class RespawnAnchor(KDS.Build.Tile):
             screen.blit(RespawnAnchor.respawn_anchor_tip, (self.rect.centerx - scroll[0] - RespawnAnchor.respawn_anchor_tip.get_width() // 2, self.rect.top - scroll[1] - 50))
             if KDS.Keys.functionKey.clicked:
                 RespawnAnchor.active = self
-                RespawnAnchor.respawnPoint = (self.rect.x, self.rect.y - Player.rect.height + 34)
                 KDS.Audio.PlaySound(random.choice(respawn_anchor_sounds))
         return self.texture
 
@@ -3569,7 +3569,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
 
     main_menu_running = False
     KDS.Scores.ScoreCounter.Start()
-    if reset_scroll: true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
+    if reset_scroll:
+        true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
     pygame.event.clear()
     KDS.Keys.Reset()
     KDS.Logging.debug("Game Loaded.")
@@ -3644,10 +3645,9 @@ def respawn_function():
     global level_finished
     Player.reset(clear_inventory=False)
     level_finished = False
-    if RespawnAnchor.active != None:
-        Player.rect.bottomleft = RespawnAnchor.active.rect.bottomleft
-    else:
-        Player.rect.topleft = KDS.ConfigManager.LevelProp.Get("Entities/Player/startPos", (100, 100))
+    if WorldData.PlayerStartPos[0] == -1 and WorldData.PlayerStartPos[1] == -1:
+        KDS.Logging.AutoError("PlayerStartPos is (-1, -1)!")
+    Player.rect.topleft = WorldData.PlayerStartPos if RespawnAnchor.active == None else RespawnAnchor.active.rect.bottomleft
     KDS.Audio.Music.Stop()
 #endregion
 #region Menus
@@ -4317,7 +4317,7 @@ while main_running:
 
     Lights.clear()
 
-    true_scroll[0] += (Player.rect.x - true_scroll[0] - (screen_size[0] / 2)) / 12
+    true_scroll[0] += (Player.rect.centerx - true_scroll[0] - (screen_size[0] / 2)) / 12
     true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]

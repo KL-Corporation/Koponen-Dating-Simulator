@@ -1527,6 +1527,7 @@ class Selected:
             except IndexError:
                 warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(<invalid-grid-size>, <invalid-grid-size>)"
                 KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}")
+        Selected.units.clear()
 
     @staticmethod
     def Move(x: int, y: int):

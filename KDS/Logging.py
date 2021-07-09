@@ -104,7 +104,8 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
         print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
         return
 
-    message = str(message)
+    if isinstance(message, Exception):
+        message = f"{type(message).__name__}: {str(message)}"
     _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
     logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
     if stack_info:
