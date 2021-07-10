@@ -75,6 +75,8 @@ class Inventory:
             self.SIndex = 0
         if self.storage[self.SIndex] == DOUBLEITEM:
             self.SIndex += 1
+        if self.SIndex >= self.size: # Has to be double checked... Or not really, but I'm too lazy to code anything smarter
+            self.SIndex = 0
 
     def moveLeft(self):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
@@ -83,6 +85,8 @@ class Inventory:
             self.SIndex = self.size - 1
         if self.storage[self.SIndex] == DOUBLEITEM:
             self.SIndex -= 1
+        if self.SIndex < 0:
+            self.SIndex = self.size - 1
 
     def pickSlot(self, index: int):
         KDS.Missions.Listeners.InventorySlotSwitching.Trigger()
@@ -113,7 +117,7 @@ class Inventory:
     def dropItem(self, forceDrop: bool = False) -> Optional[KDS.Build.Item]:
         return self.dropItemAtIndex(self.SIndex, forceDrop)
 
-    def pickupItemToIndex(self, index: int, item: KDS.Build.Item, force: bool = False) -> bool:
+    def pickupItemToIndex(self, index: int, item: KDS.Build.Item, force: bool = False, set_index: bool = False) -> bool:
         if self.storage[index] != EMPTYSLOT and not force:
             return False
         if item.serialNumber in KDS.Build.Item.inventoryDoubles:
@@ -125,10 +129,12 @@ class Inventory:
                 return False
             self.storage[index + 1] = DOUBLEITEM
         self.storage[index] = item
+        if set_index:
+            self.SIndex = index
         return True
 
     def pickupItem(self, item: KDS.Build.Item, force: bool = False) -> bool:
-        return self.pickupItemToIndex(self.SIndex, item, force)
+        return self.pickupItemToIndex(self.SIndex, item, force, set_index=True)
 
     def useItemAtIndex(self, index: int, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
         item = self.storage[index]

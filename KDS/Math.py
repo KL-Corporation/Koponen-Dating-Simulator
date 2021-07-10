@@ -94,13 +94,6 @@ def Remap01(value: float, from1: float, from2: float) -> float:
     Converts a value to another value within the given arguments.
     """
     return Remap(value, from1, 0.0, from2, 1.0)
-
-def Repeat(t: float, length: float) -> float:
-    """Loops the value t, so that it is never larger than length and never smaller than 0.
-
-    This is similar to the modulo operator but it works with floating point numbers. For example, using 3.0 for t and 2.5 for length, the result would be 0.5. With t = 5 and length = 2.5, the result would be 0.0. Note, however, that the behaviour is not defined for negative numbers as it is for the modulo operator.
-    """
-    return Clamp(t - Floor(t / length) * length, 0.0, length)
 #endregion
 
 #region Rounding
@@ -183,6 +176,31 @@ def GetAngle(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
     except Exception as e:
         KDS.Logging.AutoError(e)
         return NAN
+
+def GetAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
+        """Calculates the angle between two vectors.
+        Args:
+            p1 (tuple): First vector
+            p2 (tuple): Secod vector
+        Returns:
+            float: The angle between the vectors
+        """
+        try:
+            q = p1[0] - p2[0]
+            w = p1[1] - p2[1]
+            if w == 0:
+                w = 1
+            r = q / w
+
+            a = Atan(r) * RAD2DEG
+            #a = 360 - a
+            #while a >= 360:
+            #    a = a - 360
+
+            return a
+        except Exception as e:
+            KDS.Logging.AutoError(e)
+            return 0.0
 
 def DeltaAngle(current: float, target: float):
     return ((target - current) + 180) % 360 - 180

@@ -48,38 +48,13 @@ def init():
     imp_fireball.set_colorkey((255, 255, 255))
 
 def searchRect(targetRect: pygame.Rect, searchRect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int], obstacles: List[List[List[KDS.Build.Tile]]],  maxAngle: int = 40, maxSearchUnits: int = 24) -> Tuple[bool, float]:
-    def getAngle(p1: Tuple[int, int], p2: Tuple[int, int]):
-        """Calculates the angle between two vectors.
-        Args:
-            p1 (tuple): First vector
-            p2 (tuple): Secod vector
-        Returns:
-            float: The angle between the vectors
-        """
-        try:
-            q = p1[0] - p2[0]
-            w = p1[1] - p2[1]
-            if w == 0:
-                w = 1
-            r = q / w
-
-            a = KDS.Math.Atan(r) * KDS.Math.RAD2DEG
-            #a = 360 - a
-            #while a >= 360:
-            #    a = a - 360
-
-            return a
-        except Exception as e:
-            KDS.Logging.AutoError(e)
-            return 0.0
-
     if direction:
         if targetRect.x > searchRect.x:
             return False, 0
     elif targetRect.x < searchRect.x:
         return False, 0
 
-    angle = getAngle((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
+    angle = KDS.Math.GetAngle2((searchRect.centerx, searchRect.centery), (targetRect.x + 5, targetRect.y + 5))
     if abs(angle) < maxAngle:
         return False, 0
     if angle > 0:
@@ -227,6 +202,9 @@ class HostileEnemy:
 
     @health.setter
     def health(self, value: int):
+        if not self.enabled:
+            return
+
         if value < self._health and value > 0:
             self.sleep = False
 
@@ -265,7 +243,7 @@ class HostileEnemy:
         if self.listener != None and not self.listenerRegistered:
             self.enabled = False
             self.listenerRegistered = True
-            tmpListener = getattr(KDS.Missions.Listeners, self.listener, None)
+            tmpListener: Optional[Union[KDS.Missions.Listener, KDS.Missions.ItemListener]] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None and not isinstance(tmpListener, KDS.Missions.ItemListener):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.listenerTrigger
@@ -281,6 +259,7 @@ class HostileEnemy:
 
     def listenerTrigger(self):
         self.enabled = True
+        assert self.listenerInstance != None, "Why have we been triggered by a listener when listenerInstance is None????"
         self.listenerInstance.OnTrigger -= self.listenerTrigger
         self.listenerInstance = None
 
@@ -338,12 +317,16 @@ class HostileEnemy:
                     dropItems.append(item)
             self.playDeathSound = False
 
+        self.onBeforeRender()
         if KDS.Debug.Enabled:
             pygame.draw.rect(Surface, KDS.Colors.Orange, pygame.Rect(self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
         Surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         return enemyProjectiles, dropItems
 
     def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
+        return
+
+    def onBeforeRender(self):
         return
 
     def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
@@ -369,7 +352,7 @@ class HostileEnemy:
 
 class Imp(HostileEnemy):
     def __init__(self, pos):
-        health = 200
+        health = 65
         w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -391,7 +374,7 @@ class Imp(HostileEnemy):
 
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
-        health = 125
+        health = 30
         w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -432,7 +415,7 @@ class SergeantZombie(HostileEnemy):
 
 class DrugDealer(HostileEnemy):
     def __init__(self, pos):
-        health = 100
+        health = 25
         w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -476,7 +459,7 @@ class DrugDealer(HostileEnemy):
 
 class TurboShotgunner(HostileEnemy):
     def __init__(self, pos):
-        health = 220
+        health = 55
         w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -518,7 +501,7 @@ class TurboShotgunner(HostileEnemy):
 
 class MafiaMan(HostileEnemy):
     def __init__(self, pos):
-        health = 125
+        health = 30
         w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -559,7 +542,7 @@ class MafiaMan(HostileEnemy):
 
 class MethMaker(HostileEnemy):
     def __init__(self, pos):
-        health = 250
+        health = 65
         w_anim = KDS.Animator.Animation("methmaker_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("methmaker_idle", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("methmaker_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
@@ -602,7 +585,7 @@ class MethMaker(HostileEnemy):
 
 class CaveMonster(HostileEnemy):
     def __init__(self, pos):
-        health = 200
+        health = 50
         w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
@@ -654,7 +637,7 @@ class Mummy(HostileEnemy):
     sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
 
     def __init__(self, pos):
-        health = 200
+        health = 50
         w_anim = KDS.Animator.Animation("mummy_walking", 8, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mummy_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mummy_attack", 3, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -725,7 +708,7 @@ class SecurityGuard(HostileEnemy):
     death_sound = pygame.mixer.Sound("Assets/Audio/Entities/security_guard_death.ogg")
 
     def __init__(self, pos):
-        health = 5000
+        health = 1250
 
         w_anim = KDS.Animator.Animation("security_guard_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("security_guard_idle", 2, 40, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
@@ -781,7 +764,7 @@ class SecurityGuard(HostileEnemy):
 
 class Bulldog(HostileEnemy):
     def __init__(self, pos: Tuple[int, int]):
-        health = KDS.Math.MAXVALUE # They are 30 pixels tall so player should not be able to shoot them
+        health = 10
         w_anim = KDS.Animator.Animation("bulldog", 5, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = w_anim
         a_anim = w_anim
@@ -790,9 +773,26 @@ class Bulldog(HostileEnemy):
 
         self.internalInit(rect, w_anim, a_anim, d_anim, i_anim, None, None, health, [5, 8], KDS.Math.MAXVALUE)
         self.manualAttackHandling = True
+        self.disableDamage: bool = False
+
+    @property
+    def health(self) -> int:
+        return self._health
+
+    @health.setter
+    def health(self, value: int):
+        if not self.enabled:
+            return
+
+        if value < self._health and value > 0:
+            self.sleep = False
+
+        if not self.disableDamage:
+            self._health = max(value, 0)
 
     def lateInit(self):
         self.normalMovement = self.movement
+        super().lateInit()
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         bullets: List[KDS.World.Bullet] = []
@@ -809,5 +809,42 @@ class Bulldog(HostileEnemy):
 
     def attack(self, slope, env_obstacles: List[List[List[KDS.Build.Tile]]], target: pygame.Rect, *args) -> List[KDS.World.Bullet]:
         if random.randint(0, 30) == 0:
-            return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + KDS.Math.CeilToInt(((self.rect.width + 11) * KDS.Convert.ToMultiplier(self.direction)) / 2), self.rect.y, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
+            return [KDS.World.Bullet(pygame.Rect((self.rect.centerx + (KDS.Math.Ceil(self.rect.width / 2) + 6) * KDS.Convert.ToMultiplier(self.direction)) - 5, self.rect.centery, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
+        return []
+
+class Zombie(HostileEnemy):
+    def __init__(self, pos):
+        health = 25
+        w_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        d_anim = KDS.Animator.Animation("z_death", 5, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        rect = pygame.Rect(pos[0], pos[1] - 36, 34, 55)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=None, death_sound=None, health=health, mv=[1, 8], attackPropability=40)
+        self.manualAttackHandling = True
+        self.sleep = False
+        self.movementBeforeFreeze = self.movement
+        self.attackAnim = False
+
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
+        bullets: List[KDS.World.Bullet] = []
+        self.attackAnim = False
+        if self.health > 0 and self.rect.colliderect(targetRect):
+            if self.movement[0] != 0:
+                self.movementBeforeFreeze = self.movement
+            self.movement = [0, 8]
+            bullets = self.attack(69, tiles, targetRect)
+            self.attackAnim = True
+        elif self.movement[0] == 0:
+            self.movement = self.movementBeforeFreeze
+        super().update(Surface, scroll, tiles, targetRect)
+        return bullets, []
+
+    def onBeforeRender(self):
+        if self.attackAnim:
+            self.animation.trigger("attack")
+
+    def attack(self, slope, env_obstacles, target, *args):
+        if random.randint(0, 60) == 0:
+            return [KDS.World.Bullet(pygame.Rect((self.rect.centerx + (KDS.Math.Ceil(self.rect.width / 2) + 6) * KDS.Convert.ToMultiplier(self.direction)) - 5, self.rect.centery, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
         return []

@@ -6,16 +6,19 @@ import KDS.Logging
 
 MUSICENDEVENT = pygame.event.custom_type()
 
-def init(_mixer):
-    global MusicMixer, MusicVolume, EffectVolume, EffectChannels, SoundMixer
-    MusicMixer = _mixer.music
+SoundMixer = pygame.mixer
+MusicMixer = pygame.mixer.music
+
+def init():
+    global MusicVolume, EffectVolume, EffectChannels
+    pygame.mixer.init()
+
     MusicMixer.set_endevent(MUSICENDEVENT)
-    SoundMixer = _mixer
 
-    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 128))
+    SoundMixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", ...))
 
-    MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", 0.25)
-    EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", 0.75)
+    MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", ...)
+    EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", ...)
     EffectChannels = []
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))
@@ -30,7 +33,7 @@ class Music:
         if path != None and len(path) > 0:
             Music.Load(path=path)
         if Music.Loaded != None:
-            MusicMixer.play(loops)
+            MusicMixer.play(loops=loops)
             MusicMixer.set_volume(MusicVolume)
         else:
             KDS.Logging.AutoError("No music track has been loaded to play!")
@@ -77,6 +80,11 @@ class Music:
         MusicMixer.set_volume(MusicVolume)
 
     @staticmethod
+    def SetPos(pos: float):
+        global MusicMixer
+        MusicMixer.set_pos(pos)
+
+    @staticmethod
     def GetPlaying():
         global MusicMixer
         return MusicMixer.get_busy()
@@ -87,7 +95,8 @@ def quit():
 
 def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    if volume == -1.0: volume = EffectVolume
+    if volume == -1.0:
+        volume = EffectVolume
     play_channel = SoundMixer.find_channel(True) # Won't return None, because force is true
     play_channel.play(sound, loops, fade_ms)
     play_channel.set_volume(volume)

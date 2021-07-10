@@ -1,4 +1,4 @@
-from typing import Callable, List, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from enum import IntEnum, auto
 
@@ -115,17 +115,17 @@ class Animation:
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
-        self.animations = animations
-        self.active = None
-        for key in animations:
-            if self.active == None:
-                self.active = animations[key]
-            else:
-                break
+        if len(animations) < 1:
+            raise ValueError("MultiAnimation requires atleast one animation to function!")
+        self.animations: Dict[str, Animation] = animations
+        firstKV = next(iter(animations.items()))
+        self.active: Animation = firstKV[1]
+        self.active_key: str = firstKV[0]
 
     def trigger(self, animation_trigger: str):
         if animation_trigger in self.animations:
             self.active = self.animations[animation_trigger]
+            self.active_key = animation_trigger
         else:
             KDS.Logging.AutoError("MultiAnimation trigger invalid.")
 
@@ -208,7 +208,7 @@ class Value:
     }
 
     def __init__(self, From: float, To: float, Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
-        """Initialises a float animation.
+        """Initialises a value animation.
 
         Args:
             From (float): The starting point of the float animation.
@@ -286,22 +286,46 @@ class Color:
         self._g = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
         self._b = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
 
+    @property
+    def From(self) -> Tuple[int, int, int]:
+        return (int(self._r.From), int(self._g.From), int(self._b.From))
+
+    @From.setter
+    def From(self, value: Tuple[int, int, int]):
+        self._r.From = value[0]
+        self._g.From = value[1]
+        self._b.From = value[2]
+
+    @property
+    def To(self) -> Tuple[int, int, int]:
+        return (int(self._r.To), int(self._g.To), int(self._b.To))
+
+    @To.setter
+    def To(self, value: Tuple[int, int, int]):
+        self._r.To = value[0]
+        self._g.To = value[1]
+        self._b.To = value[2]
+
+    @property
+    def Finished(self) -> bool:
+        return self._r.Finished and self._g.Finished and self._b.Finished
+
+    @property
+    def tick(self) -> int:
+        return self._r.tick
+
+    @tick.setter
+    def tick(self, value: int):
+        self._r.tick = value
+        self._g.tick = value
+        self._b.tick = value
+
+    @property
+    def ticks(self) -> int:
+        return self._r.ticks
+
     def get_value(self) -> Tuple[int, int, int]:
         return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()))
 
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
         return (round(self._r.update(reverse)), round(self._g.update(reverse)), round(self._b.update(reverse)))
-
-    def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
-        self._r.From = From[0]
-        self._r.To = To[0]
-        self._g.From = From[1]
-        self._g.To = To[1]
-        self._b.From = From[2]
-        self._b.To = To[2]
-
-    def getValues(self):
-        return (self._r.From, self._g.From, self._b.From), (self._r.From, self._g.From, self._b.From)
-
-    def getFinished(self):
-        return True if self._r.Finished and self._g.Finished and self._b.Finished else False

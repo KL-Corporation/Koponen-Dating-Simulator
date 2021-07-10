@@ -3,43 +3,74 @@ import inspect
 import logging
 import os
 import pstats
+import platform
 import KDS.System
+import KDS.Linq
 import pygame
 import sys
+import faulthandler
+import re
+import psutil
 from datetime import datetime
-from typing import Any, Union
+from typing import Any, List, Optional, Tuple, Union
 
 running = False
 profiler_running = False
 profile = cProfile.Profile()
 
-def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True):
-    global running, AppDataPath, LogPath, logFileName
+faultHandlerEnabled: bool = False
+stderrPath: Optional[str] = None
+
+def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler: bool = True):
+    global running, AppDataPath, LogPath, stderrPath, faultHandlerEnabled, logFileName
     running = True
     AppDataPath = _AppDataPath
     LogPath = _LogPath
 
-    while len(os.listdir(LogPath)) >= 5:
-        os.remove(os.path.join(LogPath, os.listdir(LogPath)[0]))
+    logFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".log"))
+    logFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
+    while len(logFiles) > 4:
+        os.remove(os.path.join(LogPath, logFiles.pop(0)))
 
-    fileTimeFormat = "%Y-%m-%d-%H-%M-%S"
-    logTimeFormat = "%H:%M:%S"
-    logFormat = "%(levelname)s-%(asctime)s: %(message)s"
-    logFileName = os.path.join(LogPath, f"log_{datetime.now().strftime(fileTimeFormat)}.log")
-    logging.basicConfig(filename=logFileName, format=logFormat, level=logging.NOTSET, datefmt=logTimeFormat)
-    logging.debug("Created log file: " + logFileName)
+    errorlogFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".errorlog"))
+    errorlogFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
+    for errorlog in errorlogFiles:
+        wholeErrorlogPath = os.path.join(LogPath, errorlog)
+        rmErrorlog: bool = False
+        with open(wholeErrorlogPath, "r") as f:
+            if len(f.read()) < 1:
+                rmErrorlog = True
+        if rmErrorlog:
+            os.remove(wholeErrorlogPath)
+
+    logtime: str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    logFileName = os.path.join(LogPath, f"log_{logtime}.log")
+    logging.basicConfig(filename=logFileName, format="%(levelname)s-%(asctime)s: %(message)s", level=logging.NOTSET, datefmt="%H:%M:%S")
+    debug(f"Created log file: {logFileName}")
+
+    faultHandlerEnabled = _faultHandler
+    if faultHandlerEnabled:
+        stderrPath = os.path.join(LogPath, f"""errorlog_{logtime}.errorlog""")
+        sys.stderr = open(stderrPath, "w")
+        debug(f"Created errorlog file: {stderrPath}")
+        faulthandler.enable(sys.stderr, all_threads=True)
+        debug(f"Enabled faulthandler.")
 
     if not debugInfo:
         return
 
     display_info = pygame.display.Info()
+    mixer_version: Tuple = pygame.mixer.get_sdl_mixer_version()
+    platform_info = platform.uname()
+    memory_info = psutil.virtual_memory()
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
     - pygame: {pygame.version.ver}
     - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
+    - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}
     - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
-    - Windows {sys.getwindowsversion().major}{f".{sys.getwindowsversion().minor}" if sys.getwindowsversion().minor != 0 else ""}: {sys.getwindowsversion().build}
+    - {platform_info.system} {platform_info.release}: {platform_info.version}
 
     [Video Info]
     - SDL Video Driver: {pygame.display.get_driver()}
@@ -53,6 +84,11 @@ I=====[ DEBUG INFO ]=====I
     - Masks: {display_info.masks}
     - Shifts: {display_info.shifts}
     - Losses: {display_info.losses}
+
+    [System Info]
+    - Architecture: {platform_info.machine}
+    - Processor (Cores: {psutil.cpu_count(logical=False)}, Threads: {psutil.cpu_count(logical=True)}): {platform_info.processor}
+    - RAM: {memory_info.available / 1_000_000_000} GB Available ({memory_info.total / 1_000_000_000} GB Total)
 
     [Hardware Acceleration]
     - Hardware Blitting: {bool(display_info.blit_hw)}
@@ -68,12 +104,14 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
         print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
         return
 
-    message = str(message)
+    if isinstance(message, Exception):
+        message = f"{type(message).__name__}: {str(message)}"
     _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
     logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
     if stack_info:
         message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
-    if consoleVisible: print(KDS.System.Console.Colored(message, color))
+    if consoleVisible:
+        print(KDS.System.Console.Colored(message, color))
 
 def debug(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
@@ -119,7 +157,17 @@ def Profiler(enabled: bool = True):
         except IOError as e: AutoError(f"IO Error! Details: {e}")
 
 def quit():
-    global running
+    global running, faultHandlerEnabled
+    if faultHandlerEnabled:
+        faultHandlerEnabled = False
+        faulthandler.disable()
+        sys.stderr.close()
+        if stderrPath != None:
+            os.remove(stderrPath)
+        else:
+            AutoError("stderrPath is none when faulthandler is enabled!")
+
     running = False
+
     logging.shutdown()
     Profiler(False)

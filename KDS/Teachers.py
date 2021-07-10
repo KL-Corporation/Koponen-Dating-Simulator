@@ -40,7 +40,7 @@ class Teacher:
         pass
 
     def lateInit(self) -> None:
-        self.lastTargetDirection = self.direction
+        pass
 
     @property
     def health(self) -> int:
@@ -48,6 +48,9 @@ class Teacher:
 
     @health.setter
     def health(self, value: int):
+        if not self.enabled:
+            return
+
         if value < self._health:
             self.onDamage()
         self._health = max(value, 0)
@@ -110,7 +113,7 @@ class Teacher:
         return False
 
     def onDeath(self) -> List[int]:
-        return [x.serialNumber for x in self.inventory if x != None]
+        return [x.serialNumber for x in self.inventory.storage if isinstance(x, KDS.Build.Item)]
 
     def startAgro(self):
         if TeacherState.Combat not in self.state:
@@ -123,6 +126,9 @@ class Teacher:
     def onDamage(self):
         self.startAgro()
 
+    def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]: # No scroll
+        return pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x, self.rect.y)
+
     def render(self, surface: pygame.Surface, scroll: Sequence[int]):
         indicatorColor: Optional[Tuple[int, int, int]] = None
         if TeacherState.Combat in self.state:
@@ -132,17 +138,18 @@ class Teacher:
         elif TeacherState.RemovingContraband in self.state:
             indicatorColor = KDS.Colors.Cyan
 
-        if indicatorColor != None:
+        if indicatorColor != None and self.health > 0:
             pygame.draw.circle(surface, indicatorColor, (self.rect.centerx - scroll[0], self.rect.y - 2 - 5 - scroll[1]), 2)
 
         handItem = self.inventory.getHandItem()
-        if not isinstance(handItem, str):
+        if not isinstance(handItem, str) and self.health > 0:
             KDS.Inventory.Inventory.renderItemTexture(handItem.texture, self.rect, self.direction, surface, scroll)
         if KDS.Debug.Enabled:
             pygame.draw.rect(surface, KDS.Colors.Green, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
-        surface.blit(pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        renderOutput = self.customRenderer()
+        surface.blit(renderOutput[0], (renderOutput[1][0] - scroll[0], renderOutput[1][1] - scroll[1]))
 
-    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         def neutralBehaviour():
             self.animation.trigger("walk")
             self.inventory.pickSlot(0)
@@ -220,6 +227,9 @@ class Teacher:
             if not isinstance(hItem, KDS.Build.Weapon):
                 KDS.Logging.AutoError(f"Unexpected hand item of type: {type(hItem).__name__}, expected: {KDS.Build.Weapon.__name__}")
                 return
+            elif self.weaponData == None:
+                KDS.Logging.AutoError("Weapon data should not be None!")
+                return
             if self.lineOfSight:
                 hItem.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
                 self.weaponData.counter += 1
@@ -236,18 +246,19 @@ class Teacher:
         if self.health <= 0:
             self.animation.trigger("death")
             self.inventory.pickSlot(0)
-            if not self.deathHandled and self.death_sound != None:
-                KDS.Audio.PlaySound(self.death_sound)
-                items = self.onDeath()
-                KDS.Missions.Listeners.EnemyDeath.Trigger()
-                for item in items:
-                    if item:
-                        dropItems.append(item)
+            if not self.deathHandled:
+                if self.death_sound != None:
+                    KDS.Audio.PlaySound(self.death_sound)
+                tmpdrItems: List[int] = self.onDeath()
+                KDS.Missions.Listeners.TeacherDeath.Trigger()
+                for item in tmpdrItems:
+                    dropItems.append(item)
                 self.deathHandled = True
             self.render(surface, scroll)
             return enemyProjectiles, dropItems
         #endregion
-        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, self.rect, self.direction, surface, scroll, tiles, maxSearchUnits=10)
+        self.lineOfSight, _ = KDS.AI.searchRect(player.rect, pygame.Rect(self.rect.left, self.rect.top - 10, self.rect.width, self.rect.height),
+                                                self.direction, surface, scroll, tiles, maxSearchUnits=10)
         self.noSightTime += 1
         if self.lineOfSight:
             self.noSightTime = 0
@@ -305,7 +316,7 @@ class Test(Teacher):
 
 class LaaTo(Teacher):
     def __init__(self, pos: Tuple[int, int]) -> None:
-        self.internalInit(pygame.Rect(pos[0], pos[1] - 29, 19, 68),
+        self.internalInit(pygame.Rect(pos[0], pos[1] - 34, 19, 68),
                           KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
                           KDS.Animator.Animation("walk", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/LaaTo"),
@@ -317,4 +328,21 @@ class LaaTo(Teacher):
 
 class KuuMa(Teacher):
     def __init__(self, pos: Tuple[int, int]) -> None:
-        self.internalInit()
+        self.internalInit(pygame.Rect(pos[0], pos[1] - 34, 17, 68),
+                          KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/KuuMa"),
+                          KDS.Animator.Animation("walk", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/KuuMa"),
+                          KDS.Animator.Animation("walk", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/KuuMa"),
+                          KDS.Animator.Animation("walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/KuuMa"),
+                          KDS.Animator.Animation("die", 11, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="Teachers/KuuMa"),
+                          KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Teachers/KuuMa"),
+                          None, None, 750, 10, 1, 3
+                          )
+        self.inventory.storage[2] = KDS.Build.Item.serialNumbers[19]((0, 0), 19)
+
+    def onDeath(self) -> List[int]:
+        output = super().onDeath()
+        KDS.Missions.Listeners.KuuMaDeath.Trigger()
+        return output
+
+    def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]:
+        return pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - (51 if self.direction and self.animation.active_key == "death" else 0), self.rect.y)

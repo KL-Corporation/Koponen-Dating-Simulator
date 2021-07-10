@@ -1,4 +1,5 @@
 #region Importing
+from datetime import datetime
 import json
 import os
 import shutil
@@ -10,6 +11,7 @@ import KDS.Animator
 import KDS.Gamemode
 import KDS.Logging
 import KDS.Missions
+import KDS.System
 import KDS.World
 import KDS.Scores
 #endregion
@@ -21,7 +23,14 @@ def init(_AppDataPath: str, _CachePath: str, _SaveDirPath: str):
     SaveDirPath = _SaveDirPath
     SaveCachePath = os.path.join(CachePath, "save")
     SettingsPath = os.path.join(AppDataPath, "settings.cfg")
-    if not os.path.isfile(SettingsPath): shutil.copy("Assets/defaultSettings.kdf", SettingsPath)
+    if not os.path.isfile(SettingsPath):
+        OverrideDefaultSettings()
+
+    # Could be put into an else statement, but it's just unnecessary nesting
+    defaultVersion = JSON.Get("Assets/Data/defaultSettings.kdf", "Data/settingsFileVersion", True, writeMissing=False, warnMissing=True, encoding="utf-8")
+    currentVersion = JSON.Get(SettingsPath, "Data/settingsFileVersion", False, writeMissing=False, warnMissing=True, encoding="utf-8")
+    if defaultVersion != currentVersion:
+        OverrideDefaultSettings()
 
 class JSON:
     NULLPATH = "[config_manager_null_path]"
@@ -32,11 +41,14 @@ class JSON:
         return re.sub(r"\/+", "/", jsonPath.strip("/")).split("/")
 
     @staticmethod
-    def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True) ->  Union[Any, None]:
+    def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True, encoding: str = None) ->  Union[Any, None]:
+        if value == JSON.EMPTY:
+            value = {}
+
         config: Dict[str, Any] = {}
         if os.path.isfile(filePath):
             try:
-                with open(filePath, "r") as f:
+                with open(filePath, "r", encoding=encoding) as f:
                     try:
                         config = json.loads(f.read())
                     except json.decoder.JSONDecodeError as e:
@@ -58,14 +70,12 @@ class JSON:
                 else:
                     return value
         elif config != value:
-            if value == JSON.EMPTY:
-                value = {}
             config = value
         else:
             return value
 
         try:
-            with open(filePath, "w") as f:
+            with open(filePath, "w", encoding=encoding) as f:
                 f.write(json.dumps(config, sort_keys = sortKeys, indent = 4))
             return value
         except IOError as e:
@@ -77,7 +87,7 @@ class JSON:
         config: Dict[str, Any] = {}
         if not os.path.isfile(filePath):
             if warnMissing:
-                KDS.Logging.warning(f"No file found in path: {filePath}." + (f"Value of the file's {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
+                KDS.Logging.warning(f"No file found in path: {filePath}." + (f" Value of the file's {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
             if writeMissing:
                 JSON.Set(filePath, jsonPath, defaultValue)
             return defaultValue
@@ -100,7 +110,7 @@ class JSON:
             p = path[i]
             if p not in tmpConfig:
                 if warnMissing:
-                    KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}." + (f"Value of {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
+                    KDS.Logging.warning(f"No value found in path: {jsonPath} of file: {filePath}." + (f" Value of {jsonPath} has been set as default to: {defaultValue}" if writeMissing else ""), True)
                 if writeMissing:
                     JSON.Set(filePath, jsonPath, defaultValue)
                 return defaultValue
@@ -111,22 +121,40 @@ class JSON:
         KDS.Logging.AutoError("Unknown Error! This code should never execute.")
         return defaultValue
 
-def GetSetting(path: str, default: Any):
+def GetSetting(path: str, default: Any, writeMissingOverride: Optional[bool] = None, warnMissingOverride: Optional[bool] = None):
     """
     1. SaveDirectory, The name of the class (directory) your data will be loaded. Please prefer using already established directories.
     2. SaveName, The name of the setting you are loading. Make sure this does not conflict with any other SaveName!
     3. DefaultValue, The value that is going to be loaded if no value was found.
     """
-    return JSON.Get(SettingsPath, path, default, warnMissing=True)
+    output = JSON.Get(SettingsPath, path, default, warnMissing=True if warnMissingOverride == None else warnMissingOverride, writeMissing=default is not ... if writeMissingOverride == None else writeMissingOverride, encoding="utf-8")
+    if default is not ... or output is not ...:
+        return output
+
+    KDS.Logging.warning("Loading setting from \"defaultSettings.kdf\"!", True)
+    output = JSON.Get("Assets/Data/defaultSettings.kdf", path, None, writeMissing=False, warnMissing=False, encoding="utf-8")
+    if output == None:
+        raise RuntimeError(f"No default setting found on path: \"{path}\"")
+    SetSetting(path, output)
+    return output
 
 def SetSetting(path: str, value: Any) -> Any:
     """
-    Automatically fills FilePath to SaveFunction
     1. SaveDirectory, The name of the class (directory) your data will be saved. Please prefer using already established directories.
     2. SaveName, The name of the setting you are saving. Make sure this does not conflict with any other SaveName!
     3. SaveValue, The value that is going to be saved.
     """
-    return JSON.Set(SettingsPath, path, value, False)
+    return JSON.Set(SettingsPath, path, value, sortKeys=False, encoding="utf-8")
+
+def ToggleSetting(path: str, default: Union[bool, Any]):
+    """### USE ``Any`` TO ONLY PASS IN ELLIPSIS!"""
+    v = GetSetting(path, default)
+    SetSetting(path, not v)
+
+def OverrideDefaultSettings():
+    with open(SettingsPath, "w", encoding="utf-8") as settingsFile:
+        with open("Assets/Data/defaultSettings.kdf", "r", encoding="utf-8") as defaultsFile:
+            settingsFile.write(defaultsFile.read())
 
 def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None, False, True)
@@ -174,9 +202,10 @@ class Save:
                 retu.append({
                     "name": JSON.Get(path, "Story/playerName", "<name-error>", False, True),
                     "progress": ((JSON.Get(path, "Story/index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
-                    "grade": JSON.Get(path, "Story/examGrade", -1, False, True),
+                    "grade": JSON.Get(path, "Story/examGrade", -1.0, False, True),
                     "score": JSON.Get(path, "Stats/score", -1, False, True),
-                    "playtime": JSON.Get(path, "Stats/playtime", -1, False, True)
+                    "playtime": JSON.Get(path, "Stats/playtime", -1, False, True),
+                    "lastPlayedTimestamp": JSON.Get(path, "Stats/lastPlayed", -1, False, True)
                 })
             else:
                 retu.append(None)
@@ -186,13 +215,15 @@ class Save:
         def __init__(self) -> None:
             self.playerName: str = "<name-error>"
             self.index: int = 1
-            self.examGrade: int = -1
+            self.examGrade: float = -1.0
             self.principalName: str = "<principal-name-error>"
+            self.badEndingTrigger: bool = False
 
     class StatsData:
         def __init__(self) -> None:
             self.playtime: float = 0
             self.score: int = 0
+            self.lastPlayed: float = -1
 
     def __init__(self, index: int) -> None:
         Save.Active = self
@@ -213,8 +244,17 @@ class Save:
         path = Save.ToPath(self.index)
 
         if updateStats:
-            self.Stats.playtime += KDS.Scores.GameTime.gameTime
+            if KDS.Scores.GameTime.Timer != None:
+                try:
+                    self.Stats.playtime += KDS.Scores.GameTime.Timer.GetGameTime().total_seconds()
+                except Exception as e:
+                    try:
+                        KDS.Scores.ScoreCounter.Stop()
+                        self.Stats.playtime += KDS.Scores.GameTime.Timer.GetGameTime().total_seconds()
+                    except Exception as e:
+                        KDS.Logging.AutoError(e)
             self.Stats.score += KDS.Scores.score
+            self.Stats.lastPlayed = datetime.now().timestamp()
 
         data = {"Story": self.Story.__dict__, "Stats": self.Stats.__dict__}
         with open(path, "w") as f:

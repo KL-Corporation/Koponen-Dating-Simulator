@@ -1,6 +1,6 @@
 from __future__ import annotations
 import dataclasses
-from typing import Dict, Any, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
+from typing import Dict, Any, Literal, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
 import pygame
 import KDS.World
 import KDS.ConfigManager
@@ -17,6 +17,7 @@ import KDS.Teachers
 import KDS.Audio
 import KDS.Animator
 import KDS.Debug
+import KDS.NPC
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass
@@ -28,25 +29,27 @@ def init(tileData: Dict[str, Dict[str, Any]], itemData: Dict[str, Dict[str, Any]
     Tile.trueScale.clear()
     Tile.specialTiles.clear()
     for d in tileData.values():
+        srl = d["serialNumber"]
         if d["noCollision"] == True:
-            Tile.noCollision.add(d["serialNumber"])
+            Tile.noCollision.add(srl)
         if d["trueScale"] == True:
-            Tile.trueScale.add(d["serialNumber"])
+            Tile.trueScale.add(srl)
         if d["specialTile"] == True:
-            Tile.specialTiles.add(d["serialNumber"])
+            Tile.specialTiles.add(srl)
 
     Item.inventoryItems.clear()
     Item.inventoryDoubles.clear()
     Item.contraband.clear()
     for d in itemData.values():
+        srl = d["serialNumber"]
         if d["supportsInventory"] == True:
-            Item.inventoryItems.add(d["serialNumber"])
+            Item.inventoryItems.add(srl)
         if d["doubleSize"] == True:
-            Item.inventoryDoubles.add(d["serialNumber"])
+            Item.inventoryDoubles.add(srl)
         if d["isContraband"] == True:
-            Item.contraband.add(d["serialNumber"])
+            Item.contraband.add(srl)
 
-    Tile._renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", 8)
+    Tile._renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", ...)
     Tile._textures = t_textures
     Item._textures = i_textures
 
@@ -64,6 +67,7 @@ class Tile:
         self.serialNumber = serialNumber
         self.texture = Tile._textures[self.serialNumber] if serialNumber != -1 else None
         if serialNumber in Tile.trueScale:
+            assert self.texture != None, f"Truescale tile's serialNumber is -1?? Serial: {self.serialNumber}"
             self.rect = pygame.Rect(position[0] - self.texture.get_width() + 34, position[1] - self.texture.get_height() + 34, self.texture.get_width(), self.texture.get_height())
         else:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
@@ -125,6 +129,9 @@ class Tile:
     def lateInit(self) -> None:
         pass
 
+    def onDestroy(self) -> None:
+        pass
+
 class Item:
     infiniteAmmo: bool = False
 
@@ -132,7 +139,7 @@ class Item:
 
     tipItem = None
 
-    fall_speed: float = 1.0
+    fall_speed: float = 0.4
     fall_max_velocity: float = 8.0
 
     inventoryItems: Set[int] = set()
@@ -141,13 +148,20 @@ class Item:
 
     _textures: Dict[int, pygame.Surface] = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface = None):
-        self.texture = texture if texture != None else Item._textures[serialNumber]
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        if not isinstance(self, Item.serialNumbers[serialNumber]):
+            raise TypeError(f"Invalid type {type(self).__name__} for item with serial {serialNumber}")
+        self.texture = Item._textures[serialNumber]
         self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
         self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
         self.serialNumber = serialNumber
         self.physics = False
-        self.momentum = 0
+        self.vertical_momentum: float = 0.0
+        self.horizontal_momentum: float = 0.0
+        self.doubleSize: bool = self.serialNumber in Item.inventoryDoubles
+        self.supportsInventory = self.serialNumber in Item.inventoryItems
+        self.storePrice: Optional[int] = None
+        self.storeDiscountPrice: Optional[int] = None
 
     @staticmethod
     # Item_list is a list
@@ -158,58 +172,53 @@ class Item:
             if renderable.texture != None:
                 Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
             if renderable.physics:
-                renderable.momentum = min(renderable.momentum + Item.fall_speed, Item.fall_max_velocity)
-                renderable.rect.y += int(renderable.momentum)
-                collisions = KDS.World.collision_test(renderable.rect, Tile_list)
-                if len(collisions) > 0:
-                    renderable.rect.bottom = collisions[0].rect.top
+                renderable.vertical_momentum = min(renderable.vertical_momentum + Item.fall_speed, Item.fall_max_velocity)
+                collisions = KDS.World.EntityMover().move(renderable.rect, (renderable.horizontal_momentum, renderable.vertical_momentum), Tile_list)
+                if collisions.bottom:
                     renderable.physics = False
+#                 renderable.rect.y += int(renderable.vertical_momentum)
+#                 collisions = KDS.World.collision_test(renderable.rect, Tile_list)
+#                 if len(collisions) > 0:
+#                     renderable.rect.bottom = collisions[0].rect.top
+#                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, functionKey: bool, inventory):
-        showItemTip = True
-        collision = False
-        shortest_item = None
+    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory):
+        def interactionLogic(item: Item):
+            if item.supportsInventory:
+                if inventory.pickupItem(item) == False: # Return if cannot pickup
+                    return
+
+            item.pickup()
+            Item_list.remove(item) # Remove seems to search for instance and not equality
+            KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
+
+        shortest_collision_item = None
         shortest_distance = KDS.Math.MAXVALUE
 
         for item in Item_list:
-            if collidingRect.colliderect(item.rect):
-                collision = True
+            if item.rect.colliderect(collidingRect):
                 distance = KDS.Math.getDistance(item.rect.midbottom, collidingRect.midbottom)
                 if distance < shortest_distance:
-                    shortest_item = item
+                    shortest_collision_item = item
                     shortest_distance = distance
 
-                if not functionKey:
-                    continue
+        Item.tipItem = shortest_collision_item
+        if shortest_collision_item == None:
+            return
+        if KDS.Keys.functionKey.pressed:
+            interactionLogic(shortest_collision_item)
 
-                if item.serialNumber not in Item.inventoryDoubles:
-                    if inventory.storage[inventory.SIndex] == KDS.Inventory.EMPTYSLOT:
-                        if not item.pickup():
-                            inventory.storage[inventory.SIndex] = item
-                            KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
-                        Item_list.remove(item) # Remove seems to search for instance and not equality
-                        showItemTip = False
-                    elif item.serialNumber not in Item.inventoryItems:
-                        try:
-                            item.pickup()
-                            Item_list.remove(item)
-                            showItemTip = False
-                        except Exception as e:
-                            KDS.Logging.AutoError(f"An error occured while trying to pick up a non-inventory item. Details below:\n{e}")
-                else:
-                    if inventory.SIndex < inventory.size - 1:
-                        if inventory.storage[inventory.SIndex] == KDS.Inventory.EMPTYSLOT and inventory.storage[inventory.SIndex + 1] == KDS.Inventory.EMPTYSLOT:
-                            item.pickup()
-                            inventory.storage[inventory.SIndex] = item
-                            inventory.storage[inventory.SIndex + 1] = KDS.Inventory.DOUBLEITEM
-                            Item_list.remove(item)
-                            showItemTip = False
+    @staticmethod
+    def modDroppedPropertiesAndAddToList(Item_list: List[Item], item: Item, player: PlayerClass):
+        item.rect.center = player.rect.center
+        item.physics = True
+        item.vertical_momentum = player.vertical_momentum
+        item.horizontal_momentum = player.movement[0]
+        Item_list.append(item)
 
-        Item.tipItem = shortest_item if collision and showItemTip else None
-
-    def pickup(self):
-        return False # Seems to return False if we want to put in inventory
+    def pickup(self) -> None:
+        pass
 
     def use(self):
         return self.texture
@@ -237,13 +246,13 @@ class Weapon(Item):
             return Weapon.WeaponHolderData(player.rect, player.direction)
 
         @staticmethod
-        def fromEntity(entity: KDS.Teachers.Teacher) -> Weapon.WeaponHolderData:
+        def fromEntity(entity: Union[KDS.Teachers.Teacher, KDS.NPC.DoorGuardNPC]) -> Weapon.WeaponHolderData:
             return Weapon.WeaponHolderData(entity.rect, entity.direction, entity.weaponData)
 
     data: Dict[Type[Weapon], Weapon.WeaponData] = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface) -> None:
-        super().__init__(position, serialNumber, texture=texture)
+    def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
+        super().__init__(position, serialNumber)
 
     #                                                                  ↓  float to pass infinite through
     def internalInit(self, repeat_rate: int, defaultAmmo: Union[int, float], shootTexture: Optional[Union[pygame.Surface, KDS.Animator.Animation]], shootSound: Optional[pygame.mixer.Sound], stopSound: bool = False, allowHold: bool = False) -> None:
@@ -296,26 +305,30 @@ class Weapon(Item):
         Weapon.data[type(self)].counter += 1
         return self.texture
 
-    def pickup(self) -> bool:
+    def pickup(self) -> None:
         Weapon.data[type(self)].counter = self.repeat_rate + 1
         if isinstance(self.f_texture, KDS.Animator.Animation):
             self.f_texture.tick = 0
-        return super().pickup()
+        KDS.Missions.Listeners.AnyWeaponPickup.Trigger()
+        return None
 
     def getAmmo(self) -> Union[int, float]:
         return Weapon.data[type(self)].ammo
 
     @staticmethod
     def addAmmo(_type: Type[Weapon], amount: Union[int, float]) -> None:
-        Weapon.data[_type].ammo += amount
+        if _type in Weapon.data:
+            Weapon.data[_type].ammo += amount
+        else:
+            KDS.Logging.warning("Adding ammo to a weapon that does not exist in this level.", True, True)
 
     @staticmethod
     def reset() -> None:
         Weapon.data.clear()
 
 class Ammo(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int, texture: pygame.Surface):
-        super().__init__(position, serialNumber, texture=texture)
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
 
     def internalInit(self, _type: Type[Weapon], addAmmo: int, addScore: int, sound: pygame.mixer.Sound):
         self.sound = sound
@@ -328,8 +341,7 @@ class Ammo(Item):
             self.pickup()
         return self.texture
 
-    def pickup(self):
+    def pickup(self) -> None:
         KDS.Scores.score += self.score
         KDS.Audio.PlaySound(self.sound)
         Weapon.data[self.type].ammo += self.add
-        return True

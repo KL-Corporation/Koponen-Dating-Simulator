@@ -34,7 +34,7 @@
         "supportsInventory": false,
         "isContraband": false
     },
-    "iPuhelin™": {
+    "iPuhelin": {
         "serialNumber": 6,
         "path": "iPuhelin.png",
         "doubleSize": false,
@@ -129,7 +129,7 @@
         "serialNumber": 19,
         "path": "ss_bonuscard.png",
         "doubleSize": false,
-        "supportsInventory": false,
+        "supportsInventory": true,
         "isContraband": false
     },
     "Turboneedle": {
@@ -248,7 +248,7 @@
         "serialNumber": 36,
         "path": "walkie_talkie.png",
         "doubleSize": false,
-        "supportsInventory": false,
+        "supportsInventory": true,
         "isContraband": false
     },
     "Bucket of Blood": {
@@ -257,5 +257,26 @@
         "doubleSize": false,
         "supportsInventory": true,
         "isContraband": true
+    },
+    "Hotel Keycard": {
+        "serialNumber": 38,
+        "path": "hotel_keycard.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Survey Answers": {
+        "serialNumber": 39,
+        "path": "misc_paper.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
+    },
+    "Euro": {
+        "serialNumber": 40,
+        "path": "euro.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": false
     }
 }

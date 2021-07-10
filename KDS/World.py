@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
 
 import pygame
 from pygame.locals import *
@@ -24,7 +24,7 @@ import KDS.Debug
 
 import dataclasses
 
-from enum import auto, IntFlag
+from enum import IntEnum, auto, IntFlag
 
 pygame.init()
 pygame.key.stop_text_input()
@@ -199,18 +199,48 @@ class Lighting:
                 color (int): A Correlated Color Temperature (in Kelvin) which will determine the light's color. Is clamped to the range [1000, 40000].
             """
             self.surf = shape
-            if not positionFromCenter: self.position = position
-            else: self.position = (position[0] - shape.get_width() // 2, position[1] - shape.get_height() // 2)
+            if not positionFromCenter:
+                self.position = position
+            else:
+                self.position = (position[0] - shape.get_width() // 2, position[1] - shape.get_height() // 2)
 
     class Particle:
+        class UpdateAction(IntEnum):
+            KillParticle = auto()
+            NoLight = auto()
+            Error = auto()
+
         def __init__(self, position, size):
             self.rect = pygame.Rect(position[0], position[1], size, size)
             self.size = size
             self.pos = position
 
-        def update(self, Surface, scroll):
+        def update(self, Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
+            return Lighting.Particle.UpdateAction.Error
 
-            return "null"
+    class WaterParticle(Particle):
+        def __init__(self, position: Tuple[int, int], size: int, speed: int, waitTicks: int, tileListInstance: List[List[List[KDS.Build.Tile]]], color: Tuple[float, float, float] = (0, 180, 0)):
+            super().__init__(position, size)
+            self.speed = speed
+            self.mover = EntityMover()
+            self.startY = self.rect.y
+            self.wait = waitTicks
+            self.tilesInstance = tileListInstance
+            self.bsurf = Lighting.circle_surface(size, color)
+
+        def update(self, Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
+            self.wait = max(self.wait - 1, 0)
+            if self.wait == 0:
+                collisions = self.mover.move(self.rect, (0, self.speed), self.tilesInstance)
+                if collisions.bottom:
+                    return Lighting.Particle.UpdateAction.KillParticle
+                if self.startY + 1000 < self.rect.y:
+                    return Lighting.Particle.UpdateAction.KillParticle
+
+            self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
+            Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+            return Lighting.Particle.UpdateAction.NoLight
 
     class Fireparticle(Particle):
         def __init__(self, position, size, lifetime, speed, color = (220, 220, 4)):
@@ -221,12 +251,13 @@ class Lighting:
             self.bsurf = Lighting.circle_surface(size, color)
             self.tsurf = Lighting.circle_surface(size*2, color)
 
-        def update(self, Surface: pygame.Surface, scroll: List[int]):
+        def update(self, Surface: pygame.Surface, scroll: List[int]) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
             self.rect.y -= self.speed
             self.rect.x += random.randint(-1, 1)
             self.size -= self.dying_speed
 
-            if self.size < 0: return None
+            if self.size < 0:
+                return Lighting.Particle.UpdateAction.KillParticle
 
             self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size), round(self.size)))
             Surface.blit(self.bsurf, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
@@ -240,7 +271,7 @@ class Lighting:
             super().__init__(position, size)
             self.speed = speed
             self.size = size
-            self.lifetime =lifetime
+            self.lifetime = lifetime
             self.color = color
             self.direction = direction
             self.slope = slope
@@ -252,13 +283,14 @@ class Lighting:
             self.tsurf = Lighting.circle_surface(size*2, color)
             self.tsurf.fill(color)
 
-        def update(self, Surface: pygame.Surface, scroll):
+        def update(self, Surface: pygame.Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
             self.relativeX += self.direction * self.speed
             self.relativeY = self.relativeX * self.slope
             self.rect.x = self.pos[0] + round(self.relativeX)
             self.rect.y = self.pos[1] + round(self.relativeY)
             self.size -= self.dying_speed
-            if self.size < 0: return None
+            if self.size < 0:
+                return Lighting.Particle.UpdateAction.KillParticle
 
             self.bsurf = pygame.transform.scale(self.bsurf, (round(self.size/2), round(self.size*2)))
             Surface.blit(self.bsurf, (self.rect.centerx - self.bsurf.get_width()/2 - scroll[0], self.rect.centery - self.bsurf.get_height()/2 - scroll[1]))
@@ -287,6 +319,7 @@ class Bullet:
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
         if self.texture != None:
+            assert self.texture_size != None
             Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
             #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
         if KDS.Debug.Enabled:
@@ -311,7 +344,7 @@ class Bullet:
                         return "wall", player_health
 
                 for target in targets:
-                    if self.rect.colliderect(target.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
+                    if self.rect.colliderect(target.rect) and target.health > 0 and target.enabled:
                         target.health -= self.damage
                         Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
                         return "wall", player_health
@@ -338,7 +371,7 @@ class Bullet:
                     return "wall", player_health
 
             for target in targets:
-                if target.rect.colliderect(self.rect) and target.health > 0 and getattr(target, "enabled", None) != False:
+                if target.rect.colliderect(self.rect) and target.health > 0 and target.enabled:
                     if isinstance(target, KDS.AI.HostileEnemy):
                         target.sleep = False
                     target.health -= self.damage
@@ -436,6 +469,14 @@ class Dark:
     _defaultEnabled: bool = False
     _defaultDarknessStrength: int = -1
 
+    class Disco:
+        enabled: bool = False
+        colors: Tuple[Tuple[int, int, int], ...] = ((255, 192, 192), (192, 255, 192), (192, 192, 255), (255, 224, 192), (192, 255, 255))
+        colorAnimation: KDS.Animator.Color = KDS.Animator.Color(KDS.Colors.Black, KDS.Colors.Black, 30, KDS.Animator.AnimationType.EaseInOutQuad)
+        colorAnimation.tick = colorAnimation.ticks
+        colorIndex: int = 0
+        circleX: int = 0
+
     @staticmethod
     def Set(enabled: bool, strength: int):
         Dark.enabled = enabled
@@ -459,6 +500,8 @@ class Zone:
         self.rect = rect
         self.playerInside: bool = False
         self.staffOnly = bool("staffOnly" in properties and properties["staffOnly"] == True)
+        self.levelEnder = bool("levelEnder" in properties and properties["levelEnder"] == True)
+        self.disco = bool("disco" in properties and properties["disco"] == True)
         self.darkness: Optional[int] = None
         if "darkness" in properties:
             setDark = properties["darkness"]
@@ -470,12 +513,18 @@ class Zone:
             Dark.Set(True, self.darkness)
         if self.staffOnly:
             Zone.StaffOnlyCollisions += 1
+        if self.levelEnder:
+            KDS.Missions.Listeners.LevelEnder.Trigger()
+        if self.disco:
+            Dark.Disco.enabled = True
 
     def onExit(self):
         if self.darkness != None:
             Dark.Reset()
         if self.staffOnly:
             Zone.StaffOnlyCollisions -= 1
+        if self.disco:
+            Dark.Disco.enabled = False
 
     def update(self, playerRect: pygame.Rect):
         if self.rect.colliderect(playerRect):

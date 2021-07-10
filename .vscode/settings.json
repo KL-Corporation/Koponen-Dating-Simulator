@@ -1,0 +1,12 @@
+{
+    "python.linting.pylintArgs": [
+        "--unsafe-load-any-extension=y"
+    ],
+    "files.associations": {
+        "*.kdf": "json",
+        "settings.cfg": "json"
+    },
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportWildcardImportFromLibrary": "none"
+    }
+}

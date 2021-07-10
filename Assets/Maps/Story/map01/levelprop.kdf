@@ -1,0 +1,44 @@
+{
+    "Data": {
+        "TimeBonus": {
+            "end": 2,
+            "start": 1
+        }
+    },
+    "Entities": {
+        "Koponen": {
+            "startPos": [
+                3298,
+                5207
+            ],
+            "enabled": true,
+            "forceIdle": true,
+            "talk": true
+        },
+        "Player": {
+            "startPos": [
+                6607,
+                412
+            ],
+            "Inventory": {
+                "4": 6
+            },
+            "spawnInverted": true
+        }
+    },
+    "Rendering": {
+        "AmbientLight": {
+            "enabled": false,
+            "tint": [
+                0,
+                0,
+                0
+            ]
+        },
+        "Darkness": {
+            "enabled": false,
+            "playerLight": false,
+            "strength": 0
+        }
+    }
+}

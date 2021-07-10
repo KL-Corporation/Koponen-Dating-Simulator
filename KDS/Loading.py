@@ -9,6 +9,7 @@ import KDS.Colors
 import KDS.Convert
 import KDS.Debug
 import KDS.Math
+import KDS.Clock
 import KDS.Jobs
 
 import threading
@@ -30,7 +31,7 @@ class Circle:
     scaledLoadingBackground: pygame.Surface = pygame.Surface((0, 0))
 
     @staticmethod
-    def rendering(surface: pygame.Surface, clock: pygame.time.Clock, stop: Callable[[], bool]):
+    def rendering(surface: pygame.Surface, stop: Callable[[], bool]):
         angle = 0
         speed = -1
         surface_size = surface.get_size()
@@ -61,16 +62,15 @@ class Circle:
             ##### NEW CIRCLE #####
 
             surface.blit(crl, (surface_size[0] // 2 - crl.get_width() // 2 + circleOffset[0], crl.get_height() // 2 + circleOffset[1]))
-            angle += 4
-            while angle >= 360: angle -= 360
+            angle = (angle + 4) % 360
             if KDS.Debug.Enabled:
-                surface.blit(KDS.Debug.RenderData({"FPS": KDS.Math.RoundCustom(clock.get_fps(), 3, KDS.Math.MidpointRounding.AwayFromZero)}), (0, 0))
+                surface.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
-            clock.tick_busy_loop(60)
+            KDS.Clock.Tick()
             pygame.display.flip()
 
     @staticmethod
-    def Start(surface: pygame.Surface, clock: pygame.time.Clock):
+    def Start(surface: pygame.Surface):
         global circleMask
         if Circle.circleMask == None:
             circleMask = pygame.image.load("Assets/Textures/UI/loading_circle_mask.png").convert_alpha()
@@ -82,7 +82,7 @@ class Circle:
         surface.fill(Circle.loadingFill)
         surface.blit(Circle.scaledLoadingBackground, (surface_size[0] // 2 - Circle.scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - Circle.scaledLoadingBackground.get_height() // 2))
         pygame.display.flip()
-        Circle.handle = KDS.Jobs.Schedule(Circle.rendering, surface, clock, lambda: not Circle.running)
+        Circle.handle = KDS.Jobs.Schedule(Circle.rendering, surface, lambda: not Circle.running)
 
     @staticmethod
     def Stop():
@@ -94,7 +94,7 @@ class Story:
     handle = None
 
     @staticmethod
-    def rendering(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, clock: pygame.time.Clock, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
+    def rendering(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
         anim_lerp_x = KDS.Animator.Value(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
 
         savingText: pygame.Surface = normalFont.render("Saving...", True, KDS.Colors.White)
@@ -120,7 +120,7 @@ class Story:
                 else:
                     if anim_lerp_x.get_value() <= 0.0:
                         _break = True
-                clock.tick_busy_loop(60)
+                KDS.Clock.Tick()
 
         story_surf.fill(KDS.Colors.Black)
         story_surf.blit(map_name, (story_surf.get_width() // 2 - map_name.get_width() // 2, story_surf.get_height() // 2 - map_name.get_height() // 2))
@@ -134,8 +134,8 @@ class Story:
         KDS.Audio.Music.Unpause()
 
     @staticmethod
-    def Start(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, clock: pygame.time.Clock, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
-        Story.handle = KDS.Jobs.Schedule(Story.rendering, surface, oldSurf, map_name_str, clock, titleFont, normalFont)
+    def Start(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
+        Story.handle = KDS.Jobs.Schedule(Story.rendering, surface, oldSurf, map_name_str, titleFont, normalFont)
 
     @staticmethod
     def WaitForExit():
