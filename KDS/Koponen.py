@@ -141,8 +141,6 @@ def TriggerStoryEnding(koponen: KoponenEntity):
         return
 
     koponen.rect.topleft = (1700, 514)
-    assert KDS.ConfigManager.Save.Active != None, "How can I trigger story ending without any save loaded?"
-    KDS.Story.BadEndingTrigger = True
     Talk.lines.clear()
     Talk.scheduled.pop(0)
 

@@ -6937,7 +6937,7 @@
 "67-289":{"0":{"checkCollision":false}},
 "68-289":{"3":{"identifier":68,"interactable":false}},
 "69-289":{"0":{"checkCollision":false}},
-"70-289":{"3":{"identifier":69,"nice":true,"interactable":false}},
+"70-289":{"3":{"identifier":68,"interactable":false}},
 "71-289":{"0":{"checkCollision":false}},
 "72-289":{"3":{"identifier":70,"interactable":false}},
 "73-289":{"0":{"checkCollision":false},"2":{"listener":"Shoplifting","disableDamage":true}},

@@ -25,6 +25,10 @@ else:
 
 BadEndingTrigger: bool = False
 
+def badStoryEndingFunc():
+    global BadEndingTrigger
+    BadEndingTrigger = True
+
 class EndingType(IntEnum):
     Happy = auto()
     Sad = auto()
@@ -68,38 +72,19 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
     KDS.Audio.Music.Stop()
     return False
 
-def Tombstones(display: pygame.Surface) -> bool:
-    displaySize = display.get_size()
+def Tombstones(display: pygame.Surface):
+    image: pygame.Surface = pygame.image.load("Assets/Textures/UI/bad_ending.png").convert()
 
-    exitV = False
+    animA = KDS.Animator.Value(255.0, 0.0, 7 * 60)
+    blk = pygame.Surface(image.get_size())
 
-    def exitFunc():
-        nonlocal exitV
-        exitV = True
+    chnl = KDS.Audio.PlayFromFile("Assets/Audio/Music/creepy_music_box.ogg", clip_volume=0.5)
+    while chnl.get_busy():
+        blk.set_alpha(round(animA.update()))
+        pygame.event.get()
 
-    exitButton = KDS.UI.Button(pygame.Rect(displaySize[0] // 2 - 100, 25, 200, 50), exitFunc, "EXIT")
-    animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
-
-    KDS.Audio.PlayFromFile("Assets/Audio/Music/creepy_music_box.ogg")
-    while True:
-        display.fill(BackgroundColor)
-        c = False
-        mousePos = pygame.mouse.get_pos()
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                return True
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    return False
-            elif event.type == MOUSEBUTTONUP:
-                if event.button == 1:
-                    c = True
-
-        if exitV:
-            return False
-
-        display.blit(certificate, (displaySize[0] // 2 - certificateSize[0] // 2, animY.update()))
-        exitButton.update(display, mousePos, c)
+        display.blit(image, (0, 0))
+        display.blit(blk, (0, 0))
 
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))

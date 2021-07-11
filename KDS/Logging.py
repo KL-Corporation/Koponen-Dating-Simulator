@@ -30,7 +30,11 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
     logFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".log"))
     logFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
     while len(logFiles) > 4:
-        os.remove(os.path.join(LogPath, logFiles.pop(0)))
+        wholeLogPath = os.path.join(LogPath, logFiles.pop(0))
+        try:
+            os.remove(wholeLogPath)
+        except Exception:
+            print(f"Could not remove errorlog file: {wholeLogPath}")
 
     errorlogFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".errorlog"))
     errorlogFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
@@ -41,7 +45,10 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
             if len(f.read()) < 1:
                 rmErrorlog = True
         if rmErrorlog:
-            os.remove(wholeErrorlogPath)
+            try:
+                os.remove(wholeErrorlogPath)
+            except Exception:
+                print(f"Could not remove errorlog file: {wholeErrorlogPath}")
 
     logtime: str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     logFileName = os.path.join(LogPath, f"log_{logtime}.log")

@@ -58,6 +58,8 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
     KDS.Missions.Clear()
     KDS.Koponen.Talk.Conversation.clear()
     KDS.Koponen.requestReturnAlt = None
+    KDS.Missions.Listeners.TileFireCreated.OnTrigger -= KDS.Story.badStoryEndingFunc
+    KDS.Story.BadEndingTrigger = False
     if gamemode == Modes.Story:
         if index == 1:
             Presets.Tutorial()
@@ -268,6 +270,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
 
             KDS.Missions.InitialiseMission("the_last_straw", "Viimeinen Oljenkorsi")
             KDS.Missions.InitialiseTask("the_last_straw", "ignite", "Sytytä tuli pääkäytävään", (KDS.Missions.Listeners.TileFireCreated, 1.0))
+            KDS.Missions.Listeners.TileFireCreated.OnTrigger += KDS.Story.badStoryEndingFunc
 
             KDS.Missions.InitialiseMission("fire", "TULTA!")
             KDS.Missions.InitialiseTask("fire", "tell", "Kerro Koposelle tulesta", (KDS.Missions.Listeners.KoponenTalkEmbed0, 1.0))

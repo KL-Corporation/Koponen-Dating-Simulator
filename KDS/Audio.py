@@ -135,4 +135,6 @@ def PlayFromFile(path: str, volume: float = -1.0, clip_volume: float = 1.0, loop
     sound = SoundMixer.Sound(path)
     if clip_volume != 1.0:
         sound.set_volume(clip_volume)
-    return PlaySound(sound, volume, loops, fade_ms)
+    output = PlaySound(sound, volume, loops, fade_ms)
+    del sound
+    return output

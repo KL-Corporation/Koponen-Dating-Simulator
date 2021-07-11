@@ -3538,7 +3538,6 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.World.Zone.StaffOnlyCollisions = 0
     BaseTeleport.teleportDatas = {}
     ScreenEffects.Clear()
-    KDS.Story.BadEndingTrigger = False
     #endregion
 
     #region Ammo Resetting
@@ -3964,6 +3963,11 @@ def main_menu():
                     if KDS.Debug.IsVSCodeDebugging():
                         KDS.Audio.Music.Pause()
                         KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
+                        KDS.Audio.Music.Unpause()
+                elif event.key == K_F6:
+                    if KDS.Debug.IsVSCodeDebugging():
+                        KDS.Audio.Music.Pause()
+                        KDS.Story.Tombstones(display)
                         KDS.Audio.Music.Unpause()
             elif event.type == QUIT:
                 KDS_Quit()
