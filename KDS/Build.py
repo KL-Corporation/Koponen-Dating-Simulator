@@ -246,7 +246,7 @@ class Weapon(Item):
             return Weapon.WeaponHolderData(player.rect, player.direction)
 
         @staticmethod
-        def fromEntity(entity: Union[KDS.Teachers.Teacher, KDS.NPC.DoorGuardNPC]) -> Weapon.WeaponHolderData:
+        def fromEntity(entity: Union[KDS.Teachers.Teacher, KDS.NPC.DoorGuardNPC, KDS.NPC.Room309NPC]) -> Weapon.WeaponHolderData:
             return Weapon.WeaponHolderData(entity.rect, entity.direction, entity.weaponData)
 
     data: Dict[Type[Weapon], Weapon.WeaponData] = {}

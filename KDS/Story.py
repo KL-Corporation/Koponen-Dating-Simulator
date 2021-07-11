@@ -23,11 +23,16 @@ if TYPE_CHECKING:
 else:
     PlayerClass = None
 
+BadEndingTrigger: bool = False
+
 class EndingType(IntEnum):
     Happy = auto()
     Sad = auto()
 
 def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Returns True if application should quit.
+    if endingType == EndingType.Sad:
+        Tombstones(display)
+
     md = MarkdownRenderer()
     md.set_markdown("Assets/Data/credits.md", extensions=['nl2br'])
 
@@ -56,8 +61,6 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
             if waitTicks > 60 * 3:
                 if endingType == EndingType.Happy:
                     KDS.School.Certificate(display, BackgroundColor=KDS.Colors.DefaultBackground)
-                else:
-                    Tombstones(display, BackgroundColor=KDS.Colors.DefaultBackground)
                 running = False
                 pygame.event.clear()
         pygame.display.flip()
@@ -65,11 +68,8 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
     KDS.Audio.Music.Stop()
     return False
 
-def Tombstones(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] = None) -> bool:
+def Tombstones(display: pygame.Surface) -> bool:
     displaySize = display.get_size()
-
-    if BackgroundColor == None:
-        BackgroundColor = KDS.Colors.Black
 
     exitV = False
 
@@ -80,7 +80,7 @@ def Tombstones(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] = 
     exitButton = KDS.UI.Button(pygame.Rect(displaySize[0] // 2 - 100, 25, 200, 50), exitFunc, "EXIT")
     animY = KDS.Animator.Value(displaySize[1], displaySize[1] - certificateSize[1], 30, KDS.Animator.AnimationType.EaseOutExpo, KDS.Animator.OnAnimationEnd.Stop)
 
-    KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
+    KDS.Audio.PlayFromFile("Assets/Audio/Music/creepy_music_box.ogg")
     while True:
         display.fill(BackgroundColor)
         c = False

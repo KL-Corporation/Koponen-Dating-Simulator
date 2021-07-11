@@ -202,6 +202,7 @@ Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", 
 Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
 Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa")
 Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
+Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC")
 #endregion
 
 ### GLOBAL VARIABLES ###

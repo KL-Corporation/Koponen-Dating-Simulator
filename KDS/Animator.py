@@ -38,14 +38,15 @@ class Animation:
         self.PingPong = False
         self.done = False
 
-        KDS.Logging.debug(f"Initialising {number_of_images} Animation Images...")
+        KDS.Logging.debug(f"Initialising {number_of_images} animation images...")
         iterRange = (0, number_of_images, 1) if not load_in_reverse else (number_of_images - 1, -1, -1)
         for i in range(*iterRange):
             converted_animation_name = animation_name + "_" + str(i) + filetype
             path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
+            KDS.Logging.debug(f"Loading animation images from: {path}")
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
-            KDS.Logging.debug(f"Initialised Animation Image: {animation_dir}/{converted_animation_name}")
+            KDS.Logging.debug(f"Initialised animation image: {animation_dir}/{converted_animation_name}")
 
             for _ in range(duration):
                 self.images.append(image)
@@ -74,6 +75,7 @@ class Animation:
                     self.tick = 0
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = True
+                    self.tick = self.ticks
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
         else:
@@ -86,6 +88,7 @@ class Animation:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
+                    self.tick = 0
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
         return self.images[self.tick]

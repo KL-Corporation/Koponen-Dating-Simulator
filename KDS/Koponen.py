@@ -25,6 +25,7 @@ import KDS.World
 import KDS.Debug
 import KDS.Clock
 import KDS.Keys
+import KDS.Story
 import KDS.Build
 
 import re
@@ -141,7 +142,7 @@ def TriggerStoryEnding(koponen: KoponenEntity):
 
     koponen.rect.topleft = (1700, 514)
     assert KDS.ConfigManager.Save.Active != None, "How can I trigger story ending without any save loaded?"
-    KDS.ConfigManager.Save.Active.Story.badEndingTrigger = True
+    KDS.Story.BadEndingTrigger = True
     Talk.lines.clear()
     Talk.scheduled.pop(0)
 

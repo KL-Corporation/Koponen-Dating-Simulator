@@ -13,6 +13,7 @@ import KDS.Keys
 import KDS.Jobs
 import KDS.Convert
 import KDS.Debug
+import KDS.AI
 import KDS.Missions
 import KDS.Inventory
 
@@ -220,6 +221,61 @@ class DoorGuardNPC(NPC):
 
     def customRenderer(self) -> Tuple[pygame.Surface, Tuple[int, int]]:
         return pygame.transform.flip(self.animation.update(), self.direction, False), (self.rect.x - (47 if self.direction and self.animation.active_key == "death" else 0), self.rect.y)
+
+class Room309NPC(NPC):
+    instanceIndex: int = 0
+
+    def __init__(self, pos: Tuple[int, int]) -> None:
+        rect = pygame.Rect(pos[0], pos[1] - 34, 22, 68)
+        animations = os.listdir("Assets/Textures/NPC/Room309")
+        Room309NPC.instanceIndex = (Room309NPC.instanceIndex + 1) % len(animations)
+        idle_anim = KDS.Animator.Animation("idle", 3, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.PingPong, animation_dir=f"NPC/Room309/{animations[Room309NPC.instanceIndex]}")
+        self.internalInit(rect, Type.Idle, idle_anim, idle_anim, idle_anim, idle_anim, 10000, 0, 0)
+        self.noPanick = True
+        self.pistolDrawTick: int = 0
+        self.pistolDrawTime: int = random.randint(120, 180)
+        self.renderPistol: bool = False
+
+        self.pistolShootTick: int = 0
+        self.pistolShootTime: int = random.randint(180, 240)
+        self.shootPistol: bool = False
+
+        weapon = KDS.Build.Item.serialNumbers[10]((0, 0), 10)
+        assert isinstance(weapon, KDS.Build.Weapon), "Door Guard weapon should be a pistol...?"
+        self.weapon = weapon
+        self.weaponData = self.weapon.CreateWeaponData()
+        self.weaponData.ammo = KDS.Math.INFINITY
+        self.weaponData.counter = 0
+
+    def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
+        if KDS.World.Zone.StaffOnlyCollisions > 0:
+            if self.pistolDrawTick < self.pistolDrawTime:
+                self.pistolDrawTick += 1
+            else:
+                self.renderPistol = True
+
+                if self.pistolShootTick < self.pistolShootTime:
+                    self.pistolShootTick += 1
+                else:
+                    self.shootPistol = True
+
+        output = super().update(surface, scroll, tiles, items, player)
+
+        distance = self.rect.centerx - player.rect.centerx
+        targetDirection = distance >= 0
+        if targetDirection != self.direction:
+            self.direction = not self.direction
+
+        if self.renderPistol:
+            KDS.Inventory.Inventory.renderItemTexture(self.weapon.texture, self.rect, self.direction, surface, scroll)
+
+        _lineOfSight, _ = KDS.AI.searchRect(player.rect, pygame.Rect(self.rect.left, self.rect.top - 10, self.rect.width, self.rect.height),
+                                                self.direction, surface, scroll, tiles, maxSearchUnits=10)
+        if self.shootPistol and _lineOfSight:
+            self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
+            self.weaponData.counter += random.randint(0, 1)
+
+        return output
 
 # region OLD NPC CODE
 #

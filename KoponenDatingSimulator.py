@@ -2976,6 +2976,7 @@ Entity.serialNumbers = {
     1: KDS.Teachers.LaaTo,
     2: KDS.Teachers.KuuMa,
     3: KDS.Teachers.Test,
+    309: KDS.NPC.Room309NPC,
     999: KDS.NPC.StudentNPC
 }
 KDS.Missions.Listeners.TeacherAgro.OnTrigger += Entity._addAgro
@@ -3537,6 +3538,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.World.Zone.StaffOnlyCollisions = 0
     BaseTeleport.teleportDatas = {}
     ScreenEffects.Clear()
+    KDS.Story.BadEndingTrigger = False
     #endregion
 
     #region Ammo Resetting
@@ -4614,7 +4616,7 @@ while main_running:
 #region Conditional Events
     if Player.deathWait > 240:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-            if KDS.ConfigManager.Save.Active != None and KDS.ConfigManager.Save.Active.Story.badEndingTrigger:
+            if KDS.ConfigManager.Save.Active != None and KDS.Story.BadEndingTrigger:
                 KDS.Scores.ScoreCounter.Stop()
                 KDS.ConfigManager.Save.Active.save()
                 KDS.ConfigManager.Save.Active = None
