@@ -3,17 +3,26 @@
         "TimeBonus": {
             "end": 600,
             "start": 300
-        }
+        },
+        "infiniteAmmo": false
     },
     "Entities": {
         "Koponen": {
             "enabled": true,
+            "forceIdle": false,
+            "forceTalk": false,
+            "listeners": [],
+            "lscript": [],
             "startPos": [
                 2040,
                 200
-            ]
+            ],
+            "startWithTalk": false,
+            "talk": false
         },
         "Player": {
+            "Inventory": {},
+            "spawnInverted": false,
             "startPos": [
                 200,
                 100
@@ -33,6 +42,9 @@
             "enabled": true,
             "playerLight": true,
             "strength": 200
+        },
+        "Indicator": {
+            "enabled": true
         }
     }
 }
