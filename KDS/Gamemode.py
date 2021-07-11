@@ -122,7 +122,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Missions.InitialiseKoponenTask("laittomuuksia", "return", "Palauta se Koposelle", 27)
 
             KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen, True)
-            KDS.Koponen.Talk.Conversation.schedule("""Jatketaanpas sitten tuntia…
+            KDS.Koponen.Talk.Conversation.schedule("""Jatketaanpas sitten tuntia...
 Ensimmäisen asteen yhtälössä esiintyy muuttujan ensimmäinen potenssi, mutta ei korkeampia potensseja. Ensimmäisen asteen yhtälöitä ovat esimerkiksi
 2x − 1 = 3 ja
 4x + 6 = -x – 11

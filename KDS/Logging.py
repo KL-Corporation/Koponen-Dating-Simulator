@@ -95,7 +95,7 @@ I=====[ DEBUG INFO ]=====I
     [System Info]
     - Architecture: {platform_info.machine}
     - Processor (Cores: {psutil.cpu_count(logical=False)}, Threads: {psutil.cpu_count(logical=True)}): {platform_info.processor}
-    - RAM: {memory_info.available / 1_000_000_000} GB Available ({memory_info.total / 1_000_000_000} GB Total)
+    - RAM: {memory_info.available / 1_073_741_824} GB Available ({memory_info.total / 1_073_741_824} GB Total)
 
     [Hardware Acceleration]
     - Hardware Blitting: {bool(display_info.blit_hw)}

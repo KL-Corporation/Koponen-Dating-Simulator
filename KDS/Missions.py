@@ -196,7 +196,7 @@ class StudentTask(Task):
         self.Progress(self.interacted / self.interactCount)
         if self.interacted >= self.interactCount and not self.itemGiven:
             self.itemGiven = True
-            return KDS.Build.Item(student.rect.center, self.item)
+            return KDS.Build.Item.serialNumbers[self.item](student.rect.center, self.item)
         return None
 
 class Mission:
