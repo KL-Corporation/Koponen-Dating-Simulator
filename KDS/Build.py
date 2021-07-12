@@ -331,10 +331,10 @@ class Ammo(Item):
         super().__init__(position, serialNumber)
 
     def internalInit(self, _type: Type[Weapon], addAmmo: int, addScore: int, sound: pygame.mixer.Sound):
-        self.sound = sound
-        self.type = _type
-        self.add = addAmmo
-        self.score = addScore
+        self.sound: pygame.mixer.Sound = sound
+        self.type: Type[Weapon] = _type
+        self.add: int = addAmmo
+        self.score: int = addScore
 
     def use(self):
         if KDS.Keys.mainKey.onDown:
@@ -344,4 +344,4 @@ class Ammo(Item):
     def pickup(self) -> None:
         KDS.Scores.score += self.score
         KDS.Audio.PlaySound(self.sound)
-        Weapon.data[self.type].ammo += self.add
+        Weapon.addAmmo(self.type, self.add)

@@ -22,6 +22,7 @@ import KDS.Linq
 import KDS.AI
 import KDS.Inventory
 import KDS.World
+import KDS.Scores
 import KDS.Debug
 import KDS.Clock
 import KDS.Keys
@@ -130,6 +131,7 @@ class Mission:
                     Mission.Task = None
                     KDS.Missions.Listeners.KoponenReturnMission.Trigger()
                     Talk.scheduled.pop(0)
+                    KDS.Scores.koponen_happiness += 10
                     return
             # callVariation tarkoittaa esimerkiksi sitä, että sana "juusto" on taivutettu sanaksi "juustoa" tai sana "terotin" on taivutettu sanaksi "terotinta".
 #            Talk.Conversation.schedulePriority(f"Olen pahoillani, en löydä {Mission.Task.callVariation} pöksyistäsi.")

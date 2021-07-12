@@ -1,21 +1,21 @@
 {
     "Data": {
         "TimeBonus": {
-            "end": 220,
-            "start": 100
+            "end": 650,
+            "start": 360
         }
     },
     "Entities": {
         "Koponen": {
             "startPos": [
                 200,
-                200
+                210
             ]
         },
         "Player": {
             "startPos": [
                 408,
-                272
+                222
             ]
         }
     },

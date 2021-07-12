@@ -970,15 +970,18 @@ class DecorativeHead(KDS.Build.Tile):
                 if KDS.Keys.functionKey.pressed and not self.praying:
                     KDS.Audio.PlaySound(pray_sound)
                     self.praying = True
+                elif not KDS.Keys.functionKey.pressed and self.praying:
+                    pray_sound.stop()
+                    self.praying = False
                 if KDS.Keys.functionKey.held:
                     self.prayed = True
-                    self.justPrayed = True
                     KDS.Audio.PlaySound(decorative_head_wakeup_sound)
             else:
                 if not KDS.Keys.functionKey.pressed:
                     pray_sound.stop()
                     self.praying = False
-                if Player.health > 0: Player.health = min(Player.health + 0.01, 100)
+                if Player.health > 0:
+                    Player.health = min(Player.health + 0.01, 100)
         else:
             pray_sound.stop()
             self.praying = False
@@ -3000,12 +3003,14 @@ class PlayerClass:
 
         self.reset()
 
-    def reset(self, clear_inventory: bool = True):
+    def reset(self, clear_inventory: bool = True, clear_keys: bool = True):
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
         self._health: float = 100.0
         self.stamina: float = 100.0
-        if clear_inventory: self.inventory = KDS.Inventory.Inventory(5)
-        self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
+        if clear_inventory:
+            self.inventory = KDS.Inventory.Inventory(5)
+        if clear_keys:
+            self.keys: Dict[str, bool] = { "red": False, "green": False, "blue": False }
         self.farting: bool = False
         self.fart_counter: int = 0
         self.light: bool = False
@@ -3036,12 +3041,13 @@ class PlayerClass:
 
     @health.setter
     def health(self, value: float):
-        if value < self._health and value > 0:
+        if value < self._health and value > 0 and not KDS.Math.IsPositiveInfinity(self._health):
             KDS.Audio.PlaySound(hurt_sound)
         self._health = max(value, 0)
 
     def update(self):
-        if self.infiniteHealth: self.health = KDS.Math.INFINITY
+        if self.infiniteHealth:
+            self.health = KDS.Math.INFINITY
 
         #region Movement
         #region Functions
@@ -3647,11 +3653,14 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
 
 def respawn_function():
     global level_finished
-    Player.reset(clear_inventory=False)
+    Player.reset(clear_inventory=False, clear_keys=False)
     level_finished = False
     if WorldData.PlayerStartPos[0] == -1 and WorldData.PlayerStartPos[1] == -1:
         KDS.Logging.AutoError("PlayerStartPos is (-1, -1)!")
-    Player.rect.topleft = WorldData.PlayerStartPos if RespawnAnchor.active == None else RespawnAnchor.active.rect.bottomleft
+    if RespawnAnchor.active == None:
+        Player.rect.topleft = WorldData.PlayerStartPos
+    else:
+        Player.rect.midbottom = RespawnAnchor.active.rect.midbottom
     KDS.Audio.Music.Play()
 #endregion
 #region Menus
