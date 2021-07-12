@@ -3594,7 +3594,10 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
                     tmp_split = t.split(":")
                     for i in range(len(tmp_split)):
                         tmp_split[i] = tmp_split[i].strip()
-                    map_names[int(tmp_split[0])] = tmp_split[1]
+                    if len(tmp_split) == 2:
+                        map_names[int(tmp_split[0])] = tmp_split[1]
+                    else:
+                        KDS.Logging.AutoError(f"Map name \"{t}\" is broken!")
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
     load_map_names()
@@ -3832,7 +3835,10 @@ def main_menu():
                     tmp_split = t.split(":")
                     for i in range(len(tmp_split)):
                         tmp_split[i] = tmp_split[i].strip()
-                    map_names[int(tmp_split[0])] = tmp_split[1]
+                    if len(tmp_split) == 2:
+                        map_names[int(tmp_split[0])] = tmp_split[1]
+                    else:
+                        KDS.Logging.AutoError(f"Map name \"{t}\" is broken!")
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
         try:
@@ -3840,7 +3846,8 @@ def main_menu():
                 custom_maps_names[i + 1] = p
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
-    if len(map_names) < 1: load_map_names()
+    if len(map_names) < 1:
+        load_map_names()
 
     class level_pick:
         class direction:
