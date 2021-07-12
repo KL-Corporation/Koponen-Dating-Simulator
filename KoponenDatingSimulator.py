@@ -16,6 +16,7 @@ from enum import IntEnum, IntFlag, auto
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 
 import pygame
+import pygame.mixer
 from pygame.locals import *
 
 import KDS.AI
@@ -578,7 +579,7 @@ for d in itemData.values():
     i_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Items/{d["path"]}""").convert()
     i_textures[d_srl].set_colorkey(KDS.Colors.White)
 
-path_sounds: Dict[str, pygame.mixer.Sound] = {}
+path_sounds: Dict[str, List[pygame.mixer.Sound]] = {}
 default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
 sounds = []
 for p in default_paths:
@@ -4394,7 +4395,7 @@ while main_running:
         Koponen.update(Tiles, display, KDS_Quit)
     #endregion
     KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll)
-    Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
+    Player.inventory.useItem(Player.rect, Player.direction, screen, scroll, renderItem=Player.visible)
     Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
 
     for Zone in Zones:

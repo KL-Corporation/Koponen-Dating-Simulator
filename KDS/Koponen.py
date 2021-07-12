@@ -320,6 +320,9 @@ class Talk:
 
     @staticmethod
     def start(display: pygame.Surface, player_inventory: KDS.Inventory.Inventory, KDS_Quit: Callable, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
+        originalMusicVolume = KDS.Audio.MusicVolume
+        KDS.Audio.Music.SetVolume(originalMusicVolume / 4)
+
         global requestReturnAlt
         pygame.mouse.set_visible(True)
         Talk.storyTrigger = False
@@ -376,6 +379,7 @@ class Talk:
             KDS.Clock.Tick()
 
         pygame.mouse.set_visible(False)
+        KDS.Audio.Music.SetVolume(originalMusicVolume)
         return Talk.storyTrigger
 
 class KoponenEntity:

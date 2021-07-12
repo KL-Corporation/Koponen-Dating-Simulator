@@ -272,7 +272,7 @@ def Exam(showtitle = True):
             # Ethän vielä poista noita stamp rivejä, jos satut tänne tekemään jotain
             # Hups... T: Niko
             timer2 = Timer(7.5)
-            timer3 = Timer(6)
+            timer3 = Timer(8.5)
             timer2.start()
             timer_finished = False
 
@@ -296,14 +296,13 @@ def Exam(showtitle = True):
                         grade_slope = (10 - 4) / (1 - passLine)
                         f_score = 4 + grade_slope * (score - passLine)
                         score_formatted = scoreRational(f_score)
-                        exam_score = score_formatted.value
+                    exam_score = score_formatted.value
 
                     scoreSurf = gradeFont.render(f"""{score_formatted.formatted_value if score_formatted != None else "<score_error>"}""", False, KDS.Colors.Red)
 
                     gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
-                    if score < passLine: KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg")
-                    else: KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_passed.ogg")
+                    KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg" if score < passLine else "Assets/Audio/effects/exam_passed.ogg")
 
                 Display.blit(oldSurf, (0, 0))
 

@@ -4,6 +4,7 @@ import random
 from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
 
 import pygame
+import pygame.mixer
 from pygame.locals import *
 
 import KDS.Animator
@@ -79,7 +80,7 @@ class CollisionDirection(IntFlag): # Direction relative to tile
     All = 15
 
 class EntityMover:
-    def __init__(self, w_sounds: Optional[Dict[str, Sequence[pygame.mixer.Sound]]] = None) -> None:
+    def __init__(self, w_sounds: Optional[Dict[str, List[pygame.mixer.Sound]]] = None) -> None:
         self.walkSounds = w_sounds
 
     def move(self, rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], playWalkSound: bool = False) -> Collisions:

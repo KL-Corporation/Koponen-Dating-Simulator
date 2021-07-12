@@ -110,6 +110,7 @@ class WalkieTalkieEffect:
             WalkieTalkieEffect.phaseOneChannel = None
             WalkieTalkieEffect.blackSurf = pygame.Surface(display.get_size())
             player.lockMovement = True
+            KDS.Audio.Music.Fadeout(1.0)
 
         def phaseZero() -> bool:
             if WalkieTalkieEffect.phaseZeroChannel == None:
@@ -134,6 +135,7 @@ class WalkieTalkieEffect:
                     KDS.Logging.AutoError("Walkie talkie not found!")
 
                 KDS.World.Dark.Configure(True, 224)
+                player.health = 15.0
 
             display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
 

@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 import pygame
+import pygame.mixer
 import KDS.ConfigManager
 import KDS.Events
 import KDS.Logging
@@ -9,6 +10,9 @@ MUSICENDEVENT = pygame.event.custom_type()
 SoundMixer = pygame.mixer
 MusicMixer = pygame.mixer.music
 
+MusicVolume: float
+EffectVolume: float
+EffectChannels: List[SoundMixer.Channel]
 def init():
     global MusicVolume, EffectVolume, EffectChannels
     pygame.mixer.init()
@@ -42,6 +46,11 @@ class Music:
     def Stop():
         global MusicMixer, MusicVolume
         MusicMixer.stop()
+
+    @staticmethod
+    def Fadeout(seconds: float):
+        global MusicMixer
+        MusicMixer.fadeout(round(seconds * 1000.0))
 
     @staticmethod
     def Pause():
@@ -91,7 +100,7 @@ class Music:
 
 def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    MusicMixer.quit()
+    SoundMixer.quit()
 
 def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels

@@ -2624,7 +2624,7 @@
 "232-43":{"0":{"checkCollision":false}},
 "233-43":{"0":{"checkCollision":false}},
 "234-43":{"0":{"checkCollision":false}},
-"235-43":{"3":{"identifier":1593}},
+"235-43":{"3":{"identifier":1593,"interactable":false}},
 "237-43":{"0":{"checkCollision":false}},
 "238-43":{"0":{"checkCollision":false},"9":{"overlay":"0112"}},
 "43-44":{"0":{"checkCollision":false}},
