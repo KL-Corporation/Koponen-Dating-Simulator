@@ -3370,10 +3370,14 @@ def console(oldSurf: pygame.Surface):
                     KDS.Logging.info("Mission finish issued through console.", True)
                     KDS.Missions.Finish()
                 elif len(command_list) > 1 and command_list[1] == "active_mission":
-                    KDS.Console.Feed.append(f"Active mission \"{KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission).text}\" finished.")
-                    KDS.Logging.info("Current mission finish issued through console.", True)
-                    for tmpFinishMission in KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission).GetTaskList():
-                        tmpFinishMission.Progress(100)
+                    tmpFinishMission = KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission)
+                    if tmpFinishMission != None:
+                        KDS.Console.Feed.append(f"Active mission \"{tmpFinishMission.text}\" finished.")
+                        KDS.Logging.info("Current mission finish issued through console.", True)
+                        for tmpFinishMissionTask in tmpFinishMission.GetTaskList():
+                            tmpFinishMissionTask.Progress(100)
+                    else:
+                        KDS.Console.Feed.append("Could not finish active mission. No mission found.")
                 elif len(command_list) == 1:
                     KDS.Console.Feed.append("Level Finished.")
                     KDS.Logging.info("Level finish issued through console.", True)
