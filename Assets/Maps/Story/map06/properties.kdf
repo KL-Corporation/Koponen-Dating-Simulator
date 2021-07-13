@@ -4437,7 +4437,7 @@
 "108-192":{"0":{"checkCollision":false}},
 "109-192":{"0":{"checkCollision":false}},
 "110-192":{"0":{"checkCollision":false}},
-"111-192":{"3":{"identifier":111000111,"message":"Kouluterveydenhuolto"}},
+"111-192":{"3":{"identifier":111000111,"message":"Kouluterveydenhuolto","interactable":false}},
 "112-192":{"0":{"checkCollision":false}},
 "113-192":{"0":{"checkCollision":false}},
 "114-192":{"0":{"checkCollision":false}},
@@ -6069,5 +6069,5 @@
 "117-240":{"0":{"checkCollision":false}},
 "118-240":{"0":{"checkCollision":false}},
 "119-240":{"0":{"checkCollision":false}},
-"zones":{"46-188-59-5":{"staffOnly":true},"39-156-80-6":{"staffOnly":true},"44-104-73-6":{"staffOnly":true},"168-134-37-10":{"darkness":128,"staffOnly":true},"61-0-160-25":{"staffOnly":true}}
+"zones":{"46-188-59-5":{"staffOnly":true},"39-156-80-6":{"staffOnly":true},"44-104-73-6":{"staffOnly":true},"168-134-37-10":{"darkness":128,"staffOnly":true},"61-0-153-23":{"staffOnly":true}}
 }

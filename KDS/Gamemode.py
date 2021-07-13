@@ -59,6 +59,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
     KDS.Koponen.Talk.Conversation.clear()
     KDS.Koponen.requestReturnAlt = None
     KDS.Missions.Listeners.TileFireCreated.OnTrigger -= KDS.Story.badStoryEndingFunc
+    KDS.Missions.Listeners.KoponenTalkEmbed1.OnTrigger -= KDS.Story.switchToStoryHappyTalkMusic
     KDS.Story.BadEndingTrigger = False
     if gamemode == Modes.Story:
         if index == 1:
@@ -288,6 +289,9 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseMission("exit", "Pakene Tulta")
             KDS.Missions.InitialiseTask("exit", "run", "Juokse pois koulusta", (KDS.Missions.Listeners.KoponenTalkEmbed1, 1.0))
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.TRIGGERLISTENER1, None)
+
+            KDS.Missions.Listeners.KoponenTalkEmbed1.OnTrigger += KDS.Story.switchToStoryHappyTalkMusic
+
             KDS.Koponen.Talk.Conversation.schedule("Koponen! Sinunhan piti kuolla?", KDS.Koponen.Prefixes.player, True)
             KDS.Koponen.Talk.Conversation.schedule("Nähtyäni surusi tajusin jotain... Sinä olet elämäni tarkoitus. Sinä tuot merkitystä elämääni. Olet ollut ihana minulle enkä minä saa tuottaa sinulle pettymystä.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Saatan olla rakastunut sinuun...", KDS.Koponen.Prefixes.koponen, True)

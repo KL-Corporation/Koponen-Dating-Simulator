@@ -3242,7 +3242,10 @@ def console(oldSurf: pygame.Surface):
             "ammo": trueFalseTree,
             "damage": trueFalseTree
         },
-        "finish": { "missions": "break" },
+        "finish": {
+            "missions": "break",
+            "active_mission": "break"
+            },
         "teleport": {
          "~": { "~": "break" },
         },
@@ -3366,6 +3369,11 @@ def console(oldSurf: pygame.Surface):
                     KDS.Console.Feed.append("Missions Finished.")
                     KDS.Logging.info("Mission finish issued through console.", True)
                     KDS.Missions.Finish()
+                elif len(command_list) > 1 and command_list[1] == "active_mission":
+                    KDS.Console.Feed.append(f"Active mission \"{KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission).text}\" finished.")
+                    KDS.Logging.info("Current mission finish issued through console.", True)
+                    for tmpFinishMission in KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission).GetTaskList():
+                        tmpFinishMission.Progress(100)
                 elif len(command_list) == 1:
                     KDS.Console.Feed.append("Level Finished.")
                     KDS.Logging.info("Level finish issued through console.", True)

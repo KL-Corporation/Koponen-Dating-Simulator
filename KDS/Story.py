@@ -29,6 +29,9 @@ def badStoryEndingFunc():
     global BadEndingTrigger
     BadEndingTrigger = True
 
+def switchToStoryHappyTalkMusic():
+    KDS.Audio.Music.Play("Assets/Audio/Koponen/happyendingtalksong.ogg")
+
 class EndingType(IntEnum):
     Happy = auto()
     Sad = auto()
