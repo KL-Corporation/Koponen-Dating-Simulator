@@ -4432,8 +4432,8 @@ while main_running:
         Koponen.update(Tiles, display, KDS_Quit)
     #endregion
     KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll)
-    Player.inventory.useItem(Player.rect, Player.direction, screen, scroll, renderItem=Player.visible)
     Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
+    Player.inventory.useItem(Player.rect, Player.direction, screen, scroll, renderItem=Player.visible)
 
     for Zone in Zones:
         Zone.update(Player.rect)

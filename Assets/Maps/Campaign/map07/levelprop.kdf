@@ -1,8 +1,8 @@
 {
     "Data": {
         "TimeBonus": {
-            "end": 220,
-            "start": 100
+            "end": 400,
+            "start": 240
         }
     },
     "Entities": {
