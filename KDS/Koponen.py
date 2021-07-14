@@ -33,10 +33,10 @@ import re
 import shlex
 
 #region Settings
-text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 20, bold=0, italic=0)
-text_color = KDS.Colors.MidnightBlue
+text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 22, bold=0, italic=0)
+text_color = KDS.Colors.Black
 background_color = KDS.Colors.CloudWhite
-background_outline_color = KDS.Colors.MidnightBlue
+background_outline_color = KDS.Colors.Black
 conversation_rect = pygame.Rect(40, 40, 700, 400)
 conversation_outline_width = 3
 conversation_border_radius = 10
@@ -53,10 +53,10 @@ scroll_to_bottom_colors = {
     "pressed": (KDS.Colors.LightGray)
 }
 class text_padding:
-    left = 5
-    top = 5
-    right = 5
-    bottom = 5
+    left = 10
+    top = 10
+    right = 10
+    bottom = 10
 #endregion
 
 #region Koponen Variables
@@ -81,10 +81,12 @@ requestReturnAlt: Optional[str] = None
 class Prefixes:
     player = "p:"
     koponen = "k:"
+    sina = "s:"
 
 _renderedPrefixes = {
     Prefixes.player: text_font.render("ERROR: ", True, text_color),
-    Prefixes.koponen: text_font.render("Koponen: ", True, text_color)
+    Prefixes.koponen: text_font.render("Koponen: ", True, text_color),
+    Prefixes.sina: text_font.render("Sinä: ", True, text_color)
 }
 
 def init():
@@ -267,7 +269,7 @@ class Talk:
                 prefix = _renderedPrefixes[text[:2]]
                 offsetX = text_padding.left + prefix.get_width()
                 offsetY = text_padding.top + (i - Talk.Conversation.scroll) * line_spacing
-                Talk.display.blit(text_font.render(text[2:], True, KDS.Colors.MidnightBlue), (offsetX, offsetY))
+                Talk.display.blit(text_font.render(text[2:], True, text_color), (offsetX, offsetY))
                 if i <= 0 or forcePrefix or text[:2] != Talk.lines[i - 1].removeprefix("!")[:2]:
                     Talk.display.blit(prefix, (text_padding.left, offsetY))
 

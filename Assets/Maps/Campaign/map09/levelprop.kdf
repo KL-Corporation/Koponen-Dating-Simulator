@@ -1,21 +1,31 @@
 {
     "Data": {
         "TimeBonus": {
-            "end": 60,
-            "start": 30
-        }
+            "end": 2,
+            "start": 1
+        },
+        "infiniteAmmo": false
     },
     "Entities": {
         "Koponen": {
+            "enabled": false,
+            "forceIdle": false,
+            "forceTalk": false,
+            "listeners": [],
+            "lscript": [],
             "startPos": [
-                200,
-                200
-            ]
+                0,
+                0
+            ],
+            "startWithTalk": false,
+            "talk": false
         },
         "Player": {
+            "Inventory": {},
+            "spawnInverted": false,
             "startPos": [
-                100,
-                100
+                68,
+                204
             ]
         }
     },
@@ -29,9 +39,12 @@
             ]
         },
         "Darkness": {
-            "enabled": false,
-            "playerLight": false,
-            "strength": 0
+            "enabled": true,
+            "playerLight": true,
+            "strength": 224
+        },
+        "Indicator": {
+            "enabled": true
         }
     }
 }

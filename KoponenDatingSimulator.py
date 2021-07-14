@@ -3699,7 +3699,8 @@ def respawn_function():
         Player.rect.topleft = WorldData.PlayerStartPos
     else:
         Player.rect.midbottom = RespawnAnchor.active.rect.midbottom
-    KDS.Audio.Music.Play()
+    if KDS.Audio.Music.Loaded != None:
+        KDS.Audio.Music.Play()
 #endregion
 #region Menus
 def esc_menu_f(oldSurf: pygame.Surface):
@@ -4206,7 +4207,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
         current_map = f"{int(current_map) + 1:02}"
         play_function(KDS.Gamemode.Modes.Campaign, True)
 
-    next_level_bool = int(current_map) < int(KDS.System.GetLineCount("Assets/Maps/Story/names.dat"))
+    next_level_bool = int(current_map) < int(KDS.ConfigManager.GetGameData("Campaign/officialLevelCount"))
 
     main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, KDS.UI.ButtonFontSmall.render("Main Menu", True, KDS.Colors.White))
     next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, KDS.UI.ButtonFontSmall.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
@@ -4432,8 +4433,9 @@ while main_running:
         Koponen.update(Tiles, display, KDS_Quit)
     #endregion
     KDS.Build.Item.renderUpdate(Items, Tiles, screen, scroll)
-    Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
-    Player.inventory.useItem(Player.rect, Player.direction, screen, scroll, renderItem=Player.visible)
+    if Player.health > 0 and Player.visible:
+        Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
+        Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
 
     for Zone in Zones:
         Zone.update(Player.rect)

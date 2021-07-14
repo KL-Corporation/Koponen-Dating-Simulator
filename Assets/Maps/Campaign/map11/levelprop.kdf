@@ -1,8 +1,8 @@
 {
     "Data": {
         "TimeBonus": {
-            "end": 600,
-            "start": 300
+            "end": 60,
+            "start": 30
         }
     },
     "Entities": {
@@ -14,8 +14,8 @@
         },
         "Player": {
             "startPos": [
-                420,
-                310
+                100,
+                100
             ]
         }
     },
@@ -29,9 +29,9 @@
             ]
         },
         "Darkness": {
-            "enabled": true,
-            "playerLight": true,
-            "strength": 135
+            "enabled": false,
+            "playerLight": false,
+            "strength": 0
         }
     }
 }

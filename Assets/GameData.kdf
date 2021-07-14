@@ -29,5 +29,8 @@
     },
     "Story": {
         "levelCount": 11
+    },
+    "Campaign": {
+        "officialLevelCount": 9
     }
 }

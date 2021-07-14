@@ -123,9 +123,11 @@ class Inventory:
         if item.serialNumber in KDS.Build.Item.inventoryDoubles:
             if index >= self.size - 1:
                 index = self.size - 2
-                if self.storage[index] != EMPTYSLOT and not force:
-                    return False
+            if self.storage[index + 1] != EMPTYSLOT and index > 0:
+                index -= 1
             if self.storage[index + 1] != EMPTYSLOT and not force:
+                return False
+            if self.storage[index] != EMPTYSLOT and not force:
                 return False
             self.storage[index + 1] = DOUBLEITEM
         self.storage[index] = item
@@ -136,21 +138,20 @@ class Inventory:
     def pickupItem(self, item: KDS.Build.Item, force: bool = False) -> bool:
         return self.pickupItemToIndex(self.SIndex, item, force, set_index=True)
 
-    def useItemAtIndex(self, index: int, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int], renderItem: bool = True):
+    def useItemAtIndex(self, index: int, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
         item = self.storage[index]
         if not isinstance(item, str):
             dumpVals = item.use()
-            if renderItem:
-                Inventory.renderItemTexture(dumpVals, rect, direction, surface, scroll)
+            Inventory.renderItemTexture(dumpVals, rect, direction, surface, scroll)
         return None
 
-    def useItem(self, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int], renderItem: bool = True):
-        self.useItemAtIndex(self.SIndex, rect, direction, surface, scroll, renderItem=renderItem)
+    def useItem(self, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
+        self.useItemAtIndex(self.SIndex, rect, direction, surface, scroll)
 
-    def useItemByClass(self, Class: Type, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int], renderItem: bool = True):
+    def useItemByClass(self, Class: Type, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
         for i, v in enumerate(self.storage):
             if isinstance(v, Class):
-                self.useItemAtIndex(i, rect, direction, surface, scroll, renderItem=renderItem)
+                self.useItemAtIndex(i, rect, direction, surface, scroll)
                 return
 
     def useItemsByClasses(self, Classes: Sequence[Type], rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):

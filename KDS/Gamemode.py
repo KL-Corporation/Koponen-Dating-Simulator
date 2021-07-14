@@ -311,6 +311,49 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         if index == 1:
             Presets.Tutorial()
             Presets.LevelExit()
+        elif index == 10:
+            KDS.Missions.InitialiseMission("r1", "Tehtävä Koposelta")
+            KDS.Missions.InitialiseTask("r1", "talk", "Puhu Koposelle", (KDS.Missions.Listeners.KoponenTalk, 1.0))
+            KDS.Missions.InitialiseTask("r1", "mission", "Pyydä Tehtävää Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 1.0))
+
+            KDS.Koponen.Talk.Conversation.schedule("Hyvää päivää", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Saisinko tehtävän?", KDS.Koponen.Prefixes.sina, True)
+            KDS.Koponen.Talk.Conversation.schedule("Toisitko minulle kahvikupin", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("cm", "Kahvikuppi")
+            KDS.Missions.InitialiseKoponenTask("cm", "f", "Etsi kahvikuppi Koposelle", 3)
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
+            KDS.Koponen.Talk.Conversation.schedule("Loistavaa työtä", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("r2", "Tehtävä Koposelta")
+            KDS.Missions.InitialiseTask("r2", "mission", "Pyydä Tehtävää Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 0.5))
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Saisinko tehtävän?", KDS.Koponen.Prefixes.sina, True)
+            KDS.Koponen.Talk.Conversation.schedule("Toisitko minulle kaasupolttimen", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("gb", "Kaasupoltin")
+            KDS.Missions.InitialiseKoponenTask("gb", "f", "Etsi kaasupoltin Koposelle", 4)
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
+            KDS.Koponen.Talk.Conversation.schedule("Loistavaa työtä", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("r3", "Tehtävä Koposelta")
+            KDS.Missions.InitialiseTask("r3", "mission", "Pyydä Tehtävää Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 0.34))
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONREQUEST, None)
+            KDS.Koponen.Talk.Conversation.schedule("Saisinko tehtävän?", KDS.Koponen.Prefixes.sina, True)
+            KDS.Koponen.Talk.Conversation.schedule("Toisitko minulle SS-Etukortin", KDS.Koponen.Prefixes.koponen, True)
+
+            KDS.Missions.InitialiseMission("ss", "SS-Etukortti")
+            KDS.Missions.InitialiseKoponenTask("ss", "f", "Etsi SS-Etukortti Koposelle", 19)
+
+            KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
+            KDS.Koponen.Talk.Conversation.schedule("Loistavaa työtä", KDS.Koponen.Prefixes.koponen, True)
+            KDS.Koponen.Talk.Conversation.schedule("Tulisitko kanssani treffeille?", KDS.Koponen.Prefixes.sina, True)
+            KDS.Koponen.Talk.Conversation.schedule("Tulen kanssasi", KDS.Koponen.Prefixes.koponen, True)
         else:
             Presets.LevelExit()
     elif gamemode == Modes.CustomCampaign:

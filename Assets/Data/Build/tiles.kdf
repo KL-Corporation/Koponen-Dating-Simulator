@@ -1140,7 +1140,7 @@
         "noCollision": true,
         "trueScale": true
     },
-    "Hatanpään Koulu Sign": {
+    "Hatanpaan Koulu Sign": {
         "serialNumber": 165,
         "path": "hat_logo.png",
         "specialTile": false,

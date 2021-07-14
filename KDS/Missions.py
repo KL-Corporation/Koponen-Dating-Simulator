@@ -239,6 +239,8 @@ class Mission:
         self._playTaskSound = False
         notFinished = 0
         taskAssigned = False
+        hasKoponenTask: bool = False
+        hasStudentTask: bool = False
         for task in self.tasks.values():
             if not task.finished:
                 self.finished = False
@@ -246,14 +248,21 @@ class Mission:
 
             if isinstance(task, KoponenTask):
                 KDS.Koponen.Mission.Task = task
+                hasKoponenTask = True
             elif isinstance(task, StudentTask):
                 KDS.NPC.StudentNPC.Task = task
+                hasStudentTask = True
 
             if notFinished > 0:
                 self._playTaskSound = True
                 if taskAssigned:
                     break
         del notFinished, taskAssigned
+
+        if not hasKoponenTask:
+            KDS.Koponen.Mission.Task = None
+        if not hasStudentTask:
+            KDS.NPC.StudentNPC.Task = None
 
         if self.finished:
             self.finishedTicks += 1

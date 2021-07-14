@@ -836,8 +836,8 @@ class PropertiesData:
                     unitProp = PropertiesData(unit)
                     unitProp.values = {UnitType(int(k)): v for k, v in toSet.items()}
                     unit.properties = unitProp
-        if "zones" in deserialized:
-            PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"]))
+
+        PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"] if "zones" in deserialized else {}))
 
 class BrushData:
     def __init__(self) -> None:
