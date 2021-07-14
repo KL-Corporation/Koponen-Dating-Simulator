@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import platform
 import sys
+import gc as gc
 from typing import Dict, Optional
 import webbrowser
 

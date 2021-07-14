@@ -1407,13 +1407,20 @@ class TileFire(KDS.Build.Tile):
         return frame
 
     @staticmethod
-    def createInstanceAtPosition(gridPos: Tuple[int, int]) -> bool:
-        global Tiles
+    def isUnitFreeOfFire(gridPos: Tuple[int, int]) -> Tuple[bool, Tuple[int, int], List[KDS.Build.Tile]]:
         clampPos = KDS.Math.Clamp(gridPos[0], 0, WorldData.MapSize[0]), KDS.Math.Clamp(gridPos[1], 0, WorldData.MapSize[1])
         unit = Tiles[clampPos[1]][clampPos[0]]
         for t in unit:
             if isinstance(t, TileFire):
-                return False
+                return False, clampPos, unit
+        return True, clampPos, unit
+
+    @staticmethod
+    def createInstanceAtPosition(gridPos: Tuple[int, int]) -> bool:
+        global Tiles
+        isFree, clampPos, unit = TileFire.isUnitFreeOfFire(gridPos)
+        if not isFree:
+            return False
         unit.append(TileFire((clampPos[0] * 34, clampPos[1] * 34), 151))
         KDS.Missions.Listeners.TileFireCreated.Trigger()
         return True
@@ -2445,14 +2452,30 @@ class Knife(KDS.Build.Weapon):
         KDS.Audio.PlaySound(knife_pickup)
 
 class LappiSytytyspalat(KDS.Build.Item):
+    sytytys_tip: pygame.Surface = tip_font.render(f"Ignite Tile [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
+        self.requireTaskWithName: Optional[str] = None
 
     def use(self):
         global Tiles
-        if KDS.Keys.mainKey.held:
-            pos = (Player.rect.centerx // 34 + KDS.Convert.ToMultiplier(Player.direction), Player.rect.centery // 34)
-            TileFire.createInstanceAtPosition(pos)
+        allowSytytys: bool
+        if self.requireTaskWithName != None:
+            tmp_miss = KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission)
+            if tmp_miss != None:
+                allowSytytys = tmp_miss.GetTask(self.requireTaskWithName) != None
+            else:
+                allowSytytys = False
+        else:
+            allowSytytys = True
+        if allowSytytys:
+            tmpdirctn = KDS.Convert.ToMultiplier(Player.direction)
+            pos = (int(Player.rect.centerx / 34) + tmpdirctn + tmpdirctn, int(Player.rect.centery / 34))
+            if TileFire.isUnitFreeOfFire(pos)[0]:
+                screen.blit(LappiSytytyspalat.sytytys_tip, (pos[0] * 34 + 17 - scroll[0] - LappiSytytyspalat.sytytys_tip.get_width() // 2, pos[1] * 34 - scroll[1]))
+            if KDS.Keys.mainKey.held:
+                TileFire.createInstanceAtPosition(pos)
         return self.texture
 
     def pickup(self) -> None:
@@ -3576,6 +3599,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
                 KDS_Quit()
         pygame.time.wait(100)
     wdata = loadMapHandle.Complete()
+    # Stupid idea
+    # KDS.System.gc.collect() # Collecting here since player has already waited for long and this application uses a shit ton of RAM
     if not wdata:
         pygame.mouse.set_visible(True)
         return

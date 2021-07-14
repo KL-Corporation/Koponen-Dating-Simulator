@@ -174,6 +174,10 @@ class Item:
             if renderable.physics:
                 renderable.vertical_momentum = min(renderable.vertical_momentum + Item.fall_speed, Item.fall_max_velocity)
                 collisions = KDS.World.EntityMover().move(renderable.rect, (renderable.horizontal_momentum, renderable.vertical_momentum), Tile_list)
+                if collisions.top:
+                    renderable.vertical_momentum = 0
+                if collisions.left or collisions.right:
+                    renderable.horizontal_momentum = (-renderable.horizontal_momentum) / 4 # Higher value means lower elasticity
                 if collisions.bottom:
                     renderable.physics = False
 #                 renderable.rect.y += int(renderable.vertical_momentum)
