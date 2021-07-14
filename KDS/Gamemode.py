@@ -270,7 +270,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Koponen.Talk.Conversation.schedule("Olen täysin varma.", KDS.Koponen.Prefixes.koponen, True)
 
             KDS.Missions.InitialiseMission("the_last_straw", "Viimeinen Oljenkorsi")
-            KDS.Missions.InitialiseTask("the_last_straw", "ignite", "Sytytä tuli pääkäytävään", (KDS.Missions.Listeners.TileFireCreated, 1.0))
+            KDS.Missions.InitialiseTask("the_last_straw", "lappisytytyspalat_ignite", "Sytytä tuli pääkäytävään", (KDS.Missions.Listeners.TileFireCreated, 1.0))
             KDS.Missions.Listeners.TileFireCreated.OnTrigger += KDS.Story.badStoryEndingFunc
 
             KDS.Missions.InitialiseMission("fire", "TULTA!")

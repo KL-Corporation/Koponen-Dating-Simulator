@@ -6111,7 +6111,7 @@
 "199-252":{"0":{"checkCollision":false}},
 "200-252":{"0":{"checkCollision":false}},
 "201-252":{"0":{"checkCollision":false}},
-"202-252":{"0":{"checkCollision":false},"1":{"storePrice":3,"storeDiscountPrice":2}},
+"202-252":{"0":{"checkCollision":false},"1":{"storePrice":3,"storeDiscountPrice":2,"requireTaskWithName":"lappisytytyspalat_ignite"}},
 "203-252":{"0":{"checkCollision":false},"1":{"storePrice":1,"storeDiscountPrice":0}},
 "204-252":{"0":{"checkCollision":false}},
 "205-252":{"0":{"checkCollision":false},"1":{"storePrice":20}},
