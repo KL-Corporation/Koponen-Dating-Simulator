@@ -7,9 +7,11 @@
     },
     "Entities": {
         "Koponen": {
+            "enabled": false,
+            "forceIdle": true,
             "startPos": [
-                200,
-                200
+                0,
+                0
             ]
         },
         "Player": {

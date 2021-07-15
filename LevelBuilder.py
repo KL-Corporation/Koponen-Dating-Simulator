@@ -3,6 +3,7 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
+import pygame.draw
 from pygame.locals import *
 import KDS.Clock
 import KDS.Colors
@@ -140,8 +141,8 @@ class TextureHolder:
         try:
             return self.data[UnitType(int(serialNumber[0]))][serialNumber]
         except Exception as e:
-            KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! Exception: {e}")
-            return TextureHolder.TextureData("----", None, "<error>", None)
+            KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! {type(e).__name__}: {e}")
+            return TextureHolder.TextureData("----", "Assets/Textures/Editor/missing.png", "<error>", None)
 
     def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
         return self.GetData(serialNumber).texture
@@ -471,6 +472,7 @@ class UnitData:
                     if textureData.serialNumber not in noCollision and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
                         surface.blit(textureData.darkOverlay, blitPos)
                 else:
+                    pygame.draw.rect(surface, KDS.Colors.White, (pos[0], pos[1], scalesize, scalesize))
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
         elif serial[0] == "3" and serial != "3001":
             telepOverlay = Textures.GetScaledTexture("3001").copy()
@@ -1511,12 +1513,12 @@ class Selected:
     units: List[UnitData] = []
 
     @staticmethod
-    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None):
+    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
         global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
-        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride)
+        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, clear_selected=clear_selected)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None):
+    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
@@ -1528,7 +1530,8 @@ class Selected:
             except IndexError:
                 warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(<invalid-grid-size>, <invalid-grid-size>)"
                 KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}")
-        Selected.units.clear()
+        if clear_selected:
+            Selected.units.clear()
 
     @staticmethod
     def Move(x: int, y: int):
@@ -1543,7 +1546,8 @@ class Selected:
     @staticmethod
     def Update():
         Selected.units = []
-        if Drag.Rect == None: return
+        if Drag.Rect == None:
+            return
         for row in grid[Drag.Rect.y:Drag.Rect.y + Drag.Rect.height]:
             for unit in row[Drag.Rect.x:Drag.Rect.x + Drag.Rect.width]:
                 Selected.units.append(unit.Copy())
@@ -1551,7 +1555,7 @@ class Selected:
     @staticmethod
     def Get():
         Selected.Update()
-        Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={})
+        Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, clear_selected=False)
 
     @staticmethod
     def ToString(serializeProperties: bool = False) -> Union[str, Tuple[str, str]]:
@@ -1698,7 +1702,7 @@ def main():
                     Selected.Update()
                 elif event.key == K_d:
                     if keys_pressed[K_LCTRL]:
-                        Selected.Set()
+                        Selected.Set(clear_selected=False)
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                     x = 0
                     y = 0

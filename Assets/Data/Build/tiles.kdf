@@ -892,7 +892,7 @@
         "serialNumber": 128,
         "path": "avarn_car.png",
         "specialTile": true,
-        "noCollision": false,
+        "noCollision": true,
         "trueScale": true
     },
     "Gray Wall": {

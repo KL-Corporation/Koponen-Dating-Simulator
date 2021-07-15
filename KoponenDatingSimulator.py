@@ -1534,6 +1534,7 @@ class Sleepable(KDS.Build.Tile):
         self.sleepAutoEnd: bool = False # Works only with fadeAnimation
         self.requireTileSleepTask: bool = False
         self.audiofile: str = "Assets/Audio/Effects/zipper.ogg"
+        self.disableSleep: bool = False
 
     def toggleSleep(self, effect: ScreenEffects.Effects = None):
         global Player
@@ -1559,6 +1560,9 @@ class Sleepable(KDS.Build.Tile):
         Player.lockMovement = not Player.lockMovement
 
     def update(self):
+        if self.disableSleep:
+            return self.texture
+
         if self.rect.colliderect(Player.rect):
             screen.blit(Sleepable.tip, (self.rect.centerx - Sleepable.tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked and (not self.requireTileSleepTask or KDS.Missions.Listeners.TileSleepStart.ContainsActiveTask()):
@@ -1599,7 +1603,6 @@ class AvarnCar(KDS.Build.Tile):
         super().__init__(position, serialNumber)
         assert self.texture != None
         self.texture.set_colorkey(KDS.Colors.Cyan)
-        self.checkCollision = False
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
         l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3))) # WTF???
         self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)

@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+from enum import IntEnum, auto
 import math
 import random
+from tkinter.filedialog import Directory
 from typing import List, Optional, Sequence, Tuple, Union
 
 import pygame
+import pygame.draw
 
 import KDS.Animator
 import KDS.Audio
@@ -329,26 +334,39 @@ class HostileEnemy:
     def onBeforeRender(self):
         return
 
-    def AI_jump(self, obstacles, collisions: KDS.World.Collisions, surface, scroll):
-        x_coor = 0
+    def AI_jump(self, obstacles: List[List[List[KDS.Build.Tile]]], collisions: KDS.World.Collisions, surface: pygame.Surface, scroll: Sequence[int]):
+        x_coor: float = self.rect.x
         if collisions.right:
-            x_coor = (self.rect.x + self.rect.w) / 34
+            x_coor += self.rect.width
         elif collisions.left:
-            x_coor = (self.rect.x) / 34 - 1
+            x_coor -= 34 # Collision check does not work on doors
+        x_coor /= 34
         y_coor = (self.rect.y + self.rect.h) / 34 - 1
+
+        jump: bool
         try:
             jump = True
-            for y in range(math.ceil(self.rect.h / 34)):
+            obst = None
+            for y in range(math.ceil(self.rect.h / 34) * 2 - 2):
                 for obst in obstacles[int(y_coor) - 1 - y][int(x_coor)]:
                     if obst.checkCollision:
                         jump = False
                         break
-            if jump:
-                self.direction = not self.direction
-                self.movement[0] = -self.movement[0]
-                self.rect.y -= 35
+            if KDS.Debug.Enabled:
+                if obst != None:
+                    pygame.draw.rect(surface, KDS.Colors.Orange, (obst.rect.x - scroll[0] - 3, obst.rect.y - scroll[1] - 3, obst.rect.width + 6, obst.rect.height + 6), width=3)
+                debug_x = int(x_coor)
+                debug_y_start = int(y_coor) - 1
+                debug_y_end = debug_y_start - math.ceil(self.rect.h / 34)
+                pygame.draw.line(surface, KDS.Colors.Cyan, (debug_x * 34 - scroll[0], debug_y_start * 34 - scroll[1]), (debug_x * 34 - scroll[0], debug_y_end * 34 - scroll[1]), 3)
         except Exception as e:
             KDS.Logging.AutoError(e)
+            jump = False
+
+        if jump:
+            self.direction = not self.direction
+            self.movement[0] = -self.movement[0]
+            self.rect.y -= 35
 
 class Imp(HostileEnemy):
     def __init__(self, pos):
@@ -637,7 +655,7 @@ class Mummy(HostileEnemy):
     sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
 
     def __init__(self, pos):
-        health = 50
+        health = 60
         w_anim = KDS.Animator.Animation("mummy_walking", 8, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mummy_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mummy_attack", 3, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -647,56 +665,79 @@ class Mummy(HostileEnemy):
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(Mummy.soundboard_scream), death_sound=Mummy.sound_death, health=health, mv=[1, 8], attackPropability=50)
 
         self.manualAttackHandling = True
+        self.timeSinceLastSwitch: int = 0
 
     def attack(self, slope, env_obstacles, target, *args):
         KDS.Audio.PlaySound(random.choice(Mummy.soundboard_hits))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(20, 35), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
         return items
 
-    def pathfinder(self, obstacles: List[List[List[KDS.Build.Tile]]], collision_type : str) -> None:
-        x_coor = 0
-        if collision_type == "right":
-            x_coor = (self.rect.x + self.rect.w) // 34
-        else:
-            x_coor = (self.rect.x) // 34
-        y_coor = (self.rect.y) // 34
-        try:
-            jump = True
-            for y in range(3):
-                # if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
-                if all(not AaroTääVitunKoodiEiToimiUudenVitunTilesysteeminKaaPerkele.checkCollision for AaroTääVitunKoodiEiToimiUudenVitunTilesysteeminKaaPerkele in obstacles[y_coor - 1 + y][x_coor]):
-                    jump = False
-            if jump:
-                self.direction = not self.direction
-                self.movement[0] = -self.movement[0]
-                self.rect.y -= 35
-        except Exception as e:
-            KDS.Logging.AutoError(e)
+    # def pathfinder(self, obstacles: List[List[List[KDS.Build.Tile]]], collision_type : str) -> None:
+    #     x_coor = 0
+    #     if collision_type == "right":
+    #         x_coor = (self.rect.x + self.rect.w) // 34
+    #     else:
+    #         x_coor = (self.rect.x) // 34
+    #     y_coor = (self.rect.y) // 34
+    #     try:
+    #         jump = True
+    #         for y in range(3):
+    #             # if not obstacles[y_coor - 1 + y][x_coor].checkCollision:
+    #             if all(not AaroTääVitunKoodiEiToimiUudenVitunTilesysteeminKaaPerkele.checkCollision for AaroTääVitunKoodiEiToimiUudenVitunTilesysteeminKaaPerkele in obstacles[y_coor - 1 + y][x_coor]):
+    #                 jump = False
+    #         if jump:
+    #             self.direction = not self.direction
+    #             self.movement[0] = -self.movement[0]
+    #             self.rect.y -= 35
+    #     except Exception as e:
+    #         KDS.Logging.AutoError(e)
 
+    # def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
+    #     if not self.sleep and self.health > 0:
+    #         s = searchRect(targetRect=targetRect, searchRect=self.rect, direction= self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
+    #         s1 = searchRect(targetRect=targetRect, searchRect=self.rect, direction= not self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
+    #         if self.collisions != None:
+    #             if self.collisions.right:
+    #                 self.pathfinder(tiles, "right")
+    #             elif self.collisions.left:
+    #                 self.pathfinder(tiles, "left")
+    #
+    #         if s or s1:
+    #             if self.rect.centerx < targetRect.centerx:
+    #                 self.movement[0] = abs(self.movement[0])
+    #                 self.direction = False
+    #             elif self.rect.centerx > targetRect.centerx:
+    #                 self.movement[0] = abs(self.movement[0]) * -1
+    #                 self.direction = True
+    #         dist = KDS.Math.getDistance(self.rect.center, targetRect.center)
+    #         if dist < 40 and not self.attackRunning:
+    #             self.attackRunning = True
+    #         if random.randint(0, 500) == 69 and dist < 560:
+    #             KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
+
+    # Toivottavasti en raiskannu liikaa Aaron kaunista Mummy AI logiikkaa... Tän pitäis sentään toimia
     def lateUpdate(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
-        if not self.sleep and self.health > 0:
-            s = searchRect(targetRect=targetRect, searchRect=self.rect, direction= self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
-            s1 = searchRect(targetRect=targetRect, searchRect=self.rect, direction= not self.direction, surface=Surface, scroll=scroll, obstacles=tiles)[0]
-            if self.collisions != None:
-                if self.collisions.right:
-                    self.pathfinder(tiles, "right")
-                elif self.collisions.left:
-                    self.pathfinder(tiles, "left")
+        if self.sleep or self.health <= 0:
+            return
 
-            if s or s1:
-                if self.rect.centerx < targetRect.centerx:
-                    self.movement[0] = abs(self.movement[0])
-                    self.direction = False
-                elif self.rect.centerx > targetRect.centerx:
-                    self.movement[0] = abs(self.movement[0]) * -1
-                    self.direction = True
-            dist = KDS.Math.getDistance(self.rect.center, targetRect.center)
-            if dist < 40 and not self.attackRunning:
-                self.attackRunning = True
-            if random.randint(0, 500) == 69 and dist < 560: KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
+        self.timeSinceLastSwitch += 1
+
+        targetDirection = self.rect.centerx > targetRect.centerx
+        if self.direction != targetDirection:
+            s, _ = searchRect(targetRect, self.rect, targetDirection, Surface, scroll, tiles)
+            if s and self.timeSinceLastSwitch > 60 and not self.attackRunning:
+                self.direction = targetDirection
+                self.movement[0] = abs(self.movement[0]) * (-1 if self.direction else 1)
+                self.timeSinceLastSwitch = 0
+
+        dist = KDS.Math.getDistance(self.rect.midbottom, targetRect.midbottom)
+        if dist < 40:
+            self.attackRunning = True
+        if random.randint(0, 500) == 69 and dist < 560:
+            KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
 
 class SecurityGuard(HostileEnemy):
     sight_sounds = (
@@ -825,6 +866,7 @@ class Zombie(HostileEnemy):
         self.sleep = False
         self.movementBeforeFreeze = self.movement
         self.attackAnim = False
+        self.allowJump = False
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         bullets: List[KDS.World.Bullet] = []
