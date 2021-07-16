@@ -1,0 +1,38 @@
+{
+    "Data": {
+        "TimeBonus": {
+            "end": 600,
+            "start": 150
+        }
+    },
+    "Entities": {
+        "Koponen": {
+			"enabled": false,
+            "startPos": [
+                0,
+                0
+            ]
+        },
+        "Player": {
+            "startPos": [
+                100,
+                100
+            ]
+        }
+    },
+    "Rendering": {
+        "AmbientLight": {
+            "enabled": false,
+            "tint": [
+                0,
+                0,
+                0
+            ]
+        },
+        "Darkness": {
+            "enabled": true,
+            "playerLight": true,
+            "strength": 135
+        }
+    }
+}

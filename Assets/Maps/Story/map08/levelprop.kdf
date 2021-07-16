@@ -1,0 +1,40 @@
+{
+    "Data": {
+        "TimeBonus": {
+            "end": 2,
+            "start": 1
+        }
+    },
+    "Entities": {
+        "Koponen": {
+            "startPos": [
+                0,
+                0
+            ],
+            "enabled": true,
+			"talk": true,
+            "forceTalk": true
+        },
+        "Player": {
+            "startPos": [
+                0,
+                0
+            ]
+        }
+    },
+    "Rendering": {
+        "AmbientLight": {
+            "enabled": false,
+            "tint": [
+                0,
+                0,
+                0
+            ]
+        },
+        "Darkness": {
+            "enabled": false,
+            "playerLight": false,
+            "strength": 0
+        }
+    }
+}

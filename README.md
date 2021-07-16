@@ -13,6 +13,7 @@
 
 <br />
 <br />
+<br />
 
 ---
 
@@ -26,7 +27,7 @@
 [<img align="left" alt="Stack Overflow" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Stack_Overflow_icon.svg" />][stackOverflowLink]
 
 [//]: # (Temporary Below)
-[website]: http://NALStudio.tk
+[website]: https://github.com/orgs/KL-Corporation
 [repo]: https://github.com/KL-Corporation/Koponen-Dating-Simulator
 
 [vscodeLink]: https://code.visualstudio.com

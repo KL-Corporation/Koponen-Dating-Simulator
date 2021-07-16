@@ -1,11 +1,12 @@
-#The official unofficial color palette that this game is not built around
+# The official unofficial color palette that this game is not built around
 CloudWhite = (236, 240, 241)
 MidnightBlue = (44, 62, 80)
 AviatorRed = (240, 71, 71)
 EmeraldGreen = (46, 204, 113)
 RiverBlue = (52, 152, 219)
+SunYellow = (241, 196, 15)
 
-#Primary Colors
+# Primary Colors
 Red = (255, 0, 0)
 Orange = (255, 128, 0)
 Yellow = (255, 255, 0)
@@ -20,3 +21,6 @@ LightGray = (192, 192, 192)
 Gray = (128, 128, 128)
 DarkGray = (64, 64, 64)
 Black = (0, 0, 0)
+
+# Other Colors
+DefaultBackground = (20, 25, 20)

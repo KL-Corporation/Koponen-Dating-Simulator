@@ -1,5 +1,5 @@
 {
-    "Mikä on KL-Corporationin lippulaivatuote?": {
+    "Mikä näistä on KL-Corporationin lippulaivatuote?": {
         "KDS Level Builder": false,
         "Mastermind by KL-Corporation": false,
         "KDS Compiler": false,
@@ -37,9 +37,9 @@
         "Saddam Hussein": false,
         "Roberto Esquivel Cabrera": true,
         "Donald Trump": false,
-        "Niko Leinonen": true
+        "Niko Leinonen": false
     },
-    "Mikä näista koodikielistä on vanhin?": {
+    "Mikä näistä koodikielistä on vanhin?": {
         "Python": true,
         "C#": false,
         "JavaScript": false,
@@ -51,17 +51,23 @@
         "JavaScript": true,
         "Scratch": false
     },
+    "Mikä näistä koodikielistä on paras?": {
+        "Python": false,
+        "C": false,
+        "C++": true,
+        "C#": false
+    },
     "Minä vuonna sähkö löydettiin?": {
         "1902": false,
         "1881": false,
         "1879": true
     },
     "Mikä on maailman pisin käärme?": {
-        "Anaconda": false,
+        "Boa": false,
         "Python": true,
-        "Mun kyrpä ( ͡° ͜ʖ ͡°)": true
+        "Mun kyrpä ( ͡° ͜ʖ ͡°)": false
     },
-    "Kuinka suuri on kirahvin keskiverto hupituutti?": {
+    "Kuinka pitkä on kirahvin keskiverto hupituutti?": {
         "50 cm": false,
         "100 cm": true,
         "69 cm": false
@@ -77,11 +83,11 @@
         "Hard": true
     },
     "Miikalla on viisi banaania. Miikan kaverilla on herpes. Laske auringon massa.": {
-        "2 000 000 000 000 000 000 000 000kg": false,
-        "1 980 000 000 000 000 000 000 000 000 000kg": true,
-        "3 094 000 000 000 000 000 000 000 000 000kg": false
+        "2 000 000 000 000 000 000 000 000 000g": false,
+        "1 989 000 000 000 000 000 000 000 000 000 000g": true,
+        "3 094 000 000 000 000 000 000 000 000 000 000g": false
     },
-    "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä nyt on?": {
+    "Heikillä on 420 karkkia. Heikki syo niistä 69. Mitä Heikillä on nyt? (2)": {
         "69 karkkia": false,
         "Diabetes": true,
         "351 karkkia": true
@@ -112,11 +118,6 @@
         "Ruumis ja kolme flamingoa": true,
         "Yksi flamingo ja masennus": false
     },
-    "Seppo Virtanen omistaa koiran. Hänen koiransa haluaa ruokaa, mutta Seppo haluaa kaljaa. Sepolla on 15€ ja koiranruoka maksaa 10€. Sixpack kaljaa maksaa 8€. Miten Seppo toimii seuraavaksi? Hän...": {
-        "Vetää kunnon kännit eikä huoli koirastaan": false,
-        "Ostaa koiranruokaa ja ruokkii koiran": false,
-        "Ostaa kaljaa ja juottaa koirankin": true
-    },
     "Kuka kirjoitti Kommunistisen Manifestin?": {
         "Josif Stalin": false,
         "Vladimir Putin": false,
@@ -127,7 +128,7 @@
         "Carl Marx": false,
         "Karl Marz": false
     },
-    "Kuka oli Yhdysvaltain 36. Presidentti?": {
+    "Kuka oli Yhdysvaltain 36. presidentti?": {
         "Lyndon b. Johnson": true,
         "Harry S. Truman": false,
         "Jimmy Carter": false,
@@ -138,7 +139,7 @@
         "Grover Cleveland": false,
         "Donald Trump": false,
         "Osama bin Laden": false,
-        "Matias Broman": true,
+        "Matias Broman": false,
         "Muammar Gaddafi": false,
         "Saddam Hussein": false,
         "Jussi Halla-aho": false,
@@ -153,9 +154,10 @@
     "Kuka hallitsija tuli tunnetuksi Gulageistaan?": {
         "Donald Trump": false,
         "Vladimir Putin": false,
-        "Josif Vissarionovitš Džugašvili": true
+        "Josif Vissarionovitš Džugašvili": true,
+        "Vladimir Iljitš Lenin": false
     },
-    "20-vuotiaalla maalaismiehellä on ongelma. Hänen tarvitsee saada viiden päivän kuluessa toimitettua 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Miten hän hankkii loput rynnäkkökiväärit?": {
+    "20-vuotiaalla maalaismiehellä on ongelma. Hänen täytyy toimittaa viiden päivän kuluessa 200 rynnäkkökivääriä Venäjän mafialle. Miehellä on nyt 69 rynnäkkökivääriä. Mitä eri tapoja hänellä on hankkia loput rynnäkkökiväärit? (2)": {
         "Mies ostaa kiväärit Lidlistä": false,
         "Mies varastaa kiväärit Lidlistä": false,
         "Mies kutsuu koskenlaskijaa tuomaan kiväärit": true,
@@ -190,11 +192,12 @@
         "ideaaliosa": false,
         "tantaaliosa": false
     },
-    "Mikä aatesuunta pyrkii luomaan tuotantovälineiden yhteisomistukseen perustuvan yhteiskuntajärjestyksen": {
+    "Mikä aatesuunta pyrkii luomaan tuotantovälineiden yhteisomistukseen perustuvan yhteiskuntajärjestyksen?": {
         "Kapitalismi": false,
         "Sosialismi": true,
         "Demokratia": false,
-        "Fasismi": false
+        "Fasismi": false,
+        "Masokismi": false
     },
     "Missä valtiossa sijaitsee \"Jerusalemi\"?": {
         "Israelissa": false,
@@ -202,7 +205,7 @@
         "Syyriassa": false,
         "Neuvostoliitossa": false
     },
-    "Mikä seuraavista valtioista ei kerää tuloveroa?": {
+    "Mitkä seuraavista valtioista EI KERÄÄ tuloveroa? (2)": {
         "Yhdistyneet Arabiemiirikunnat": true,
         "Vanuatu": true,
         "Etelä-Afrikka": false,
@@ -217,16 +220,197 @@
         "Kyllä": false,
         "Ei": true
     },
+    "Ovatko iPuhelimet huonoja?": {
+        "Kyllä": true,
+        "Ei": false
+    },
     "Mikä on pinta-alaltaan maailman suurimman valtion virallinen nimi?": {
         "Venäjä": false,
         "Venäjän federaatio": true,
-        "Kiina": false,
+        "Kiinan kansantasavalta": false,
         "Pohjois-Korean demokraattinen kansantasavalta": false
     },
-    "Mikä seuraavista pelin jakelupalveluista on paras?": {
+    "Mikä seuraavista pelinjakelupalveluista on paras?": {
         "Steam": false,
         "Epic Games Store": false,
         "NALStudio Game Launcher": true,
         "Apple App Store": false
+    },
+    "Kuinka monta spermasiittiötä tarvitaan, jotta niiden tallennustila saavuttaisi yhden teratavun?": {
+        "n. 26 000": false,
+        "n. 28 000": true,
+        "n. 30 000": false,
+        "n. 36 000": false
+    },
+    "Kuinka paljon tallennustilaa yhdessä siemensyöksyssä on keskimäärin?": {
+        "n. 15 000 Tb": false,
+        "n. 15 000 Tt": false,
+        "n. 11 250 Tb": false,
+        "n. 11 250 Tt": true
+    },
+    "Mikä on maailman myydyin peli?": {
+        "Tetris": false,
+        "Grand Theft Auto V": false,
+        "Minecraft": true,
+        "Wii Sports": false
+    },
+    "Mikä on Australian pääkaupunki?": {
+        "Melbourne": false,
+        "Sydney": false,
+        "Canberra": true,
+        "Perth": false
+    },
+    "Missä sijaitsevat kenguruiden kivekset?": {
+        "Peniksen alapuolella": false,
+        "Peniksen yläpuolella": true,
+        "Otsassa": false
+    },
+    "Kuinka monta vaginaa kengurulla on?": {
+        "1": false,
+        "2": false,
+        "3": true,
+        "4": false
+    },
+    "Mistä tulee lyhenne FBI?": {
+        "Federal Boob Inspectors": false,
+        "Federal Bureau of Investigation": true,
+        "Federal Investigation Bureau": false,
+        "Federal Bureau Intelligence": false
+    },
+    "Mikä on piin (π) 69. desimaali?": {
+        "1": true,
+        "2": false,
+        "3": false,
+        "8": false
+    },
+    "Mikä on pelaajan hyppykorkeus normaalisti Minecraftin 1.8 -versiossa": {
+        "1,249m": true,
+        "69,420mm": false,
+        "1,25m": false,
+        "1,252m": false
+    },
+    "Mitkä hormonit aiheuttavat ihmiskehon pituuskasvun? (2)": {
+        "Somatotropiini": true,
+        "Somatropiini": true,
+        "Tyroksiini": false,
+        "Pippeliini": false
+    },
+    "Mikä näistä EI OLE syy väestönkasvuun?": {
+        "Kondomien hajoaminen": false,
+        "Lisääntyminen": false,
+        "Seksi": false,
+        "GameStop:in osakkeiden ostaminen": true
+    },
+    "Mitkä näistä kaupungeista ovat megakaupunkeja? (4)": {
+        "Tokio": true,
+        "Shanghai": true,
+        "Delhi": true,
+        "Dhaka": true,
+        "Berliini": false,
+        "Helsinki": false
+    },
+    "Mikä megalopoli sijaitsee Yhdysvaltojen itärannikolla?": {
+        "BosWas": false,
+        "BoshWash": false,
+        "BosWash": true,
+        "BoshWas": false
+    },
+    "Mitkä näistä vähentävät väkilukua?": {
+        "Syntyvyys": false,
+        "Kuolleisuus": true,
+        "Maahanmuutto": false,
+        "Maastamuutto": true
+    },
+    "Ihminen, joka on muuttanut vainon takia pois kotimaastaan.": {
+        "Siirtolainen": false,
+        "Pakolainen": true,
+        "Turvapaikanhakija": false,
+        "Juutalainen": false
+    },
+    "Ihminen, joka on muuttanut paremman elintason toivossa maasta toiseen.": {
+        "Siirtolainen": true,
+        "Pakolainen": false,
+        "Turvapaikanhakija": false,
+        "Juutalainen": false
+    },
+    "Mikä on suomen yleisin kivilaji?": {
+        "Graniitti": true,
+        "Basaltti": false,
+        "Gneissi": false,
+        "Termiitti": false
+    },
+    "Mikä on kuivan kangasmetsän pääpuulaji?": {
+        "Mänty": true,
+        "Jäkälä": false,
+        "Kuusi": false,
+        "Koivu": false,
+        "Palmu": false
+    },
+    "Mikä on tuoreen kangasmetsän pääpuulaji?": {
+        "Mänty": false,
+        "Jäkälä": false,
+        "Kuusi": true,
+        "Koivu": false,
+        "Palmu": false
+    },
+    "Mitkä näistä eläimistä EIVÄT OLE tasalämpöisiä?": {
+        "Ihminen": false,
+        "Kana": false,
+        "Kala": true,
+        "Sammakko": true
+    },
+    "Mitkä seuraavista luonnonmaantieteellisistä muodostumista ovat syntyneet jään sulatessa ja jäätikön vetäytyessä? (2)": {
+        "drumliini": false,
+        "pitkittäisharju": true,
+        "silokallio": false,
+        "pohjamoreeni": false,
+        "lustosavi": true
+    },
+    "MarineTrafficissa on tietoja yli 650 000 aluksesta.": {
+        "Totta": true,
+        "Tarua": false
+    },
+    "Maailman suurin rahtialus on yli 399 metriä pitkä.": {
+        "Totta": true,
+        "Tarua": false
+    },
+    "Kuuman vyöhykkeen kasvi, josta valmistetaan mm. suklaata.": {
+        "Kaakao": true,
+        "Tee": false,
+        "Pepsi": false
+    },
+    "Kasvi, josta valmistetaan mm. farkkuja.": {
+        "Puuvilla": true,
+        "Muovivilla": false,
+        "Maitovilla": false,
+        "Metallivilla": false
+    },
+    "Uusiutuva luonnonvara": {
+        "Uraani": false,
+        "Puu": true,
+        "Hiili": false,
+        "Öljy": false,
+        "Rasputin": false
+    },
+    "Metalliesiintymä, jonka louhiminen on taloudellisesti kannattavaa.": {
+        "Malmö": false,
+        "Malmi": true,
+        "Lasi": false,
+        "Hiilikuitu": false,
+        "Flex Tape": false
+    },
+    "Radioaktiiviseen uraaniin perustuva energiamuoto.": {
+        "Maalämpö": false,
+        "Ydinlämpö": false,
+        "Fuusiolämpö": false,
+        "Maavoima": false,
+        "Ydinvoima": true,
+        "Fuusiovoima": false
+    },
+    "Rastita oikeat väittämät. (3)": {
+        "Betoni on uusiutuva luonnonvara": false,
+        "Litiumia tarvitaan nykyisin mm. akuissa.": true,
+        "Kiinalla on paljon luonnonvaroja": true,
+        "Chile on tärkeä kuparintuottaja": true
     }
 }

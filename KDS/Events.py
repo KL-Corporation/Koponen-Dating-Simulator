@@ -1,88 +1,75 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable, Union, overload
+from typing import Any, Callable, Iterable, Union
+
+import KDS.Linq
 
 new = list()
 
+# Currently no useful type hints, because I suck at Python
 class Event:
-    @overload
-    def __init__(self) -> None:
-        self.listeners = []
-    @overload
-    def __init__(self, values: Iterable) -> None:
+    def __init__(self, values: Iterable[Callable] = []) -> None:
         self.listeners = [v for v in values]
-        
+
     def __add__(self, value: Event) -> Event:
         if (isinstance(value, Event)):
-            if not any(v in value.listeners for v in self.listeners):
-                #Creates a new instance
-                return Event([*value.listeners, *self.listeners])
-            else:
-                raise ValueError("Events have overlapping values!")
+            toAdd = KDS.Linq.Where(value.listeners, lambda v: v not in self.listeners)
+            return Event([*self.listeners, *toAdd]) # Makes a new instance by unpacking two lists to a new list.
+            # else:
+            #     raise ValueError("Events have overlapping values!")
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
-        
-    def __iadd__(self, value: Union[Callable[[]], Event]) -> Event:
+
+    def __iadd__(self, value: Union[Callable, Event]) -> Event:
         if callable(value):
             if value not in self.listeners:
                 self.listeners.append(value)
-                return self
-            else:
-                raise ValueError(f"Value {value} already in events!")
+            return self
+            # else: Maybe throwing an error is a bit too much
+            #     raise ValueError(f"Value {value} already in events!")
         elif isinstance(value, Event):
-            if not any(v in value.listeners for v in self.listeners):
-                self.listeners.extend(value.listeners)
-                return self
-            else:
-                raise ValueError("Events have overlapping values!")
+            toAdd = KDS.Linq.Where(value.listeners, lambda v: v not in self.listeners)
+            self.listeners.extend(toAdd)
+            return self
+            # else:
+            #     raise ValueError("Events have overlapping values!")
         else:
             raise TypeError(f"Value of type {type(value)} is not callable and also not an event!")
-    
+
     def __sub__(self, value: Event) -> Event:
         if isinstance(value, Event):
-            newVals = []
-            for l in self.listeners:
-                if l not in value.listeners:
-                    newVals.append(l)
-            for l in value.listeners:
-                if l not in self.listeners and l not in newVals:
-                    newVals.append(l)
-            return Event(newVals)
+            newValues = KDS.Linq.Where(value.listeners, lambda v: v not in self.listeners)
+            return Event(newValues)
         else:
             raise TypeError(f"Value of type {type(value)} is not an Event!")
-        
-    def __isub__(self, value: Union[Callable[[]], Event]):
+
+    def __isub__(self, value: Union[Callable, Event]):
         if callable(value):
             while value in self.listeners:
                 self.listeners.remove(value)
-                return self
         elif isinstance(value, Event):
-            for l in self.listeners:
-                while l in value.listeners: self.listeners.remove(l)
-            return self
+            toRemove = KDS.Linq.Where(value.listeners, lambda v: v in self.listeners)
+            for rem in toRemove:
+                self.listeners.remove(rem) # No need to check for duplicates, there should not be any.
         else:
             raise TypeError(f"Value of type {type(value)} is not callable and also not an event!")
-        
+        return self
+
     def __eq__(self, target: Event) -> bool:
         if isinstance(target, Event):
             return self.listeners == target.listeners
         else:
-            raise TypeError(f"Value of type {type(target)} is not an Event!")
-    
+            return False
+
     def __ne__(self, target: Event) -> bool:
-        if isinstance(target, Event):
-            return self.listeners != target.listeners
-        else:
-            raise TypeError(f"Value of type {type(target)} is not an Event!")
-    
-    def __contains__(self, value: Event) -> bool:
-        if isinstance(value, Event):
-            return value in self.listeners
-        else:
-            raise TypeError(f"Value of type {type(value)} is not an Event!")
-        
+        return not self.__eq__(target)
+
+    def __contains__(self, value: Callable) -> bool:
+        return value in self.listeners # Will return False if wrong type.
+
     def __len__(self) -> int:
         return len(self.listeners)
-    
+
     def Invoke(self, *args, **kwargs):
-        for listener in self.listeners: listener(*args, **kwargs)
+        for listener in self.listeners.copy():
+            listener(*args, **kwargs)

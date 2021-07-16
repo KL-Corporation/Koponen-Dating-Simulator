@@ -1,24 +1,23 @@
 #region Importing
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 import json
-from typing import Dict, List, Tuple, Union
 
 import pygame
 
 import KDS.Animator
 import KDS.Audio
+import KDS.Build
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Events
 import KDS.Gamemode
 import KDS.Koponen
 import KDS.Logging
+import KDS.NPC
 import KDS.Math
+import KDS.Linq
 
-#endregion
-#region Initialisation
-with open ("Assets/Textures/build.json", "r") as f:
-    data = f.read()
-buildData = json.loads(data)
 #endregion
 #region Settings
 MissionColor = (128, 128, 128)
@@ -43,44 +42,76 @@ class Padding:
 #region Listeners
 class Listener:
     def __init__(self) -> None:
-        self.listenerList: List[Tuple[str, str, float]] = []
-        
+        self._listenerList: List[Tuple[str, str, float]] = []
+        self.OnTrigger = KDS.Events.Event()
+
     def Add(self, MissionName: str, TaskName: str, AddValue: float):
-        self.listenerList.append((MissionName, TaskName, AddValue))
-        
+        self._listenerList.append((MissionName, TaskName, AddValue))
+
+    def ContainsActiveTask(self) -> bool:
+        global Active_Mission
+        return KDS.Linq.Any(self._listenerList, lambda l: l[0] == Active_Mission and (m := Missions.GetMission(Active_Mission)) != None and m.GetTask(l[1]) != None)
+
     def Trigger(self):
-        for listnr in self.listenerList:
+        for listnr in self._listenerList:
             AddProgress(listnr[0], listnr[1], listnr[2])
+        self.OnTrigger.Invoke()
+
+    def Clear(self):
+        self._listenerList.clear()
 
 class ItemListener:
     def __init__(self) -> None:
-        self.listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
-           
+        self._listenerDict: Dict[int, List[Tuple[str, str, float]]] = {}
+        self.OnTrigger = KDS.Events.Event()
+
     def Add(self, itemSerial: int, MissionName: str, TaskName: str, AddValue: float):
-        if itemSerial not in self.listenerDict:
-            self.listenerDict[itemSerial] = []
-        self.listenerDict[itemSerial].append((MissionName, TaskName, AddValue))
-        
+        if itemSerial not in self._listenerDict:
+            self._listenerDict[itemSerial] = []
+        self._listenerDict[itemSerial].append((MissionName, TaskName, AddValue))
+
     def Trigger(self, itemSerial: int):
-        if itemSerial in self.listenerDict:
-            for v in self.listenerDict[itemSerial]:
+        if itemSerial in self._listenerDict:
+            for v in self._listenerDict[itemSerial]:
                 AddProgress(v[0], v[1], v[2])
+        self.OnTrigger.Invoke(itemSerial)
+
+    def Clear(self):
+        self._listenerDict.clear()
 
 class Listeners:
     InventorySlotSwitching = Listener()
     Movement = Listener()
     KoponenTalk = Listener()
-    KoponenAskDate = Listener()
     KoponenRequestMission = Listener()
+    KoponenReturnMission = Listener()
     LevelEnder = Listener()
+    Teleport = Listener()
+    TileSleepStart = Listener()
+    TileSleepEnd = Listener()
+    EnemyDeath = Listener()
+    TeacherAgro = Listener()
+    TeacherDeath = Listener()
+    KuuMaDeath = Listener()
+    DoorGuardNPCDeath = Listener()
+    DoorGuardNPCEnable = Listener()
+    DoorGuardNPCDisable = Listener()
+    Shoplifting = Listener()
+    TileFireCreated = Listener()
+    KoponenTalkEmbed0 = Listener()
+    KoponenTalkEmbed1 = Listener()
+    KoponenTalkEmbed2 = Listener()
+    AnyWeaponPickup = Listener()
     ItemPickup = ItemListener()
     ItemDrop = ItemListener()
+    ItemPurchase = ItemListener()
 #endregion
 #region Classes
 class Task:
     def __init__(self, missionName: str, safeName: str, text: str) -> None:
         global Missions
         self.safeName = safeName
+        self.missionName = missionName
         self.text = text
         self.renderedText = TaskFont.render(self.text, True, KDS.Colors.White)
         self.renderedTextSize = self.renderedText.get_size()
@@ -88,177 +119,227 @@ class Task:
         self.progressScaled = 0
         self.finished = False
         self.lastFinished = False
-        self.color = KDS.Animator.Color(TaskColor, TaskFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
-        Missions.GetMission(missionName).AddTask(safeName, self)
-        
+        self.color = KDS.Animator.Color(TaskColor, TaskColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
+
+        tmpMsn = Missions.GetMission(missionName)
+        assert tmpMsn != None, "Cannot add task to a non-existing mission!"
+        tmpMsn.AddTask(safeName, self)
+
     def Progress(self, Value: float, Add: bool = False):
         self.progress = (self.progress + Value if Add else Value)
         if self.progress >= 1.0:
             self.finished = True
             self.progress = 1.0
-        else: 
+        else:
             self.finished = False
             if self.progress < 0.0: self.progress = 0.0
-        self.progressScaled = KDS.Math.Floor(self.progress * 100)
-        
+        self.progressScaled = KDS.Math.FloorToInt(self.progress * 100)
+
     def Update(self, Width: int, Height: int, PlaySound: bool = True):
-        surface = pygame.Surface((Width, Height))
-        surface.fill(self.color.update(not self.finished))
-        surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
-        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
         if self.finished != self.lastFinished:
             if self.finished:
                 if PlaySound:
                     KDS.Audio.PlaySound(TaskFinishSound)
-                self.color.changeValues(TaskColor, TaskFinishedColor)
+                self.color.From = TaskColor
+                self.color.To = TaskFinishedColor
             else:
                 if PlaySound:
                     KDS.Audio.PlaySound(TaskUnFinishSound)
-                self.color.changeValues(TaskColor, TaskUnFinishedColor)
+                self.color.From = TaskColor
+                self.color.To = TaskUnFinishedColor
+
+        surface = pygame.Surface((Width, Height))
+        surface.fill(self.color.update(not self.finished))
+        surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
+        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
         self.lastFinished = self.finished
         return surface
 
 class KoponenTask(Task):
-    def __init__(self, missionName: str, safeName: str, text: str, itemID: int, itemPrompt: str) -> None:
+    def __init__(self, missionName: str, safeName: str, text: str, itemIDs: Iterable[int], removeItems: bool) -> None:
         super().__init__(missionName, safeName, text)
         koponenTaskCount = 0
-        for task in Missions.GetMission(missionName).GetTaskList():
-            if isinstance(task, KoponenTask): koponenTaskCount += 1
-        if koponenTaskCount > 1: KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
-        self.item = itemID
-        self.itemPrompt = itemPrompt
-        if itemID not in buildData["inventory_items"]: KDS.Logging.AutoError("Item cannot be returned, since it cannot be picked up into inventory!")
+        tmpMsn = Missions.GetMission(missionName)
+        assert tmpMsn != None, "Cannot add Koponen task to a non-existing mission!"
+        for task in tmpMsn.GetTaskList():
+            if isinstance(task, KoponenTask):
+                koponenTaskCount += 1
+        if koponenTaskCount > 1:
+            KDS.Logging.AutoError("Only one Koponen Task allowed per mission!")
+        self.items = itemIDs
+        self.removeItems = removeItems
+
+class StudentTask(Task):
+    def __init__(self, missionName: str, safeName: str, text: str, interactCount: int, interactPrompt: str, completedItem: int) -> None:
+        super().__init__(missionName, safeName, text)
+        studentTaskCount = 0
+        tmpMsn = Missions.GetMission(missionName)
+        assert tmpMsn != None, "Cannot add student task to a non-existing mission!"
+        for task in tmpMsn.GetTaskList():
+            if isinstance(task, StudentTask):
+                studentTaskCount += 1
+        if studentTaskCount > 1:
+            KDS.Logging.AutoError("Only one Student Task allowed per mission!")
+        self.interacted: int = 0
+        self.interactCount: int = interactCount
+        self.interactedStudents: List[KDS.NPC.StudentNPC] = []
+        self.prompt: pygame.Surface = TipFont.render(interactPrompt, True, KDS.Colors.White)
+        self.item = completedItem
+        self.itemGiven: bool = False
+
+    def HasInteracted(self, student: KDS.NPC.StudentNPC) -> bool:
+        return student in self.interactedStudents
+
+    def Interact(self, student: KDS.NPC.StudentNPC) -> Optional[KDS.Build.Item]:
+        self.interactedStudents.append(student)
+        self.interacted += 1
+        self.Progress(self.interacted / self.interactCount)
+        if self.interacted >= self.interactCount and not self.itemGiven:
+            self.itemGiven = True
+            return KDS.Build.Item.serialNumbers[self.item](student.rect.center, self.item)
+        return None
 
 class Mission:
-    def __init__(self, safeName: str, text: str) -> None:
+    def __init__(self, safeName: str, text: str, playSound: bool) -> None:
         global Missions
         self.safeName = safeName
         self.text = text
         self.renderedText = MissionFont.render(self.text, True, KDS.Colors.White)
         self.textSize = self.renderedText.get_size()
         self.tasks: Dict[str, Task] = {}
-        self.task_keys: List[str] = []
-        self.task_values: List[Task] = []
         self.finished = False
         self.lastFinished = False
         self.finishedTicks = 0
         self.trueFinished = False
         self.color = KDS.Animator.Color(MissionColor, MissionFinishedColor, TaskAnimationDuration, AnimationType, KDS.Animator.OnAnimationEnd.Stop)
-        self.PlaySound = True
+        self._playTaskSound: bool = False
+        self.playSound = playSound
         Missions.AddMission(self.safeName, self)
-        
+
     def AddTask(self, safeName: str, task: Task):
         if safeName not in self.tasks:
             self.tasks[safeName] = task
-            self.task_keys = safeName
-            self.task_values.append(self.tasks[safeName])
         else: KDS.Logging.AutoError("SafeName is already occupied!")
-        
+
     def GetTask(self, safeName: str):
         if safeName in self.tasks: return self.tasks[safeName]
         else: return None
-    
-    def GetTaskList(self):
-        return self.task_values
-    
-    def GetKeyList(self):
-        return self.task_keys
-    
+
+    def GetTaskList(self) -> List[Task]:
+        return list(self.tasks.values())
+
+    def GetKeyList(self) -> List[str]:
+        return list(self.tasks.keys())
+
     def GetTaskByValue(self, value):
-        return self.tasks[self.task_keys[self.task_values.index(value)]]
-    
+        return self.tasks[tuple(self.tasks.keys())[tuple(self.tasks.values()).index(value)]]
+
     def Update(self):
         self.finished = True
-        self.PlaySound = False
+        self._playTaskSound = False
         notFinished = 0
         taskAssigned = False
-        for task in self.task_values:
+        hasKoponenTask: bool = False
+        hasStudentTask: bool = False
+        for task in self.tasks.values():
             if not task.finished:
                 self.finished = False
                 notFinished += 1
 
             if isinstance(task, KoponenTask):
                 KDS.Koponen.Mission.Task = task
-                taskAssigned = True
+                hasKoponenTask = True
+            elif isinstance(task, StudentTask):
+                KDS.NPC.StudentNPC.Task = task
+                hasStudentTask = True
 
-            if notFinished > 1:
-                self.PlaySound = True
-                if taskAssigned: break
+            if notFinished > 0:
+                self._playTaskSound = True
+                if taskAssigned:
+                    break
         del notFinished, taskAssigned
+
+        if not hasKoponenTask:
+            KDS.Koponen.Mission.Task = None
+        if not hasStudentTask:
+            KDS.NPC.StudentNPC.Task = None
 
         if self.finished:
             self.finishedTicks += 1
         else:
             self.trueFinished = False
             self.finishedTicks = 0
-            
+
         if self.finishedTicks > MissionWaitTicks:
             self.trueFinished = True
             self.finishedTicks = MissionWaitTicks
-        
+
         if self.lastFinished != self.finished:
             if self.finished:
-                KDS.Audio.PlaySound(MissionFinishSound)
-                self.color.changeValues(MissionColor, MissionFinishedColor)
+                if self.playSound:
+                    KDS.Audio.PlaySound(MissionFinishSound)
+                self.color.From = MissionColor
+                self.color.To = MissionFinishedColor
             else:
-                KDS.Audio.PlaySound(MissionUnFinishSound)
-                self.color.changeValues(MissionColor, MissionUnFinishedColor)
+                if self.playSound:
+                    KDS.Audio.PlaySound(MissionUnFinishSound)
+                self.color.From = MissionColor
+                self.color.To = MissionUnFinishedColor
         self.lastFinished = self.finished
-    
+
     def Render(self) -> Tuple[pygame.Surface, int]:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
         _taskWidth = 0
-        for task in self.task_values:
+        for task in self.tasks.values():
             _taskWidth = max(_taskWidth, task.renderedTextSize[0])
         _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
-        HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.task_values))
-        surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.task_values))))
+        surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))))
         surface.fill(self.color.update(not self.finished))
         surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
-        for i, t in enumerate(self.task_values):
-            surface.blit(t.Update(_taskWidth, _taskHeight, self.PlaySound), (0, HeaderHeight + (i * _taskHeight)))
+        for i, t in enumerate(self.tasks.values()):
+            surface.blit(t.Update(_taskWidth, _taskHeight, self._playTaskSound if self.playSound else False), (0, HeaderHeight + (i * _taskHeight)))
         return surface, int(_taskWidth)
 
 class MissionHolder:
     def __init__(self) -> None:
         self.missions: Dict[str, Mission] = {}
-        self.mission_keys: List[str] = []
-        self.mission_values: List[Mission] = []
-        self.finished = False
-        
-    def GetMission(self, safeName: str):
-        if safeName in self.missions: return self.missions[safeName]
-        else: return None
-    
-    def GetMissionList(self):
-        return self.mission_values
-    
-    def GetKeyList(self):
-        return self.mission_keys
-    
-    def GetMissionByValue(self, value):
-        return self.missions[self.mission_keys[self.mission_values.index(value)]]
-    
+        self.finished: bool = False
+
+    def GetMission(self, safeName: str) -> Union[Mission, None]:
+        if safeName in self.missions:
+            return self.missions[safeName]
+        else:
+            return None
+
+    def GetMissionList(self) -> List[Mission]:
+        return list(self.missions.values())
+
+    def GetKeyList(self) -> List[str]:
+        return list(self.missions.keys())
+
+    def GetMissionByValue(self, value) -> Mission:
+        return self.missions[tuple(self.missions.keys())[tuple(self.missions.values()).index(value)]]
+
     def AddMission(self, safeName: str, mission: Mission):
         if safeName not in self.missions:
             self.missions[safeName] = mission
-            self.mission_keys.append(safeName)
-            self.mission_values.append(self.missions[safeName])
-        else: KDS.Logging.AutoError("SafeName is already occupied!")
+        else:
+            KDS.Logging.AutoError("SafeName is already occupied!")
 
-Missions = MissionHolder()     
+Missions = MissionHolder()
 #endregion
 #region init
 Active_Mission: str
 def init():
-    global MissionFont, TaskFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
+    global MissionFont, TaskFont, TipFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
+    TipFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
     MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
     TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
     TaskFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_finish.ogg")
     TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_unfinish.ogg")
     MissionFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_finish.ogg")
     MissionUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_unfinish.ogg")
-    Active_Mission = None
+    Active_Mission = ""
     Last_Active_Mission = 0
     text_height = 0
     TextOffset = int(TaskFont.size(" ")[0] * TextOffset)
@@ -278,32 +359,44 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
         if isinstance(data[0], Listener):
             data[0].Add(MissionName, SafeName, data[1])
         elif isinstance(data[0], ItemListener):
-            data[0].Add(data[1], MissionName, SafeName, data[1])
-        else: raise TypeError("Listener is not a valid type!")
-        
-def InitialiseMission(SafeName: str, Text: str):
+            data[0].Add(cast(int, data[1]), MissionName, SafeName, cast(float, data[2]))
+        else: raise ValueError("Invalid arguments were given.")
+
+def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, *itemIDs: int, removeItems: bool = True):
+    KoponenTask(MissionName, SafeName, Text, itemIDs, removeItems)
+
+def InitialiseStudentTask(MissionName: str, SafeName: str, Text: str, InteractCount: int, Prompt: str, CompletedItem: int):
+    StudentTask(MissionName, SafeName, Text, InteractCount, Prompt, CompletedItem)
+
+def InitialiseMission(SafeName: str, Text: str, NoSound: bool = False):
     """Initialises a mission.
 
     Args:
         Safe_Name (str): A name that does not conflict with any other names.
         Visible_Name (str): The name that will be displayed as the task header.
     """
-    Mission(SafeName, Text)
+    Mission(SafeName, Text, not NoSound)
 #endregion
 #region Rendering
 def Render(surface: pygame.Surface):
     global Missions, Active_Mission
-    Active_Mission = None
+    Active_Mission = ""
     for mission in Missions.GetMissionList():
         mission.Update()
         if not mission.trueFinished:
             Active_Mission = mission.safeName
             break
-    if Active_Mission == None: Missions.finished = True
-    else: Missions.finished = False
-    if not Missions.finished:
-        rendered, offset = Missions.GetMission(Active_Mission).Render()
+    if len(Active_Mission) < 1:
+        Missions.finished = True
+        return
+
+    Missions.finished = False
+    tmpMsn = Missions.GetMission(Active_Mission)
+    if tmpMsn != None:
+        rendered, offset = tmpMsn.Render()
         surface.blit(rendered, (surface.get_width() - offset, 0))
+    else:
+        KDS.Logging.AutoError("Tried to render a non-existing mission!")
 #endregion
 #region Progress
 def SetProgress(MissionName: str, TaskName: str, SetValue: float):
@@ -315,10 +408,10 @@ def SetProgress(MissionName: str, TaskName: str, SetValue: float):
         Set_Value (float): The value that will be set to your task's progress.
     """
     var = Missions.GetMission(MissionName)
-    if var != None: 
+    if var != None:
         var = var.GetTask(TaskName)
         if var != None: var.Progress(SetValue)
-    
+
 def AddProgress(MissionName: str, TaskName: str, AddValue: float):
     """Adds a specified amount of progress to a task.
 
@@ -337,62 +430,31 @@ def GetFinished():
     return Missions.finished
 def SetFinished(MissionName: str):
     global Missions
-    for task in Missions.GetMission(MissionName).GetTaskList():
-        task.Progress(100)
+    tmpMsn = Missions.GetMission(MissionName)
+    if tmpMsn != None:
+        for task in tmpMsn.GetTaskList():
+            task.Progress(100)
+    else:
+        KDS.Logging.AutoError("Tried to set finished for a non-existing mission!")
 def Clear():
     global Missions
+    KDS.Koponen.Mission.Task = None
+    for l in Listeners.__dict__.values():
+        if isinstance(l, Listener) or isinstance(l, ItemListener):
+            l.Clear()
     Missions = MissionHolder()
 def Finish():
     global Missions
     for _mission in Missions.GetMissionList():
         for _task in _mission.GetTaskList():
             _task.Progress(100)
-#endregion
-#region Missions
-class Presets:
-    @staticmethod
-    def Tutorial():
-        InitialiseMission("tutorial", "Tutoriaali")
-        InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (Listeners.Movement, 0.005))
-        InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (Listeners.InventorySlotSwitching, 0.2))
-        InitialiseTask("tutorial", "fart", "Piere painamalla: F, kun staminasi on 100")
-        InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (Listeners.ItemDrop, 6, 1.0), (Listeners.ItemPickup, 6, -1.0))
-        
-    @staticmethod
-    def KoponenIntroduction():
-        InitialiseMission("koponen_introduction", "Tutustu Koposeen")
-        InitialiseTask("koponen_introduction", "talk", "Puhu Koposelle", (Listeners.KoponenTalk, 1.0))
-        InitialiseTask("koponen_introduction", "mission", "Pyydä Tehtävää Koposelta", (Listeners.KoponenRequestMission, 1.0))
-
-    @staticmethod
-    def LevelExit():
-        InitialiseMission("reach_level_exit", "Uloskäynti")
-        InitialiseTask("reach_level_exit", "exit", "Löydä Uloskäynti", (Listeners.LevelEnder, 1.0))
-        
-def InitialiseMissions(index):
-    Clear()
-    if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-        if index == 1:
-            Presets.Tutorial()
-            InitialiseMission("enter_school", "Mene Kouluun")
-            InitialiseTask("enter_school", "side_door", "Kävele Kouluun Sivuovesta", (Listeners.LevelEnder, 1.0))
-            
-        elif index == 2:
-            Presets.KoponenIntroduction()
-            InitialiseMission("coffee_mission", "Kahvi Kuumana, Koponen Nuorena")
-            InitialiseTask("coffee_mission", "find_mug", "Etsi Koposen Kahvikuppi")
-            InitialiseTask("coffee_mission", "return_mug", "Palauta Koposen Kahvikuppi")
-        
-            InitialiseMission("sauna_and_exit", "Suuret Haaveet")
-            InitialiseTask("sauna_and_exit", "find_and_exit", "Etsi Saunavessa Koulupolkusi Jatkamiseksi", (Listeners.LevelEnder, 1.0))
-            
-        elif index == 3:
-            InitialiseMission("biology_test", "Biologian Tunti")
-            InitialiseTask("biology_test", "go_to_biology_test", "Mene Biologian Tunnille")
-    else:
-        if index == 1:
-            Presets.Tutorial()
-            Presets.LevelExit()
-        else:
-            Presets.LevelExit()
+def ForceFinish():
+    global Missions
+    for _mission in Missions.GetMissionList():
+        for _task in _mission.GetTaskList():
+            _task.Progress(100)
+            _task.lastFinished = True
+        _mission.finished = True
+        _mission.trueFinished = True
+        _mission.lastFinished = True
 #endregion

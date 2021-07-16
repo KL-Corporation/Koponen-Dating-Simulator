@@ -1,66 +1,112 @@
+from typing import List, Optional
+import pygame
+import pygame.mixer
 import KDS.ConfigManager
+import KDS.Events
+import KDS.Logging
 
-def init(_mixer):
-    global MusicMixer, MusicVolume, EffectVolume, EffectChannels, SoundMixer
-    MusicMixer = _mixer.music
-    SoundMixer = _mixer
-    
-    _mixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", 32))
+MUSICENDEVENT = pygame.event.custom_type()
 
-    MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", 0.25)
-    EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", 0.75)
+SoundMixer = pygame.mixer
+MusicMixer = pygame.mixer.music
+
+MusicVolume: float
+EffectVolume: float
+EffectChannels: List[SoundMixer.Channel]
+def init():
+    global MusicVolume, EffectVolume, EffectChannels
+    pygame.mixer.init()
+
+    MusicMixer.set_endevent(MUSICENDEVENT)
+
+    SoundMixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", ...))
+
+    MusicVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/music", ...)
+    EffectVolume = KDS.ConfigManager.GetSetting("Mixer/Volume/effect", ...)
     EffectChannels = []
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))
-        
+
 class Music:
+    Loaded = None
+    OnEnd = KDS.Events.Event()
+
     @staticmethod
-    def Play(path: str, loops: int = -1):
+    def Play(path: str = None, loops: int = -1):
         global MusicMixer, MusicVolume
-        if MusicMixer.get_busy(): MusicMixer.stop()
-        if path != None: MusicMixer.load(path)
-        MusicMixer.play(loops)
-        MusicMixer.set_volume(MusicVolume)
-        
+        if path != None and len(path) > 0:
+            Music.Load(path=path)
+        if Music.Loaded != None:
+            MusicMixer.play(loops=loops)
+            MusicMixer.set_volume(MusicVolume)
+        else:
+            KDS.Logging.AutoError("No music track has been loaded to play!")
+
     @staticmethod
     def Stop():
         global MusicMixer, MusicVolume
         MusicMixer.stop()
-        
+
+    @staticmethod
+    def Fadeout(seconds: float):
+        global MusicMixer
+        MusicMixer.fadeout(round(seconds * 1000.0))
+
     @staticmethod
     def Pause():
         global MusicMixer, MusicVolume
         MusicMixer.pause()
-        
+
     @staticmethod
     def Unpause():
         global MusicMixer, MusicVolume
         MusicMixer.unpause()
-        
+
+    @staticmethod
+    def Load(path: str):
+        global MusicMixer, MusicVolume
+        if MusicMixer.get_busy(): MusicMixer.stop()
+        if path == None:
+            raise ValueError("Audio file path cannot be null!")
+        MusicMixer.load(path)
+        Music.Loaded = path
+
     @staticmethod
     def Unload():
         global MusicMixer, MusicVolume
         MusicMixer.unload()
-        
+        Music.Loaded = None
+
     @staticmethod
     def Rewind():
         global MusicMixer, MusicVolume
         MusicMixer.rewind()
-  
+
     @staticmethod
     def SetVolume(volume: float):
         global MusicVolume, MusicMixer
         MusicVolume = volume
         MusicMixer.set_volume(MusicVolume)
- 
+
+    @staticmethod
+    def SetPos(pos: float):
+        global MusicMixer
+        MusicMixer.set_pos(pos)
+
+    @staticmethod
+    def GetPlaying():
+        global MusicMixer
+        return MusicMixer.get_busy()
+
 def quit():
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    MusicMixer.quit()
+    SoundMixer.quit()
 
-def PlaySound(sound, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    if volume == -1: volume = EffectVolume
-    play_channel = SoundMixer.find_channel(True)
+    if volume == -1.0:
+        volume = EffectVolume
+    play_channel = SoundMixer.find_channel(True) # Won't return None, because force is true
     play_channel.play(sound, loops, fade_ms)
     play_channel.set_volume(volume)
     return play_channel
@@ -94,6 +140,10 @@ def SetVolume(volume: float):
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
 
-def PlayFromFile(path, volume: float = -1, loops: int = 0, fade_ms: int = 0):
+def PlayFromFile(path: str, volume: float = -1.0, clip_volume: float = 1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     sound = SoundMixer.Sound(path)
-    PlaySound(sound, volume, loops, fade_ms)
+    if clip_volume != 1.0:
+        sound.set_volume(clip_volume)
+    output = PlaySound(sound, volume, loops, fade_ms)
+    del sound
+    return output

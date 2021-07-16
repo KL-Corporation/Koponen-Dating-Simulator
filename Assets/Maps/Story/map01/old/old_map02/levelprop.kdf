@@ -1,0 +1,43 @@
+{
+    "Data": {
+        "TimeBonus": {
+            "end": 2,
+            "start": 1
+        }
+    },
+    "Entities": {
+        "Koponen": {
+            "startPos": [
+                2686,
+                714
+            ],
+            "enabled": true,
+            "forceIdle": true,
+            "talk": true
+        },
+        "Player": {
+            "startPos": [
+                1479,
+                745
+            ]
+        }
+    },
+    "Rendering": {
+        "AmbientLight": {
+            "enabled": false,
+            "tint": [
+                0,
+                0,
+                0
+            ]
+        },
+        "Darkness": {
+            "enabled": false,
+            "playerLight": false,
+            "strength": 0
+        }
+    },
+    "Audio": {
+        "resumeLastSong": true
+    }
+}

@@ -1,161 +1,307 @@
 from __future__ import annotations
-#region Import Error
-if __name__ != "__main__":
-    raise ImportError("Level Builder cannot be imported!")
-#endregion
-
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
-from typing import Any, Dict, List, Tuple, Union
-import sys
 import pygame
+import pygame.draw
 from pygame.locals import *
+import KDS.Clock
 import KDS.Colors
-import KDS.Convert
 import KDS.ConfigManager
-import KDS.System
-import KDS.Math
-import KDS.UI
 import KDS.Console
-import tkinter 
+import KDS.Convert
+import KDS.Debug
+import KDS.Events
+import KDS.Math
+import KDS.Jobs
+import KDS.Linq
+import KDS.Loading
+import KDS.Logging
+import KDS.System
+import KDS.UI
+import tkinter
 from tkinter import filedialog
 import json
-import copy
+import traceback
+from dataclasses import dataclass
+from enum import Enum, IntEnum
+
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast
 
 root = tkinter.Tk()
 root.withdraw()
+root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 pygame.init()
-display_size = (1600, 800)
+pygame.scrap.init()
+pygame.scrap.set_mode(SCRAP_CLIPBOARD)
+display_size: Tuple[int, int] = (1600, 800)
+monitor_info = pygame.display.Info()
 scalesize = 68
 gamesize = 34
 scaleMultiplier = scalesize / gamesize
 
-display: pygame.Surface = pygame.display.set_mode(display_size)
+ZOOMRANGE = (3, 128)
+DEFAULTZOOM = scalesize
+
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
+def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
+    global display, display_size, display_info
+    display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
+    display_size = display.get_size()
+    display_info = pygame.display.Info()
+SetDisplaySize((min(display_size[0], monitor_info.current_w), min(display_size[1], monitor_info.current_h - 100)))
 
-clock = pygame.time.Clock()
+APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
+LOGPATH = os.path.join(APPDATA, "logs")
+os.makedirs(LOGPATH, exist_ok=True)
+KDS.Logging.init(APPDATA, LOGPATH)
+KDS.Jobs.init()
+
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
 harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
 
-consoleBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
+class UnitType(IntEnum):
+    Tile = 0
+    Item = 1
+    Enemy = 2
+    Teleport = 3
+    Entity = 4
+    Unspecified = 9
 
-brushNames = {
-    "imp": "2001",
-    "seargeant": "2002",
-    "drug_dealer": "2003",
-    "turbo_shotgunner": "2004",
-    "mafiaman": "2005",
-    "methmaker": "2006",
-    "undead_monster": "2007",
-    "teleport": "3001"
-}
+class TextureHolder:
+    class TextureData:
+        def __init__(self, serialNumber: str, path: Optional[str], name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]], alpha: int = -1) -> None:
+            self.serialNumber = serialNumber
+            if path != None:
+                self.path: str = path
+                self.directory, self.filename = os.path.split(self.path)
+                self.texture: pygame.Surface = pygame.image.load(path).convert()
+            else:
+                self.path: str = "<error>"
+                KDS.Logging.AutoError("Texture path was None.")
+                self.directory = "<error>"
+                self.filename = "<error>"
+                self.texture: pygame.Surface = pygame.Surface((gamesize, gamesize))
+            self.texture_size: Tuple[int, int] = self.texture.get_size()
+            self.name = name
+            if colorkey != None:
+                if len(colorkey) == 3:
+                    self.texture.set_colorkey(cast(Tuple[int, int, int], colorkey))
+                elif len(colorkey) == 2:
+                    self.texture.set_colorkey(self.texture.get_at(colorkey))
+                else:
+                    KDS.Logging.AutoError("Invalid colorkey.")
+            if 0 <= alpha <= 255:
+                self.texture.set_alpha(alpha)
+            self.rescaleTexture()
 
-with open("Assets/Textures/build.json") as f:
-    d = f.read()
-buildData = json.loads(d)
+        def rescaleTexture(self):
+            self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (round(self.texture.get_width() * scaleMultiplier), round(self.texture.get_height() * scaleMultiplier)))
+            self.scaledTexture_size: Tuple[int, int] = self.scaledTexture.get_size()
 
-t_textures = {}
-for element in buildData["tile_textures"]:
-    srl = f"0{element}"
+            drkOvl = self.scaledTexture.convert_alpha()
+            drkOvl.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
+            self.darkOverlay = drkOvl
 
-    elmt = buildData["tile_textures"][element]
-    t_textures[srl] = pygame.image.load("Assets/Textures/Tiles/" + elmt).convert()
-    t_textures[srl].set_colorkey(KDS.Colors.White)
-    brushNames[os.path.splitext(elmt)[0]] = srl
+            lghtOvl = self.scaledTexture.convert_alpha()
+            lghtOvl.fill((255, 255, 255, 255), special_flags=BLEND_RGB_MAX)
+            lghtOvl.fill((255, 255, 255, 128), special_flags=BLEND_RGBA_MULT)
+            self.lightOverlay = lghtOvl
 
-i_textures = {}
-for element in buildData["item_textures"]:
-    srl = f"1{element}"
-    
-    elmt = buildData["item_textures"][element]
-    i_textures[srl] = pygame.image.load("Assets/Textures/Items/" + elmt).convert()
-    i_textures[srl].set_colorkey(KDS.Colors.White)
-    brushNames[os.path.splitext(elmt)[0]] = srl
+    def __init__(self) -> None:
+        self.data: Dict[UnitType, Dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
+        self.serials: List[str] = []
+        self.names: List[str] = []
 
-e_textures = {
-    "2001": pygame.image.load("Assets/Textures/Animations/imp_walking_0.png").convert(),
-    "2002": pygame.image.load("Assets/Textures/Animations/seargeant_walking_0.png").convert(),
-    "2003": pygame.image.load("Assets/Textures/Animations/drug_dealer_walking_0.png").convert(),
-    "2004": pygame.image.load("Assets/Textures/Animations/turbo_shotgunner_walking_0.png").convert(),
-    "2005": pygame.image.load("Assets/Textures/Animations/mafiaman_walking_0.png").convert(),
-    "2006": pygame.image.load("Assets/Textures/Animations/methmaker_idle_0.png").convert(),
-    "2007": pygame.image.load("Assets/Textures/Animations/undead_monster_walking_0.png").convert(),
-    "2008": pygame.image.load("Assets/Textures/Animations/mummy_walking_0.png").convert()
-}
+    def __iter__(self):
+        self.iterIndex: int = 0
+        self.iterValues: List[TextureHolder.TextureData] = []
+        for d in self.data.values():
+            self.iterValues.extend([v for v in d.values()])
+        return self
 
-teleports = {
-    "3001" : pygame.image.load("Assets/Textures/Editor/telep.png").convert(),
-    "3002" : pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
-}
+    def __next__(self) -> TextureHolder.TextureData:
+        if self.iterIndex >= len(self.iterValues):
+            raise StopIteration
+        output = self.iterValues[self.iterIndex]
+        self.iterIndex += 1
+        return output
 
-Atextures = {
-    "0": t_textures,
-    "1": i_textures,
-    "2": e_textures,
-    "3": teleports
-}
+    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]] = KDS.Colors.White, alpha: int = -1) -> None:
+        try:
+            self.data[UnitType(int(serialNumber[0]))][serialNumber] = TextureHolder.TextureData(serialNumber, path, name, colorkey, alpha)
+            self.serials.append(serialNumber)
+            self.names.append(name)
+        except Exception as e:
+            KDS.Logging.AutoError(f"Could not add texture \"{serialNumber}\" at path: \"{path}\"! Exception: {e}")
 
-trueScale = [f"0{e}" for e in buildData["trueScale"]]
+    def GetData(self, serialNumber: str) -> TextureHolder.TextureData:
+        try:
+            return self.data[UnitType(int(serialNumber[0]))][serialNumber]
+        except Exception as e:
+            KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! {type(e).__name__}: {e}")
+            return TextureHolder.TextureData("----", "Assets/Textures/Editor/missing.png", "<error>", None)
+
+    def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
+        return self.GetData(serialNumber).texture
+
+    def GetScaledTexture(self, serialNumber: str) -> pygame.Surface:
+        return self.GetData(serialNumber).scaledTexture
+
+    def GetScaledTextureWithSize(self, serialNumber: str) -> Tuple[pygame.Surface, Tuple[int, int]]:
+        data = self.GetData(serialNumber)
+        return data.scaledTexture, data.scaledTexture_size
+
+    def RescaleTextures(self) -> None:
+        for t in self.data.values():
+            for d in t.values():
+                d.rescaleTexture()
+        LevelPropData.rescale()
+
+#region Textures
+Textures = TextureHolder()
+trueScale: Set[str] = set()
+noCollision: Set[str] = set()
+
+with open("Assets/Data/Build/tiles.kdf") as f:
+    tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+for dName, d in tileData.items():
+    srl = f"""0{d["serialNumber"]:03d}"""
+    Textures.AddTexture(srl, f"""Assets/Textures/Tiles/{d["path"]}""", dName, colorkey=KDS.Colors.White if srl != "0128" else KDS.Colors.Cyan, alpha= -1 if srl != "0102" else 30)
+    if d["trueScale"] == True:
+        trueScale.add(srl)
+    if d["noCollision"] == True:
+        noCollision.add(srl)
+
+with open("Assets/Data/Build/items.kdf") as f:
+    itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+for dName, d in itemData.items():
+    srl = f"""1{d["serialNumber"]:03d}"""
+    Textures.AddTexture(srl, f"""Assets/Textures/Items/{d["path"]}""", dName)
+
+with open("Assets/Data/Build/teleports.kdf") as f:
+    teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+for dName, d in teleportData.items():
+    srl = f"""3{d["serialNumber"]:03d}"""
+    Textures.AddTexture(srl, f"""Assets/Textures/Teleports/{d["path"]}""", dName, KDS.Colors.White if srl != "3001" else None)
+
+Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "Imp", (0, 0))
+Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "Seargeant", (0, 0))
+Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "Drug Dealer", (0, 0))
+Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "Turbo Shotgunner", (0, 0))
+Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "Mafiaman", (0, 0))
+Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", (0, 0))
+Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", (0, 0))
+Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy", (0, 0))
+Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", (0, 0))
+Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog", (0, 0))
+Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie", (0, 0))
+
+Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
+Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
+Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa")
+Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
+Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC")
+#endregion
+
 ### GLOBAL VARIABLES ###
 
-dark_colors = [(50,50,50),(20,25,20),(230,230,230),(255,0,0)]
-light_colors = [(240,230,234), (210,220,214),(20,20,20),(0,0,255)]
-scroll = [0, 0]
-brush = "0000"
-brushTex = None
-teleportTemp = "001"
+scroll: List[int] = [0, 0]
 currentSaveName = ''
-grid: List[List[tileInfo]] = [[]]
-tileprops: Dict[str, Dict[str, Any]] = {}
-gridSize = (0, 0)
+currentLoadName = ''
+grid: List[List[UnitData]] = [[]]
+gridSize: Tuple[int, int] = (0, 0)
 
-dragRect = None
+refrenceGrid: Optional[List[List[UnitData]]] = None
+refrenceGridSize = (0, 0)
+refrenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
+
+zoneMode = False
+
+class LevelPropData:
+    @staticmethod
+    def rescale():
+        LevelPropData.KoponenTextureRescaled = KDS.Convert.AspectScale(LevelPropData.KoponenTexture, (int(LevelPropData.KoponenTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
+        LevelPropData.PlayerTextureRescaled = KDS.Convert.AspectScale(LevelPropData.PlayerTexture, (int(LevelPropData.PlayerTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
+
+    ShowKoponen: bool = False
+    KoponenPos: Tuple[int, int] = (0, 0)
+    KoponenTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/koponen_idle_0.png").convert()
+    KoponenTexture.set_colorkey(KDS.Colors.White)
+    KoponenTexture.set_alpha(64)
+    ShowPlayer: bool = False
+    PlayerPos: Tuple[int, int] = (0, 0)
+    PlayerTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
+    PlayerTexture.set_colorkey(KDS.Colors.White)
+    PlayerTexture.set_alpha(64)
+    KoponenTextureRescaled: pygame.Surface = pygame.Surface((0, 0))
+    PlayerTextureRescaled: pygame.Surface = pygame.Surface((0, 0))
+    PlayerFlipped: bool = False
+LevelPropData.rescale()
 
 class Undo:
-    points = []
+    changes: List[UnitData] = []
     index = 0
     overflowCount = 0
-    
+    totalOffset = 0
+
     @staticmethod
-    def register():
-        global grid, dragRect, brush, tileprops
-        toSave = {
-            "grid": copy.deepcopy(grid),
-            "dragRect": dragRect.copy() if dragRect != None else dragRect,
-            "brush": brush,
-            "tileprops": copy.deepcopy(tileprops)
-        }
-        if Undo.index == len(Undo.points) - 1 and toSave == Undo.points[Undo.index]:
+    def register(unit: UnitData):
+        del Undo.changes[Undo.index + 1:]
+        if len(Undo.changes) > 0 and unit == Undo.changes[-1]:
             return
+        Undo.changes.append(unit.Copy())
+        while len(Undo.changes) > 128:
+            del Undo.changes[0]
+            Undo.overflowCount += 1
+        Undo.index = len(Undo.changes) - 1
+        """
+        global grid, dragRect
+        if Undo.index == len(Undo.points) - 1:
+            last = Undo.points[Undo.index]
+            if last["grid"] == grid and last["dragRect"] == dragRect:
+                if Undo.totalOffset == 0 and Undo.index == 0 and Undo.overflowCount == 0:
+                    Undo.totalOffset = 1
+                return
+
+        toSave = {
+            "grid": [[t.Copy() for t in r] for r in grid], # deepcopy replacement
+            "dragRect": dragRect.copy() if dragRect != None else None
+        }
+
         Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
+        removedCount = len(Undo.points[Undo.index + 1:])
         del Undo.points[Undo.index + 1:]
+        if Undo.index == 0 and len(Undo.points) == 1 and removedCount > 0: del Undo.points[0]
         Undo.points.append(toSave)
         while len(Undo.points) > 64:
             del Undo.points[0]
             Undo.overflowCount += 1
         Undo.index = len(Undo.points) - 1
-    
+        """
+
     @staticmethod
     def request(redo: bool = False):
-        Undo.index = KDS.Math.Clamp(Undo.index - KDS.Convert.ToMultiplier(redo), 0, len(Undo.points) - 1)
-        
-        global grid, dragRect, brush, tileprops
-        data = Undo.points[Undo.index]
-        grid = data["grid"]
-        dragRect = data["dragRect"]
-        brush = data["brush"]
-        tileprops = data["tileprops"]
-    
+        global grid
+        redoSub = KDS.Convert.ToMultiplier(redo)
+        Undo.index = KDS.Math.Clamp(Undo.index - redoSub, 0, len(Undo.changes) - 1)
+        subIndex = Undo.index - redoSub
+        if 0 <= subIndex < len(Undo.changes) and Undo.changes[subIndex].pos == Undo.changes[Undo.index].pos:
+            Undo.index = subIndex
+        change = Undo.changes[Undo.index]
+        if grid[change.pos[1]][change.pos[0]].pos != change.pos: # Scrapped finding by iterating, because too slow.
+            KDS.Logging.AutoError(f"Unit at position: {change.pos} not found in grid!")
+            return
+        grid[change.pos[1]][change.pos[0]] = change.Copy()
+
     @staticmethod
     def clear():
-        Undo.points.clear()
+        Undo.changes.clear()
         Undo.index = 0
-        Undo.register()
         Undo.overflowCount = 0
-       
+
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
@@ -164,195 +310,327 @@ def LB_Quit():
     btn_menu = False
     mainRunning = False
 
-KDS.Console.init(display, pygame.Surface((1200, 800)), clock, _Offset=(200, 0), _KDS_Quit = LB_Quit)
+KDS.Console.init(display, pygame.Surface((1200, 800)), _Offset=(200, 0), _KDS_Quit = LB_Quit)
 
-##################################################
+####################################################################################################
 
-class tileInfo:
+class UnitData:
     releasedButtons = { 0: True, 2: True }
     placedOnTile = None
-    EMPTYSERIAL = "0000 0000 0000 0000 / "
-    
-    def __init__(self, position: Tuple[int, int], serialNumber = EMPTYSERIAL):
+    EMPTYSERIAL = "0000 0000 0000 0000"
+    EMPTY = "0000"
+    SLOTCOUNT = 4
+
+    DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
+
+    def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
-       
+        self.matchesRefrence = False
+        self._updateSplit()
+        self.properties = PropertiesData(self)
+
     def __eq__(self, other) -> bool:
         """ == operator """
-        if isinstance(other, tileInfo):
-            return self.pos == other.pos and self.serialNumber == other.serialNumber
-        else: return False
+        if isinstance(other, UnitData):
+            return self.Equals(other)
+        return False
 
     def __ne__(self, other) -> bool:
         """ != operator """
         return not self.__eq__(other)
-        
-    def copy(self) -> tileInfo:
-        return tileInfo(self.pos, serialNumber=self.serialNumber)
+
+    def __str__(self) -> str:
+        return self.serialNumber
+
+    def Equals(self, other: UnitData) -> bool:
+        return self.pos == other.pos and self.serialNumber == other.serialNumber and self.properties == other.properties
+
+    def Copy(self) -> UnitData:
+        data = UnitData(position=self.pos, serialNumber=self.serialNumber)
+        data.properties = self.properties.Copy(parentOverride=data)
+        return data
+
+    def setProperties(self, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+        self.properties.SetAll(properties)
+
+    def addProperties(self, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+        for _type, value in properties.items():
+            for k, v in value.items():
+                self.properties.Set(_type, k, v)
+
+    def _updateSplit(self):
+        self.serials = tuple(self.serialNumber.split(" "))
+        if len(self.serials) != UnitData.SLOTCOUNT:
+            KDS.Logging.AutoError(f"Serials length does not match slot count! Serials length: {len(self.serials)} | Slot Count: {UnitData.SLOTCOUNT} | Serials: {self.serials} | Serial Number: {self.serialNumber}")
+        self.filledSerials = tuple(KDS.Linq.Where(self.serials, lambda s: s != UnitData.EMPTY))
+
+    def overrideData(self, _from: UnitData):
+        self.overrideSerial(_from.serialNumber)
+        self._updateSplit()
+        self.properties.SetAll(_from.properties.GetAll())
+
+    def overrideSerial(self, newSerial: str):
+        Undo.register(self)
+        self.serialNumber = newSerial
+        self._updateSplit()
 
     def setSerial(self, srlNumber: str):
-        self.serialNumber = f"{srlNumber} 0000 0000 0000 / "
-    
+        Undo.register(self)
+        self.serialNumber = f"{srlNumber} 0000 0000 0000"
+        self._updateSplit()
+
     def setSerialToSlot(self, srlNumber: str, slot: int):
-        #self.serialNumber = self.serialNumber[slot*4] + srlNumber + self.serialNumber[:3-slot]
-        #return self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        if slot >= UnitData.SLOTCOUNT or slot < 0:
+            raise ValueError(f"Slot {slot} is an invalid index!")
+        Undo.register(self)
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
+        self._updateSplit()
 
     def getSerial(self, slot: int):
         slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
 
-    def getSerials(self):
-        return tuple(self.serialNumber.replace(" / ", "").split())
-
-    def addSerial(self, srlNumber):
-        srlist = self.getSerials()
-        for index, number in enumerate(srlist):
+    def addSerial(self, srlNumber: str):
+        Undo.register(self)
+        for index, number in enumerate(self.serials):
             if int(number) == 0:
-                if srlNumber not in srlist:
-                    if srlNumber not in t_textures or not self.hasTile():
+                if srlNumber not in self.serials:
+                    if srlNumber[0] != "3" or not self.hasTeleport():
                         self.setSerialToSlot(srlNumber, index)
-                    else: print(f"Tile already in {self.pos}!")
-                else: print(f"Serial {srlNumber} already in {self.pos}!")
+                    else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
+                else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
-        print(f"No empty slots at {self.pos} available for serial {srlNumber}!")
-        
+        KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
+
+    def insertSerial(self, srlNumber: str):
+        Undo.register(self)
+        if srlNumber[0] != "3" and self.hasTeleport():
+            KDS.Logging.info("Only one teleport is allowed per unit.", True)
+            return
+        if srlNumber in self.serials:
+            KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
+            return
+        if len(self.filledSerials) > UnitData.SLOTCOUNT:
+            KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
+            return
+
+        for index, number in enumerate(self.filledSerials): # No need to copy because tuple
+            self.setSerialToSlot(number, index + 1)
+        self.setSerialToSlot(srlNumber, 0)
+
     def removeSerial(self):
-        srlist = self.getSerials()
-        for index, number in reversed(list(enumerate(srlist))):
+        for index, number in reversed(list(enumerate(self.serials))):
             if int(number) != 0:
-                self.setSerialToSlot("0000", index)
+                self.setSerialToSlot(UnitData.EMPTY, index)
                 return
 
-    def hasTile(self):
-        split: List[str] = self.serialNumber.split(" ")
-        for s in split:
-            if len(s) > 0 and s[0] == "0" and s != "0000":
-                return True
-        return False
+    def removeSerialFromStart(self):
+        srlist = self.serials
+        for index in range(len(srlist)):
+            if index >= len(srlist) - 1:
+                self.setSerialToSlot(UnitData.EMPTY, index)
+            else:
+                self.setSerialToSlot(srlist[index + 1], index)
+
+    def getSlot(self, serial: str) -> Optional[int]:
+        try:
+            return self.serials.index(serial)
+        except ValueError:
+            return None
+
+    def hasTile(self) -> bool:
+        return KDS.Linq.Any(self.serials, lambda s: s[0] == "0" and s != UnitData.EMPTY)
+
+    def hasTeleport(self) -> bool:
+        return KDS.Linq.Any(self.serials, lambda s: s[0] == "3")
 
     def resetSerial(self):
-        self.serialNumber = tileInfo.EMPTYSERIAL
+        Undo.register(self)
+        self.serialNumber = UnitData.EMPTYSERIAL
+        self._updateSplit()
+        self.properties.RemoveUnused()
 
     @staticmethod
     def toSerialString(srlNumber: str):
-        return f"{srlNumber} 0000 0000 0000 / "
+        return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderUpdate(Surface: pygame.Surface, scroll: list, renderList: List, brsh: str = "0000", updttiles: bool = True):
+    def renderSerial(surface: pygame.Surface, properties: Optional[PropertiesData], serial: str, pos: Tuple[int, int], lightOverlay: bool = False):
+        textureData = Textures.GetData(serial)
+        blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
+        #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
+
+        #region Blitting
+        surface.blit(textureData.scaledTexture, blitPos)
+        #endregion
+
+        if serial[0] == "0" and properties != None:
+            checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
+            if isinstance(checkCollision, bool):
+                if not checkCollision:
+                    if textureData.serialNumber not in noCollision and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
+                        surface.blit(textureData.darkOverlay, blitPos)
+                else:
+                    pygame.draw.rect(surface, KDS.Colors.White, (pos[0], pos[1], scalesize, scalesize))
+                    KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
+        elif serial[0] == "3" and serial != "3001":
+            telepOverlay = Textures.GetScaledTexture("3001").copy()
+            telepOverlay.set_alpha(100)
+            surface.blit(telepOverlay, pos)
+        if lightOverlay: # I don't know if pygame.Surface has a custom equals operator.
+            surface.blit(textureData.lightOverlay, blitPos)
+
+    @staticmethod
+    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, middleMouseOnDown: bool = False):
+        global allowTilePlacement
+        _TYPECOLORS = {
+            UnitType.Tile: KDS.Colors.EmeraldGreen,
+            UnitType.Item: KDS.Colors.RiverBlue,
+            UnitType.Enemy: KDS.Colors.AviatorRed,
+            UnitType.Teleport: KDS.Colors.Yellow,
+            UnitType.Entity: KDS.Colors.Orange,
+            UnitType.Unspecified: KDS.Colors.Magenta
+        }
+
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
-        brushtemp = brsh
-        scroll[0] = KDS.Math.Clamp(scroll[0], 0, gridSize[0] - 1)
-        scroll[1] = KDS.Math.Clamp(scroll[1], 0, gridSize[1] - 1)
-        bpos = (0, 0)
-        
+        #region Scroll Clamping
+        scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize) + 1, gridSize[0] - 1)
+        scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize) + 1, gridSize[1] - 1)
+        #endregion
+        bpos = (-1, -1)
+
         tip_renders = []
         mpos = pygame.mouse.get_pos()
         mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
-        pygame.draw.rect(Surface, (80, 30, 30), pygame.Rect(0, 0, (len(renderList[0]) - scroll[0]) * scalesize, (len(renderList) - scroll[1]) * scalesize))
-        for row in renderList[scroll[1] : scroll[1] + display_size[1] // scalesize + 2]:
-            row: List[tileInfo]
-            for unit in row[scroll[0] : scroll[0] + display_size[0] // scalesize + 2]:
-                blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
-                srlist = unit.getSerials()
-                for index, number in enumerate(srlist):
-                    if int(number) != 0:
-                        unitTexture = None
-                        if number[0] == '3':
-                            unitTexture = Atextures["3"]["3001"]
-                        else:
-                            try:
-                                unitTexture = Atextures[number[0]][number]
-                            except KeyError:
-                                    print(f"Cannot render unit because texture is not added: {srlist}")
+        pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
+        doorRenders: List[Tuple[str, Tuple[int, int], bool]] = []
+        overlayRenders: List[Tuple[str, Tuple[int, int], bool]] = []
+        for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
+            for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
+                normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
+                unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
+                overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
+                if isinstance(overlayTileprops, str):
+                    overlayRenders.append((overlayTileprops, normalBlitPos, unit.matchesRefrence))
+                for number in unit.serials:
+                    if number == UnitData.EMPTY:
+                        continue
+                    if number in UnitData.DOORSERIALS:
+                        doorRenders.append((number, (normalBlitPos[0], normalBlitPos[1] + scalesize), unit.matchesRefrence))
+                        continue
 
-                        if number[0] == "3":
-                            if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
-                                t_ind = str(int(number[1:]))
-                                tip_renders.append(harbinger_font_small.render(t_ind, True, KDS.Colors.AviatorRed))
-                                if keys_pressed[K_p]:
-                                    temp_serial = KDS.Console.Start('Set teleport index: (int[0, 999])', True, KDS.Console.CheckTypes.Int(0, 999), defVal=t_ind)
-                                    if len(temp_serial) > 0:
-                                        temp_serial = f"3{int(temp_serial):03d}"
-                                        unit.setSerialToSlot(temp_serial, index)
-                                    #keys_pressed[K_p] = False
+                    UnitData.renderSerial(surface, unit.properties, number, normalBlitPos, unit.matchesRefrence)
 
-                        if unitTexture != None:
-                            if number in trueScale:
-                                Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0] - (unitTexture.get_width() * scaleMultiplier - scalesize), blitPos[1] - (unitTexture.get_height() * scaleMultiplier - scalesize)))
-                            else:
-                                Surface.blit(pygame.transform.scale(unitTexture, (int(unitTexture.get_width() * scaleMultiplier), int(unitTexture.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - unitTexture.get_height() * scaleMultiplier + scalesize))
-                            
-                tilepropsPath = f"{unit.pos[0]}-{unit.pos[1]}"
-                if tilepropsPath in tileprops and "checkCollision" in tileprops[tilepropsPath]:
-                    if not tileprops[tilepropsPath]["checkCollision"]:
-                        tilepropsOverlayColor = KDS.Colors.Black
-                    else:
-                        tilepropsOverlayColor = KDS.Colors.White
-                    tilepropsOverlay = pygame.Surface((scalesize, scalesize)).convert()
-                    tilepropsOverlay.fill(tilepropsOverlayColor)
-                    tilepropsOverlay.set_alpha(128)
-                    Surface.blit(tilepropsOverlay, (blitPos[0], blitPos[1]))
+                if unitRect.collidepoint(mpos_scaled):
+                    if unit.hasTeleport():
+                        teleportIdentifier = unit.properties.Get(UnitType.Teleport, "identifier", None)
+                        if teleportIdentifier == None:
+                            unit.properties.Set(UnitType.Teleport, "identifier", 1)
+                            teleportIdentifier = 1
+                        if isinstance(teleportIdentifier, int):
+                            tip_renders.append(harbinger_font_small.render(str(teleportIdentifier), True, KDS.Colors.AviatorRed))
+                            if keys_pressed[K_p]:
+                                if not zoneMode:
+                                    newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
+                                    if newTeleportIdentifier != None:
+                                        unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
 
-                if pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize).collidepoint(mpos_scaled):
-                    if keys_pressed[K_p]:
-                        setPropKey: str = KDS.Console.Start("Enter Property Key:")
-                        if len(setPropKey) > 0:
-                            tmp = KDS.Console.Start("Enter Property Value:")
-                            setPropVal = KDS.Convert.AutoType(tmp)
-                            if setPropVal != None:
-                                if tilepropsPath not in tileprops:
-                                    tileprops[tilepropsPath] = {}
-                                tileprops[tilepropsPath][setPropKey] = setPropVal
-                            else: print(f"Value {tmp} could not be parsed into any type.")
-                    
-                    srlist = unit.getSerials()
-                    fld_srls = 0
-                    for sr in srlist:
-                        if int(sr) != 0: fld_srls += 1
-                        else: break
-                    if fld_srls > 1:
-                        for i in range(fld_srls): tip_renders.append(harbinger_font_small.render(srlist[i], True, KDS.Colors.RiverBlue))
-                    
-                    if mouse_pressed[1] and not keys_pressed[K_LSHIFT]:
-                        brushtemp = unit.getSerial(0)
-                    pygame.draw.rect(Surface, (20, 20, 20), (blitPos[0], blitPos[1], scalesize, scalesize), 2)
-                    bpos = unit.pos
-                    if mouse_pressed[0] and updttiles:
-                        if brsh != "0000":
-                            if not keys_pressed[K_c]:
-                                if not keys_pressed[K_LSHIFT]:
-                                    unit.setSerial(brsh)
-                                elif tileInfo.releasedButtons[0] or tileInfo.placedOnTile != unit: unit.addSerial(brsh)
-                            elif unit.hasTile():
-                                if not keys_pressed[K_LALT]:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
+                    if keys_pressed[K_f]:
+                        autoFill = {}
+                        for t in UnitType:
+                            autoFill[t.name] = "break"
+                        setPropType = str(KDS.Console.Start("Enter Property Type:", True, KDS.Console.CheckTypes.Commands(), commands=autoFill)).lower()
+                        propType = KDS.Linq.FirstOrNone(UnitType, lambda t: t.name.lower() == setPropType)
+                        if len(setPropType) > 0 and propType != None:
+                            setPropKey: str = KDS.Console.Start("Enter Property Key:")
+                            if len(setPropKey) > 0:
+                                setPropValUnformatted: str = KDS.Console.Start("Enter Property Value:")
+                                if propType == UnitType.Unspecified and setPropKey == "overlay": # Force string for overlay
+                                    setPropVal = setPropValUnformatted
                                 else:
-                                    tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
-                        elif keys_pressed[K_c]:
-                            if not keys_pressed[K_LALT]:
-                                tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : False}
+                                    setPropVal = KDS.Convert.AutoType(setPropValUnformatted, setPropValUnformatted) # If cannot be parsed to int, bool or float; return string
+                                if len(setPropValUnformatted) > 0:
+                                    unit.properties.Set(propType, setPropKey, setPropVal)
+                                else:
+                                    unit.properties.Remove(propType, setPropKey)
+                        elif len(setPropType) > 0:
+                            KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
+                    elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
+                        overlayId = materialMenu(UnitData.EMPTY)
+                        allowTilePlacement = False
+                        if overlayId != UnitData.EMPTY:
+                            unit.properties.Set(UnitType.Unspecified, "overlay", overlayId)
+                        else:
+                            unit.properties.Remove(UnitType.Unspecified, "overlay")
+                    elif keys_pressed[K_q]:
+                        if refrenceGrid != None and unit.pos[1] < len(refrenceGrid):
+                            refrence2 = refrenceGrid[unit.pos[1]]
+                            if unit.pos[0] < len(refrence2):
+                                unit.overrideData(refrence2[unit.pos[0]])
+
+                    if len(unit.filledSerials) > 1: # If more than one tile
+                        for sr in unit.filledSerials: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
+
+                    if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
+                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != brush.brush)
+                        teleportBrushProperties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+                        if tempbrushtemp == None:
+                            tempbrushtemp = unit.getSerial(0)
+                        elif tempbrushtemp[0] == "3":
+                            tmpProp = unit.properties.Get(UnitType.Teleport, "identifier", 1)
+                            if isinstance(tmpProp, int):
+                                teleportBrushProperties = {UnitType.Teleport:{"identifier":tmpProp}}
+
+                        if keys_pressed[K_LCTRL]:
+                            teleportBrushProperties = unit.properties.GetAll()
+
+                        brush.SetValues(tempbrushtemp, teleportBrushProperties)
+
+                    pygame.draw.rect(surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
+                    bpos = unit.pos
+                    if allowTilePlacement:
+                        if mouse_pressed[0]:
+                            if not brush.IsEmpty() or keys_pressed[K_c]:
+                                if not keys_pressed[K_c]:
+                                    if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
+                                        brush.SetOnUnit(unit)
+                                    elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
+                                        if keys_pressed[K_LSHIFT]:
+                                            brush.AddOnUnit(unit)
+                                        else: # At this point only CTRL can be pressed.
+                                            brush.InsertOnUnit(unit)
+                                elif unit.hasTile():
+                                    setVal = False
+                                    if keys_pressed[K_LALT]:
+                                        setVal = True
+                                    unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
+                        elif mouse_pressed[2]:
+                            if not keys_pressed[K_c]:
+                                if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
+                                    unit.resetSerial()
+                                elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit:
+                                    if keys_pressed[K_LSHIFT]:
+                                        unit.removeSerial()
+                                    else: # At this point only CTRL can be pressed.
+                                        unit.removeSerialFromStart()
                             else:
-                                tileprops[f"{unit.pos[0]}-{unit.pos[1]}"] = {"checkCollision" : True}
-                    elif mouse_pressed[2]:
-                        tpP = f"{unit.pos[0]}-{unit.pos[1]}"
-                        if not keys_pressed[K_c]:
-                            if not keys_pressed[K_LSHIFT]:
-                                unit.resetSerial()
-                                if tpP in tileprops:
-                                    del tileprops[tpP]
-                            elif tileInfo.releasedButtons[2] or tileInfo.placedOnTile != unit: unit.removeSerial()
-                        elif tpP in tileprops and "checkCollision" in tileprops[tpP]:
-                            del tileprops[tpP]["checkCollision"]
-                            if len(tileprops[tpP]) < 1: del tileprops[tpP]
-                    tileInfo.placedOnTile = unit
-                
-                    if tilepropsPath in tileprops:
-                        for k, v in tileprops[tilepropsPath].items():
-                            if k != "checkCollision":
-                                tip_renders.append(harbinger_font_small.render(f"{k}: {v}", True, KDS.Colors.EmeraldGreen))
-        
+                                unit.properties.Remove(UnitType.Tile, "checkCollision")
+                    UnitData.placedOnTile = unit
+
+                    tipProps = unit.properties.GetAll()
+                    for _type, properties in tipProps.items():
+                        color = _TYPECOLORS[_type]
+                        for k, v in properties.items():
+                            if k in ("checkCollision", "identifier"):
+                                continue
+                            rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
+                            tip_renders.append(rendered_tip)
+
+        [UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay) for doorSrl, doorPos, lightOverlay in doorRenders]
+        [UnitData.renderSerial(surface, None, ovs, ovp, ovov) for ovs, ovp, ovov in overlayRenders]
+
         if len(tip_renders) > 0:
             totHeight = 0
             maxWidth = 0
@@ -366,34 +644,356 @@ class tileInfo:
                 pygame.draw.rect(display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
-        
-        mousePosText = harbinger_font.render(f"({bpos[0]}, {bpos[1]})", True, KDS.Colors.AviatorRed)
-        display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
-        
-        tileInfo.releasedButtons[0] = False if mouse_pressed[0] else True
-        tileInfo.releasedButtons[2] = False if mouse_pressed[2] else True
-        
-        return renderList, brushtemp
 
-def loadGrid(size):
+        if bpos != (-1, -1):
+            mousePosText = harbinger_font.render(str(bpos), True, KDS.Colors.AviatorRed)
+            display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
+
+        UnitData.releasedButtons[0] = not mouse_pressed[0]
+        UnitData.releasedButtons[2] = not mouse_pressed[2]
+
+    @staticmethod
+    def refrenceUpdate():
+        global grid, refrenceGrid, gridSize, refrenceGridSize
+        for x in range(min(gridSize[0], refrenceGridSize[0])):
+            if refrenceGridSize == None:
+                return
+            for y in range(min(gridSize[1], refrenceGridSize[1])):
+                if refrenceGrid == None:
+                    return
+                grid[y][x].matchesRefrence = grid[y][x].Equals(refrenceGrid[y][x])
+
+class PropertiesData:
+    class ZoneSetting(Enum):
+        StaffOnly = "staffOnly"
+        Darkness = "darkness"
+        LevelEnder = "levelEnder"
+        Disco = "disco"
+
+    class ZoneData:
+        def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
+            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(cast(pygame.Rect, v[0].copy()), v[1]) for v in values]
+
+        def __getitem__(self, index: int) -> Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
+            return self.zones[index]
+
+        def __setitem__(self, index: int, value: Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]):
+            self.zones[index] = value
+
+        def __len__(self) -> int:
+            return len(self.zones)
+
+        def RemoveCollidePoint(self, mouse_pos: Tuple[int, int]) -> None:
+            mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
+            for zone in reversed(self.zones):
+                if zone[0].collidepoint(mouse_pos_scaled):
+                    self.zones.remove(zone)
+                    return
+
+        @staticmethod
+        def NewDragRect():
+            assert Drag.Rect != None, "NewDragRect from null!"
+            PropertiesData.Zones.zones.append((pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), {}))
+            Undo.overflowCount += 1
+
+        @staticmethod
+        def UpdateDragRect():
+            if len(PropertiesData.Zones.zones) < 1:
+                return
+            assert Drag.Rect != None, "UpdateDragRect from null!"
+            PropertiesData.Zones.zones[-1] = (pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), PropertiesData.Zones.zones[-1][1])
+
+        def _returnCorrectZone(self, zoneRect: pygame.Rect) -> Optional[Dict[PropertiesData.ZoneSetting, str | int | float | bool]]:
+            for zone in self.zones:
+                if zone[0].x == zoneRect.x and zone[0].y == zoneRect.y and zone[0].width == zoneRect.width and zone[0].height == zoneRect.height:
+                    return zone[1]
+            return None
+
+        def SetSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting, value: Union[str, int, float, bool]):
+            zone = self._returnCorrectZone(zoneRect)
+            if zone == None:
+                KDS.Logging.warning(f"No zone matching {zoneRect} found!", consoleVisible=True)
+                return
+            zone[setting] = value
+
+        def RemoveSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting):
+            zone = self._returnCorrectZone(zoneRect)
+            if zone == None:
+                KDS.Logging.warning(f"No zone matching {zoneRect} found!", consoleVisible=True)
+                return
+            if setting in zone:
+                zone.pop(setting)
+
+    Zones = ZoneData()
+
+    def __init__(self, parent: UnitData) -> None:
+        self.parent = parent
+        self.values: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+
+    def __eq__(self, other) -> bool:
+        """ == operator """
+        if isinstance(other, PropertiesData):
+            return self.values == other.values # Won't check parents
+        return False
+
+    def __ne__(self, other) -> bool:
+        """ != operator """
+        return not self.__eq__(other)
+
+    def Set(self, _type: UnitType, key: str, value: Union[str, int, float, bool]) -> None:
+        if _type not in self.values:
+            self.values[_type] = {}
+        Undo.register(self.parent)
+        self.values[_type][key] = value
+
+    def SetAll(self, data: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+        Undo.register(self.parent)
+        self.values = {k: {ik: iv for ik, iv in v.items()} for k, v in data.items()}
+
+    def Remove(self, _type: UnitType, key: str) -> None:
+        """Removes the specified key in type if found.
+
+        Args:
+            _type (UnitType): The type specifying what the key controls.
+            key (str): The key to remove.
+        """
+        if _type in self.values and key in self.values[_type]:
+            Undo.register(self.parent)
+            self.values[_type].pop(key)
+            if len(self.values[_type]) < 1:
+                self.values.pop(_type)
+
+    def Get(self, _type: UnitType, key: str, default: Optional[Union[str, int, float, bool]]) -> Optional[Union[str, int, float, bool]]:
+        if _type not in self.values or key not in self.values[_type]:
+            return default
+        return self.values[_type][key]
+
+    def GetAll(self) -> Dict[UnitType, Dict[str, Union[str, int, float, bool]]]:
+        return {k: v.copy() for k, v in self.values.items()}
+
+    def RemoveUnused(self):
+        for _type in self.values.copy():
+            if _type == UnitType.Unspecified:
+                continue
+
+            if not KDS.Linq.Any(self.parent.serials, lambda v: int(v[0]) == _type.value and int(v) != 0):
+                self.values.pop(_type)
+
+    def Copy(self, parentOverride: UnitData = None) -> PropertiesData:
+        new = PropertiesData(parentOverride if parentOverride != None else self.parent)
+        new.values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
+        return new
+
+    def __str__(self) -> Optional[str]:
+        self.RemoveUnused()
+        if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1): # The dictionary should be empty if there are no values, but let's check just in case.
+            return ""
+        key = f"{self.parent.pos[0]}-{self.parent.pos[1]}"
+        value = json.dumps(self.values, separators=(',', ':')) # Separators ensure that there are no useless spaces in the file.
+        return f"\"{key}\":{value}" # Puts key in quotes so that it is valid JSON
+
+    @staticmethod
+    def _zonesSerializer():
+        parsableZones: Dict[str, Dict[str, Union[str, int, float, bool]]] = {}
+        for rect, data in PropertiesData.Zones:
+            parsableZones[f"{rect.x}-{rect.y}-{rect.width}-{rect.height}"] = {k.value: v for k, v in data.items()}
+        return f"\"zones\":{json.dumps(parsableZones, separators=(',', ':'))}"
+
+    @staticmethod
+    def _zonesDeserializer(data: Dict[str, Dict[str, Union[str, int, float, bool]]]) -> List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]]:
+        parsedZones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []
+        for rect, d in data.items():
+            x, y, w, h = rect.split("-")
+            parsedZones.append((pygame.Rect(int(x), int(y), int(w), int(h)), {PropertiesData.ZoneSetting(t): v for t, v in d.items()}))
+        return parsedZones
+
+    @staticmethod
+    def Serialize(grid: List[List[UnitData]]) -> str:
+        strings: List[str] = []
+        for row in grid:
+            for unit in row:
+                pString = str(unit.properties)
+                if len(pString) > 0:
+                    strings.append(pString)
+        if len(PropertiesData.Zones) > 0:
+            strings.append(PropertiesData._zonesSerializer())
+        if len(strings) < 1: # If there is nothing to save, return empty.
+            return ""
+        result = "{\n" + "".join(f"{s},\n" for s in strings).removesuffix(",\n") + "\n}"
+        return result
+
+    @staticmethod
+    def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
+        if len(jsonString) < 1 or jsonString.isspace():
+            return
+        deserialized: Dict[str, Union[Dict[str, Dict[str, Union[str, int, float, bool]]]]] = json.loads(jsonString)
+        for row in grid:
+            for unit in row:
+                key = f"{unit.pos[0]}-{unit.pos[1]}"
+                if key in deserialized:
+                    toSet = deserialized[key]
+                    if not isinstance(toSet, dict):
+                        KDS.Logging.AutoError(f"Invalid value type occured during deserialization. Key for data: {key}")
+                        continue
+                    unitProp = PropertiesData(unit)
+                    unitProp.values = {UnitType(int(k)): v for k, v in toSet.items()}
+                    unit.properties = unitProp
+
+        PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"] if "zones" in deserialized else {}))
+
+class BrushData:
+    def __init__(self) -> None:
+        self.brush: str = UnitData.EMPTY
+        self.properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+
+    def SetValues(self, brush: str = UnitData.EMPTY, properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None):
+        self.brush = brush
+        self.properties = None
+        if not self.IsEmpty() and properties != None:
+            correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
+            if correctType != None:
+                propValues = properties[correctType]
+                self.properties = {correctType: {ik: iv for ik, iv in propValues.items()}}
+
+    def SetOnUnit(self, unit: UnitData):
+        unit.setSerial(self.brush)
+        if self.properties != None:
+            unit.setProperties(self.properties)
+        unit.properties.RemoveUnused()
+
+    def AddOnUnit(self, unit: UnitData):
+        unit.addSerial(self.brush)
+        if self.properties != None:
+            unit.addProperties(self.properties)
+        unit.properties.RemoveUnused()
+
+    def InsertOnUnit(self, unit: UnitData):
+        unit.insertSerial(self.brush)
+        if self.properties != None:
+            unit.addProperties(self.properties)
+        unit.properties.RemoveUnused()
+
+    def IsEmpty(self):
+        return self.brush == UnitData.EMPTY
+brush = BrushData()
+
+class DragMode(IntEnum):
+    Default = 0
+    Zone = 1
+
+@dataclass
+class DragStyle:
+    color: Tuple[int, int, int]
+    alpha: int
+    border_width: int
+
+class DragData:
+    DEFAULT_STYLE = DragStyle(KDS.Colors.White, 64, 5)
+
+    def __init__(self) -> None:
+        self.Rect: Optional[pygame.Rect] = None
+        self.Mode: DragMode = DragMode.Default
+
+        self.startPos: Optional[Tuple[int, int]] = None
+        self.c_onDragStart: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragUpdate: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragEnd: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragClear: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+
+        self.lastL = False
+
+    def SelectCustom(self, rect: Optional[pygame.Rect]):
+        if rect != None:
+            self.Rect = cast(pygame.Rect, rect.copy())
+            [onStart() for onStart in self.c_onDragStart[self.Mode]]
+        else:
+            self.clear()
+
+    def clear(self):
+        self.Rect = None
+        self.startPos = None
+        [onClear() for onClear in self.c_onDragClear[self.Mode]]
+
+    def render(self, style: DragStyle, surface: pygame.Surface, scroll: List[int]):
+        if self.Rect == None:
+            return
+
+        selectDrawRect = pygame.Rect((self.Rect.x - scroll[0]) * scalesize, (self.Rect.y - scroll[1]) * scalesize, self.Rect.width * scalesize, self.Rect.height * scalesize)
+        selectDraw = pygame.Surface(selectDrawRect.size)
+        selectDraw.fill(style.color)
+        if style.border_width > 0:
+            pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), KDS.Math.CeilToInt(style.border_width / 34 * scalesize))
+        selectDraw.set_alpha(style.alpha)
+        surface.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
+
+        wRnd = harbinger_font.render(str(self.Rect.width), True, KDS.Colors.CloudWhite)
+        surface.blit(wRnd, (selectDrawRect.x + selectDrawRect.width // 2 - wRnd.get_width() // 2, selectDrawRect.y - 10 - wRnd.get_height()))
+        hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
+        surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
+
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: Dict[int, bool]):
+        if not brush.IsEmpty():
+            return
+        if right_down:
+            self.clear()
+            return
+        if self.lastL != left_down:
+            self.lastL = left_down
+            if left_down:
+                self.startPos = None
+            else:
+                [onEnd() for onEnd in self.c_onDragEnd[self.Mode]]
+        if not left_down:
+            return
+        if keys_down[K_c]:
+            return
+
+        startCallFlag = False
+        if self.startPos == None:
+            self.startPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
+            startCallFlag = True
+
+        mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
+        x = min(mouse_pos_scaled[0], self.startPos[0])
+        y = min(mouse_pos_scaled[1], self.startPos[1])
+        w = abs(self.startPos[0] - mouse_pos_scaled[0]) + 1
+        h = abs(self.startPos[1] - mouse_pos_scaled[1]) + 1
+        self.Rect = pygame.Rect(x, y, w, h)
+        if startCallFlag:
+            [onStart() for onStart in self.c_onDragStart[self.Mode]]
+        else:
+            [onUpdate() for onUpdate in self.c_onDragUpdate[self.Mode]]
+
+    def registerCalls(self, mode: DragMode, onDragStart: Optional[Callable[[], None]], onDragUpdate: Optional[Callable[[], None]], onDragEnd: Optional[Callable[[], None]], onDragClear: Optional[Callable[[], None]]):
+        if onDragStart != None:
+            self.c_onDragStart[mode].append(onDragStart)
+        if onDragUpdate != None:
+            self.c_onDragUpdate[mode].append(onDragUpdate)
+        if onDragEnd != None:
+            self.c_onDragEnd[mode].append(onDragEnd)
+        if onDragClear != None:
+            self.c_onDragClear[mode].append(onDragClear)
+
+Drag = DragData()
+Drag.registerCalls(DragMode.Zone, PropertiesData.ZoneData.NewDragRect, PropertiesData.ZoneData.UpdateDragRect, PropertiesData.ZoneData.UpdateDragRect, None)
+
+def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
     rlist = []
     for y in range(size[1]):
         row = []
         for x in range(size[0]):
-            row.append(tileInfo((x, y)))
+            row.append(UnitData((x, y)))
         rlist.append(row)
-    global gridSize
-    gridSize = size
     return rlist
 
-def resizeGrid(size, grid: list):
+def resizeGrid(size: Tuple[int, int], grid: list):
     grid_size = (len(grid[0]), len(grid))
     size_difference = (size[0] - grid_size[0], size[1] - grid_size[1])
     if size_difference[1] > 0:
         for y in range(grid_size[1], size[1]):
             row = []
             for x in range(grid_size[0]):
-                row.append(tileInfo((x, y)))
+                row.append(UnitData((x, y)))
             grid.append(row)
     else:
         for y in range(abs(size_difference[1])):
@@ -402,7 +1002,7 @@ def resizeGrid(size, grid: list):
         for y in range(len(grid)):
             row = grid[y]
             while len(row) < size[0]:
-                row.append(tileInfo(((len(row)), y)))
+                row.append(UnitData(((len(row)), y)))
     else:
         for row in grid:
             while len(row) > size[0]:
@@ -411,88 +1011,174 @@ def resizeGrid(size, grid: list):
     gridSize = size
     return grid
 
-def saveMap(grd, name: str):
+def generateMapString(grid: List[List[UnitData]]) -> str:
     outputString = ''
-    for row in grd:
+    for row in grid:
         for unit in row:
-            outputString += unit.serialNumber
-        outputString += "\n"
-    with open(name, 'w') as f:
-        f.write(outputString)
+            outputString += str(unit) + " / "
+        outputString = outputString.removesuffix(" / ") + "\n"
+    return outputString
+
+def saveMap(grid: List[List[UnitData]], name: str):
+    #region Map
+    with open(name, 'w', encoding="utf-8") as f:
+        f.write(generateMapString(grid))
+    #endregion
     #region Tile Props
-    global tileprops
-    tilepropsPath = os.path.join(os.path.dirname(name), "tileprops.kdf")
-    if len(tileprops) > 0:
-        if os.path.isfile(tilepropsPath) or KDS.System.MessageBox.Show("No Tileprops!", "Your project does not have a tileprops file even though it is required. Do you want to add one?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
-            with open(tilepropsPath, "w") as f:
-                f.write(json.dumps(tileprops))
+    propertiesPath = os.path.join(os.path.dirname(name), "properties.kdf")
+    propertiesString = PropertiesData.Serialize(grid)
+    saveProps = False
+
+    if len(propertiesString) > 0:
+        if os.path.isfile(propertiesPath):
+            saveProps = True
         else:
-            KDS.System.MessageBox.Show("Tileprops Ignored", "Tileprops generation ignored. You might lose level data.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
-    elif os.path.isfile(tilepropsPath):
-        if KDS.System.MessageBox.Show("Useless Tileprops!", "We have detected a tileprops file in your project, but this file is no longer needed. Do you want to remove it?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
-            os.remove(tilepropsPath)
+            while not saveProps:
+                if KDS.System.MessageBox.Show("No Properties File!", "Your project does not have a properties file even though it is required. Do you want to add one?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+                    saveProps = True
+                    break
+                if KDS.System.MessageBox.Show("Properties Ignored", "Properties generation ignored. You might lose level data.", KDS.System.MessageBox.Buttons.OKCANCEL, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.OK:
+                    break
+    elif os.path.isfile(propertiesPath):
+        if KDS.System.MessageBox.Show("Unused Properties!", "We have detected a properties file in your project, but this file is no longer required. Do you want to remove it?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            os.remove(propertiesPath)
         else:
-            with open(tilepropsPath, "w") as f:
-                f.write(json.dumps(tileprops))
+            saveProps = True
+
+    if saveProps:
+        with open(propertiesPath, "w", encoding="utf-8") as f:
+            f.write(propertiesString)
     #endregion
     Undo.clear()
-        
+
 def saveMapName():
     global currentSaveName, grid
-    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
+    savePath = filedialog.asksaveasfilename(initialfile="level", defaultextension=".dat", filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Save Map")
     if len(savePath) > 0:
-        saveMap(grid, savePath)
         currentSaveName = savePath
+        saveMap(grid, currentSaveName)
 
-def loadMap(path: str):
-    global currentSaveName, gridSize, grid, tileprops
+def loadLevelProp(dirPath: str):
+    LevelPropData.ShowKoponen = False
+    LevelPropData.ShowPlayer = False
+    lPath = os.path.join(dirPath, "levelprop.kdf")
+    if not os.path.isfile(lPath):
+        return
+    with open(lPath, "r", encoding="utf-8") as f:
+        lpData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+        if "Entities" not in lpData:
+            return
+        entityData = lpData["Entities"]
+        if "Koponen" in entityData and "startPos" in entityData["Koponen"]:
+            tmpPos = entityData["Koponen"]["startPos"]
+            LevelPropData.KoponenPos = (tmpPos[0], tmpPos[1])
+            LevelPropData.ShowKoponen = True
+        if "Player" in entityData:
+            playerData = entityData["Player"]
+            if "startPos" in playerData:
+                tmpPos = playerData["startPos"]
+                LevelPropData.PlayerPos = (tmpPos[0], tmpPos[1])
+                LevelPropData.ShowPlayer = True
+            if "spawnInverted" in playerData:
+                spawnInverted = playerData["spawnInverted"]
+                if not isinstance(spawnInverted, bool):
+                    KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
+                LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
+
+def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
+    global display, clock, currentLoadName
+    currentLoadName = path
+
+    with open(path, 'r') as f:
+        wholeContents = f.read()
+        contents = wholeContents.splitlines()
+        while len(contents) > 0 and (len(contents[-1]) < 1 or contents[-1].isspace()):
+            contents = contents[:-1]
+
+        if len(contents) < 0:
+            KDS.Logging.AutoError("Map contents length is less than one!")
+
+    maxWStr = max(contents, key=lambda c: len(c.split("/")))
+    maxW = len(maxWStr.split("/"))
+    temporaryGridSize = (maxW, len(contents))
+    temporaryGrid = loadGrid(temporaryGridSize)
+
+    for row, rRow in zip(contents, temporaryGrid):
+        for unit, rUnit in zip(row.split("/"), rRow):
+            unit = unit.strip(" ")
+            #region Fixing Broken Serials
+            while len(unit) < len(UnitData.EMPTYSERIAL):
+                if not unit.endswith("0000"):
+                    unit += "0"
+                else:
+                    unit += " "
+            while len(unit) > len(UnitData.EMPTYSERIAL):
+                unit = unit[:-1]
+            if KDS.Linq.Any(unit.split(" "), lambda n: len(n) != len(UnitData.EMPTY)):
+                KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
+            #endregion
+            rUnit.overrideSerial(unit)
+
+    if generateMapString(temporaryGrid) != wholeContents:
+        KDS.Logging.AutoError("Loaded map file does not match generated map file!")
+
+    def loadProperties():
+        nonlocal temporaryGrid
+        pPath = os.path.join(os.path.dirname(path), "properties.kdf")
+        if not os.path.isfile(pPath):
+            return
+        with open(pPath, 'r', encoding="utf-8") as f:
+            PropertiesData.Deserialize(f.read(), temporaryGrid)
+
+    loadProperties()
+    loadLevelProp(os.path.dirname(path))
+    return temporaryGrid, temporaryGridSize
+
+def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
+    global currentSaveName, gridSize, grid, display, clock
+    if path == None or len(path) < 1:
+        KDS.Logging.info(f"Path \"{path}\" of map file is not valid.", True)
+        return False
+    if not path.endswith(".dat"):
+        KDS.Logging.info(f"Map file at path \"{path}\" is not a valid type.", True)
+        return False
+
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
-        if not currentSaveName:
+        if len(currentSaveName) < 1 or currentSaveName.isspace():
             saveMapName()
         else:
             saveMap(grid, currentSaveName)
-            
-    temporaryGrid = None
-    if path:
-        with open(path, 'r') as f:
-            contents = f.read().split("\n")
-            while len(contents[-1]) < 1: contents = contents[:-1]
-            
-        maxW = 0
-        for i in range(len(contents)):
-            maxW = max(maxW, len(contents[i][:-2].split("/")))
-        temporaryGrid = loadGrid((maxW, len(contents)))
 
-        for row, rRow in zip(contents, temporaryGrid):
-            for unit, rUnit in zip(row[:-2].split("/"), rRow):
-                unit = unit.strip() + " / "
-                rUnit.serialNumber = unit
+    KDS.Loading.Circle.Start(display)
 
-        #for row, tRow in zip(tempGrid, contents):
-        #    for unit, tUnit in zip(row, tRow.split("/")):
-        #        tUnit = tUnit.strip()
-        #        unit.serialNumber = tUnit + " /"
-        
-        #return tempGrid
-        currentSaveName = path
+    handle = KDS.Jobs.Schedule(internalLoadMap, path)
+    while not handle.IsComplete:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                LB_Quit()
+        pygame.time.wait(1000)
+    currentSaveName = path
+    grid, gridSize = handle.Complete()
 
-        grid = temporaryGrid
-        fpath = os.path.join(os.path.dirname(path), "tileprops.kdf")
-        if os.path.isfile(fpath):
-            with open(fpath, 'r') as f:
-                tileprops = json.loads(f.read())
-                
-        Undo.clear()
-    
-def openMap(): #Returns a 2d array ;;;udhadah Returns Nothing
-    global currentSaveName, gridSize, grid, tileprops
-    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")))
-    loadMap(fileName)
+    Undo.clear()
+    KDS.Loading.Circle.Stop()
+    return True
 
+def openMap() -> bool: # Returns True if the operation was succesful
+    global currentSaveName, gridSize, grid
+    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Map File")
+    if fileName == None or len(fileName) < 1:
+        return False
+    return loadMap(fileName)
+
+consoleTextureNames = {}
+for tmpName in Textures:
+    modName = tmpName.name.replace(" ", "_").lower().replace("(", "").replace(")", "")
+    consoleTextureNames[modName.encode("ascii", "ignore").decode("ascii")] = tmpName.serialNumber
 commandTree = {
     "set": {
-        "brush": brushNames,
-        **brushNames
+        "brush": consoleTextureNames,
+        **consoleTextureNames
     },
     "add": {
         "rows": "break",
@@ -504,20 +1190,33 @@ commandTree = {
         "stacks": "break"
     }
 }
-def consoleHandler(commandlist):
-    global brush, grid, dragRect
-    Undo.register()
+def consoleHandler(commandlist: List[str]):
+    global brush, grid
     if commandlist[0] == "set":
+        textureNames = Textures.names
+        textureSerials = Textures.serials
         if commandlist[1] == "brush":
-            if commandlist[2] in brushNames:
-                brush = brushNames[commandlist[2]]
-                KDS.Console.Feed.append(f"Brush set: [{brushNames[commandlist[2]]}: {commandlist[2]}]")
+            if len(commandlist) < 3:
+                KDS.Console.Feed.append("Invalid set command.")
+                return
+            if commandlist[2] in textureNames:
+                data = Textures.GetData(consoleTextureNames[commandlist[2]])
+                brush.SetValues(data.serialNumber)
+                KDS.Console.Feed.append(f"Brush set: [{data.serialNumber}: {data.name}]")
+            elif commandlist[2] in textureSerials:
+                brush.SetValues(commandlist[2])
+                KDS.Console.Feed.append(f"Brush set: [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
             else: KDS.Console.Feed.append("Invalid brush.")
-        elif dragRect != None:
-            if commandlist[1] in brushNames:
-                Selected.Set(tileInfo.toSerialString(brushNames[commandlist[1]]))
+        elif Drag.Mode == DragMode.Default and Drag.Rect != None:
+            if commandlist[1] in textureNames:
+                data = Textures.GetData(consoleTextureNames[commandlist[1]])
+                Selected.Set(UnitData.toSerialString(data.serialNumber))
                 Selected.Update()
-                KDS.Console.Feed.append(f"Filled [{dragRect.topleft}, {dragRect.bottomright}] with [{brushNames[commandlist[1]]}: {commandlist[1]}]")
+                KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{data.serialNumber}: {data.name}]")
+            elif commandlist[1] in textureSerials:
+                Selected.Set(UnitData.toSerialString(commandlist[2]))
+                Selected.Update()
+                KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
         else: KDS.Console.Feed.append("Invalid set command.")
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
@@ -545,66 +1244,118 @@ def consoleHandler(commandlist):
         elif commandlist[1] == "stacks":
             for row in grid:
                 for unit in row:
-                    unit: tileInfo
-                    srlist = unit.getSerials()
-                    for i in range(1, len(srlist)):
-                        unit.setSerialToSlot("0000", i)
+                    for i in range(1, len(unit.serials)):
+                        unit.setSerialToSlot(UnitData.EMPTY, i)
         else: KDS.Console.Feed.append("Invalid remove command.")
     else: KDS.Console.Feed.append("Invalid command.")
+
+def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
+    Undo.overflowCount += 1
+    if commandlist == None:
+        return
+
+    if len(commandlist) != 2:
+        KDS.Logging.info("Invalid command.", consoleVisible=True)
+        return
+
+    command_setting: Optional[PropertiesData.ZoneSetting] = None
+    for zs in PropertiesData.ZoneSetting:
+        if zs.value.lower() == commandlist[0]:
+            command_setting = zs
+            break
+
+    if command_setting == None:
+        KDS.Logging.info(f"No property {commandlist[0]} found!", consoleVisible=True)
+        return
+
+    if commandlist[1] == "null":
+        PropertiesData.Zones.RemoveSetting(zoneRect, command_setting)
+        return
+
+    if command_setting in (PropertiesData.ZoneSetting.StaffOnly, PropertiesData.ZoneSetting.LevelEnder, PropertiesData.ZoneSetting.Disco):
+        parsedBool = KDS.Convert.String.ToBool(commandlist[1], hideError=True)
+        if parsedBool == None:
+            KDS.Logging.info(f"{commandlist[1]} is not a valid bool.", consoleVisible=True)
+            return
+        PropertiesData.Zones.SetSetting(zoneRect, command_setting, parsedBool)
+    elif command_setting == PropertiesData.ZoneSetting.Darkness:
+        if not commandlist[1].isnumeric():
+            KDS.Logging.info(f"{commandlist[1]} is not a valid int.", consoleVisible=True)
+            return
+        intDarkness = int(commandlist[1])
+        if intDarkness < 0 or intDarkness > 255:
+            KDS.Logging.info(f"{intDarkness} is not in the range [0 - 255] of darkness.", consoleVisible=True)
+            return
+        PropertiesData.Zones.SetSetting(zoneRect, command_setting, intDarkness)
 
 def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
     matMenRunning = True
     rscroll = 0
-    blocksize = 70
+    BLOCKSIZE = 70
+    SPACING = (100, 90)
+    COLUMNS = 12
+    OFFSET = (display_size[0] // 2 - SPACING[0] * COLUMNS // 2 - BLOCKSIZE // 2, 40)
 
     class selectorRect:
-        def __init__(self, rect: pygame.Rect, serialNumber: str):
-            self.rect: pygame.Rect = rect
-            self.serialNumber: str = serialNumber
+        def __init__(self, pos: Tuple[int, int], data: TextureHolder.TextureData):
+            self.pos = pos
+            self.rect: pygame.Rect = pygame.Rect(pos[0] * SPACING[0] + OFFSET[0], pos[1] * SPACING[1] + OFFSET[1], BLOCKSIZE, BLOCKSIZE)
+            self.data: TextureHolder.TextureData = data
 
     selectorRects: List[selectorRect] = []
 
     y = 0
     x = 0
-    for collection in Atextures:
-        for item in Atextures[collection]:
-            selectorRects.append(selectorRect(pygame.Rect(x*100 + 100, y*90 + 40, blocksize, blocksize), item))
+    for i, collection in enumerate(Textures.data.values()):
+        for data in sorted(collection.values(), key=lambda k: k.name.lower()):
+            selectorRects.append(selectorRect((x, y), data))
             x += 1
-            if x > 6:
+            if x > COLUMNS:
                 x = 0
                 y += 1
+
+        if i < len(Textures.data) - 1: # Skips the line adding for the last collection
+            y += 1
+            if x > 0:
+                x = 0
+                y += 1
+
+    ROWS = y
 
     while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get():
-            if event.type == QUIT:
-                LB_Quit()
+            if defaultEventHandler(event):
+                continue
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
                     matMenRunning = False
                     return previousMaterial
             elif event.type == MOUSEWHEEL:
-                if event.y > 0: rscroll = max(rscroll - 1, 0)
-                else: rscroll = min(rscroll + 1, sys.maxsize)
-        
+                if event.y > 0: rscroll = max(rscroll - 2, 0)
+                else: rscroll = int(min((rscroll + 2) * 30, (ROWS - 2) * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
+        yCalc = rscroll * 30
+
         tip_renders = []
-        
+
         mpos = pygame.mouse.get_pos()
-        display.fill((20,20,20))
+        display.fill((20, 20, 20))
         for selection in selectorRects:
             selection: selectorRect
-            sorting = selection.serialNumber[0]
-            display.blit(KDS.Convert.AspectScale(Atextures[sorting][selection.serialNumber], (blocksize, blocksize)), (selection.rect.x,selection.rect.y - rscroll * 30))
-            if selection.rect.collidepoint(mpos[0],mpos[1] + rscroll * 30):
-                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, selection.rect.y - rscroll * 30, blocksize, blocksize), 3)
-                tip_renders.append(harbinger_font_small.render(selection.serialNumber, True, KDS.Colors.RiverBlue))
+            rndY = selection.rect.y - yCalc
+            scaledTex = KDS.Convert.AspectScale(selection.data.texture, (BLOCKSIZE, BLOCKSIZE))
+            display.blit(scaledTex, (selection.rect.x + selection.rect.width // 2 - scaledTex.get_width() // 2, rndY + selection.rect.height // 2 - scaledTex.get_height() // 2))
+            if selection.rect.collidepoint(mpos[0], mpos[1] + yCalc):
+                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, rndY, BLOCKSIZE, BLOCKSIZE), 3)
+                tip_renders.append(harbinger_font_small.render(selection.data.name, True, KDS.Colors.AviatorRed))
+                tip_renders.append(harbinger_font_small.render(selection.data.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
-                    return selection.serialNumber
-                
+                    return selection.data.serialNumber
+
         if mouse_pressed[0]:
-            return "0000"
-        
+            return UnitData.EMPTY
+
         if len(tip_renders) > 0:
             totHeight = 0
             maxWidth = 0
@@ -618,228 +1369,414 @@ def materialMenu(previousMaterial: str) -> str:
                 pygame.draw.rect(display, KDS.Colors.LightGray, pygame.Rect(mpos[0] + 15 - 3, mpos[1] + 15 - 3 + cumHeight, maxWidth + 5, tip.get_height() + 5))
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+
         pygame.display.flip()
-        
+        KDS.Clock.Tick(-1)
+
     return previousMaterial
 
 def generateLevelProp():
     """
     Generate a levelProp.kdf using this tool.
     """
+    p_start_pos = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100", autoFormat=True)
+    k_enabled = KDS.Console.Start("Koponen Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
+    k_start_pos: Tuple[int, int] = (0, 0)
+    if k_enabled:
+        k_start_pos = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200", autoFormat=True)
+
     dark = KDS.Console.Start("Darkness Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
+    darkness: int = 0
+    player_light: bool = False
     if dark:
         darkness = KDS.Console.Start("Darkness Strength: (int[0, 255])", False, KDS.Console.CheckTypes.Int(0, 255), autoFormat=True)
         player_light = KDS.Console.Start("Player Light: (bool)", False, KDS.Console.CheckTypes.Bool(), defVal="true", autoFormat=True)
-    else:
-        darkness = 0
-        player_light = False
-    
-    ambient_light = KDS.Console.Start("Ambient Light Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
-    if ambient_light: ambient_light_tint = KDS.Console.Start("Ambient Light Tint: (int, int, int)", False, KDS.Console.CheckTypes.Tuple(3, 0, 255), autoFormat=True)
-    else: ambient_light_tint = (0, 0, 0)
-    
-    p_start_pos = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100", autoFormat=True)
-    
-    k_start_pos = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200", autoFormat=True)
-    
+
     tb_start, tb_end = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0, requireIncrease=True), autoFormat=True)
-    
-    savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")))
+
+    savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")), title="Save LevelProp")
     if len(savePath) > 0:
-        if os.path.isfile(savePath): os.remove(savePath)
+        if os.path.isfile(savePath):
+            os.remove(savePath)
+        #region User-defined
+        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
+        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/enabled", k_enabled)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startPos", k_start_pos)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/startPos", p_start_pos)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/enabled", dark)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/strength", darkness)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/playerLight", player_light)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/enabled", ambient_light)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/tint", ambient_light_tint)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/startPos", p_start_pos)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startPos", k_start_pos)
-        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
-        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
+        #endregion
+        #region Defaults
+        KDS.ConfigManager.JSON.Set(savePath, "Data/infiniteAmmo", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceTalk", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startWithTalk", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceIdle", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/talk", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/lscript", [])
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/listeners", [])
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/Inventory", {})
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/spawnInverted", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/enabled", False)
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/tint", (0, 0, 0))
+        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Indicator/enabled", True) # Story-only
+        #endregion
+
+def upgradeTileProp():
+    filename = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")), title="Select Tileprops File")
+    if filename == None or len(filename) < 1:
+        return
+    try:
+        with open(filename, "r") as f:
+            data: Dict[str, Dict[str, Any]] = json.loads(f.read())
+        newData: Dict[str, Dict[int, Dict[str, Any]]] = {}
+
+        for k, v in data.items():
+            newData[k] = {}
+            for k2, v2 in v.items():
+                if k2 != "overlay":
+                    if UnitType.Tile.value not in newData[k]: # Adding it if needed, because due to overlays being a different type, this might be empty.
+                        newData[k][UnitType.Tile.value] = {}
+                    newData[k][UnitType.Tile.value][k2] = v2
+                else:
+                    if UnitType.Unspecified.value not in newData[k]:
+                        newData[k][UnitType.Unspecified.value] = {}
+                    newData[k][UnitType.Unspecified.value][k2] = v2
+
+        with open(os.path.join(os.path.dirname(filename), "properties.kdf"), "w", encoding="utf-8") as f:
+            f.write(json.dumps(newData, separators=(',', ':'))) # Separators specified to remove useless spaces.
+
+        if KDS.System.MessageBox.Show("Success!", "Tileprops was converted to properties succesfully. Do you want to delete the old tileprops file?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
+            os.remove(filename)
+    except Exception as e:
+        KDS.System.MessageBox.Show("Failure!", "Tileprops conversion failed.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
+        KDS.Logging.AutoError(e) # Number probably means a key error
 
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
-    grid = None
+    grid = [[]]
     def button_handler(_openMap: bool = False):
-        global btn_menu
+        global btn_menu, grid, gridSize
         if _openMap:
-            openMap()
-            if grid != None:
-                btn_menu = False
-            else: 
-                btn_menu = True
-        else: btn_menu = False
-    newMap_btn = KDS.UI.Button(pygame.Rect(650, 150, 300, 100), button_handler, harbinger_font.render("New Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    openMap_btn = KDS.UI.Button(pygame.Rect(650, 300, 300, 100), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    genProp_btn = KDS.UI.Button(pygame.Rect(650, 450, 300, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    quit_btn = KDS.UI.Button(pygame.Rect(650, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.Black), (255, 255, 255), (235, 235, 235), (200, 200, 200))
-    
+            # Button menu is turned off if openMap was succesful
+            btn_menu = not openMap()
+        else:
+            g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
+            gridSize = (int(g[0]), int(g[1]))
+            grid = loadGrid(gridSize)
+            btn_menu = False
+
+    newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
+    openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       250, 400, 150), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))
+    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425, 450, 400, 100), upgradeTileProp, harbinger_font.render("Upgrade Legacy tileprops", True, KDS.Colors.White))
+    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.White))
+    quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed))
+
+    txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and/or maintenance.", True, KDS.Colors.CloudWhite)
+    txt_icon = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Branding/levelBuilderTextIcon.png").convert_alpha(), (0, 150), aspectMode=KDS.Convert.AspectMode.HeightControlsWidth)
+
     while btn_menu:
         clicked = False
         for event in pygame.event.get():
-            if event.type == QUIT:
-                LB_Quit()
+            if defaultEventHandler(event, DROPFILE):
+                continue
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     clicked = True
             elif event.type == DROPFILE:
-                loadMap(event.file)
-                btn_menu = False
-        display.fill(KDS.Colors.Gray)
+                # Button menu is turned off if loadMap was succesful
+                btn_menu = not loadMap(event.file)
+        display.fill((34, 34, 34))
         mouse_pos = pygame.mouse.get_pos()
         newMap_btn.update(display, mouse_pos, clicked)
         openMap_btn.update(display, mouse_pos, clicked, True)
+        upgradeProps_btn.update(display, mouse_pos, clicked)
         genProp_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
-        
-        pygame.display.flip()
+
+        display.blit(txt, (2, display_size[1] - harbinger_font_small.get_height() - 2))
+        display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, 50))
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+
+        if btn_menu:
+            pygame.display.flip()
+        KDS.Clock.Tick()
 
 class Selected:
-    units: List[tileInfo] = []
-    
-    @staticmethod
-    def Set(serialOverride: str = None, registerUndo: bool = True):
-        global grid
-        if registerUndo: Undo.register()
-        for unit in Selected.units:
-            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
+    units: List[UnitData] = []
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[tileInfo]], serialOverride: str = None, registerUndo: bool = True):
-        if registerUndo: Undo.register()
+    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
+        global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
+        Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, clear_selected=clear_selected)
+
+    @staticmethod
+    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
         for unit in Selected.units:
-            grid[unit.pos[1]][unit.pos[0]].serialNumber = unit.serialNumber if serialOverride == None else serialOverride
-            
-    @staticmethod         
+            unitCopy = unit.Copy()
+            if serialOverride != None:
+                unitCopy.overrideSerial(serialOverride)
+            if propertiesOverride != None:
+                unitCopy.properties.values = propertiesOverride
+            try:
+                grid[unit.pos[1]][unit.pos[0]] = unitCopy
+            except IndexError:
+                warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(<invalid-grid-size>, <invalid-grid-size>)"
+                KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}")
+        if clear_selected:
+            Selected.units.clear()
+
+    @staticmethod
+    def Move(x: int, y: int):
+        if Drag.Rect == None:
+            return
+
+        for u in Selected.units:
+            u.pos = (u.pos[0] + x, u.pos[1] + y)
+        Drag.Rect.x += x
+        Drag.Rect.y += y
+
+    @staticmethod
     def Update():
         Selected.units = []
-        if dragRect == None: return
-        for row in grid[dragRect.y:dragRect.y + dragRect.height]:
-            for unit in row[dragRect.x:dragRect.x + dragRect.width]:
-                Selected.units.append(unit.copy())
-                
+        if Drag.Rect == None:
+            return
+        for row in grid[Drag.Rect.y:Drag.Rect.y + Drag.Rect.height]:
+            for unit in row[Drag.Rect.x:Drag.Rect.x + Drag.Rect.width]:
+                Selected.units.append(unit.Copy())
+
     @staticmethod
     def Get():
         Selected.Update()
-        Selected.Set(serialOverride=tileInfo.EMPTYSERIAL, registerUndo=False)
+        Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, clear_selected=False)
 
+    @staticmethod
+    def ToString(serializeProperties: bool = False) -> Union[str, Tuple[str, str]]:
+        units2d: Dict[int, Dict[int, UnitData]] = {} # Dictionaries are ordered
+        for u in Selected.units:
+            if u.pos[1] not in units2d:
+                units2d[u.pos[1]] = {}
+            units2d[u.pos[1]][u.pos[0]] = u
+        output = ""
+        for row in units2d.values():
+            for u in row.values():
+                output += str(u) + " / "
+            output = output.removesuffix(" / ") + "\n"
+        if not serializeProperties:
+            return output
+        else:
+            unitsNormalizedPositions = [[u.Copy() for u in l.values()] for l in units2d.values()]
+            for y, row in enumerate(unitsNormalizedPositions):
+                for x, u in enumerate(row):
+                    u.pos = (x, y)
+            return output, PropertiesData.Serialize(unitsNormalizedPositions)
+
+    @staticmethod
+    def FromString(string: str, properties: str = None):
+        Selected.units: List[UnitData] = []
+        contents = string.splitlines()
+        while len(contents[-1]) < 1: contents = contents[:-1]
+
+        offset = Drag.Rect.topleft if Drag.Rect != None else (0, 0)
+        maxX = 0
+        for y, row in enumerate(contents):
+            for x, unit in enumerate(row.split("/")):
+                maxX = max(maxX, x)
+                Selected.units.append(UnitData((x, y), unit.strip(" ")))
+        if properties != None:
+            PropertiesData.Deserialize(properties, [Selected.units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
+        for u in Selected.units:
+            u.pos = (u.pos[0] + offset[0], u.pos[1] + offset[1])
+        Drag.SelectCustom(pygame.Rect(offset[0], offset[1], maxX + 1, len(contents)) if maxX > 0 and len(contents) > 0 else None)
+                                                                    # ^^ Need to add one... I don't know why.
+Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
+
+def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
+    #region Event Ignoring
+    if event.type == ignoreEventOfType:
+        return False
+    #endregion
+
+    if event.type == QUIT:
+        LB_Quit()
+        return True # Return True if event handling can be stopped
+    elif event.type == KEYDOWN:
+        if event.key == K_F3:
+            KDS.Debug.Enabled = not KDS.Debug.Enabled
+            KDS.Logging.Profiler(KDS.Debug.Enabled)
+            return True
+    elif event.type == VIDEORESIZE:
+        SetDisplaySize((event.w, event.h))
+        return True
+    elif event.type == DROPFILE:
+        loadMap(event.file)
+        return True
+    # There are no good ways to make fullscreen in levelbuilder at the moment, because pygame.display.toggle_fullscreen crashes for some reason
+    # elif event.type == KEYDOWN:
+        # if event.key == K_F11:
+        #     SetDisplaySize(toggleFullscreen=True)
+        #     return True
+    return False
+
+allowTilePlacement = True
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, brushTex, dragRect
+    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode, refrenceGridHandle
 
     menu()
     if not mainRunning: return
 
-    display.fill(KDS.Colors.Black)
-    
-    def zoom(add: int, scroll: List[int], grid: List[List[tileInfo]]):
+    textureRescaleHandle: Optional[KDS.Jobs.JobHandle] = None
+
+    def zoom(add: int, scroll: List[int], grid: List[List[UnitData]]):
         global scalesize, scaleMultiplier
+        nonlocal textureRescaleHandle
         mouse_pos = pygame.mouse.get_pos()
-        mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
+        mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
-        scalesize = KDS.Math.Clamp(scalesize + add, 1, 272)
+        newsize = KDS.Math.Clamp(scalesize + add, ZOOMRANGE[0], ZOOMRANGE[1])
+        if newsize == scalesize:
+            return
+
+        scalesize = newsize
         scaleMultiplier = scalesize / gamesize
-        mouse_pos_scaled = (KDS.Math.Floor(mouse_pos[0] / scalesize + scroll[0]), KDS.Math.Floor(mouse_pos[1] / scalesize + scroll[1]))
+
+        mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-
-    if grid == None:
-        g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000)).replace(" ", "").split(",")
-            
-        gridSize = (int(g[0]), int(g[1]))
-        grid = loadGrid(gridSize)
+        if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This should not break anything, because CPython still has it's stupid GIL
+        textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
     inputConsole_output = None
-    updateTiles = True
-
-    DebugMode = False
-
-    dragStartPos = None
-    dragPos = None
-    selectTrigger = False
-    brushTrigger = True
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
     while mainRunning:
+        middleMouseOnDown = False
         pygame.key.set_repeat(500, 31)
         mouse_pos = pygame.mouse.get_pos()
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get(): #Event loop
-            if event.type == QUIT:
-                LB_Quit()
+            if defaultEventHandler(event):
+                continue
             elif event.type == MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if brush != "0000":
-                        Undo.register()
-                    selectTrigger = True
-                elif event.button == 3:
-                    Undo.register()
-                elif event.button == 2:
+                if event.button == 2:
                     mouse_pos_beforeMove = mouse_pos
                     scroll_beforeMove = scroll.copy()
+                    middleMouseOnDown = True
+                elif event.button == 3:
+                    if zoneMode:
+                        PropertiesData.Zones.RemoveCollidePoint(mouse_pos)
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
-                    updateTiles = True
+                    allowTilePlacement = True
             elif event.type == KEYDOWN:
                 if event.key == K_z or event.key == K_y:
                     if keys_pressed[K_LCTRL]:
-                        redo = False
-                        if event.key == K_y: redo = True
-                        Undo.request(redo)
+                        Undo.request(event.key == K_y)
                         Selected.Update()
+                    else:
+                        zoneMode = not zoneMode
                 elif event.key == K_t:
                     inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
                 elif event.key == K_r:
-                    Undo.register()
-                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, sys.maxsize, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
-                    if resize_output != None: grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
+                    resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
+                    if resize_output != None:
+                        grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
-                    brush = materialMenu(brush)
-                    updateTiles = False
-                elif event.key == K_F3:
-                    DebugMode = not DebugMode
+                    tmpBrush = materialMenu(brush.brush)
+                    tmpProps: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+                    if tmpBrush[0] == "3":
+                        tmpProps = {UnitType.Teleport: {"identifier": 1}}
+                    brush.SetValues(tmpBrush, tmpProps)
+                    allowTilePlacement = not pygame.mouse.get_pressed()[0]
                 elif event.key == K_DELETE:
-                    Selected.Set(tileInfo.EMPTYSERIAL)
+                    Selected.Set(UnitData.EMPTYSERIAL)
                     Selected.Update()
                 elif event.key == K_d:
                     if keys_pressed[K_LCTRL]:
-                        Selected.Set()
+                        Selected.Set(clear_selected=False)
                 elif event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
-                    xy = (0, 0)
+                    x = 0
+                    y = 0
                     if event.key == K_UP:
-                        xy = (0, -1)
+                        y += -1
                     elif event.key == K_DOWN:
-                        xy = (0, 1)
+                        y += 1
                     elif event.key == K_LEFT:
-                        xy = (-1, 0)
+                        x += -1
                     elif event.key == K_RIGHT:
-                        xy = (1, 0)
-                    for unit in Selected.units:
-                        unit.pos = (unit.pos[0] + xy[0], unit.pos[1] + xy[1])
-                    dragRect.x += xy[0]
-                    dragRect.y += xy[1]
+                        x += 1
+                    Selected.Move(x, y)
+                elif event.key == K_a:
+                    if keys_pressed[K_LCTRL]:
+                        if Drag.Mode == DragMode.Default:
+                            Drag.SelectCustom(pygame.Rect(0, 0, gridSize[0], gridSize[1]))
+                        Selected.Get()
+                elif event.key == K_c:
+                    if keys_pressed[K_LCTRL]:
+                        try:
+                            toClipboard = Selected.ToString(serializeProperties=True)
+                            if not isinstance(toClipboard, tuple) or len(toClipboard) != 2:
+                                raise ValueError(f"Clipboard data (type: from) is an incorrect type. Tuple of length 2 expected; got: \"{toClipboard}\".")
+                            pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}", "utf-8"))
+                        except Exception:
+                            KDS.Logging.AutoError(f"Copy to clipboard failed. Exception Below:\n{traceback.format_exc()}")
+                elif event.key == K_v:
+                    if keys_pressed[K_LCTRL]:
+                        try:
+                            fromClipboard: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
+                            if fromClipboard != None:
+                                if isinstance(fromClipboard, bytes):
+                                    fromClipboard = fromClipboard.decode("utf-8")
+                                if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
+                                    fromClipboardSplit = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
+                                    if len(fromClipboardSplit) != 2:
+                                        raise ValueError(f"Clipboard data (type: to) is an incorrect type. List of length 2 expected; got: \"{fromClipboardSplit}\".")
+                                    if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
+                                        Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
+                                    else:
+                                        KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
+                                else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.")
+                        except Exception:
+                            KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
+                elif event.key == K_g:
+                    if refrenceGrid != None:
+                        refrenceGrid = None
+                        for row in grid:
+                            for unit in row:
+                                unit.matchesRefrence = False
+                    else:
+                        refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
+                        if len(refrencePath) > 0 and not refrencePath.isspace():
+                            refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
+                elif event.key == K_F5:
+                    loadLevelProp(os.path.dirname(currentLoadName))
             elif event.type == MOUSEWHEEL:
-                if keys_pressed[K_LSHIFT]:
-                    scroll[0] -= event.y
-                elif keys_pressed[K_LCTRL]:
+                if keys_pressed[K_LCTRL]:
                     zoom(event.y * 5, scroll, grid)
+                elif keys_pressed[K_LSHIFT]:
+                    scroll[0] -= event.y
                 else:
                     scroll[1] -= event.y
                 scroll[0] += event.x
-            elif event.type == DROPFILE:
-                loadMap(event.file)
-            
+
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
             mid_scroll_y = (mouse_pos_beforeMove[1] - mouse_pos[1]) // scalesize
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
                 scroll[0] = scroll_beforeMove[0] + mid_scroll_x
                 scroll[1] = scroll_beforeMove[1] + mid_scroll_y
-        
+
         if keys_pressed[K_s] and keys_pressed[K_LCTRL]:
-            if not currentSaveName:
+            if len(currentSaveName) < 1 or currentSaveName.isspace():
                 saveMapName()
             else:
                 saveMap(grid, currentSaveName)
@@ -847,16 +1784,26 @@ def main():
             saveMapName()
 
         if keys_pressed[K_o] and keys_pressed[K_LCTRL]:
-            openMap()
-            if grid == None:
-                print("Map opening cancelled.")
+            openMapSuccess = openMap()
+            if not openMapSuccess:
+                KDS.Logging.info("Map opening cancelled.", True)
 
         if inputConsole_output != None:
             consoleHandler(inputConsole_output)
             inputConsole_output = None
 
-        display.fill((30,20,60))
-        grid, brush = tileInfo.renderUpdate(display, scroll, grid, brush, updateTiles)
+        if refrenceGrid != None:
+            if refrenceGridHandle == None or refrenceGridHandle.IsComplete:
+                if refrenceGridHandle != None:
+                    refrenceGridHandle.Complete()
+                refrenceGridHandle = KDS.Jobs.Schedule(UnitData.refrenceUpdate)
+        elif refrenceGridHandle != None:
+            if refrenceGridHandle.IsComplete:
+                refrenceGridHandle.Complete()
+                refrenceGridHandle = None
+
+        display.fill((30, 20, 60))
+        UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
@@ -865,85 +1812,131 @@ def main():
             elif 100 >= undoTotal >= 50: _color = KDS.Colors.Orange
             else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
-        if brush != "0000":
-            tmpScaled = KDS.Convert.AspectScale(Atextures[brush[0]][brush], (68, 68))
+
+        if not brush.IsEmpty():
+            tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
-            if brushTrigger:
-                selectTrigger = False
-                dragStartPos = None
-                dragRect = None
-                Selected.Set()
-                brushTrigger = False
-        elif selectTrigger and mouse_pressed[0] and not keys_pressed[K_c]:
-            if dragStartPos == None:
-                Selected.Set()
-                dragStartPos = (int((mouse_pos[0] + scroll[0] * scalesize) / scalesize), int((mouse_pos[1] + scroll[1] * scalesize) / scalesize))
-            dragPos = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
-            dragRect = pygame.Rect(min(dragPos[0], dragStartPos[0]), min(dragPos[1], dragStartPos[1]), abs(dragStartPos[0] - dragPos[0]) + 1, abs(dragStartPos[1] - dragPos[1]) + 1)
-            Selected.Update()
-        elif dragStartPos != None:
-            selectTrigger = False
-            dragStartPos = None
-            Selected.Get()
-        if brush == "0000": brushTrigger = True
-        if mouse_pressed[2] and dragRect != None and not keys_pressed[K_c]:
-            selectTrigger = False
-            dragStartPos = None
-            dragRect = None
-            Selected.Set()
-            Selected.Update()
+
+        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed)
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
-                blitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
-                srlist = unit.getSerials()
-                for number in srlist:
-                    blitTex = None
-                    if number[0] == '3':
-                        blitTex = Atextures["3"]["3001"]
-                    elif number != "0000":
-                        try:
-                            blitTex = Atextures[number[0]][number]
-                        except KeyError:
-                                print(f"Cannot render unit because texture is not added: {srlist}")
-                    if blitTex != None:
-                        if number in trueScale:
-                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0] - (blitTex.get_width() * scaleMultiplier - scalesize), blitPos[1] - (blitTex.get_height() * scaleMultiplier - scalesize)))
-                        else:
-                            display.blit(pygame.transform.scale(blitTex, (int(blitTex.get_width() * scaleMultiplier), int(blitTex.get_height() * scaleMultiplier))), (blitPos[0], blitPos[1] - blitTex.get_height() * scaleMultiplier + scalesize))
-        
-        if dragRect != None and dragRect.width > 0 and dragRect.height > 0:
-            selectDrawRect = pygame.Rect((dragRect.x - scroll[0]) * scalesize, (dragRect.y - scroll[1]) * scalesize, dragRect.width * scalesize, dragRect.height * scalesize)
-            selectDraw = pygame.Surface(selectDrawRect.size)
-            selectDraw.fill(KDS.Colors.White)
-            pygame.draw.rect(selectDraw, KDS.Colors.Black, (0, 0, *selectDraw.get_size()), scalesize // 8)
-            selectDraw.set_alpha(64)
-            display.blit(selectDraw, (selectDrawRect.x, selectDrawRect.y))
-        
-        if DebugMode:
-            debugSurf = pygame.Surface((200, 40))
-            debugSurf.fill(KDS.Colors.DarkGray)
-            debugSurf.set_alpha(128)
-            display.blit(debugSurf, (0, 0))
-        
-            fps_text = "FPS: " + str(round(clock.get_fps()))
-            fps_text = harbinger_font.render(fps_text, True, KDS.Colors.White)
-            display.blit(fps_text, (10, 10))
-        
+                for number in unit.serials:
+                    if number != UnitData.EMPTY:
+                        UnitData.renderSerial(display, unit.properties, number, (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize))
+
+        if Drag.Mode == DragMode.Default:
+            Drag.render(Drag.DEFAULT_STYLE, display, scroll)
+
+        if zoneMode:
+            if brush.brush != UnitData.EMPTY:
+                brush.SetValues()
+            if Drag.Mode != DragMode.Zone:
+                Drag.clear()
+                Drag.Mode = DragMode.Zone
+            allowTilePlacement = False
+
+            zoneScreen = pygame.Surface(display_size)
+            zoneScreen.fill(KDS.Colors.White)
+            for zoneRect, zoneData in PropertiesData.Zones:
+                zoneRectScaled = pygame.Rect((zoneRect.x - scroll[0]) * scalesize, (zoneRect.y - scroll[1]) * scalesize, zoneRect.width * scalesize, zoneRect.height * scalesize)
+                if zoneRectScaled.right < 0 or zoneRectScaled.left > display_size[0] or zoneRectScaled.bottom < 0 or zoneRectScaled.top > display_size[0]:
+                    continue
+
+                zoneSurf = pygame.Surface(zoneRectScaled.size)
+                zoneSurf.fill(KDS.Colors.Gray)
+
+                if PropertiesData.ZoneSetting.Disco in zoneData and zoneData[PropertiesData.ZoneSetting.Disco] == True:
+                    disco_colors = (
+                        KDS.Colors.Red,
+                        KDS.Colors.Orange,
+                        KDS.Colors.Yellow,
+                        KDS.Colors.Green,
+                        KDS.Colors.Blue,
+                        KDS.Colors.Purple,
+                        KDS.Colors.Magenta
+                    )
+                    disco_w = 40
+                    for i in range(0, zoneRectScaled.width, disco_w):
+                        pygame.draw.rect(zoneSurf, disco_colors[i // disco_w % len(disco_colors)], (i, 0, disco_w, zoneRectScaled.height))
+
+                if PropertiesData.ZoneSetting.Darkness in zoneData:
+                    zoneDarkness = zoneData[PropertiesData.ZoneSetting.Darkness]
+                    if isinstance(zoneDarkness, int):
+                        darkColor = 255 - zoneDarkness
+                        scaleDiv = scalesize // 3
+                        for y in range(0, zoneRectScaled.height, scaleDiv * 2):
+                            for x in range(0, zoneRectScaled.width, scaleDiv * 2):
+                                pygame.draw.circle(zoneSurf, (darkColor, darkColor, darkColor), (x, y), scaleDiv // 2)
+
+                if PropertiesData.ZoneSetting.StaffOnly in zoneData and zoneData[PropertiesData.ZoneSetting.StaffOnly] == True:
+                    lineWidth = max(scalesize // 8, 1)
+                    line_45 = ((0, 0), zoneRectScaled.size)
+                    lineLength = max(zoneRectScaled.width, zoneRectScaled.height)
+                    for y in range( -lineLength, lineLength, lineWidth * 3):
+                        pygame.draw.line(zoneSurf, KDS.Colors.Black, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
+
+                if PropertiesData.ZoneSetting.LevelEnder in zoneData and zoneData[PropertiesData.ZoneSetting.LevelEnder] == True:
+                    lineWidth = max(scalesize // 8, 1)
+                    line_45 = ((zoneRectScaled.width, 0), (0, zoneRectScaled.height))
+                    lineLength = max(zoneRectScaled.width, zoneRectScaled.height)
+                    for y in range(-lineLength, lineLength, lineWidth * 3):
+                        pygame.draw.line(zoneSurf, KDS.Colors.RiverBlue, (line_45[0][0], line_45[0][1] + y), (line_45[1][0], line_45[1][1] + y), lineWidth)
+
+                zoneScreen.blit(zoneSurf, zoneRectScaled.topleft)
+
+                if keys_pressed[K_p] and zoneRectScaled.collidepoint(*mouse_pos):
+                    zone_command_tree = {
+                        "staffOnly": {"true": "break", "false": "break", "null": "break"},
+                        "levelEnder": {"true": "break", "false": "break", "null": "break"},
+                        "disco": {"true": "break", "false": "break", "null": "break"},
+                        "darkness": {"[int]": "break", "null": "break"}
+                    }
+                    zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
+                    zoneConsoleHandler(zone_command, zoneRect)
+            zoneScreen.set_alpha(128)
+            display.blit(zoneScreen, (0, 0))
+        elif Drag.Mode != DragMode.Default:
+            Drag.Mode = DragMode.Default
+            Drag.clear()
+
+        if LevelPropData.ShowKoponen:
+            display.blit(LevelPropData.KoponenTextureRescaled, (LevelPropData.KoponenPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.KoponenPos[1] * scaleMultiplier - scroll[1] * scalesize))
+        if LevelPropData.ShowPlayer:
+            display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+
         pygame.display.flip()
-        clock.tick_busy_loop()
+        KDS.Clock.Tick(-1)
 
-mainRunning = True   
-main()
+mainRunning = True
+try:
+    main()
+except Exception as e:
+    KDS.Logging.AutoError(f"KDS LevelBuilder ran into an unrecoverable error! Details below:\n{traceback.format_exc()}")
+    if KDS.System.MessageBox.Show("Fatal Error!", "KDS LevelBuilder ran into an unrecoverable error! Do you want to try to save your project?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.ERROR) == KDS.System.MessageBox.Responses.YES:
+        try:
+            saveMapName()
+            KDS.System.MessageBox.Show("Success!", "Your project was saved successfully.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.INFORMATION)
+        except Exception:
+            KDS.System.MessageBox.Show("Failure!", "You project failed to save.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
 
+KDS.Jobs.quit()
 pygame.quit()
 
 """ KEYMAP
     [Normal]
-    P: Set teleport index
     Middle Mouse: Get Serial
+    Middle Mouse + SHIFT: Move Camera
+    Middle Mouse + CTRL: Get Serial with Properties
     Left Mouse: Set Serial
-    Left Mouse + SHIFT: Add Serial
+    Left Mouse + SHIFT: Add Serial At Top
+    Left Mouse + CTRL: Insert Serial At Bottom
+    Right Mouse: Reset Serial
+    Right Mouse + SHIFT: Remove Serial From Top
+    Right Mouse + CTRL: Remove Serial From Bottom
     Left Mouse + C: No Collision
     Left Mouse + ALT + C: Force Collision
     Right Mouse + C: Remove Collision Attribute
@@ -952,13 +1945,21 @@ pygame.quit()
     CTRL + Z: Undo
     CTRL + Y: Redo
     CTRL + D: Duplicate Selection
+    CTRL + C: Copy
+    CTRL + V: Paste if possible
     T: Input Console
     R: Resize Map
-    P: Set Property
+    F: Set Property
+    P: Set teleport index
+    O: Set Overlay
+    G: Select Refrence Map File
+    Z: Toggle Zone Mode
+    CTRL + A: Select All
     CTRL + S: Save Project
     CTRL + SHIFT + S: Save Project As
     CTRL + O: Open Project
-    
+    F5: Reload LevelProp
+
     [Material Menu]
     Escape: Close Material Menu
     E: Close Material Menu

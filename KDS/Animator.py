@@ -1,4 +1,6 @@
-from typing import Callable, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+
+from enum import IntEnum, auto
 
 import pygame
 
@@ -7,13 +9,13 @@ import KDS.Logging
 import KDS.Math
 
 
-class OnAnimationEnd:
-    Stop = "stop"
-    Loop = "loop"
-    PingPong = "pingpong"
+class OnAnimationEnd(IntEnum):
+    Stop = auto()
+    Loop = auto()
+    PingPong = auto()
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations") -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations", load_in_reverse: bool = False) -> None:
         """Initialises an animation.
 
         Args:
@@ -27,7 +29,7 @@ class Animation:
         """
         if number_of_images < 1 or duration < 1:
             KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
-        self.images = []
+        self.images: List[pygame.Surface] = []
         self.duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
@@ -36,19 +38,21 @@ class Animation:
         self.PingPong = False
         self.done = False
 
-        KDS.Logging.debug(f"Initialising {number_of_images} Animation Images...")
-        for i in range(number_of_images):
+        KDS.Logging.debug(f"Initialising {number_of_images} animation images...")
+        iterRange = (0, number_of_images, 1) if not load_in_reverse else (number_of_images - 1, -1, -1)
+        for i in range(*iterRange):
             converted_animation_name = animation_name + "_" + str(i) + filetype
             path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
+            KDS.Logging.debug(f"Loading animation images from: {path}")
             image = pygame.image.load(path).convert()
             image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
-            KDS.Logging.debug(f"Initialised Animation Image: {animation_dir}/{converted_animation_name}")
+            KDS.Logging.debug(f"Initialised animation image: {animation_dir}/{converted_animation_name}")
 
             for _ in range(duration):
                 self.images.append(image)
-        
+
         self.size = self.images[0].get_size()
-                
+
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
 
@@ -71,6 +75,7 @@ class Animation:
                     self.tick = 0
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = True
+                    self.tick = self.ticks
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
         else:
@@ -83,6 +88,7 @@ class Animation:
                     self.tick = self.ticks
                 elif self.onAnimationEnd == OnAnimationEnd.PingPong:
                     self.PingPong = False
+                    self.tick = 0
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
         return self.images[self.tick]
@@ -94,54 +100,124 @@ class Animation:
             pygame.Surface: Currently active frame.
         """
         return self.images[self.tick]
-    
+
     def change_colorkey(self, colorkey: Tuple[int, int, int]):
         for image in self.images:
             image.set_colorkey(colorkey)
 
+    def get_size(self) -> Tuple[int, int]:
+        if len(self.images) > 0:
+            return self.images[0].get_size()
+        return (-1, -1)
+
+    def get_width(self) -> int:
+        return self.get_size()[0]
+
+    def get_height(self) -> int:
+        return self.get_size()[1]
+
 class MultiAnimation:
     def __init__(self, **animations: Animation):
-        self.animations = animations
-        self.active = None
-        for key in animations:
-            if self.active == None:
-                self.active = animations[key]
-            else:
-                break
-    
-    def trigger(self, animation_trigger):
+        if len(animations) < 1:
+            raise ValueError("MultiAnimation requires atleast one animation to function!")
+        self.animations: Dict[str, Animation] = animations
+        firstKV = next(iter(animations.items()))
+        self.active: Animation = firstKV[1]
+        self.active_key: str = firstKV[0]
+
+    def trigger(self, animation_trigger: str):
         if animation_trigger in self.animations:
             self.active = self.animations[animation_trigger]
+            self.active_key = animation_trigger
         else:
             KDS.Logging.AutoError("MultiAnimation trigger invalid.")
-            
+
     def update(self, reverse: bool = False):
         return self.active.update(reverse)
-    
+
     def get_frame(self):
         return self.active.get_frame()
-    
+
     def reset(self):
         for anim in self.animations:
             self.animations[anim].tick = 0
 
-class AnimationType:
-    Linear = lambda t: t
-    EaseIn = lambda t: 1.0 - KDS.Math.Cos(t * KDS.Math.PI * 0.5)
-    EaseOut = lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5)
-    Exponential = lambda t: t * t
-    SmoothStep = lambda t: t * t * (3.0 - (2.0 * t))
-    SmootherStep = lambda t: t * t * t * (t * ((6.0 * t) - 15.0) + 10.0)
+class AnimationType(IntEnum):
+    Linear = auto()
+    EaseInSine = auto()
+    EaseOutSine = auto()
+    EaseInOutSine = auto()
+    EaseInCubic = auto()
+    EaseOutCubic = auto()
+    EaseInOutCubic = auto()
+    EaseInQuint = auto()
+    EaseOutQuint = auto()
+    EaseInOutQuint = auto()
+    EaseInCirc = auto()
+    EaseOutCirc = auto()
+    EaseInOutCirc = auto()
+    EaseInElastic = auto()
+    EaseOutElastic = auto()
+    EaseInOutElastic = auto()
+    EaseInQuad = auto()
+    EaseOutQuad = auto()
+    EaseInOutQuad = auto()
+    EaseInQuart = auto()
+    EaseOutQuart = auto()
+    EaseInOutQuart = auto()
+    EaseInExpo = auto()
+    EaseOutExpo = auto()
+    EaseInOutExpo = auto()
+    EaseInBack = auto()
+    EaseOutBack = auto()
+    EaseInOutBack = auto()
+    EaseInBounce = auto()
+    EaseOutBounce = auto()
+    EaseInOutBounce = auto()
 
-class Float:
-    def __init__(self, From: float, To: float, Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:
-        """Initialises a float animation.
+class Value:
+    _animT = {
+        # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
+        AnimationType.EaseInSine: lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5),
+        AnimationType.EaseOutSine: lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5),
+        AnimationType.EaseInOutSine: lambda t: -(KDS.Math.Cos(KDS.Math.PI * t) - 1) * 0.5,
+        AnimationType.EaseInCubic: lambda t: t * t * t,
+        AnimationType.EaseOutCubic: lambda t: 1 - pow(1 - t, 3),
+        AnimationType.EaseInOutCubic: lambda t: 4 * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 3) * 0.5,
+        AnimationType.EaseInQuint: lambda t: t * t * t * t * t,
+        AnimationType.EaseOutQuint: lambda t: 1 - pow(1 - t, 5),
+        AnimationType.EaseInOutQuint: lambda t: 16 * t * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 5) * 0.5,
+        AnimationType.EaseInCirc: lambda t: 1 - KDS.Math.Sqrt(1 - pow(t, 2)),
+        AnimationType.EaseOutCirc: lambda t: KDS.Math.Sqrt(1 - pow(t - 1, 2)),
+        AnimationType.EaseInOutCirc: lambda t: (1 - KDS.Math.Sqrt(1 - pow(2 * t, 2))) * 0.5 if t < 0.5 else (KDS.Math.Sqrt(1 - pow(-2 * t + 2, 2)) + 1) * 0.5,
+        AnimationType.EaseInElastic: lambda t: 0 if t == 0 else (1 if t == 1 else -pow(2, 10 * t - 10) * KDS.Math.Sin((t * 10 - 10.75) * ((2 * KDS.Math.PI) / 3))),
+        AnimationType.EaseOutElastic: lambda t: 0 if t == 0 else (1 if t == 1 else pow(2, -10 * t) * KDS.Math.Sin((t * 10 - 0.75) * ((2 * KDS.Math.PI) / 3)) + 1),
+        AnimationType.EaseInOutElastic: lambda t: 0 if t == 0 else (1 if t == 1 else (-(pow(2, 20 * t - 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 if t < 0.5 else (pow(2, -20 * t + 10) * KDS.Math.Sin((20 * t - 11.125) * ((2 * KDS.Math.PI) / 4.5))) * 0.5 + 1)), #Yeah... I have no idea what's happening here...
+        AnimationType.EaseInQuad: lambda t: t * t,
+        AnimationType.EaseOutQuad: lambda t: 1 - (1 - t) * (1 - t),
+        AnimationType.EaseInOutQuad: lambda t: 2 * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 2) * 0.5,
+        AnimationType.EaseInQuart: lambda t: t * t * t * t,
+        AnimationType.EaseOutQuart: lambda t: 1 - pow(1 - t, 4),
+        AnimationType.EaseInOutQuart: lambda t: 8 * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 4) * 0.5,
+        AnimationType.EaseInExpo: lambda t: 0 if t == 0 else pow(2, 10 * t - 10),
+        AnimationType.EaseOutExpo: lambda t: 1 if t == 1 else 1 - pow(2, -10 * t),
+        AnimationType.EaseInOutExpo: lambda t: 0 if t == 0 else (1 if t == 1 else (pow(2, 20 * t - 10) * 0.5 if t < 0.5 else (2 - pow(2, -20 * t + 10)) * 0.5)),
+        AnimationType.EaseInBack: lambda t: 2.70158 * t * t * t - 1.70158 * t * t,
+        AnimationType.EaseOutBack: lambda t: 1 + 2.70158 * pow(t - 1, 3) + 1.70158 * pow(t - 1, 2),
+        AnimationType.EaseInOutBack: lambda t: (pow(2 * t, 2) * ((2.5949095 + 1) * 2 * t - 2.5949095)) * 0.5 if t < 0.5 else (pow(2 * t - 2, 2) * ((2.5949095 + 1) * (t * 2 - 2) + 2.5949095) + 2) * 0.5,
+        AnimationType.EaseInBounce: lambda t: 1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - t),
+        AnimationType.EaseOutBounce: lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)),
+        AnimationType.EaseInOutBounce: lambda t: (1 - (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(1 - 2 * t)) * 0.5 if t < 0.5 else (1 + (lambda t: 7.5625 * t * t if t < 1 / 2.75 else (7.5625 * (t := t - 1.5 / 2.75) * t + 0.75 if t < 2 / 2.75 else (7.5625 * (t := t - 2.25 / 2.75) * t + 0.9375 if t < 2.5 / 2.75 else 7.5625 * (t := t - 2.625 / 2.75) * t + 0.984375)))(2 * t - 1)) * 0.5
+    }
+
+    def __init__(self, From: float, To: float, Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
+        """Initialises a value animation.
 
         Args:
             From (float): The starting point of the float animation.
             To (float): The ending point of the float animation.
             Duration (int): The amount of ticks it takes to finish the entire float animation.
-            Type (AnimationType): The type of float animation you want.
+            _AnimationType (AnimationType): The type of float animation you want.
             _OnAnimationEnd (OnAnimationEnd): What will the animator do when the animaton has finished.
         """
         self.From = From
@@ -150,7 +226,7 @@ class Float:
         self.ticks = Duration
         self.tick = 0
         self.onAnimationEnd = _OnAnimationEnd
-        self.type = Type
+        self.type = Value._animT[_AnimationType] if _AnimationType in Value._animT else None
         self.PingPong = False
         self.value = From
 
@@ -160,9 +236,14 @@ class Float:
         Returns:
             float: Current value.
         """
-        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
-        else: return self.To
-    
+        try:
+            t = self.tick / self.ticks
+        except ZeroDivisionError:   # Trying and catching so that the function is generally faster
+            t = 1.0                 # than when the user uses the animator not so optimally...
+        if self.type != None: t = self.type(t)
+
+        return KDS.Math.Lerp(self.From, self.To, t)
+
     def update(self, reverse: bool = False) -> float:
         """Updates the float animation
 
@@ -199,32 +280,55 @@ class Float:
                     self.PingPong = False
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
-        
-        if self.ticks != 0: return KDS.Math.Lerp(self.From, self.To, self.type(self.tick / self.ticks))
-        else: return self.To
+
+        return self.get_value()
 
 class Color:
-    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, Type: AnimationType and Callable[[float], float] = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd and str = OnAnimationEnd.Stop) -> None:
-        self.int0 = Float(From[0], To[0], Duration, Type, _OnAnimationEnd)
-        self.int1 = Float(From[1], To[1], Duration, Type, _OnAnimationEnd)
-        self.int2 = Float(From[2], To[2], Duration, Type, _OnAnimationEnd)
-        
+    def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
+        self._r = Value(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
+        self._g = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
+        self._b = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
+
+    @property
+    def From(self) -> Tuple[int, int, int]:
+        return (int(self._r.From), int(self._g.From), int(self._b.From))
+
+    @From.setter
+    def From(self, value: Tuple[int, int, int]):
+        self._r.From = value[0]
+        self._g.From = value[1]
+        self._b.From = value[2]
+
+    @property
+    def To(self) -> Tuple[int, int, int]:
+        return (int(self._r.To), int(self._g.To), int(self._b.To))
+
+    @To.setter
+    def To(self, value: Tuple[int, int, int]):
+        self._r.To = value[0]
+        self._g.To = value[1]
+        self._b.To = value[2]
+
+    @property
+    def Finished(self) -> bool:
+        return self._r.Finished and self._g.Finished and self._b.Finished
+
+    @property
+    def tick(self) -> int:
+        return self._r.tick
+
+    @tick.setter
+    def tick(self, value: int):
+        self._r.tick = value
+        self._g.tick = value
+        self._b.tick = value
+
+    @property
+    def ticks(self) -> int:
+        return self._r.ticks
+
     def get_value(self) -> Tuple[int, int, int]:
-        return (round(self.int0.get_value()), round(self.int1.get_value()), round(self.int2.get_value()))
-    
+        return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()))
+
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
-        return (round(self.int0.update(reverse)), round(self.int1.update(reverse)), round(self.int2.update(reverse)))
-    
-    def changeValues(self, From: Tuple[int, int, int], To: Tuple[int, int, int]):
-        self.int0.From = From[0]
-        self.int0.To = To[0]
-        self.int1.From = From[1]
-        self.int1.To = To[1]
-        self.int2.From = From[2]
-        self.int2.To = To[2]
-    
-    def getValues(self):
-        return ((self.int0.From, self.int1.From, self.int2.From), (self.int0.From, self.int1.From, self.int2.From))
-    
-    def getFinished(self):
-        return True if self.int0.Finished and self.int1.Finished and self.int2.Finished else False  
+        return (round(self._r.update(reverse)), round(self._g.update(reverse)), round(self._b.update(reverse)))

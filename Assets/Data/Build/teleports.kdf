@@ -1,0 +1,50 @@
+{
+    "Invisible Teleport": {
+        "serialNumber": 1,
+        "path": "telep.png"
+    },
+    "Door Teleport": {
+        "serialNumber": 2,
+        "path": "door_front.png"
+    },
+    "Door Teleport Mirrored": {
+        "serialNumber": 3,
+        "path": "door_front_mirrored.png"
+    },
+    "Gray Door Teleport": {
+        "serialNumber": 4,
+        "path": "gray_door.png"
+    },
+    "Large Door Teleport": {
+        "serialNumber": 5,
+        "path": "large_door_closed.png"
+    },
+    "Elevator Teleport": {
+        "serialNumber": 6,
+        "path": "elevator.png"
+    },
+    "Hotel Door Teleport": {
+        "serialNumber": 7,
+        "path": "hotel_door_front.png"
+    },
+    "Hotel Door Teleport Mirrored": {
+        "serialNumber": 8,
+        "path": "hotel_door_front_mirrored.png"
+    },
+    "Door Teleport Left Side": {
+        "serialNumber": 9,
+        "path": "door_closed.png"
+    },
+    "Guard Hotel Door Teleport Mirrored": {
+        "serialNumber": 10,
+        "path": "hotel_door_front_mirrored.png"
+    },
+    "Nysse Teleport": {
+        "serialNumber": 11,
+        "path": "Nysse.png"
+    },
+    "Hologram Teleport": {
+        "serialNumber": 12,
+        "path": "teleport_base.png"
+    }
+}

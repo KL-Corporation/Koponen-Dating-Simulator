@@ -1,0 +1,45 @@
+{
+    "Data": {
+        "settingsFileVersion": 1,
+        "Terms": {
+            "accepted": false
+        }
+    },
+    "Game": {
+        "pauseOnFocusLoss": true
+    },
+    "Mixer": {
+        "channelCount": 128,
+        "Volume": {
+            "music": 0.25,
+            "effect": 0.75
+        },
+        "walkSound": false,
+        "legacyLobbyMusic": false
+    },
+    "Renderer": {
+        "fullscreen": false,
+
+        "Tile": {
+            "renderPadding": 8
+        },
+        "Item": {
+
+        },
+        "Entity": {
+
+        },
+        "Lighting": {
+
+        },
+        "Particle": {
+            "maxCount": 128
+        }
+    },
+    "Player": {
+        "currentMap": "01"
+    },
+    "UI": {
+        "cursor": 0
+    }
+}

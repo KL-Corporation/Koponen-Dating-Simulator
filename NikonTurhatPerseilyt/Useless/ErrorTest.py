@@ -1,2 +1,0 @@
-# int("Seppo")
-# Seppo
