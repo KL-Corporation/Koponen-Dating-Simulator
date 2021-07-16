@@ -2245,6 +2245,9 @@ class WoodDoorSideTeleport(WoodDoorTeleport):
         self.rect = pygame.Rect(position[0] + 27, position[1] - 34, 7, 68)
         self.teleportOffset = (-KDS.Math.CeilToInt(stand_size[0] / 2 + self.rect.width / 2), 0)
 
+    def onTeleport(self):
+        Player.direction = True
+
 class NysseTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
