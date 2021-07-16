@@ -414,7 +414,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     #region Settings
     GradeExtras: bool = True
     StoryExtras: bool = True
-    AlignOverride: bool = True
+    AlignOverride: bool = False
     GlobalRefrenceOverride: Optional[int] = None
     #endregion
 
