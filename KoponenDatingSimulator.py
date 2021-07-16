@@ -4390,12 +4390,6 @@ while main_running:
             elif event.key in KDS.Keys.terminal.Bindings:
                 if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Debug.IsVSCodeDebugging(): # Console is disabled in story mode if application is not run on VSCode debug mode.
                     go_to_console = True
-            elif event.key == K_F5:
-                KDS.Audio.MusicMixer.pause()
-                quit_temp, exam_score = KDS.School.Exam()
-                KDS.Audio.MusicMixer.unpause()
-                if quit_temp:
-                    KDS_Quit()
             elif event.key in KDS.Keys.screenshot.Bindings:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
