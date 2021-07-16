@@ -4,6 +4,7 @@ import logging
 import os
 import pstats
 import platform
+import KDS.Application
 import KDS.System
 import KDS.Linq
 import pygame
@@ -73,6 +74,7 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
+    - Application: {KDS.Application.VERSION}
     - pygame: {pygame.version.ver}
     - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
     - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}

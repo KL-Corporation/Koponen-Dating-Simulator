@@ -20,8 +20,8 @@ animationDivider = 2 #The value the default animation length will be divided
 
 maxTimeBonus = 500
 
-score = 0
-koponen_happiness = 40
+score: int = 0
+levelDeaths: int = 0
 
 def init():
     global pointSound
@@ -163,9 +163,9 @@ class GameTime:
 class ScoreCounter:
     @staticmethod
     def Start():
-        global score, koponen_happiness
+        global score, levelDeaths
         score = 0
-        koponen_happiness = 40
+        levelDeaths = 0
         storyMode = KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story
         GameTime.Start(GameTimerType.PerfCounter if not storyMode else GameTimerType.DateTime)
 
@@ -183,7 +183,7 @@ class ScoreCounter:
 
     @staticmethod
     def CalculateScores():
-        global score, koponen_happiness
+        global score, levelDeaths
         tb_start: int = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/start", None)
         tb_end: int = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/end", None)
         if tb_start == None or tb_end == None:
@@ -193,10 +193,11 @@ class ScoreCounter:
         clampedGameTime = KDS.Math.Clamp(GameTime.GetGameTime().total_seconds(), tb_start, tb_end)
         timeBonusFloat: float = KDS.Math.Remap(clampedGameTime, tb_start, tb_end, maxTimeBonus, 0)
         timeBonus = round(timeBonusFloat)
+        deathlessBonus = 500 if levelDeaths < 1 else 0
 
-        totalScore: int = score + koponen_happiness + timeBonus
+        totalScore: int = score + deathlessBonus + timeBonus
 
-        return score, koponen_happiness, timeBonus, totalScore
+        return score, deathlessBonus, timeBonus, totalScore
 
 class ScoreAnimation:
     animationIndex = 0
@@ -207,18 +208,18 @@ class ScoreAnimation:
 
     @staticmethod
     def init():
-        score, koponen_happiness, timeBonus, totalScore = ScoreCounter.CalculateScores()
+        score, deathlessBonus, timeBonus, totalScore = ScoreCounter.CalculateScores()
 
         ScoreAnimation.animationIndex = 0
         ScoreAnimation.finished = False
 
         score_animation = KDS.Animator.Value(0, score, min(round(abs(score) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
-        koponen_happiness_animation = KDS.Animator.Value(0, koponen_happiness, min(round(abs(koponen_happiness) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
+        deathlessBonus_animation = KDS.Animator.Value(0, deathlessBonus, min(round(abs(deathlessBonus) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
         timeBonus_animation = KDS.Animator.Value(0, timeBonus, min(round(abs(timeBonus) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
         totalScore_animation = KDS.Animator.Value(0, totalScore, min(round(abs(totalScore) / animationDivider), maxAnimationLength), KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Stop)
 
-        ScoreAnimation.animationList = (score_animation, koponen_happiness_animation, timeBonus_animation, totalScore_animation)
-        ScoreAnimation.valueList = (score, koponen_happiness, timeBonus, totalScore)
+        ScoreAnimation.animationList = (score_animation, deathlessBonus_animation, timeBonus_animation, totalScore_animation)
+        ScoreAnimation.valueList = (score, deathlessBonus, timeBonus, totalScore)
 
     @staticmethod
     def update(fadeFinished: bool = True):

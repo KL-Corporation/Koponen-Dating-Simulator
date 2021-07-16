@@ -517,7 +517,7 @@
         "noCollision": false,
         "trueScale": false
     },
-    "Teleport Base": {
+    "Fake Teleport Base": {
         "serialNumber": 75,
         "path": "teleport_base.png",
         "specialTile": false,

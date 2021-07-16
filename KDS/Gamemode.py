@@ -32,9 +32,12 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         @staticmethod
         def Tutorial():
             KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-            KDS.Missions.InitialiseTask("tutorial", "walk", "Liiku käyttämällä: WASD, Vaihto, CTRL ja Välilyönti", (KDS.Missions.Listeners.Movement, 0.005))
+            wasd_binding = f"{KDS.Keys.moveUp.BindingDisplayName}{KDS.Keys.moveLeft.BindingDisplayName}{KDS.Keys.moveDown.BindingDisplayName}{KDS.Keys.moveRight.BindingDisplayName}"
+            if wasd_binding != "WASD":
+                wasd_binding = f"{KDS.Keys.moveLeft.BindingDisplayName}, {KDS.Keys.moveRight.BindingDisplayName}, {KDS.Keys.moveUp.BindingDisplayName}, {KDS.Keys.moveDown.BindingDisplayName}"
+            KDS.Missions.InitialiseTask("tutorial", "walk", f"Liiku käyttämällä: {wasd_binding} ja {KDS.Keys.moveRun.BindingDisplayName}", (KDS.Missions.Listeners.Movement, 0.005))
             KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (KDS.Missions.Listeners.InventorySlotSwitching, 0.25))
-            KDS.Missions.InitialiseTask("tutorial", "trash", "Poista roska tavaraluettelostasi painamalla: Q", (KDS.Missions.Listeners.ItemDrop, 6, 1.0), (KDS.Missions.Listeners.ItemPickup, 6, -1.0))
+            KDS.Missions.InitialiseTask("tutorial", "trash", f"Poista roska tavaraluettelostasi painamalla: {KDS.Keys.dropItem.BindingDisplayName}", (KDS.Missions.Listeners.ItemDrop, 6, 1.0), (KDS.Missions.Listeners.ItemPickup, 6, -1.0))
 
         @staticmethod
         def KoponenIntroduction():
@@ -65,7 +68,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         if index == 1:
             Presets.Tutorial()
             KDS.Missions.InitialiseMission("enter_school", "Mene Kouluun")
-            KDS.Missions.InitialiseTask("enter_school", "enter", "Avaa koulun ovi painamalla: E", (KDS.Missions.Listeners.Teleport, 1.0))
+            KDS.Missions.InitialiseTask("enter_school", "enter", f"Avaa koulun ovi painamalla: {KDS.Keys.functionKey.BindingDisplayName}", (KDS.Missions.Listeners.Teleport, 1.0))
 
             Presets.KoponenIntroduction()
 
@@ -125,7 +128,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule("Kiitos erittäin paljon. Otan tämän varmuuden vuoksi mukaan seuraavaan opettajien kokoukseen.", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("""Jatketaanpas sitten tuntia...
 Ensimmäisen asteen yhtälössä esiintyy muuttujan ensimmäinen potenssi, mutta ei korkeampia potensseja. Ensimmäisen asteen yhtälöitä ovat esimerkiksi
-2x − 1 = 3 ja
+2x – 1 = 3 ja
 4x + 6 = -x – 11
 Toisen asteen yhtälössä taas esiintyy muuttujan toinen potenssi, mutta ei korkeampia potensseja. Toisen asteen yhtälöitä ovat esimerkiksi
 x^2 = 7 ja

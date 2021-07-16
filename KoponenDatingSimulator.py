@@ -1724,6 +1724,8 @@ class Nysse(KDS.Build.Tile):
             screen.blit(Nysse.tip, (self.rect.centerx - Nysse.tip.get_width() // 2 - scroll[0], self.rect.y - 5 - Nysse.tip.get_height() - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 KDS.Missions.Listeners.LevelEnder.Trigger()
+                Player.visible = False
+                Player.lockMovement = True
         return self.texture
 
 class Fucking(KDS.Build.Tile):
@@ -2275,6 +2277,27 @@ class NysseTeleport(BaseTeleport):
                 self.teleport()
         return self.texture
 
+class HologramTeleport(BaseTeleport):
+    tip: pygame.Surface = tip_font.render(f"Teleport [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    sound = pygame.mixer.Sound("Assets/Audio/Tiles/platform_teleport_sound.ogg")
+
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.teleportSound = HologramTeleport.sound
+
+    def update(self) -> Optional[pygame.Surface]:
+        shape: pygame.Surface = KDS.World.Lighting.Shapes.cone_narrow.getColor(102, 196.164, 0.7773, 0.8980)
+        shape = pygame.transform.rotate(shape, 90)
+        shape = shape.subsurface((0, 0, shape.get_width(), 68)) # type: ignore
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.bottom - 34), shape, True))
+
+        if self.rect.colliderect(Player.rect):
+            screen.blit(HologramTeleport.tip, (self.rect.centerx - HologramTeleport.tip.get_width() // 2 - scroll[0], self.rect.y - 45 - scroll[1]))
+            if KDS.Keys.functionKey.clicked:
+                self.teleport()
+
+        return self.texture
+
 KDS.Build.Tile.specialTilesClasses = {
     15: Toilet,
     16: Trashcan,
@@ -2346,7 +2369,8 @@ BaseTeleport.serialNumbers = {
     8: HotelDoorMirrored,
     9: WoodDoorSideTeleport,
     10: HotelGuardDoor,
-    11: NysseTeleport
+    11: NysseTeleport,
+    12: HologramTeleport
 }
 
 KDS.Logging.debug("Tile Loading Complete.")
@@ -3256,7 +3280,6 @@ def console(oldSurf: pygame.Surface):
             "item": "break",
             "key": "break"
         },
-        "playboy": "break",
         "kill": "break",
         "stop": "break",
         "killme": "break",
@@ -3326,10 +3349,6 @@ def console(oldSurf: pygame.Surface):
                         else: KDS.Console.Feed.append("You don't have that item!")
                     else: KDS.Console.Feed.append(f"Item [{command_list[1]} {command_list[2]}] does not exist!")
                 else: KDS.Console.Feed.append("Not a valid remove command.")
-            elif command_list[0] == "playboy":
-                KDS.Scores.koponen_happiness = 1000
-                KDS.Console.Feed.append("You are now a playboy")
-                KDS.Console.Feed.append(f"Koponen happines: {KDS.Scores.koponen_happiness}")
             elif command_list[0] == "kill" or command_list[0] == "stop":
                 KDS.Console.Feed.append("Stopping Game...")
                 KDS.Logging.info("Stop command issued through console.", True)
@@ -3354,15 +3373,6 @@ def console(oldSurf: pygame.Surface):
                         KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
-            elif command_list[0] == "woof":
-                if len(command_list) == 2:
-                    woofState = KDS.Convert.String.ToBool(command_list[1], None)
-                    if woofState != None:
-                        KDS.Console.Feed.append("Woof state assignment has not been implemented for the new AI system yet.")
-                    else:
-                        KDS.Console.Feed.append("Please provide a proper state for woof")
-                else:
-                    KDS.Console.Feed.append("Please provide a proper state for woof")
             elif command_list[0] == "infinite":
                 if len(command_list) == 3:
                     if command_list[1] == "health":
@@ -3482,16 +3492,18 @@ def console(oldSurf: pygame.Surface):
                 KDS.Console.Feed.append("""
         Console Help:
             - give => Adds the specified item to your inventory.
-            - playboy => Sets Koponen's happiness to unseen levels.
+            - remove => Removes the specified item from your inventory.
             - kill | stop => Stops the game.
             - killme => Kills the player.
+            - killall => Kills all entities.
             - terms => Sets Terms and Conditions accepted to the specified value.
             - woof => Sets all bulldogs anger to the specified value.
-            - finish => Finishes level or missions.
+            - finish => Forces level finish, finishes missions or finishes active mission.
             - infinite => Sets the specified infinite type to the specified value.
             - teleport => Teleports player either to static coordinates or relative coordinates.
             - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
             - fly => Sets fly mode to the specified value.
+            - godmode => Gives the player some buffs like infinite health
             - help => Shows the list of commands.
         """)
             else:
@@ -3581,6 +3593,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.NPC.NPC.InstanceList.clear()
     KDS.Teachers.Teacher.InstanceList.clear()
     KDS.World.Zone.StaffOnlyCollisions = 0
+    RespawnAnchor.active = None
     BaseTeleport.teleportDatas = {}
     ScreenEffects.Clear()
     #endregion
@@ -3694,6 +3707,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
 
 def respawn_function():
     global level_finished
+    KDS.Scores.levelDeaths += 1
     Player.reset(clear_inventory=False, clear_keys=False)
     level_finished = False
     if WorldData.PlayerStartPos[0] == -1 and WorldData.PlayerStartPos[1] == -1:
@@ -4184,7 +4198,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
     timeTakenVertOffset = 100
     scoreTexts = (
         ArialFont.render("Score:", True, score_color),
-        ArialFont.render("Koponen Happiness:", True, score_color),
+        ArialFont.render("Deathless Bonus:", True, score_color),
         ArialFont.render("Time Bonus:", True, score_color),
         ArialFont.render("Total:", True, score_color)
     )
@@ -4204,11 +4218,14 @@ def level_finished_menu(oldSurf: pygame.Surface):
         go_to_main_menu = True
         KDS.Audio.Music.Unpause()
 
+    render_level_finished: bool = True
     def next_level():
         global level_finished_running, current_map
+        nonlocal render_level_finished
         level_finished_running = False
         current_map = f"{int(current_map) + 1:02}"
         play_function(KDS.Gamemode.Modes.Campaign, True)
+        render_level_finished = False
 
     next_level_bool = int(current_map) < int(KDS.ConfigManager.GetGameData("Campaign/officialLevelCount"))
 
@@ -4216,6 +4233,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
     next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, KDS.UI.ButtonFontSmall.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)
 
     pre_rendered_scores = {}
+
 
     level_finished_running = True
     while level_finished_running:
@@ -4269,8 +4287,8 @@ def level_finished_menu(oldSurf: pygame.Surface):
         display.blit(level_f_surf, (0, 0))
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
-        pygame.display.flip()
-        display.fill(KDS.Colors.Black)
+        if render_level_finished:
+            pygame.display.flip()
         KDS.Clock.Tick()
 #endregion
 #region Check Terms
@@ -4553,7 +4571,8 @@ while main_running:
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
         screen.blit(score_font.render(f"""HEALTH: {KDS.Math.CeilToInt(Player.health) if not KDS.Math.IsInfinity(Player.health) else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
         screen.blit(score_font.render(f"STAMINA: {KDS.Math.CeilToInt(Player.stamina)}", True, KDS.Colors.White), (10, 120))
-        screen.blit(score_font.render(f"KOPONEN HAPPINESS: {KDS.Scores.koponen_happiness}", True, KDS.Colors.White), (10, 130))
+        if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story:
+            screen.blit(score_font.render(f"DEATHS: {KDS.Scores.levelDeaths}", True, KDS.Colors.White), (10, 130))
 
         KDS.UI.Indicator.visible_contraband = False
         if isinstance(ui_hand_item, KDS.Build.Item):

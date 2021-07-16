@@ -42,5 +42,9 @@
     "Nysse Teleport": {
         "serialNumber": 11,
         "path": "Nysse.png"
+    },
+    "Hologram Teleport": {
+        "serialNumber": 12,
+        "path": "teleport_base.png"
     }
 }
