@@ -210,18 +210,18 @@ KDS.Logging.debug("Item Texture Loading Complete.")
 pygame.event.pump()
 #region Menu Textures
 KDS.Logging.debug("Loading Menu Textures...")
-gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_1.png").convert()
-gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_1_2.png").convert()
-gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_1.png").convert()
-gamemode_bc_2_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode_bc_2_2.png").convert()
-main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc2.png").convert()
-main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc3.png").convert()
-main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc4.png").convert()
-main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/main_menu_bc.png").convert()
+gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_1.png").convert()
+gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_2.png").convert()
+gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_1.png").convert()
+gamemode_bc_2_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_2.png").convert()
+main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc2.png").convert()
+main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc3.png").convert()
+main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc4.png").convert()
+main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc.png").convert()
 settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
-main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/main_menu_title.png").convert()
+main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
 KDS.Logging.debug("Menu Texture Loading Complete.")
 #endregion
@@ -3958,12 +3958,15 @@ def main_menu():
     main_menu_quit_button = KDS.UI.Button(pygame.Rect(450, 320, 300, 60), KDS_Quit, "QUIT")
     #Frame 2
     Frame2 = pygame.Surface(display_size)
-    Frame2.blit(main_menu_background_2, (0,0))
+    Frame2.fill(KDS.Colors.DefaultBackground)
+    Frame2.blit(main_menu_background_2, (0, 0))
     #Frame 3
     Frame3 = pygame.Surface(display_size)
+    Frame3.fill(KDS.Colors.DefaultBackground)
     Frame3.blit(main_menu_background_3, (0, 0))
     #Frame 4
     Frame4 = pygame.Surface(display_size)
+    Frame4.fill(KDS.Colors.DefaultBackground)
     Frame4.blit(main_menu_background_4, (0, 0))
     #endregion
     #region Mode Selection Menu
@@ -3999,12 +4002,30 @@ def main_menu():
     story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, storyStartMiddleman)
     story_new_save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 175, display_size[1] - 325, 350, 125), newSave, "<error>")
     story_menu_data = None
+    story_background: pygame.Surface = pygame.image.load("Assets/Textures/UI/Menus/story_menu.png").convert()
     #endregion
     #region Campaign Menu
     campaign_right_button_rect = pygame.Rect(1084, 200, 66, 66)
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
     campaign_play_text = KDS.UI.ButtonFont.render("START", True, KDS.Colors.EmeraldGreen)
+    campaign_backgrounds: Dict[int, pygame.Surface] = {
+        1: pygame.image.load("Assets/Textures/UI/Menus/Campaign/1.png").convert(),
+        2: pygame.image.load("Assets/Textures/UI/Menus/Campaign/2.png").convert(),
+        3: pygame.image.load("Assets/Textures/UI/Menus/Campaign/3.png").convert(),
+        4: pygame.image.load("Assets/Textures/UI/Menus/Campaign/4.png").convert(),
+        5: pygame.image.load("Assets/Textures/UI/Menus/Campaign/5.png").convert(),
+        6: pygame.image.load("Assets/Textures/UI/Menus/Campaign/6.png").convert(),
+        7: pygame.image.load("Assets/Textures/UI/Menus/Campaign/7.png").convert(),
+        8: pygame.image.load("Assets/Textures/UI/Menus/Campaign/8.png").convert(),
+        9: pygame.image.load("Assets/Textures/UI/Menus/Campaign/9.png").convert(),
+        10: pygame.image.load("Assets/Textures/UI/Menus/Campaign/10.png").convert()
+    }
+    campaignNoBackgroundSurf: pygame.Surface = pygame.Surface(display_size)
+
+    campaignCurrentBackground: Optional[pygame.Surface] = None
+    campaignLastBackground: Optional[pygame.Surface] = None
+    campaignBackgroundAnim = KDS.Animator.Value(0, 255, 30)
 
     def campaign_play_handler():
         if current_map_int != 0:
@@ -4015,6 +4036,7 @@ def main_menu():
     campaign_right_button = KDS.UI.Button(campaign_right_button_rect, level_pick.right, arrow_button)
 
     Frame1 = pygame.Surface(display_size)
+    Frame1.fill(KDS.Colors.DefaultBackground)
     frames = [Frame1, Frame2, Frame3, Frame4]
     #endregion
     while main_menu_running:
@@ -4092,6 +4114,8 @@ def main_menu():
                             MenuMode = Mode.StoryMenu
                         elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
                             MenuMode = Mode.CampaignMenu
+                            campaignBackgroundAnim.tick = 0
+                            campaignLastBackground = None
                             c = False
                         else:
                             KDS.Logging.AutoError(f"Invalid mode_selection_mode! Value: {mode_selection_modes[y]}")
@@ -4104,6 +4128,8 @@ def main_menu():
                         display.blit(gamemode_bc_2_2, (campaign_mode_button.x, campaign_mode_button.y))
 
         elif MenuMode == Mode.StoryMenu:
+            display.blit(story_background, (0, 0))
+
             font = harbinger_font
             fontHeight = font.get_height()
 
@@ -4153,21 +4179,38 @@ def main_menu():
                     display.blit(rendered, ((rect.width // 2 - rendered.get_width() // 2) + rect.x, (rect.height // 3 - rendered.get_height() // 2) + rect.y))
 
         elif MenuMode == Mode.CampaignMenu:
+            campaign_comp = campaign_backgrounds[current_map_int] if current_map_int in campaign_backgrounds else None
+            if campaign_comp is not campaignCurrentBackground:
+                campaignLastBackground = campaignCurrentBackground
+                campaignCurrentBackground = campaign_comp
+                campaignBackgroundAnim.tick = 0
+            campaignToBlit = (campaignCurrentBackground if campaignCurrentBackground != None else campaignNoBackgroundSurf).copy()
+            campaignToBlit.set_alpha(int(campaignBackgroundAnim.update()))
+            display.blit(campaignLastBackground if campaignLastBackground != None else campaignNoBackgroundSurf, (0, 0))
+            display.blit(campaignToBlit, (0, 0))
+
             if len(os.listdir(PersistentPaths.CustomMaps)) != len(custom_maps_names):
                 KDS.Logging.debug("New custom maps detected.", True)
                 load_map_names()
                 level_pick.pick(level_pick.direction.none)
 
-            pygame.draw.rect(display, (192, 192, 192), (50, 200, int(display_size[0] - 100), 66))
+            pygame.draw.rect(display, KDS.Colors.LightGray, (50, 200, int(display_size[0] - 100), 66))
 
             current_map_int = int(current_map)
 
-            if current_map_int in map_names: current_map_name = map_names[current_map_int]
-            elif current_map_int < 0 and abs(current_map_int) in custom_maps_names: current_map_name = custom_maps_names[abs(current_map_int)]
-            else: current_map_name = "[ ERROR ]"
-            if current_map_int > 0: render_map_name = f"{current_map} - {current_map_name}"
-            elif current_map_int == 0: render_map_name = "<= Custom                Campaign =>"
-            else: render_map_name = f"CUSTOM - {current_map_name}"
+            if current_map_int in map_names:
+                current_map_name = map_names[current_map_int]
+            elif current_map_int < 0 and abs(current_map_int) in custom_maps_names:
+                current_map_name = custom_maps_names[abs(current_map_int)]
+            else:
+                current_map_name = "[ ERROR ]"
+
+            if current_map_int > 0:
+                render_map_name = f"{current_map} - {current_map_name}"
+            elif current_map_int == 0:
+                render_map_name = "<= Custom                Campaign =>"
+            else:
+                render_map_name = f"CUSTOM - {current_map_name}"
             level_text = KDS.UI.ButtonFont.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
@@ -4184,7 +4227,7 @@ def main_menu():
             pygame.display.flip()
         else:
             skip_render_this_frame = False
-        display.fill(KDS.Colors.Black)
+        display.fill(KDS.Colors.DefaultBackground)
         KDS.Clock.Tick()
 
 def level_finished_menu(oldSurf: pygame.Surface):

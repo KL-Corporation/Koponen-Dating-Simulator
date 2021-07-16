@@ -230,7 +230,8 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     BindText: pygame.Surface = ArialFont.render("Press a key to bind it.", True, KDS.Colors.White)
     BindHelperText: pygame.Surface = ArialFont.render("CTRL + F4: Delete Binding | CTRL + X: Restore Default Binding | Escape: Cancel Binding", True, KDS.Colors.White)
 
-    scroll = 0
+    scroll: int = 0
+    headerSize: int = ArialFont.get_height() + 20
 
     keyDatas: List[Tuple[str, Key, KDS.UI.Button, KDS.UI.Button]] = []
     keyMaxY = 0
@@ -267,6 +268,10 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
 
     reset_button = KDS.UI.Button(pygame.Rect(480, keyMaxY + 4 * buttonPadding, 240, 40), reset_def, KDS.UI.ButtonFontSmall.render("Reset Bindings", True, KDS.Colors.AviatorRed))
     return_button = KDS.UI.Button(pygame.Rect(465, reset_button.rect.bottom + 4 * buttonPadding, 270, 60), return_def, "RETURN")
+    restart_tip: pygame.Surface = ArialFont.render("We recommend restarting the game if any changes were made.", True, KDS.Colors.White)
+    primary_tip: pygame.Surface = ArialFont.render("Primary", True, KDS.Colors.White)
+    secondary_tip: pygame.Surface = ArialFont.render("Secondary", True, KDS.Colors.White)
+
     while running:
         c = False
 
@@ -286,24 +291,27 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
                 scroll = KDS.Math.Clamp(scroll + event.y * 5, -(keyMaxY - buttonHeight), 0)
 
         display.fill(KDS.Colors.DefaultBackground)
+        display.blit(primary_tip, (keyDatas[0][2].rect.centerx - primary_tip.get_width() // 2, scroll + headerSize // 2 - primary_tip.get_height() // 2))
+        display.blit(secondary_tip, (keyDatas[0][3].rect.centerx - secondary_tip.get_width() // 2, scroll + headerSize // 2 - secondary_tip.get_height() // 2))
 
         for data in keyDatas:
-            data[2].rect.centery += scroll
-            data[3].rect.centery += scroll
+            data[2].rect.centery += scroll + headerSize
+            data[3].rect.centery += scroll + headerSize
             nameRnd: pygame.Surface = ArialFont.render(data[0], True, KDS.Colors.White)
             display.blit(nameRnd, (textMarginLeft, data[2].rect.centery - nameRnd.get_height() // 2))
             data[2].update(display, mouse_pos, c, data[1], False)
             data[3].update(display, mouse_pos, c, data[1], True)
-            data[2].rect.centery -= scroll
-            data[3].rect.centery -= scroll
+            data[2].rect.centery -= scroll + headerSize
+            data[3].rect.centery -= scroll + headerSize
 
-        reset_button.rect.centery += scroll
+        reset_button.rect.centery += scroll + headerSize
         reset_button.update(display, mouse_pos, c)
-        reset_button.rect.centery -= scroll
+        reset_button.rect.centery -= scroll + headerSize
 
-        return_button.rect.centery += scroll
+        return_button.rect.centery += scroll + headerSize
         return_button.update(display, mouse_pos, c)
-        return_button.rect.centery -= scroll
+        return_button.rect.centery -= scroll + headerSize
+        display.blit(restart_tip, (return_button.rect.centerx - restart_tip.get_width() // 2, return_button.rect.bottom + scroll + headerSize + 10))
 
         pygame.display.flip()
         KDS.Clock.Tick()
