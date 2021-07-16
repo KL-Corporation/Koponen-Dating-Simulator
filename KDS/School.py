@@ -70,14 +70,15 @@ def Exam(showtitle = True):
     pencil_scribbles = (pygame.mixer.Sound("Assets/Audio/effects/pencil_scribble.ogg"), pygame.mixer.Sound("Assets/Audio/effects/pencil_scribble1.ogg"), pygame.mixer.Sound("Assets/Audio/effects/pencil_scribble2.ogg"))
     page_turning = (pygame.mixer.Sound("Assets/Audio/effects/page_turning0.ogg"), pygame.mixer.Sound("Assets/Audio/effects/page_turning1.ogg"), pygame.mixer.Sound("Assets/Audio/effects/page_turning2.ogg"))
     title = "Pistokoe"
-    titleFont = pygame.font.SysFont("Arial", 100)
-    timerFont = pygame.font.SysFont("Arial", 40)
-    examTestFont = pygame.font.SysFont("Calibri", 20)
-    gradeFont = pygame.font.SysFont("Comic Sans MS", 45)
-    titleSurf = titleFont.render(title, False, KDS.Colors.White)
+    titleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 100)
+    timerFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 40)
+    examTestFont = pygame.font.Font("Assets/Fonts/Windows/calibril.ttf", 20)
+    gradeFont = pygame.font.Font("Assets/Fonts/Windows/comic.ttf", 45)
+    FONTANTIALIASING: bool = True
+    titleSurf = titleFont.render(title, FONTANTIALIASING, KDS.Colors.White)
 
-    x_texture = examTestFont.render("X", False, KDS.Colors.Black)
-    time_ended = titleFont.render("Aika loppui!", False, KDS.Colors.Red)
+    x_texture = examTestFont.render("X", FONTANTIALIASING, KDS.Colors.Black)
+    time_ended = titleFont.render("Aika loppui!", FONTANTIALIASING, KDS.Colors.Red)
 
     question_maxwidth = exam_paper.get_width() - 18
     exam_paper_height = exam_paper.get_height()
@@ -95,7 +96,7 @@ def Exam(showtitle = True):
                     c = len(words)
                     while True:
                         if examTestFont.size(" ".join(words[ : c]))[0] < max_width:
-                            _t_rows.append(examTestFont.render(" ".join(words[ : c]), False, KDS.Colors.Black))
+                            _t_rows.append(examTestFont.render(" ".join(words[ : c]), FONTANTIALIASING, KDS.Colors.Black))
                             words = words[c : ]
                             break
                         c -= 1
@@ -143,7 +144,7 @@ def Exam(showtitle = True):
                     if not self.options[option]["selected"]:
                         KDS.Audio.PlaySound(random.choice(pencil_scribbles))
                         self.options[option]["selected"] = True
-                        self.qsurf.blit(pygame.transform.scale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)
+                        self.qsurf.blit(pygame.transform.smoothscale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)
                     else:
                         self.options[option]["selected"] = False
                         pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
@@ -298,7 +299,7 @@ def Exam(showtitle = True):
                         score_formatted = scoreRational(f_score)
                     exam_score = score_formatted.value
 
-                    scoreSurf = gradeFont.render(f"""{score_formatted.formatted_value if score_formatted != None else "<score_error>"}""", False, KDS.Colors.Red)
+                    scoreSurf = gradeFont.render(f"""{score_formatted.formatted_value if score_formatted != None else "<score_error>"}""", FONTANTIALIASING, KDS.Colors.Red)
 
                     gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
@@ -390,7 +391,7 @@ def Exam(showtitle = True):
                     pygame.display.flip()
                     KDS.Clock.Tick()
                 return_exam()
-            Display.blit(timerFont.render(strtime, False, KDS.Colors.Red), (10, 10))
+            Display.blit(timerFont.render(strtime, FONTANTIALIASING, KDS.Colors.Red), (10, 10))
 
             if KDS.Debug.Enabled:
                 Display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
@@ -413,14 +414,14 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     #region Settings
     GradeExtras: bool = True
     StoryExtras: bool = True
-    AlignOverride: bool = False
+    AlignOverride: bool = True
     GlobalRefrenceOverride: Optional[int] = None
     #endregion
 
     class Fonts:
-        NAME = pygame.font.SysFont("ArialBD", 26)
-        SSN = pygame.font.SysFont("Arial", 18)
-        GRADE = pygame.font.SysFont("Arial", 18)
+        NAME = pygame.font.Font("Assets/Fonts/Windows/arialbd.ttf", 18)
+        SSN = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 17)
+        GRADE = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 17)
         ANTIALIASING: bool = True
 
     surname = None
@@ -505,7 +506,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     if not AlignOverride:
         pygame.draw.rect(certificate, KDS.Colors.White, (60, 165, 350, 60))
         pygame.draw.rect(certificate, KDS.Colors.White, (690, 280, 275, 420)) # 690 and 420 were purely coincidental (no joking, seriously)
-    certificate.blit(Fonts.NAME.render(name, Fonts.ANTIALIASING, KDS.Colors.Black), (66, 170))
+    certificate.blit(Fonts.NAME.render(name, Fonts.ANTIALIASING, KDS.Colors.Black), (65, 167))
     certificate.blit(Fonts.SSN.render(socialSecurityNumber, Fonts.ANTIALIASING, KDS.Colors.Black), (65, 189))
 
     yList: List[int] = [
