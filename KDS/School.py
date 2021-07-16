@@ -421,6 +421,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
         NAME = pygame.font.SysFont("ArialBD", 26)
         SSN = pygame.font.SysFont("Arial", 18)
         GRADE = pygame.font.SysFont("Arial", 18)
+        ANTIALIASING: bool = True
 
     surname = None
     if Surnames != None:
@@ -504,8 +505,8 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
     if not AlignOverride:
         pygame.draw.rect(certificate, KDS.Colors.White, (60, 165, 350, 60))
         pygame.draw.rect(certificate, KDS.Colors.White, (690, 280, 275, 420)) # 690 and 420 were purely coincidental (no joking, seriously)
-    certificate.blit(Fonts.NAME.render(name, True, KDS.Colors.Black), (66, 170))
-    certificate.blit(Fonts.SSN.render(socialSecurityNumber, True, KDS.Colors.Black), (65, 189))
+    certificate.blit(Fonts.NAME.render(name, Fonts.ANTIALIASING, KDS.Colors.Black), (66, 170))
+    certificate.blit(Fonts.SSN.render(socialSecurityNumber, Fonts.ANTIALIASING, KDS.Colors.Black), (65, 189))
 
     yList: List[int] = [
         302,
@@ -536,8 +537,8 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
         10: "Erinomainen"
     }
     for i in range(len(grades)):
-        gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", True, KDS.Colors.Black)
-        verbalGradeRender = Fonts.GRADE.render((verbalGrades[grades[i]] if grades[i] in verbalGrades else "<error>") if not AlignOverride else "[ALIGN-WORD]", True, KDS.Colors.Black)
+        gradeRender = Fonts.GRADE.render(str(grades[i]) if not AlignOverride else "[ALIGN]", Fonts.ANTIALIASING, KDS.Colors.Black)
+        verbalGradeRender = Fonts.GRADE.render((verbalGrades[grades[i]] if grades[i] in verbalGrades else "<error>") if not AlignOverride else "[ALIGN-WORD]", Fonts.ANTIALIASING, KDS.Colors.Black)
         y = yList[i] - 5
         certificate.blit(gradeRender, (706, y))
         certificate.blit(verbalGradeRender, (783, y))
