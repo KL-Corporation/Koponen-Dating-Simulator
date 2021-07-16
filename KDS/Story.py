@@ -41,7 +41,13 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
         Tombstones(display)
 
     md = MarkdownRenderer()
-    md.set_markdown("Assets/Data/credits.md", extensions=['nl2br'])
+    md.set_markdown("Assets/Data/credits.md", extensions=['markdown.extensions.nl2br'])
+    md.font_header = pygame.font.Font("Assets/Fonts/Windows/arialbd.ttf", md.font_header_size)
+    md.font_header2 = pygame.font.Font("Assets/Fonts/Windows/arialbd.ttf", md.font_header2_size)
+    md.font_header3 = pygame.font.Font("Assets/Fonts/Windows/arialbd.ttf", md.font_header3_size)
+    md.font_text = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", md.font_text_size)
+    md.font_quote = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", md.font_quote_size)
+    # md.font_code = pygame.font.Font(md.font_code_str, md.font_text_size, bold=False) We dont use code blocks
 
     mdScroll = KDS.Animator.Value(0.0, 1.0, 12840) # 12840 correctly syncs to music.
     mdHorizontalPadding = (10, 10)

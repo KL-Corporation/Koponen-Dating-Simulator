@@ -21,6 +21,7 @@ from pygame.locals import *
 
 import KDS.AI
 import KDS.Animator
+import KDS.Application
 import KDS.Audio
 import KDS.Build
 import KDS.Clock
@@ -165,8 +166,8 @@ score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
 teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10, bold=0, itealic=0)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
-ArialFont = pygame.font.SysFont("Arial", 28, bold=0, italic=0)
-ArialTitleFont = pygame.font.SysFont("Arial", 72, bold=0, italic=0)
+ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28, bold=0, italic=0)
+ArialTitleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 72, bold=0, italic=0)
 KDS.Logging.debug("Font Loading Complete.")
 #endregion
 pygame.event.pump()
@@ -2244,6 +2245,9 @@ class WoodDoorSideTeleport(WoodDoorTeleport):
         self.rect = pygame.Rect(position[0] + 27, position[1] - 34, 7, 68)
         self.teleportOffset = (-KDS.Math.CeilToInt(stand_size[0] / 2 + self.rect.width / 2), 0)
 
+    def onTeleport(self):
+        Player.direction = True
+
 class NysseTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -4054,12 +4058,12 @@ def main_menu():
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
                 elif event.key == K_F5:
-                    if KDS.Debug.IsVSCodeDebugging():
+                    if KDS.Application.ISDEBUGBUILD:
                         KDS.Audio.Music.Pause()
                         KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
                         KDS.Audio.Music.Unpause()
                 elif event.key == K_F6:
-                    if KDS.Debug.IsVSCodeDebugging():
+                    if KDS.Application.ISDEBUGBUILD:
                         KDS.Audio.Music.Pause()
                         KDS.Story.Tombstones(display)
                         KDS.Audio.Music.Unpause()
@@ -4388,11 +4392,17 @@ while main_running:
             elif event.key in KDS.Keys.hideUI.Bindings:
                 renderUI = not renderUI
             elif event.key in KDS.Keys.terminal.Bindings:
-                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Debug.IsVSCodeDebugging(): # Console is disabled in story mode if application is not run on VSCode debug mode.
+                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Application.ISDEBUGBUILD: # Console is disabled in story mode if application is not a debug build.
                     go_to_console = True
             elif event.key in KDS.Keys.screenshot.Bindings:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
+            elif event.key == K_F5 and KDS.Application.ISDEBUGBUILD:
+                KDS.Audio.MusicMixer.pause()
+                quit_temp, exam_score = KDS.School.Exam()
+                KDS.Audio.MusicMixer.unpause()
+                if quit_temp:
+                    KDS_Quit()
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 KDS.Keys.mainKey.SetState(True)

@@ -63,4 +63,4 @@ for buildType in toBuild.items():
 clearCache()
 for buildType in toBuild.items():
     cutName = os.path.splitext(buildType[1]["filename"])[0]
-    print(KDS.System.Console.Colored(f"Built {buildType[0]} at " + os.path.join(BuildPath, cutName, f"{cutName}.exe"), "green"))
+    print(KDS.System.Console.Colored(f"Built {buildType[0]} at: \"" + os.path.join(BuildPath, cutName, f"{cutName}.exe") + "\"", "green"))

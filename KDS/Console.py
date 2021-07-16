@@ -17,8 +17,8 @@ pygame.key.stop_text_input()
 pygame.scrap.init()
 pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 #region Settings
-console_font = pygame.font.SysFont("Consolas", 25, bold=False, italic=False)
-console_font_small = pygame.font.SysFont("Consolas", 15, bold=False, italic=False)
+console_font = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 25, bold=False, italic=False)
+console_font_small = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 15, bold=False, italic=False)
 text_input_rect = pygame.Rect(0, 750, 1200, 50)
 text_rect = pygame.Rect(10, 762, 1180, 25)
 text_color = KDS.Colors.LightGray
@@ -363,7 +363,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
             Feed = newFeed
             renderFeed = Feed.copy()
             renderFeed.reverse()
-            for y_i in range(len(renderFeed)): display.blit(console_font.render(renderFeed[y_i], True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - y_i * console_font.get_height()))
+            for y_i in range(len(renderFeed)):
+                display.blit(console_font.render(renderFeed[y_i], True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - y_i * console_font.get_height()))
 
         #endregion
 
@@ -534,8 +535,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
                         else:
                             if len(cmdSplit) > 0:
                                 previewOffsetX = text_rect.left
-                                for i in range(len(cmdSplit) - 1): previewOffsetX += console_font.size(f"{cmdSplit[i]} ")[0]
-                            else: previewOffsetX = text_rect.left
+                                for i in range(len(cmdSplit) - 1):
+                                    previewOffsetX += console_font.size(f"{cmdSplit[i]} ")[0]
+                            else:
+                                previewOffsetX = text_rect.left
                             tempSplit = cmdSplit[-1]
                             if len(cmdSplit) < 1 or cmdSplit[-1] in r:
                                 previewTxt = r
@@ -623,7 +626,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
     #region Formatting
     if autoFormat:
         if len(cmd) > 0:
-            _type = checkType["type"]
+            _type = checkType["type"] if checkType != None else None
             if _type == "int":
                 return int(cmd)
             elif _type == "float":
