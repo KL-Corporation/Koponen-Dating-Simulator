@@ -41,7 +41,7 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
         Tombstones(display)
 
     md = MarkdownRenderer()
-    md.set_markdown("Assets/Data/credits.md", extensions=['nl2br'])
+    md.set_markdown("Assets/Data/credits.md", extensions=['markdown.extensions.nl2br'])
 
     mdScroll = KDS.Animator.Value(0.0, 1.0, 12840) # 12840 correctly syncs to music.
     mdHorizontalPadding = (10, 10)
