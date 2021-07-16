@@ -47,7 +47,7 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
     md.font_header3 = pygame.font.Font("Assets/Fonts/Windows/arialbd.ttf", md.font_header3_size)
     md.font_text = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", md.font_text_size)
     md.font_quote = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", md.font_quote_size)
-    # md.font_code = pygame.font.SysFont(md.font_code_str, md.font_text_size, bold=False) We dont use code blocks
+    # md.font_code = pygame.font.Font(md.font_code_str, md.font_text_size, bold=False) We dont use code blocks
 
     mdScroll = KDS.Animator.Value(0.0, 1.0, 12840) # 12840 correctly syncs to music.
     mdHorizontalPadding = (10, 10)
