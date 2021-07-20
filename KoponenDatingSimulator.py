@@ -2483,7 +2483,7 @@ class Knife(KDS.Build.Weapon):
         KDS.Audio.PlaySound(knife_pickup)
 
 class LappiSytytyspalat(KDS.Build.Item):
-    sytytys_tip: pygame.Surface = tip_font.render(f"Ignite Tile [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    sytytys_tip: pygame.Surface = tip_font.render(f"Ignite Tile [Hold: LMB]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
