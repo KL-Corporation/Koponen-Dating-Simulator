@@ -14,13 +14,13 @@ Enabled: bool = False
 #     return bool(sys.gettrace() != None)
 
 pygame.init()
-font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
 padding: Dict[str, int] = {"left": 10, "right": 10, "top": 10, "bottom": 10}
 background_color = KDS.Colors.DarkGray
 background_alpha = 128
 text_color = KDS.Colors.White
 
-def RenderData(data: Dict[str, Any], fontOverride: pygame.font.Font = None) -> pygame.Surface:
+def RenderData(data: Dict[str, Any], fontOverride: pygame.font.Font | None = None) -> pygame.Surface:
     f = font if fontOverride == None else fontOverride
 
     rList: List[pygame.Surface] = []

@@ -33,7 +33,7 @@ import re
 import shlex
 
 #region Settings
-text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 22, bold=0, italic=0)
+text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 22)
 text_color = KDS.Colors.Black
 background_color = KDS.Colors.CloudWhite
 background_outline_color = KDS.Colors.Black
@@ -149,8 +149,7 @@ def TriggerStoryEnding(koponen: KoponenEntity):
 
 class Talk:
     running = False
-    mask = pygame.mask.Mask(conversation_rect.size, True)
-    display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
+    display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA)
     display_size = display.get_size()
     lineCount = KDS.Math.FloorToInt((display.get_height() - text_padding.top - text_padding.bottom) / line_spacing)
     soundPlaying = None

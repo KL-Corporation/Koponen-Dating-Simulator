@@ -91,10 +91,16 @@ class Key(BaseKey):
 
     @property
     def BindingDisplayName(self) -> str:
-        if self.binding != None or self.secondaryBinding != None:
-            name: str = pygame.key.name(self.binding if self.binding != None else self.secondaryBinding)
-            return name.capitalize()
-        return "null"
+        name: str | None = None
+        if self.binding != None:
+            name = pygame.key.name(self.binding)
+        if self.secondaryBinding != None:
+            name = pygame.key.name(self.secondaryBinding)
+
+        if name is None:
+            return "null"
+
+        return name.capitalize()
 
 class InventoryKey(Key):
     def __init__(self, defaultBinding: int, inventory_index: int) -> None:
@@ -226,7 +232,7 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     buttonWidth = 400
     buttonHeight = 50
     display_size = display.get_size()
-    ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28, bold=0, italic=0)
+    ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28)
     BindText: pygame.Surface = ArialFont.render("Press a key to bind it.", True, KDS.Colors.White)
     BindHelperText: pygame.Surface = ArialFont.render("CTRL + F4: Delete Binding | CTRL + X: Restore Default Binding | Escape: Cancel Binding", True, KDS.Colors.White)
 

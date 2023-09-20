@@ -122,16 +122,16 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
     if consoleVisible:
         print(KDS.System.Console.Colored(message, color))
 
-def debug(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def debug(message: Union[str, Exception], consoleVisible: bool = KDS.Application.ISDEBUGBUILD, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
 
-def info(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def info(message: Union[str, Exception], consoleVisible: bool = KDS.Application.ISDEBUGBUILD, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.INFO, "blue")
 
-def warning(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def warning(message: Union[str, Exception], consoleVisible: bool = KDS.Application.ISDEBUGBUILD, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
 
-def error(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def error(message: Union[str, Exception], consoleVisible: bool = KDS.Application.ISDEBUGBUILD, stack_info: bool = False) -> None:
     __log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
 def AutoError(message: Union[str, Exception], **kwargs: Any) -> None:

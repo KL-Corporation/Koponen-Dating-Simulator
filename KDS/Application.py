@@ -4,4 +4,4 @@
 # 1.0.0-RC69   (RC == Release Candidate)
 # 4.2.0        (Release version does not have anything after it.)
 VERSION: str = "1.0.5"
-ISDEBUGBUILD: bool = False
+ISDEBUGBUILD: bool = False # As this logs everything onto the console, it crashes Level 2 loading.

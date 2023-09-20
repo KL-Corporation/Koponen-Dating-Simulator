@@ -303,7 +303,7 @@ class Lighting:
 class Bullet:
     GodMode = False
 
-    def __init__(self, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance: int = 2000, slope: float = 0.0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
@@ -392,7 +392,7 @@ class HitTarget:
         self.hitted = False
 
 class BallisticProjectile:
-    def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: pygame.Surface = None):
+    def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: pygame.Surface | None = None):
         self.rect = rect
         self.sl = slope
         self.force = force * KDS.Convert.ToMultiplier(direction)

@@ -26,14 +26,13 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
 root = tkinter.Tk()
 root.withdraw()
 root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 pygame.init()
-pygame.scrap.init()
-pygame.scrap.set_mode(SCRAP_CLIPBOARD)
+display: pygame.Surface = pygame.Surface((2, 2)) # HACK: Dunder surface for linter, shitty solution because KDS isn't in active development anymore anyway
 display_size: Tuple[int, int] = (1600, 800)
 monitor_info = pygame.display.Info()
 scalesize = 68
@@ -45,9 +44,10 @@ DEFAULTZOOM = scalesize
 
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
+
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     global display, display_size, display_info
-    display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
+    display = pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE)
     display_size = display.get_size()
     display_info = pygame.display.Info()
 SetDisplaySize((min(display_size[0], monitor_info.current_w), min(display_size[1], monitor_info.current_h - 100)))
@@ -58,9 +58,9 @@ os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
 KDS.Jobs.init()
 
-harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
-harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
-harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
+harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
+harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55)
+harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15)
 
 class UnitType(IntEnum):
     Tile = 0
@@ -672,7 +672,7 @@ class PropertiesData:
 
     class ZoneData:
         def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
-            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(cast(pygame.Rect, v[0].copy()), v[1]) for v in values]
+            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(v[0].copy(), v[1]) for v in values]
 
         def __getitem__(self, index: int) -> Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
             return self.zones[index]
@@ -779,7 +779,7 @@ class PropertiesData:
             if not KDS.Linq.Any(self.parent.serials, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
-    def Copy(self, parentOverride: UnitData = None) -> PropertiesData:
+    def Copy(self, parentOverride: UnitData | None = None) -> PropertiesData:
         new = PropertiesData(parentOverride if parentOverride != None else self.parent)
         new.values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
         return new
@@ -826,7 +826,7 @@ class PropertiesData:
     def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
         if len(jsonString) < 1 or jsonString.isspace():
             return
-        deserialized: Dict[str, Union[Dict[str, Dict[str, Union[str, int, float, bool]]]]] = json.loads(jsonString)
+        deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
         for row in grid:
             for unit in row:
                 key = f"{unit.pos[0]}-{unit.pos[1]}"
@@ -904,7 +904,7 @@ class DragData:
 
     def SelectCustom(self, rect: Optional[pygame.Rect]):
         if rect != None:
-            self.Rect = cast(pygame.Rect, rect.copy())
+            self.Rect = rect.copy()
             [onStart() for onStart in self.c_onDragStart[self.Mode]]
         else:
             self.clear()
@@ -931,7 +931,7 @@ class DragData:
         hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
-    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: Dict[int, bool]):
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper):
         if not brush.IsEmpty():
             return
         if right_down:
@@ -1513,12 +1513,12 @@ class Selected:
     units: List[UnitData] = []
 
     @staticmethod
-    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
+    def Set(serialOverride: str | None = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
         global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
         Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, clear_selected=clear_selected)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
+    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str | None = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
@@ -1579,8 +1579,8 @@ class Selected:
             return output, PropertiesData.Serialize(unitsNormalizedPositions)
 
     @staticmethod
-    def FromString(string: str, properties: str = None):
-        Selected.units: List[UnitData] = []
+    def FromString(string: str, properties: str | None = None):
+        units: List[UnitData] = []
         contents = string.splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
 
@@ -1589,16 +1589,23 @@ class Selected:
         for y, row in enumerate(contents):
             for x, unit in enumerate(row.split("/")):
                 maxX = max(maxX, x)
-                Selected.units.append(UnitData((x, y), unit.strip(" ")))
+
+                unit = unit.strip(" ")
+                if unit == UnitData.EMPTYSERIAL:
+                    continue # Do not override empty tiles
+
+                units.append(UnitData((x, y), unit.strip(" ")))
         if properties != None:
-            PropertiesData.Deserialize(properties, [Selected.units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
-        for u in Selected.units:
+            PropertiesData.Deserialize(properties, [units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
+        for u in units:
             u.pos = (u.pos[0] + offset[0], u.pos[1] + offset[1])
         Drag.SelectCustom(pygame.Rect(offset[0], offset[1], maxX + 1, len(contents)) if maxX > 0 and len(contents) > 0 else None)
                                                                     # ^^ Need to add one... I don't know why.
+        Selected.units = units # Drag.SelectCustom seems to clear units, so set them after it.
+
 Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
 
-def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
+def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
     #region Event Ignoring
     if event.type == ignoreEventOfType:
         return False
@@ -1726,25 +1733,23 @@ def main():
                             toClipboard = Selected.ToString(serializeProperties=True)
                             if not isinstance(toClipboard, tuple) or len(toClipboard) != 2:
                                 raise ValueError(f"Clipboard data (type: from) is an incorrect type. Tuple of length 2 expected; got: \"{toClipboard}\".")
-                            pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}", "utf-8"))
+                            pygame.scrap.put_text(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}")
                         except Exception:
                             KDS.Logging.AutoError(f"Copy to clipboard failed. Exception Below:\n{traceback.format_exc()}")
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
                         try:
-                            fromClipboard: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
-                            if fromClipboard != None:
-                                if isinstance(fromClipboard, bytes):
-                                    fromClipboard = fromClipboard.decode("utf-8")
-                                if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
-                                    fromClipboardSplit = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
-                                    if len(fromClipboardSplit) != 2:
-                                        raise ValueError(f"Clipboard data (type: to) is an incorrect type. List of length 2 expected; got: \"{fromClipboardSplit}\".")
-                                    if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
-                                        Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
-                                    else:
-                                        KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
-                                else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.")
+                            fromClipboard: str = pygame.scrap.get_text()
+                            if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
+                                fromClipboardSplit = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
+                                if len(fromClipboardSplit) != 2:
+                                    raise ValueError(f"Clipboard data (type: to) is an incorrect type. List of length 2 expected; got: \"{fromClipboardSplit}\".")
+                                if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
+                                    Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
+                                else:
+                                    KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
+                                    Selected.FromString(fromClipboardSplit[0], None)
+                            else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.")
                         except Exception:
                             KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
                 elif event.key == K_g:

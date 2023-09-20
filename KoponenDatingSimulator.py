@@ -13,7 +13,7 @@ import random
 import shutil
 import traceback
 from enum import IntEnum, IntFlag, auto
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import pygame
 import pygame.mixer
@@ -53,7 +53,7 @@ import KDS.World
 #region Priority Initialisation
 pygame.init()
 
-pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
+# pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
 
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
 
@@ -140,7 +140,8 @@ cursorData = {
     4: pygame.cursors.arrow,
     5: pygame.cursors.tri_left
 }
-if cursorIndex in cursorData: pygame.mouse.set_cursor(*cursorData[cursorIndex])
+if cursorIndex in cursorData:
+    pygame.mouse.set_cursor(*cursorData[cursorIndex])
 del cursorData
 
 surfarrayLagFix = pygame.surfarray.pixels2d(screen)
@@ -162,12 +163,12 @@ KDS.Logging.debug("Loading Assets...")
 pygame.event.pump()
 #region Fonts
 KDS.Logging.debug("Loading Fonts...")
-score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10, bold=0, italic=0)
-tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
-teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10, bold=0, itealic=0)
-harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
-ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28, bold=0, italic=0)
-ArialTitleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 72, bold=0, italic=0)
+score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10)
+tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10)
+teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10)
+harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
+ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28)
+ArialTitleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 72)
 KDS.Logging.debug("Font Loading Complete.")
 #endregion
 pygame.event.pump()
@@ -775,13 +776,18 @@ class Trashcan(KDS.Build.Tile):
         else:
             return self.texture
 
-class Jukebox(KDS.Build.Tile):
+def _load_jukebox_songs() -> list[pygame.mixer.Sound]:
     __musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
+    assert len(__musikerna) > 0
     songs = []
     for __musiken in __musikerna:
         songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + __musiken))
-    random.shuffle(songs)
-    del __musikerna, __musiken
+    return songs
+    # 1.1 UPDATE: Songs are not shuffled anymore as I felt that it was unnecessary...
+    # A random song is picked every time anyways.
+
+class Jukebox(KDS.Build.Tile):
+    songs: list[pygame.mixer.Sound] = _load_jukebox_songs()
 
     tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
@@ -1537,7 +1543,7 @@ class Sleepable(KDS.Build.Tile):
         self.audiofile: str = "Assets/Audio/Effects/zipper.ogg"
         self.disableSleep: bool = False
 
-    def toggleSleep(self, effect: ScreenEffects.Effects = None):
+    def toggleSleep(self, effect: ScreenEffects.Effects | None = None):
         global Player
         if effect != None:
             if effect == ScreenEffects.Effects.FadeInOut:
@@ -3462,7 +3468,7 @@ def console(oldSurf: pygame.Surface):
                         "drugdealer": KDS.AI.DrugDealer,
                         "turboshotgunner": KDS.AI.TurboShotgunner,
                         "methmaker": KDS.AI.MethMaker,
-                        "cavemonster": KDS.AI.cavemonster_gun
+                        "cavemonster": KDS.AI.CaveMonster
                     }
                     try:
                         ent = summonEntity[command_list[1]]
@@ -3644,7 +3650,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     if auto_play_music and KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
 
-def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
+def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface | None = None):
     pygame.mouse.set_visible(False)
 
     map_names: Dict[int, str] = {}
