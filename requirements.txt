@@ -1,7 +1,9 @@
 # pip install -r .\requirements.txt --upgrade
 
-pygame
-pillow
-markdown
-numpy
-psutil
+# Python Version: 3.9.13
+
+pygame==2.0.1
+pillow==10.0.1
+markdown==3.4.4
+numpy==1.26.0
+psutil==5.9.5

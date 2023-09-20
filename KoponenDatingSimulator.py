@@ -53,7 +53,8 @@ import KDS.World
 #region Priority Initialisation
 pygame.init()
 
-pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
+# No longer required as pygame doesn't force its ugly cursor on you anymore.
+# pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
 
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
 
