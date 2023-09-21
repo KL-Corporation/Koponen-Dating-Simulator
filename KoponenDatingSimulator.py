@@ -363,6 +363,9 @@ try:
     LoadGameSettings()
 except:
     KDS.Logging.AutoError("Game Settings could not be loaded!")
+
+debug_gamesetting_allow_subprog_debug: bool = KDS.ConfigManager.GetGameData("Debug/allowSubprogramTesting")
+debug_gamesetting_allow_console_in_storymode: bool = KDS.ConfigManager.GetGameData("Debug/allowConsoleInStoryMode")
 #endregion
 #region World Data
 class WorldData:
@@ -4082,12 +4085,12 @@ def main_menu():
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
                 elif event.key == K_F5:
-                    if KDS.Application.ISDEBUGBUILD:
+                    if debug_gamesetting_allow_subprog_debug:
                         KDS.Audio.Music.Pause()
                         KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
                         KDS.Audio.Music.Unpause()
                 elif event.key == K_F6:
-                    if KDS.Application.ISDEBUGBUILD:
+                    if debug_gamesetting_allow_subprog_debug:
                         KDS.Audio.Music.Pause()
                         KDS.Story.Tombstones(display)
                         KDS.Audio.Music.Unpause()
@@ -4416,12 +4419,12 @@ while main_running:
             elif event.key in KDS.Keys.hideUI.Bindings:
                 renderUI = not renderUI
             elif event.key in KDS.Keys.terminal.Bindings:
-                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or KDS.Application.ISDEBUGBUILD: # Console is disabled in story mode if application is not a debug build.
+                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or debug_gamesetting_allow_console_in_storymode: # Console is disabled in story mode if debug setting not overridden in GameData.
                     go_to_console = True
             elif event.key in KDS.Keys.screenshot.Bindings:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
                 KDS.Audio.PlaySound(camera_shutter)
-            elif event.key == K_F5 and KDS.Application.ISDEBUGBUILD:
+            elif event.key == K_F5 and debug_gamesetting_allow_subprog_debug:
                 KDS.Audio.MusicMixer.pause()
                 quit_temp, exam_score = KDS.School.Exam()
                 KDS.Audio.MusicMixer.unpause()

@@ -32,5 +32,9 @@
     },
     "Campaign": {
         "officialLevelCount": 9
+    },
+    "Debug": {
+        "allowSubprogramTesting": false,
+        "allowConsoleInStoryMode": false
     }
 }
