@@ -179,21 +179,21 @@
         "path": "empty_flask.png",
         "doubleSize": false,
         "supportsInventory": true,
-        "isContraband": false
+        "isContraband": true
     },
     "Flask (meth)": {
         "serialNumber": 27,
         "path": "flask_meth.png",
         "doubleSize": false,
         "supportsInventory": true,
-        "isContraband": false
+        "isContraband": true
     },
     "Flask (blood)": {
         "serialNumber": 28,
         "path": "flask_blood.png",
         "doubleSize": false,
         "supportsInventory": true,
-        "isContraband": false
+        "isContraband": true
     },
     "Grenade": {
         "serialNumber": 29,
