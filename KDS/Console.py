@@ -1,6 +1,5 @@
 import re
-import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -37,7 +36,7 @@ feedTextColor = KDS.Colors.Gray
 matchChars = r" ; , \/ \\ \" "
 #endregion
 
-def init(_window: pygame.Surface, _display: pygame.Surface, _Offset: Tuple[int, int] = None, _KDS_Quit: Callable[[], None] = None):
+def init(_window: pygame.Surface, _display: pygame.Surface, _Offset: Optional[Tuple[int, int]] = None, _KDS_Quit: Optional[Callable[[], None]] = None):
     global window, display, display_size, defaultBackground, KDS_Quit, rndrOffset
     window = _window
     display = _display
@@ -50,21 +49,21 @@ def init(_window: pygame.Surface, _display: pygame.Surface, _Offset: Tuple[int, 
 
 class CheckTypes:
     @staticmethod
-    def Int(_min: int = None, _max: int = None):
+    def Int(_min: Optional[int] = None, _max: Optional[int] = None):
         """Both min and max are inclusive."""
         return {
             "type": "int",
             "min":_min,
             "max": _max }
     @staticmethod
-    def Float(_min: int = None, _max: int = None):
+    def Float(_min: Optional[int] = None, _max: Optional[int] = None):
         """Both min and max are inclusive."""
         return {
             "type": "float",
             "min":_min,
             "max": _max }
     @staticmethod
-    def Tuple(size: int, _min: int = None, _max: int = None, perfWarning: int = None, requireIncrease: bool = False):
+    def Tuple(size: int, _min: Optional[int] = None, _max: Optional[int] = None, perfWarning: Optional[int] = None, requireIncrease: bool = False):
         """All min, max and perfWarning are inclusive."""
         return {
             "type": "tuple",
@@ -75,7 +74,7 @@ class CheckTypes:
             "requireIncrease": requireIncrease
             }
     @staticmethod
-    def Rect(minPos: int = None, maxPos: int = None, minSize: int = None, maxSize: int = None):
+    def Rect(minPos: Optional[int] = None, maxPos: Optional[int] = None, minSize: Optional[int] = None, maxSize: Optional[int] = None):
         """All mins and maxs are inclusive."""
         return {
             "type": "rect",
@@ -96,7 +95,7 @@ class CheckTypes:
             "type": "commands"
         }
     @staticmethod
-    def String(maxLength: int = None, invalidChars: str = None, invalidStrings: Sequence[str] = None, funnyStrings: Sequence[str] = None, noSpace: bool = False):
+    def String(maxLength: Optional[int] = None, invalidChars: Optional[str] = None, invalidStrings: Optional[Sequence[str]] = None, funnyStrings: Optional[Sequence[str]] = None, noSpace: bool = False):
         return {
             "type": "string",
             "maxLength": maxLength,
@@ -110,7 +109,7 @@ Escaped = False
 Feed = []
 OldCommands = []
 
-def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: dict = None, background: pygame.Surface = None, commands: dict = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: str = None) -> Any:
+def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: Optional[dict] = None, background: Optional[pygame.Surface] = None, commands: Optional[dict] = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: Optional[str] = None) -> Any:
     global Escaped, Feed, OldCommands
     if commands != None:
         commandsFound = commands
@@ -185,7 +184,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: d
         Key_Up = False
         Key_Down = False
         tmp_events = pygame.event.get()
-        keys_pressed: Dict[int, bool] = pygame.key.get_pressed()
+        keys_pressed: pygame.key.ScancodeWrapper = pygame.key.get_pressed()
         for event in tmp_events:
             if event.type == TEXTINPUT:
                 addText(event.text)

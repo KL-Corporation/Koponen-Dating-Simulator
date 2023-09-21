@@ -10,7 +10,7 @@ EMPTYSLOT: Literal["none"] = "none"
 DOUBLEITEM: Literal["DOUBLEITEM"] = "DOUBLEITEM"
 
 class Inventory:
-    def __init__(self, size: int, storage: Sequence[Union[KDS.Build.Item, str]] = None):
+    def __init__(self, size: int, storage: Sequence[Union[KDS.Build.Item, str]] | None = None):
         self.storage: List[Union[KDS.Build.Item, str]] = [EMPTYSLOT for _ in range(size)]
         if storage != None:
             for i in range(min(len(storage), len(self.storage))):

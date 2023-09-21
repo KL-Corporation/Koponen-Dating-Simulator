@@ -1,6 +1,5 @@
 #region Importing
 from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
-import json
 
 import pygame
 
@@ -361,8 +360,8 @@ def InitialiseTask(MissionName: str, SafeName: str, Text: str, *ListenerData: Un
     for data in ListenerData:
         if isinstance(data[0], Listener):
             data[0].Add(MissionName, SafeName, data[1])
-        elif isinstance(data[0], ItemListener):
-            data[0].Add(cast(int, data[1]), MissionName, SafeName, cast(float, data[2]))
+        elif isinstance(data[0], ItemListener): # pyright: ignore [reportUnnecessaryIsInstance]
+            data[0].Add(cast(int, data[1]), MissionName, SafeName, cast(float, data[2])) # type: ignore  I just can't be bothered to refactor this without linting errors
         else: raise ValueError("Invalid arguments were given.")
 
 def InitialiseKoponenTask(MissionName: str, SafeName: str, Text: str, *itemIDs: int, removeItems: bool = True):

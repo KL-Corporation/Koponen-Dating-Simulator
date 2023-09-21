@@ -91,10 +91,15 @@ class Key(BaseKey):
 
     @property
     def BindingDisplayName(self) -> str:
-        if self.binding != None or self.secondaryBinding != None:
-            name: str = pygame.key.name(self.binding if self.binding != None else self.secondaryBinding)
-            return name.capitalize()
-        return "null"
+        binding: int
+        if self.binding != None:
+            binding = self.binding
+        elif self.secondaryBinding != None:
+            binding = self.secondaryBinding
+        else:
+            return "null"
+
+        return pygame.key.name(binding).capitalize()
 
 class InventoryKey(Key):
     def __init__(self, defaultBinding: int, inventory_index: int) -> None:

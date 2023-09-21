@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import random
 import math
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pygame
 from pygame.locals import *
@@ -149,8 +149,9 @@ def TriggerStoryEnding(koponen: KoponenEntity):
 
 class Talk:
     running = False
-    mask = pygame.mask.Mask(conversation_rect.size, True)
-    display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA, masks=mask)
+    # mask = pygame.mask.Mask(conversation_rect.size, True)
+    # ^^^^ Masks were originally used incorrectly in KDS before 1.1.0
+    display = pygame.Surface(conversation_rect.size, pygame.SRCALPHA)
     display_size = display.get_size()
     lineCount = KDS.Math.FloorToInt((display.get_height() - text_padding.top - text_padding.bottom) / line_spacing)
     soundPlaying = None
@@ -525,7 +526,7 @@ class KoponenEntity:
                         if execFunc != None:
                             execCArgs = [KDS.Convert.AutoType3(a) for a in execArgs]
                             try:
-                                execFunc(*execCArgs) #type: ignore (tää disabloi ton tyhmän errorin)
+                                execFunc(*execCArgs)
                             except Exception as e:
                                 KDS.Logging.AutoError(f"Exec function {execFuncName} failed on instruction {self.current_instruction} with message: {e}")
                         else:

@@ -303,7 +303,7 @@ class Lighting:
 class Bullet:
     GodMode = False
 
-    def __init__(self, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance = 2000, slope = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+    def __init__(self, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance: int = 2000, slope: float = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons"""
         self.rect = rect
         self.direction = direction
@@ -335,7 +335,7 @@ class Bullet:
                 self.movedDistance += 18
 
                 self.slopeBuffer += self.slope
-                self.rect.y = self.slopeBuffer
+                self.rect.y = self.slopeBuffer # type: ignore This works with float input into int rect.
 
                 collision_list = collision_test(self.rect, self.environment_obstacles)
 
@@ -392,7 +392,7 @@ class HitTarget:
         self.hitted = False
 
 class BallisticProjectile:
-    def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: pygame.Surface = None):
+    def __init__(self, rect: pygame.Rect, slope: float, force: float, direction: bool, gravitational_factor: float = 0.1, flight_time: int = 240, texture: Optional[pygame.Surface] = None):
         self.rect = rect
         self.sl = slope
         self.force = force * KDS.Convert.ToMultiplier(direction)
@@ -422,7 +422,7 @@ class BallisticProjectile:
                 self.rect.left = c1.rect.right
                 collisions['right'] = True
 
-        self.rect.y += self.upforce
+        self.rect.y += self.upforce # type: ignore  you can pass float in as well.
         self.upforce += self.gravitational_factor
         if self.upforce > 6:
             self.upforce = 6

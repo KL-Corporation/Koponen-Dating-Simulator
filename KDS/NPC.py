@@ -19,7 +19,7 @@ import KDS.Inventory
 
 import os
 import random
-from typing import Dict, Optional, Sequence, TYPE_CHECKING, Tuple, List
+from typing import Optional, Sequence, TYPE_CHECKING, Tuple, List
 from enum import IntEnum, auto
 
 if TYPE_CHECKING:

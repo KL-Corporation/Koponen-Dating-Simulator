@@ -16,7 +16,7 @@ import KDS.Clock
 import KDS.Debug
 import KDS.UI
 
-from typing import Any, Callable, TYPE_CHECKING, Tuple, Type
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass

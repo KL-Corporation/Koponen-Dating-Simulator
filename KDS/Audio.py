@@ -32,7 +32,7 @@ class Music:
     OnEnd = KDS.Events.Event()
 
     @staticmethod
-    def Play(path: str = None, loops: int = -1):
+    def Play(path: Optional[str] = None, loops: int = -1):
         global MusicMixer, MusicVolume
         if path != None and len(path) > 0:
             Music.Load(path=path)

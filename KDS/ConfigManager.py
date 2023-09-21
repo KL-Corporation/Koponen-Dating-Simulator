@@ -41,7 +41,7 @@ class JSON:
         return re.sub(r"\/+", "/", jsonPath.strip("/")).split("/")
 
     @staticmethod
-    def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True, encoding: str = None) ->  Union[Any, None]:
+    def Set(filePath: str, jsonPath: str, value: Any, sortKeys: bool = True, encoding: Optional[str] = None) ->  Union[Any, None]:
         if value == JSON.EMPTY:
             value = {}
 
@@ -83,7 +83,7 @@ class JSON:
             return None
 
     @staticmethod
-    def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False, encoding: str = None) -> Any:
+    def Get(filePath: str, jsonPath: str, defaultValue: Any, writeMissing: bool = True, warnMissing: bool = False, encoding: Optional[str] = None) -> Any:
         config: Dict[str, Any] = {}
         if not os.path.isfile(filePath):
             if warnMissing:

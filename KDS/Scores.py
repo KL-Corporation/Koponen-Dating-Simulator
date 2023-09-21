@@ -151,7 +151,7 @@ class GameTime:
         return GameTime.Timer.GetGameTime()
 
     @staticmethod
-    def GetFormattedString(secondsOverride: float = None) -> str:
+    def GetFormattedString(secondsOverride: Optional[float] = None) -> str:
         totalSeconds = secondsOverride
         if totalSeconds == None:
             time = GameTime.GetGameTime()
@@ -184,8 +184,8 @@ class ScoreCounter:
     @staticmethod
     def CalculateScores():
         global score, levelDeaths
-        tb_start: int = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/start", None)
-        tb_end: int = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/end", None)
+        tb_start: Optional[int] = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/start", None)
+        tb_end: Optional[int] = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/end", None)
         if tb_start == None or tb_end == None:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})")
             tb_start = 1

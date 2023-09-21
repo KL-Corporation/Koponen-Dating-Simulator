@@ -76,7 +76,7 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     return max(_min, min(value, _max))
 
 def Clamp01(value: Value) -> Value:
-    return Clamp(value, 0, 1) # Should be fine without being the same type...?
+    return Clamp(value, 0, 1) # Should be fine without being the same type...? # type: ignore
                               # Not casting, because it will call two extra functions and slow the code down.
 
 def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
@@ -231,14 +231,14 @@ def LerpColor(a: Sequence[int], b: Sequence[int], t: float) -> Tuple[int, int, i
     _b = Lerp(a[2], b[2], t)
     return (round(_r), round(_g), round(_b))
 
-def LerpAngle(a: float, b: float, t: float) -> float:
-    """Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.
-
-    The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be in degrees.
-    """
-    delta = Repeat(b - a, 360.0)
-    if (delta > 180): delta -= 360
-    return a + delta * Clamp01(t)
+# def LerpAngle(a: float, b: float, t: float) -> float:
+#     """Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.
+#
+#     The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be in degrees.
+#     """
+#     delta = Repeat(b - a, 360.0)
+#     if (delta > 180): delta -= 360
+#     return a + delta * Clamp01(t)
 
 def SmoothStep(a: float, b: float, t: float) -> float:
     """Smoothly interpolates between a and b by t.
@@ -271,9 +271,9 @@ def MoveTowardsAngle(current: float, target: float, maxDelta: float) -> float:
     target = current + deltaAngle
     return MoveTowards(current, target, maxDelta)
 
-def PingPong(t: float, length: float) -> float:
-    t = Repeat(t, length * 2)
-    return length - abs(t - length)
+# def PingPong(t: float, length: float) -> float:
+#     t = Repeat(t, length * 2)
+#     return length - abs(t - length)
 #endregion
 
 #region Iterables

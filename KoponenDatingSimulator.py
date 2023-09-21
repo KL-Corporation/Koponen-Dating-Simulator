@@ -593,7 +593,7 @@ del default_paths, sounds
 
 KDS.Build.init(tileData, itemData, t_textures, i_textures)
 
-def defaultEventHandler(event: pygame.event.EventType, *ignore: int) -> bool:
+def defaultEventHandler(event: pygame.event.Event, *ignore: int) -> bool:
     if event.type in ignore:
         return False
 
@@ -776,13 +776,18 @@ class Trashcan(KDS.Build.Tile):
         else:
             return self.texture
 
-class Jukebox(KDS.Build.Tile):
-    __musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
+def _load_jukebox_songs() -> list[pygame.mixer.Sound]:
+    musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
     songs = []
-    for __musiken in __musikerna:
-        songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + __musiken))
-    random.shuffle(songs)
-    del __musikerna, __musiken
+    for musiken in musikerna:
+        songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
+    # random.shuffle(songs)
+    # This feels useless as we access songs randomly anyways...
+
+    return songs
+
+class Jukebox(KDS.Build.Tile):
+    songs: list[pygame.mixer.Sound] = _load_jukebox_songs()
 
     tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
@@ -1538,7 +1543,7 @@ class Sleepable(KDS.Build.Tile):
         self.audiofile: str = "Assets/Audio/Effects/zipper.ogg"
         self.disableSleep: bool = False
 
-    def toggleSleep(self, effect: ScreenEffects.Effects = None):
+    def toggleSleep(self, effect: Optional[ScreenEffects.Effects] = None):
         global Player
         if effect != None:
             if effect == ScreenEffects.Effects.FadeInOut:
@@ -3463,7 +3468,7 @@ def console(oldSurf: pygame.Surface):
                         "drugdealer": KDS.AI.DrugDealer,
                         "turboshotgunner": KDS.AI.TurboShotgunner,
                         "methmaker": KDS.AI.MethMaker,
-                        "cavemonster": KDS.AI.cavemonster_gun
+                        "cavemonster": KDS.AI.CaveMonster
                     }
                     try:
                         ent = summonEntity[command_list[1]]
@@ -3645,7 +3650,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     if auto_play_music and KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
 
-def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: pygame.Surface = None):
+def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: Optional[pygame.Surface] = None):
     pygame.mouse.set_visible(False)
 
     map_names: Dict[int, str] = {}

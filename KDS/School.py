@@ -299,7 +299,7 @@ def Exam(showtitle = True):
                         score_formatted = scoreRational(f_score)
                     exam_score = score_formatted.value
 
-                    scoreSurf = gradeFont.render(f"""{score_formatted.formatted_value if score_formatted != None else "<score_error>"}""", FONTANTIALIASING, KDS.Colors.Red)
+                    scoreSurf = gradeFont.render(f"""{score_formatted.formatted_value}""", FONTANTIALIASING, KDS.Colors.Red)
 
                     gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
@@ -368,7 +368,7 @@ def Exam(showtitle = True):
 
             lastYoffset = 0
             for question in pages[page_index]:
-                rel_mpos = list(pygame.mouse.get_pos())
+                rel_mpos: list[float] = list(pygame.mouse.get_pos())
                 rel_mpos[0] -= (relative_position[0] + 10)
                 rel_mpos[1] -= (relative_position[1] + 10 + lastYoffset)
                 question.update(rel_mpos, c)
@@ -407,7 +407,7 @@ def Exam(showtitle = True):
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] = None) -> bool:
+def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] | None = None) -> bool:
     pygame.key.set_repeat(500, 31) #temp... Fuck... Apparently not
     displaySize = display.get_size()
 
@@ -472,7 +472,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] =
         return f"{birthday.day:02d}{birthday.month:02d}05A{yksiloNro:03d}{tarkistusmerkki}"
 
 
-    def randomGrade(refrenceOverride: float = None) -> int:
+    def randomGrade(refrenceOverride: Optional[float] = None) -> int:
         if GlobalRefrenceOverride != None and (4 <= GlobalRefrenceOverride <= 10):
             refrenceOverride = GlobalRefrenceOverride
         elif (KDS.ConfigManager.Save.Active == None or KDS.ConfigManager.Save.Active.Story.examGrade < 0):

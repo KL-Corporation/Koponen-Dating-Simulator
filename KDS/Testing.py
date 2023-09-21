@@ -2,7 +2,7 @@ import time
 from typing import Callable
 
 class PerformanceTimer():
-    def __init__(self, identifier: str = None) -> None:
+    def __init__(self, identifier: Optional[str] = None) -> None:
         self.startTime = -1
         self.stopTime = -1
         self.identifier = identifier

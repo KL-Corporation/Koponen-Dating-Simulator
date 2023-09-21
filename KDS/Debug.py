@@ -1,9 +1,8 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import pygame
 from pygame.constants import SRCALPHA
 import KDS.Colors
 import KDS.Logging
-import sys
 
 Enabled: bool = False
 
@@ -20,7 +19,7 @@ background_color = KDS.Colors.DarkGray
 background_alpha = 128
 text_color = KDS.Colors.White
 
-def RenderData(data: Dict[str, Any], fontOverride: pygame.font.Font = None) -> pygame.Surface:
+def RenderData(data: Dict[str, Any], fontOverride: Optional[pygame.font.Font] = None) -> pygame.Surface:
     f = font if fontOverride == None else fontOverride
 
     rList: List[pygame.Surface] = []

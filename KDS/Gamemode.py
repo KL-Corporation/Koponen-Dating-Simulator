@@ -5,7 +5,6 @@ import KDS.Story
 import KDS.Logging
 import KDS.Keys
 
-import pygame
 from enum import IntEnum
 
 class Modes(IntEnum):
@@ -102,7 +101,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule("Tulit juuri sopivaan aikaan. Haluaisin tehdä tutkimuksen siitä kuka olisi koulun paras opettaja... Siis minun lisäkseni tietenkin... Kävisitkö kyselemässä tätä muutamalta oppilaalta?", KDS.Koponen.Prefixes.koponen)
 
             KDS.Missions.InitialiseMission("research", "Tutkimus")
-            KDS.Missions.InitialiseStudentTask("research", "ask","Kysy oppilaiden mielipidettä", 10, f"Kysy mielipidetta [{pygame.key.name(KDS.Keys.functionKey.binding if KDS.Keys.functionKey.binding != None else (KDS.Keys.functionKey.secondaryBinding if KDS.Keys.functionKey.secondaryBinding != None else 'null'))}]", 39)
+            KDS.Missions.InitialiseStudentTask("research", "ask","Kysy oppilaiden mielipidettä", 10, f"Kysy mielipidetta [{KDS.Keys.functionKey.BindingDisplayName}]", 39)
             KDS.Missions.InitialiseKoponenTask("research", "answers", "Palauta kyselypaperi", 39)
 
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)

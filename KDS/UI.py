@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Tuple, Union, cast
+from typing import Any, Callable, Optional, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -17,7 +17,7 @@ ButtonFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 52)
 ButtonFontSmall = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 26)
 
 class Slider:
-    def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[float, Any] = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 6, custom_path: str = None):
+    def __init__(self, safe_name: str, slider_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[float, Any] = 0.0, handle_move_area_padding: Tuple[int, int] = (0, 0), slider_default_color: Tuple[int, int, int] = (120, 120, 120), slider_fill_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), lerp_duration: int = 6, custom_path: Optional[str] = None):
         """
         1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
         2. slider_rect: The pygame.Rect of the slider.
@@ -76,7 +76,7 @@ class Slider:
                 handle_draw_color = handle_color
                 self.handle_old_color = handle_color
             else:
-                handle_draw_color = (KDS.Math.Lerp(self.handle_old_color[0], handle_color[0], fade), KDS.Math.Lerp(self.handle_old_color[1], handle_color[1], fade), KDS.Math.Lerp(self.handle_old_color[2], handle_color[2], fade))
+                handle_draw_color = (round(KDS.Math.Lerp(self.handle_old_color[0], handle_color[0], fade)), round(KDS.Math.Lerp(self.handle_old_color[1], handle_color[1], fade)), round(KDS.Math.Lerp(self.handle_old_color[2], handle_color[2], fade)))
         else:
             handle_draw_color = handle_color
         pygame.draw.rect(surface, self.slider_default_color, self.slider_rect)
@@ -88,7 +88,7 @@ class Slider:
         return value
 
 class Button:
-    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Union[pygame.Surface, str] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 6, enabled: bool = True):
+    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Optional[Union[pygame.Surface, str]] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 6, enabled: bool = True):
         """Instantiates a new Button
 
         Args:
@@ -152,7 +152,7 @@ class Button:
                 draw_color = button_color
                 self.button_old_color = button_color
             else:
-                draw_color = (KDS.Math.Lerp(self.button_old_color[0], button_color[0], fade), KDS.Math.Lerp(self.button_old_color[1], button_color[1], fade), KDS.Math.Lerp(self.button_old_color[2], button_color[2], fade))
+                draw_color = (round(KDS.Math.Lerp(self.button_old_color[0], button_color[0], fade)), round(KDS.Math.Lerp(self.button_old_color[1], button_color[1], fade)), round(KDS.Math.Lerp(self.button_old_color[2], button_color[2], fade)))
         else:
             draw_color = button_color
         pygame.draw.rect(surface, draw_color, self.rect)
@@ -163,7 +163,7 @@ class Button:
         return executed
 
 class Switch:
-    def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 6, move_lerp_duration: int = 15, custom_path: str = None):
+    def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 6, move_lerp_duration: int = 15, custom_path: Optional[str] = None):
         """
         1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
         2. switch_rect: The pygame.Rect of the slider.
@@ -217,7 +217,7 @@ class Switch:
                 handle_draw_color = handle_color
                 self.handle_old_color = handle_color
             else:
-                handle_draw_color = (KDS.Math.Lerp(self.handle_old_color[0], handle_color[0], fade), KDS.Math.Lerp(self.handle_old_color[1], handle_color[1], fade), KDS.Math.Lerp(self.handle_old_color[2], handle_color[2], fade))
+                handle_draw_color = (round(KDS.Math.Lerp(self.handle_old_color[0], handle_color[0], fade)), round(KDS.Math.Lerp(self.handle_old_color[1], handle_color[1], fade)), round(KDS.Math.Lerp(self.handle_old_color[2], handle_color[2], fade)))
         else:
             handle_draw_color = handle_color
         if self.state:
@@ -226,7 +226,7 @@ class Switch:
         else:
             handle_move = self.handle_move_animation.update(True)
             self.handle_rect.x = round(KDS.Math.Lerp(self.range[0], self.range[1], handle_move))
-        switch_color = (KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move), KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move), KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move))
+        switch_color = (round(KDS.Math.Lerp(self.switch_off_color[0], self.switch_on_color[0], handle_move)), round(KDS.Math.Lerp(self.switch_off_color[1], self.switch_on_color[1], handle_move)), round(KDS.Math.Lerp(self.switch_off_color[2], self.switch_on_color[2], handle_move)))
         pygame.draw.rect(surface, switch_color, self.switch_rect)
         pygame.draw.rect(surface, handle_draw_color, self.handle_rect)
         if self.custom_path == None:
@@ -265,13 +265,13 @@ class Indicator:
 
         #region Texture Loading
         if Indicator.combat_texture == None:
-            Indicator.combat_texture = cast(pygame.Surface, pygame.image.load("Assets/Textures/UI/Indicators/combat.png").convert())
+            Indicator.combat_texture = pygame.image.load("Assets/Textures/UI/Indicators/combat.png").convert()
         if Indicator.searching_texture == None:
-            Indicator.searching_texture = cast(pygame.Surface, pygame.image.load("Assets/Textures/UI/Indicators/searching.png").convert())
+            Indicator.searching_texture = pygame.image.load("Assets/Textures/UI/Indicators/searching.png").convert()
         if Indicator.trespassing_texture == None:
-            Indicator.trespassing_texture = cast(pygame.Surface, pygame.image.load("Assets/Textures/UI/Indicators/trespassing.png").convert())
+            Indicator.trespassing_texture = pygame.image.load("Assets/Textures/UI/Indicators/trespassing.png").convert()
         if Indicator.visible_contraband_texture == None:
-            Indicator.visible_contraband_texture = cast(pygame.Surface, pygame.image.load("Assets/Textures/UI/Indicators/contraband.png").convert())
+            Indicator.visible_contraband_texture = pygame.image.load("Assets/Textures/UI/Indicators/contraband.png").convert()
         #endregion
 
         yellowTexture: Optional[pygame.Surface] = None

@@ -105,7 +105,7 @@ class MessageBox:
         YES = 6
 
     @staticmethod
-    def Show(title: str, text: str, buttons: MessageBox.Buttons = None, icon: MessageBox.Icon = None, defaultButton: MessageBox.DefaultButton = None, *args: int) -> MessageBox.Responses:
+    def Show(title: str, text: str, buttons: Optional[MessageBox.Buttons] = None, icon: Optional[MessageBox.Icon] = None, defaultButton: Optional[MessageBox.DefaultButton] = None, *args: int) -> MessageBox.Responses:
         if ISLINUX:
             MessageBox._sendLinuxNotification(title, text, icon)
             return MessageBox.Responses.OK # notify doesn't have buttons so we will return this same response... Shut up, I know this is stupid.
@@ -118,7 +118,7 @@ class MessageBox:
         return MessageBox.Responses(response)
 
     @staticmethod
-    def _sendLinuxNotification(title: str, text: str, icon: MessageBox.Icon = None):
+    def _sendLinuxNotification(title: str, text: str, icon: Optional[MessageBox.Icon] = None):
         icons: Dict[Optional[MessageBox.Icon], Optional[str]] = {
             MessageBox.Icon.EXCLAMATION: "error",
             MessageBox.Icon.WARNING: "dialog-warning",

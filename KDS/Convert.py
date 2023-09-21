@@ -179,8 +179,8 @@ def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False) -> pygame.
     blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
     blurredString = blurredImage.tobytes("raw", mode)
     blurredSurface: pygame.Surface = pygame.image.fromstring(blurredString, image.get_size(), mode)
-    if alpha: blurredSurface = cast(pygame.Surface, blurredSurface.convert_alpha())
-    else: blurredSurface = cast(pygame.Surface, blurredSurface.convert())
+    if alpha: blurredSurface = blurredSurface.convert_alpha()
+    else: blurredSurface = blurredSurface.convert()
     return blurredSurface
 
 class AspectMode(IntEnum):

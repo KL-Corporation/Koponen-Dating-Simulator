@@ -1,4 +1,4 @@
-from typing import Any, Callable, Tuple, Union
+from typing import Callable, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -27,7 +27,7 @@ class Circle:
 
     circleMask = None
     loadingBackground: pygame.Surface = pygame.Surface((0, 0))
-    loadingFill: Tuple[int, int, int, int] = (0, 0, 0, 0)
+    loadingFill: Union[Tuple[int, int, int, int], pygame.Color] = (0, 0, 0, 0)
     scaledLoadingBackground: pygame.Surface = pygame.Surface((0, 0))
 
     @staticmethod
