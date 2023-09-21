@@ -2300,7 +2300,7 @@ class HologramTeleport(BaseTeleport):
     def update(self) -> Optional[pygame.Surface]:
         shape: pygame.Surface = KDS.World.Lighting.Shapes.cone_narrow.getColor(102, 196.164, 0.7773, 0.8980)
         shape = pygame.transform.rotate(shape, 90)
-        shape = shape.subsurface((0, 0, shape.get_width(), 68)) # type: ignore
+        shape = shape.subsurface((0, 0, shape.get_width(), 68))
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.bottom - 34), shape, True))
 
         if self.rect.colliderect(Player.rect):

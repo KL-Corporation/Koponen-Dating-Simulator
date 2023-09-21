@@ -26,14 +26,13 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
 root = tkinter.Tk()
 root.withdraw()
 root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 pygame.init()
-pygame.scrap.init()
-pygame.scrap.set_mode(SCRAP_CLIPBOARD)
+display: pygame.Surface = pygame.Surface((2, 2)) # Dunder surface for linting
 display_size: Tuple[int, int] = (1600, 800)
 monitor_info = pygame.display.Info()
 scalesize = 68
@@ -47,10 +46,12 @@ pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     global display, display_size, display_info
-    display = cast(pygame.Surface, pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE))
+    display = pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE)
     display_size = display.get_size()
     display_info = pygame.display.Info()
 SetDisplaySize((min(display_size[0], monitor_info.current_w), min(display_size[1], monitor_info.current_h - 100)))
+pygame.scrap.init()
+pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
@@ -88,7 +89,7 @@ class TextureHolder:
             self.name = name
             if colorkey != None:
                 if len(colorkey) == 3:
-                    self.texture.set_colorkey(cast(Tuple[int, int, int], colorkey))
+                    self.texture.set_colorkey(colorkey)
                 elif len(colorkey) == 2:
                     self.texture.set_colorkey(self.texture.get_at(colorkey))
                 else:
@@ -672,7 +673,7 @@ class PropertiesData:
 
     class ZoneData:
         def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
-            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(cast(pygame.Rect, v[0].copy()), v[1]) for v in values]
+            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(v[0].copy(), v[1]) for v in values]
 
         def __getitem__(self, index: int) -> Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
             return self.zones[index]
@@ -779,7 +780,7 @@ class PropertiesData:
             if not KDS.Linq.Any(self.parent.serials, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
-    def Copy(self, parentOverride: UnitData = None) -> PropertiesData:
+    def Copy(self, parentOverride: UnitData | None = None) -> PropertiesData:
         new = PropertiesData(parentOverride if parentOverride != None else self.parent)
         new.values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
         return new
@@ -826,7 +827,7 @@ class PropertiesData:
     def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
         if len(jsonString) < 1 or jsonString.isspace():
             return
-        deserialized: Dict[str, Union[Dict[str, Dict[str, Union[str, int, float, bool]]]]] = json.loads(jsonString)
+        deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
         for row in grid:
             for unit in row:
                 key = f"{unit.pos[0]}-{unit.pos[1]}"
@@ -904,7 +905,7 @@ class DragData:
 
     def SelectCustom(self, rect: Optional[pygame.Rect]):
         if rect != None:
-            self.Rect = cast(pygame.Rect, rect.copy())
+            self.Rect = rect.copy()
             [onStart() for onStart in self.c_onDragStart[self.Mode]]
         else:
             self.clear()
@@ -931,8 +932,10 @@ class DragData:
         hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
-    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: Dict[int, bool]):
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper):
         if not brush.IsEmpty():
+            if self.Rect != None:
+                self.clear()
             return
         if right_down:
             self.clear()
@@ -1220,24 +1223,24 @@ def consoleHandler(commandlist: List[str]):
         else: KDS.Console.Feed.append("Invalid set command.")
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
-            if commandlist[2].isnumeric:
+            if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0], gridSize[1] + int(commandlist[2])), grid)
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} rows.")
             else: KDS.Console.Feed.append("Row add count is not a valid value.")
         elif commandlist[1] == "cols":
-            if commandlist[2].isnumeric:
+            if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0] + int(commandlist[2]), gridSize[1]), grid)
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} columns.")
             else: KDS.Console.Feed.append("Column add count is not a valid value.")
         else: KDS.Console.Feed.append("Invalid add command.")
     elif commandlist[0] == "rmv":
         if commandlist[1] == "rows":
-            if commandlist[2].isnumeric:
+            if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0], gridSize[1] - int(commandlist[2])), grid)
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} rows.")
             else: KDS.Console.Feed.append("Row add count is not a valid value.")
         elif commandlist[1] == "cols":
-            if commandlist[2].isnumeric:
+            if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0] - int(commandlist[2]), gridSize[1]), grid)
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} columns.")
             else: KDS.Console.Feed.append("Column add count is not a valid value.")
@@ -1513,12 +1516,12 @@ class Selected:
     units: List[UnitData] = []
 
     @staticmethod
-    def Set(serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
+    def Set(serialOverride: str | None = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
         global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
         Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, clear_selected=clear_selected)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = None, clear_selected: bool = True):
+    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str | None = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
@@ -1579,7 +1582,7 @@ class Selected:
             return output, PropertiesData.Serialize(unitsNormalizedPositions)
 
     @staticmethod
-    def FromString(string: str, properties: str = None):
+    def FromString(string: str, properties: str | None = None):
         Selected.units: List[UnitData] = []
         contents = string.splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
@@ -1598,7 +1601,7 @@ class Selected:
                                                                     # ^^ Need to add one... I don't know why.
 Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
 
-def defaultEventHandler(event, ignoreEventOfType: int = None) -> bool:
+def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
     #region Event Ignoring
     if event.type == ignoreEventOfType:
         return False
