@@ -4747,7 +4747,7 @@ while main_running:
             "FPS": KDS.Clock.GetFPS(3),
             "Frame Time": f"{frametime_ms} ms",
             "Raw Frame Time": f"{raw_frametime_ms} ms",
-            "CPU Bound": f"{'Yes' if raw_frametime_ms > frametime_ms else 'No'}",
+            "CPU Bound": f"{'Yes' if raw_frametime_ms >= frametime_ms else 'No'}", # When raw_frametime == frametime, we are CPU bound as we do not sleep anymore. Int comparison so it's accurate.
             "Player Position": Player.rect.topleft,
             "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
             "Entities": f"{Entity.total - Entity.death_count} / {Entity.total} | Agro: {Entity.agro_count}",
