@@ -36,12 +36,16 @@ def reload_fonts(self) -> None:
     """
     Reloads the fonts after some change happenned (e.g. font or font-size was changed with the other customizing functions).
     """
-    self.font_header = pygame.font.SysFont(self.font_normal_str, self.font_header_size, bold=True)
-    self.font_header2 = pygame.font.SysFont(self.font_normal_str, self.font_header2_size, bold=True)
-    self.font_header3 = pygame.font.SysFont(self.font_normal_str, self.font_header3_size, bold=True)
-    self.font_text = pygame.font.SysFont(self.font_normal_str, self.font_text_size, bold=False)
-    self.font_code = pygame.font.SysFont(self.font_code_str, self.font_code_size, bold=False)
-    self.font_quote = pygame.font.SysFont(self.font_normal_str, self.font_quote_size, bold=False)
+    self.font_header = pygame.font.SysFont(self.font_normal_str, self.font_header_size)
+    self.font_header.bold = True
+    self.font_header2 = pygame.font.SysFont(self.font_normal_str, self.font_header2_size)
+    self.font_header2.bold = True
+    self.font_header3 = pygame.font.SysFont(self.font_normal_str, self.font_header3_size)
+    self.font_header3.bold = True
+
+    self.font_text = pygame.font.SysFont(self.font_normal_str, self.font_text_size)
+    self.font_code = pygame.font.SysFont(self.font_code_str, self.font_code_size)
+    self.font_quote = pygame.font.SysFont(self.font_normal_str, self.font_quote_size)
 
 
 def set_line_gaps(self, gap_line: int = 5, gap_paragraph: int = 30) -> None:

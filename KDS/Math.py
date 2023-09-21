@@ -86,7 +86,7 @@ def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> f
     try:
         return (value - from1) / (to1 - from1) * (to2 - from2) + from2
     except ZeroDivisionError:
-        KDS.Logging.AutoError("Division by zero!")
+        KDS.Logging.AutoError(f"Division by zero! Params: (value: {value}, from1: {from1}, to1: {to1}, from2: {from2}, to2: {to2})")
         return NAN
 
 def Remap01(value: float, from1: float, from2: float) -> float:

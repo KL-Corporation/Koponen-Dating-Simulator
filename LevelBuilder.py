@@ -104,12 +104,12 @@ class TextureHolder:
 
             drkOvl = self.scaledTexture.convert_alpha()
             drkOvl.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
-            self.darkOverlay = drkOvl
+            self.darkOverlay: pygame.Surface = drkOvl
 
             lghtOvl = self.scaledTexture.convert_alpha()
             lghtOvl.fill((255, 255, 255, 255), special_flags=BLEND_RGB_MAX)
             lghtOvl.fill((255, 255, 255, 128), special_flags=BLEND_RGBA_MULT)
-            self.lightOverlay = lghtOvl
+            self.lightOverlay: pygame.Surface = lghtOvl
 
     def __init__(self) -> None:
         self.data: Dict[UnitType, Dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
@@ -216,7 +216,7 @@ grid: List[List[UnitData]] = [[]]
 gridSize: Tuple[int, int] = (0, 0)
 
 refrenceGrid: Optional[List[List[UnitData]]] = None
-refrenceGridSize = (0, 0)
+refrenceGridSize: tuple[int, int] = (0, 0)
 refrenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 
 zoneMode = False
@@ -470,7 +470,7 @@ class UnitData:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
-                    if textureData.serialNumber not in noCollision and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
+                    if textureData.serialNumber not in noCollision: # and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
                         surface.blit(textureData.darkOverlay, blitPos)
                 else:
                     pygame.draw.rect(surface, KDS.Colors.White, (pos[0], pos[1], scalesize, scalesize))
@@ -657,8 +657,8 @@ class UnitData:
     def refrenceUpdate():
         global grid, refrenceGrid, gridSize, refrenceGridSize
         for x in range(min(gridSize[0], refrenceGridSize[0])):
-            if refrenceGridSize == None:
-                return
+            # if refrenceGridSize == None:
+            #     return
             for y in range(min(gridSize[1], refrenceGridSize[1])):
                 if refrenceGrid == None:
                     return
@@ -833,7 +833,7 @@ class PropertiesData:
                 key = f"{unit.pos[0]}-{unit.pos[1]}"
                 if key in deserialized:
                     toSet = deserialized[key]
-                    if not isinstance(toSet, dict):
+                    if not isinstance(toSet, dict): # pyright: ignore [reportUnnecessaryIsInstance]
                         KDS.Logging.AutoError(f"Invalid value type occured during deserialization. Key for data: {key}")
                         continue
                     unitProp = PropertiesData(unit)
@@ -1139,7 +1139,7 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
     global currentSaveName, gridSize, grid, display, clock
-    if path == None or len(path) < 1:
+    if len(path) < 1:
         KDS.Logging.info(f"Path \"{path}\" of map file is not valid.", True)
         return False
     if not path.endswith(".dat"):
@@ -1169,8 +1169,8 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
 
 def openMap() -> bool: # Returns True if the operation was succesful
     global currentSaveName, gridSize, grid
-    fileName = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Map File")
-    if fileName == None or len(fileName) < 1:
+    fileName: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Map File")
+    if len(fileName) < 1:
         return False
     return loadMap(fileName)
 
@@ -1430,8 +1430,8 @@ def generateLevelProp():
         #endregion
 
 def upgradeTileProp():
-    filename = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")), title="Select Tileprops File")
-    if filename == None or len(filename) < 1:
+    filename: str = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")), title="Select Tileprops File")
+    if len(filename) < 1:
         return
     try:
         with open(filename, "r") as f:
@@ -1532,7 +1532,7 @@ class Selected:
                 grid[unit.pos[1]][unit.pos[0]] = unitCopy
             except IndexError:
                 warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(<invalid-grid-size>, <invalid-grid-size>)"
-                KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}")
+                KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}", consoleVisible=True)
         if clear_selected:
             Selected.units.clear()
 
@@ -1583,7 +1583,7 @@ class Selected:
 
     @staticmethod
     def FromString(string: str, properties: str | None = None):
-        Selected.units: List[UnitData] = []
+        units: List[UnitData] = []
         contents = string.splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
 
@@ -1592,13 +1592,20 @@ class Selected:
         for y, row in enumerate(contents):
             for x, unit in enumerate(row.split("/")):
                 maxX = max(maxX, x)
-                Selected.units.append(UnitData((x, y), unit.strip(" ")))
+
+                unit = unit.strip(" ")
+                if unit == UnitData.EMPTYSERIAL:
+                    continue # Do not override empty tiles
+
+                units.append(UnitData((x, y), unit.strip(" ")))
         if properties != None:
-            PropertiesData.Deserialize(properties, [Selected.units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
-        for u in Selected.units:
+            PropertiesData.Deserialize(properties, [units]) # Should be fine since deserialize doesn't actually use the indexes of units in list
+        for u in units:
             u.pos = (u.pos[0] + offset[0], u.pos[1] + offset[1])
         Drag.SelectCustom(pygame.Rect(offset[0], offset[1], maxX + 1, len(contents)) if maxX > 0 and len(contents) > 0 else None)
                                                                     # ^^ Need to add one... I don't know why.
+        Selected.units = units # Drag.SelectCustom seems to clear units, so set them after it.
+
 Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
 
 def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
@@ -1746,8 +1753,9 @@ def main():
                                     if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
                                         Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
                                     else:
-                                        KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.")
-                                else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.")
+                                        KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.", consoleVisible=True)
+                                        Selected.FromString(fromClipboardSplit[0], None)
+                                else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.", consoleVisible=True)
                         except Exception:
                             KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
                 elif event.key == K_g:

@@ -53,17 +53,20 @@ class MarkdownRenderer:
         self.font_normal_str = 'Arial'
         self.font_code_str = 'Courier'
         self.font_header_size = 28
-        self.font_header = pygame.font.SysFont(self.font_normal_str, self.font_header_size, bold=True)
+        self.font_header = pygame.font.SysFont(self.font_normal_str, self.font_header_size)
+        self.font_header.bold = True
         self.font_header2_size = 24
-        self.font_header2 = pygame.font.SysFont(self.font_normal_str, self.font_header2_size, bold=True)
+        self.font_header2 = pygame.font.SysFont(self.font_normal_str, self.font_header2_size)
+        self.font_header2.bold = True
         self.font_header3_size = 20
-        self.font_header3 = pygame.font.SysFont(self.font_normal_str, self.font_header3_size, bold=True)
+        self.font_header3 = pygame.font.SysFont(self.font_normal_str, self.font_header3_size)
+        self.font_header3.bold = True
         self.font_text_size = 16
-        self.font_text = pygame.font.SysFont(self.font_normal_str, self.font_text_size, bold=False)
+        self.font_text = pygame.font.SysFont(self.font_normal_str, self.font_text_size)
         self.font_code_size = 16
-        self.font_code = pygame.font.SysFont(self.font_code_str, self.font_text_size, bold=False)
+        self.font_code = pygame.font.SysFont(self.font_code_str, self.font_text_size)
         self.font_quote_size = 16
-        self.font_quote = pygame.font.SysFont(self.font_normal_str, self.font_quote_size, bold=False)
+        self.font_quote = pygame.font.SysFont(self.font_normal_str, self.font_quote_size)
 
         # Text-rendering variables
         self.gap_line = 8
