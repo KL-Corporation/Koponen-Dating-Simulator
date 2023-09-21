@@ -829,6 +829,8 @@ class Jukebox(KDS.Build.Tile):
                 self.playRandomTrack()
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
         if self.channel != None and not self.channel.get_busy():
+            for music in Jukebox.songs: # Fix freeze on Python 3.11
+                music.stop()            # Fix freeze on Python 3.11
             self.playRandomTrack()
         if self.playing != -1:
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
