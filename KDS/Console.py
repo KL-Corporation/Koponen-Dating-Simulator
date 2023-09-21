@@ -14,11 +14,11 @@ import KDS.Clock
 
 pygame.init()
 pygame.key.stop_text_input()
-pygame.scrap.init()
-pygame.scrap.set_mode(SCRAP_CLIPBOARD)
+# pygame.scrap.init()
+# pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 #region Settings
-console_font = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 25, bold=False, italic=False)
-console_font_small = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 15, bold=False, italic=False)
+console_font = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 25)
+console_font_small = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 15)
 text_input_rect = pygame.Rect(0, 750, 1200, 50)
 text_rect = pygame.Rect(10, 762, 1180, 25)
 text_color = KDS.Colors.LightGray

@@ -33,7 +33,7 @@ import re
 import shlex
 
 #region Settings
-text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 22, bold=0, italic=0)
+text_font = pygame.font.Font("Assets/Fonts/courier.ttf", 22)
 text_color = KDS.Colors.Black
 background_color = KDS.Colors.CloudWhite
 background_outline_color = KDS.Colors.Black

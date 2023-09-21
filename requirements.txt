@@ -1,8 +1,8 @@
 # pip install -r .\requirements.txt --upgrade
 
-# Python Version: 3.9.13
+# Python Version: 3.11.5
 
-pygame==2.0.1
+pygame==2.1.3
 pillow==10.0.1
 markdown==3.4.4
 numpy==1.26.0

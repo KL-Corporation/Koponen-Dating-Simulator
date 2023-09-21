@@ -332,9 +332,12 @@ Missions = MissionHolder()
 Active_Mission: str
 def init():
     global MissionFont, TaskFont, TipFont, TaskFinishSound, TaskUnFinishSound, MissionFinishSound, MissionUnFinishSound, Active_Mission, Last_Active_Mission, text_height, TextOffset, hundredSize
-    TipFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10, bold=0, italic=0)
-    MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15, bold=1, italic=0)
-    TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10, bold=0, italic=0)
+    TipFont = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10)
+
+    MissionFont = pygame.font.Font("Assets/Fonts/courier.ttf", 15)
+    MissionFont.bold = True
+
+    TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10)
     TaskFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_finish.ogg")
     TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_unfinish.ogg")
     MissionFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_finish.ogg")

@@ -58,9 +58,9 @@ os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
 KDS.Jobs.init()
 
-harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
-harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55, bold=0, italic=0)
-harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15, bold=0, italic=0)
+harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
+harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55)
+harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15)
 
 class UnitType(IntEnum):
     Tile = 0

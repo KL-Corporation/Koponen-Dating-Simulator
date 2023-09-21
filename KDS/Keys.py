@@ -226,7 +226,7 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     buttonWidth = 400
     buttonHeight = 50
     display_size = display.get_size()
-    ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28, bold=0, italic=0)
+    ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28)
     BindText: pygame.Surface = ArialFont.render("Press a key to bind it.", True, KDS.Colors.White)
     BindHelperText: pygame.Surface = ArialFont.render("CTRL + F4: Delete Binding | CTRL + X: Restore Default Binding | Escape: Cancel Binding", True, KDS.Colors.White)
 

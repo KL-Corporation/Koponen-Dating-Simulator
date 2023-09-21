@@ -14,7 +14,7 @@ Enabled: bool = False
 #     return bool(sys.gettrace() != None)
 
 pygame.init()
-font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25, bold=0, italic=0)
+font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
 padding: Dict[str, int] = {"left": 10, "right": 10, "top": 10, "bottom": 10}
 background_color = KDS.Colors.DarkGray
 background_alpha = 128
