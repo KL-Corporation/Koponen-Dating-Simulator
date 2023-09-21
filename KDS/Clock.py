@@ -50,6 +50,14 @@ def GetFPS(roundingDigits: Optional[int] = None) -> float:
         return KDS.Math.RoundCustom(fps, roundingDigits, KDS.Math.MidpointRounding.AwayFromZero)
     return fps
 
+def GetFrameTimeMs() -> int:
+    """Includes the time slept to achieve target fps."""
+    return _clock.get_time()
+
+def GetRawFrameTimeMs() -> int:
+    """Does not include the time slept to achieve target fps."""
+    return _clock.get_rawtime()
+
 def GetDeltaTime() -> float: # Would've been useful in variable framerate, but that was not possible to implement.
     """The interval in seconds from the last frame to the current one."""
     return _clock.get_time() / 1000
