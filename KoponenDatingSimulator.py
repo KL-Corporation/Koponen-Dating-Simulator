@@ -3078,6 +3078,7 @@ class PlayerClass:
         self.fart_counter: int = 0
         self.light: bool = False
         self.infiniteHealth: bool = False
+        self.infiniteStamina: bool = False
         self.fly: bool = False
         self.dead: bool = False
         self.deathAnimFinished: bool = False
@@ -3111,6 +3112,12 @@ class PlayerClass:
     def update(self):
         if self.infiniteHealth:
             self.health = KDS.Math.INFINITY
+        elif KDS.Math.IsInfinity(self.health):
+            self._health = 100.0 # Skip hurt sound using _health instead of health
+        if self.infiniteStamina:
+            self.stamina = KDS.Math.INFINITY
+        elif KDS.Math.IsInfinity(self.stamina):
+            self.stamina = 100.0
 
         #region Movement
         #region Functions
@@ -3301,7 +3308,8 @@ def console(oldSurf: pygame.Surface):
         "infinite": {
             "health": trueFalseTree,
             "ammo": trueFalseTree,
-            "damage": trueFalseTree
+            "damage": trueFalseTree,
+            "stamina": trueFalseTree
         },
         "finish": {
             "missions": "break",
@@ -3408,6 +3416,13 @@ def console(oldSurf: pygame.Surface):
                             KDS.Console.Feed.append(f"infinite damage state has been set to: {KDS.World.Bullet.GodMode}")
                         else:
                             KDS.Console.Feed.append("Please provide a proper state for infinite damage.")
+                    elif command_list[1] == "stamina":
+                        h_state = KDS.Convert.String.ToBool(command_list[2], None)
+                        if h_state != None:
+                            Player.infiniteStamina = h_state
+                            KDS.Console.Feed.append(f"infinite stamina state has been set to: {Player.infiniteStamina}")
+                        else:
+                            KDS.Console.Feed.append("Please provide a proper state for infinite health.")
                     else:
                         KDS.Console.Feed.append("Not a valid infinite command.")
                 else:
@@ -3494,6 +3509,7 @@ def console(oldSurf: pygame.Surface):
                     if godmodeState != None:
                         KDS.World.Bullet.GodMode = godmodeState
                         Player.infiniteHealth = godmodeState
+                        Player.infiniteStamina = godmodeState
                         KDS.Build.Item.infiniteAmmo = godmodeState
                         KDS.Console.Feed.append(f"Godmode state has been set to: {KDS.World.Bullet.GodMode}")
                     else:
@@ -4625,7 +4641,7 @@ while main_running:
 
         screen.blit(score_font.render(f"SCORE: {KDS.Scores.score}", True, KDS.Colors.White), (10, 45))
         screen.blit(score_font.render(f"""HEALTH: {KDS.Math.CeilToInt(Player.health) if not KDS.Math.IsInfinity(Player.health) else "INFINITE"}""", True, KDS.Colors.White), (10, 55))
-        screen.blit(score_font.render(f"STAMINA: {KDS.Math.CeilToInt(Player.stamina)}", True, KDS.Colors.White), (10, 120))
+        screen.blit(score_font.render(f"""STAMINA: {KDS.Math.CeilToInt(Player.stamina) if not KDS.Math.IsInfinity(Player.stamina) else "INFINITE"}""", True, KDS.Colors.White), (10, 120))
         if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story:
             screen.blit(score_font.render(f"DEATHS: {KDS.Scores.levelDeaths}", True, KDS.Colors.White), (10, 130))
 
