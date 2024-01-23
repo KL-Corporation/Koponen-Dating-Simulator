@@ -3,7 +3,7 @@
 # Python Version: 3.11.5
 
 pygame==2.1.3
-pillow==10.0.1
+pillow==10.2.0
 markdown==3.4.4
 numpy==1.26.0
 psutil==5.9.5
