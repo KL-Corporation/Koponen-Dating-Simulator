@@ -221,6 +221,13 @@ class Item:
             if Item._canPickupItem:
                 Item._canPickupItem = False
                 was_picked: bool = Item._collisionInteractionLogic(shortest_collision_item, Item_list, inventory)
+                # If item could not be picked (two slot item for example)
+                # check if any of the other colliding items can be picked
+                if not was_picked:
+                    for item in collision_items:
+                        was_picked = Item._collisionInteractionLogic(item, Item_list, inventory)
+                        if was_picked:
+                            break
 
                 # If no items could be picked
                 if not was_picked:
