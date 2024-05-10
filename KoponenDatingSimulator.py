@@ -13,7 +13,9 @@ import random
 import shutil
 import traceback
 from enum import IntEnum, IntFlag, auto
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, Type, Union
+
+import time
 
 import pygame
 import pygame.mixer
@@ -1347,7 +1349,7 @@ class ImpaledBody(KDS.Build.Tile):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.animation = KDS.Animator.Animation("impaled_corpse", 2, 50, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        self.rect = pygame.Rect(position[0] - (self.animation.images[0].get_width() - 34), position[1] - (self.animation.images[0].get_height() - 34), self.animation.images[0].get_width(), self.animation.images[0].get_height())
+        self.rect = pygame.Rect(position[0] - (self.animation.get_width() - 34), position[1] - (self.animation.get_height() - 34), self.animation.get_width(), self.animation.get_height())
         self.checkCollision = False
 
     def update(self):
@@ -3599,6 +3601,7 @@ KDS.Logging.debug("Game Initialisation Complete.")
 #region Game Functions
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
     KDS.Logging.debug("Loading Game...")
+    loading_starttime: Final[float] = time.perf_counter()
     global main_menu_running, current_map, true_scroll, selectedSave
 
     pygame.mouse.set_visible(False)
@@ -3679,7 +3682,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
     pygame.event.clear()
     KDS.Keys.Reset()
-    KDS.Logging.debug("Game Loaded.")
+    loading_endtime: Final[float] = time.perf_counter()
+    KDS.Logging.debug(f"Game Loaded. (took {loading_endtime - loading_starttime:.3f} seconds)", consoleVisible=True)
     if show_loading:
         KDS.Loading.Circle.Stop()
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.

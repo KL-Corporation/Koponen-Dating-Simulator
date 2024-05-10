@@ -399,19 +399,19 @@ class SergeantZombie(HostileEnemy):
         d_anim = KDS.Animator.Animation("seargeant_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 34, 63)
 
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 40), KDS.Animator.ShootFrametime(1, 2), KDS.Animator.ShootFrametime(0, 10)))
         #region Handling the i_anim:
-        aim_im = a_anim.images[0]
-        shoot_im = a_anim.images[1]
-        a_anim.images.clear()
-        for _ in range(40):
-            a_anim.images.append(aim_im)
-        for _ in range(2):
-            a_anim.images.append(shoot_im)
-        for _ in range(10):
-            a_anim.images.append(aim_im)
-        a_anim.ticks = 51
-        del aim_im, shoot_im
-
+        # aim_im = a_anim.images[0]
+        # shoot_im = a_anim.images[1]
+        # a_anim.images.clear()
+        # for _ in range(40):
+        #     a_anim.images.append(aim_im)
+        # for _ in range(2):
+        #     a_anim.images.append(shoot_im)
+        # for _ in range(10):
+        #     a_anim.images.append(aim_im)
+        # a_anim.ticks = 51
+        # del aim_im, shoot_im
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=60)
@@ -436,24 +436,25 @@ class DrugDealer(HostileEnemy):
         health = 25
         w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+        a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         d_anim = KDS.Animator.Animation("drug_dealer_dying", 6, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-36, 35, 70)
 
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 30), KDS.Animator.ShootFrametime(1, 4), KDS.Animator.ShootFrametime(2, 4), KDS.Animator.ShootFrametime(3, 4)))
         #region Handling the i_anim:
-        af = a_anim.images.copy()
-        a_anim.images.clear()
-        for _ in range(30):
-            a_anim.images.append(af[0])
-        for __ in range(4):
-            a_anim.images.append(af[16])
-        for __ in range(4):
-            a_anim.images.append(af[32])
-        for __ in range(4):
-            a_anim.images.append(af[63])
+        # af = a_anim.images.copy()
+        # a_anim.images.clear()
+        # for _ in range(30):
+        #     a_anim.images.append(af[0])
+        # for __ in range(4):
+        #     a_anim.images.append(af[16])
+        # for __ in range(4):
+        #     a_anim.images.append(af[32])
+        # for __ in range(4):
+        #     a_anim.images.append(af[63])
 
-        a_anim.ticks = len(a_anim.images)-1
-        del af
+        # a_anim.ticks = len(a_anim.images)-1
+        # del af
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=drug_dealer_sight, death_sound=drug_dealer_death_sound, health=health, mv=[2, 8], attackPropability=20)
@@ -485,19 +486,20 @@ class TurboShotgunner(HostileEnemy):
         d_anim1 = KDS.Animator.Animation("turbo_shotgunner_dying1", 5, 13, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-24, 40, 58)
 
-        #region Handling the i_anim:
-        aim_im = a_anim.images[0]
-        shoot_im = a_anim.images[1]
-        a_anim.images.clear()
-        for _ in range(50):
-            a_anim.images.append(aim_im)
-        for _ in range(2):
-            a_anim.images.append(shoot_im)
-        for _ in range(10):
-            a_anim.images.append(aim_im)
-        a_anim.ticks = 61
-        del aim_im, shoot_im
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 50), KDS.Animator.ShootFrametime(1, 2), KDS.Animator.ShootFrametime(0, 10)))
 
+        #region Handling the i_anim:
+        # aim_im = a_anim.images[0]
+        # shoot_im = a_anim.images[1]
+        # a_anim.images.clear()
+        # for _ in range(50):
+        #     a_anim.images.append(aim_im)
+        # for _ in range(2):
+        #     a_anim.images.append(shoot_im)
+        # for _ in range(10):
+        #     a_anim.images.append(aim_im)
+        # a_anim.ticks = 61
+        # del aim_im, shoot_im
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=random.choice([d_anim0, d_anim1]), i=i_anim, sight_sound=zombie_sight_sound, death_sound=zombie_death_sound, health=health, mv=[1, 8], attackPropability=80)
@@ -526,19 +528,20 @@ class MafiaMan(HostileEnemy):
         d_anim = KDS.Animator.Animation("mafiaman_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-19, 40, 53)
 
-        #region Handling the i_anim:
-        aim_im = a_anim.images[0]
-        shoot_im = a_anim.images[1]
-        a_anim.images.clear()
-        for _ in range(20):
-            a_anim.images.append(aim_im)
-        for _ in range(2):
-            a_anim.images.append(shoot_im)
-        for _ in range(5):
-            a_anim.images.append(aim_im)
-        a_anim.ticks = 26
-        del aim_im, shoot_im
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 20), KDS.Animator.ShootFrametime(1, 2), KDS.Animator.ShootFrametime(0, 5)))
 
+        #region Handling the i_anim:
+        # aim_im = a_anim.images[0]
+        # shoot_im = a_anim.images[1]
+        # a_anim.images.clear()
+        # for _ in range(20):
+        #     a_anim.images.append(aim_im)
+        # for _ in range(2):
+        #     a_anim.images.append(shoot_im)
+        # for _ in range(5):
+        #     a_anim.images.append(aim_im)
+        # a_anim.ticks = 26
+        # del aim_im, shoot_im
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=mafiaman_sight, death_sound=mafiaman_death, health=health, mv=[1, 8], attackPropability=40)
@@ -567,19 +570,19 @@ class MethMaker(HostileEnemy):
         d_anim = KDS.Animator.Animation("methmaker_dying", 5, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0], pos[1]-19, 40, 53)
 
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 35), KDS.Animator.ShootFrametime(1, 2), KDS.Animator.ShootFrametime(0, 8)))
         #region Handling the i_anim:
-        aim_im = a_anim.images[0]
-        shoot_im = a_anim.images[1]
-        a_anim.images.clear()
-        for _ in range(35):
-            a_anim.images.append(aim_im)
-        for _ in range(2):
-            a_anim.images.append(shoot_im)
-        for _ in range(8):
-            a_anim.images.append(aim_im)
-        a_anim.ticks = 44
-        del aim_im, shoot_im
-
+        # aim_im = a_anim.images[0]
+        # shoot_im = a_anim.images[1]
+        # a_anim.images.clear()
+        # for _ in range(35):
+        #     a_anim.images.append(aim_im)
+        # for _ in range(2):
+        #     a_anim.images.append(shoot_im)
+        # for _ in range(8):
+        #     a_anim.images.append(aim_im)
+        # a_anim.ticks = 44
+        # del aim_im, shoot_im
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=zombie_sight_sound, death_sound=methmaker_death, health=health, mv=[2, 8], attackPropability=50)
@@ -610,19 +613,19 @@ class CaveMonster(HostileEnemy):
         d_anim = KDS.Animator.Animation("undead_monster_dying", 5, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0]-20, pos[1]-23, 54, 57)
 
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 40), KDS.Animator.ShootFrametime(1, 2), KDS.Animator.ShootFrametime(0, 10)))
         #region Handling the i_anim:
-        aim_im = a_anim.images[0]
-        shoot_im = a_anim.images[1]
-        a_anim.images.clear()
-        for _ in range(40):
-            a_anim.images.append(aim_im)
-        for _ in range(2):
-            a_anim.images.append(shoot_im)
-        for _ in range(10):
-            a_anim.images.append(aim_im)
-        a_anim.ticks = 51
-        del aim_im, shoot_im
-
+        # aim_im = a_anim.images[0]
+        # shoot_im = a_anim.images[1]
+        # a_anim.images.clear()
+        # for _ in range(40):
+        #     a_anim.images.append(aim_im)
+        # for _ in range(2):
+        #     a_anim.images.append(shoot_im)
+        # for _ in range(10):
+        #     a_anim.images.append(aim_im)
+        # a_anim.ticks = 51
+        # del aim_im, shoot_im
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=cavemonster_sight, death_sound=cavemonster_death, health=health, mv=[2, 8], attackPropability=50)
@@ -757,19 +760,20 @@ class SecurityGuard(HostileEnemy):
         d_anim = KDS.Animator.Animation("security_guard_dying", 5, 13, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
         rect = pygame.Rect(pos[0] - 20, pos[1] - 23, 40, 73)
 
-        #region Handling the i_anim:
-        aim_im = a_anim.images[0]
-        shoot_im = a_anim.images[1]
-        a_anim.images.clear()
-        for _ in range(40):
-            a_anim.images.append(aim_im)
-        for _ in range(2):
-            a_anim.images.append(shoot_im)
-        for _ in range(10):
-            a_anim.images.append(aim_im)
-        a_anim.ticks = 51
-        del aim_im, shoot_im
+        a_anim.init_shoot_parameters((KDS.Animator.ShootFrametime(0, 40), KDS.Animator.ShootFrametime(1, 2), KDS.Animator.ShootFrametime(0, 10)))
 
+        #region Handling the i_anim:
+        # aim_im = a_anim.images[0]
+        # shoot_im = a_anim.images[1]
+        # a_anim.images.clear()
+        # for _ in range(40):
+        #     a_anim.images.append(aim_im)
+        # for _ in range(2):
+        #     a_anim.images.append(shoot_im)
+        # for _ in range(10):
+        #     a_anim.images.append(aim_im)
+        # a_anim.ticks = 51
+        # del aim_im, shoot_im
         #endregion
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[1, 8], attackPropability=40)

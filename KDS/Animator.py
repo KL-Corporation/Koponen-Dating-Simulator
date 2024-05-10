@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, Final, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 from enum import IntEnum, auto
 
@@ -13,6 +13,18 @@ class OnAnimationEnd(IntEnum):
     Stop = auto()
     Loop = auto()
     PingPong = auto()
+
+class _CachedAnimationSurface:
+    def __init__(self, surf_id: str, surf: pygame.Surface) -> None:
+        self.id: Final[str] = surf_id
+        self.surface: Final[pygame.Surface] = surf
+        self.refcount: int = 0
+
+_surfaceCache: dict[str, _CachedAnimationSurface] = {}
+
+class ShootFrametime(NamedTuple):
+    frame_index: int
+    frame_duration: int
 
 class Animation:
     def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations", load_in_reverse: bool = False) -> None:
@@ -29,8 +41,8 @@ class Animation:
         """
         if number_of_images < 1 or duration < 1:
             KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
-        self.images: List[pygame.Surface] = []
-        self.duration = duration
+        self._images: List[_CachedAnimationSurface] = []
+        self._duration = duration
         self.ticks = number_of_images * duration - 1
         self.tick = 0
         self.colorkey = colorkey
@@ -42,16 +54,51 @@ class Animation:
         iterRange = (0, number_of_images, 1) if not load_in_reverse else (number_of_images - 1, -1, -1)
         for i in range(*iterRange):
             converted_animation_name = animation_name + "_" + str(i) + filetype
-            path = f"Assets/Textures/{animation_dir}/{converted_animation_name}" #Kaikki animaation kuvat ovat oletusarvoisesti png-muotoisia
-            KDS.Logging.debug(f"Loading animation images from: {path}")
-            image = pygame.image.load(path).convert()
-            image.set_colorkey(self.colorkey) #Kaikki osat kuvasta joiden väri on colorkey muutetaan läpinäkyviksi
-            KDS.Logging.debug(f"Initialised animation image: {animation_dir}/{converted_animation_name}")
+            animation_id: str = f"{animation_dir}/{converted_animation_name}"
+            surf: _CachedAnimationSurface | None = _surfaceCache.get(animation_id)
+            if surf is None:
+                path = "Assets/Textures/" + animation_id
+                image: pygame.Surface = pygame.image.load(path).convert()
+                image.set_colorkey(self.colorkey)
+                surf = _CachedAnimationSurface(animation_id, image)
+                _surfaceCache[animation_id] = surf
+                KDS.Logging.debug(f"Loaded shared animation image: {animation_id}")
 
-            for _ in range(duration):
-                self.images.append(image)
+            # We switches to shared surfaces so we assert this just in case
+            assert(surf.surface.get_colorkey() == (*self.colorkey, 255))
+            self._images.append(surf) # for each append we add a refcount
+            surf.refcount += 1
+            # KDS.Logging.debug(f"Initialised animation image: {animation_id}")
 
-        self.size = self.images[0].get_size()
+        self.size = self._images[0].surface.get_size()
+
+    def __del__(self):
+        for img in self._images: # when destroyed, decrement refcount
+            img.refcount -= 1
+            if img.refcount <= 0:
+                del _surfaceCache[img.id]
+                KDS.Logging.debug(f"Unloaded shared animation image: {img.id}")
+
+    # HACK: I can't be bothered to refactor this old KDS codebase
+    # so we create a special method to restore the old animation behaviour for AI shoot
+    # this code is very vulnerable and can be broken/brake things easily
+    def init_shoot_parameters(self, frametimes: tuple[ShootFrametime, ...]):
+        """
+        Hack function for KDS.AI
+
+        DO NOT CALL MULTIPLE TIMES!!
+        """
+        assert(self._duration == 1)
+
+        images: list[_CachedAnimationSurface] = []
+        for f in frametimes:
+            img: _CachedAnimationSurface = self._images[f.frame_index]
+            images.extend(img for _ in range(f.frame_duration))
+            # use duration 1 and append multiple identical frames
+            # as Animation doesn't support per frame durations
+            # and implementing that is out of the scope of this small-ish KDS update
+        self._images = images
+        self.ticks = len(images) - 1
 
     #update-funktio tulee kutsua silmukan jokaisella kierroksella, jotta animaatio toimii kunnolla
     #update-funktio palauttaa aina yhden pygame image-objektin
@@ -91,7 +138,8 @@ class Animation:
                     self.tick = 0
                 else:
                     KDS.Logging.AutoError("Invalid On Animation End Type!")
-        return self.images[self.tick]
+
+        return self.get_frame()
 
     def get_frame(self) -> pygame.Surface:
         """Returns the currently active frame.
@@ -99,22 +147,21 @@ class Animation:
         Returns:
             pygame.Surface: Currently active frame.
         """
-        return self.images[self.tick]
+        return self._images[KDS.Math.FloorToInt(self.tick / self._duration)].surface
 
-    def change_colorkey(self, colorkey: Tuple[int, int, int]):
-        for image in self.images:
-            image.set_colorkey(colorkey)
+    # Commented out as we now use shared surfaces
+    # def change_colorkey(self, colorkey: Tuple[int, int, int]):
+    #     for image in self.images:
+    #         image.set_colorkey(colorkey)
 
     def get_size(self) -> Tuple[int, int]:
-        if len(self.images) > 0:
-            return self.images[0].get_size()
-        return (-1, -1)
+        return self.size
 
     def get_width(self) -> int:
-        return self.get_size()[0]
+        return self.size[0]
 
     def get_height(self) -> int:
-        return self.get_size()[1]
+        return self.size[1]
 
 class MultiAnimation:
     def __init__(self, **animations: Animation):
