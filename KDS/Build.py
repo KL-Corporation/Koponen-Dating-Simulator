@@ -346,6 +346,6 @@ class Ammo(Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += self.score
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, self.score)
         KDS.Audio.PlaySound(self.sound)
         Weapon.addAmmo(self.type, self.add)

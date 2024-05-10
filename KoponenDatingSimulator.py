@@ -2413,7 +2413,7 @@ class Coffeemug(KDS.Build.Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 6
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 6)
         KDS.Audio.PlaySound(coffeemug_sound)
 
 class Gasburner(KDS.Build.Item):
@@ -2436,7 +2436,7 @@ class Gasburner(KDS.Build.Item):
             return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 12
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 12)
         KDS.Audio.PlaySound(gasburner_clip)
 
 class GreenKey(KDS.Build.Item):
@@ -2488,7 +2488,7 @@ class Knife(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 5
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 5)
         KDS.Audio.PlaySound(knife_pickup)
 
 class LappiSytytyspalat(KDS.Build.Item):
@@ -2519,7 +2519,7 @@ class LappiSytytyspalat(KDS.Build.Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 14
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 14)
         KDS.Audio.PlaySound(lappi_sytytyspalat_sound)
 
 class Medkit(KDS.Build.Item):
@@ -2537,7 +2537,7 @@ class Pistol(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 18
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 18)
         KDS.Audio.PlaySound(weapon_pickup)
 
     def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
@@ -2573,7 +2573,7 @@ class rk62(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 29
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 29)
         KDS.Audio.PlaySound(weapon_pickup)
 
 class Shotgun(KDS.Build.Weapon):
@@ -2594,7 +2594,7 @@ class Shotgun(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 23
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 23)
         KDS.Audio.PlaySound(weapon_pickup)
 
 class rk62Mag(KDS.Build.Ammo):
@@ -2625,7 +2625,7 @@ class Plasmarifle(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 35
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 35)
         KDS.Audio.PlaySound(weapon_pickup)
 
 class Soulsphere(KDS.Build.Item):
@@ -2633,7 +2633,7 @@ class Soulsphere(KDS.Build.Item):
         super().__init__(position, serialNumber)
 
     def pickup(self) -> None:
-        KDS.Scores.score += 20
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 20)
         Player.health += 100
         KDS.Audio.PlaySound(item_pickup)
 
@@ -2653,7 +2653,7 @@ class SSBonuscard(KDS.Build.Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 30
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 30)
         KDS.Audio.PlaySound(ss_sound)
 
 class Turboneedle(KDS.Build.Item):
@@ -2684,7 +2684,7 @@ class Ppsh41(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 15
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 15)
 
 class Awm(KDS.Build.Weapon):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -2703,7 +2703,7 @@ class Awm(KDS.Build.Weapon):
 
     def pickup(self) -> None:
         super().pickup()
-        KDS.Scores.score += 25
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 25)
 
 class AwmMag(KDS.Build.Ammo):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -2718,7 +2718,7 @@ class EmptyFlask(KDS.Build.Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 1
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 1)
         KDS.Audio.PlaySound(coffeemug_sound)
 
 class MethFlask(KDS.Build.Item):
@@ -2734,7 +2734,7 @@ class MethFlask(KDS.Build.Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 10
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 10)
         KDS.Audio.PlaySound(coffeemug_sound)
 
 class BloodFlask(KDS.Build.Item):
@@ -2750,7 +2750,7 @@ class BloodFlask(KDS.Build.Item):
 
     def pickup(self) -> None:
         KDS.Audio.PlaySound(coffeemug_sound)
-        KDS.Scores.score += 7
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 7)
 
 class Grenade(KDS.Build.Item):
     Slope = 0.7
@@ -2773,7 +2773,7 @@ class Grenade(KDS.Build.Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.score += 7
+        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 7)
 
 class FireExtinguisher(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
