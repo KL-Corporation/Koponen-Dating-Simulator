@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Final, Optional, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -301,3 +301,39 @@ class Indicator:
         else:
             Indicator.red_alpha_anim.tick = 0
             Indicator.red_visible = False
+
+class Notification:
+    FADE_START: Final[int] = 30 # 0,5 seconds (60 fps)
+    FADE_END: Final[int] = 60 # 1 second
+
+    def __init__(self, message: str, color: tuple[int, int, int]) -> None:
+        self.message: str = message
+        self.color: tuple[int, int, int] = color
+
+        self._base_surface: pygame.Surface | None = None
+        self._progress: int = 0
+
+    def update(self, font: pygame.font.Font, target_surface_size: tuple[int, int]) -> tuple[tuple[int, int], pygame.Surface] | None:
+        """
+        Font is only used during the first render of this notification.
+        Returns `None` when the notification should be destroyed.
+        """
+        if self._progress > Notification.FADE_END:
+            return
+
+        if self._base_surface is None:
+            self._base_surface = font.render(self.message, True, self.color)
+
+        opacity: float = KDS.Math.Remap(KDS.Math.Clamp(self._progress, Notification.FADE_START, Notification.FADE_END),
+                                        Notification.FADE_START, Notification.FADE_END,
+                                        1, 0)
+        self._base_surface.set_alpha(round(255 * opacity))
+
+        self._progress += 1
+
+        pos_x: int = round((target_surface_size[0] - self._base_surface.get_width()) / 2)
+
+        pos_y: int = round((target_surface_size[1] - self._base_surface.get_height()) / 2)
+        pos_y -= round(self._progress / 4)
+
+        return ((pos_x, pos_y), self._base_surface)

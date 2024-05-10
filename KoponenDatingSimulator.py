@@ -346,6 +346,8 @@ Koponen: KDS.Koponen.KoponenEntity = KDS.Koponen.KoponenEntity((0, 0), (0, 0))
 
 koponen_talk_tip = tip_font.render(f"Puhu Koposelle [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
+Notifications: list[KDS.UI.Notification] = []
+
 KDS.Logging.debug("Variable Defining Complete.")
 #endregion
 #region Game Settings
@@ -842,10 +844,15 @@ class Jukebox(KDS.Build.Tile):
         return self.texture
 
 class Door(KDS.Build.Tile):
-    keys = {
+    key_names: dict[int, str] = {
         24: "red",
         25: "blue",
         26: "green"
+    }
+    key_colors: dict[int, tuple[int, int, int]] = {
+        24: (237, 28, 36),
+        25: (63, 72, 204),
+        26: (34, 177, 76),
     }
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = -1):
@@ -874,7 +881,7 @@ class Door(KDS.Build.Tile):
                 self.open = False
                 self.closingCounter = 0
         if KDS.Math.getDistance(Player.rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.functionKey.clicked:
-            if self.serialNumber == 23 or Player.keys[Door.keys[self.serialNumber]]:
+            if self.serialNumber == 23 or Player.keys[Door.key_names[self.serialNumber]]:
                 KDS.Audio.PlaySound(door_opening)
                 self.closingCounter = 0
                 self.open = not self.open
@@ -885,6 +892,8 @@ class Door(KDS.Build.Tile):
                         Player.rect.left = self.rect.right
             else:
                 KDS.Audio.PlaySound(door_locked)
+                Notifications.append(KDS.UI.Notification(f"Missing {Door.key_names[self.serialNumber]} key", color=Door.key_colors[self.serialNumber]))
+
         return self.texture if not self.open else self.opentexture
 
 class Landmine(KDS.Build.Tile):
@@ -4429,6 +4438,8 @@ while main_running:
                     go_to_console = True
             elif event.key in KDS.Keys.screenshot.Bindings:
                 pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
+                # Uses the last frame's screen state which is why the notification isn't visible
+                Notifications.append(KDS.UI.Notification("Screenshot saved", KDS.Colors.Cyan))
                 KDS.Audio.PlaySound(camera_shutter)
             elif event.key == K_F5 and debug_gamesetting_allow_subprog_debug:
                 KDS.Audio.MusicMixer.pause()
@@ -4502,7 +4513,7 @@ while main_running:
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
-    KDS.Build.Item.checkCollisions(Items, Player.rect, Player.inventory)
+    KDS.Build.Item.checkCollisions(Items, Player.rect, Player.inventory, Notifications)
     KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll)
     TileFire.cachedAnimation.update()
 
@@ -4743,6 +4754,19 @@ while main_running:
         screen.blit(screen_overlay, (0, 0))
 
     pygame.transform.scale(screen, display_size, display)
+
+    #region Notifications
+    notif_rmv_count: int = 0
+    for notif_i in range(len(Notifications)):
+        notif_index: int = notif_i - notif_rmv_count
+        notif: KDS.UI.Notification = Notifications[notif_index]
+        notif_data = notif.update(ArialFont, display_size)
+        if notif_data is None:
+            Notifications.pop(notif_index)
+            notif_rmv_count += 1
+        else:
+            display.blit(notif_data[1], notif_data[0])
+    #endregion
 
     #region Debug Mode
     if KDS.Debug.Enabled:
