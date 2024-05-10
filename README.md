@@ -40,7 +40,7 @@ Note to self: _GitHub actions disabled due to build error_
 
 [vscodeLink]: https://code.visualstudio.com
 [pythonLink]: https://www.python.org
-[pygameLink]: https://www.pygame.org
+[pygameLink]: https://www.pyga.me
 [jsonLink]: https://www.json.org
 [gitLink]: https://git-scm.com
 [gitHubLink]: https://github.com
