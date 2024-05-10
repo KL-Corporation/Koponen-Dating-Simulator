@@ -115,7 +115,7 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
 
     if isinstance(message, Exception):
         message = f"{type(message).__name__}: {str(message)}"
-    logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
+    logging.log(logLevel, message, stack_info=stack_info, stacklevel=3, **kwargs)
     if stack_info:
         _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
         message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
