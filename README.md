@@ -20,11 +20,19 @@
 ### Languages and Tools Used:
 [<img align="left" alt="Visual Studio Code" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" />][vscodeLink]
 [<img align="left" alt="Python" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" />][pythonLink]
-[<img align="left" alt="PyGame" width="88px" src="https://www.pygame.org/docs/pygame_logo.gif" />][pygameLink]
+[<img align="left" alt="PyGame" width="88px" src="https://raw.githubusercontent.com/pygame-community/pygame-ce/main/docs/reST/_static/pygame_logo.svg" />][pygameLink]
 [<img align="left" alt="JSON" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/c/c9/JSON_vector_logo.svg" />][jsonLink]
 [<img align="left" alt="Git" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Git_Icon.svg" />][gitLink]
 [<img align="left" alt="GitHub" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Github-desktop-logo-symbol.svg" />][gitHubLink]
 [<img align="left" alt="Stack Overflow" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Stack_Overflow_icon.svg" />][stackOverflowLink]
+
+<br />
+<br />
+<br />
+<br />
+<br />
+
+Note to self: _GitHub actions disabled due to build error_
 
 [//]: # (Temporary Below)
 [website]: https://github.com/orgs/KL-Corporation
