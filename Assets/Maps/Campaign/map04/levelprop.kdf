@@ -15,6 +15,7 @@
             ]
         },
         "Player": {
+            "spawnInverted": true,
             "startPos": [
                 8332,
                 175
