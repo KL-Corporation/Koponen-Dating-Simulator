@@ -414,9 +414,7 @@ class WorldData:
 
         KDS.ConfigManager.LevelProp.init(MapPath)
         KDS.World.Dark.Configure(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
-        Player.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
-        Player.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
-        Player.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
+        Player.load_levelprop()
 
         tmpInventory: Dict[str, int] = KDS.ConfigManager.LevelProp.Get("Entities/Player/Inventory", {})
         for k, v in tmpInventory.items():
@@ -3069,7 +3067,7 @@ class PlayerClass:
 
         self.reset()
 
-    def reset(self, clear_inventory: bool = True, clear_keys: bool = True):
+    def reset(self, clear_inventory: bool = True, clear_keys: bool = True, load_levelprop: bool = False):
         self.rect: pygame.Rect = pygame.Rect(100, 100, stand_size[0], stand_size[1])
         self._health: float = 100.0
         self.stamina: float = 100.0
@@ -3101,6 +3099,14 @@ class PlayerClass:
         self.lockMovement: bool = False
         self.animations.reset()
         self.deathSound.stop()
+
+        if load_levelprop:
+            self.load_levelprop()
+
+    def load_levelprop(self):
+        self.light = KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/playerLight", True)
+        self.disableSprint = KDS.ConfigManager.LevelProp.Get("Entities/Player/disableSprint", False)
+        self.direction = KDS.ConfigManager.LevelProp.Get("Entities/Player/spawnInverted", False)
 
     @property
     def health(self) -> float:
@@ -3739,7 +3745,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
 def respawn_function():
     global level_finished
     KDS.Scores.levelDeaths += 1
-    Player.reset(clear_inventory=False, clear_keys=False)
+    Player.reset(clear_inventory=False, clear_keys=False, load_levelprop=True)
     level_finished = False
     if WorldData.PlayerStartPos[0] == -1 and WorldData.PlayerStartPos[1] == -1:
         KDS.Logging.AutoError("PlayerStartPos is (-1, -1)!")
