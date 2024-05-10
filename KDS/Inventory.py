@@ -117,7 +117,7 @@ class Inventory:
     def dropItem(self, forceDrop: bool = False) -> Optional[KDS.Build.Item]:
         return self.dropItemAtIndex(self.SIndex, forceDrop)
 
-    def pickupItemToIndex(self, index: int, item: KDS.Build.Item, force: bool = False, set_index: bool = False) -> bool:
+    def pickupItemToIndex(self, index: int, item: KDS.Build.Item, *, force: bool = False, set_index: bool = False) -> bool:
         if self.storage[index] != EMPTYSLOT and not force:
             return False
         if item.serialNumber in KDS.Build.Item.inventoryDoubles:
@@ -135,8 +135,23 @@ class Inventory:
             self.SIndex = index
         return True
 
-    def pickupItem(self, item: KDS.Build.Item, force: bool = False) -> bool:
-        return self.pickupItemToIndex(self.SIndex, item, force, set_index=True)
+    # Use kw only args so that when I make changes, dependant systems don't break without an exception
+    def pickupItem(self, item: KDS.Build.Item, *, allow_find_empty_slot: bool = False, force: bool = False) -> bool:
+        if not allow_find_empty_slot:
+            # Keep the old inventory behaviour as default
+            # so that I don't have to test all of the other systems that depend on this method
+            # Player just overrides the allow_find_empty_slot flag
+            return self.pickupItemToIndex(self.SIndex, item, force=force, set_index=True)
+        else:
+            # Cycle inventory slots and try to pick up until a free slot is found
+            startingIndex: int = self.SIndex
+            for i_offset in range(self.size + 1): # size + 1 so that if inventory is full, we have returned to the original offset index
+                self.SIndex = (startingIndex + i_offset) % self.size
+                if self.pickupItemToIndex(self.SIndex, item, force=force, set_index=True):
+                    return True
+
+            assert(not force) # force should always return True
+            return False
 
     def useItemAtIndex(self, index: int, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
         item = self.storage[index]

@@ -2,6 +2,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Dict, Any, Literal, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
 import pygame
+import KDS.UI
 import KDS.World
 import KDS.ConfigManager
 import KDS.Colors
@@ -135,6 +136,8 @@ class Tile:
 class Item:
     infiniteAmmo: bool = False
 
+    _canDisplayInventoryNotification: bool = True
+
     serialNumbers: Dict[int, Type[Item]] = {}
 
     tipItem = None
@@ -187,16 +190,18 @@ class Item:
 #                     renderable.physics = False
 
     @staticmethod
-    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory):
-        def interactionLogic(item: Item):
-            if item.supportsInventory:
-                if inventory.pickupItem(item) == False: # Return if cannot pickup
-                    return
+    def _collisionInteractionLogic(item: Item, Item_list: List[Item], inventory: KDS.Inventory.Inventory) -> bool:
+        if item.supportsInventory:
+            if not inventory.pickupItem(item, allow_find_empty_slot=True): # Return if cannot pickup
+                return False
 
-            item.pickup()
-            Item_list.remove(item) # Remove seems to search for instance and not equality
-            KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
+        item.pickup()
+        Item_list.remove(item) # Remove seems to search for instance and not equality
+        KDS.Missions.Listeners.ItemPickup.Trigger(item.serialNumber)
+        return True
 
+    @staticmethod
+    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory, Notifications: List[KDS.UI.Notification]):
         shortest_collision_item = None
         shortest_distance = KDS.Math.MAXVALUE
 
@@ -211,7 +216,12 @@ class Item:
         if shortest_collision_item == None:
             return
         if KDS.Keys.functionKey.pressed:
-            interactionLogic(shortest_collision_item)
+            was_picked: bool = Item._collisionInteractionLogic(shortest_collision_item, Item_list, inventory)
+            if not was_picked and Item._canDisplayInventoryNotification:
+                Item._canDisplayInventoryNotification = False
+                Notifications.append(KDS.UI.Notification("Inventory full", KDS.Colors.Red))
+        else:
+            Item._canDisplayInventoryNotification = True
 
     @staticmethod
     def modDroppedPropertiesAndAddToList(Item_list: List[Item], item: Item, player: PlayerClass):
