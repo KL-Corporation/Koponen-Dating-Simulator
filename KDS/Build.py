@@ -136,7 +136,7 @@ class Tile:
 class Item:
     infiniteAmmo: bool = False
 
-    _canDisplayInventoryNotification: bool = True
+    _canPickupItem: bool = True
 
     serialNumbers: Dict[int, Type[Item]] = {}
 
@@ -202,11 +202,13 @@ class Item:
 
     @staticmethod
     def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory, Notifications: List[KDS.UI.Notification]):
-        shortest_collision_item = None
+        collision_items: List[Item] = []
+        shortest_collision_item: Item | None = None
         shortest_distance = KDS.Math.MAXVALUE
 
         for item in Item_list:
             if item.rect.colliderect(collidingRect):
+                collision_items.append(item)
                 distance = KDS.Math.getDistance(item.rect.midbottom, collidingRect.midbottom)
                 if distance < shortest_distance:
                     shortest_collision_item = item
@@ -216,12 +218,15 @@ class Item:
         if shortest_collision_item == None:
             return
         if KDS.Keys.functionKey.pressed:
-            was_picked: bool = Item._collisionInteractionLogic(shortest_collision_item, Item_list, inventory)
-            if not was_picked and Item._canDisplayInventoryNotification:
-                Item._canDisplayInventoryNotification = False
-                Notifications.append(KDS.UI.Notification("Inventory full", KDS.Colors.Red))
+            if Item._canPickupItem:
+                Item._canPickupItem = False
+                was_picked: bool = Item._collisionInteractionLogic(shortest_collision_item, Item_list, inventory)
+
+                # If no items could be picked
+                if not was_picked:
+                    Notifications.append(KDS.UI.Notification("Inventory full", KDS.Colors.Red))
         else:
-            Item._canDisplayInventoryNotification = True
+            Item._canPickupItem = True
 
     @staticmethod
     def modDroppedPropertiesAndAddToList(Item_list: List[Item], item: Item, player: PlayerClass):
