@@ -115,9 +115,9 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
 
     if isinstance(message, Exception):
         message = f"{type(message).__name__}: {str(message)}"
-    _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
     logging.log(logLevel, message, stack_info=stack_info, stacklevel=4, **kwargs)
     if stack_info:
+        _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
         message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
     if consoleVisible:
         print(KDS.System.Console.Colored(message, color))
