@@ -1,6 +1,7 @@
 {
     "Data": {
         "settingsFileVersion": 1,
+        "quickloadLevels": false,
         "Terms": {
             "accepted": false
         }

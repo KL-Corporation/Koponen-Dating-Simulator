@@ -155,6 +155,7 @@ del surfarrayLagFix
 #region Settings
 KDS.Logging.debug("Loading Settings...")
 tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
+quickload_levels: bool = KDS.ConfigManager.GetSetting("Data/quickloadLevels", False)
 current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", ...)
 current_map_name: str = ""
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", ...)
@@ -3682,8 +3683,15 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
     pygame.event.clear()
     KDS.Keys.Reset()
-    loading_endtime: Final[float] = time.perf_counter()
-    KDS.Logging.debug(f"Game Loaded. (took {loading_endtime - loading_starttime:.3f} seconds)", consoleVisible=True)
+    loadtime_total: Final[float] = time.perf_counter() - loading_starttime
+    KDS.Logging.debug(f"Game Loaded. (took {loadtime_total:.3f} seconds)", consoleVisible=True)
+    if loadtime_total < 3:
+        if not quickload_levels:
+            loadtime_extra: Final[float] = 3 - loadtime_total
+            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to properly display the loading screen before launch.", consoleVisible=True)
+            time.sleep(loadtime_extra)
+        else:
+            KDS.Logging.info("Loading delay skipped due to quickload.", consoleVisible=True)
     if show_loading:
         KDS.Loading.Circle.Stop()
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
