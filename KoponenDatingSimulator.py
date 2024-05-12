@@ -2055,7 +2055,6 @@ class BaseTeleport(KDS.Build.Tile):
         self.triggerStoryEnding: bool = False
 
     def lateInit(self):
-        print("TESTI")
         if self.message != None:
             self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
         if self.identifier != None:
