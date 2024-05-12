@@ -163,7 +163,7 @@ def fake_load_extra(loadtime: float, quickload: bool, *, pump_events: bool = Tru
     if loadtime < FAKE_LOAD_SECONDS:
         if not quickload:
             loadtime_extra = FAKE_LOAD_SECONDS - loadtime
-            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to properly display the loading screen.\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
+            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to display the loading screen properly...\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
             if not pump_events:
                 time.sleep(loadtime_extra)
             else:
