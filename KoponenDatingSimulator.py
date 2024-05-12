@@ -3558,7 +3558,7 @@ def console(oldSurf: pygame.Surface):
                 else: KDS.Console.Feed.append("Please provide proper coordinates for teleporting.")
             elif command_list[0] == "summon":
                 if len(command_list) > 1:
-                    summonEntity: Dict[str, Type[KDS.AI.HostileEnemy]] = {
+                    summonEntity: Dict[str, Type[KDS.AI.HostileEnemy | KDS.Teachers.Teacher]] = {
                         "imp": KDS.AI.Imp,
                         "sergeantzombie": KDS.AI.SergeantZombie,
                         "drugdealer": KDS.AI.DrugDealer,
