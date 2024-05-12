@@ -2649,7 +2649,7 @@ class Shotgun(KDS.Build.Weapon):
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6, maxDistance=1400, slope=3 - x / 1.5))
+                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6, maxDistance=1400, slope=(5 - x) / 20))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2742,7 +2742,7 @@ class Ppsh41(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 3, slope=random.uniform(-0.5, 0.5)))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 3, slope=random.uniform(-0.5, 0.5) / 5))
         return output
 
     def pickup(self) -> None:
