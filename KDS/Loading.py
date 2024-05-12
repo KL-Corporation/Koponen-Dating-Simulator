@@ -141,22 +141,37 @@ class Story:
         Story.handle = KDS.Jobs.Schedule(Story.rendering, surface, oldSurf, map_name_str, titleFont, normalFont)
 
     @staticmethod
-    def WaitForExit():
+    def WaitForExit(pump_events: bool = False):
         if Story.handle != None:
-            Story.handle.Complete()
+            if not pump_events:
+                Story.handle.Complete()
+            else:
+                pygame.event.pump() # One extra pump before sleep just in case
+                while not Story.handle.IsComplete:
+                    time.sleep(0.1)
+                    pygame.event.pump()
             Story.handle = None
 
 FAKE_LOAD_SECONDS: float = 3.0
-def fake_load_extra(loadtime: float, quickload: bool):
+def fake_load_extra(loadtime: float, quickload: bool, *, pump_events: bool = True):
     """
     Sleeps until the target load time is reached.
+    This method's accuracy is limited to considerably less than 100 milliseconds when `pump_events` is set to `True`
 
     if quickload game settings in on, waiting is skipped.
     """
     if loadtime < FAKE_LOAD_SECONDS:
         if not quickload:
             loadtime_extra = FAKE_LOAD_SECONDS - loadtime
-            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to properly display the loading screen.\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
-            time.sleep(loadtime_extra)
+            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to display the loading screen properly...\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
+            if not pump_events:
+                time.sleep(loadtime_extra)
+            else:
+                PER_ITERATION_WAIT: float = 0.1 # seconds
+                iterationCount: int = round(loadtime_extra / PER_ITERATION_WAIT)
+                pygame.event.pump()
+                for _ in range(iterationCount):
+                    time.sleep(PER_ITERATION_WAIT)
+                    pygame.event.pump()
         else:
             KDS.Logging.info("Loading delay skipped due to quickload.", consoleVisible=True)
