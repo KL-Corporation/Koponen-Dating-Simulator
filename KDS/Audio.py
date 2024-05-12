@@ -1,4 +1,5 @@
-from typing import List, Optional
+import dataclasses
+from typing import List, NamedTuple, Optional
 import pygame
 import pygame.mixer
 import KDS.ConfigManager
@@ -27,24 +28,98 @@ def init():
     for c_i in range(SoundMixer.get_num_channels()):
         EffectChannels.append(SoundMixer.Channel(c_i))
 
+class _MusicLoadedContext(NamedTuple):
+    filepath: str
+
+class _MusicPlayingContext(NamedTuple):
+    start: float
+    loops: int
+
+class MusicOverrideHandle:
+    def __init__(self, *, _lctx: _MusicLoadedContext, _pctx: _MusicPlayingContext, _musicplayer_pos: float) -> None:
+        self._original_music_path: str = _lctx.filepath
+        self._original_music_position: float = _pctx.start + _musicplayer_pos
+
+        if _pctx.loops > 0:
+            raise RuntimeError("Cannot restore playback state for fixed loop counts!")
+        self._original_loops: int = _pctx.loops
+
+        self._local_volume: float = 1.0
+        self._is_active: bool = True
+
+    @property
+    def is_active(self) -> bool:
+        return self._is_active
+
+    def _checkActive(self):
+        if not self._is_active:
+            e = RuntimeError("Music Override Handle is not active anymore!")
+            e.add_note("If you did not stop the overridden music, all music might have been stopped in the parent player or another base music might have been loaded.")
+            raise e
+
+    def SetLocalVolume(self, volume: float):
+        self._checkActive()
+
+        self._local_volume = volume
+        self._UpdateLocalVolume()
+
+    def _UpdateLocalVolume(self):
+        self._checkActive()
+
+        MusicMixer.set_volume(MusicVolume * self._local_volume)
+        # MusicMixer.set_volume doesn't modify MusicVolume
+
+    def Stop(self, *, _play_base_song: bool = True):
+        """
+        Starts playing the base music again.
+        Music position can only be restored if loops=0
+        """
+
+        self._checkActive()
+        self._is_active = False
+
+        start: float
+        if self._original_loops == 0:
+            start = self._original_music_position
+        else:
+            # We don't know how long the song is
+            # so we can't compute the starting point for the song
+            # as _musicplayer_pos is the duration the music has been playing
+            # and not the actual position in the track.
+            start = 0.0
+
+        Music.Overridden = None
+        MusicMixer.set_volume(MusicVolume)
+
+        if _play_base_song:
+            Music.Play(self._original_music_path, loops=self._original_loops, start=start)
+
 class Music:
-    Loaded = None
+    Loaded: _MusicLoadedContext | None = None
+    """This value might change if the music is overridden."""
+    Playing: _MusicPlayingContext | None = None
+    """This value might change if the music is overridden."""
+
+    Overridden: MusicOverrideHandle | None = None
+
     OnEnd = KDS.Events.Event()
 
     @staticmethod
-    def Play(path: Optional[str] = None, loops: int = -1):
+    def Play(path: Optional[str] = None, loops: int = -1, start: float = 0.0):
         global MusicMixer, MusicVolume
         if path != None and len(path) > 0:
             Music.Load(path=path)
-        if Music.Loaded != None:
-            MusicMixer.play(loops=loops)
-            MusicMixer.set_volume(MusicVolume)
-        else:
-            KDS.Logging.AutoError("No music track has been loaded to play!")
+
+        assert(Music.Loaded is not None)
+        MusicMixer.play(loops=loops, start=start)
+        MusicMixer.set_volume(MusicVolume)
+        Music.Playing = _MusicPlayingContext(loops=loops, start=start)
 
     @staticmethod
     def Stop():
         global MusicMixer, MusicVolume
+        if Music.Overridden is not None:
+            Music.Overridden.Stop(_play_base_song=False)
         MusicMixer.stop()
 
     @staticmethod
@@ -63,13 +138,33 @@ class Music:
         MusicMixer.unpause()
 
     @staticmethod
+    def Override(path: Optional[str] = None, loops: int = -1) -> MusicOverrideHandle:
+        if Music.Loaded is None:
+            raise RuntimeError("Cannot override! No base music loaded.")
+        if Music.Playing is None:
+            raise RuntimeError("Cannot override! No base music playing.")
+        if Music.Overridden is not None:
+            raise RuntimeError("Cannot override! Music has already been overridden.")
+
+        handle = MusicOverrideHandle(
+            _lctx=Music.Loaded,
+            _pctx=Music.Playing,
+            _musicplayer_pos=MusicMixer.get_pos()
+        )
+        Music.Play(path, loops=loops)
+        Music.Overridden = handle
+
+        return handle
+
+
+    @staticmethod
     def Load(path: str):
         global MusicMixer, MusicVolume
-        if MusicMixer.get_busy(): MusicMixer.stop()
-        if path == None:
+        Music.Stop()
+        if path == None: # type: ignore
             raise ValueError("Audio file path cannot be null!")
         MusicMixer.load(path)
-        Music.Loaded = path
+        Music.Loaded = _MusicLoadedContext(filepath=path)
 
     @staticmethod
     def Unload():
@@ -86,12 +181,15 @@ class Music:
     def SetVolume(volume: float):
         global MusicVolume, MusicMixer
         MusicVolume = volume
-        MusicMixer.set_volume(MusicVolume)
+        if Music.Overridden is None:
+            MusicMixer.set_volume(MusicVolume)
+        else:
+            Music.Overridden._UpdateLocalVolume()
 
-    @staticmethod
-    def SetPos(pos: float):
-        global MusicMixer
-        MusicMixer.set_pos(pos)
+    # @staticmethod
+    # def SetPos(pos: float):
+    #     global MusicMixer
+    #     MusicMixer.set_pos(pos)
 
     @staticmethod
     def GetPlaying():

@@ -793,18 +793,22 @@ class Trashcan(KDS.Build.Tile):
         else:
             return self.texture
 
-def _load_jukebox_songs() -> list[pygame.mixer.Sound]:
-    musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
-    songs = []
-    for musiken in musikerna:
-        songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
-    # random.shuffle(songs)
-    # This feels useless as we access songs randomly anyways...
+# def _load_jukebox_songs() -> list[pygame.mixer.Sound]:
+#     musikerna = os.listdir("Assets/Audio/JukeboxMusic/")
+#     # songs = []
+#     # for musiken in musikerna:
+#     #     songs.append(pygame.mixer.Sound("Assets/Audio/JukeboxMusic/" + musiken))
+#     # random.shuffle(songs)
+#     # This feels useless as we access songs randomly anyways...
 
-    return songs
+#     return songs
+def _load_jukebox_songs() -> list[str]:
+    DIRNAME: str = "Assets/Audio/JukeboxMusic"
+    musikerna = os.listdir(DIRNAME)
+    return [os.path.join(DIRNAME, m) for m in musikerna]
 
 class Jukebox(KDS.Build.Tile):
-    songs: list[pygame.mixer.Sound] = _load_jukebox_songs()
+    songs: list[str] = _load_jukebox_songs()
 
     tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
@@ -817,26 +821,31 @@ class Jukebox(KDS.Build.Tile):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
         self.checkCollision = False
-        self.playing = -1
+
         self.lastPlayed = [-69 for _ in range(5)]
-        self.channel = None
+
+        self.playing_index: int = -1
+        self.playing: KDS.Audio.MusicOverrideHandle | None = None
 
     def stopPlayingTrack(self):
-        for music in Jukebox.songs:
-            music.stop()
-        self.playing = -1
-        self.channel = None
-        KDS.Audio.Music.Unpause()
+        if self.playing is not None:
+            self.playing.Stop()
+            self.playing = None
 
     def playRandomTrack(self):
-        KDS.Audio.Music.Pause()
+        if self.playing is not None:
+            self.stopPlayingTrack()
+            assert(self.playing is None)
+
         loopStopper = 0
-        while (self.playing in self.lastPlayed or self.playing == -1) and loopStopper < 10:
-            self.playing = random.randint(0, len(Jukebox.songs) - 1)
+        while (self.playing_index in self.lastPlayed or self.playing_index == -1) and loopStopper < 10:
+            self.playing_index = random.randint(0, len(Jukebox.songs) - 1) # randint end is inclusive
             loopStopper += 1
+
         self.lastPlayed.pop(0)
-        self.lastPlayed.append(self.playing)
-        self.channel = KDS.Audio.PlaySound(Jukebox.songs[self.playing], KDS.Audio.MusicVolume)
+        self.lastPlayed.append(self.playing_index)
+
+        self.playing = KDS.Audio.Music.Override(Jukebox.songs[self.playing_index], loops=0)
 
     def update(self):
         if self.rect.colliderect(Player.rect):
@@ -845,14 +854,14 @@ class Jukebox(KDS.Build.Tile):
                 self.stopPlayingTrack()
                 self.playRandomTrack()
             elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
-        if self.channel != None and not self.channel.get_busy():
-            for music in Jukebox.songs: # Fix freeze on Python 3.11
-                music.stop()            # Fix freeze on Python 3.11
-            self.playRandomTrack()
-        if self.playing != -1:
+        if self.playing is not None:
+            assert(KDS.Audio.Music.Overridden is self.playing)
+            if not KDS.Audio.Music.GetPlaying():
+                self.playRandomTrack()
+
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
             jukebox_volume = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
-            Jukebox.songs[self.playing].set_volume(jukebox_volume)
+            self.playing.SetLocalVolume(jukebox_volume)
             Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
         return self.texture
