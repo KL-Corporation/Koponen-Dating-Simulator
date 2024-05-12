@@ -2871,7 +2871,7 @@ class Chainsaw(KDS.Build.Item):
         KDS.Missions.Listeners.AnyWeaponPickup.Trigger()
 
 class GasCanister(KDS.Build.Item):
-    pickup_sound = pygame.mixer.Sound("assets/Audio/Items/gascanister_shake.ogg")
+    pickup_sound = pygame.mixer.Sound("Assets/Audio/Items/gascanister_shake.ogg")
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
 
