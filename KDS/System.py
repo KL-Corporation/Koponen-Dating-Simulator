@@ -108,7 +108,7 @@ class MessageBox:
     def Show(title: str, text: str, buttons: Optional[MessageBox.Buttons] = None, icon: Optional[MessageBox.Icon] = None, defaultButton: Optional[MessageBox.DefaultButton] = None, *args: int) -> MessageBox.Responses:
         if ISLINUX:
             MessageBox._sendLinuxNotification(title, text, icon)
-            return MessageBox.Responses.OK # notify doesn't have buttons so we will return this same response... Shut up, I know this is stupid.
+            return MessageBox.Responses.YES # notify doesn't have buttons so we will return this same response... Shut up, I know this is stupid.
 
         argVal = buttons.value if buttons != None else 0
         argVal += icon.value if icon != None else 0
