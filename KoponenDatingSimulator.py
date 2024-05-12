@@ -3396,7 +3396,14 @@ def console(oldSurf: pygame.Surface):
             "drugdealer": "break",
             "turboshotgunner": "break",
             "methmaker": "break",
-            "cavemonster": "break"
+            "cavemonster": "break",
+            "mummy" : "break",
+            "mafiaman" : "break",
+            "kuuma" : "break",
+            "laato" : "break",
+            "securityguard" : "break",
+            "bulldog" : "break",
+            "zombie" : "break"
         },
         "fly": trueFalseTree,
         "godmode": trueFalseTree
@@ -3557,7 +3564,14 @@ def console(oldSurf: pygame.Surface):
                         "drugdealer": KDS.AI.DrugDealer,
                         "turboshotgunner": KDS.AI.TurboShotgunner,
                         "methmaker": KDS.AI.MethMaker,
-                        "cavemonster": KDS.AI.CaveMonster
+                        "cavemonster": KDS.AI.CaveMonster,
+                        "mummy" : KDS.AI.Mummy,
+                        "mafiaman" : KDS.AI.MafiaMan,
+                        "kuuma" : KDS.Teachers.KuuMa,
+                        "laato" : KDS.Teachers.LaaTo,
+                        "securityguard" : KDS.AI.SecurityGuard,
+                        "bulldog" : KDS.AI.Bulldog,
+                        "zombie" : KDS.AI.Zombie
                     }
                     try:
                         ent = summonEntity[command_list[1]]
