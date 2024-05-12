@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Any
+from abc import ABC, abstractmethod
+from enum import Enum
+from typing import Callable, Dict, Final, List, Literal, NamedTuple, Optional, Self, Sequence, Tuple, Any
 
 import pygame
 import KDS.Events
@@ -11,14 +13,39 @@ import KDS.Colors
 import KDS.System
 import KDS.Clock
 import KDS.Logging
+import KDS.Debug
 
 from pygame.locals import *
 
 #The amount of ticks before hold is activated.
 holdTicks = 50
 
-baseKeyList: List[BaseKey] = []
 keyList: List[Key] = []
+
+class BindingType(Enum):
+    mouse = 0
+    keyboard = 1
+
+class Binding(NamedTuple):
+    type: BindingType
+    key: int
+
+    @classmethod
+    def deserialize(cls, value: dict[str, object]) -> Self:
+        t = value["type"]
+        k = value["key"]
+        assert(isinstance(t, str))
+        assert(isinstance(k, int))
+        return cls(BindingType[t], k)
+
+    def serialize(self) -> dict[str, str | int]:
+        return {"type": self.type.name, "key": self.key}
+
+    def get_displayname(self) -> str:
+        if self.type == BindingType.keyboard:
+            return pygame.key.name(self.key, use_compat=False).capitalize()
+        else:
+            return f"Mouse Button {self.key}"
 
 class BaseKey:
     def __init__(self) -> None:
@@ -29,7 +56,6 @@ class BaseKey:
         self.onDown: bool = False
         self.holdClicked: bool = False
         self.ticksHeld: int = 0
-        baseKeyList.append(self)
 
     def update(self):
         self.onDown = False
@@ -60,80 +86,140 @@ class BaseKey:
         return True if self.ticksHeld > holdTicks else False
 
 class Key(BaseKey):
-    def __init__(self, name: str, defaultBinding: int, secondaryDefaultBinding: Optional[int]) -> None:
+    def __init__(self, name: str, defaultBinding: Binding, secondaryDefaultBinding: Binding | None, onDownCallback: Callable[[], None] | None = None) -> None:
         super().__init__()
-        self.name = name
-        self._defaultBinding: int = defaultBinding
-        self._secondaryDefaultBinding: Optional[int] = secondaryDefaultBinding
-        self.binding: Optional[int] = defaultBinding
-        self.secondaryBinding: Optional[int] = secondaryDefaultBinding
+        self.name: Final[str] = name
+
+        self._defaultBinding: Binding = defaultBinding
+        self._secondaryDefaultBinding: Binding | None = secondaryDefaultBinding
+
+        self._onDownCallback: Callable[[], None] | None = onDownCallback
+
+        self.binding: Binding | None = None
+        self.secondaryBinding: Binding | None = None
+
         keyList.append(self)
 
-    def loadBindings(self):
-        bindings: List[int] = KDS.ConfigManager.GetSetting(f"Keys/Bindings/{self.name}", (self._defaultBinding, self._secondaryDefaultBinding), writeMissingOverride=False, warnMissingOverride=False)
+    def _loadBindings_backwardsCompat(self, bindings: list[int]):
         if len(bindings) == 0:
             return
         if len(bindings) != 2:
             KDS.Logging.AutoError(f"Unexpected bindings count! Expected: 2, Got: {len(bindings)}. Binding loading will try to continue.")
         try:
-            self.binding = bindings[0]
-            self.secondaryBinding = bindings[1]
+            self.binding = Binding(BindingType.keyboard, bindings[0])
+            self.secondaryBinding = Binding(BindingType.keyboard, bindings[1])
         except Exception as e:
             KDS.Logging.AutoError(f"Could not load bindings. Exception ({type(e)}): {e}")
 
-    def saveBindings(self):
-        if self.binding != self._defaultBinding or self.secondaryBinding != self._secondaryDefaultBinding:
-            KDS.ConfigManager.SetSetting(f"Keys/Bindings/{self.name}", (self.binding, self.secondaryBinding))
+    def _loadBindings(self):
+        setting_path: str = f"Keys/Bindings/{self.name}"
 
-    @property
-    def Bindings(self) -> Sequence[int]:
-        return tuple([b for b in (self.binding, self.secondaryBinding) if b != None])
+        primary: dict[str, object] | Literal["default"] | None = KDS.ConfigManager.GetSetting(f"{setting_path}/Primary", "default", writeMissingOverride=False, warnMissingOverride=False)
+        if primary == "default":
+            self.binding = self._defaultBinding
+        elif primary is None:
+            self.binding = None
+        else:
+            self.binding = Binding.deserialize(primary)
+
+        secondary: dict[str, object] | Literal["default"] | None = KDS.ConfigManager.GetSetting(f"{setting_path}/Secondary", "default", writeMissingOverride=False, warnMissingOverride=False)
+        if secondary == "default":
+            self.secondaryBinding = self._secondaryDefaultBinding
+        elif secondary is None:
+            self.secondaryBinding = None
+        else:
+            self.secondaryBinding = Binding.deserialize(secondary)
+
+    def loadBindings(self):
+        bindings: list[int] | object = KDS.ConfigManager.GetSetting(f"Keys/Bindings/{self.name}", None, writeMissingOverride=False, warnMissingOverride=False)
+        if isinstance(bindings, list):
+            self._loadBindings_backwardsCompat(bindings)
+        else:
+            self._loadBindings()
+
+    def saveBindings(self):
+        setting_path: str = f"Keys/Bindings/{self.name}"
+
+        if not isinstance(KDS.ConfigManager.GetSetting(setting_path, None, writeMissingOverride=False, warnMissingOverride=False), dict):
+            KDS.ConfigManager.SetSetting(setting_path, {})
+
+        if self.binding != self._defaultBinding:
+            serialized = self.binding.serialize() if self.binding is not None else None
+            KDS.ConfigManager.SetSetting(f"{setting_path}/Primary", serialized)
+        else:
+            KDS.ConfigManager.SetSetting(f"{setting_path}/Primary", "default")
+
+        if self.secondaryBinding != self._secondaryDefaultBinding:
+            serialized = self.secondaryBinding.serialize() if self.secondaryBinding is not None else None
+            KDS.ConfigManager.SetSetting(f"{setting_path}/Secondary", serialized)
+        else:
+            KDS.ConfigManager.SetSetting(f"{setting_path}/Secondary", "default")
+
+    def _register_event(self, event: pygame.event.Event) -> None:
+        """Register an event for this key. The key is handled if the event matches."""
+        for binding in (self.binding, self.secondaryBinding):
+            if binding is None:
+                continue
+
+            setState: bool | None = None
+            if event.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP):
+                if event.button == binding.key:
+                    setState = (event.type == MOUSEBUTTONDOWN)
+            elif event.type in (KEYDOWN, KEYUP):
+                if event.key == binding.key:
+                    setState = (event.type == KEYDOWN)
+
+            if setState is not None:
+                self.SetState(setState)
+                if setState and self._onDownCallback is not None:
+                    self._onDownCallback()
 
     @property
     def BindingDisplayName(self) -> str:
-        binding: int
-        if self.binding != None:
-            binding = self.binding
-        elif self.secondaryBinding != None:
-            binding = self.secondaryBinding
+        if self.binding is not None:
+            return self.binding.get_displayname()
+        elif self.secondaryBinding is not None:
+            return self.secondaryBinding.get_displayname()
         else:
             return "null"
 
-        return pygame.key.name(binding).capitalize()
-
 class InventoryKey(Key):
-    def __init__(self, defaultBinding: int, inventory_index: int) -> None:
+    def __init__(self, defaultBinding: Binding, inventory_index: int) -> None:
         super().__init__(f"inventory{inventory_index}", defaultBinding, None)
         self.index = inventory_index
 
-class MouseButton(BaseKey):
-    def __init__(self) -> None:
-        super().__init__()
+def _onDownHandlerDebug():
+    KDS.Debug.Enabled = not KDS.Debug.Enabled
+    KDS.Logging.Profiler(KDS.Debug.Enabled)
 
-moveUp = Key("moveUp", K_w, K_SPACE)
-moveDown = Key("moveDown", K_s, K_LCTRL)
-moveRight = Key("moveRight", K_d, None)
-moveLeft = Key("moveLeft", K_a, None)
-moveRun = Key("moveRun", K_LSHIFT, None)
-functionKey = Key("functionKey", K_e, None)
-mainKey = MouseButton()
-altUp = Key("altUp", K_UP, None)
-altDown = Key("altDown", K_DOWN, None)
-altLeft = Key("altLeft", K_LEFT, None)
-altRight = Key("altRight", K_RIGHT, None)
-fart = Key("fart", K_f, None) # Binding only
-dropItem = Key("dropItem", K_q, None) # Binding only
-terminal = Key("terminal", K_t, None) # Binding only
-hideUI = Key("hideUI", K_F1, None) # Binding only
-screenshot = Key("screenshot", K_F12, None) # Binding only
-toggleDebug = Key("toggleDebug", K_F3, None) # Binding only
-toggleFullscreen = Key("toggleFullscreen", K_F11, None) # Binding only
+def _onDownHandlerFullscreen():
+    pygame.display.toggle_fullscreen()
+    KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
 
-Inventory1 = InventoryKey(K_1, 0)
-Inventory2 = InventoryKey(K_2, 1)
-Inventory3 = InventoryKey(K_3, 2)
-Inventory4 = InventoryKey(K_4, 3)
-Inventory5 = InventoryKey(K_5, 4)
+moveUp = Key("moveUp", Binding(BindingType.keyboard, K_w), Binding(BindingType.keyboard, K_SPACE))
+moveDown = Key("moveDown", Binding(BindingType.keyboard, K_s), Binding(BindingType.keyboard, K_LCTRL))
+moveRight = Key("moveRight", Binding(BindingType.keyboard, K_d), None)
+moveLeft = Key("moveLeft", Binding(BindingType.keyboard, K_a), None)
+moveRun = Key("moveRun", Binding(BindingType.keyboard, K_LSHIFT), None)
+functionKey = Key("functionKey", Binding(BindingType.keyboard, K_e), None)
+actionKey = Key("actionKey", Binding(BindingType.mouse, 1), Binding(BindingType.keyboard, K_r))
+altUp = Key("altUp", Binding(BindingType.keyboard, K_UP), None)
+altDown = Key("altDown", Binding(BindingType.keyboard, K_DOWN), None)
+# altLeft = Key("altLeft", Binding(BindingType.keyboard, K_LEFT), None)
+# altRight = Key("altRight", Binding(BindingType.keyboard, K_RIGHT), None)
+fart = Key("fart", Binding(BindingType.keyboard, K_f), None)
+dropItem = Key("dropItem", Binding(BindingType.keyboard, K_q), None)
+terminal = Key("terminal", Binding(BindingType.keyboard, K_t), None)
+hideUI = Key("hideUI", Binding(BindingType.keyboard, K_F1), None)
+screenshot = Key("screenshot", Binding(BindingType.keyboard, K_F12), None)
+toggleDebug = Key("toggleDebug", Binding(BindingType.keyboard, K_F3), None, onDownCallback=_onDownHandlerDebug)
+toggleFullscreen = Key("toggleFullscreen", Binding(BindingType.keyboard, K_F11), None, onDownCallback=_onDownHandlerFullscreen)
+
+Inventory1 = InventoryKey(Binding(BindingType.keyboard, K_1), 0)
+Inventory2 = InventoryKey(Binding(BindingType.keyboard, K_2), 1)
+Inventory3 = InventoryKey(Binding(BindingType.keyboard, K_3), 2)
+Inventory4 = InventoryKey(Binding(BindingType.keyboard, K_4), 3)
+Inventory5 = InventoryKey(Binding(BindingType.keyboard, K_5), 4)
 INVENTORYKEYS = (Inventory1, Inventory2, Inventory3, Inventory4, Inventory5)
 
 REBINDBLACKLIST: Tuple[int, ...] = (
@@ -146,24 +232,36 @@ REBINDBLACKLIST: Tuple[int, ...] = (
     # Important Keys
     K_ESCAPE
 )
-REBINDABLEKEYS = {
-    "Move Up": moveUp,
-    "Move Down": moveDown,
-    "Move Left": moveLeft,
-    "Move Right": moveRight,
-    "Interact": functionKey,
-    "Align Up": altUp,
-    "Align Down": altDown,
-    "Align Left": altLeft,
-    "Align Right": altRight,
-    "Fart": fart,
-    "Drop Item": dropItem,
-    "Open Terminal": terminal,
-    "Hide UI": hideUI,
-    "Take a Screenshot": screenshot,
-    "Toggle Debug Mode": toggleDebug,
-    "Toggle Fullscreen": toggleFullscreen
-}
+
+class RebindLabel(NamedTuple):
+    title: str
+    description: str | None = None
+
+REBINDABLEKEYS: tuple[tuple[RebindLabel, Key], ...] = (
+    (RebindLabel("Move Up"), moveUp),
+    (RebindLabel("Move Down"), moveDown),
+    (RebindLabel("Move Left"), moveLeft),
+    (RebindLabel("Move Right"), moveRight),
+    (RebindLabel("Interact", "open door, pickup item, ..."), functionKey),
+    (RebindLabel("Action", "shoot, throw, ..."), actionKey),
+    (RebindLabel("Aim Up", "aim grenade"), altUp),
+    (RebindLabel("Aim Down", "aim grenade"), altDown),
+    # (RebindLabel("Align Left"), altLeft),
+    # (RebindLabel("Align Right"), altRight),
+    (RebindLabel("Fart"), fart),
+    (RebindLabel("Drop Item"), dropItem),
+    (RebindLabel("Open Terminal"), terminal),
+    (RebindLabel("Hide UI"), hideUI),
+    (RebindLabel("Take a Screenshot"), screenshot),
+    (RebindLabel("Toggle Debug Mode"), toggleDebug),
+    (RebindLabel("Toggle Fullscreen"), toggleFullscreen),
+
+    (RebindLabel("Inventory Slot 1"), Inventory1),
+    (RebindLabel("Inventory Slot 2"), Inventory2),
+    (RebindLabel("Inventory Slot 3"), Inventory3),
+    (RebindLabel("Inventory Slot 4"), Inventory4),
+    (RebindLabel("Inventory Slot 5"), Inventory5)
+)
 
 def LoadCustomBindings():
     for key in keyList:
@@ -173,21 +271,32 @@ def ResetCustomBindings():
     KDS.ConfigManager.SetSetting(f"Keys/Bindings", KDS.ConfigManager.JSON.EMPTY)
     LoadCustomBindings()
 
+def RegisterEvent(event: pygame.event.Event):
+    for key in keyList:
+        key._register_event(event)
+
 def Update():
-    for key in baseKeyList:
+    for key in keyList:
         key.update()
 
 def Reset():
-    for key in baseKeyList:
+    for key in keyList:
         key.SetState(False)
+
+class _KeyData(NamedTuple):
+    title: str
+    description: str | None
+    key: Key
+    rebindButton1: KDS.UI.Button
+    rebindButton2: KDS.UI.Button
 
 def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool]):
     def bindKey(key: Key, isAlt: bool):
-        def setBindingValue(value: Optional[int]):
+        def setBindingValue(binding: Binding | None):
             if isAlt:
-                key.secondaryBinding = value
+                key.secondaryBinding = binding
             else:
-                key.binding = value
+                key.binding = binding
             key.saveBindings()
             loadKeyDatas()
 
@@ -202,20 +311,23 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
                     continue
                 if event.type == KEYDOWN:
                     if event.mod & KMOD_CTRL:
-                        if event.key == K_F4: # Delete Binding
+                        if event.key == K_x: # Delete Binding
                             setBindingValue(None)
                             running2 = False
-                        elif event.key == K_x: # Restore Default
+                        elif event.key == K_d: # Restore Default
                             setBindingValue(key._defaultBinding if not isAlt else key._secondaryDefaultBinding)
                             running2 = False
                     elif event.key == K_ESCAPE: # Cancel
                         running2 = False
                     else: # Rebind
                         if event.key not in REBINDBLACKLIST:
-                            setBindingValue(event.key)
+                            setBindingValue(Binding(BindingType.keyboard, event.key))
                             running2 = False
                         else:
                             KDS.System.MessageBox.Show("Not Allowed", "This key cannot be bound because it is integral to the applications operation.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.WARNING)
+                elif event.type == MOUSEBUTTONDOWN:
+                    setBindingValue(Binding(BindingType.mouse, event.button))
+                    running2 = False
 
             display.fill(KDS.Colors.Gray)
             dest1 = (display_size[0] // 2 - BindText.get_width() // 2, display_size[1] // 2 - BindText.get_height() // 2)
@@ -228,26 +340,32 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     running = True
     buttonPadding = 10
     textMarginLeft = 10
+    textMarginBetween = 20
     buttonWidth = 400
     buttonHeight = 50
     display_size = display.get_size()
     ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28)
+    ArialFontShrinkedItalic = pygame.font.Font("Assets/Fonts/Windows/ariali.ttf", 18)
     BindText: pygame.Surface = ArialFont.render("Press a key to bind it.", True, KDS.Colors.White)
-    BindHelperText: pygame.Surface = ArialFont.render("CTRL + F4: Delete Binding | CTRL + X: Restore Default Binding | Escape: Cancel Binding", True, KDS.Colors.White)
+    BindHelperText: pygame.Surface = ArialFont.render("CTRL + X: Delete Binding | CTRL + D: Restore Default Binding | Escape: Cancel Binding", True, KDS.Colors.White)
 
-    scroll: int = 0
+    raw_scroll: float = 0
     headerSize: int = ArialFont.get_height() + 20
 
-    keyDatas: List[Tuple[str, Key, KDS.UI.Button, KDS.UI.Button]] = []
+    keyDatas: List[_KeyData] = []
     keyMaxY = 0
     def loadKeyDatas():
         nonlocal keyDatas, keyMaxY
 
-        def renderBindingText(binding: Optional[int]) -> pygame.Surface:
-            return ArialFont.render(pygame.key.name(binding).capitalize() if binding != None else "Unassigned", True, KDS.Colors.White if binding != None else KDS.Colors.LightGray)
+        def renderBindingText(binding: Binding | None) -> pygame.Surface:
+            if binding is None:
+                return ArialFont.render("Unassigned", True, KDS.Colors.LightGray)
+            else:
+                return ArialFont.render(binding.get_displayname(), True, KDS.Colors.White)
+
         keyDatas.clear()
 
-        for index, (keyName, key) in enumerate(REBINDABLEKEYS.items()):
+        for index, (label, key) in enumerate(REBINDABLEKEYS):
             b2Rect = pygame.Rect(display_size[0] - buttonWidth - buttonPadding, buttonPadding + index * (buttonHeight + buttonPadding), buttonWidth, buttonHeight)
             b2Text = renderBindingText(key.secondaryBinding)
             button2 = KDS.UI.Button(b2Rect, bindKey, b2Text)
@@ -256,7 +374,7 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
             b1Text = renderBindingText(key.binding)
             button1 = KDS.UI.Button(b1Rect, bindKey, b1Text)
 
-            keyDatas.append((keyName, key, button1, button2))
+            keyDatas.append(_KeyData(label.title, label.description, key, button1, button2))
 
             keyMaxY = b2Rect.bottom
 
@@ -277,8 +395,9 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     primary_tip: pygame.Surface = ArialFont.render("Primary", True, KDS.Colors.White)
     secondary_tip: pygame.Surface = ArialFont.render("Secondary", True, KDS.Colors.White)
 
+    left_pressed: bool = False
     while running:
-        c = False
+        left_clicked: bool = False
 
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
@@ -289,32 +408,47 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     running = False
+            elif event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    left_pressed = True
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
-                    c = True
+                    if left_pressed:
+                        left_clicked = True
+                    left_pressed = False
             elif event.type == MOUSEWHEEL:
-                scroll = KDS.Math.Clamp(scroll + event.y * 5, -(keyMaxY - buttonHeight), 0)
+                raw_scroll = KDS.Math.Clamp(raw_scroll + event.precise_y * 20, -(keyMaxY - buttonHeight), 0)
+
+        scroll: int = round(raw_scroll)
 
         display.fill(KDS.Colors.DefaultBackground)
-        display.blit(primary_tip, (keyDatas[0][2].rect.centerx - primary_tip.get_width() // 2, scroll + headerSize // 2 - primary_tip.get_height() // 2))
-        display.blit(secondary_tip, (keyDatas[0][3].rect.centerx - secondary_tip.get_width() // 2, scroll + headerSize // 2 - secondary_tip.get_height() // 2))
+        display.blit(primary_tip, (keyDatas[0].rebindButton1.rect.centerx - primary_tip.get_width() // 2, scroll + headerSize // 2 - primary_tip.get_height() // 2))
+        display.blit(secondary_tip, (keyDatas[0].rebindButton2.rect.centerx - secondary_tip.get_width() // 2, scroll + headerSize // 2 - secondary_tip.get_height() // 2))
 
         for data in keyDatas:
-            data[2].rect.centery += scroll + headerSize
-            data[3].rect.centery += scroll + headerSize
-            nameRnd: pygame.Surface = ArialFont.render(data[0], True, KDS.Colors.White)
-            display.blit(nameRnd, (textMarginLeft, data[2].rect.centery - nameRnd.get_height() // 2))
-            data[2].update(display, mouse_pos, c, data[1], False)
-            data[3].update(display, mouse_pos, c, data[1], True)
-            data[2].rect.centery -= scroll + headerSize
-            data[3].rect.centery -= scroll + headerSize
+            data.rebindButton1.rect.centery += scroll + headerSize
+            data.rebindButton2.rect.centery += scroll + headerSize
+
+            nameRnd: pygame.Surface = ArialFont.render(data.title, True, KDS.Colors.White)
+            nameRndPos: tuple[int, int] = (textMarginLeft, data.rebindButton1.rect.centery - nameRnd.get_height() // 2)
+            display.blit(nameRnd, nameRndPos)
+
+            if data.description is not None:
+                descRnd: pygame.Surface = ArialFontShrinkedItalic.render(data.description, True, KDS.Colors.LightGray)
+                display.blit(descRnd, (nameRndPos[0] + nameRnd.get_width() + textMarginBetween, nameRndPos[1] + nameRnd.get_height() - descRnd.get_height()))
+
+            data.rebindButton1.update(display, mouse_pos, left_clicked, data.key, False)
+            data.rebindButton2.update(display, mouse_pos, left_clicked, data.key, True)
+
+            data.rebindButton1.rect.centery -= scroll + headerSize
+            data.rebindButton2.rect.centery -= scroll + headerSize
 
         reset_button.rect.centery += scroll + headerSize
-        reset_button.update(display, mouse_pos, c)
+        reset_button.update(display, mouse_pos, left_clicked)
         reset_button.rect.centery -= scroll + headerSize
 
         return_button.rect.centery += scroll + headerSize
-        return_button.update(display, mouse_pos, c)
+        return_button.update(display, mouse_pos, left_clicked)
         return_button.rect.centery -= scroll + headerSize
         display.blit(restart_tip, (return_button.rect.centerx - restart_tip.get_width() // 2, return_button.rect.bottom + scroll + headerSize + 10))
 

@@ -323,7 +323,7 @@ class Weapon(Item):
         return self.texture
 
     def internalUse(self, holderData: Weapon.WeaponHolderData) -> pygame.Surface:
-        if KDS.Keys.mainKey.onDown or (self.allowHold and KDS.Keys.mainKey.pressed):
+        if KDS.Keys.actionKey.onDown or (self.allowHold and KDS.Keys.actionKey.pressed):
             if self.shoot(holderData) and self.f_texture != None:
                 return self.f_texture if not isinstance(self.f_texture, KDS.Animator.Animation) else self.f_texture.update()
         elif self.stopSound and self.sound != None:
@@ -363,7 +363,7 @@ class Ammo(Item):
         self.score: int = addScore
 
     def use(self):
-        if KDS.Keys.mainKey.onDown:
+        if KDS.Keys.actionKey.onDown:
             self.pickup()
         return self.texture
 

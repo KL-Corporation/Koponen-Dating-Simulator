@@ -642,18 +642,11 @@ def defaultEventHandler(event: pygame.event.Event, *ignore: int) -> bool:
     if event.type in ignore:
         return False
 
+    KDS.Keys.RegisterEvent(event)
+
     if event.type == KDS.Audio.MUSICENDEVENT:
         KDS.Audio.Music.OnEnd.Invoke()
         return True
-    elif event.type == KEYDOWN:
-        if event.key in KDS.Keys.toggleDebug.Bindings:
-            KDS.Debug.Enabled = not KDS.Debug.Enabled
-            KDS.Logging.Profiler(KDS.Debug.Enabled)
-            return True
-        elif event.key in KDS.Keys.toggleFullscreen.Bindings:
-            pygame.display.toggle_fullscreen()
-            KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-            return True
     elif event.type == QUIT:
         KDS_Quit(confirm=True)
         return True
@@ -884,7 +877,8 @@ class Jukebox(KDS.Build.Tile):
             if KDS.Keys.functionKey.clicked and not KDS.Keys.functionKey.holdClicked:
                 self.stopPlayingTrack()
                 self.playRandomTrack()
-            elif KDS.Keys.functionKey.held: self.stopPlayingTrack()
+            elif KDS.Keys.functionKey.held:
+                self.stopPlayingTrack()
         if self.playing is not None:
             assert(KDS.Audio.Music.Overridden is self.playing)
             if not KDS.Audio.Music.GetPlaying():
@@ -2059,6 +2053,7 @@ class BaseTeleport(KDS.Build.Tile):
         self.triggerStoryEnding: bool = False
 
     def lateInit(self):
+        print("TESTI")
         if self.message != None:
             self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
         if self.identifier != None:
@@ -2486,7 +2481,7 @@ class Gasburner(KDS.Build.Item):
         self.sound = False
 
     def use(self):
-        if KDS.Keys.mainKey.pressed:
+        if KDS.Keys.actionKey.pressed:
             Gasburner.burning = True
             if not self.sound:
                 KDS.Audio.PlaySound(gasburner_fire, loops=-1)
@@ -2543,7 +2538,7 @@ class Knife(KDS.Build.Weapon):
 
     def use(self) -> pygame.Surface:
         self.internalUse(KDS.Build.Weapon.WeaponHolderData.fromPlayer(Player))
-        if KDS.Keys.mainKey.pressed:
+        if KDS.Keys.actionKey.pressed:
             return knife_animation_object.update()
         else:
             knife_animation_object.tick = 0
@@ -2577,7 +2572,7 @@ class LappiSytytyspalat(KDS.Build.Item):
             pos = (int(Player.rect.centerx / 34) + tmpdirctn + tmpdirctn, int(Player.rect.centery / 34))
             if TileFire.isUnitFreeOfFire(pos)[0]:
                 screen.blit(LappiSytytyspalat.sytytys_tip, (pos[0] * 34 + 17 - scroll[0] - LappiSytytyspalat.sytytys_tip.get_width() // 2, pos[1] * 34 - scroll[1]))
-            if KDS.Keys.mainKey.held:
+            if KDS.Keys.actionKey.held:
                 TileFire.createInstanceAtPosition(pos)
         return self.texture
 
@@ -2789,7 +2784,7 @@ class MethFlask(KDS.Build.Item):
         super().__init__(position, serialNumber)
 
     def use(self):
-        if KDS.Keys.mainKey.pressed:
+        if KDS.Keys.actionKey.pressed:
             KDS.Scores.score += 1
             Player.health += random.choice([random.randint(10, 30), random.randint(-30, 30)])
             Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[26]((0, 0), 26), force=True)
@@ -2804,7 +2799,7 @@ class BloodFlask(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
     def use(self):
-        if KDS.Keys.mainKey.pressed:
+        if KDS.Keys.actionKey.pressed:
             KDS.Scores.score += 1
             Player.health += random.randint(0, 10)
             Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[26]((0, 0), 26), force=True)
@@ -2829,7 +2824,7 @@ class Grenade(KDS.Build.Item):
             Grenade.Slope -= 0.03
 
         pygame.draw.line(screen, (255, 10, 10), (Player.rect.centerx - scroll[0], Player.rect.y + 10 - scroll[1]), (Player.rect.centerx + (Grenade.Force + 15) * KDS.Convert.ToMultiplier(Player.direction) - scroll[0], Player.rect.y + 10 + Grenade.Slope * (Grenade.Force + 15) * -1 - scroll[1]) )
-        if KDS.Keys.mainKey.pressed:
+        if KDS.Keys.actionKey.pressed:
             KDS.Audio.PlaySound(grenade_throw)
             Player.inventory.dropItem(forceDrop=True)
             BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), Grenade.Slope, Grenade.Force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
@@ -2850,7 +2845,7 @@ class LevelEnderItem(KDS.Build.Item):
         super().__init__(position, serialNumber)
 
     def use(self):
-        if KDS.Keys.mainKey.pressed:
+        if KDS.Keys.actionKey.pressed:
             KDS.Missions.Listeners.LevelEnder.Trigger()
 
         return self.texture
@@ -2892,7 +2887,7 @@ class Chainsaw(KDS.Build.Item):
 
     def use(self):
         if self.pickupFinished and (Chainsaw.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
-            if KDS.Keys.mainKey.pressed:
+            if KDS.Keys.actionKey.pressed:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
                 Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, Tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
@@ -3218,17 +3213,19 @@ class PlayerClass:
             if self.vertical_momentum > 0 or not KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
                 _fall_speed *= fall_multiplier
 
+            run_pressed: bool = KDS.Keys.moveRun.pressed and not KDS.Keys.moveDown.pressed
+
             if KDS.Keys.moveRight.pressed:
                 if not self.crouching: self.movement[0] += 4
                 else: self.movement[0] += 2
-                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching and not self.disableSprint:
+                if run_pressed and self.stamina > 0 and not self.crouching and not self.disableSprint:
                     self.movement[0] += 4
                 elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
 
             if KDS.Keys.moveLeft.pressed:
                 if not self.crouching: self.movement[0] -= 4
                 else: self.movement[0] -= 2
-                if KDS.Keys.moveRun.pressed and self.stamina > 0 and not self.crouching and not self.disableSprint:
+                if run_pressed and self.stamina > 0 and not self.crouching and not self.disableSprint:
                     self.movement[0] -= 4
                 elif self.stamina <= 0: KDS.Keys.moveRun.SetState(False)
 
@@ -4475,51 +4472,8 @@ while main_running:
         if defaultEventHandler(event):
             continue
         elif event.type == KEYDOWN:
-            if event.key in KDS.Keys.moveRight.Bindings:
-                KDS.Keys.moveRight.SetState(True)
-            elif event.key in KDS.Keys.moveLeft.Bindings:
-                KDS.Keys.moveLeft.SetState(True)
-            elif event.key in KDS.Keys.moveUp.Bindings:
-                KDS.Keys.moveUp.SetState(True)
-            elif event.key in KDS.Keys.moveDown.Bindings:
-                KDS.Keys.moveDown.SetState(True)
-            elif event.key in KDS.Keys.moveRun.Bindings:
-                if not KDS.Keys.moveDown.pressed:
-                    KDS.Keys.moveRun.SetState(True)
-            elif event.key in KDS.Keys.functionKey.Bindings:
-                KDS.Keys.functionKey.SetState(True)
-            elif event.key == K_ESCAPE:
+            if event.key == K_ESCAPE:
                 esc_menu = True
-            elif (matchingInventoryKey := KDS.Linq.FirstOrNone(KDS.Keys.INVENTORYKEYS, lambda ik: event.key in ik.Bindings)) != None:
-                Player.inventory.pickSlot(matchingInventoryKey.index)
-            elif event.key in KDS.Keys.dropItem.Bindings:
-                if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
-                    droppedItem: Optional[KDS.Build.Item] = Player.inventory.dropItem()
-                    if droppedItem != None:
-                        KDS.Build.Item.modDroppedPropertiesAndAddToList(Items, droppedItem, Player)
-            elif event.key in KDS.Keys.fart.Bindings:
-                if Player.stamina == 100:
-                    Player.stamina = -1000.0
-                    Player.farting = True
-                    KDS.Audio.PlaySound(fart)
-            elif event.key in KDS.Keys.altDown.Bindings:
-                KDS.Keys.altDown.SetState(True)
-            elif event.key in KDS.Keys.altUp.Bindings:
-                KDS.Keys.altUp.SetState(True)
-            elif event.key in KDS.Keys.altLeft.Bindings:
-                KDS.Keys.altLeft.SetState(True)
-            elif event.key in KDS.Keys.altRight.Bindings:
-                KDS.Keys.altRight.SetState(True)
-            elif event.key in KDS.Keys.hideUI.Bindings:
-                renderUI = not renderUI
-            elif event.key in KDS.Keys.terminal.Bindings:
-                if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or debug_gamesetting_allow_console_in_storymode: # Console is disabled in story mode if debug setting not overridden in GameData.
-                    go_to_console = True
-            elif event.key in KDS.Keys.screenshot.Bindings:
-                pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
-                # Uses the last frame's screen state which is why the notification isn't visible
-                Notifications.append(KDS.UI.Notification("Screenshot saved", KDS.Colors.Cyan))
-                KDS.Audio.PlaySound(camera_shutter)
             elif event.key == K_F5 and debug_gamesetting_allow_subprog_debug:
                 KDS.Audio.MusicMixer.pause()
                 quit_temp, exam_score = KDS.School.Exam()
@@ -4528,32 +4482,11 @@ while main_running:
                     KDS_Quit()
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
-                KDS.Keys.mainKey.SetState(True)
+                KDS.Keys.actionKey.SetState(True)
                 rk62_sound_cooldown = 11
-        elif event.type == KEYUP:
-            if event.key in KDS.Keys.moveRight.Bindings:
-                KDS.Keys.moveRight.SetState(False)
-            elif event.key in KDS.Keys.moveLeft.Bindings:
-                KDS.Keys.moveLeft.SetState(False)
-            elif event.key in KDS.Keys.moveUp.Bindings:
-                KDS.Keys.moveUp.SetState(False)
-            elif event.key in KDS.Keys.moveDown.Bindings:
-                KDS.Keys.moveDown.SetState(False)
-            elif event.key in KDS.Keys.moveRun.Bindings:
-                KDS.Keys.moveRun.SetState(False)
-            elif event.key in KDS.Keys.functionKey.Bindings:
-                KDS.Keys.functionKey.SetState(False)
-            elif event.key in KDS.Keys.altDown.Bindings:
-                KDS.Keys.altDown.SetState(False)
-            elif event.key in KDS.Keys.altUp.Bindings:
-                KDS.Keys.altUp.SetState(False)
-            elif event.key in KDS.Keys.altLeft.Bindings:
-                KDS.Keys.altLeft.SetState(False)
-            elif event.key in KDS.Keys.altRight.Bindings:
-                KDS.Keys.altRight.SetState(False)
         elif event.type == MOUSEBUTTONUP:
             if event.button == 1:
-                KDS.Keys.mainKey.SetState(False)
+                KDS.Keys.actionKey.SetState(False)
         elif event.type == MOUSEWHEEL:
             tmpAmount = event.x - event.y
             if tmpAmount > 0:
@@ -4562,6 +4495,31 @@ while main_running:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveLeft()
         elif event.type == WINDOWFOCUSLOST:
             if pauseOnFocusLoss: esc_menu = True
+
+    if KDS.Keys.dropItem.onDown:
+        if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
+            droppedItem: Optional[KDS.Build.Item] = Player.inventory.dropItem()
+            if droppedItem != None:
+                KDS.Build.Item.modDroppedPropertiesAndAddToList(Items, droppedItem, Player)
+    if KDS.Keys.fart.onDown:
+        if Player.stamina == 100:
+            Player.stamina = -1000.0
+            Player.farting = True
+            KDS.Audio.PlaySound(fart)
+    if KDS.Keys.hideUI.onDown:
+        renderUI = not renderUI
+    if KDS.Keys.terminal.onDown:
+        if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or debug_gamesetting_allow_console_in_storymode: # Console is disabled in story mode if debug setting not overridden in GameData.
+            go_to_console = True
+    if KDS.Keys.screenshot.onDown:
+        pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))
+        # Uses the last frame's screen state which is why the notification isn't visible
+        Notifications.append(KDS.UI.Notification("Screenshot saved", KDS.Colors.Cyan))
+        KDS.Audio.PlaySound(camera_shutter)
+
+    for inventoryKey in KDS.Keys.INVENTORYKEYS:
+        if inventoryKey.onDown:
+            Player.inventory.pickSlot(inventoryKey.index)
 #endregion
 #region Data
     display.fill(KDS.Colors.DefaultBackground)
