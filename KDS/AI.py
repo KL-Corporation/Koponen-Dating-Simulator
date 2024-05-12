@@ -650,9 +650,9 @@ class Mummy(HostileEnemy):
                         pygame.mixer.Sound("Assets/Audio/Entities/hit3.ogg"))
 
     soundboard_scream = (pygame.mixer.Sound("Assets/Audio/Entities/monster_scream.ogg"),
-                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl.ogg"),
+                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl.ogg"), # Liian kovalla
                         pygame.mixer.Sound("Assets/Audio/Entities/monster_growl2.ogg"),
-                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl3.ogg")
+                        pygame.mixer.Sound("Assets/Audio/Entities/monster_growl3.ogg") # Liian kovalla
                         )
 
     sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
@@ -741,6 +741,10 @@ class Mummy(HostileEnemy):
             self.attackRunning = True
         if random.randint(0, 500) == 69 and dist < 560:
             KDS.Audio.PlaySound(random.choice(Mummy.soundboard_scream[1:]))
+
+Mummy.soundboard_scream[1].set_volume(0.5)
+Mummy.soundboard_scream[2].set_volume(0.7)
+Mummy.soundboard_scream[3].set_volume(0.32)
 
 class SecurityGuard(HostileEnemy):
     sight_sounds = (
