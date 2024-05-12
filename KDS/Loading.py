@@ -133,6 +133,7 @@ class Story:
         doAnimation(False)
         pygame.time.wait(3600)
         doAnimation(True)
+        pygame.time.wait(1000)
         KDS.Audio.Music.Unpause()
 
     @staticmethod
