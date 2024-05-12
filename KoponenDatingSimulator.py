@@ -562,23 +562,26 @@ class WorldData:
         #endregion
         map_load_logger.stop("Map Constructed.")
 
+        map_object_initialising_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD:     ")
         map_load_logger.start("Initialising Objects...")
         #region LateInit
         # lateInit order is the reverse of pointers
-        for entity in Entities:
-            entity.lateInit()
-        for item in Items:
-            item.lateInit()
-        for overlay in overlays:
-            overlay.lateInit()
-        for row in Tiles:
-            for unit in row:
-                for tile in unit:
-                    tile.lateInit()
+        map_object_initialising_logger.start("Executing lateInit()...")
+
+        # Use generators instead of a for x in ... loop as they are orders of magnitude quicker in performance testing
+        # VOLATILE: If these generators are optimised away, this code breaks.
+        (entity.lateInit() for entity in Entities)
+        (item.lateInit() for item in Items)
+        (overlay.lateInit() for overlay in overlays)
+        (((tile.lateInit() for tile in unit) for unit in row) for row in Tiles)
+
+        map_object_initialising_logger.stop("lateInit() execution complete.")
         #endregion
 
+        map_object_initialising_logger.start("Sorting teleport data by order...")
         for teleportData in BaseTeleport.teleportDatas.values():
             teleportData.Order()
+        map_object_initialising_logger.stop("Teleport data sorting complete.")
         map_load_logger.stop("Object Initialisation Complete.")
 
         map_load_logger.start("Loading Music...")
@@ -590,6 +593,12 @@ class WorldData:
         map_load_logger.stop("Music Loaded." if music_file_exists else "Music Loading Skipped.")
 
         map_whole_load_logger.stop("Map loading complete.")
+        KDS.Logging.debug(f"Unmeasured loading execution time: {map_whole_load_logger.accumulatedTime - map_load_logger.accumulatedTime:.3f}")
+
+        assert(not map_whole_load_logger.is_running)
+        assert(not map_load_logger.is_running)
+        assert(not map_object_initialising_logger.is_running)
+
         return WorldData.PlayerStartPos, k_start_pos
 #endregion
 #region Data
