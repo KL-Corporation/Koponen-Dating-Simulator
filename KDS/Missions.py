@@ -337,10 +337,10 @@ def init():
     MissionFont.bold = True
 
     TaskFont = pygame.font.Font("Assets/Fonts/courier.ttf", 10)
-    TaskFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_finish.ogg")
-    TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/task_unfinish.ogg")
-    MissionFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_finish.ogg")
-    MissionUnFinishSound = pygame.mixer.Sound("Assets/Audio/effects/mission_unfinish.ogg")
+    TaskFinishSound = pygame.mixer.Sound("Assets/Audio/Effects/task_finish.ogg")
+    TaskUnFinishSound = pygame.mixer.Sound("Assets/Audio/Effects/task_unfinish.ogg")
+    MissionFinishSound = pygame.mixer.Sound("Assets/Audio/Effects/mission_finish.ogg")
+    MissionUnFinishSound = pygame.mixer.Sound("Assets/Audio/Effects/mission_unfinish.ogg")
     Active_Mission = ""
     Last_Active_Mission = 0
     text_height = 0
