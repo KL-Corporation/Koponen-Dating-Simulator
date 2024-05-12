@@ -4,7 +4,9 @@ import logging
 import os
 import pstats
 import platform
+from types import EllipsisType
 import KDS.Application
+import KDS.Math
 import KDS.System
 import KDS.Linq
 import pygame
@@ -13,7 +15,10 @@ import faulthandler
 import re
 import psutil
 from datetime import datetime
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Self, Tuple, Union
+
+from contextlib import contextmanager
+import time
 
 running = False
 profiler_running = False
@@ -108,7 +113,7 @@ I=====[ DEBUG INFO ]=====I
     - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 
-def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
+def _log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
     if not running:
         print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
         return
@@ -122,17 +127,24 @@ def __log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool
     if consoleVisible:
         print(KDS.System.Console.Colored(message, color))
 
+# remembed to also update the individual log functions (debug, info, etc.) as they use a static variable for performance reasons
+_logLevelColors: dict[int, str] = {
+    logging.DEBUG: "green",
+    logging.INFO: "blue",
+    logging.WARNING: "yellow",
+    logging.ERROR: "red",
+}
 def debug(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
-    __log(message, consoleVisible, stack_info, logging.DEBUG, "green")
+    _log(message, consoleVisible, stack_info, logging.DEBUG, "green")
 
 def info(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
-    __log(message, consoleVisible, stack_info, logging.INFO, "blue")
+    _log(message, consoleVisible, stack_info, logging.INFO, "blue")
 
 def warning(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
-    __log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
+    _log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
 
 def error(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
-    __log(message, consoleVisible, stack_info, logging.ERROR, "red")
+    _log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
 def AutoError(message: Union[str, Exception], **kwargs: Any) -> None:
     """Generates an automatic error message.
@@ -140,7 +152,7 @@ def AutoError(message: Union[str, Exception], **kwargs: Any) -> None:
     Args:
         Message (str): The error message.
     """
-    __log(message, True, True, 40, "red", **kwargs)
+    _log(message, True, True, 40, "red", **kwargs)
 
 def Profiler(enabled: bool = True):
     """Turns the profiler on or off.
@@ -164,6 +176,71 @@ def Profiler(enabled: bool = True):
                 ps.print_stats()
                 f.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n")
         except IOError as e: AutoError(f"IO Error! Details: {e}")
+
+class ExecutionTimeLogger:
+    def __init__(self, logLevel: int, msg_prefix: str) -> None:
+        self._level: int = logLevel
+        self._msg_prefix: str = msg_prefix
+
+        self._startTime: float | None = None
+        self._times: list[float] = []
+
+    @property
+    def is_running(self) -> bool:
+        return self._startTime is not None
+
+    @property
+    def accumulatedTime(self) -> float:
+        # Calculate the accumulated time using kahan summation algorithm
+        # https://www.geeksforgeeks.org/kahan-summation-algorithm/
+        count: int = len(self._times)
+        if count == 0:
+            return 0
+        if count == 1:
+            return self._times[0]
+
+        sum = 0.0
+        c = 0.0
+
+        for f in self._times:
+            y = f - c
+            t = sum + y
+
+            c = (t - sum) - y
+            sum = t
+
+        return sum
+
+    @classmethod
+    def debug(cls, msg_prefix: str = "") -> Self:
+        return cls(logging.DEBUG, msg_prefix)
+    @classmethod
+    def info(cls, msg_prefix: str = "") -> Self:
+        return cls(logging.INFO, msg_prefix)
+    @classmethod
+    def warning(cls, msg_prefix: str = "") -> Self:
+        return cls(logging.WARNING, msg_prefix)
+    @classmethod
+    def error(cls, msg_prefix: str = "") -> Self:
+        return cls(logging.ERROR, msg_prefix)
+
+    def start(self, message: str, consoleVisible: bool = False, stack_info: bool = False):
+        if self._startTime is not None:
+            raise RuntimeError("Timer is already running!")
+
+        _log(self._msg_prefix + message, consoleVisible=consoleVisible, stack_info=stack_info, logLevel=self._level, color=_logLevelColors[self._level])
+
+        self._startTime = time.perf_counter()
+
+    def stop(self, message: str, consoleVisible: bool = False, stack_info: bool = False):
+        if self._startTime is None:
+            raise RuntimeError("Timer wasn't running!")
+
+        seconds: float = time.perf_counter() - self._startTime
+        self._times.append(seconds)
+        self._startTime = None
+
+        _log(self._msg_prefix + message + f" (took {seconds:.3f} seconds)", consoleVisible=consoleVisible, stack_info=stack_info, logLevel=self._level, color=_logLevelColors[self._level])
 
 def quit():
     global running, faultHandlerEnabled

@@ -116,13 +116,16 @@ os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
 
 KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
 KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Cache, PersistentPaths.Saves)
-KDS.Logging.debug("Initialising Game...")
-KDS.Logging.debug("Initialising Display Driver...")
+game_whole_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
+game_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(4 * " ")
+game_whole_initialization_logger.start("Initialising Game...")
 
+game_initialization_logger.start("Initialising Display Driver...")
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", ...):
     pygame.display.toggle_fullscreen()
+game_initialization_logger.stop("Display Driver initialised.")
 
-KDS.Logging.debug("Initialising KDS modules...")
+game_initialization_logger.start("Initialising KDS modules...")
 KDS.Audio.init()
 KDS.Jobs.init()
 KDS.AI.init()
@@ -130,11 +133,12 @@ KDS.World.init()
 KDS.Missions.init()
 KDS.Scores.init()
 KDS.Koponen.init()
-KDS.Logging.debug("KDS modules initialised.")
 KDS.Console.init(display, display, _KDS_Quit = KDS_Quit)
 KDS.School.init(display)
 KDS.Keys.LoadCustomBindings()
+game_initialization_logger.stop("KDS modules initialised.")
 
+game_initialization_logger.start("Initialising cursors and surface arrays...")
 cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
 cursorData = {
     1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
@@ -150,47 +154,51 @@ surfarrayLagFix = pygame.surfarray.pixels2d(screen)
 # Creating a surfarray for the first time is not noticeable on faster hardware like my desktop,
 # but lags the shit out of the game on my laptop with an amazing two-core processor.
 del surfarrayLagFix
+game_initialization_logger.stop("Cursors and surface arrays initialised.")
 #endregion
 #region Loading
 #region Settings
-KDS.Logging.debug("Loading Settings...")
+game_initialization_logger.start("Loading Settings...")
 tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 quickload_levels: bool = KDS.ConfigManager.GetSetting("Data/quickloadLevels", False)
 current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", ...)
 current_map_name: str = ""
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", ...)
 play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", ...)
-KDS.Logging.debug("Settings Loaded.")
+game_initialization_logger.stop("Settings Loaded.")
 #endregion
-KDS.Logging.debug("Loading Assets...")
+game_initialization_logger.start("Loading Assets...")
+asset_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(8 * " ")
 pygame.event.pump()
 #region Fonts
-KDS.Logging.debug("Loading Fonts...")
+asset_loading_logger.start("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10)
 teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10)
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
 ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28)
 ArialTitleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 72)
-KDS.Logging.debug("Font Loading Complete.")
+asset_loading_logger.stop("Font Loading Complete.")
 #endregion
 pygame.event.pump()
 #region UI Textures
+asset_loading_logger.start("Loading UI Textures...")
 text_icon = pygame.image.load("Assets/Textures/Branding/textIcon.png").convert()
 text_icon.set_colorkey(KDS.Colors.White)
 level_cleared_icon = pygame.image.load("Assets/Textures/UI/LevelCleared.png").convert()
 level_cleared_icon.set_colorkey(KDS.Colors.White)
+asset_loading_logger.stop("UI Texture Loading Complete.")
 #endregion
 pygame.event.pump()
 #region Building Textures
-KDS.Logging.debug("Loading Building Textures...")
+asset_loading_logger.start("Loading Building Textures...")
 door_open: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
 exit_door_open: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
-KDS.Logging.debug("Building Texture Loading Complete.")
+asset_loading_logger.stop("Building Texture Loading Complete.")
 #endregion
 pygame.event.pump()
 #region Item Textures
-KDS.Logging.debug("Loading Item Textures...")
+asset_loading_logger.start("Loading Item Textures...")
 red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
 green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
 blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
@@ -210,11 +218,11 @@ rk62_f_texture.set_colorkey(KDS.Colors.White)
 shotgun_f.set_colorkey(KDS.Colors.White)
 ppsh41_f_texture.set_colorkey(KDS.Colors.White)
 awm_f_texture.set_colorkey(KDS.Colors.White)
-KDS.Logging.debug("Item Texture Loading Complete.")
+asset_loading_logger.stop("Item Texture Loading Complete.")
 #endregion
 pygame.event.pump()
 #region Menu Textures
-KDS.Logging.debug("Loading Menu Textures...")
+asset_loading_logger.start("Loading Menu Textures...")
 gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_1.png").convert()
 gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_2.png").convert()
 gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_1.png").convert()
@@ -228,11 +236,11 @@ agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").conv
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
-KDS.Logging.debug("Menu Texture Loading Complete.")
+asset_loading_logger.stop("Menu Texture Loading Complete.")
 #endregion
 pygame.event.pump()
 #region Audio
-KDS.Logging.debug("Loading Audio Files...")
+asset_loading_logger.start("Loading Audio Files...")
 gasburner_clip = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
 gasburner_fire = pygame.mixer.Sound("Assets/Audio/Items/gasburner_use.ogg")
 door_opening = pygame.mixer.Sound("Assets/Audio/Tiles/door.ogg")
@@ -277,12 +285,13 @@ hurt_sound.set_volume(0.6)
 plasma_hitting.set_volume(0.03)
 rk62_shot.set_volume(0.9)
 shotgun_shot.set_volume(0.8)
-KDS.Logging.debug("Audio File Loading Complete.")
+asset_loading_logger.stop("Audio File Loading Complete.")
 #endregion
 pygame.event.pump()
-KDS.Logging.debug("Asset Loading Complete.")
+game_initialization_logger.stop("Asset Loading Complete.")
 #endregion
 #region Variable Initialisation
+game_initialization_logger.start("Defining Variables...")
 ambient_tint = pygame.Surface(screen_size)
 black_tint = pygame.Surface(screen_size, SRCALPHA)
 black_tint.fill((20, 20, 20))
@@ -297,7 +306,6 @@ currently_on_mission = False
 current_mission = "none"
 shoot = False
 
-KDS.Logging.debug("Defining Variables...")
 selectedSave = 0
 
 esc_menu = False
@@ -351,7 +359,7 @@ koponen_talk_tip = tip_font.render(f"Puhu Koposelle [{KDS.Keys.functionKey.Bindi
 
 Notifications: list[KDS.UI.Notification] = []
 
-KDS.Logging.debug("Variable Defining Complete.")
+game_initialization_logger.stop("Variable Defining Complete.")
 #endregion
 #region Game Settings
 fall_speed: float = 0.4
@@ -563,7 +571,7 @@ class WorldData:
         return WorldData.PlayerStartPos, k_start_pos
 #endregion
 #region Data
-KDS.Logging.debug("Loading Data...")
+game_initialization_logger.start("Loading Data...")
 
 with open("Assets/Data/Build/tiles.kdf", "r", encoding="utf-8") as f:
     tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
@@ -671,6 +679,9 @@ class ScreenEffects:
 ScreenEffects.Clear()
 
 #region Animations
+animation_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(8 * " ")
+animation_loading_logger.start("Loading Animations...")
+
 koponen_animations = KDS.Animator.MultiAnimation(
     idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
     walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
@@ -719,12 +730,12 @@ imp_dying = KDS.Animator.Animation(
 knife_animation_object = KDS.Animator.Animation(
     "knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
-KDS.Logging.debug("Animation Loading Complete.")
+animation_loading_logger.stop("Animation Loading Complete.")
 #endregion
-KDS.Logging.debug("Data Loading Complete.")
+game_initialization_logger.stop("Data Loading Complete.")
 #endregion
 #region Tiles
-KDS.Logging.debug("Loading Tiles...")
+game_initialization_logger.start("Loading Tiles...")
 class Toilet(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):
         super().__init__(position, serialNumber)
@@ -2398,10 +2409,10 @@ BaseTeleport.serialNumbers = {
     12: HologramTeleport
 }
 
-KDS.Logging.debug("Tile Loading Complete.")
+game_initialization_logger.stop("Tile Loading Complete.")
 #endregion
 #region Items
-KDS.Logging.debug("Loading Items...")
+game_initialization_logger.start("Loading Items...")
 itemTip: pygame.Surface = tip_font.render(f"Nosta Esine [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
 
 class BlueKey(KDS.Build.Item):
@@ -2970,7 +2981,7 @@ KDS.Build.Item.serialNumbers = {
     39: SurveyAnswers,
     40: Euro
 }
-KDS.Logging.debug("Item Loading Complete.")
+game_initialization_logger.stop("Item Loading Complete.")
 #endregion
 #region Enemies
 class Enemy:
@@ -3062,7 +3073,7 @@ KDS.Missions.Listeners.TeacherAgro.OnTrigger += Entity._addAgro
 KDS.Missions.Listeners.TeacherDeath.OnTrigger += Entity._addDeath
 #endregion
 #region Player
-KDS.Logging.debug("Loading Player...")
+game_initialization_logger.start("Loading Player...")
 class PlayerClass:
     def __init__(self) -> None:
         self.inventory = KDS.Inventory.Inventory(5)
@@ -3293,10 +3304,10 @@ class PlayerClass:
         #endregion
 
 Player = PlayerClass()
-KDS.Logging.debug("Player Loading Complete.")
+game_initialization_logger.stop("Player Loading Complete.")
 #endregion
 #region Console
-KDS.Logging.debug("Loading Console...")
+game_initialization_logger.start("Loading Console...")
 def console(oldSurf: pygame.Surface):
     global level_finished, go_to_console, Player, Enemies
     go_to_console = False
@@ -3596,13 +3607,20 @@ def agr():
         pygame.display.flip()
         c = False
     return True
-KDS.Logging.debug("Console Loading Complete.")
-KDS.Logging.debug("Game Initialisation Complete.")
+game_initialization_logger.stop("Console Loading Complete.")
+game_whole_initialization_logger.stop("Game Initialisation Complete.")
+KDS.Logging.debug(f"Unmeasured loading execution time: {game_whole_initialization_logger.accumulatedTime - game_initialization_logger.accumulatedTime:.3f}")
+
+assert(not game_whole_initialization_logger.is_running)
+assert(not game_initialization_logger.is_running)
+assert(not asset_loading_logger.is_running)
+assert(not animation_loading_logger.is_running)
 #endregion
 #region Game Functions
 def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
-    KDS.Logging.debug("Loading Game...")
-    loading_starttime: Final[float] = time.perf_counter()
+    game_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
+    game_loading_logger.start("Loading Game...")
+
     global main_menu_running, current_map, true_scroll, selectedSave
 
     pygame.mouse.set_visible(False)
@@ -3683,8 +3701,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
         true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
     pygame.event.clear()
     KDS.Keys.Reset()
-    loadtime_total: Final[float] = time.perf_counter() - loading_starttime
-    KDS.Logging.debug(f"Game Loaded. (took {loadtime_total:.3f} seconds)", consoleVisible=True)
+    game_loading_logger.stop(f"Game Loaded.", consoleVisible=True)
+    loadtime_total: float = game_loading_logger.accumulatedTime
     if loadtime_total < 3:
         if not quickload_levels:
             loadtime_extra: Final[float] = 3 - loadtime_total
