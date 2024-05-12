@@ -160,7 +160,7 @@ game_initialization_logger.stop("Cursors and surface arrays initialised.")
 #region Settings
 game_initialization_logger.start("Loading Settings...")
 tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
-quickload_levels: bool = KDS.ConfigManager.GetSetting("Data/quickloadLevels", False)
+quickload: Final[bool] = KDS.ConfigManager.GetSetting("Data/quickload", False)
 current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", ...)
 current_map_name: str = ""
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", ...)
@@ -3618,7 +3618,9 @@ def agr():
     return True
 game_initialization_logger.stop("Console Loading Complete.")
 game_whole_initialization_logger.stop("Game Initialisation Complete.")
-KDS.Logging.debug(f"Unmeasured loading execution time: {game_whole_initialization_logger.accumulatedTime - game_initialization_logger.accumulatedTime:.3f}")
+game_whole_initialization_duration: Final[float] = game_whole_initialization_logger.accumulatedTime
+KDS.Logging.debug(f"Unmeasured loading execution time: {game_whole_initialization_duration - game_initialization_logger.accumulatedTime:.3f}")
+KDS.Loading.fake_load_extra(game_whole_initialization_duration, quickload)
 
 assert(not game_whole_initialization_logger.is_running)
 assert(not game_initialization_logger.is_running)
@@ -3711,14 +3713,7 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     pygame.event.clear()
     KDS.Keys.Reset()
     game_loading_logger.stop(f"Game Loaded.", consoleVisible=True)
-    loadtime_total: float = game_loading_logger.accumulatedTime
-    if loadtime_total < 3:
-        if not quickload_levels:
-            loadtime_extra: Final[float] = 3 - loadtime_total
-            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to properly display the loading screen before launch.", consoleVisible=True)
-            time.sleep(loadtime_extra)
-        else:
-            KDS.Logging.info("Loading delay skipped due to quickload.", consoleVisible=True)
+    KDS.Loading.fake_load_extra(game_loading_logger.accumulatedTime, quickload)
     if show_loading:
         KDS.Loading.Circle.Stop()
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.

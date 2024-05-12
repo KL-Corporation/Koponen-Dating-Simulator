@@ -1,3 +1,4 @@
+import time
 from typing import Callable, Tuple, Union
 
 import pygame
@@ -11,6 +12,7 @@ import KDS.Debug
 import KDS.Math
 import KDS.Clock
 import KDS.Jobs
+import KDS.Logging
 
 import threading
 
@@ -142,3 +144,18 @@ class Story:
         if Story.handle != None:
             Story.handle.Complete()
             Story.handle = None
+
+FAKE_LOAD_SECONDS: float = 3.0
+def fake_load_extra(loadtime: float, quickload: bool):
+    """
+    Sleeps until the target load time is reached.
+
+    if quickload game settings in on, waiting is skipped.
+    """
+    if loadtime < FAKE_LOAD_SECONDS:
+        if not quickload:
+            loadtime_extra = FAKE_LOAD_SECONDS - loadtime
+            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to properly display the loading screen.\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
+            time.sleep(loadtime_extra)
+        else:
+            KDS.Logging.info("Loading delay skipped due to quickload.", consoleVisible=True)
