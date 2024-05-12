@@ -387,6 +387,10 @@ class WorldData:
 
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
+        map_whole_load_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD: ")
+        map_load_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD: ")
+        map_whole_load_logger.start("Loading map...")
+
         global Items, Tiles, Enemies, Projectiles, overlays, Player, Zones
         if not (os.path.isdir(MapPath) and os.path.isfile(os.path.join(MapPath, "level.dat")) and os.path.isfile(os.path.join(MapPath, "levelprop.kdf")) ):
             #region Error String
@@ -402,16 +406,22 @@ class WorldData:
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             KDS.Loading.Circle.Stop()
             return None
+
+        map_load_logger.start("Loading Properties ...")
                         #pos,     type,      key,  value
         properties: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = {}
         if os.path.isfile(os.path.join(MapPath, "properties.kdf")):
             properties = KDS.ConfigManager.JSON.Get(os.path.join(MapPath, "properties.kdf"), KDS.ConfigManager.JSON.NULLPATH, {}, encoding="utf-8")
+        map_load_logger.stop("Properties Loaded.")
         global level_background_img
+        map_load_logger.start("Loading Level Background...")
         if os.path.isfile(os.path.join(MapPath, "background.png")):
             level_background_img = pygame.image.load(os.path.join(MapPath, "background.png")).convert()
         else:
             level_background_img = None
+        map_load_logger.stop("Level Background Loaded." if level_background_img is not None else "Level Background Loading Skipped.")
 
+        map_load_logger.start("Loading Map data...")
         with open(os.path.join(MapPath, "level.dat"), "r", encoding="utf-8") as map_file:
             map_data = map_file.read().split("\n")
 
@@ -424,7 +434,9 @@ class WorldData:
                     _u.onDestroy()
         Tiles = [[[] for x in range(WorldData.MapSize[0] + 1)] for y in range(WorldData.MapSize[1] + 1)]
         overlays = []
+        map_load_logger.stop("Map data Loaded.")
 
+        map_load_logger.start("Loading LevelProp...")
         KDS.ConfigManager.LevelProp.init(MapPath)
         KDS.World.Dark.Configure(KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/enabled", False), KDS.ConfigManager.LevelProp.Get("Rendering/Darkness/strength", 0))
         Player.load_levelprop()
@@ -452,7 +464,9 @@ class WorldData:
             Koponen.loadScript(koponen_script)
 
         KDS.UI.Indicator.Enabled = KDS.ConfigManager.LevelProp.Get("Rendering/Indicator/enabled", True)
+        map_load_logger.stop("LevelProp Loaded.")
 
+        map_load_logger.start("Constructing Map...")
         Enemy.total = 0
         Enemy.death_count = 0
         Entity.total = 0
@@ -546,7 +560,9 @@ class WorldData:
                 zoneKRect = pygame.Rect(int(zoneKSplit[0]) * 34, int(zoneKSplit[1]) * 34, int(zoneKSplit[2]) * 34, int(zoneKSplit[3]) * 34)
                 Zones.append(KDS.World.Zone(zoneKRect, v))
         #endregion
+        map_load_logger.stop("Map Constructed.")
 
+        map_load_logger.start("Initialising Objects...")
         #region LateInit
         # lateInit order is the reverse of pointers
         for entity in Entities:
@@ -563,11 +579,17 @@ class WorldData:
 
         for teleportData in BaseTeleport.teleportDatas.values():
             teleportData.Order()
+        map_load_logger.stop("Object Initialisation Complete.")
 
-        if os.path.isfile(os.path.join(MapPath, "music.ogg")):
+        map_load_logger.start("Loading Music...")
+        music_file_exists: Final[bool] = os.path.isfile(os.path.join(MapPath, "music.ogg"))
+        if music_file_exists:
             KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
         else:
             KDS.Audio.Music.Unload()
+        map_load_logger.stop("Music Loaded." if music_file_exists else "Music Loading Skipped.")
+
+        map_whole_load_logger.stop("Map loading complete.")
         return WorldData.PlayerStartPos, k_start_pos
 #endregion
 #region Data
