@@ -3812,7 +3812,7 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
         KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], ArialTitleFont, ArialFont)
     KDS.Koponen.setPlayerPrefix(KDS.ConfigManager.Save.Active.Story.playerName)
     play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride, auto_play_music=False)
-    KDS.Loading.Story.WaitForExit()
+    KDS.Loading.Story.WaitForExit(pump_events=True)
     if KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
 
