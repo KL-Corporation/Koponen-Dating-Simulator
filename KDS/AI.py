@@ -655,9 +655,6 @@ class Mummy(HostileEnemy):
                         pygame.mixer.Sound("Assets/Audio/Entities/monster_growl3.ogg")
                         )
 
-    for scream in soundboard_scream:
-        scream.set_volume(0.6)
-
     sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
 
     def __init__(self, pos):
