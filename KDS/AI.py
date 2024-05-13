@@ -637,7 +637,7 @@ class CaveMonster(HostileEnemy):
         dist /= 1200
         cavemonster_gun.set_volume(dist)
         KDS.Audio.PlaySound(cavemonster_gun)
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
