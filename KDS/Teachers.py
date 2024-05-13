@@ -237,7 +237,7 @@ class Teacher:
                 self.weaponData.counter = 0
 
         def inventoryFullBehaviour():
-            raise NotImplementedError("Inventory full behaviour has not been implemented yet!")
+            raise NotImplementedError("Inventory full behaviour has not been implemented yet! (And probably won't ever be implemented)")
 
         enemyProjectiles: List[KDS.World.Bullet] = []
         dropItems: List[int] = []

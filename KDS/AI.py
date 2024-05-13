@@ -370,7 +370,7 @@ class HostileEnemy:
 
 class Imp(HostileEnemy):
     def __init__(self, pos):
-        health = 65
+        health = 70
         w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -392,7 +392,7 @@ class Imp(HostileEnemy):
 
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
-        health = 30
+        health = 60
         w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -433,7 +433,7 @@ class SergeantZombie(HostileEnemy):
 
 class DrugDealer(HostileEnemy):
     def __init__(self, pos):
-        health = 25
+        health = 50
         w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -478,7 +478,7 @@ class DrugDealer(HostileEnemy):
 
 class TurboShotgunner(HostileEnemy):
     def __init__(self, pos):
-        health = 55
+        health = 60
         w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -521,7 +521,7 @@ class TurboShotgunner(HostileEnemy):
 
 class MafiaMan(HostileEnemy):
     def __init__(self, pos):
-        health = 30
+        health = 50
         w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -563,7 +563,7 @@ class MafiaMan(HostileEnemy):
 
 class MethMaker(HostileEnemy):
     def __init__(self, pos):
-        health = 65
+        health = 120
         w_anim = KDS.Animator.Animation("methmaker_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("methmaker_idle", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("methmaker_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
@@ -606,7 +606,7 @@ class MethMaker(HostileEnemy):
 
 class CaveMonster(HostileEnemy):
     def __init__(self, pos):
-        health = 50
+        health = 70
         w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
@@ -658,7 +658,7 @@ class Mummy(HostileEnemy):
     sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
 
     def __init__(self, pos):
-        health = 60
+        health = 150
         w_anim = KDS.Animator.Animation("mummy_walking", 8, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mummy_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mummy_attack", 3, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -780,6 +780,9 @@ class SecurityGuard(HostileEnemy):
         # del aim_im, shoot_im
         #endregion
 
+        self.lastTargetDirection = False
+        self.ticksSinceSwitch = 0
+
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[1, 8], attackPropability=40)
 
     def lateInit(self):
@@ -813,7 +816,7 @@ class SecurityGuard(HostileEnemy):
 
 class Bulldog(HostileEnemy):
     def __init__(self, pos: Tuple[int, int]):
-        health = 10
+        health = 30
         w_anim = KDS.Animator.Animation("bulldog", 5, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = w_anim
         a_anim = w_anim
@@ -863,7 +866,7 @@ class Bulldog(HostileEnemy):
 
 class Zombie(HostileEnemy):
     def __init__(self, pos):
-        health = 25
+        health = 100
         w_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
