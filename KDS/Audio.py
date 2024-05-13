@@ -32,17 +32,14 @@ class _MusicLoadedContext(NamedTuple):
     filepath: str
 
 class _MusicPlayingContext(NamedTuple):
+    filepath: str
     start: float
     loops: int
 
 class MusicOverrideHandle:
-    def __init__(self, *, _lctx: _MusicLoadedContext, _pctx: _MusicPlayingContext, _musicplayer_pos: float) -> None:
-        self._original_music_path: str = _lctx.filepath
-        self._original_music_position: float = _pctx.start + _musicplayer_pos
-
-        if _pctx.loops > 0:
-            raise RuntimeError("Cannot restore playback state for fixed loop counts!")
-        self._original_loops: int = _pctx.loops
+    def __init__(self, *, _ctx: _MusicPlayingContext | None, _musicplayer_pos_seconds: float) -> None:
+        self._ctx: _MusicPlayingContext | None = _ctx
+        self._music_player_position: float = _musicplayer_pos_seconds
 
         self._local_volume: float = 1.0
         self._is_active: bool = True
@@ -71,34 +68,34 @@ class MusicOverrideHandle:
 
     def Stop(self, *, _play_base_song: bool = True):
         """
-        Starts playing the base music again.
+        Starts playing the base music again. (restores the original MusicMixer state)
         Music position can only be restored if loops=0
         """
 
         self._checkActive()
         self._is_active = False
 
-        start: float
-        if self._original_loops == 0:
-            start = self._original_music_position
-        else:
-            # We don't know how long the song is
-            # so we can't compute the starting point for the song
-            # as _musicplayer_pos is the duration the music has been playing
-            # and not the actual position in the track.
-            start = 0.0
-
         Music.Overridden = None
-        MusicMixer.set_volume(MusicVolume)
 
-        if _play_base_song:
-            Music.Play(self._original_music_path, loops=self._original_loops, start=start)
+        if self._ctx is not None:
+            start: float = self._ctx.start + self._music_player_position
+            MusicMixer.set_volume(MusicVolume)
+
+            if _play_base_song:
+                Music.Play(self._ctx.filepath, loops=self._ctx.loops, start=start)
+        else:
+            if _play_base_song:
+                Music.Stop()
 
 class Music:
     Loaded: _MusicLoadedContext | None = None
     """This value might change if the music is overridden."""
     Playing: _MusicPlayingContext | None = None
-    """This value might change if the music is overridden."""
+    """
+    This value might change if the music is overridden.
+
+    A song might be loaded, but is not playing. Only `Music.Playing` contains the up to date info on the currently playing song.
+    """
 
     Overridden: MusicOverrideHandle | None = None
 
@@ -113,7 +110,7 @@ class Music:
         assert(Music.Loaded is not None)
         MusicMixer.play(loops=loops, start=start)
         MusicMixer.set_volume(MusicVolume)
-        Music.Playing = _MusicPlayingContext(loops=loops, start=start)
+        Music.Playing = _MusicPlayingContext(filepath=Music.Loaded.filepath, loops=loops, start=start)
 
     @staticmethod
     def Stop():
@@ -121,6 +118,7 @@ class Music:
         if Music.Overridden is not None:
             Music.Overridden.Stop(_play_base_song=False)
         MusicMixer.stop()
+        Music.Playing = None
 
     @staticmethod
     def Fadeout(seconds: float):
@@ -139,17 +137,12 @@ class Music:
 
     @staticmethod
     def Override(path: Optional[str] = None, loops: int = -1) -> MusicOverrideHandle:
-        if Music.Loaded is None:
-            raise RuntimeError("Cannot override! No base music loaded.")
-        if Music.Playing is None:
-            raise RuntimeError("Cannot override! No base music playing.")
         if Music.Overridden is not None:
             raise RuntimeError("Cannot override! Music has already been overridden.")
 
         handle = MusicOverrideHandle(
-            _lctx=Music.Loaded,
-            _pctx=Music.Playing,
-            _musicplayer_pos=MusicMixer.get_pos()
+            _ctx=Music.Playing,
+            _musicplayer_pos_seconds=(MusicMixer.get_pos() / 1000)
         )
         Music.Play(path, loops=loops)
         Music.Overridden = handle
