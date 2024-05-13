@@ -370,7 +370,7 @@ class HostileEnemy:
 
 class Imp(HostileEnemy):
     def __init__(self, pos):
-        health = 70
+        health = 60
         w_anim = KDS.Animator.Animation("imp_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("imp_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("imp_attacking", 2, 27, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -392,7 +392,7 @@ class Imp(HostileEnemy):
 
 class SergeantZombie(HostileEnemy):
     def __init__(self, pos):
-        health = 60
+        health = 50
         w_anim = KDS.Animator.Animation("seargeant_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("seargeant_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("seargeant_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -433,7 +433,7 @@ class SergeantZombie(HostileEnemy):
 
 class DrugDealer(HostileEnemy):
     def __init__(self, pos):
-        health = 50
+        health = 30
         w_anim = KDS.Animator.Animation("drug_dealer_walking", 5, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("drug_dealer_idle", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("drug_dealer_shooting", 4, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -478,7 +478,7 @@ class DrugDealer(HostileEnemy):
 
 class TurboShotgunner(HostileEnemy):
     def __init__(self, pos):
-        health = 60
+        health = 58
         w_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("turbo_shotgunner_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("turbo_shotgunner_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -521,7 +521,7 @@ class TurboShotgunner(HostileEnemy):
 
 class MafiaMan(HostileEnemy):
     def __init__(self, pos):
-        health = 50
+        health = 40
         w_anim = KDS.Animator.Animation("mafiaman_walking", 4, 11, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mafiaman_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mafiaman_shooting", 2, 1, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -594,7 +594,7 @@ class MethMaker(HostileEnemy):
         dist /= 1200
         basicGunshot.set_volume(dist)
         KDS.Audio.PlaySound(basicGunshot)
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 17), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -606,7 +606,7 @@ class MethMaker(HostileEnemy):
 
 class CaveMonster(HostileEnemy):
     def __init__(self, pos):
-        health = 70
+        health = 60
         w_anim = KDS.Animator.Animation("undead_monster_walking", 4, 11, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("undead_monster_walking", 2, 16, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("undead_monster_shooting", 2, 1, KDS.Colors.Cyan, KDS.Animator.OnAnimationEnd.Stop)
@@ -637,7 +637,7 @@ class CaveMonster(HostileEnemy):
         dist /= 1200
         cavemonster_gun.set_volume(dist)
         KDS.Audio.PlaySound(cavemonster_gun)
-        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -658,7 +658,7 @@ class Mummy(HostileEnemy):
     sound_death = pygame.mixer.Sound("Assets/Audio/Entities/monster_death.ogg")
 
     def __init__(self, pos):
-        health = 150
+        health = 140
         w_anim = KDS.Animator.Animation("mummy_walking", 8, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         i_anim = KDS.Animator.Animation("mummy_walking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("mummy_attack", 3, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
@@ -672,7 +672,7 @@ class Mummy(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         KDS.Audio.PlaySound(random.choice(Mummy.soundboard_hits))
-        return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(20, 35), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(20, 40), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []

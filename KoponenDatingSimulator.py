@@ -2757,7 +2757,7 @@ class Awm(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(75, 150), slope=0))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(125, 150), slope=0))
         return output
 
     def pickup(self) -> None:
