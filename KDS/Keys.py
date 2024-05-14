@@ -182,6 +182,10 @@ class Key(BaseKey):
             return self.secondaryBinding.get_displayname()
         else:
             return "null"
+        
+    @property
+    def Bindings(self) -> Tuple[Binding]:
+        return (self.binding, self.secondaryBinding)
 
 class InventoryKey(Key):
     def __init__(self, defaultBinding: Binding, inventory_index: int) -> None:

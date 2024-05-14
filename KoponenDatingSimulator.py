@@ -3404,7 +3404,8 @@ def console(oldSurf: pygame.Surface):
             "zombie" : "break"
         },
         "fly": trueFalseTree,
-        "godmode": trueFalseTree
+        "godmode": trueFalseTree,
+        "exam" : "break",
     }
 
     consoleRunning = True
@@ -3618,6 +3619,13 @@ def console(oldSurf: pygame.Surface):
             - godmode => Gives the player some buffs like infinite health
             - help => Shows the list of commands.
         """)
+            elif command_list[0] == "exam":
+                quit_, grade = KDS.School.Exam()
+                KDS.Console.Feed.append(f"Exam grade: {grade}")
+
+                if quit_:
+                    KDS_Quit()
+
             else:
                 KDS.Console.Feed.append("Invalid Command.")
         except Exception as e:

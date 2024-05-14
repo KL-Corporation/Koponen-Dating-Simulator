@@ -67,8 +67,8 @@ def Exam(showtitle = True):
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
     exam_paper = pygame.transform.scale(exam_paper, (round(exam_paper.get_width() * 1.7), round(exam_paper.get_height() * 1.7)))
     exam_music = pygame.mixer.Sound("Assets/Audio/Music/exam_music.ogg")
-    pencil_scribbles = (pygame.mixer.Sound("Assets/Audio/effects/pencil_scribble.ogg"), pygame.mixer.Sound("Assets/Audio/effects/pencil_scribble1.ogg"), pygame.mixer.Sound("Assets/Audio/effects/pencil_scribble2.ogg"))
-    page_turning = (pygame.mixer.Sound("Assets/Audio/effects/page_turning0.ogg"), pygame.mixer.Sound("Assets/Audio/effects/page_turning1.ogg"), pygame.mixer.Sound("Assets/Audio/effects/page_turning2.ogg"))
+    pencil_scribbles = (pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble1.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble2.ogg"))
+    page_turning = (pygame.mixer.Sound("Assets/Audio/Effects/page_turning0.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/page_turning1.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/page_turning2.ogg"))
     title = "Pistokoe"
     titleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 100)
     timerFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 40)
@@ -203,7 +203,7 @@ def Exam(showtitle = True):
         questions = []
         relative_position = (1200 / 2 - exam_paper.get_width() / 2, 800 / 2 - exam_paper.get_height() / 2)
 
-        KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/effects/exam_start.ogg"))
+        KDS.Audio.PlaySound(pygame.mixer.Sound("Assets/Audio/Effects/exam_start.ogg"))
         if showtitle: showTitle(titleSurf)
         pygame.mouse.set_visible(True)
         question_amount = random.randint(10, 13)
@@ -256,7 +256,7 @@ def Exam(showtitle = True):
             nonlocal exam_running, _quit, exam_score
             oldSurf = Display.copy()
             exam_music.stop()
-            exam_returned = pygame.mixer.Sound("Assets/Audio/effects/exam_returned.ogg")
+            exam_returned = pygame.mixer.Sound("Assets/Audio/Effects/exam_returned.ogg")
             KDS.Audio.PlaySound(exam_returned)
 
             class scoreRational:
@@ -303,7 +303,7 @@ def Exam(showtitle = True):
 
                     gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
-                    KDS.Audio.PlayFromFile("Assets/Audio/effects/exam_failed.ogg" if score < passLine else "Assets/Audio/effects/exam_passed.ogg")
+                    KDS.Audio.PlayFromFile("Assets/Audio/Effects/exam_failed.ogg" if score < passLine else "Assets/Audio/Effects/exam_passed.ogg")
 
                 Display.blit(oldSurf, (0, 0))
 
@@ -316,9 +316,9 @@ def Exam(showtitle = True):
                 pygame.display.flip()
             exam_running = False
 
-        pg_button1 = pygame.image.load("Assets/textures/UI/Buttons/page_arrow_red.png").convert()
+        pg_button1 = pygame.image.load("Assets/Textures/UI/Buttons/page_arrow_red.png").convert()
         pg_button1 = pygame.transform.scale(pg_button1, (round(pg_button1.get_width() / 2), round(pg_button1.get_height() / 2)))
-        pg_button2 = pygame.image.load("Assets/textures/UI/Buttons/palauta_red.png").convert()
+        pg_button2 = pygame.image.load("Assets/Textures/UI/Buttons/palauta_red.png").convert()
         pg_button2 = pygame.transform.scale(pg_button2, (round(pg_button2.get_width() / 2), round(pg_button2.get_height() / 2)))
 
         page_return_button = pageButton((relative_position[0] + 5, relative_position[1] + exam_paper.get_height() - 55),
@@ -384,7 +384,7 @@ def Exam(showtitle = True):
             if nmtime < 0:
                 exam_music.stop()
                 oldSurf = Display.copy()
-                KDS.Audio.PlayFromFile("Assets/Audio/effects/timeup.ogg")
+                KDS.Audio.PlayFromFile("Assets/Audio/Effects/timeup.ogg")
                 for x in range(0, Display.get_width() + time_ended.get_width(), int(Display.get_width() / 100)):
                     Display.blit(oldSurf, (0, 0))
                     Display.blit(time_ended, (x - time_ended.get_width() + 10, Display.get_height() / 2 - time_ended.get_height() / 2))
