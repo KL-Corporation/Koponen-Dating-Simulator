@@ -2534,7 +2534,7 @@ class Knife(KDS.Build.Weapon):
     def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
         output = super().shoot(holderData)
         if output:
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 5, maxDistance=40))
+            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 10, maxDistance=40))
         return output
 
     def use(self) -> pygame.Surface:

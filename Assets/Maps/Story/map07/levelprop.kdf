@@ -32,7 +32,8 @@
             ],
             "Inventory": {
                 "0": 10,
-                "1": 7
+                "1": 7,
+                "2": 24
             },
             "spawnInverted": true
         }
