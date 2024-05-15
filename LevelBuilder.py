@@ -30,7 +30,8 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Un
 
 root = tkinter.Tk()
 root.withdraw()
-root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
+if not KDS.System.ISLINUX:
+    root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 pygame.init()
 display: pygame.Surface = pygame.Surface((2, 2)) # Dunder surface for linting
 display_size: Tuple[int, int] = (1600, 800)
@@ -1152,7 +1153,8 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         else:
             saveMap(grid, currentSaveName)
 
-    KDS.Loading.Circle.Start(display)
+    if not KDS.System.ISLINUX:
+        KDS.Loading.Circle.Start(display)
 
     handle = KDS.Jobs.Schedule(internalLoadMap, path)
     while not handle.IsComplete:
@@ -1164,7 +1166,9 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
     grid, gridSize = handle.Complete()
 
     Undo.clear()
-    KDS.Loading.Circle.Stop()
+    if not KDS.System.ISLINUX:
+        KDS.Loading.Circle.Stop()
+        
     return True
 
 def openMap() -> bool: # Returns True if the operation was succesful
