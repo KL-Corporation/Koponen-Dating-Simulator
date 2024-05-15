@@ -248,7 +248,7 @@
         "n. 11 250 Tb": false,
         "n. 11 250 Tt": true
     },
-    "Mikä on maailman myydyin peli?": {
+    "Mikä on maailman myydyin peli? (Ainakin vuonna 2021 tai jotain)": {
         "Tetris": false,
         "Grand Theft Auto V": false,
         "Minecraft": true,
@@ -412,5 +412,83 @@
         "Litiumia tarvitaan nykyisin mm. akuissa.": true,
         "Kiinalla on paljon luonnonvaroja": true,
         "Chile on tärkeä kuparintuottaja": true
+    },
+    "Kuka oli Hatsun vuoden 2021 kuningatar?": {
+        "Hashim Alkaff" : false,
+        "Mohammed Al Anal-Raiskhar" : false,
+        "Roope Roito" : true,
+        "Hanna Myllymäki" : false
+    },
+    "Mikä on Koponen Dating Simulatorin ensimmäisen git-commitin otsikko?": {
+        "Create UselessFile.txt" : true,
+        "Update pelikoodi.py" : false,
+        "Item tip only visible once at a time" : false,
+        "Added more resources for zombies" : false,
+        "Final commit to this reposity." : false
+    },
+    "Onko YTL-sensoreilla riittävä arviointikyky sekä tyylitaju?" : {
+        "Kyllä" : false,
+        "Ei" : true
+    },
+    "Minä vuonna COVID-19 julkaistiin?" : {
+        "2017" : false,
+        "2018" : false,
+        "2019" : true,
+        "2020" : false,
+        "2021" : false,
+        "2022" : false,
+        "2023" : false,
+        "2024" : false
+    },
+    "Mikä seuraavista git-commiteista on tehty 5.12.2020?" : {
+        "Vitun save system saatana" : true,
+        "Added this stolen music that Niko requested": false,
+        "Fuck you Python" : false,
+        "Ah fuck my life" : false,
+        "Removed useless shite" : false
+    },
+    "Mikä seuraavista käyttöjärjestelmistä on objektiivisesti paras?" : {
+        "Windows 10" : false,
+        "Windows 11": false,
+        "GNU/Linux" : false,
+        "Android" : false,
+        "iOS" : false,
+        "MacOS" : false,
+        "TempleOS" : true,
+        "SymbianOS" : false,
+        "FreeBSD" : false
+    },
+    "Rikkooko Koponen Dating Simulator tekijänoikeuksia?" : {
+        "Kyllä. Ymmärrän myös kotitalouksien tulipalojen konkreettisen riskin." : false,
+        "Ei." : true
+    },
+    "Rikkooko Koponen Dating Simulator ihmisoikeuksia?" : {
+        "Kyllä. Ymmärrän myös auton alle jäämisen todellisen riskin." : false,
+        "Ei." : true
+    },
+    "Rikkooko Koponen Dating Simulator vähemmistöjen oikeuksia?" : {
+        "Kyllä. Ymmärrän myös taivaalta putoavien flyygelien aiheuttaman elämisen lakkaamisen todellisen riskin." : false,
+        "Ei." : true
+    },
+    "Mistä seuraavista asioista Avarn Security erityisesti tunnetaan" : {
+        "Alaikäisiin kohdistuvista törkeistä väkivalta- ja heitteillepanorikoksista" : true,
+        "Yleisen järjestyksen turvaamisesta" : false,
+        "Huumausainerikoksista" : true,
+        "Yhteyksistä äärioikeistoon ja uusnatsi-aatteeseen": true,
+        "Yleisestä rikollisesta toiminnasta": true,
+        "Väkivaltaisuudesta" : true,
+        "Ammattitaitoisista turvallisuuspalveluista" : false,
+        "Tärkeiden asioiden turvaamisesta": false
+    },
+    "Minä vuonna ovat syntyneet Hatanpään yläasteen kaikkien aikojen parhaat oppilaat" : {
+        "2002" : false,
+        "2003" : false,
+        "2004" : false,
+        "2005" : true,
+        "2006" : false,
+        "2007" : false,
+        "2008" : false,
+        "2009" : false,
+        "2010" : false
     }
 }
