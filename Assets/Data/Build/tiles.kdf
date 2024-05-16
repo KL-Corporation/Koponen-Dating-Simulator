@@ -1174,5 +1174,68 @@
         "specialTile": true,
         "noCollision": true,
         "trueScale": true
+    },
+    "Bookshelf": {
+        "serialNumber": 170,
+        "path": "bookshelf.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Smooth Stone": {
+        "serialNumber": 171,
+        "path": "smooth_stone.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Smooth Gold Ore": {
+        "serialNumber": 172,
+        "path": "smooth_stone.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Red Wall 2": {
+        "serialNumber": 173,
+        "path": "red_wall_2.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Blue Wall": {
+        "serialNumber": 174,
+        "path": "blue_wall.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Rusty I-Beam Side Profile": {
+        "serialNumber": 175,
+        "path": "rusty_i_beam_side.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Rusty Steel": {
+        "serialNumber": 176,
+        "path": "rusty_steel.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Rusty Tiles": {
+        "serialNumber": 177,
+        "path": "rusty_tiles.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
+    },
+    "Scratched Steel": {
+        "serialNumber": 178,
+        "path": "scratched_steel.png",
+        "specialTile": false,
+        "noCollision": false,
+        "trueScale": false
     }
 }
