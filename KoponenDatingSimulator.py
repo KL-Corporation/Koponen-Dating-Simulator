@@ -828,13 +828,16 @@ class Trashcan(KDS.Build.Tile):
 #     # This feels useless as we access songs randomly anyways...
 
 #     return songs
-def _load_jukebox_songs() -> list[str]:
+def _load_jukebox_songs() -> tuple[str, ...]:
     DIRNAME: str = "Assets/Audio/JukeboxMusic"
     musikerna = os.listdir(DIRNAME)
-    return [os.path.join(DIRNAME, m) for m in musikerna]
+    return tuple(os.path.join(DIRNAME, m) for m in musikerna)
 
 class Jukebox(KDS.Build.Tile):
-    songs: list[str] = _load_jukebox_songs()
+    PARTICLE_RATE: int = 15 # try place every 15 ticks (0,25 seconds)
+    MIN_PARTICLE_RATE: int = 120 # force place every 150 ticks (2 seconds)
+
+    songs: Final[tuple[str, ...]] = _load_jukebox_songs()
 
     tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
     tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
@@ -852,6 +855,10 @@ class Jukebox(KDS.Build.Tile):
 
         self.playing_index: int = -1
         self.playing: KDS.Audio.MusicOverrideHandle | None = None
+
+        self.particle_counter: int = 0
+        self.last_particle_counter: int = 0
+        self.last_particle_offset: int | None = None
 
     def stopPlayingTrack(self):
         if self.playing is not None:
@@ -889,10 +896,29 @@ class Jukebox(KDS.Build.Tile):
             lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
             jukebox_volume = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
             self.playing.SetLocalVolume(jukebox_volume)
-            Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
-            if random.randint(0, 1000) < 13:
-                Particles.append(KDS.World.Lighting.Noteparticle((self.rect.centerx - 20 + random.randint(-10, 10), self.rect.centery - 20), 20, 230, 0.8))
+            if KDS.World.Dark.enabled:
+                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
+
+            self.last_particle_counter += 1
+            if self.last_particle_counter > Jukebox.MIN_PARTICLE_RATE:
+                self.last_particle_offset = None
+
+            self.particle_counter += 1
+            if self.particle_counter > Jukebox.PARTICLE_RATE:
+                self.particle_counter = 0
+
+                PARTICLE_SIZE: int = KDS.World.Lighting.NoteParticle.SIZE
+                particle_offset: int = random.randint(-PARTICLE_SIZE, PARTICLE_SIZE)
+
+                if self.last_particle_offset is None or abs(self.last_particle_offset - particle_offset) > PARTICLE_SIZE:
+                    self.last_particle_offset = particle_offset
+                    self.last_particle_counter = 0
+
+                    particle_x: int = self.rect.centerx + particle_offset - KDS.World.Lighting.NoteParticle.HALF_SIZE
+                    particle_y: int = self.rect.top - KDS.World.Lighting.NoteParticle.HALF_SIZE
+
+                    Particles.append(KDS.World.Lighting.NoteParticle((particle_x, particle_y), angleDeg=random.randint(-15, 15)))
 
         return self.texture
 
@@ -3671,7 +3697,7 @@ def agr():
         c = False
     return True
 game_initialization_logger.stop("Console Loading Complete.")
-game_whole_initialization_logger.stop("Game Initialisation Complete.")
+game_whole_initialization_logger.stop("Game Initialisation Complete.", consoleVisible=True)
 game_whole_initialization_duration: Final[float] = game_whole_initialization_logger.accumulatedTime
 KDS.Logging.debug(f"Unmeasured loading execution time: {game_whole_initialization_duration - game_initialization_logger.accumulatedTime:.3f}")
 KDS.Loading.fake_load_extra(game_whole_initialization_duration, quickload)
@@ -4639,6 +4665,12 @@ while main_running:
     if len(Particles) > maxParticles:
         Particles = Particles[maxParticles:]
     renderedParticleCount = len(Particles)
+
+    # Do not check enabled for each particle render, only check when necessary
+    if KDS.Debug.Enabled:
+        for particle in Particles:
+            pygame.draw.rect(screen, KDS.Colors.Purple, (particle.rect.x - scroll[0], particle.rect.y - scroll[1], particle.rect.w, particle.rect.h))
+
     for particle in Particles:
         result = particle.update(screen, scroll)
         if isinstance(result, pygame.Surface):

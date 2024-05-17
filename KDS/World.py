@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Dict, Final, List, Literal, NamedTuple, Optional, Self, Sequence, Set, Tuple, Type, Union
 
 import pygame
 import pygame.mixer
@@ -44,11 +44,20 @@ def init():
     Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
     Lighting.Shapes.fluorecent = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/fluorecent.png").convert_alpha())
 
-    Lighting.Noteparticle.textures = [pygame.image.load(f"Assets/Textures/Particles/note_{index}.png") for index in range(10)]
-    for texture in Lighting.Noteparticle.textures:
-        texture.set_colorkey(KDS.Colors.White)
+    NEIN: Final[Literal[False]] = False
 
-        texture = pygame.transform.scale(texture, (texture.get_width() / 4, texture.get_height() / 4))
+    Lighting.NoteParticle.textures = (
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_0.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_1.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_2.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_3.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_4.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_5.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_6.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_7.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_8.png", allow_rotate=True),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_9.png", allow_rotate=NEIN),
+    )
 
 def collision_test(rect: pygame.Rect, Tile_list: List[List[List]]):
     hit_list = []
@@ -312,29 +321,51 @@ class Lighting:
             self.tsurf = pygame.transform.scale(self.tsurf, (self.bsurf.get_width()*2, self.bsurf.get_height()*2))
             return self.tsurf
 
-    class Noteparticle(Particle):
-        textures = []
+    class NoteParticle(Particle):
+        class NoteParticleTexture(NamedTuple):
+            texture: pygame.Surface
+            allow_rotate: bool
 
-        def __init__(self, position, size, lifetime, speed, direction = 1):
-            super().__init__(position, size)
-            self.lifetime = lifetime
+            @classmethod
+            def load(cls, path: str, allow_rotate: bool) -> Self:
+                tex: pygame.Surface = pygame.image.load(path)
+                tex.set_colorkey(KDS.Colors.White)
+
+                # This was in the original code but it did nothing as it was accidentally assigned to an unreferenced value
+                # tex = pygame.transform.scale(tex, (tex.get_width() / 4, tex.get_height() / 4))
+
+                return cls(tex, allow_rotate)
+
+        SIZE: int = 20
+        HALF_SIZE: int = round(SIZE / 2)
+
+        textures: tuple[NoteParticleTexture, ...]
+
+        def __init__(self, position: tuple[int, int], angleDeg: float):
+            """angleDeg is ignored on particles where rotation is forbidden."""
+
+            super().__init__(position, Lighting.NoteParticle.SIZE)
+            self.lifetime = 40
             self.life = 0
-            self.speed = speed
-            self.direction = direction
-            self.dying_speed = 15
+            self.speed = 0.1
+            self.dying_speed = 5
             self.opacity = 255
 
-            self.float_position: List[float] = list(position)
+            self.float_y: float = position[1]
 
-            self.texture = random.choice(Lighting.Noteparticle.textures)
+            tex = random.choice(Lighting.NoteParticle.textures)
+            if tex.allow_rotate:
+                self.texture = pygame.transform.rotate(tex.texture, angle=angleDeg)
+            else:
+                self.texture = tex.texture
 
         def update(self, Surface: pygame.Surface, scroll: List[int]) -> pygame.Surface | KDS.World.Lighting.Particle.UpdateAction:
-            self.float_position[1] -= self.speed * self.direction
-            self.rect.y = KDS.Math.RoundCustomInt(self.float_position[1])
+            self.float_y -= self.speed
+            self.rect.y = KDS.Math.FloorToInt(self.float_y)
 
             self.life += 5
-
             if self.life >= self.lifetime:
+                self.life = self.lifetime
                 self.opacity -= self.dying_speed
 
             if self.opacity <= 0:
@@ -342,7 +373,7 @@ class Lighting:
 
             self.texture.set_alpha(self.opacity)
 
-            Surface.blit(self.texture, (self.rect.centerx - scroll[0], self.rect.centery - scroll[1]))
+            Surface.blit(self.texture, (self.rect.centerx - (self.texture.get_width() / 2) - scroll[0], self.rect.centery - (self.texture.get_height() / 2) - scroll[1]))
 
             return Lighting.Particle.UpdateAction.NoLight
 
