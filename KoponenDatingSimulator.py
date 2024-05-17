@@ -3714,13 +3714,14 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     Player = PlayerClass()
 
     #region World Data
-    global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones
+    global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones, Particles
     Items.clear()
     Explosions.clear()
     BallisticObjects.clear()
     Projectiles.clear()
     Entities.clear()
     Zones.clear()
+    Particles.clear()
     #endregion
     #region Class Data
     KDS.NPC.NPC.InstanceList.clear()
