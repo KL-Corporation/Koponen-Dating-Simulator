@@ -342,26 +342,28 @@ def Exam(showtitle = True):
 
         c = False
         while exam_running:
+            KDS.Keys.Update()
             for event in pygame.event.get():
+                KDS.Keys.RegisterEvent(event)
+
                 if event.type == pygame.QUIT:
                     if KDS.System.MessageBox.Show("Quit?", "Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
                         _quit = True
                         return
                 elif event.type == MOUSEBUTTONDOWN:
-                    if event.button == 1: c = True
-                elif event.type == KEYDOWN:
-                    if event.key in KDS.Keys.toggleFullscreen.Bindings:
-                        pygame.display.toggle_fullscreen()
-                        KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                elif event.type == KEYUP:
-                    if event.key == K_LEFT:
-                        last_page_index = page_index
-                        page_index = max(0, page_index -1)
-                        if last_page_index != page_index: KDS.Audio.PlaySound(random.choice(page_turning))
-                    elif event.key == K_RIGHT:
-                        last_page_index = page_index
-                        page_index = min(len(pages) - 1, page_index + 1)
-                        if last_page_index != page_index: KDS.Audio.PlaySound(random.choice(page_turning))
+                    if event.button == 1:
+                        c = True
+
+            if KDS.Keys.altLeft.onDown:
+                last_page_index = page_index
+                page_index = max(0, page_index -1)
+                if last_page_index != page_index:
+                    KDS.Audio.PlaySound(random.choice(page_turning))
+            if KDS.Keys.altRight.onDown:
+                last_page_index = page_index
+                page_index = min(len(pages) - 1, page_index + 1)
+                if last_page_index != page_index:
+                    KDS.Audio.PlaySound(random.choice(page_turning))
 
             Display.blit(background, (0, 0))
             Display.blit(exam_paper, relative_position)
@@ -378,8 +380,10 @@ def Exam(showtitle = True):
 
             mouse_position = pygame.mouse.get_pos()
             strtime, nmtime = timer.get_time()
-            if page_index > 0: page_return_button.update(mouse_position, c)
-            if page_index < len(pages) - 1: page_next_button.update(mouse_position, c)
+            if page_index > 0:
+                page_return_button.update(mouse_position, c)
+            if page_index < len(pages) - 1:
+                page_next_button.update(mouse_position, c)
             exam_return_button.update(mouse_position, c)
             if nmtime < 0:
                 exam_music.stop()

@@ -7,8 +7,6 @@ import KDS.Events
 import KDS.Logging
 import KDS.Math
 
-MUSICENDEVENT = pygame.event.custom_type()
-
 SoundMixer = pygame.mixer
 MusicMixer = pygame.mixer.music
 
@@ -18,8 +16,6 @@ EffectChannels: List[SoundMixer.Channel]
 def init():
     global MusicVolume, EffectVolume, EffectChannels
     pygame.mixer.init()
-
-    MusicMixer.set_endevent(MUSICENDEVENT)
 
     SoundMixer.set_num_channels(KDS.ConfigManager.GetSetting("Mixer/channelCount", ...))
 
@@ -104,8 +100,6 @@ class Music:
     """
 
     Overridden: MusicOverrideHandle | None = None
-
-    OnEnd = KDS.Events.Event()
 
     @staticmethod
     def Play(path: Optional[str] = None, loop: bool = True, start: float = 0.0):

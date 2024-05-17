@@ -205,8 +205,8 @@ functionKey = Key("functionKey", Binding(BindingType.keyboard, K_e), None)
 actionKey = Key("actionKey", Binding(BindingType.mouse, 1), Binding(BindingType.keyboard, K_r))
 altUp = Key("altUp", Binding(BindingType.keyboard, K_UP), None)
 altDown = Key("altDown", Binding(BindingType.keyboard, K_DOWN), None)
-# altLeft = Key("altLeft", Binding(BindingType.keyboard, K_LEFT), None)
-# altRight = Key("altRight", Binding(BindingType.keyboard, K_RIGHT), None)
+altLeft = Key("altLeft", Binding(BindingType.keyboard, K_LEFT), None)
+altRight = Key("altRight", Binding(BindingType.keyboard, K_RIGHT), None)
 fart = Key("fart", Binding(BindingType.keyboard, K_f), None)
 dropItem = Key("dropItem", Binding(BindingType.keyboard, K_q), None)
 terminal = Key("terminal", Binding(BindingType.keyboard, K_t), None)
@@ -246,8 +246,8 @@ REBINDABLEKEYS: tuple[tuple[RebindLabel, Key], ...] = (
     (RebindLabel("Action", "shoot, throw, ..."), actionKey),
     (RebindLabel("Aim Up", "aim grenade"), altUp),
     (RebindLabel("Aim Down", "aim grenade"), altDown),
-    # (RebindLabel("Align Left"), altLeft),
-    # (RebindLabel("Align Right"), altRight),
+    (RebindLabel("Aim Left", "switch exam page"), altLeft),
+    (RebindLabel("Aim Right", "switch exam page"), altRight),
     (RebindLabel("Fart"), fart),
     (RebindLabel("Drop Item"), dropItem),
     (RebindLabel("Open Terminal"), terminal),

@@ -25,7 +25,6 @@ import KDS.World
 import KDS.Scores
 import KDS.Debug
 import KDS.Clock
-import KDS.Keys
 import KDS.Story
 import KDS.Build
 
@@ -278,26 +277,29 @@ class Talk:
                 if i == len(Talk.lines) - 1:
                     lastIncluded = True
 
+            animationRectTarget: pygame.Rect | None
             if len(Talk.lines) > 0:
                 lastLine = Talk.lines[-1]
                 if lastLine.startswith("!"):
                     lastLine = lastLine.removeprefix("!")
                 animationRectTarget = pygame.Rect(text_padding.left + _renderedPrefixes[lastLine[:2]].get_width(),
                                                 text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(lastLine[2:])[0], text_font.get_height())
-            else: animationRectTarget = pygame.Rect(0, 0, 0, 0)
+            else:
+                animationRectTarget = None
 
-            if Talk.Conversation.newAnimation:
-                Talk.Conversation.newAnimation = False
-                Talk.Conversation.animationProgress = 0.0
-                Talk.Conversation.animationWidth = animationRectTarget.width
+            if animationRectTarget is not None:
+                if Talk.Conversation.newAnimation:
+                    Talk.Conversation.newAnimation = False
+                    Talk.Conversation.animationProgress = 0.0
+                    Talk.Conversation.animationWidth = animationRectTarget.width
 
-            if Talk.Conversation.animationProgress >= 1.0:
-                Talk.Conversation.animationProgress = -1
-            if Talk.Conversation.animationProgress != -1:
-                Talk.Conversation.animationWidth = max(Talk.Conversation.animationWidth - line_reveal_speed, 0)
-                Talk.Conversation.animationProgress = KDS.Math.Remap01(Talk.Conversation.animationWidth, animationRectTarget.width, 0)
-                if lastIncluded:
-                    pygame.draw.rect(Talk.display, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
+                if Talk.Conversation.animationProgress >= 1.0:
+                    Talk.Conversation.animationProgress = -1
+                if Talk.Conversation.animationProgress != -1:
+                    Talk.Conversation.animationWidth = max(Talk.Conversation.animationWidth - line_reveal_speed, 0)
+                    Talk.Conversation.animationProgress = KDS.Math.Remap01(Talk.Conversation.animationWidth, animationRectTarget.width, 0)
+                    if lastIncluded:
+                        pygame.draw.rect(Talk.display, background_color, pygame.Rect(animationRectTarget.x + (animationRectTarget.width - Talk.Conversation.animationWidth), animationRectTarget.y, Talk.Conversation.animationWidth, animationRectTarget.height))
 
             pygame.draw.rect(Talk.display, background_outline_color, pygame.Rect(0, 0, Talk.display_size[0], Talk.display_size[1]), conversation_outline_width, conversation_border_radius)
             return Talk.display
@@ -321,7 +323,7 @@ class Talk:
             Talk.running = False
 
     @staticmethod
-    def start(display: pygame.Surface, player_inventory: KDS.Inventory.Inventory, KDS_Quit: Callable, autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
+    def start(display: pygame.Surface, player_inventory: KDS.Inventory.Inventory, defaultEventHandler: Callable[[pygame.event.Event], bool], autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
         originalMusicVolume = KDS.Audio.MusicVolume
         KDS.Audio.Music.SetVolume(originalMusicVolume / 4)
 
@@ -350,23 +352,18 @@ class Talk:
 
         while Talk.running:
             mouse_pos = pygame.mouse.get_pos()
-            conversation_mouse_pos = (mouse_pos[0] - conversation_rect.left, mouse_pos[0] - conversation_rect.top)
+            # conversation_mouse_pos = (mouse_pos[0] - conversation_rect.left, mouse_pos[0] - conversation_rect.top)
             c = False
             for event in pygame.event.get():
+                if defaultEventHandler(event):
+                    continue
+
                 if event.type == KEYDOWN:
-                    if event.key in KDS.Keys.toggleFullscreen.Bindings:
-                        pygame.display.toggle_fullscreen()
-                        KDS.ConfigManager.ToggleSetting("Renderer/fullscreen", ...)
-                    elif event.key == K_F4:
-                        if pygame.key.get_pressed()[K_LALT]:
-                            KDS_Quit()
-                    elif event.key == K_ESCAPE:
+                    if event.key == K_ESCAPE:
                         Talk.stop()
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         c = True
-                elif event.type == QUIT:
-                    KDS_Quit()
                 elif event.type == MOUSEWHEEL:
                     Talk.Conversation.scroll = KDS.Math.Clamp(Talk.Conversation.scroll - line_scroll_speed * event.y, 0, max(len(Talk.lines) - Talk.lineCount, 0))
 

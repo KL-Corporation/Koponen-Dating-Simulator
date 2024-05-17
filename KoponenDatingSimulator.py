@@ -638,18 +638,15 @@ del default_paths, sounds
 
 KDS.Build.init(tileData, itemData, t_textures, i_textures)
 
-def defaultEventHandler(event: pygame.event.Event, *ignore: int) -> bool:
-    if event.type in ignore:
-        return False
-
+def defaultEventHandler(event: pygame.event.Event, *, ignore_quit: bool = False) -> bool:
     KDS.Keys.RegisterEvent(event)
 
-    if event.type == KDS.Audio.MUSICENDEVENT:
-        KDS.Audio.Music.OnEnd.Invoke()
-        return True
-    elif event.type == QUIT:
-        KDS_Quit(confirm=True)
-        return True
+    if event.type == QUIT:
+        if ignore_quit:
+            return False
+        else:
+            KDS_Quit(confirm=True)
+            return True
     return False
 
 class ScreenEffects:
@@ -3677,7 +3674,7 @@ def agr():
     while tcagr_running:
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
-            if defaultEventHandler(event, QUIT):
+            if defaultEventHandler(event, ignore_quit=True):
                 continue
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -4214,7 +4211,7 @@ def main_menu():
     while main_menu_running:
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
-            if defaultEventHandler(event, QUIT):
+            if defaultEventHandler(event, ignore_quit=True):
                 continue
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -4627,7 +4624,7 @@ while main_running:
                     talk = True
         if talk:
             Koponen.start_with_talk = False
-            result = KDS.Koponen.Talk.start(display, Player.inventory, KDS_Quit, autoExit=Koponen.force_talk)
+            result = KDS.Koponen.Talk.start(display, Player.inventory, defaultEventHandler=defaultEventHandler, autoExit=Koponen.force_talk)
             if result:
                 KDS.Missions.ForceFinish()
                 tmp = pygame.Surface(display_size)
