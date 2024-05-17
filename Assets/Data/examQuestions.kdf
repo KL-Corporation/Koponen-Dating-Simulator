@@ -374,51 +374,51 @@
         "Chile on tärkeä kuparintuottaja": true
     },
     "Kuka oli Hatsun vuoden 2021 kuningatar?": {
-        "Hashim Alkaff" : false,
-        "Mohammed Al Anal-Raiskhar" : false,
-        "Roope Roito" : true,
-        "Hanna Myllymäki" : false
+        "Hashim Alkaff": false,
+        "Mohammed Al Anal-Raiskhar": false,
+        "Roope Roito": true,
+        "Hanna Myllymäki": false
     },
-    "Minä vuonna COVID-19 julkaistiin?" : {
-        "2017" : false,
-        "2018" : false,
-        "2019" : true,
-        "2020" : false,
-        "2021" : false,
-        "2022" : false,
-        "2023" : false,
-        "2024" : false
+    "Minä vuonna COVID-19 julkaistiin?": {
+        "2017": false,
+        "2018": false,
+        "2019": true,
+        "2020": false,
+        "2021": false,
+        "2022": false,
+        "2023": false,
+        "2024": false
     },
-    "Mikä seuraavista käyttöjärjestelmistä on objektiivisesti paras?" : {
-        "Windows 10" : false,
+    "Mikä seuraavista käyttöjärjestelmistä on objektiivisesti paras?": {
+        "Windows 10": false,
         "Windows 11": false,
-        "GNU/Linux" : false,
-        "Android" : false,
-        "iOS" : false,
-        "MacOS" : false,
-        "TempleOS" : true,
-        "SymbianOS" : false,
-        "FreeBSD" : false
+        "GNU/Linux": false,
+        "Android": false,
+        "iOS": false,
+        "MacOS": false,
+        "TempleOS": true,
+        "SymbianOS": false,
+        "FreeBSD": false
     },
-    "Mistä seuraavista asioista Avarn Security erityisesti tunnetaan" : {
-        "Alaikäisiin kohdistuvista törkeistä väkivalta- ja heitteillepanorikoksista" : true,
-        "Huumausainerikoksista" : true,
+    "Mistä seuraavista asioista Avarn Security erityisesti tunnetaan": {
+        "Alaikäisiin kohdistuvista törkeistä väkivalta- ja heitteillepanorikoksista": true,
+        "Huumausainerikoksista": true,
         "Yhteyksistä äärioikeistoon ja uusnatsi-aatteeseen": true,
         "Yleisestä rikollisesta toiminnasta": true,
-        "Väkivaltaisuudesta" : true,
-        "Yleisen järjestyksen turvaamisesta" : false,
-        "Ammattitaitoisista turvallisuuspalveluista" : false,
+        "Väkivaltaisuudesta": true,
+        "Yleisen järjestyksen turvaamisesta": false,
+        "Ammattitaitoisista turvallisuuspalveluista": false,
         "Tärkeiden asioiden turvaamisesta": false
     },
-    "Minä vuonna ovat syntyneet Hatanpään yläasteen kaikkien aikojen parhaat oppilaat" : {
-        "2002" : false,
-        "2003" : false,
-        "2004" : false,
-        "2005" : true,
-        "2006" : false,
-        "2007" : false,
-        "2008" : false,
-        "2009" : false,
-        "2010" : false
+    "Minä vuonna ovat syntyneet Hatanpään yläasteen kaikkien aikojen parhaat oppilaat": {
+        "2002": false,
+        "2003": false,
+        "2004": false,
+        "2005": true,
+        "2006": false,
+        "2007": false,
+        "2008": false,
+        "2009": false,
+        "2010": false
     }
 }
