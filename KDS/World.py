@@ -223,6 +223,13 @@ class Lighting:
             self.pos = position
 
         def update(self, Surface, scroll) -> Union[pygame.Surface, Lighting.Particle.UpdateAction]:
+            """
+            Returns a light surface if this particle emits light.
+            Returns Lighting.Particle.UpdateAction.NoLight otherwise.
+
+            Returns a Lighting.Particle.UpdateAction.KillParticle when particle is ready to be destroyed by Koponen Engine™
+            """
+
             return Lighting.Particle.UpdateAction.Error
 
     class WaterParticle(Particle):
@@ -332,10 +339,12 @@ class Lighting:
 
             if self.opacity <= 0:
                 return Lighting.Particle.UpdateAction.KillParticle
-            
+
             self.texture.set_alpha(self.opacity)
 
             Surface.blit(self.texture, (self.rect.centerx - scroll[0], self.rect.centery - scroll[1]))
+
+            return Lighting.Particle.UpdateAction.NoLight
 
 class Bullet:
     GodMode = False
