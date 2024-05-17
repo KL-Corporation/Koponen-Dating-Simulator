@@ -3,6 +3,8 @@
         "*.kdf": "json",
         "settings.cfg": "json"
     },
+    "files.trimTrailingWhitespace": true,
+
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.diagnosticSeverityOverrides": {
         "reportWildcardImportFromLibrary": "none"
