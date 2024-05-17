@@ -5,6 +5,7 @@ import pygame.mixer
 import KDS.ConfigManager
 import KDS.Events
 import KDS.Logging
+import KDS.Math
 
 MUSICENDEVENT = pygame.event.custom_type()
 
@@ -34,12 +35,12 @@ class _MusicLoadedContext(NamedTuple):
 class _MusicPlayingContext(NamedTuple):
     filepath: str
     start: float
-    loops: int
+    loop: bool
 
 class MusicOverrideHandle:
-    def __init__(self, *, _ctx: _MusicPlayingContext | None, _musicplayer_pos_seconds: float) -> None:
+    def __init__(self, *, _ctx: _MusicPlayingContext | None, _musicmixer_pos_ms: float) -> None:
         self._ctx: _MusicPlayingContext | None = _ctx
-        self._music_player_position: float = _musicplayer_pos_seconds
+        self._musicmixer_pos_ms: float = _musicmixer_pos_ms
 
         self._local_volume: float = 1.0
         self._is_active: bool = True
@@ -78,11 +79,16 @@ class MusicOverrideHandle:
         Music.Overridden = None
 
         if self._ctx is not None:
-            start: float = self._ctx.start + self._music_player_position
+            start: float
+            if not self._ctx.loop:
+                start = self._ctx.start + (self._musicmixer_pos_ms / 1000)
+            else:
+                start = 0.0
+
             MusicMixer.set_volume(MusicVolume)
 
             if _play_base_song:
-                Music.Play(self._ctx.filepath, loops=self._ctx.loops, start=start)
+                Music.Play(self._ctx.filepath, loop=self._ctx.loop, start=start)
         else:
             if _play_base_song:
                 Music.Stop()
@@ -102,15 +108,15 @@ class Music:
     OnEnd = KDS.Events.Event()
 
     @staticmethod
-    def Play(path: Optional[str] = None, loops: int = -1, start: float = 0.0):
+    def Play(path: Optional[str] = None, loop: bool = True, start: float = 0.0):
         global MusicMixer, MusicVolume
         if path != None and len(path) > 0:
             Music.Load(path=path)
 
         assert(Music.Loaded is not None)
-        MusicMixer.play(loops=loops, start=start)
+        MusicMixer.play(loops=(-1 if loop else 0), start=start)
         MusicMixer.set_volume(MusicVolume)
-        Music.Playing = _MusicPlayingContext(filepath=Music.Loaded.filepath, loops=loops, start=start)
+        Music.Playing = _MusicPlayingContext(filepath=Music.Loaded.filepath, loop=loop, start=start)
 
     @staticmethod
     def Stop():
@@ -136,15 +142,15 @@ class Music:
         MusicMixer.unpause()
 
     @staticmethod
-    def Override(path: Optional[str] = None, loops: int = -1) -> MusicOverrideHandle:
+    def Override(path: Optional[str] = None, loop: bool = True) -> MusicOverrideHandle:
         if Music.Overridden is not None:
             raise RuntimeError("Cannot override! Music has already been overridden.")
 
         handle = MusicOverrideHandle(
             _ctx=Music.Playing,
-            _musicplayer_pos_seconds=(MusicMixer.get_pos() / 1000)
+            _musicmixer_pos_ms=(MusicMixer.get_pos() / 1000)
         )
-        Music.Play(path, loops=loops)
+        Music.Play(path, loop=loop)
         Music.Overridden = handle
 
         return handle

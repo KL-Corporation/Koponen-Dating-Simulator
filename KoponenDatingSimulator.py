@@ -871,7 +871,7 @@ class Jukebox(KDS.Build.Tile):
         self.lastPlayed.pop(0)
         self.lastPlayed.append(self.playing_index)
 
-        self.playing = KDS.Audio.Music.Override(Jukebox.songs[self.playing_index], loops=0)
+        self.playing = KDS.Audio.Music.Override(Jukebox.songs[self.playing_index], loop=False)
 
     def update(self):
         if self.rect.colliderect(Player.rect):
