@@ -420,5 +420,40 @@
         "2008": false,
         "2009": false,
         "2010": false
+    },
+    "Tietyn alueen kaikkien eliöiden muodostama kokonaisuus": {
+        "populaatio": false,
+        "ekosysteemi": false,
+        "abioottinen kokonaisuus": false,
+        "eliöyhteisö": true,
+        "biosfääri": false
+    },
+    "Monien kasvien ja niitä pölyttävien hyönteisten sopeutuminen on ollut toisistaan riippuvaista. Mikä ilmiö on kyseessä?": {
+        "loisiminen": false,
+        "pöytävieraus": false,
+        "symbioosi": false,
+        "mutualismi": false,
+        "koevoluutio": true
+    },
+    "Mikä seuraavista EI KUULU hiilen pitkäaikaisiin varastoihin?": {
+        "maakaasu": false,
+        "kivihiili": false,
+        "turve": true,
+        "öljy": false,
+        "metaani": false
+    },
+    "Mikä seuraavista EI TOIMI hiilinieluna?": {
+        "trooppinen sademetsä": false,
+        "luonnontilainen suo": false,
+        "meri": false,
+        "sekametsävaiheen metsä": false,
+        "tehoviljelyssä oleva pelto": true
+    },
+    "Mikä seuraavista EI OLE abioottinen ympäristötekijä?": {
+        "maaperän ravinteet": false,
+        "sademäärä": false,
+        "ravinto": true,
+        "valo": false,
+        "lämpötila": false
     }
 }
