@@ -3632,23 +3632,22 @@ def console(oldSurf: pygame.Surface):
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for godmode")
             elif command_list[0] == "help":
-                KDS.Console.Feed.append("""
-        Console Help:
-            - give => Adds the specified item to your inventory.
-            - remove => Removes the specified item from your inventory.
-            - kill | stop => Stops the game.
-            - killme => Kills the player.
-            - killall => Kills all entities.
-            - terms => Sets Terms and Conditions accepted to the specified value.
-            - woof => Sets all bulldogs anger to the specified value.
-            - finish => Forces level finish, finishes missions or finishes active mission.
-            - infinite => Sets the specified infinite type to the specified value.
-            - teleport => Teleports player either to static coordinates or relative coordinates.
-            - summon => Summons enemy to the coordinates of player's rectangle's top left corner.
-            - fly => Sets fly mode to the specified value.
-            - godmode => Gives the player some buffs like infinite health
-            - help => Shows the list of commands.
-        """)
+                KDS.Console.Feed.extend("""
+Console Help:
+    - give => Adds the specified item to your inventory.
+    - remove => Removes the specified item from your inventory.
+    - kill | stop => Stops the game.
+    - killme => Kills the player.
+    - killall => Kills all entities.
+    - terms => Sets Terms and Conditions accepted to the specified value.
+    - woof => Sets all bulldogs anger to the specified value.
+    - finish => Forces level finish, finishes missions or finishes active mission.
+    - infinite => Sets the specified infinite type to the specified value.
+    - teleport => Teleports player either to static coordinates or relative coordinates.
+    - summon => Summons enemy to the coordinates of player's rect's top-left corner.
+    - fly => Sets fly mode to the specified value.
+    - godmode => Gives the player some buffs like infinite health
+    - help => Shows the list of commands.""".splitlines())
             else:
                 KDS.Console.Feed.append("Invalid Command.")
         except Exception as e:
