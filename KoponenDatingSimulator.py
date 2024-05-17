@@ -13,7 +13,7 @@ import random
 import shutil
 import traceback
 from enum import IntEnum, IntFlag, auto
-from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Dict, Final, List, NamedTuple, Optional, Sequence, Tuple, Type, Union
 
 import time
 
@@ -3704,7 +3704,11 @@ assert(not asset_loading_logger.is_running)
 assert(not animation_loading_logger.is_running)
 #endregion
 #region Game Functions
-def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading: bool = True, auto_play_music: bool = True):
+class PlayCustomLoadscreen(NamedTuple):
+    start: Callable[[], None]
+    end: Callable[[], None]
+
+def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load: PlayCustomLoadscreen | None = None, auto_play_music: bool = True):
     game_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
     game_loading_logger.start("Loading Game...")
 
@@ -3713,7 +3717,9 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     pygame.mouse.set_visible(False)
     KDS.Audio.Music.Stop()
 
-    if show_loading:
+    if custom_load is not None:
+        custom_load.start()
+    else:
         KDS.Loading.Circle.Start(display)
 
     level_index: int
@@ -3791,13 +3797,17 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, show_loading
     KDS.Keys.Reset()
     game_loading_logger.stop(f"Game Loaded.", consoleVisible=True)
     KDS.Loading.fake_load_extra(game_loading_logger.accumulatedTime, quickload)
-    if show_loading:
+
+    if custom_load is not None:
+        custom_load.end()
+    else:
         KDS.Loading.Circle.Stop()
+
     #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
     if auto_play_music and KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
 
-def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, oldSurf: Optional[pygame.Surface] = None):
+def play_story(saveIndex: int, newSave: bool = True, oldSurf: Optional[pygame.Surface] = None):
     pygame.mouse.set_visible(False)
 
     map_names: Dict[int, str] = {}
@@ -3854,11 +3864,19 @@ def play_story(saveIndex: int, newSave: bool = True, show_loading: bool = True, 
     KDS.Audio.Music.Stop()
 
     animationOverride = map_names[KDS.ConfigManager.Save.Active.Story.index] != "<no-animation>"
-    if animationOverride and show_loading:
-        KDS.Loading.Story.Start(display, oldSurf, map_names[KDS.ConfigManager.Save.Active.Story.index], ArialTitleFont, ArialFont)
+
+    custom_load: PlayCustomLoadscreen | None
+    if animationOverride:
+        custom_load_active_save: Final = KDS.ConfigManager.Save.Active
+        custom_load = PlayCustomLoadscreen(
+            start=lambda: KDS.Loading.Story.Start(display, oldSurf, map_names[custom_load_active_save.Story.index], ArialTitleFont, ArialFont),
+            end=lambda: KDS.Loading.Story.WaitForExit(pump_events=True)
+        )
+    else:
+        custom_load = None
+
     KDS.Koponen.setPlayerPrefix(KDS.ConfigManager.Save.Active.Story.playerName)
-    play_function(KDS.Gamemode.Modes.Story, True, show_loading=not animationOverride, auto_play_music=False)
-    KDS.Loading.Story.WaitForExit(pump_events=True)
+    play_function(KDS.Gamemode.Modes.Story, True, custom_load=custom_load, auto_play_music=False)
     if KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
 
