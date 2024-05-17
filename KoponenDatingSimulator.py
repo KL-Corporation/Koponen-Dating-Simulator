@@ -15,8 +15,6 @@ import traceback
 from enum import IntEnum, IntFlag, auto
 from typing import Any, Callable, Dict, Final, List, NamedTuple, Optional, Sequence, Tuple, Type, Union
 
-import time
-
 import pygame
 import pygame.mixer
 from pygame.locals import *
