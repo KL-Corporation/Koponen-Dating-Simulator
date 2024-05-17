@@ -375,7 +375,6 @@ try:
 except:
     KDS.Logging.AutoError("Game Settings could not be loaded!")
 
-debug_gamesetting_allow_subprog_debug: bool = KDS.ConfigManager.GetGameData("Debug/allowSubprogramTesting")
 debug_gamesetting_allow_console_in_storymode: bool = KDS.ConfigManager.GetGameData("Debug/allowConsoleInStoryMode")
 #endregion
 #region World Data
@@ -1871,9 +1870,9 @@ class PistokoeDoor(KDS.Build.Tile):
                 screen.blit(PistokoeDoor.tip, (self.rect.centerx - PistokoeDoor.tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
                 if KDS.Keys.functionKey.clicked:
                     KDS.Missions.SetProgress("story_exam", "go_to_class", 1.0)
-                    KDS.Audio.MusicMixer.pause()
+                    KDS.Audio.Music.Pause()
                     quit_temp, exam_grade = KDS.School.Exam()
-                    KDS.Audio.MusicMixer.unpause()
+                    KDS.Audio.Music.Unpause()
                     self.used = not self.allowMultipleUses
                     if quit_temp:
                         KDS_Quit()
@@ -3428,12 +3427,23 @@ def console(oldSurf: pygame.Surface):
             "zombie" : "break"
         },
         "fly": trueFalseTree,
-        "godmode": trueFalseTree
+        "godmode": trueFalseTree,
+        "runprog": {
+            "exam": "break",
+            "story_sad_ending": "break",
+            "certificate": "break",
+        },
+        "help": "break"
     }
 
     consoleRunning = True
 
     blurred_background = KDS.Convert.ToBlur(pygame.transform.scale(oldSurf.copy(), display_size), 6)
+
+    blurred_background_black_overlay = pygame.Surface(blurred_background.get_size())
+    blurred_background_black_overlay.set_alpha(128)
+
+    blurred_background.blit(blurred_background_black_overlay, (0, 0))
 
     while consoleRunning:
         command_list: list = KDS.Console.Start(prompt="Enter Command:", allowEscape=True, checkType=KDS.Console.CheckTypes.Commands(), background=blurred_background, commands=commandTree, autoFormat=True, enableOld=True, showFeed=True)
@@ -3606,8 +3616,13 @@ def console(oldSurf: pygame.Surface):
                     except KeyError:
                         KDS.Console.Feed.append(f"Entity name {command_list[1]} is not valid.")
             elif command_list[0] == "fly":
-                if len(command_list) == 2:
-                    flyState = KDS.Convert.String.ToBool(command_list[1], None)
+                if len(command_list) in (1, 2):
+                    flyState: bool | None
+                    if len(command_list) > 1:
+                        flyState = KDS.Convert.String.ToBool(command_list[1], None)
+                    else:
+                        flyState = not Player.fly
+
                     if flyState != None:
                         Player.fly = flyState
                         KDS.Console.Feed.append(f"Fly state has been set to: {Player.fly}")
@@ -3628,23 +3643,43 @@ def console(oldSurf: pygame.Surface):
                         KDS.Console.Feed.append("Please provide a proper state for godmode")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for godmode")
+            elif command_list[0] == "runprog":
+                if len(command_list) == 2:
+                    if command_list[1] == "exam":
+                        quit_, grade = KDS.School.Exam()
+                        KDS.Console.Feed.append(f"Exam grade: {grade}")
+                        if quit_:
+                            KDS_Quit()
+                    elif command_list[1] == "story_sad_ending":
+                        KDS.Story.Tombstones(display)
+                    elif command_list[1] == "certificate":
+                        KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
+                    else:
+                        KDS.Console.Feed.append("Not a valid runprog program.")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper program for runprog")
             elif command_list[0] == "help":
                 KDS.Console.Feed.extend("""
 Console Help:
-    - give => Adds the specified item to your inventory.
-    - remove => Removes the specified item from your inventory.
-    - kill | stop => Stops the game.
-    - killme => Kills the player.
-    - killall => Kills all entities.
-    - terms => Sets Terms and Conditions accepted to the specified value.
-    - woof => Sets all bulldogs anger to the specified value.
-    - finish => Forces level finish, finishes missions or finishes active mission.
-    - infinite => Sets the specified infinite type to the specified value.
-    - teleport => Teleports player either to static coordinates or relative coordinates.
-    - summon => Summons enemy to the coordinates of player's rect's top-left corner.
-    - fly => Sets fly mode to the specified value.
-    - godmode => Gives the player some buffs like infinite health
-    - help => Shows the list of commands.""".splitlines())
+    - give: Add the specified item to your inventory.
+    - remove: Remove the specified item from your inventory.
+    - kill | stop: Stop the game.
+    - killme: Kill the player.
+    - killall: Kill all entities.
+    - terms: Set Terms and Conditions accepted to the specified value.
+    - woof: Set all bulldogs anger to the specified value.
+    - finish: Force a level finish.
+        Finish all missions or finish the currently active mission.
+    - infinite: Set the specified infinite type to the specified value.
+        If value is not given, infinity is toggled.
+    - teleport: Teleport player to static or relative coordinates.
+    - summon: Summon an enemy to the coordinates of player's rect's top-left corner.
+    - fly: Set fly mode to the specified value.
+        If value is not given, infinity is toggled.
+    - godmode: Activate God Mode.
+        Gives the player some buffs like infinite health
+    - runprog: Run an internal KDS program.
+    - help: Show the list of commands.""".splitlines())
             else:
                 KDS.Console.Feed.append("Invalid Command.")
         except Exception as e:
@@ -4222,20 +4257,6 @@ def main_menu():
                         MenuMode = Mode.MainMenu
                     else:
                         menu_mode_selector(Mode.ModeSelectionMenu)
-                elif event.key == K_F5:
-                    if debug_gamesetting_allow_subprog_debug:
-                        KDS.Audio.Music.Pause()
-                        KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
-                        KDS.Audio.Music.Unpause()
-                    else:
-                        KDS.Logging.info("Certificate not opened. Subprogram debugging disabled in GameData.kdf", consoleVisible=True)
-                elif event.key == K_F6:
-                    if debug_gamesetting_allow_subprog_debug:
-                        KDS.Audio.Music.Pause()
-                        KDS.Story.Tombstones(display)
-                        KDS.Audio.Music.Unpause()
-                    else:
-                        KDS.Logging.info("Tombstones ending not started. Subprogram debugging disabled in GameData.kdf", consoleVisible=True)
             elif event.type == QUIT:
                 KDS_Quit()
 
@@ -4525,15 +4546,6 @@ while main_running:
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 esc_menu = True
-            elif event.key == K_F5:
-                if debug_gamesetting_allow_subprog_debug:
-                    KDS.Audio.MusicMixer.pause()
-                    quit_temp, exam_score = KDS.School.Exam()
-                    KDS.Audio.MusicMixer.unpause()
-                    if quit_temp:
-                        KDS_Quit()
-                else:
-                    KDS.Logging.info("Exam not started. Subprogram debugging disabled in GameData.kdf", consoleVisible=True)
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 KDS.Keys.actionKey.SetState(True)
@@ -4878,7 +4890,7 @@ while main_running:
             "Player Position": Player.rect.topleft,
             "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",
             "Entities": f"{Entity.total - Entity.death_count} / {Entity.total} | Agro: {Entity.agro_count}",
-            "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio.SoundMixer.get_num_channels()}",
+            "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio._SoundMixer.get_num_channels()}",
             "Lights Rendering": len(Lights),
             "Particles Rendering": f"{renderedParticleCount} / {maxParticles}"
         }), (0, 0))
