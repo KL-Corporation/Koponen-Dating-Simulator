@@ -3,6 +3,9 @@
 ~$S Script.docx
 .vscode/
 
+# Can be used to define different Python versions like .env311/ or .env312/
+.env*/
+
 None
 
 ### GitHub default .gitignore for Python below ###
