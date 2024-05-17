@@ -891,6 +891,9 @@ class Jukebox(KDS.Build.Tile):
             self.playing.SetLocalVolume(jukebox_volume)
             Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
+            if random.randint(0, 1000) < 13:
+                Particles.append(KDS.World.Lighting.Noteparticle((self.rect.centerx - 20 + random.randint(-10, 10), self.rect.centery - 20), 20, 230, 0.8))
+
         return self.texture
 
 class Door(KDS.Build.Tile):

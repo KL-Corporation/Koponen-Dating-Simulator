@@ -44,6 +44,12 @@ def init():
     Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
     Lighting.Shapes.fluorecent = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/fluorecent.png").convert_alpha())
 
+    Lighting.Noteparticle.textures = [pygame.image.load(f"Assets/Textures/Particles/note_{index}.png") for index in range(10)]
+    for texture in Lighting.Noteparticle.textures:
+        texture.set_colorkey(KDS.Colors.White)
+
+        texture = pygame.transform.scale(texture, (texture.get_width() / 4, texture.get_height() / 4))
+
 def collision_test(rect: pygame.Rect, Tile_list: List[List[List]]):
     hit_list = []
 
@@ -299,6 +305,37 @@ class Lighting:
             self.tsurf = pygame.transform.scale(self.tsurf, (self.bsurf.get_width()*2, self.bsurf.get_height()*2))
             return self.tsurf
 
+    class Noteparticle(Particle):
+        textures = []
+
+        def __init__(self, position, size, lifetime, speed, direction = 1):
+            super().__init__(position, size)
+            self.lifetime = lifetime
+            self.life = 0
+            self.speed = speed
+            self.direction = direction
+            self.dying_speed = 15
+            self.opacity = 255
+
+            self.float_position: List[float] = list(position)
+
+            self.texture = random.choice(Lighting.Noteparticle.textures)
+
+        def update(self, Surface: pygame.Surface, scroll: List[int]) -> pygame.Surface | KDS.World.Lighting.Particle.UpdateAction:
+            self.float_position[1] -= self.speed * self.direction
+            self.rect.y = KDS.Math.RoundCustomInt(self.float_position[1])
+
+            self.life += 5
+
+            if self.life >= self.lifetime:
+                self.opacity -= self.dying_speed
+
+            if self.opacity <= 0:
+                return Lighting.Particle.UpdateAction.KillParticle
+            
+            self.texture.set_alpha(self.opacity)
+
+            Surface.blit(self.texture, (self.rect.centerx - scroll[0], self.rect.centery - scroll[1]))
 
 class Bullet:
     GodMode = False
