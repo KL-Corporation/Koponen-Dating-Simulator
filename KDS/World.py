@@ -328,7 +328,7 @@ class Lighting:
 
             @classmethod
             def load(cls, path: str, allow_rotate: bool) -> Self:
-                tex: pygame.Surface = pygame.image.load(path)
+                tex: pygame.Surface = pygame.image.load(path).convert()
                 tex.set_colorkey(KDS.Colors.White)
 
                 # This was in the original code but it did nothing as it was accidentally assigned to an unreferenced value

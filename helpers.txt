@@ -1,0 +1,2 @@
+Search for unconverted images using this Regex:
+pygame\.image\.load\(([a-zA-Z]*|".*")\)(?!.convert)
