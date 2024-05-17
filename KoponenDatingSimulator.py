@@ -3501,37 +3501,41 @@ def console(oldSurf: pygame.Surface):
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for terms & conditions")
             elif command_list[0] == "infinite":
-                if len(command_list) == 3:
-                    if command_list[1] == "health":
-                        h_state = KDS.Convert.String.ToBool(command_list[2], None)
-                        if h_state != None:
-                            Player.infiniteHealth = h_state
-                            KDS.Console.Feed.append(f"infinite health state has been set to: {Player.infiniteHealth}")
-                        else:
-                            KDS.Console.Feed.append("Please provide a proper state for infinite health.")
-                    elif command_list[1] == "ammo":
-                        a_state = KDS.Convert.String.ToBool(command_list[2], None)
-                        if a_state != None:
-                            KDS.Build.Item.infiniteAmmo = a_state
-                            KDS.Console.Feed.append(f"infinite ammo state has been set to: {KDS.Build.Item.infiniteAmmo}")
-                        else:
-                            KDS.Console.Feed.append("Please provide a proper state for infinite ammo.")
-                    elif command_list[1] == "damage":
-                        a_state = KDS.Convert.String.ToBool(command_list[2], None)
-                        if a_state != None:
-                            KDS.World.Bullet.GodMode = a_state
-                            KDS.Console.Feed.append(f"infinite damage state has been set to: {KDS.World.Bullet.GodMode}")
-                        else:
-                            KDS.Console.Feed.append("Please provide a proper state for infinite damage.")
-                    elif command_list[1] == "stamina":
-                        h_state = KDS.Convert.String.ToBool(command_list[2], None)
-                        if h_state != None:
-                            Player.infiniteStamina = h_state
-                            KDS.Console.Feed.append(f"infinite stamina state has been set to: {Player.infiniteStamina}")
-                        else:
-                            KDS.Console.Feed.append("Please provide a proper state for infinite health.")
+                if len(command_list) in (2, 3):
+                    infinite_command: str = command_list[1]
+
+                    infinite_state: bool | None
+                    stateIsValid: bool
+                    if len(command_list) > 2:
+                        infinite_state = KDS.Convert.String.ToBool(command_list[2], None)
+                        stateIsValid = infinite_state is not None
                     else:
-                        KDS.Console.Feed.append("Not a valid infinite command.")
+                        infinite_state = None
+                        stateIsValid = True
+
+
+                    if stateIsValid:
+                        match infinite_command:
+                            case "health":
+                                if infinite_state is None:
+                                    infinite_state = not Player.infiniteHealth
+                                Player.infiniteHealth = infinite_state
+                            case "ammo":
+                                if infinite_state is None:
+                                    infinite_state = not KDS.Build.Item.infiniteAmmo
+                                KDS.Build.Item.infiniteAmmo = infinite_state
+                            case "damage":
+                                if infinite_state is None:
+                                    infinite_state = not KDS.World.Bullet.GodMode
+                                KDS.World.Bullet.GodMode = infinite_state
+                            case "stamina":
+                                if infinite_state is None:
+                                    infinite_state = not Player.infiniteStamina
+                                Player.infiniteStamina = infinite_state
+
+                        KDS.Console.Feed.append(f"infinite {infinite_command} state has been set to: {infinite_state}")
+                    else:
+                        KDS.Console.Feed.append(f"Please provide a proper state for infinite {infinite_command}.")
                 else:
                     KDS.Console.Feed.append("Not a valid infinite command.")
             elif command_list[0] == "finish":
