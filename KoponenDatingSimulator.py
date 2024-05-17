@@ -3433,8 +3433,7 @@ def console(oldSurf: pygame.Surface):
             "zombie" : "break"
         },
         "fly": trueFalseTree,
-        "godmode": trueFalseTree,
-        "exam" : "break",
+        "godmode": trueFalseTree
     }
 
     consoleRunning = True
@@ -3652,13 +3651,6 @@ def console(oldSurf: pygame.Surface):
             - godmode => Gives the player some buffs like infinite health
             - help => Shows the list of commands.
         """)
-            elif command_list[0] == "exam":
-                quit_, grade = KDS.School.Exam()
-                KDS.Console.Feed.append(f"Exam grade: {grade}")
-
-                if quit_:
-                    KDS_Quit()
-
             else:
                 KDS.Console.Feed.append("Invalid Command.")
         except Exception as e:
@@ -4223,11 +4215,15 @@ def main_menu():
                         KDS.Audio.Music.Pause()
                         KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
                         KDS.Audio.Music.Unpause()
+                    else:
+                        KDS.Logging.info("Certificate not opened. Subprogram debugging disabled in GameData.kdf", consoleVisible=True)
                 elif event.key == K_F6:
                     if debug_gamesetting_allow_subprog_debug:
                         KDS.Audio.Music.Pause()
                         KDS.Story.Tombstones(display)
                         KDS.Audio.Music.Unpause()
+                    else:
+                        KDS.Logging.info("Tombstones ending not started. Subprogram debugging disabled in GameData.kdf", consoleVisible=True)
             elif event.type == QUIT:
                 KDS_Quit()
 
@@ -4517,12 +4513,15 @@ while main_running:
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 esc_menu = True
-            elif event.key == K_F5 and debug_gamesetting_allow_subprog_debug:
-                KDS.Audio.MusicMixer.pause()
-                quit_temp, exam_score = KDS.School.Exam()
-                KDS.Audio.MusicMixer.unpause()
-                if quit_temp:
-                    KDS_Quit()
+            elif event.key == K_F5:
+                if debug_gamesetting_allow_subprog_debug:
+                    KDS.Audio.MusicMixer.pause()
+                    quit_temp, exam_score = KDS.School.Exam()
+                    KDS.Audio.MusicMixer.unpause()
+                    if quit_temp:
+                        KDS_Quit()
+                else:
+                    KDS.Logging.info("Exam not started. Subprogram debugging disabled in GameData.kdf", consoleVisible=True)
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
                 KDS.Keys.actionKey.SetState(True)
