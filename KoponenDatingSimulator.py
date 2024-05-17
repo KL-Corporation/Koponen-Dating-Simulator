@@ -966,6 +966,7 @@ class Door(KDS.Build.Tile):
             else:
                 KDS.Audio.PlaySound(door_locked)
                 Notifications.append(KDS.UI.Notification(f"Missing {Door.key_names[self.serialNumber]} key", color=Door.key_colors[self.serialNumber]))
+                KDS.Missions.Listeners.KeyDoorLocked.Trigger()
 
         return self.texture if not self.open else self.opentexture
 

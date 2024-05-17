@@ -312,6 +312,13 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
     elif gamemode == Modes.Campaign:
         if index == 1:
             Presets.Tutorial()
+
+            KDS.Missions.InitialiseMission("continue", "Jatka")
+            KDS.Missions.InitialiseTask("continue", "cont", "Jatka kenttää eteenpäin", (KDS.Missions.Listeners.KeyDoorLocked, 1.0), (KDS.Missions.Listeners.ItemPickup, 13, 1.0))
+
+            KDS.Missions.InitialiseMission("red_key", "Ovi On Lukittu")
+            KDS.Missions.InitialiseTask("red_key", "pick_key", "Nouda punainen avain yläkerrasta", (KDS.Missions.Listeners.ItemPickup, 13, 1.0))
+
             Presets.LevelExit()
         elif index == 10:
             KDS.Missions.InitialiseMission("r1", "Tehtävä Koposelta")
