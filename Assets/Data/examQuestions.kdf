@@ -1,18 +1,19 @@
 {
-    "Mikä näistä on KL-Corporationin lippulaivatuote?": {
+    "Mikä näistä on KL Corporationin lippulaivatuote?": {
         "KDS Level Builder": false,
-        "Mastermind by KL-Corporation": false,
+        "Mastermind by KL Corporation": false,
         "KDS Compiler": false,
+        "Oispa KaLussa": false,
         "Koponen Dating Simulator": true
     },
     "Kuka kehitti \"Rise and Fall\" -nimisen videopelin?": {
         "Matias Broman": true,
-        "KL-Corporation": false,
+        "KL Corporation": false,
         "NALStudio": false
     },
-    "Mikä seuraavista EI OLE KL-Corporationin tuote?": {
+    "Mikä seuraavista EI OLE KL Corporationin tuote?": {
         "Koponen Dating Simulator": false,
-        "Mastermind by KL-Corporation": false,
+        "Mastermind by KL Corporation": false,
         "Rise and Fall": true
     },
     "Minä päivämääränä \"Koponen Dating Simulator\" -pelin ensimmäinen julkinen versio julkaistiin?": {
@@ -78,7 +79,7 @@
         "Koskenkorva": false
     },
     "Mistä Antabus-lääke on valmistetu?": {
-        "Lyijysta": false,
+        "Lyijystä": false,
         "Disulfiraamista": true,
         "Etanolista": false,
         "Saippuasta": false
@@ -207,7 +208,7 @@
         "n. 11 250 Tb": false,
         "n. 11 250 Tt": true
     },
-    "Mikä on maailman myydyin peli? (Ainakin vuonna 2021 tai jotain)": {
+    "Mikä on maailman myydyin peli?": {
         "Tetris": false,
         "Grand Theft Auto V": false,
         "Minecraft": true,
@@ -401,11 +402,11 @@
     },
     "Mistä seuraavista asioista Avarn Security erityisesti tunnetaan" : {
         "Alaikäisiin kohdistuvista törkeistä väkivalta- ja heitteillepanorikoksista" : true,
-        "Yleisen järjestyksen turvaamisesta" : false,
         "Huumausainerikoksista" : true,
         "Yhteyksistä äärioikeistoon ja uusnatsi-aatteeseen": true,
         "Yleisestä rikollisesta toiminnasta": true,
         "Väkivaltaisuudesta" : true,
+        "Yleisen järjestyksen turvaamisesta" : false,
         "Ammattitaitoisista turvallisuuspalveluista" : false,
         "Tärkeiden asioiden turvaamisesta": false
     },
