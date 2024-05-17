@@ -535,7 +535,7 @@ class WorldData:
                             for k, v in idProp[idPropCheck].items():
                                 if k == "checkCollision" and isinstance(value, KDS.Build.Tile): # Checking instance instead of pointer so that Pylance is happy.
                                     value.checkCollision = bool(v)
-                                    if not v and value.texture != None and isinstance(value.texture, pygame.Surface): # Some tiles have animations as texture
+                                    if not v and value.texture != None and isinstance(value.texture, pygame.Surface): # type: ignore  Some tiles have animations as texture
                                         tex: Any = value.texture.convert_alpha()
                                         tex.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MULT)
                                         value.darkOverlay = tex
@@ -3437,7 +3437,7 @@ def console(oldSurf: pygame.Surface):
 
     while consoleRunning:
         command_list: list = KDS.Console.Start(prompt="Enter Command:", allowEscape=True, checkType=KDS.Console.CheckTypes.Commands(), background=blurred_background, commands=commandTree, autoFormat=True, enableOld=True, showFeed=True)
-        if command_list == None:
+        if command_list == None: # type: ignore
             consoleRunning = False
             break
         try:
