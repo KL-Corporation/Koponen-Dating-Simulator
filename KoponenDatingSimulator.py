@@ -353,7 +353,7 @@ jump_velocity = 2.0
 
 Koponen: KDS.Koponen.KoponenEntity = KDS.Koponen.KoponenEntity((0, 0), (0, 0))
 
-koponen_talk_tip = tip_font.render(f"Puhu Koposelle [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+koponen_talk_tip = KDS.UI.KeybindFormattedText(tip_font, f"Puhu Koposelle [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
 Notifications: list[KDS.UI.Notification] = []
 
@@ -833,12 +833,12 @@ class Jukebox(KDS.Build.Tile):
 
     songs: Final[tuple[str, ...]] = _load_jukebox_songs()
 
-    tmp_jukebox_data = tip_font.render(f"Use Jukebox [Click: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
-    tmp_jukebox_data2 = tip_font.render(f"Stop Jukebox [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
-    jukebox_tip: pygame.Surface = pygame.Surface((max(tmp_jukebox_data.get_width(), tmp_jukebox_data2.get_width()), tmp_jukebox_data.get_height() + tmp_jukebox_data2.get_height()), SRCALPHA)
-    jukebox_tip.blit(tmp_jukebox_data, ((tmp_jukebox_data2.get_width() - tmp_jukebox_data.get_width()) / 2, 0))
-    jukebox_tip.blit(tmp_jukebox_data2, ((tmp_jukebox_data.get_width() - tmp_jukebox_data2.get_width()) / 2, tmp_jukebox_data.get_height()))
-    del tmp_jukebox_data, tmp_jukebox_data2
+    tooltip1 = KDS.UI.KeybindFormattedText(tip_font, f"Use Jukebox [Click: {{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    tooltip2 = KDS.UI.KeybindFormattedText(tip_font, f"Stop Jukebox [Hold: {{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    # jukebox_tip: pygame.Surface = pygame.Surface((max(tooltip1.get_width(), tooltip2.get_width()), tooltip1.get_height() + tooltip2.get_height()), SRCALPHA)
+    # jukebox_tip.blit(tooltip1, ((tooltip2.get_width() - tooltip1.get_width()) / 2, 0))
+    # jukebox_tip.blit(tooltip2, ((tooltip1.get_width() - tooltip2.get_width()) / 2, tooltip1.get_height()))
+    # del tooltip1, tooltip2
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -876,7 +876,16 @@ class Jukebox(KDS.Build.Tile):
 
     def update(self):
         if self.rect.colliderect(Player.rect):
-            screen.blit(Jukebox.jukebox_tip, (self.rect.centerx - scroll[0] - Jukebox.jukebox_tip.get_width() / 2, self.rect.y - scroll[1] - 30))
+            # screen.blit(Jukebox.jukebox_tip, (self.rect.centerx - scroll[0] - Jukebox.jukebox_tip.get_width() / 2, self.rect.y - scroll[1] - 30))
+
+            tooltip1: pygame.Surface = Jukebox.tooltip1.get_surface()
+            tooltip1_pos: tuple[int, int] = (self.rect.centerx - scroll[0] - round(tooltip1.get_width() / 2), self.rect.y - scroll[1] - 30)
+            tooltip2: pygame.Surface = Jukebox.tooltip2.get_surface()
+            tooltip2_pos: tuple[int, int] = (self.rect.centerx - scroll[0] - round(tooltip2.get_width() / 2), tooltip1_pos[1] + tip_font.get_height())
+
+            screen.blit(tooltip1, tooltip1_pos)
+            screen.blit(tooltip2, tooltip2_pos)
+
             if KDS.Keys.functionKey.clicked and not KDS.Keys.functionKey.holdClicked:
                 self.stopPlayingTrack()
                 self.playRandomTrack()
@@ -1047,7 +1056,7 @@ class LampChain(KDS.Build.Tile):
         return self.texture
 
 class DecorativeHead(KDS.Build.Tile):
-    decorative_head_tip: pygame.Surface = tip_font.render(f"Activate Head [Hold: {KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    decorative_head_tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Activate Head [Hold: {{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1060,7 +1069,8 @@ class DecorativeHead(KDS.Build.Tile):
     def update(self):
         if self.rect.colliderect(Player.rect):
             if not self.prayed:
-                screen.blit(DecorativeHead.decorative_head_tip, (self.rect.centerx - scroll[0] - DecorativeHead.decorative_head_tip.get_width() // 2, self.rect.top - scroll[1] - 20))
+                decorative_head_tip: pygame.Surface = DecorativeHead.decorative_head_tip.get_surface()
+                screen.blit(decorative_head_tip, (self.rect.centerx - scroll[0] - decorative_head_tip.get_width() // 2, self.rect.top - scroll[1] - 20))
                 if KDS.Keys.functionKey.pressed and not self.praying:
                     KDS.Audio.PlaySound(pray_sound)
                     self.praying = True
@@ -1149,7 +1159,8 @@ class GoryHead(KDS.Build.Tile):
         return self.texture
 
 class LevelEnder(KDS.Build.Tile):
-    level_ender_tip: pygame.Surface = tip_font.render(f"Finish level [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    level_ender_tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Finish level [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.texture = t_textures[serialNumber]
@@ -1159,7 +1170,8 @@ class LevelEnder(KDS.Build.Tile):
     def update(self):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.top + 10), KDS.World.Lighting.Shapes.circle.get(40, 40000), True))
         if self.rect.colliderect(Player.rect):
-            screen.blit(LevelEnder.level_ender_tip, (self.rect.centerx - LevelEnder.level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            level_ender_tip: pygame.Surface = LevelEnder.level_ender_tip.get_surface()
+            screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 KDS.Missions.Listeners.LevelEnder.Trigger()
         return t_textures[self.serialNumber]
@@ -1178,7 +1190,9 @@ class LevelEnderDoor(KDS.Build.Tile):
 
     def update(self):
         if self.rect.colliderect(Player.rect) or self.propOpen:
-            if self.showTip: screen.blit(LevelEnder.level_ender_tip, (self.rect.centerx - LevelEnder.level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            if self.showTip:
+                level_ender_tip: pygame.Surface = LevelEnder.level_ender_tip.get_surface()
+                screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked or self.propOpen:
                 if self.interactable:
                     if not self.propOpen:
@@ -1288,7 +1302,7 @@ class RespawnAnchor(KDS.Build.Tile):
 
     active: Optional[RespawnAnchor] = None
     rspP_list = []
-    respawn_anchor_tip: pygame.Surface = tip_font.render(f"Set Respawn Point [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    respawn_anchor_tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Set Respawn Point [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1308,7 +1322,8 @@ class RespawnAnchor(KDS.Build.Tile):
             return self.ontexture
 
         if self.rect.colliderect(Player.rect):
-            screen.blit(RespawnAnchor.respawn_anchor_tip, (self.rect.centerx - scroll[0] - RespawnAnchor.respawn_anchor_tip.get_width() // 2, self.rect.top - scroll[1] - 50))
+            respawn_anchor_tip: pygame.Surface = RespawnAnchor.respawn_anchor_tip.get_surface()
+            screen.blit(respawn_anchor_tip, (self.rect.centerx - scroll[0] - respawn_anchor_tip.get_width() // 2, self.rect.top - scroll[1] - 50))
             if KDS.Keys.functionKey.clicked:
                 RespawnAnchor.active = self
                 KDS.Audio.PlaySound(random.choice(respawn_anchor_sounds))
@@ -1600,7 +1615,8 @@ class DoorFront(KDS.Build.Tile):
     def update(self):
         if self.rect.colliderect(Player.rect):
             if self.showTip:
-                screen.blit(LevelEnder.level_ender_tip, (self.rect.centerx - LevelEnder.level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+                level_ender_tip: pygame.Surface = LevelEnder.level_ender_tip.get_surface()
+                screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 if not self.locked:
                     KDS.Audio.PlaySound(door_opening)
@@ -1618,7 +1634,7 @@ class DoorFrontMirrored(DoorFront):
         return super().update()
 
 class Sleepable(KDS.Build.Tile):
-    tip = tip_font.render(f"Toggle Sleep [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Toggle Sleep [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1657,7 +1673,8 @@ class Sleepable(KDS.Build.Tile):
             return self.texture
 
         if self.rect.colliderect(Player.rect):
-            screen.blit(Sleepable.tip, (self.rect.centerx - Sleepable.tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+            tip: pygame.Surface = Sleepable.tip.get_surface()
+            screen.blit(tip, (self.rect.centerx - tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked and (not self.requireTileSleepTask or KDS.Missions.Listeners.TileSleepStart.ContainsActiveTask()):
                 if self.sleepAutoEnd:
                     ScreenEffects.OnEffectFinish += self.toggleSleep
@@ -1786,7 +1803,7 @@ class Kiuas(KDS.Build.Tile):
         return self.animation.update()
 
 class Nysse(KDS.Build.Tile):
-    tip: pygame.Surface = tip_font.render(f"Matkusta bussilla [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Matkusta bussilla [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1814,7 +1831,8 @@ class Nysse(KDS.Build.Tile):
             if self.blinkerIndex > 3600:
                 self.blinkerIndex = 0
         if self.levelEnder and self.rect.colliderect(Player.rect):
-            screen.blit(Nysse.tip, (self.rect.centerx - Nysse.tip.get_width() // 2 - scroll[0], self.rect.y - 5 - Nysse.tip.get_height() - scroll[1]))
+            tip: pygame.Surface = Nysse.tip.get_surface()
+            screen.blit(tip, (self.rect.centerx - tip.get_width() // 2 - scroll[0], self.rect.y - 5 - tip.get_height() - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 KDS.Missions.Listeners.LevelEnder.Trigger()
                 Player.visible = False
@@ -1848,7 +1866,7 @@ class Shower(KDS.Build.Tile):
         return self.texture
 
 class PistokoeDoor(KDS.Build.Tile):
-    tip: pygame.Surface = tip_font.render(f"Vaita peseneesi kadet [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Väitä pesseesi kädet [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1865,29 +1883,32 @@ class PistokoeDoor(KDS.Build.Tile):
 
     def update(self) -> Optional[pygame.Surface]:
         if self.rect.colliderect(Player.rect):
+            tip: pygame.Surface | None = PistokoeDoor.tip.get_surface() if not self.used else None
             if self.renderedMessage != None:
-                screen.blit(self.renderedMessage, (self.rect.centerx - self.renderedMessage.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1] - (PistokoeDoor.tip.get_height() + 5 if not self.used else 0)))
-            if not self.used:
-                screen.blit(PistokoeDoor.tip, (self.rect.centerx - PistokoeDoor.tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
-                if KDS.Keys.functionKey.clicked:
-                    KDS.Missions.SetProgress("story_exam", "go_to_class", 1.0)
-                    KDS.Audio.Music.Pause()
-                    quit_temp, exam_grade = KDS.School.Exam()
-                    KDS.Audio.Music.Unpause()
-                    self.used = not self.allowMultipleUses
-                    if quit_temp:
-                        KDS_Quit()
-                    elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
-                        if KDS.ConfigManager.Save.Active != None:
-                            KDS.ConfigManager.Save.Active.Story.examGrade = exam_grade
-                        else:
-                            KDS.Logging.AutoError("Could not save exam grade. No save active when gamemode is story.")
+                screen.blit(self.renderedMessage, (self.rect.centerx - self.renderedMessage.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1] - ((tip.get_height() + 5) if tip is not None else 0)))
+            if tip is not None:
+                screen.blit(tip, (self.rect.centerx - tip.get_width() // 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
+
+            if KDS.Keys.functionKey.clicked and not self.used:
+                KDS.Missions.SetProgress("story_exam", "go_to_class", 1.0)
+                KDS.Audio.Music.Pause()
+                quit_temp, exam_grade = KDS.School.Exam()
+                KDS.Audio.Music.Unpause()
+                self.used = not self.allowMultipleUses
+                if quit_temp:
+                    KDS_Quit()
+                elif KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
+                    if KDS.ConfigManager.Save.Active != None:
+                        KDS.ConfigManager.Save.Active.Story.examGrade = exam_grade
+                    else:
+                        KDS.Logging.AutoError("Could not save exam grade. No save active when gamemode is story.")
+
         return self.animation.update()
 
 class CashRegister(KDS.Build.Tile):
-    dropItemTip: pygame.Surface = tip_font.render(f"Aseta ostos [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
-    payTip: pygame.Surface = tip_font.render(f"Maksa euro [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
-    ssCardTip: pygame.Surface = tip_font.render(f"Nayta SS-Etukortti [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    dropItemTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Aseta ostos [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    payTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Maksa euro [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    ssCardTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Nayta SS-Etukortti [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Tiles/cashregister.ogg")
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -1933,19 +1954,22 @@ class CashRegister(KDS.Build.Tile):
         if self.payRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
             if isinstance(hndItm, Euro):
-                screen.blit(CashRegister.payTip, (self.payRect.centerx - CashRegister.payTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
+                payTip = CashRegister.payTip.get_surface()
+                screen.blit(payTip, (self.payRect.centerx - payTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
                 if KDS.Keys.functionKey.clicked and self.payEuro():
                     drpd = Player.inventory.dropItem()
                     if drpd == None:
                         KDS.Logging.AutoError("Could not drop Euro coin!")
             elif isinstance(hndItm, SSBonuscard):
-                screen.blit(CashRegister.ssCardTip, (self.payRect.centerx - CashRegister.ssCardTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
+                ssCardTip = CashRegister.ssCardTip.get_surface()
+                screen.blit(ssCardTip, (self.payRect.centerx - ssCardTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
                 if KDS.Keys.functionKey.clicked:
                     self.ssBonuscardShown = True
         elif self.dropItemsRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
             if isinstance(hndItm, KDS.Build.Item) and hndItm.storePrice != None:
-                screen.blit(CashRegister.dropItemTip, (self.dropItemsRect.centerx - CashRegister.dropItemTip.get_width() // 2 - scroll[0], self.dropItemsRect.y + 20 - scroll[1]))
+                dropItemTip = CashRegister.dropItemTip.get_surface()
+                screen.blit(dropItemTip, (self.dropItemsRect.centerx - dropItemTip.get_width() // 2 - scroll[0], self.dropItemsRect.y + 20 - scroll[1]))
                 if KDS.Keys.functionKey.clicked:
                     drpd = Player.inventory.dropItem()
                     if drpd != None:
@@ -2188,7 +2212,7 @@ class HotelDoor(DoorTeleport):
         Accept = auto()
         Decline = auto()
 
-    tip_render: pygame.Surface = tip_font.render(f"Use Keycard [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Use Keycard [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     acceptSound = pygame.mixer.Sound("Assets/Audio/Tiles/hotel_door_accept.ogg")
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -2204,7 +2228,9 @@ class HotelDoor(DoorTeleport):
                 self.messageOffset = (0, -50 - teleport_message_font.get_height() - 5)
                 messageSize = self.renderedMessage.get_size() if self.renderedMessage != None else (0, 0)
                 normalMessagePos = (self.rect.centerx - messageSize[0] // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - messageSize[1] // 2 - scroll[1] + self.messageOffset[1])
-                screen.blit(HotelDoor.tip_render, (self.rect.centerx - HotelDoor.tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
+
+                tip_render: pygame.Surface = HotelDoor.tip_render.get_surface()
+                screen.blit(tip_render, (self.rect.centerx - tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
 
                 if KDS.Keys.functionKey.clicked:
                     if self.interactable:
@@ -2232,8 +2258,8 @@ class HotelDoorMirrored(HotelDoor):
         self.lightPos = (self.rect.x + 9, self.rect.y + 25)
 
 class HotelGuardDoor(DoorTeleport):
-    tip_render: pygame.Surface = tip_font.render(f"Knock [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
-    alt_tip_render: pygame.Surface = tip_font.render(f"Enter [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Knock [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    alt_tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Enter [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -2267,10 +2293,15 @@ class HotelGuardDoor(DoorTeleport):
 
             messageSize = self.renderedMessage.get_size() if self.renderedMessage != None else (0, 0)
             normalMessagePos = (self.rect.centerx - messageSize[0] // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - messageSize[1] // 2 - scroll[1] + self.messageOffset[1])
+
+            tip_render: pygame.Surface | None = None
             if not self.open:
-                screen.blit(HotelGuardDoor.tip_render, (self.rect.centerx - HotelGuardDoor.tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
+                tip_render = HotelGuardDoor.tip_render.get_surface()
             elif self.entity.health <= 0:
-                screen.blit(HotelGuardDoor.alt_tip_render, (self.rect.centerx - HotelGuardDoor.alt_tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
+                tip_render = HotelGuardDoor.alt_tip_render.get_surface()
+
+            if tip_render is not None:
+                screen.blit(tip_render, (self.rect.centerx - tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
 
             if KDS.Keys.functionKey.clicked and self.interactable:
                 if not self.open:
@@ -2368,13 +2399,14 @@ class NysseTeleport(BaseTeleport):
             if self.blinkerIndex > 3600:
                 self.blinkerIndex = 0
         if self.rect.colliderect(Player.rect):
-            screen.blit(Nysse.tip, (self.rect.centerx - Nysse.tip.get_width() // 2 - scroll[0], self.rect.y - 5 - Nysse.tip.get_height() - scroll[1]))
+            tip: pygame.Surface = Nysse.tip.get_surface()
+            screen.blit(tip, (self.rect.centerx - tip.get_width() // 2 - scroll[0], self.rect.y - 5 - tip.get_height() - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 self.teleport()
         return self.texture
 
 class HologramTeleport(BaseTeleport):
-    tip: pygame.Surface = tip_font.render(f"Teleport [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+    tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Teleport [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     sound = pygame.mixer.Sound("Assets/Audio/Tiles/platform_teleport_sound.ogg")
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -2388,7 +2420,8 @@ class HologramTeleport(BaseTeleport):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.bottom - 34), shape, True))
 
         if self.rect.colliderect(Player.rect):
-            screen.blit(HologramTeleport.tip, (self.rect.centerx - HologramTeleport.tip.get_width() // 2 - scroll[0], self.rect.y - 45 - scroll[1]))
+            tip: pygame.Surface = HologramTeleport.tip.get_surface()
+            screen.blit(tip, (self.rect.centerx - tip.get_width() // 2 - scroll[0], self.rect.y - 45 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 self.teleport()
 
@@ -2473,7 +2506,7 @@ game_initialization_logger.stop("Tile Loading Complete.")
 #endregion
 #region Items
 game_initialization_logger.start("Loading Items...")
-itemTip: pygame.Surface = tip_font.render(f"Nosta Esine [{KDS.Keys.functionKey.BindingDisplayName}]", True, KDS.Colors.White)
+itemTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Nosta Esine [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
 class BlueKey(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -4631,7 +4664,8 @@ while main_running:
         if Koponen.rect.colliderect(Player.rect):
             Koponen.stopAutoMove()
             if Koponen.allow_talk:
-                screen.blit(koponen_talk_tip, (Koponen.rect.centerx - scroll[0] - koponen_talk_tip.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
+                _koponen_talk_tip_surf: Final[pygame.Surface] = koponen_talk_tip.get_surface()
+                screen.blit(_koponen_talk_tip_surf, (Koponen.rect.centerx - scroll[0] - _koponen_talk_tip_surf.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
                 if KDS.Keys.functionKey.pressed:
                     KDS.Keys.Reset()
                     talk = True
@@ -4723,12 +4757,13 @@ while main_running:
 
     #Item Tip
     if KDS.Build.Item.tipItem != None:
-        tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - itemTip.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
-        screen.blit(itemTip, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
+        tip_rnd_surf: Final[pygame.Surface] = itemTip.get_surface()
+        tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - tip_rnd_surf.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
+        screen.blit(tip_rnd_surf, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
         if KDS.Build.Item.tipItem.storePrice != None:
             price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 euroa " + (f"""[SS-Etukortilla: {KDS.Build.Item.tipItem.storeDiscountPrice}.00{" ostoksen ohessa" if KDS.Build.Item.tipItem.storeDiscountPrice == 0 else ""}]""" if KDS.Build.Item.tipItem.storeDiscountPrice != None else ""), True, KDS.Colors.White)
             #                           if storePrice == 0, bulldogs will be angry if nothing else of value was bought
-            screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + itemTip.get_height() - scroll[1]))
+            screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + tip_rnd_surf.get_height() - scroll[1]))
 
     #Valojen käsittely
     if KDS.World.Dark.enabled:

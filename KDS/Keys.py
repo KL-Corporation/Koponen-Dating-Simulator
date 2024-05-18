@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Callable, Dict, Final, List, Literal, NamedTuple, Optional, Self, Sequence, Tuple, Any
+from enum import IntEnum
+from typing import Callable, Final, List, Literal, NamedTuple, Self, Tuple, Any
 
 import pygame
 import KDS.Events
@@ -20,9 +19,9 @@ from pygame.locals import *
 #The amount of ticks before hold is activated.
 holdTicks = 50
 
-keyList: List[Key] = []
+keys: dict[str, Key] = {}
 
-class BindingType(Enum):
+class BindingType(IntEnum):
     mouse = 0
     keyboard = 1
 
@@ -98,7 +97,20 @@ class Key(BaseKey):
         self.binding: Binding | None = None
         self.secondaryBinding: Binding | None = None
 
-        keyList.append(self)
+        if name in keys:
+            raise RuntimeError(f"Name '{name}' already defined in keys.")
+        keys[name] = self
+
+    def get_primary_binding(self) -> Binding | None:
+        """
+        Gets the first non-null binding of this key.
+
+        Bindings are searched in the order binding => secondaryBinding => None
+        """
+        if self.binding is not None:
+            return self.binding
+        else:
+            return self.secondaryBinding
 
     def _loadBindings_backwardsCompat(self, bindings: list[int]):
         if len(bindings) == 0:
@@ -173,15 +185,6 @@ class Key(BaseKey):
                 self.SetState(setState)
                 if setState and self._onDownCallback is not None:
                     self._onDownCallback()
-
-    @property
-    def BindingDisplayName(self) -> str:
-        if self.binding is not None:
-            return self.binding.get_displayname()
-        elif self.secondaryBinding is not None:
-            return self.secondaryBinding.get_displayname()
-        else:
-            return "null"
 
 class InventoryKey(Key):
     def __init__(self, defaultBinding: Binding, inventory_index: int) -> None:
@@ -263,8 +266,23 @@ REBINDABLEKEYS: tuple[tuple[RebindLabel, Key], ...] = (
     (RebindLabel("Inventory Slot 5"), Inventory5)
 )
 
+def MoveIsUsingWASD() -> bool:
+    def _internalHelper(key: int, b1: Binding | None, b2: Binding | None):
+        if b1 is not None and b1.type == BindingType.keyboard and b1.key == key:
+            return True
+        if b2 is not None and b2.type == BindingType.keyboard and b2.key == key:
+            return True
+        return False
+
+    return all((
+        _internalHelper(K_w, moveUp.binding, moveUp.secondaryBinding),
+        _internalHelper(K_s, moveDown.binding, moveDown.secondaryBinding),
+        _internalHelper(K_a, moveLeft.binding, moveLeft.secondaryBinding),
+        _internalHelper(K_d, moveRight.binding, moveRight.secondaryBinding),
+    ))
+
 def LoadCustomBindings():
-    for key in keyList:
+    for key in keys.values():
         key.loadBindings()
 
 def ResetCustomBindings():
@@ -272,15 +290,15 @@ def ResetCustomBindings():
     LoadCustomBindings()
 
 def RegisterEvent(event: pygame.event.Event):
-    for key in keyList:
+    for key in keys.values():
         key._register_event(event)
 
 def Update():
-    for key in keyList:
+    for key in keys.values():
         key.update()
 
 def Reset():
-    for key in keyList:
+    for key in keys.values():
         key.SetState(False)
 
 class _KeyData(NamedTuple):

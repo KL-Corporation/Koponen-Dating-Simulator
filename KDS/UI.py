@@ -1,4 +1,5 @@
-from typing import Any, Callable, Final, Optional, Tuple, Union
+from abc import ABC, abstractmethod
+from typing import Any, Callable, Final, Iterable, NamedTuple, Optional, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -7,6 +8,8 @@ import KDS.Animator
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Keys
+import KDS.Logging
 import KDS.Math
 import KDS.Colors
 
@@ -337,3 +340,91 @@ class Notification:
         pos_y -= round(self._progress / 4)
 
         return ((pos_x, pos_y), self._base_surface)
+
+class KeybindFormattedText:
+    class _TextBinding(NamedTuple):
+        start: int
+        """inclusive"""
+
+        end: int
+        """exclusive"""
+
+        key: KDS.Keys.Key
+
+    class _RenderedSurface(NamedTuple):
+        surface: pygame.Surface
+        binding_vector: tuple[KDS.Keys.Binding | tuple[KDS.Keys.Binding] | None, ...]
+
+    def __init__(self, font: pygame.font.Font, text: str, antialias: bool, color: tuple[int, int, int], background: Optional[tuple[int, int, int]] = None,) -> None:
+        self._font: pygame.font.Font = font
+        self._surface: KeybindFormattedText._RenderedSurface | None = None
+
+        self._text: str = text
+        self._text_bindings: tuple[KeybindFormattedText._TextBinding, ...] = tuple(KeybindFormattedText._compute_bindings(text))
+
+        self._antialias: bool = antialias
+        self._color: tuple[int, int, int] = color
+        self._background_color: tuple[int, int, int] | None = background
+
+    @staticmethod
+    def _compute_bindings(text: str) -> Iterable[_TextBinding]:
+        PREFIX: str = "{binding:"
+        SUFFIX: str = "}"
+
+        start: int = 0
+        while True:
+            try:
+                leftIndex: int = text.index(PREFIX, start)
+            except ValueError:
+                return
+
+            try:
+                rightIndex: int = text.index(SUFFIX, leftIndex)
+            except ValueError as e:
+                raise ValueError(f"binding at index {leftIndex} was not closed.") from e
+
+            endIndex: int = rightIndex + 1
+            start = endIndex
+
+            keyName: str = text[leftIndex:endIndex].removeprefix(PREFIX).removesuffix(SUFFIX)
+            key: KDS.Keys.Key
+            try:
+                key = KDS.Keys.keys[keyName]
+            except KeyError as e:
+                raise ValueError(f"Binding for '{keyName}' does not exist.") from e
+
+            yield KeybindFormattedText._TextBinding(leftIndex, endIndex, key)
+
+    def _generate_binding_vector(self) -> tuple[KDS.Keys.Binding | None, ...]:
+        return tuple(b.key.get_primary_binding() for b in self._text_bindings)
+
+    def _regenerate_surface(self, binding_vector: tuple[KDS.Keys.Binding | None, ...]) -> None:
+        text: str = self._text
+
+        mod: int = 0
+        for textbind, binding in zip(self._text_bindings, binding_vector, strict=True):
+            binding_text: str = binding.get_displayname() if binding is not None else "null"
+
+            format_length: int = textbind.end - textbind.start
+            binding_length: int = len(binding_text)
+
+            text = text[:(textbind.start + mod)] + binding_text + text[(textbind.end + mod):]
+            mod += binding_length - format_length
+
+        surf: pygame.Surface = self._font.render(text, self._antialias, self._color, self._background_color)
+
+        self._surface = KeybindFormattedText._RenderedSurface(surf, binding_vector)
+
+    def get_surface(self) -> pygame.Surface:
+        bvec = self._generate_binding_vector()
+        assert(len(bvec) == len(self._text_bindings))
+
+        if self._surface is None:
+            KDS.Logging.debug("Generating first surface for keybind formatted text...")
+            self._regenerate_surface(bvec)
+        elif bvec != self._surface.binding_vector:
+            KDS.Logging.debug("Generating new surface for keybind formatted text...", consoleVisible=True)
+            self._regenerate_surface(bvec)
+
+        assert self._surface is not None
+        return self._surface.surface

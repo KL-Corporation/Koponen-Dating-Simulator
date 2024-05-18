@@ -16,6 +16,7 @@ import KDS.Logging
 import KDS.NPC
 import KDS.Math
 import KDS.Linq
+import KDS.UI
 
 #endregion
 #region Settings
@@ -113,8 +114,7 @@ class Task:
         self.safeName = safeName
         self.missionName = missionName
         self.text = text
-        self.renderedText = TaskFont.render(self.text, True, KDS.Colors.White)
-        self.renderedTextSize = self.renderedText.get_size()
+        self.renderedText = KDS.UI.KeybindFormattedText(TaskFont, self.text, True, KDS.Colors.White)
         self.progress = 0.0
         self.progressScaled = 0
         self.finished = False
@@ -150,8 +150,13 @@ class Task:
 
         surface = pygame.Surface((Width, Height))
         surface.fill(self.color.update(not self.finished))
-        surface.blit(self.renderedText, (Padding.left, round((Height / 2) - (self.renderedTextSize[1] / 2))))
-        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (self.renderedTextSize[1] / 2))))
+
+        renderedText: pygame.Surface = self.renderedText.get_surface()
+        renderedTextHeight: int = renderedText.get_height()
+        surface.blit(renderedText, (Padding.left, round((Height / 2) - (renderedTextHeight / 2))))
+
+        surface.blit(TaskFont.render(f"{self.progressScaled}%", True, KDS.Colors.White), (Width - Padding.right - hundredSize[0], round((Height / 2) - (renderedTextHeight / 2))))
+
         self.lastFinished = self.finished
         return surface
 
@@ -289,9 +294,9 @@ class Mission:
 
     def Render(self) -> Tuple[pygame.Surface, int]:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
-        _taskWidth = 0
-        for task in self.tasks.values():
-            _taskWidth = max(_taskWidth, task.renderedTextSize[0])
+        _taskWidth = max(t.renderedText.get_surface().get_width() for t in self.tasks.values())
+        # for task in self.tasks.values():
+        #     _taskWidth = max(_taskWidth, task.renderedText.get_surface().get_width())
         _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
         surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))))
         surface.fill(self.color.update(not self.finished))

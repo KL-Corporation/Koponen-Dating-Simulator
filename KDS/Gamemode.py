@@ -31,12 +31,13 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         @staticmethod
         def Tutorial():
             KDS.Missions.InitialiseMission("tutorial", "Tutoriaali")
-            wasd_binding = f"{KDS.Keys.moveUp.BindingDisplayName}{KDS.Keys.moveLeft.BindingDisplayName}{KDS.Keys.moveDown.BindingDisplayName}{KDS.Keys.moveRight.BindingDisplayName}"
-            if wasd_binding != "WASD":
-                wasd_binding = f"{KDS.Keys.moveLeft.BindingDisplayName}, {KDS.Keys.moveRight.BindingDisplayName}, {KDS.Keys.moveUp.BindingDisplayName}, {KDS.Keys.moveDown.BindingDisplayName}"
-            KDS.Missions.InitialiseTask("tutorial", "walk", f"Liiku käyttämällä: {wasd_binding} ja {KDS.Keys.moveRun.BindingDisplayName}", (KDS.Missions.Listeners.Movement, 0.005))
+            KDS.Missions.InitialiseTask(
+                "tutorial", "walk",
+                f"Liiku käyttämällä: {{binding:{KDS.Keys.moveUp.name}}}, {{binding:{KDS.Keys.moveLeft.name}}}, {{binding:{KDS.Keys.moveDown.name}}}, {{binding:{KDS.Keys.moveRight.name}}} ja {{binding:{KDS.Keys.moveRun.name}}}",
+                (KDS.Missions.Listeners.Movement, 0.005)
+            )
             KDS.Missions.InitialiseTask("tutorial", "inventory", "Käytä tavaraluetteloa rullaamalla hiirtä", (KDS.Missions.Listeners.InventorySlotSwitching, 0.25))
-            KDS.Missions.InitialiseTask("tutorial", "trash", f"Poista roska tavaraluettelostasi painamalla: {KDS.Keys.dropItem.BindingDisplayName}", (KDS.Missions.Listeners.ItemDrop, 6, 1.0), (KDS.Missions.Listeners.ItemPickup, 6, -1.0))
+            KDS.Missions.InitialiseTask("tutorial", "trash", f"Poista roska tavaraluettelostasi painamalla: {{binding:{KDS.Keys.dropItem.name}}}", (KDS.Missions.Listeners.ItemDrop, 6, 1.0), (KDS.Missions.Listeners.ItemPickup, 6, -1.0))
 
         @staticmethod
         def KoponenIntroduction():
@@ -67,7 +68,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
         if index == 1:
             Presets.Tutorial()
             KDS.Missions.InitialiseMission("enter_school", "Mene Kouluun")
-            KDS.Missions.InitialiseTask("enter_school", "enter", f"Avaa koulun ovi painamalla: {KDS.Keys.functionKey.BindingDisplayName}", (KDS.Missions.Listeners.Teleport, 1.0))
+            KDS.Missions.InitialiseTask("enter_school", "enter", f"Avaa koulun ovi painamalla: {{binding:{KDS.Keys.functionKey.name}}}", (KDS.Missions.Listeners.Teleport, 1.0))
 
             Presets.KoponenIntroduction()
 
@@ -101,7 +102,7 @@ def SetGamemode(Gamemode: Modes, LevelIndex: int = 0):
             KDS.Koponen.Talk.Conversation.schedule("Tulit juuri sopivaan aikaan. Haluaisin tehdä tutkimuksen siitä kuka olisi koulun paras opettaja... Siis minun lisäkseni tietenkin... Kävisitkö kyselemässä tätä muutamalta oppilaalta?", KDS.Koponen.Prefixes.koponen)
 
             KDS.Missions.InitialiseMission("research", "Tutkimus")
-            KDS.Missions.InitialiseStudentTask("research", "ask","Kysy oppilaiden mielipidettä", 10, f"Kysy mielipidetta [{KDS.Keys.functionKey.BindingDisplayName}]", 39)
+            KDS.Missions.InitialiseStudentTask("research", "ask","Kysy oppilaiden mielipidettä", 10, f"Kysy mielipidetta [{{binding:{KDS.Keys.functionKey.name}}}]", 39)
             KDS.Missions.InitialiseKoponenTask("research", "answers", "Palauta kyselypaperi", 39)
 
             KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
