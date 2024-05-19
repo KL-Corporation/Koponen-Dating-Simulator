@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from enum import IntEnum, auto
 import math
 import random
-from tkinter.filedialog import Directory
 from typing import List, Optional, Sequence, Tuple, Union
 
 import pygame
