@@ -160,6 +160,7 @@ class MessageBox:
             "Retry": MessageBox.Responses.RETRY,
             "Yes": MessageBox.Responses.YES,
             "No": MessageBox.Responses.NO
+            # Help not implemented
         }
 
         btns: tuple[str, ...] = BUTTONS[buttons]

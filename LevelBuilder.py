@@ -29,9 +29,8 @@ from enum import Enum, IntEnum
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
 
 KEYMAP_STR: Final[str] = """
-***** KEYMAP *****
+[   KEYMAP   ]
 
-[ Normal ]
 Middle Mouse: Get Serial
 Middle Mouse + SHIFT: Move Camera
 Middle Mouse + CTRL: Get Serial with Properties
@@ -45,12 +44,14 @@ Left Mouse + C: No Collision
 Left Mouse + ALT + C: Force Collision
 Right Mouse + C: Remove Collision Attribute
 Right Mouse + ALT + C: Remove Collision Attribute
-E: Open Material Menu
+
 CTRL + Z: Undo
 CTRL + Y: Redo
 CTRL + D: Duplicate Selection
 CTRL + C: Copy
 CTRL + V: Paste if possible
+
+E: Open Material Menu
 T: Input Console
 R: Resize Map
 F: Set Property
@@ -58,18 +59,16 @@ P: Set teleport index
 O: Set Overlay
 G: Select Refrence Map File
 Z or Y: Toggle Zone Mode
+
 CTRL + A: Select All
 CTRL + S: Save Project
 CTRL + SHIFT + S: Save Project As
 CTRL + O: Open Project
+
 F5: Reload LevelProp
 H: Show Help
 
-[ Material Menu ]
-Escape: Close Material Menu
-E: Close Material Menu
-
-***** KEYMAP *****
+[   KEYMAP   ]
 """.strip()
 
 root = tkinter.Tk()
