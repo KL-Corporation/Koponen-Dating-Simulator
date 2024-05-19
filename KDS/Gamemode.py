@@ -316,6 +316,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
 
             KDS.Missions.InitialiseMission("continue", "Jatka")
             KDS.Missions.InitialiseTask("continue", "cont", "Jatka kenttää eteenpäin", (KDS.Missions.Listeners.KeyDoorLocked, 1.0), (KDS.Missions.Listeners.ItemPickup, 13, 1.0))
+            # check for item pickup since if the key has already been picked up, KeyDoorLocked will not fire anymore.
 
             KDS.Missions.InitialiseMission("red_key", "Ovi On Lukittu")
             KDS.Missions.InitialiseTask("red_key", "pick_key", "Nouda punainen avain yläkerrasta", (KDS.Missions.Listeners.ItemPickup, 13, 1.0))
