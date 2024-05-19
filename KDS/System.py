@@ -7,14 +7,14 @@ import os
 import shutil
 import subprocess
 import platform
-import sys
 import gc as gc
-from typing import Dict, Optional
+from typing import Final, Literal, Optional
 import webbrowser
 
 import KDS.Logging
 
 from enum import IntEnum
+from pygame.display import message_box as pygame_message_box
 
 BASEDIR = str(os.path.dirname(os.path.abspath(__file__)))
 
@@ -70,7 +70,7 @@ class MessageBox:
     class Buttons(IntEnum):
         ABORTRETRYIGNORE = 2
         CANCELTRYCONTINUE = 6
-        HELP = 16384
+        # HELP = 16384
         OK = 0
         OKCANCEL = 1
         RETRYCANCEL = 5
@@ -82,7 +82,7 @@ class MessageBox:
         WARNING = 48
         INFORMATION = 64
         ASTERISK = 64
-        QUESTION = 32
+        # QUESTION = 32
         STOP = 16
         ERROR = 16
         HAND = 16
@@ -105,40 +105,73 @@ class MessageBox:
         YES = 6
 
     @staticmethod
-    def Show(title: str, text: str, buttons: Optional[MessageBox.Buttons] = None, icon: Optional[MessageBox.Icon] = None, defaultButton: Optional[MessageBox.DefaultButton] = None, *args: int) -> MessageBox.Responses:
+    def Show(title: str, text: str, buttons: MessageBox.Buttons, icon: MessageBox.Icon, defaultButton: MessageBox.DefaultButton = DefaultButton.BUTTON1) -> MessageBox.Responses:
         if ISLINUX:
-            MessageBox._sendLinuxNotification(title, text, icon)
-            return MessageBox.Responses.YES # notify doesn't have buttons so we will return this same response... Shut up, I know this is stupid.
+            return MessageBox._pygameMessageboxFallback(title=title, text=text, buttons=buttons, icon=icon, defaultButton=defaultButton)
 
-        argVal = buttons.value if buttons != None else 0
-        argVal += icon.value if icon != None else 0
-        argVal += defaultButton.value if defaultButton != None else 0
-        argVal += sum(args)
+        argVal = buttons.value
+        argVal += icon.value
+        argVal += defaultButton.value
+        # argVal += sum(args)
         response = ctypes.windll.user32.MessageBoxW(0, text, title, argVal)
         return MessageBox.Responses(response)
 
     @staticmethod
-    def _sendLinuxNotification(title: str, text: str, icon: Optional[MessageBox.Icon] = None):
-        icons: Dict[Optional[MessageBox.Icon], Optional[str]] = {
-            MessageBox.Icon.EXCLAMATION: "error",
-            MessageBox.Icon.WARNING: "dialog-warning",
+    def _pygameMessageboxFallback(title: str, text: str, buttons: MessageBox.Buttons, icon: MessageBox.Icon, defaultButton: MessageBox.DefaultButton) -> MessageBox.Responses:
+        """Slow, janky and shit."""
+        BUTTONS: Final[dict[MessageBox.Buttons, tuple[str, ...]]] = {
+            MessageBox.Buttons.ABORTRETRYIGNORE: ("Abort", "Retry", "Ignore"),
+            MessageBox.Buttons.CANCELTRYCONTINUE: ("Cancel", "Try Again", "Continue"),
+            # MessageBox.Buttons.HELP: ("Help",), # non-standard, should be a dedicated help button
+            MessageBox.Buttons.OK: ("OK",),
+            MessageBox.Buttons.OKCANCEL: ("OK", "Cancel"),
+            MessageBox.Buttons.RETRYCANCEL: ("Retry", "Cancel"),
+            MessageBox.Buttons.YESNO: ("Yes", "No"),
+            MessageBox.Buttons.YESNOCANCEL: ("Yes", "No", "Cancel")
+        }
+
+        ICONS: Final[dict[MessageBox.Icon, Literal["info", "warn", "error"]]] = {
+            MessageBox.Icon.STOP: "error",
+            MessageBox.Icon.ERROR: "error",
+            MessageBox.Icon.HAND: "error",
+            MessageBox.Icon.EXCLAMATION: "warn",
+            MessageBox.Icon.WARNING: "warn",
             MessageBox.Icon.INFORMATION: "info",
             MessageBox.Icon.ASTERISK: "info",
-            MessageBox.Icon.QUESTION: "help",
-            MessageBox.Icon.STOP: "stop",
-            MessageBox.Icon.ERROR: "stop",
-            MessageBox.Icon.HAND: "stop",
-            None: None
+            # MessageBox.Icon.QUESTION: "info" # non-standard, should be a question mark
         }
-        cmd = ["/usr/bin/notify-send"]
 
-        tmpicon = icons[icon]
-        if tmpicon != None:
-            cmd.append(f"--icon={tmpicon}")
+        DEFAULT_BUTTONS: Final[dict[MessageBox.DefaultButton, int]] = {
+            MessageBox.DefaultButton.BUTTON1: 0,
+            MessageBox.DefaultButton.BUTTON2: 1,
+            MessageBox.DefaultButton.BUTTON3: 2,
+            MessageBox.DefaultButton.BUTTON4: 3
+        }
 
-        cmd.append(title)
-        cmd.append(text)
-        subprocess.run(cmd)
+        RESPONSES: Final[dict[str, MessageBox.Responses]] = {
+            "Abort": MessageBox.Responses.ABORT,
+            "Retry": MessageBox.Responses.RETRY,
+            "Ignore": MessageBox.Responses.IGNORE,
+            "Cancel": MessageBox.Responses.CANCEL,
+            "Try Again": MessageBox.Responses.TRYAGAIN,
+            "Continue": MessageBox.Responses.CONTINUE,
+            "OK": MessageBox.Responses.OK,
+            "Cancel": MessageBox.Responses.CANCEL,
+            "Retry": MessageBox.Responses.RETRY,
+            "Yes": MessageBox.Responses.YES,
+            "No": MessageBox.Responses.NO
+        }
+
+        btns: tuple[str, ...] = BUTTONS[buttons]
+        button_index: int = pygame_message_box(
+            title=title,
+            message=text,
+            message_type=ICONS[icon],
+            buttons=btns,
+            return_button=DEFAULT_BUTTONS[defaultButton],
+        )
+
+        return RESPONSES[btns[button_index]]
 
 class Console:
     ATTRIBUTES = dict(
