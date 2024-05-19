@@ -26,7 +26,51 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
+
+KEYMAP_STR: Final[str] = """
+***** KEYMAP *****
+
+[ Normal ]
+Middle Mouse: Get Serial
+Middle Mouse + SHIFT: Move Camera
+Middle Mouse + CTRL: Get Serial with Properties
+Left Mouse: Set Serial
+Left Mouse + SHIFT: Add Serial At Top
+Left Mouse + CTRL: Insert Serial At Bottom
+Right Mouse: Reset Serial
+Right Mouse + SHIFT: Remove Serial From Top
+Right Mouse + CTRL: Remove Serial From Bottom
+Left Mouse + C: No Collision
+Left Mouse + ALT + C: Force Collision
+Right Mouse + C: Remove Collision Attribute
+Right Mouse + ALT + C: Remove Collision Attribute
+E: Open Material Menu
+CTRL + Z: Undo
+CTRL + Y: Redo
+CTRL + D: Duplicate Selection
+CTRL + C: Copy
+CTRL + V: Paste if possible
+T: Input Console
+R: Resize Map
+F: Set Property
+P: Set teleport index
+O: Set Overlay
+G: Select Refrence Map File
+Z or Y: Toggle Zone Mode
+CTRL + A: Select All
+CTRL + S: Save Project
+CTRL + SHIFT + S: Save Project As
+CTRL + O: Open Project
+F5: Reload LevelProp
+H: Show Help
+
+[ Material Menu ]
+Escape: Close Material Menu
+E: Close Material Menu
+
+***** KEYMAP *****
+""".strip()
 
 root = tkinter.Tk()
 root.withdraw()
@@ -931,7 +975,7 @@ class DragData:
         hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
-    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper):
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper, *, allow_drag: bool):
         if not brush.IsEmpty():
             if self.Rect != None:
                 self.clear()
@@ -948,6 +992,9 @@ class DragData:
         if not left_down:
             return
         if keys_down[K_c]:
+            return
+
+        if not allow_drag:
             return
 
         startCallFlag = False
@@ -1176,14 +1223,14 @@ def openMap() -> bool: # Returns True if the operation was succesful
         return False
     return loadMap(fileName)
 
-consoleTextureNames = {}
+consoleTextureNameSerials: dict[str, str] = {}
 for tmpName in Textures:
     modName = tmpName.name.replace(" ", "_").lower().replace("(", "").replace(")", "")
-    consoleTextureNames[modName.encode("ascii", "ignore").decode("ascii")] = tmpName.serialNumber
+    consoleTextureNameSerials[modName.encode("ascii", "ignore").decode("ascii")] = tmpName.serialNumber
 commandTree = {
     "set": {
-        "brush": consoleTextureNames,
-        **consoleTextureNames
+        "brush": {n: "break" for n in consoleTextureNameSerials.keys()},
+        **{n: "break" for n in consoleTextureNameSerials.keys()},
     },
     "add": {
         "rows": "break",
@@ -1191,11 +1238,13 @@ commandTree = {
     },
     "rmv": {
         "rows": "break",
-        "cols": "break",
-        "stacks": "break"
+        "cols": "break"
+        # "stacks": "break"
     }
 }
-def consoleHandler(commandlist: List[str]):
+def consoleHandler(commandlist: List[str]) -> int:
+    """Return 0 on success, 1 on error"""
+
     global brush, grid
     if commandlist[0] == "set":
         textureNames = Textures.names
@@ -1203,56 +1252,88 @@ def consoleHandler(commandlist: List[str]):
         if commandlist[1] == "brush":
             if len(commandlist) < 3:
                 KDS.Console.Feed.append("Invalid set command.")
-                return
-            if commandlist[2] in textureNames:
-                data = Textures.GetData(consoleTextureNames[commandlist[2]])
+                return 1
+            if commandlist[2] in consoleTextureNameSerials:
+                data = Textures.GetData(consoleTextureNameSerials[commandlist[2]])
                 brush.SetValues(data.serialNumber)
                 KDS.Console.Feed.append(f"Brush set: [{data.serialNumber}: {data.name}]")
+                return 0
             elif commandlist[2] in textureSerials:
                 brush.SetValues(commandlist[2])
                 KDS.Console.Feed.append(f"Brush set: [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
-            else: KDS.Console.Feed.append("Invalid brush.")
+                return 0
+            else:
+                KDS.Console.Feed.append("Invalid brush.")
+                return 1
         elif Drag.Mode == DragMode.Default and Drag.Rect != None:
-            if commandlist[1] in textureNames:
-                data = Textures.GetData(consoleTextureNames[commandlist[1]])
+            if commandlist[1] in consoleTextureNameSerials:
+                data = Textures.GetData(consoleTextureNameSerials[commandlist[1]])
                 Selected.Set(UnitData.toSerialString(data.serialNumber))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{data.serialNumber}: {data.name}]")
+                return 0
             elif commandlist[1] in textureSerials:
                 Selected.Set(UnitData.toSerialString(commandlist[2]))
                 Selected.Update()
                 KDS.Console.Feed.append(f"Filled [{Drag.Rect.topleft}, {Drag.Rect.bottomright}] with [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
-        else: KDS.Console.Feed.append("Invalid set command.")
+                return 0
+            else:
+                KDS.Console.Feed.append("Invalid brush.")
+                return 1
+        else:
+            KDS.Console.Feed.append("Invalid set command.")
+            return 1
     elif commandlist[0] == "add":
         if commandlist[1] == "rows":
             if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0], gridSize[1] + int(commandlist[2])), grid)
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} rows.")
-            else: KDS.Console.Feed.append("Row add count is not a valid value.")
+                return 0
+            else:
+                KDS.Console.Feed.append("Row add count is not a valid value.")
+                return 1
         elif commandlist[1] == "cols":
             if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0] + int(commandlist[2]), gridSize[1]), grid)
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} columns.")
-            else: KDS.Console.Feed.append("Column add count is not a valid value.")
-        else: KDS.Console.Feed.append("Invalid add command.")
+                return 0
+            else:
+                KDS.Console.Feed.append("Column add count is not a valid value.")
+                return 1
+        else:
+            KDS.Console.Feed.append("Invalid add command.")
+            return 1
     elif commandlist[0] == "rmv":
         if commandlist[1] == "rows":
             if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0], gridSize[1] - int(commandlist[2])), grid)
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} rows.")
-            else: KDS.Console.Feed.append("Row add count is not a valid value.")
+                return 0
+            else:
+                KDS.Console.Feed.append("Row add count is not a valid value.")
+                return 1
         elif commandlist[1] == "cols":
             if commandlist[2].isnumeric():
                 resizeGrid((gridSize[0] - int(commandlist[2]), gridSize[1]), grid)
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} columns.")
-            else: KDS.Console.Feed.append("Column add count is not a valid value.")
-        elif commandlist[1] == "stacks":
-            for row in grid:
-                for unit in row:
-                    for i in range(1, len(unit.serials)):
-                        unit.setSerialToSlot(UnitData.EMPTY, i)
-        else: KDS.Console.Feed.append("Invalid remove command.")
-    else: KDS.Console.Feed.append("Invalid command.")
+                return 0
+            else:
+                KDS.Console.Feed.append("Column add count is not a valid value.")
+                return 1
+        # This command was too dangerous (make an accidental mistake and you are fucked)
+        # elif commandlist[1] == "stacks":
+        #     for row in grid:
+        #         for unit in row:
+        #             for i in range(1, len(unit.serials)):
+        #                 unit.setSerialToSlot(UnitData.EMPTY, i)
+        #     KDS.Console.Feed.append("Removed all stacks found in this map.")
+        #     return 0
+        else:
+            KDS.Console.Feed.append("Invalid remove command.")
+            return 1
+    else:
+        KDS.Console.Feed.append("Invalid command.")
+        return 1
 
 def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
     Undo.overflowCount += 1
@@ -1338,8 +1419,10 @@ def materialMenu(previousMaterial: str) -> str:
                     matMenRunning = False
                     return previousMaterial
             elif event.type == MOUSEWHEEL:
-                if event.y > 0: rscroll = max(rscroll - 2, 0)
-                else: rscroll = int(min((rscroll + 2) * 30, (ROWS - 2) * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
+                if event.y > 0:
+                    rscroll = max(rscroll - 2, 0)
+                else:
+                    rscroll = int(min((rscroll + 2) * 30, (ROWS - 2) * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
         yCalc = rscroll * 30
 
         tip_renders = []
@@ -1665,16 +1748,19 @@ def main():
         if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This should not break anything, because CPython still has it's stupid GIL
         textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
 
-    inputConsole_output = None
+    openCommandTerminal: bool = False
 
     mouse_pos_beforeMove = pygame.mouse.get_pos()
     scroll_beforeMove = scroll
     while mainRunning:
         middleMouseOnDown = False
         pygame.key.set_repeat(500, 31)
+
+        # BEFORE EVENTS
         mouse_pos = pygame.mouse.get_pos()
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
+
         for event in pygame.event.get(): #Event loop
             if defaultEventHandler(event):
                 continue
@@ -1697,7 +1783,10 @@ def main():
                     else:
                         zoneMode = not zoneMode
                 elif event.key == K_t:
-                    inputConsole_output = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
+                    openCommandTerminal = True
+                elif event.key == K_h:
+                    KDS.Console.Feed.append(KEYMAP_STR)
+                    openCommandTerminal = True
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None:
@@ -1779,6 +1868,20 @@ def main():
                     scroll[1] -= event.y
                 scroll[0] += event.x
 
+        # AFTER EVENTS
+        mouse_pos = pygame.mouse.get_pos()
+        keys_pressed = pygame.key.get_pressed()
+        mouse_pressed = pygame.mouse.get_pressed()
+        # second event check fixes some race conditions and edge cases
+
+        if openCommandTerminal:
+            inputConsole_output: Final = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
+            if inputConsole_output != None:
+                console_exit_code: Final[int] = consoleHandler(inputConsole_output)
+                openCommandTerminal = (console_exit_code > 0)
+            else:
+                openCommandTerminal = False
+
         if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
             mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
             mid_scroll_y = (mouse_pos_beforeMove[1] - mouse_pos[1]) // scalesize
@@ -1798,10 +1901,6 @@ def main():
             openMapSuccess = openMap()
             if not openMapSuccess:
                 KDS.Logging.info("Map opening cancelled.", True)
-
-        if inputConsole_output != None:
-            consoleHandler(inputConsole_output)
-            inputConsole_output = None
 
         if refrenceGrid != None:
             if refrenceGridHandle == None or refrenceGridHandle.IsComplete:
@@ -1828,7 +1927,7 @@ def main():
             tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
 
-        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed)
+        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed, allow_drag=allowTilePlacement)
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
@@ -1936,42 +2035,3 @@ except Exception as e:
 
 KDS.Jobs.quit()
 pygame.quit()
-
-""" KEYMAP
-    [Normal]
-    Middle Mouse: Get Serial
-    Middle Mouse + SHIFT: Move Camera
-    Middle Mouse + CTRL: Get Serial with Properties
-    Left Mouse: Set Serial
-    Left Mouse + SHIFT: Add Serial At Top
-    Left Mouse + CTRL: Insert Serial At Bottom
-    Right Mouse: Reset Serial
-    Right Mouse + SHIFT: Remove Serial From Top
-    Right Mouse + CTRL: Remove Serial From Bottom
-    Left Mouse + C: No Collision
-    Left Mouse + ALT + C: Force Collision
-    Right Mouse + C: Remove Collision Attribute
-    Right Mouse + ALT + C: Remove Collision Attribute
-    E: Open Material Menu
-    CTRL + Z: Undo
-    CTRL + Y: Redo
-    CTRL + D: Duplicate Selection
-    CTRL + C: Copy
-    CTRL + V: Paste if possible
-    T: Input Console
-    R: Resize Map
-    F: Set Property
-    P: Set teleport index
-    O: Set Overlay
-    G: Select Refrence Map File
-    Z: Toggle Zone Mode
-    CTRL + A: Select All
-    CTRL + S: Save Project
-    CTRL + SHIFT + S: Save Project As
-    CTRL + O: Open Project
-    F5: Reload LevelProp
-
-    [Material Menu]
-    Escape: Close Material Menu
-    E: Close Material Menu
-"""

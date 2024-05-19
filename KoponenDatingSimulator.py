@@ -3598,29 +3598,49 @@ def console(oldSurf: pygame.Surface):
                     KDS.Console.Feed.append("Please provide a proper finish type.")
             elif command_list[0] == "teleport":
                 if len(command_list) == 3:
+                    teleport_command_x_valid: bool = True
+                    teleport_command_y_valid: bool = True
+
                     if command_list[1][0] == "~":
-                        if len(command_list[1]) < 2: command_list[1] += "0"
+                        if len(command_list[1]) < 2:
+                            command_list[1] += "0"
                         xt = command_list[1][1:]
-                        try: xt = Player.rect.x + int(xt)
-                        except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+                        try:
+                            xt = Player.rect.x + int(xt)
+                        except ValueError:
+                            teleport_command_x_valid = False
                     else:
                         xt = command_list[1]
-                        try: xt = int(xt)
-                        except ValueError: KDS.Console.Feed.append("X-coordinate invalid.")
+                        try:
+                            xt = int(xt)
+                        except ValueError:
+                            teleport_command_x_valid = False
 
                     if command_list[2][0] == "~":
-                        if len(command_list[2]) < 2: command_list[2] += "0"
+                        if len(command_list[2]) < 2:
+                            command_list[2] += "0"
                         yt = command_list[2][1:]
-                        try: yt = Player.rect.y + int(yt)
+                        try:
+                            yt = Player.rect.y + int(yt)
                         except ValueError:
-                            if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
-                            else: KDS.Console.Feed.append("Y-coordinate invalid.")
+                            teleport_command_y_valid = False
                     else:
                         yt = command_list[2]
-                        try: yt = int(yt)
+                        try:
+                            yt = int(yt)
                         except ValueError:
-                            if not isinstance(xt, int): KDS.Console.Feed[-1] = "X and Y-coordinates invalid."
-                            else: KDS.Console.Feed.append("Y-coordinate invalid.")
+                            teleport_command_y_valid = False
+
+                    if not teleport_command_x_valid or not teleport_command_y_valid:
+                        teleport_command_msg: str
+                        if not teleport_command_x_valid and not teleport_command_y_valid:
+                            teleport_command_msg = "X and Y -coordinates invalid."
+                        elif not teleport_command_x_valid:
+                            teleport_command_msg = "X-coordinate invalid."
+                        else:
+                            assert(not teleport_command_y_valid)
+                            teleport_command_msg = "Y-coordinate invalid."
+                        KDS.Console.Feed.append(teleport_command_msg)
 
                     if isinstance(xt, int) and isinstance(yt, int):
                         Player.rect.topleft = (xt, yt)
@@ -3693,7 +3713,7 @@ def console(oldSurf: pygame.Surface):
                 else:
                     KDS.Console.Feed.append("Please provide a proper program for runprog")
             elif command_list[0] == "help":
-                KDS.Console.Feed.extend("""
+                KDS.Console.Feed.append("""
 Console Help:
     - give: Add the specified item to your inventory.
     - remove: Remove the specified item from your inventory.
@@ -3713,7 +3733,7 @@ Console Help:
     - godmode: Activate God Mode.
         Gives the player some buffs like infinite health
     - runprog: Run an internal KDS program.
-    - help: Show the list of commands.""".splitlines())
+    - help: Show the list of commands.""")
             else:
                 KDS.Console.Feed.append("Invalid Command.")
         except Exception as e:

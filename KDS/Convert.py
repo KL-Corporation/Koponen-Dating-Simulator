@@ -320,9 +320,19 @@ def HSVToRGB2(hue: float, saturation: float, value: float) -> Tuple[float, float
         KDS.Logging.AutoError("Invalid HSV => RGB Conversion color.")
         return (0.0, 0.0, 0.0)
 
-def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> Tuple[str, ...]:
+def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> list[str]:
+    ### HANDLE NEWLINE ###
+    if '\n' in text:
+        lines: list[str] = text.split('\n')
+        lines_out: list[str] = []
+        for l in lines:
+            lines_out.extend(ToLines(l, font=font, max_width=max_width))
+        return lines_out
+    ### HANDLE NEWLINE ###
+    ###  early return  ###
+
     if font.size(text)[0] < max_width:
-        return tuple([text])
+        return [text]
 
     # Freezes if word is longer than max_width...
     text_split = [" " + wrd for wrd in text.split(" ")]
@@ -345,7 +355,7 @@ def ToLines(text: str, font: pygame.font.Font, max_width: Union[int, float]) -> 
     if len(new_split[-1]) < 1:
         del(new_split[-1])
 
-    return tuple(["".join(new_split[i]).lstrip() for i in range(len(new_split))])
+    return ["".join(new_split[i]).lstrip() for i in range(len(new_split))]
 
 def ToRational(value: float) -> str:
     fraction, integer = KDS.Math.SplitFloat(value)

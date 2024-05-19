@@ -1,5 +1,6 @@
+from collections import deque
 import re
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Final, Iterable, List, Optional, Sequence, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -13,8 +14,6 @@ import KDS.Clock
 
 pygame.init()
 pygame.key.stop_text_input()
-# pygame.scrap.init()
-# pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 #region Settings
 console_font = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 25)
 console_font_small = pygame.font.Font("Assets/Fonts/Windows/consola.ttf", 15)
@@ -44,8 +43,6 @@ def init(_window: pygame.Surface, _display: pygame.Surface, _Offset: Optional[Tu
     rndrOffset = _Offset if _Offset != None else (0, 0)
     defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
     KDS_Quit = _KDS_Quit
-    pygame.scrap.init()
-    pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 
 class CheckTypes:
     @staticmethod
@@ -105,12 +102,36 @@ class CheckTypes:
             "noSpace": noSpace
         }
 
-Escaped = False
-Feed = []
-OldCommands = []
+class _ConsoleFeed:
+    MAX_LENGTH: int = 1024
+
+    def __init__(self) -> None:
+        self._queue: list[str] = list()
+
+    def append(self, text: str) -> None:
+        lines: list[str] = KDS.Convert.ToLines(text, console_font, feedRect.width)
+        self._queue.extend(lines)
+
+        while len(self._queue) > _ConsoleFeed.MAX_LENGTH:
+            self._queue.pop(0)
+
+    def iter_from_end(self, count: int, *, offset: int = 0) -> Iterable[str]:
+        if offset > 0:
+            raise ValueError("Offset can only be negative!")
+
+        start: int = (len(self._queue) - 1) + offset
+        end: int = max(start - count, -1)
+        for i in range(start, end, -1):
+            yield self._queue[i]
+
+    def __len__(self) -> int:
+        return len(self._queue)
+
+Feed: _ConsoleFeed = _ConsoleFeed()
+_OldCommands = []
 
 def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: Optional[dict] = None, background: Optional[pygame.Surface] = None, commands: Optional[dict] = None, autoFormat: bool = False, showFeed: bool = False, enableOld: bool = False, defVal: Optional[str] = None) -> Any:
-    global Escaped, Feed, OldCommands
+    global Feed, _OldCommands
     if commands != None:
         commandsFound = commands
         previousCommandsFound = commandsFound
@@ -178,6 +199,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
         found.reverse()
         return found
 
+    console_feed_y: int = 0
+
     while running:
         showSuggestions = True
         tabbed = False
@@ -232,7 +255,6 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                 elif event.key == K_ESCAPE and allowEscape:
                     cmd = ""
                     running = False
-                    Escaped = True
                 elif event.key == K_LEFT:
                     caret_animation.tick = 0
                     if not keys_pressed[K_LSHIFT]:
@@ -306,21 +328,20 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                         addCaretLength(len(cmd))
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
-                        clipboardText: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
-                        if clipboardText != None:
-                            if isinstance(clipboardText, bytes):
-                                clipboardText = clipboardText.decode("utf-8")
+                        # If clipboard doesn't have anything, do not override selection with empty string
+                        # because if clipboard is empty get_text() returns an empty string
+                        if pygame.scrap.has_text():
+                            clipboardText: str = pygame.scrap.get_text()
                             addText(clipboardText)
                 elif event.key == K_c:
                     if keys_pressed[K_LCTRL] and caret_length != 0:
                         tmp_crt_pos = caret_index + caret_length
-                        pygame.scrap.put("text/plain;charset=utf-8", cmd[min(tmp_crt_pos, caret_index):max(tmp_crt_pos, caret_index)].encode("utf-8"))
+                        pygame.scrap.put_text(cmd[min(tmp_crt_pos, caret_index):max(tmp_crt_pos, caret_index)])
                 elif event.key == K_x:
                     if keys_pressed[K_LCTRL] and caret_length != 0:
                         tmp_crt_pos = caret_index + caret_length
-                        pygame.scrap.put("text/plain;charset=utf-8", cmd[min(tmp_crt_pos, caret_index):max(tmp_crt_pos, caret_index)].encode("utf-8"))
+                        pygame.scrap.put_text(cmd[min(tmp_crt_pos, caret_index):max(tmp_crt_pos, caret_index)])
                         addText("")
-
             elif event.type == MOUSEBUTTONDOWN:
                 caret_animation.tick = 0
                 if text_input_rect.collidepoint(pygame.mouse.get_pos()):
@@ -329,6 +350,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                 else:
                     pygame.key.stop_text_input()
                     textInput = False
+            elif event.type == MOUSEWHEEL:
+                console_feed_y -= event.y
             elif event.type == QUIT:
                 if allowEscape:
                     cmd = ""
@@ -352,19 +375,12 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
 
         #region Feed Rendering
         if showFeed:
-            newFeed: List[str] = []
-            for line in Feed:
-                 splitFeed = KDS.Convert.ToLines(line, console_font, feedRect.width)
-                 for newLine in splitFeed:
-                     newFeed.append(newLine)
-            while len(newFeed) > feedRect.height / console_font.get_height():
-                del newFeed[0]
-            Feed = newFeed
-            renderFeed = Feed.copy()
-            renderFeed.reverse()
-            for y_i in range(len(renderFeed)):
-                display.blit(console_font.render(renderFeed[y_i], True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - y_i * console_font.get_height()))
-
+            visible_line_count: Final[int] = KDS.Math.CeilToInt(feedRect.height / console_font.get_height())
+            # use min(max()) instead of clamp
+            # as clamp's order of operations is wrong for this situation ( max(min()) )
+            console_feed_y = min(max(console_feed_y, -len(Feed) + 1), 0) # +1 so that we show at least one line
+            for i, line in enumerate(Feed.iter_from_end(visible_line_count, offset=console_feed_y)):
+                display.blit(console_font.render(line, True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - (i * console_font.get_height())))
         #endregion
 
         #region Type Checking
@@ -561,15 +577,15 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                     display.blit(r, (0, text_input_rect.top - y))
                     y -= suggestionSpacing + console_font.get_height()
 
-            if enableOld and (len(cmd) <= 0 or cmd in OldCommands) and ((len(OldCommands) > oldIndex and oldIndex != -1 or len(OldCommands) > oldIndex + 1 and oldIndex == -1)) and (Key_Up or Key_Down):
+            if enableOld and (len(cmd) <= 0 or cmd in _OldCommands) and ((len(_OldCommands) > oldIndex and oldIndex != -1 or len(_OldCommands) > oldIndex + 1 and oldIndex == -1)) and (Key_Up or Key_Down):
                 if Key_Up:
                     oldIndex += 1
-                    if oldIndex >= len(OldCommands): oldIndex = len(OldCommands) - 1
-                    cmd = OldCommands[len(OldCommands) - 1 - oldIndex]
+                    if oldIndex >= len(_OldCommands): oldIndex = len(_OldCommands) - 1
+                    cmd = _OldCommands[len(_OldCommands) - 1 - oldIndex]
                 else:
                     oldIndex -= 1
                     if oldIndex < -1: oldIndex = -1
-                    cmd = OldCommands[len(OldCommands) - 1 - oldIndex] if oldIndex > -1 else ""
+                    cmd = _OldCommands[len(_OldCommands) - 1 - oldIndex] if oldIndex > -1 else ""
                 caret_index = len(cmd)
 
         if not suggestionsRendered: display.blit(promptRender, (text_input_rect.left, text_input_rect.top - promptRender.get_height()))
@@ -620,7 +636,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
-    if enableOld and len(cmd) > 0: OldCommands.append(cmd)
+    if enableOld and len(cmd) > 0: _OldCommands.append(cmd)
 
     #region Formatting
     if autoFormat:
