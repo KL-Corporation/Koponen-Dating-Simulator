@@ -51,8 +51,6 @@ def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
     display_size = display.get_size()
     display_info = pygame.display.Info()
 SetDisplaySize((min(display_size[0], monitor_info.current_w), min(display_size[1], monitor_info.current_h - 100)))
-pygame.scrap.init()
-pygame.scrap.set_mode(SCRAP_CLIPBOARD)
 
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
@@ -532,10 +530,10 @@ class UnitData:
                             unit.properties.Set(UnitType.Teleport, "identifier", 1)
                             teleportIdentifier = 1
                         if isinstance(teleportIdentifier, int):
-                            tip_renders.append(harbinger_font_small.render(str(teleportIdentifier), True, KDS.Colors.AviatorRed))
+                            tip_renders.append(harbinger_font_small.render(f"teleport id: {teleportIdentifier}", True, KDS.Colors.AviatorRed))
                             if keys_pressed[K_p]:
                                 if not zoneMode:
-                                    newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport index: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
+                                    newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport ID: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
                                     if newTeleportIdentifier != None:
                                         unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
 
@@ -1168,7 +1166,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
     Undo.clear()
     if not KDS.System.ISLINUX:
         KDS.Loading.Circle.Stop()
-        
+
     return True
 
 def openMap() -> bool: # Returns True if the operation was succesful
@@ -1740,26 +1738,24 @@ def main():
                             toClipboard = Selected.ToString(serializeProperties=True)
                             if not isinstance(toClipboard, tuple) or len(toClipboard) != 2:
                                 raise ValueError(f"Clipboard data (type: from) is an incorrect type. Tuple of length 2 expected; got: \"{toClipboard}\".")
-                            pygame.scrap.put("text/plain;charset=utf-8", bytes(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}", "utf-8"))
+                            pygame.scrap.put_text(f"KDS_LevelBuilder_Clipboard_Copy_{toClipboard[0]}??{toClipboard[1]}")
                         except Exception:
                             KDS.Logging.AutoError(f"Copy to clipboard failed. Exception Below:\n{traceback.format_exc()}")
                 elif event.key == K_v:
                     if keys_pressed[K_LCTRL]:
                         try:
-                            fromClipboard: Union[str, bytes, None] = pygame.scrap.get("text/plain;charset=utf-8")
-                            if fromClipboard != None:
-                                if isinstance(fromClipboard, bytes):
-                                    fromClipboard = fromClipboard.decode("utf-8")
-                                if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
-                                    fromClipboardSplit = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
-                                    if len(fromClipboardSplit) != 2:
-                                        raise ValueError(f"Clipboard data (type: to) is an incorrect type. List of length 2 expected; got: \"{fromClipboardSplit}\".")
-                                    if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
-                                        Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
-                                    else:
-                                        KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.", consoleVisible=True)
-                                        Selected.FromString(fromClipboardSplit[0], None)
-                                else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.", consoleVisible=True)
+                            fromClipboard: str = pygame.scrap.get_text()
+                            # fromClipboard is empty string ("") if clipboard is empty. Check prefix to verify the values in clipboard.
+                            if fromClipboard.startswith("KDS_LevelBuilder_Clipboard_Copy_"):
+                                fromClipboardSplit = fromClipboard.removeprefix("KDS_LevelBuilder_Clipboard_Copy_").split("??", 1)
+                                if len(fromClipboardSplit) != 2:
+                                    raise ValueError(f"Clipboard data (type: to) is an incorrect type. List of length 2 expected; got: \"{fromClipboardSplit}\".")
+                                if len(fromClipboardSplit[1]) > 0 and not fromClipboardSplit[1].isspace():
+                                    Selected.FromString(fromClipboardSplit[0], fromClipboardSplit[1])
+                                else:
+                                    KDS.Logging.info("Skipped properties for pasting from clipboard, because it is either empty or whitespace.", consoleVisible=True)
+                                    Selected.FromString(fromClipboardSplit[0], None)
+                            else: KDS.Logging.info(f"Cannot paste \"{fromClipboard}\" into LevelBuilder.", consoleVisible=True)
                         except Exception:
                             KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
                 elif event.key == K_g:
