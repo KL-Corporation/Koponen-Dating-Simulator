@@ -176,8 +176,10 @@ class Inventory:
 
     @staticmethod
     def renderItemTexture(texture: pygame.Surface, rect: pygame.Rect, direction: bool, surface: pygame.Surface, scroll: Sequence[int]):
-        if direction: renderOffset = -texture.get_width()
-        else: renderOffset = rect.width + 2
+        if direction:
+            renderOffset = -texture.get_width() - 2
+        else:
+            renderOffset = rect.width + 2
 
         surface.blit(pygame.transform.flip(texture, direction, False), (rect.x - scroll[0] + renderOffset, rect.y + 10 -scroll[1]))
 
