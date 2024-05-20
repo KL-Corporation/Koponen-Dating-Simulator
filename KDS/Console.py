@@ -503,7 +503,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                 commandsFoundLowerKeys = dict((k.lower(), k) for k in commandsFound)
                 suggestionPathIndex = 0
                 while suggestionPathIndex < len(cmdSplit):
-                    if isinstance(commandsFound, dict) and cmdSplit[suggestionPathIndex].lower() in commandsFoundLowerKeys:
+                    if isinstance(commandsFound, dict) and cmdSplit[suggestionPathIndex].lower() in commandsFoundLowerKeys: # pyright: ignore [reportUnnecessaryIsInstance]
                         previousCommandsFound = commandsFound
                         commandsFound = commandsFound[commandsFoundLowerKeys[cmdSplit[suggestionPathIndex].lower()]]
                         if isinstance(commandsFound, dict):

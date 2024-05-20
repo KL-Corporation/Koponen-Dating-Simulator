@@ -171,7 +171,8 @@ class StudentNPC(NPC):
     def update(self, surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], items: List[KDS.Build.Item], player: PlayerClass) -> Tuple[List[KDS.World.Bullet], List[int]]:
         output = super().update(surface, scroll, tiles, items, player)
         if StudentNPC.Task != None and self.rect.colliderect(player.rect) and not StudentNPC.Task.HasInteracted(self):
-            surface.blit(StudentNPC.Task.prompt, (self.rect.centerx - StudentNPC.Task.prompt.get_width() // 2 - scroll[0], self.rect.y - 15 - scroll[1]))
+            renderedPrompt: pygame.Surface = StudentNPC.Task.prompt.get_surface()
+            surface.blit(renderedPrompt, (self.rect.centerx - renderedPrompt.get_width() // 2 - scroll[0], self.rect.y - 15 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 item = StudentNPC.Task.Interact(self)
                 if item != None:

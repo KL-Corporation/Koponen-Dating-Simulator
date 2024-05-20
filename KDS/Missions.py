@@ -113,8 +113,7 @@ class Task:
         global Missions
         self.safeName = safeName
         self.missionName = missionName
-        self.text = text
-        self.renderedText = KDS.UI.KeybindFormattedText(TaskFont, self.text, True, KDS.Colors.White)
+        self.text = KDS.UI.KeybindFormattedText(TaskFont, text, True, KDS.Colors.White)
         self.progress = 0.0
         self.progressScaled = 0
         self.finished = False
@@ -151,7 +150,7 @@ class Task:
         surface = pygame.Surface((Width, Height))
         surface.fill(self.color.update(not self.finished))
 
-        renderedText: pygame.Surface = self.renderedText.get_surface()
+        renderedText: pygame.Surface = self.text.get_surface()
         renderedTextHeight: int = renderedText.get_height()
         surface.blit(renderedText, (Padding.left, round((Height / 2) - (renderedTextHeight / 2))))
 
@@ -188,7 +187,7 @@ class StudentTask(Task):
         self.interacted: int = 0
         self.interactCount: int = interactCount
         self.interactedStudents: List[KDS.NPC.StudentNPC] = []
-        self.prompt: pygame.Surface = TipFont.render(interactPrompt, True, KDS.Colors.White)
+        self.prompt: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(TipFont, interactPrompt, True, KDS.Colors.White)
         self.item = completedItem
         self.itemGiven: bool = False
 
@@ -208,9 +207,7 @@ class Mission:
     def __init__(self, safeName: str, text: str, playSound: bool) -> None:
         global Missions
         self.safeName = safeName
-        self.text = text
-        self.renderedText = MissionFont.render(self.text, True, KDS.Colors.White)
-        self.textSize = self.renderedText.get_size()
+        self.text: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(MissionFont, text, True, KDS.Colors.White)
         self.tasks: Dict[str, Task] = {}
         self.finished = False
         self.lastFinished = False
@@ -294,13 +291,15 @@ class Mission:
 
     def Render(self) -> Tuple[pygame.Surface, int]:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
-        _taskWidth = max(t.renderedText.get_surface().get_width() for t in self.tasks.values())
+        _taskWidth = max(t.text.get_surface().get_width() for t in self.tasks.values())
         # for task in self.tasks.values():
         #     _taskWidth = max(_taskWidth, task.renderedText.get_surface().get_width())
         _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
         surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))))
         surface.fill(self.color.update(not self.finished))
-        surface.blit(self.renderedText, ((_taskWidth // 2) - (self.textSize[0] // 2), (HeaderHeight // 2) - (self.textSize[1] // 2)))
+
+        renderedText: pygame.Surface = self.text.get_surface()
+        surface.blit(renderedText, ((_taskWidth // 2) - (renderedText.get_width() // 2), (HeaderHeight // 2) - (renderedText.get_height() // 2)))
         for i, t in enumerate(self.tasks.values()):
             surface.blit(t.Update(_taskWidth, _taskHeight, self._playTaskSound if self.playSound else False), (0, HeaderHeight + (i * _taskHeight)))
         return surface, int(_taskWidth)

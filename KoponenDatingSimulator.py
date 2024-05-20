@@ -172,7 +172,7 @@ pygame.event.pump()
 asset_loading_logger.start("Loading Fonts...")
 score_font = pygame.font.Font("Assets/Fonts/gamefont.ttf", 10)
 tip_font = pygame.font.Font("Assets/Fonts/gamefont2.ttf", 10)
-teleport_message_font = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10)
+tip_font_extended = pygame.font.Font("Assets/Fonts/gamefont2_extended.ttf", 10) # mostly used in teleports
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
 ArialFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 28)
 ArialTitleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 72)
@@ -1866,7 +1866,7 @@ class Shower(KDS.Build.Tile):
         return self.texture
 
 class PistokoeDoor(KDS.Build.Tile):
-    tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Väitä pesseesi kädet [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font_extended, f"Väitä pesseesi kädet [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
@@ -1879,7 +1879,7 @@ class PistokoeDoor(KDS.Build.Tile):
     def lateInit(self) -> None:
         self.darkOverlay = None
         if self.message != None:
-            self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
+            self.renderedMessage = tip_font_extended.render(self.message, True, KDS.Colors.White)
 
     def update(self) -> Optional[pygame.Surface]:
         if self.rect.colliderect(Player.rect):
@@ -2104,7 +2104,7 @@ class BaseTeleport(KDS.Build.Tile):
 
     def lateInit(self):
         if self.message != None:
-            self.renderedMessage = teleport_message_font.render(self.message, True, KDS.Colors.White)
+            self.renderedMessage = tip_font_extended.render(self.message, True, KDS.Colors.White)
         if self.identifier != None:
             if self.identifier not in BaseTeleport.teleportDatas:
                 BaseTeleport.teleportDatas[self.identifier] = BaseTeleport.TeleportData()
@@ -2225,7 +2225,7 @@ class HotelDoor(DoorTeleport):
         if self.rect.colliderect(Player.rect):
             self.messageOffset = (0, -50)
             if isinstance(Player.inventory.getHandItem(), HotelKeycard):
-                self.messageOffset = (0, -50 - teleport_message_font.get_height() - 5)
+                self.messageOffset = (0, -50 - tip_font_extended.get_height() - 5)
                 messageSize = self.renderedMessage.get_size() if self.renderedMessage != None else (0, 0)
                 normalMessagePos = (self.rect.centerx - messageSize[0] // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - messageSize[1] // 2 - scroll[1] + self.messageOffset[1])
 
@@ -2280,7 +2280,7 @@ class HotelGuardDoor(DoorTeleport):
         global Entities
         Entities.append(e)
 
-        self.messageOffset = (0, -50 - teleport_message_font.get_height() - 5)
+        self.messageOffset = (0, -50 - tip_font_extended.get_height() - 5)
 
     def lateInit(self):
         super().lateInit()
