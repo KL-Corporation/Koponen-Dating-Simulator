@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import List, Literal, Union, Tuple, Optional, Sequence, Type
 import pygame
+import KDS.Colors
+import KDS.Debug
 import KDS.World
 import KDS.Build
 import KDS.Missions
@@ -10,6 +12,8 @@ EMPTYSLOT: Literal["none"] = "none"
 DOUBLEITEM: Literal["DOUBLEITEM"] = "DOUBLEITEM"
 
 class Inventory:
+    """The rect passed into the functions is the parent entity's rect (player rect, teacher rect, NPC rect, ...)"""
+
     def __init__(self, size: int, storage: Sequence[Union[KDS.Build.Item, str]] | None = None):
         self.storage: List[Union[KDS.Build.Item, str]] = [EMPTYSLOT for _ in range(size)]
         if storage != None:
@@ -181,7 +185,10 @@ class Inventory:
         else:
             renderOffset = rect.width + 2
 
-        surface.blit(pygame.transform.flip(texture, direction, False), (rect.x - scroll[0] + renderOffset, rect.y + 10 -scroll[1]))
+        dest: tuple[int, int] = (rect.x - scroll[0] + renderOffset, rect.y + 10 -scroll[1])
+        if KDS.Debug.Enabled:
+            pygame.draw.rect(surface, KDS.Colors.RiverBlue, (*dest, *texture.get_size()))
+        surface.blit(pygame.transform.flip(texture, direction, False), dest)
 
     # def useSpecificItem(self, index: int, Surface: pygame.Surface, *args):
     #     dumpValues = nullLantern.use(args, Surface)
