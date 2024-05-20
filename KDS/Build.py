@@ -309,12 +309,13 @@ class Weapon(Item):
     def shoot(self, holderData: Weapon.WeaponHolderData) -> bool:
         """
         ### OVERLOAD EXAMPLE
-        output = super().shoot(directionMultiplier) \\
-        if output: \\
-            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True)) \\
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 30 * directionMultiplier, Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100)) \\
+        ```
+        output = super().shoot(directionMultiplier)
+        if output:
+            Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
+            Projectiles.append(KDS.World.Bullet(Player.rect | None, pygame.Rect(Player.rect.centerx + 30 * directionMultiplier, Player.rect.y + 13, 2, 2), Player.direction, -1, tiles, 100))
         return output
-        ### OVERLOAD EXAMPLE
+        ```
         """
         return self.internalShoot(holderData.weaponDataOverride)
 

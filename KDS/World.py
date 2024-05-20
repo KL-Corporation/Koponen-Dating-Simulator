@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, Final, List, Literal, NamedTuple, Optional, Self, Sequence, Set, Tuple, Type, Union
+from typing import Any, Dict, Final, Iterable, List, Literal, NamedTuple, Optional, Self, Sequence, Set, Tuple, Type, Union
 
 import pygame
 import pygame.mixer
@@ -59,22 +59,68 @@ def init():
         Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_9.png", allow_rotate=NEIN),
     )
 
-def collision_test(rect: pygame.Rect, Tile_list: List[List[List]]):
+def _iter_nearby_tiles(point: tuple[int, int], Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int) -> Iterable[KDS.Build.Tile]:
+    """use overscan because not all tiles are 1x1"""
+
+    max_x: int = len(Tile_list[0]) - 1
+    max_y: int = len(Tile_list) - 1
+
+    centerx: int = int(point[0] / 34)
+    centery: int = int(point[1] / 34)
+
+    xmin: int = KDS.Math.Clamp(centerx - overscan, 0, max_x)
+    xmax: int = KDS.Math.Clamp(centerx + overscan, 0, max_x)
+    ymin: int = KDS.Math.Clamp(centery - overscan, 0, max_y)
+    ymax: int = KDS.Math.Clamp(centery + overscan, 0, max_y)
+
+    return (tile for row in Tile_list[ymin:(ymax + 1)] for unit in row[xmin:(xmax + 1)] for tile in unit)
+
+def _bresenham(x1: int, y1: int, x2: int, y2: int) -> Iterable[tuple[int, int]]:
+    m_new: int = 2 * (y2 - y1)
+    slope_error_new: int = m_new - (x2 - x1)
+
+    y: int = y1
+    for x in range(x1, x2 + 1):
+        yield (x, y)
+
+        slope_error_new = slope_error_new + m_new
+
+        if slope_error_new >= 0:
+            y = y + 1
+            slope_error_new = slope_error_new - 2 * (x2 - x1)
+
+def collision_test(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> list[KDS.Build.Tile]:
+    """Returns all collisions that were detected."""
+
     hit_list = []
 
-    max_x = len(Tile_list[0]) - 1
-    max_y = len(Tile_list) - 1
-    x = KDS.Math.Clamp(int(rect.x / 34 - 3), 0, max_x)
-    y = KDS.Math.Clamp(int(rect.y / 34 - 3), 0, max_y)
-    end_x = KDS.Math.Clamp(x + 6, 0, max_x)
-    end_y = KDS.Math.Clamp(y + 6, 0, max_y)
+    for tile in _iter_nearby_tiles(rect.topleft, Tile_list, overscan=overscan):
+        if rect.colliderect(tile.rect) and tile.checkCollision:
+            hit_list.append(tile)
 
-    for row in Tile_list[y:end_y]:
-        for unit in row[x:end_x]:
-            for tile in unit:
-                if rect.colliderect(tile.rect) and tile.checkCollision:
-                    hit_list.append(tile)
     return hit_list
+
+def collision_test_fast(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> KDS.Build.Tile | None:
+    """Returns the first collision that was detected."""
+
+    for tile in _iter_nearby_tiles(rect.topleft, Tile_list, overscan=overscan):
+        if rect.colliderect(tile.rect) and tile.checkCollision:
+            return tile
+    return None
+
+# TODO: Test this method... I was going to use this but decided against it so this method is currently a proof of concept
+# def collision_test_line(start: tuple[int, int], end: tuple[int, int], Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> KDS.Build.Tile | None:
+#     """Returns the first collision that was detected."""
+
+#     # Use Bresenham's algorithm to get a rudimentary idea of the tiles that were visited
+#     # Then use overscan to include any other tiles nearby
+
+#     for tile_pos in _bresenham(int(start[0] / 34), int(start[1] / 34), int(end[0] / 34), int(end[1] / 34)):
+#         # multiply by 34 as I'm too lazy to make a tile size only function variant
+#         for tile in _iter_nearby_tiles((tile_pos[0] * 34, tile_pos[1] * 34), Tile_list, overscan=overscan):
+#             if len(tile.rect.clipline(start, end)) > 0: # line goes through rect
+#                 return tile
+#     return None
 
 @dataclasses.dataclass
 class Collisions: # Direction relative to rect (player / entity)
@@ -105,8 +151,8 @@ class EntityMover:
         collisions = Collisions()
 
         rect.x += round(movement[0])
-        hit_list = collision_test(rect, tiles)
-        for tile in hit_list: # CollisionDirection is inverted, because it is relative to tile
+        for tile in collision_test(rect, tiles):
+            # CollisionDirection is inverted, because it is relative to tile
             if movement[0] > 0 and CollisionDirection.Left in tile.collisionDirection:
                 rect.right = tile.rect.left
                 collisions.right = True
@@ -116,8 +162,7 @@ class EntityMover:
 
         rect.y += round(movement[1])
         # Has to be checked twice or my testing of merging these two went horribly wrong
-        hit_list = collision_test(rect, tiles)
-        for tile in hit_list:
+        for tile in collision_test(rect, tiles):
             if movement[1] > 0 and CollisionDirection.Top in tile.collisionDirection and tile.rect.bottom > rect.bottom:
                 rect.bottom = tile.rect.top
                 collisions.bottom = True
@@ -380,8 +425,14 @@ class Lighting:
 class Bullet:
     GodMode = False
 
-    def __init__(self, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance: int = 2000, slope: float = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
-        """Bullet superclass written for KDS weapons"""
+    RESOLUTION: Final[int] = 5 # How many pixels to move between collision checks => lower is better.
+    # 5 was chosen as door rect width is 5 pixels
+
+    def __init__(self, player_rect: pygame.Rect | None, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance: int = 2000, slope: float = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
+        """Bullet superclass written for KDS weapons."""
+        self.player_rect: pygame.Rect | None = player_rect
+        self.player_rect_handled: bool = False
+
         self.rect = rect
         self.direction = direction
         self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
@@ -396,52 +447,40 @@ class Bullet:
         self.slopeBuffer = float(self.rect.y)
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
-        if self.texture != None:
-            assert self.texture_size != None
-            Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
-            #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
+        # Early return so that the bullet has no chance of dealing damage (or rendering) if the gun is embedded into a wall
+        if not self.player_rect_handled:
+            if self.player_rect is not None:
+                pr_pos: tuple[int, int] = (self.player_rect.centerx, self.rect.top)
+                pr_test = pygame.Rect(pr_pos[0], pr_pos[1], self.rect.right - pr_pos[0], self.rect.height)
+                pr_had_col: bool = collision_test_fast(pr_test, self.environment_obstacles) is not None # increase overscan if necessary
+                if KDS.Debug.Enabled:
+                    pygame.draw.rect(Surface, KDS.Colors.AviatorRed if pr_had_col else KDS.Colors.Gray, (pr_test.x - scroll[0], pr_test.y - scroll[1], *pr_test.size))
+                if pr_had_col:
+                    return "wall", player_health
+
+            self.player_rect_handled = True
+
         if KDS.Debug.Enabled:
             pygame.draw.rect(Surface, KDS.Colors.Black, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
             debugStartPos = (self.rect.centerx - (self.movedDistance * self.direction_multiplier), self.rect.centery - (self.slope * self.movedDistance))
             pygame.draw.line(Surface, KDS.Colors.White, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))
 
-        if self.speed == -1:
-            for _ in range(round(self.maxDistance / 18)):
+        if self.texture != None:
+            assert self.texture_size != None
+            Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
+            #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
 
-                self.rect.x += 18 * self.direction_multiplier
-                self.movedDistance += 18
+        target_mv: Final[int] = self.speed if self.speed > -1 else self.maxDistance
+        current_mv: int = 0
 
-                self.slopeBuffer += self.slope
-                self.rect.y = self.slopeBuffer # type: ignore This works with float input into int rect.
+        for _ in range(KDS.Math.CeilToInt(target_mv / Bullet.RESOLUTION)):
+            mv: int = min(Bullet.RESOLUTION, target_mv - current_mv) # move amount
 
-                collision_list = collision_test(self.rect, self.environment_obstacles)
+            self.rect.x += mv * self.direction_multiplier
+            self.movedDistance += mv
 
-                for hTarget in HitTargets.values():
-                    if hTarget.rect.colliderect(self.rect):
-                        hTarget.hitted = True
-                        return "wall", player_health
-
-                for target in targets:
-                    if self.rect.colliderect(target.rect) and target.health > 0 and target.enabled:
-                        target.health -= self.damage
-                        Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
-                        return "wall", player_health
-
-                if plr_rct.colliderect(self.rect):
-                    player_health -= self.damage
-                    return "wall", player_health
-                if collision_list:
-                    return "wall", player_health
-
-            return "air", player_health
-        else:
-            self.rect.x += self.speed * self.direction_multiplier
-            self.movedDistance += self.speed
-
-            self.slopeBuffer += self.slope * self.speed
-            self.rect.y = round(self.slopeBuffer)
-
-            collision_list = collision_test(self.rect, self.environment_obstacles)
+            self.slopeBuffer += self.slope * mv
+            self.rect.y = self.slopeBuffer
 
             for hTarget in HitTargets.values():
                 if hTarget.rect.colliderect(self.rect):
@@ -449,17 +488,18 @@ class Bullet:
                     return "wall", player_health
 
             for target in targets:
-                if target.rect.colliderect(self.rect) and target.health > 0 and target.enabled:
-                    if isinstance(target, KDS.AI.HostileEnemy):
-                        target.sleep = False
+                if self.rect.colliderect(target.rect) and target.health > 0 and target.enabled:
                     target.health -= self.damage
+                    Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
                     return "wall", player_health
 
             if plr_rct.colliderect(self.rect):
                 player_health -= self.damage
                 return "wall", player_health
-            if collision_list:
+
+            if collision_test_fast(self.rect, self.environment_obstacles) is not None:
                 return "wall", player_health
+
             if self.movedDistance > self.maxDistance:
                 return "air", player_health
 

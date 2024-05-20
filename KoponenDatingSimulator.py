@@ -2591,7 +2591,7 @@ class Knife(KDS.Build.Weapon):
     def shoot(self, holderData: KDS.Build.Weapon.WeaponHolderData) -> bool:
         output = super().shoot(holderData)
         if output:
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 10, maxDistance=40))
+            Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx + 13 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 1, 1), holderData.direction, -1, Tiles, 10, maxDistance=40))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2660,7 +2660,7 @@ class Pistol(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25))
+            Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx + 30 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 25))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2680,7 +2680,7 @@ class rk62(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6))
+            Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx + 50 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6))
         return output
 
 
@@ -2702,7 +2702,7 @@ class Shotgun(KDS.Build.Weapon):
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
             for x in range(10):
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6, maxDistance=1400, slope=(5 - x) / 20))
+                Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 6, maxDistance=1400, slope=(5 - x) / 20))
         return output
 
     def use(self) -> pygame.Surface:
@@ -2736,7 +2736,7 @@ class Plasmarifle(KDS.Build.Weapon):
         if output:
             asset_offset = 70 * -KDS.Convert.ToMultiplier(holderData.direction)
             Lights.append(KDS.World.Lighting.Light((int(holderData.rect.centerx - asset_offset / 1.4), holderData.rect.centery - 30), KDS.World.Lighting.Shapes.circle.get(40, 40000)))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, Tiles, 5, plasma_ammo, 2000, random.randint(-1, 1) / 27))
+            Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx - asset_offset, holderData.rect.y + 13, 2, 2), holderData.direction, 27, Tiles, 5, plasma_ammo, 2000, random.randint(-1, 1) / 27))
         return output
 
     def pickup(self) -> None:
@@ -2795,7 +2795,7 @@ class Ppsh41(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 3, slope=random.uniform(-0.5, 0.5) / 5))
+            Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx + 60 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, 3, slope=random.uniform(-0.5, 0.5) / 5))
         return output
 
     def pickup(self) -> None:
@@ -2814,7 +2814,7 @@ class Awm(KDS.Build.Weapon):
         output = super().shoot(holderData)
         if output:
             Lights.append(KDS.World.Lighting.Light(holderData.rect.center, KDS.World.Lighting.Shapes.circle_hard.get(300, 5500), True))
-            Projectiles.append(KDS.World.Bullet(pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(125, 150), slope=0))
+            Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(holderData.rect.centerx + 90 * KDS.Convert.ToMultiplier(holderData.direction), holderData.rect.y + 13, 2, 2), holderData.direction, -1, Tiles, random.randint(125, 150), slope=0))
         return output
 
     def pickup(self) -> None:
@@ -2947,7 +2947,7 @@ class Chainsaw(KDS.Build.Item):
         if self.pickupFinished and (Chainsaw.ammunition > 0 or KDS.Build.Item.infiniteAmmo):
             if KDS.Keys.actionKey.pressed:
                 Chainsaw.ammunition = max(0, Chainsaw.ammunition - 0.05)
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, Tiles, damage=1, maxDistance=80))
+                Projectiles.append(KDS.World.Bullet(Player.rect, pygame.Rect(Player.rect.centerx + 18 * KDS.Convert.ToMultiplier(Player.direction), Player.rect.y + 28, 1, 1), Player.direction, -1, Tiles, damage=1, maxDistance=80))
                 if Chainsaw.soundCounter > 70:
                     Chainsaw.freespin_sound.stop()
                     KDS.Audio.PlaySound(Chainsaw.throttle_sound)
@@ -3253,7 +3253,8 @@ class PlayerClass:
                     self.crouching = True
             elif self.crouching:
                 # If more than zero collisions; do not release crouch
-                if len(KDS.World.collision_test(pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height), Tiles)) > 0:
+                test_rect: pygame.Rect = pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height)
+                if KDS.World.collision_test_fast(test_rect, Tiles) is not None:
                     return
                 self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
                 self.crouching = False
@@ -4726,8 +4727,8 @@ while main_running:
         if r2:
             for x in range(8):
                 x /= -8
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), True, -1, Tiles, 25, maxDistance=82, slope=x))
-                Projectiles.append(KDS.World.Bullet(pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), False, -1, Tiles, 25, maxDistance=82, slope=x))
+                Projectiles.append(KDS.World.Bullet(None, pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), True, -1, Tiles, 25, maxDistance=82, slope=x))
+                Projectiles.append(KDS.World.Bullet(None, pygame.Rect(B_Object.rect.centerx, B_Object.rect.centery, 1, 1), False, -1, Tiles, 25, maxDistance=82, slope=x))
 
             KDS.Audio.PlaySound(landmine_explosion)
             Explosions.append(KDS.World.Explosion(KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop), (B_Object.rect.x - 60, B_Object.rect.y - 55)))
