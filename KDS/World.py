@@ -433,6 +433,7 @@ class Bullet:
         self.player_rect: pygame.Rect | None = player_rect
         self.player_rect_handled: bool = False
 
+        self.start_center: tuple[int, int] = rect.center
         self.rect = rect
         self.direction = direction
         self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
@@ -446,30 +447,7 @@ class Bullet:
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
 
-    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
-        # Early return so that the bullet has no chance of dealing damage (or rendering) if the gun is embedded into a wall
-        if not self.player_rect_handled:
-            if self.player_rect is not None:
-                pr_pos: tuple[int, int] = (self.player_rect.centerx, self.rect.top)
-                pr_test = pygame.Rect(pr_pos[0], pr_pos[1], self.rect.right - pr_pos[0], self.rect.height)
-                pr_had_col: bool = collision_test_fast(pr_test, self.environment_obstacles) is not None # increase overscan if necessary
-                if KDS.Debug.Enabled:
-                    pygame.draw.rect(Surface, KDS.Colors.AviatorRed if pr_had_col else KDS.Colors.Gray, (pr_test.x - scroll[0], pr_test.y - scroll[1], *pr_test.size))
-                if pr_had_col:
-                    return "wall", player_health
-
-            self.player_rect_handled = True
-
-        if KDS.Debug.Enabled:
-            pygame.draw.rect(Surface, KDS.Colors.Black, (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.width, self.rect.height))
-            debugStartPos = (self.rect.centerx - (self.movedDistance * self.direction_multiplier), self.rect.centery - (self.slope * self.movedDistance))
-            pygame.draw.line(Surface, KDS.Colors.White, (debugStartPos[0] - scroll[0], debugStartPos[1] - scroll[1]), (debugStartPos[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], debugStartPos[1] - scroll[1] + (self.slope * self.maxDistance)))
-
-        if self.texture != None:
-            assert self.texture_size != None
-            Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
-            #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
-
+    def _collision_check(self, *, targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
         target_mv: Final[int] = self.speed if self.speed > -1 else self.maxDistance
         current_mv: int = 0
 
@@ -502,6 +480,50 @@ class Bullet:
 
             if self.movedDistance > self.maxDistance:
                 return "air", player_health
+
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
+        # Early return so that the bullet has no chance of dealing damage (or rendering) if the gun is embedded into a wall
+        if not self.player_rect_handled:
+            if self.player_rect is not None:
+                pr_pos: tuple[int, int] = (self.player_rect.centerx, self.rect.top)
+                pr_test = pygame.Rect(pr_pos[0], pr_pos[1], self.rect.right - pr_pos[0], self.rect.height)
+                pr_had_col: bool = collision_test_fast(pr_test, self.environment_obstacles) is not None # increase overscan if necessary
+                if KDS.Debug.Enabled:
+                    pygame.draw.rect(Surface, KDS.Colors.AviatorRed if pr_had_col else KDS.Colors.Gray, (pr_test.x - scroll[0], pr_test.y - scroll[1], *pr_test.size))
+                if pr_had_col:
+                    return "wall", player_health
+
+            self.player_rect_handled = True
+
+        x_before_move: int = self.rect.x
+        collision = self._collision_check(targets=targets, HitTargets=HitTargets, Particles=Particles, plr_rct=plr_rct, player_health=player_health)
+
+        if KDS.Debug.Enabled:
+            pygame.draw.line(
+                Surface,
+                KDS.Colors.EmeraldGreen,
+                (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
+                (self.rect.centerx - scroll[0], self.rect.centery - scroll[1])
+            )
+            pygame.draw.line(
+                Surface,
+                KDS.Colors.White,
+                (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
+                (self.rect.centerx + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.centery - scroll[1] + (self.slope * self.maxDistance))
+            )
+
+        # fast weapons like plasmarifle look like two floating bullets layered on top of each other
+        # this attempts to fix that issue.
+        # render if collision didn't happen, bullet hasn't travelled to the first renderpoint or bullets are sufficiently apart from each other
+        if collision is None or abs(self.start_center[0] - self.rect.centerx) < self.speed or abs(x_before_move - self.rect.x) > (self.speed / 2):
+            if self.texture != None:
+                assert self.texture_size != None
+                Surface.blit(self.texture, (self.rect.centerx - self.texture_size[0] // 2 - scroll[0], self.rect.centery - self.texture_size[1] // 2 - scroll[1]))
+                #pygame.draw.rect(Surface,  (244, 200, 20), (self.rect.x-scroll[0], self.rect.y-scroll[1], 10, 10))
+
+        return collision
+
+
 
 class HitTarget:
     def __init__(self, rect: pygame.Rect):
