@@ -34,9 +34,9 @@ class _MusicPlayingContext(NamedTuple):
     loop: bool
 
 class MusicOverrideHandle:
-    def __init__(self, *, _ctx: _MusicPlayingContext | None, __MusicMixer_pos_ms: float) -> None:
+    def __init__(self, *, _ctx: _MusicPlayingContext | None, _MusicMixer_pos_ms: float) -> None:
         self._ctx: _MusicPlayingContext | None = _ctx
-        self.__MusicMixer_pos_ms: float = __MusicMixer_pos_ms
+        self.__MusicMixer_pos_ms: float = _MusicMixer_pos_ms
 
         self._local_volume: float = 1.0
         self._is_active: bool = True
@@ -142,7 +142,7 @@ class Music:
 
         handle = MusicOverrideHandle(
             _ctx=Music.Playing,
-            __MusicMixer_pos_ms=(_MusicMixer.get_pos() / 1000)
+            _MusicMixer_pos_ms=(_MusicMixer.get_pos() / 1000)
         )
         Music.Play(path, loop=loop)
         Music.Overridden = handle

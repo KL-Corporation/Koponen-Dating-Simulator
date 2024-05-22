@@ -47,16 +47,16 @@ def init():
     NEIN: Final[Literal[False]] = False
 
     Lighting.NoteParticle.textures = (
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_0.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_1.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_2.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_3.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_4.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_5.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_6.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_7.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_8.png", allow_rotate=True),
-        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_9.png", allow_rotate=NEIN),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_0.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_1.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_2.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_3.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_4.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_5.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_6.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_7.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_8.png"),
+        Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_9.png", weight=0.1, allow_rotate=NEIN),
     )
 
 def _iter_nearby_tiles(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]]) -> Iterable[KDS.Build.Tile]:
@@ -381,17 +381,18 @@ class Lighting:
     class NoteParticle(Particle):
         class NoteParticleTexture(NamedTuple):
             texture: pygame.Surface
-            allow_rotate: bool
+            weight: float = 1.0
+            allow_rotate: bool = True
 
             @classmethod
-            def load(cls, path: str, allow_rotate: bool) -> Self:
+            def load(cls, path: str, weight: float = 1.0, allow_rotate: bool = True) -> Self:
                 tex: pygame.Surface = pygame.image.load(path).convert()
                 tex.set_colorkey(KDS.Colors.White)
 
                 # This was in the original code but it did nothing as it was accidentally assigned to an unreferenced value
                 # tex = pygame.transform.scale(tex, (tex.get_width() / 4, tex.get_height() / 4))
 
-                return cls(tex, allow_rotate)
+                return cls(tex, weight=weight, allow_rotate=allow_rotate)
 
         SIZE: int = 20
         HALF_SIZE: int = round(SIZE / 2)
@@ -410,7 +411,7 @@ class Lighting:
 
             self.float_y: float = position[1]
 
-            tex = random.choice(Lighting.NoteParticle.textures)
+            tex = random.choices(Lighting.NoteParticle.textures, weights=[n.weight for n in Lighting.NoteParticle.textures], k=1)[0]
             if tex.allow_rotate:
                 self.texture = pygame.transform.rotate(tex.texture, angle=angleDeg)
             else:
