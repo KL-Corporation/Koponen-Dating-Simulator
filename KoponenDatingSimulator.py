@@ -3405,7 +3405,7 @@ game_initialization_logger.stop("Player Loading Complete.")
 #region Console
 game_initialization_logger.start("Loading Console...")
 def console(oldSurf: pygame.Surface):
-    global level_finished, go_to_console, Player, Enemies
+    global level_finished, go_to_console, Player
     go_to_console = False
 
     itemDict: Dict[str, Union[str, Dict[str, str]]] = {}
@@ -3467,6 +3467,9 @@ def console(oldSurf: pygame.Surface):
             "exam": "break",
             "story_sad_ending": "break",
             "certificate": "break",
+        },
+        "tickspeed": {
+            "default": "break"
         },
         "help": "break"
     }
@@ -3554,6 +3557,7 @@ def console(oldSurf: pygame.Surface):
 
 
                     if stateIsValid:
+                        infinite_command_matched: bool = True
                         match infinite_command:
                             case "health":
                                 if infinite_state is None:
@@ -3571,8 +3575,13 @@ def console(oldSurf: pygame.Surface):
                                 if infinite_state is None:
                                     infinite_state = not Player.infiniteStamina
                                 Player.infiniteStamina = infinite_state
+                            case _:
+                                infinite_command_matched = False
 
-                        KDS.Console.Feed.append(f"infinite {infinite_command} state has been set to: {infinite_state}")
+                        if infinite_command_matched:
+                            KDS.Console.Feed.append(f"infinite {infinite_command} state has been set to: {infinite_state}")
+                        else:
+                            KDS.Console.Feed.append("Please provide a proper command for infinite.")
                     else:
                         KDS.Console.Feed.append(f"Please provide a proper state for infinite {infinite_command}.")
                 else:
@@ -3713,6 +3722,24 @@ def console(oldSurf: pygame.Surface):
                         KDS.Console.Feed.append("Not a valid runprog program.")
                 else:
                     KDS.Console.Feed.append("Please provide a proper program for runprog")
+            elif command_list[0] == "tickspeed":
+                if len(command_list) == 2:
+                    command_tickspeed: int | None
+                    if command_list[1] == "default":
+                        command_tickspeed = KDS.Clock.DEFAULT_FRAMERATE
+                    else:
+                        try:
+                            command_tickspeed = int(command_list[1])
+                        except ValueError:
+                            command_tickspeed = None
+
+                    if command_tickspeed is not None:
+                        KDS.Clock.framerate = command_tickspeed
+                        KDS.Console.Feed.append(f"Global tick speed has been set to: {command_tickspeed}")
+                    else:
+                        KDS.Console.Feed.append(f"Invalid tick speed: '{command_list[1]}'")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper tick speed")
             elif command_list[0] == "help":
                 KDS.Console.Feed.append("""
 Console Help:
@@ -3734,6 +3761,7 @@ Console Help:
     - godmode: Activate God Mode.
         Gives the player some buffs like infinite health
     - runprog: Run an internal KDS program.
+    - tickspeed: Change the runtime tick speed (framerate) of the program.
     - help: Show the list of commands.""")
             else:
                 KDS.Console.Feed.append("Invalid Command.")
@@ -4629,7 +4657,7 @@ while main_running:
             KDS.Audio.PlaySound(fart)
     if KDS.Keys.hideUI.onDown:
         renderUI = not renderUI
-    if KDS.Keys.terminal.onDown:
+    if KDS.Keys.terminal.onDown: # onDown required double tap to enter console because console swallowed up the event
         if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or debug_gamesetting_allow_console_in_storymode: # Console is disabled in story mode if debug setting not overridden in GameData.
             go_to_console = True
     if KDS.Keys.screenshot.onDown:

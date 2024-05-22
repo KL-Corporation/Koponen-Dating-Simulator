@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Final, Optional, Union
 import pygame
 import pygame.time
 import time
@@ -29,20 +29,12 @@ class _customClock:
     def get_time(self) -> float:
         return self.delta_time * 1000 # Multiplying for pygame clock compatibility
 
-_tick: int = 0
 _clock: Union[pygame.time.Clock, _customClock] = pygame.time.Clock() # _customClock() custom clock broke everything... Should've considered it a bit earlier
 
-def Tick(framerate: int = 60):
-    global _tick
-    if framerate > 0:
-        _tick = (_tick + 1) % framerate
-    else:
-        _tick = -1
-    _clock.tick_busy_loop(framerate)
-
-def GetTick() -> int: # Not used, but good to have.
-    global _tick
-    return _tick
+DEFAULT_FRAMERATE: Final[int] = 60
+framerate: int = DEFAULT_FRAMERATE
+def Tick(framerate_override: int | None = None):
+    _clock.tick_busy_loop(framerate_override if framerate_override is not None else framerate)
 
 def GetFPS(roundingDigits: Optional[int] = None) -> float:
     fps = _clock.get_fps()

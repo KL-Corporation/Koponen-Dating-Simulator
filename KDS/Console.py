@@ -610,20 +610,6 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
             display.blit(blueTint, (text_rect.left + console_font.size(cmd[:min(caret_index, caret_index + caret_length)])[0], text_y))
         if textInput and caret_animation.update() >= 1.0:
             pygame.draw.rect(display, (192, 192, 192), pygame.Rect(text_rect.left + console_font.size(cmd[:caret_index])[0] - round(cursor_width / 2), text_y, cursor_width, console_font.get_height()))
-
-        """
-        overlayColor = KDS.Colors.White
-        if invalid:
-            overlayColor = KDS.Colors.Red
-        elif warning:
-            overlayColor = KDS.Colors.Yellow
-            display.blit(warnText, (text_rect.left + renderedCmd.get_width() + 5, text_y + (console_font.get_height() - console_font_small.get_height())))
-        if invalid or warning:
-            overlaySurf = pygame.Surface(renderedCmd.get_size())
-            overlaySurf.fill(overlayColor)
-            overlaySurf.set_alpha(128)
-            display.blit(overlaySurf, (text_rect.left, text_y))
-        """
         #endregion
 
         suggestionsRendered = False
@@ -632,7 +618,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
         pygame.display.flip()
         display.fill(KDS.Colors.Black)
         window.fill(KDS.Colors.Black)
-        KDS.Clock.Tick()
+        KDS.Clock.Tick(framerate_override=KDS.Clock.DEFAULT_FRAMERATE)
 
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
