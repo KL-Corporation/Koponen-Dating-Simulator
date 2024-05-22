@@ -1,5 +1,9 @@
 from __future__ import annotations
 import os
+
+import KDS.LevelBuilder
+import KDS.LevelBuilder.LegacyTileProp
+import KDS.LevelBuilder.LevelProp
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 import pygame
@@ -26,7 +30,9 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union
+
+from KDS.LevelBuilder.Shared import *
 
 KEYMAP_STR: Final[str] = """
 [   KEYMAP   ]
@@ -104,14 +110,6 @@ KDS.Jobs.init()
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
 harbinger_font_large = pygame.font.Font("Assets/Fonts/harbinger.otf", 55)
 harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15)
-
-class UnitType(IntEnum):
-    Tile = 0
-    Item = 1
-    Enemy = 2
-    Teleport = 3
-    Entity = 4
-    Unspecified = 9
 
 class TextureHolder:
     class TextureData:
@@ -346,11 +344,12 @@ class Undo:
         Undo.overflowCount = 0
 
 def LB_Quit():
-    global matMenRunning, btn_menu, mainRunning
+    global matMenRunning, btn_menu, mainRunning, legacy_upgrade_menu_running
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
         return
     matMenRunning = False
     btn_menu = False
+    legacy_upgrade_menu_running = False
     mainRunning = False
 
 KDS.Console.init(display, pygame.Surface((1200, 800)), _Offset=(200, 0), _KDS_Quit = LB_Quit)
@@ -1465,83 +1464,54 @@ def materialMenu(previousMaterial: str) -> str:
 
     return previousMaterial
 
-def generateLevelProp():
-    """
-    Generate a levelProp.kdf using this tool.
-    """
-    p_start_pos = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100", autoFormat=True)
-    k_enabled = KDS.Console.Start("Koponen Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
-    k_start_pos: Tuple[int, int] = (0, 0)
-    if k_enabled:
-        k_start_pos = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200", autoFormat=True)
+def legacy_upgrade_menu():
+    global legacy_upgrade_menu_running
+    legacy_upgrade_menu_running = True
 
-    dark = KDS.Console.Start("Darkness Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
-    darkness: int = 0
-    player_light: bool = False
-    if dark:
-        darkness = KDS.Console.Start("Darkness Strength: (int[0, 255])", False, KDS.Console.CheckTypes.Int(0, 255), autoFormat=True)
-        player_light = KDS.Console.Start("Player Light: (bool)", False, KDS.Console.CheckTypes.Bool(), defVal="true", autoFormat=True)
+    def notImplemented():
+        KDS.Logging.AutoError("This legacy converter has not been implemented yet!")
 
-    tb_start, tb_end = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0, requireIncrease=True), autoFormat=True)
+    def back():
+        global legacy_upgrade_menu_running
+        legacy_upgrade_menu_running = False
 
-    savePath = filedialog.asksaveasfilename(initialfile="levelprop", defaultextension=".kdf", filetypes=(("Koponen Data Format", "*.kdf"), ("All files", "*.*")), title="Save LevelProp")
-    if len(savePath) > 0:
-        if os.path.isfile(savePath):
-            os.remove(savePath)
-        #region User-defined
-        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/start", tb_start)
-        KDS.ConfigManager.JSON.Set(savePath, "Data/TimeBonus/end", tb_end)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/enabled", k_enabled)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startPos", k_start_pos)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/startPos", p_start_pos)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/enabled", dark)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/strength", darkness)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/playerLight", player_light)
-        #endregion
-        #region Defaults
-        KDS.ConfigManager.JSON.Set(savePath, "Data/infiniteAmmo", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceTalk", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startWithTalk", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceIdle", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/talk", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/lscript", [])
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/listeners", [])
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/Inventory", {})
-        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/spawnInverted", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/enabled", False)
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/tint", (0, 0, 0))
-        KDS.ConfigManager.JSON.Set(savePath, "Rendering/Indicator/enabled", True) # Story-only
-        #endregion
+    title = harbinger_font_large.render("UPGRADE LEGACY", True, KDS.Colors.White)
+    title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
+    tileprop_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 200, 600, 100), KDS.LevelBuilder.LegacyTileProp.upgradeTileProp, harbinger_font.render("tileprops.kdf", True, KDS.Colors.White))
+    gamemap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 325, 600, 100), notImplemented, harbinger_font.render("game_map.kds + item_map.kds", True, KDS.Colors.White))
+    mapmap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 450, 600, 100), notImplemented, harbinger_font.render(".map files", True, KDS.Colors.White))
 
-def upgradeTileProp():
-    filename: str = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")), title="Select Tileprops File")
-    if len(filename) < 1:
-        return
-    try:
-        with open(filename, "r") as f:
-            data: Dict[str, Dict[str, Any]] = json.loads(f.read())
-        newData: Dict[str, Dict[int, Dict[str, Any]]] = {}
+    back_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 125, 300, 100), back, harbinger_font.render("Back", True, KDS.Colors.AviatorRed))
 
-        for k, v in data.items():
-            newData[k] = {}
-            for k2, v2 in v.items():
-                if k2 != "overlay":
-                    if UnitType.Tile.value not in newData[k]: # Adding it if needed, because due to overlays being a different type, this might be empty.
-                        newData[k][UnitType.Tile.value] = {}
-                    newData[k][UnitType.Tile.value][k2] = v2
-                else:
-                    if UnitType.Unspecified.value not in newData[k]:
-                        newData[k][UnitType.Unspecified.value] = {}
-                    newData[k][UnitType.Unspecified.value][k2] = v2
+    while legacy_upgrade_menu_running:
+        clicked: bool = False
+        for event in pygame.event.get():
+            if defaultEventHandler(event, DROPFILE):
+                continue
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    clicked = True
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    legacy_upgrade_menu_running = False
 
-        with open(os.path.join(os.path.dirname(filename), "properties.kdf"), "w", encoding="utf-8") as f:
-            f.write(json.dumps(newData, separators=(',', ':'))) # Separators specified to remove useless spaces.
+        display.fill((34, 34, 34))
+        mouse_pos: Final = pygame.mouse.get_pos()
 
-        if KDS.System.MessageBox.Show("Success!", "Tileprops was converted to properties succesfully. Do you want to delete the old tileprops file?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.INFORMATION) == KDS.System.MessageBox.Responses.YES:
-            os.remove(filename)
-    except Exception as e:
-        KDS.System.MessageBox.Show("Failure!", "Tileprops conversion failed.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.ERROR)
-        KDS.Logging.AutoError(e) # Number probably means a key error
+        pygame.draw.rect(display, KDS.Colors.Gray, (title_rect.x - 200, title_rect.y - 25, title_rect.w + 400, title_rect.h + 50))
+        display.blit(title, title_rect)
+
+        tileprop_btn.update(display, mouse_pos, clicked)
+        gamemap_btn.update(display, mouse_pos, clicked)
+        mapmap_btn.update(display, mouse_pos, clicked)
+
+        back_btn.update(display, mouse_pos, clicked)
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+
+        pygame.display.flip()
+        KDS.Clock.Tick()
 
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
@@ -1560,8 +1530,8 @@ def menu():
 
     newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
     openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       250, 400, 150), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))
-    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425, 450, 400, 100), upgradeTileProp, harbinger_font.render("Upgrade Legacy tileprops", True, KDS.Colors.White))
-    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.White))
+    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425, 450, 400, 100), legacy_upgrade_menu, harbinger_font.render("Upgrade Legacy", True, KDS.Colors.White))
+    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), KDS.LevelBuilder.LevelProp.generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.White))
     quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed))
 
     txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and/or maintenance.", True, KDS.Colors.CloudWhite)
@@ -1721,7 +1691,7 @@ def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
 
 allowTilePlacement = True
 def main():
-    global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode, refrenceGridHandle
+    global currentSaveName, brush, grid, gridSize, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode, refrenceGridHandle
 
     menu()
     if not mainRunning: return
