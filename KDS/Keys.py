@@ -69,12 +69,11 @@ class BaseKey:
 
     def SetState(self, pressed: bool):
         if pressed:
-            if not self.pressed:
-                self.onDown = True
+            self.onDown = True
         else:
+            self.onUp = True
             if self.pressed:
                 self.clicked = True
-                self.onUp = True
             if self.held:
                 self.holdClicked = True
                 self.held = False
