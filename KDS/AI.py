@@ -869,7 +869,7 @@ class Zombie(HostileEnemy):
         i_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         d_anim = KDS.Animator.Animation("z_death", 5, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-        rect = pygame.Rect(pos[0], pos[1] - 36, 34, 55)
+        rect = pygame.Rect(pos[0], pos[1] - 36, 34, 64)
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=None, death_sound=None, health=health, mv=[1, 8], attackPropability=40)
         self.manualAttackHandling = True
         self.sleep = False
