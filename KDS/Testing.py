@@ -1,5 +1,7 @@
+from pstats import SortKey
 import time
-from typing import Callable
+from typing import Callable, Optional
+import cProfile
 
 class PerformanceTimer():
     def __init__(self, identifier: Optional[str] = None) -> None:
@@ -32,5 +34,14 @@ def timeit(func: Callable):
         output = func(*args, **kwargs)
         stop = time.perf_counter_ns()
         print(f"Execution of function \"{func.__name__}\" took {stop - start} nanoseconds.")
+        return output
+    return wrapper
+
+def profileit(func: Callable):
+    """Decorator that profiles the given function and prints the results to the console."""
+    def wrapper(*args, **kwargs):
+        with cProfile.Profile() as p:
+            output = func(*args, **kwargs)
+            p.print_stats(SortKey.CUMULATIVE)
         return output
     return wrapper
