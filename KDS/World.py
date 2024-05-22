@@ -437,6 +437,9 @@ class Lighting:
 class Bullet:
     GodMode = False
 
+    RESOLUTION: Final[int] = 16 # The maximum amount of pixels to move between collision checks => lower is better.
+    # the smallest entity (by width) I could find was KuuMa which was 17 pixels width, so I set the resolution at 16
+
     def __init__(self, player_rect: pygame.Rect | None, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance: int = 2000, slope: float = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons."""
         self.player_rect: pygame.Rect | None = player_rect
@@ -444,49 +447,73 @@ class Bullet:
 
         self.start_center: tuple[int, int] = rect.center
         self.rect = rect
+
+        # tile_res is a tile specific resolution that adjusts itself based on the width of nearby tiles
+        self.tile_res: int = 1  # Start with 1 and initialise value properly after first collision check
+                                # This is done so that the bullet doesn't go through any doors if the barrel is close enough.
+
         self.direction = direction
         self.direction_multiplier = KDS.Convert.ToMultiplier(direction)
+
         self.speed = speed
-        self.texture = texture
-        self.texture_size = self.texture.get_size() if self.texture != None else None
-        self.maxDistance = maxDistance
-        self.movedDistance = 0
-        self.environment_obstacles = environment_obstacles
-        self.damage = damage if not Bullet.GodMode else KDS.Math.MAXVALUE
         self.slope = slope
         self.slopeBuffer = float(self.rect.y)
+        self.movedDistance = 0
+        self.maxDistance = maxDistance
 
-    def _collision_check(self, *, targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
-        target_mv: Final[int] = self.speed if self.speed > -1 else self.maxDistance
+        self.damage = damage if not Bullet.GodMode else KDS.Math.MAXVALUE
+        self.texture = texture
+        self.texture_size = self.texture.get_size() if self.texture != None else None
+
+        self.environment_obstacles = environment_obstacles
+
+    def _tile_collision_check(self, target_mv: int) -> bool:
         current_mv: int = 0
 
-        MIN_RESOLUTION: Final[int] = 16 # The maximum amount of pixels to move between collision checks => lower is better.
-        # the smallest entity (by width) I could find was KuuMa which was 17 pixels width, so I set the resolution at 16
-
-        resolution: int = 1 # Use smallest width first and then scale resolution based on tile size
-        # if resolution is defaulted to MIN_RESOLUTION, the first collision check would pass any doors if shot close enough
-
-        # We could potentially optimize this further by checking for entities every MIN_RESOLUTION
-        # and scale tile checks by tile size, but this is fine for now
-
         while current_mv < target_mv:
-            mv: int = min(resolution, target_mv - current_mv)
-            # move amount
+            mv: int = min(self.tile_res, target_mv - current_mv)
 
+            # Increment moved amount
             current_mv += mv
 
+            # Move bullet
             self.rect.x += mv * self.direction_multiplier
             self.movedDistance += mv
 
             self.slopeBuffer += self.slope * mv
             self.rect.y = self.slopeBuffer
 
+            # Check tile collisions and adjust tile resolution
+            self.tile_res = Bullet.RESOLUTION
+            for tile in _iter_nearby_tiles(self.rect, self.environment_obstacles):
+                # If tile rect is smaller and we might jump over it during the next collision update
+                if tile.rect.width < self.tile_res and abs(tile.rect.x - self.rect.x) < self.tile_res:
+                    self.tile_res = tile.rect.width
+                if collision_test_single(self.rect, tile):
+                    return True
+
+        return False
+
+    def _collision_check(self, *, targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
+        target_mv: Final[int] = self.speed if self.speed > -1 else self.maxDistance
+        current_mv: int = 0
+
+        while current_mv < target_mv:
+            mv: int = min(Bullet.RESOLUTION, target_mv - current_mv)
+            # move amount
+
+            if self._tile_collision_check(mv):
+                return "wall", player_health
+
+            # assert(tile_moved_amount == mv) # Removed assert to squeeze out every ounce of performance
+            current_mv += mv
+
             for hTarget in HitTargets.values():
                 if hTarget.rect.colliderect(self.rect):
                     hTarget.hitted = True
                     return "wall", player_health
 
-            for target in targets:
+            for target in targets: # We really are in need of a chunk system so that all entities aren't checked each bullet physics frame
                 if self.rect.colliderect(target.rect) and target.health > 0 and target.enabled:
                     target.health -= self.damage
                     Particles.append(Lighting.Fireparticle(target.rect.center, random.randint(2, 10), 20, -1, (180, 0, 0)))
@@ -496,16 +523,8 @@ class Bullet:
                 player_health -= self.damage
                 return "wall", player_health
 
-            # Custom collision handling so we can adjust the bullet resolution
-            resolution = MIN_RESOLUTION
-            for tile in _iter_nearby_tiles(self.rect, self.environment_obstacles):
-                if tile.rect.width < resolution:
-                    resolution = tile.rect.width
-                if collision_test_single(self.rect, tile):
-                    return "wall", player_health
-
-            if self.movedDistance > self.maxDistance:
-                return "air", player_health
+        if self.movedDistance >= self.maxDistance:
+            return "air", player_health
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], targets: Sequence[Union[KDS.AI.HostileEnemy, KDS.Teachers.Teacher, KDS.NPC.NPC]], HitTargets: Dict[KDS.Build.Tile, HitTarget], Particles: List[Lighting.Particle], plr_rct: pygame.Rect, player_health: float) -> Optional[Tuple[str, float]]:
         # Early return so that the bullet has no chance of dealing damage (or rendering) if the gun is embedded into a wall
@@ -529,7 +548,7 @@ class Bullet:
                 Surface,
                 KDS.Colors.White,
                 (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
-                (self.rect.centerx + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.centery - scroll[1] + (self.slope * self.maxDistance))
+                (self.start_center[0] + (self.maxDistance * self.direction_multiplier) - scroll[0], self.start_center[1] - scroll[1] + (self.slope * self.maxDistance))
             )
             pygame.draw.line(
                 Surface,
