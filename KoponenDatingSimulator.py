@@ -968,7 +968,10 @@ class Door(KDS.Build.Tile):
                 self.closingCounter = 0
                 self.open = not self.open
                 if not self.open:
-                    if self.rect.centerx - Player.rect.centerx > 0:
+                    # Use direction to offset the player center
+                    # this way we can prefer to push the player backwards (face towards the door)
+                    player_ref: int = Player.rect.centerx - ((Player.rect.width // 8) * KDS.Convert.ToMultiplier(Player.direction))
+                    if self.rect.centerx >= player_ref: # use >= instead of > because centerx might get rounded down and be biased towards the left
                         Player.rect.right = self.rect.left
                     else:
                         Player.rect.left = self.rect.right
