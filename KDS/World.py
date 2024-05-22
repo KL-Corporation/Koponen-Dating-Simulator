@@ -75,20 +75,6 @@ def _iter_nearby_tiles(point: tuple[int, int], Tile_list: list[list[list[KDS.Bui
 
     return (tile for row in Tile_list[ymin:(ymax + 1)] for unit in row[xmin:(xmax + 1)] for tile in unit)
 
-def _bresenham(x1: int, y1: int, x2: int, y2: int) -> Iterable[tuple[int, int]]:
-    m_new: int = 2 * (y2 - y1)
-    slope_error_new: int = m_new - (x2 - x1)
-
-    y: int = y1
-    for x in range(x1, x2 + 1):
-        yield (x, y)
-
-        slope_error_new = slope_error_new + m_new
-
-        if slope_error_new >= 0:
-            y = y + 1
-            slope_error_new = slope_error_new - 2 * (x2 - x1)
-
 def collision_test(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> list[KDS.Build.Tile]:
     """Returns all collisions that were detected."""
 
@@ -107,6 +93,20 @@ def collision_test_fast(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.T
         if rect.colliderect(tile.rect) and tile.checkCollision:
             return tile
     return None
+
+# def _bresenham(x1: int, y1: int, x2: int, y2: int) -> Iterable[tuple[int, int]]:
+#     m_new: int = 2 * (y2 - y1)
+#     slope_error_new: int = m_new - (x2 - x1)
+
+#     y: int = y1
+#     for x in range(x1, x2 + 1):
+#         yield (x, y)
+
+#         slope_error_new = slope_error_new + m_new
+
+#         if slope_error_new >= 0:
+#             y = y + 1
+#             slope_error_new = slope_error_new - 2 * (x2 - x1)
 
 # TODO: Test this method... I was going to use this but decided against it so this method is currently a proof of concept
 # def collision_test_line(start: tuple[int, int], end: tuple[int, int], Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> KDS.Build.Tile | None:
