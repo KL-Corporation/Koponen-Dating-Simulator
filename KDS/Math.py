@@ -147,13 +147,13 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
 #region Slope
 def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]):
     """
-    Calculates slope of straight going trough two points
+    Calculates slope of a given straight going trough two points
     """
     return (p2[1] - p1[1]) / (p2[0]- p1[0])
 
 def getSlope2(angle: float) -> float: #Angle in degrees
     """
-    Calculates slope of straight from angle
+    Calculates slope of a given straight from angle
     """
     return Tan(angle * DEG2RAD)
 #endregion
