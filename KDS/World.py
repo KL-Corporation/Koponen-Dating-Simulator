@@ -59,38 +59,50 @@ def init():
         Lighting.NoteParticle.NoteParticleTexture.load("Assets/Textures/Particles/note_9.png", allow_rotate=NEIN),
     )
 
-def _iter_nearby_tiles(point: tuple[int, int], Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int) -> Iterable[KDS.Build.Tile]:
-    """use overscan because not all tiles are 1x1"""
+def _iter_nearby_tiles(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]]) -> Iterable[KDS.Build.Tile]:
+    X_OVERSCAN: Final[int] = 1 # Molok requires overscan of 1 due to its width (the tile origin is at the far right)
+    Y_OVERSCAN: Final[int] = 1 # Door requires overscan of 1 due to its height (the tile origin is at the top)
 
     max_x: int = len(Tile_list[0]) - 1
     max_y: int = len(Tile_list) - 1
 
-    centerx: int = int(point[0] / 34)
-    centery: int = int(point[1] / 34)
+    top: int = KDS.Math.FloorToInt(rect.top / 34)
+    left: int = KDS.Math.FloorToInt(rect.left / 34)
+    bottom: int = KDS.Math.CeilToInt(rect.bottom / 34)
+    right: int = KDS.Math.CeilToInt(rect.right / 34)
 
-    xmin: int = KDS.Math.Clamp(centerx - overscan, 0, max_x)
-    xmax: int = KDS.Math.Clamp(centerx + overscan, 0, max_x)
-    ymin: int = KDS.Math.Clamp(centery - overscan, 0, max_y)
-    ymax: int = KDS.Math.Clamp(centery + overscan, 0, max_y)
+    # KDS.Math.Clamp is somehow faster than using the appropriate min-max -functions
+    xmin: int = KDS.Math.Clamp(left   - X_OVERSCAN, 0, max_x)
+    xmax: int = KDS.Math.Clamp(right  + X_OVERSCAN, 0, max_x)
+    ymin: int = KDS.Math.Clamp(top    - Y_OVERSCAN, 0, max_y)
+    ymax: int = KDS.Math.Clamp(bottom + Y_OVERSCAN, 0, max_y)
 
-    return (tile for row in Tile_list[ymin:(ymax + 1)] for unit in row[xmin:(xmax + 1)] for tile in unit)
+    # Yielding seems to be a tiny bit faster
+    for row in Tile_list[ymin:(ymax + 1)]:
+        for unit in row[xmin:(xmax + 1)]:
+            for tile in unit:
+                yield tile
+    # return (tile for row in Tile_list[ymin:(ymax + 1)] for unit in row[xmin:(xmax + 1)] for tile in unit)
 
-def collision_test(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> list[KDS.Build.Tile]:
+def collision_test_single(rect: pygame.Rect, tile: KDS.Build.Tile) -> bool:
+    return rect.colliderect(tile.rect) and tile.checkCollision
+
+def collision_test(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]]) -> list[KDS.Build.Tile]:
     """Returns all collisions that were detected."""
 
     hit_list = []
 
-    for tile in _iter_nearby_tiles(rect.topleft, Tile_list, overscan=overscan):
-        if rect.colliderect(tile.rect) and tile.checkCollision:
+    for tile in _iter_nearby_tiles(rect, Tile_list):
+        if collision_test_single(rect, tile):
             hit_list.append(tile)
 
     return hit_list
 
-def collision_test_fast(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]], *, overscan: int = 3) -> KDS.Build.Tile | None:
+def collision_test_fast(rect: pygame.Rect, Tile_list: list[list[list[KDS.Build.Tile]]]) -> KDS.Build.Tile | None:
     """Returns the first collision that was detected."""
 
-    for tile in _iter_nearby_tiles(rect.topleft, Tile_list, overscan=overscan):
-        if rect.colliderect(tile.rect) and tile.checkCollision:
+    for tile in _iter_nearby_tiles(rect, Tile_list):
+        if collision_test_single(rect, tile):
             return tile
     return None
 
@@ -246,7 +258,7 @@ class Lighting:
     @staticmethod
     def lamp_cone(topwidth, bottomwidth, height, color):
         surf = pygame.Surface((bottomwidth, height))
-        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0), (bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)])
+        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0), (bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)]) # type: ignore
         surf.set_colorkey((0, 0, 0))
         return surf
 
@@ -425,9 +437,6 @@ class Lighting:
 class Bullet:
     GodMode = False
 
-    RESOLUTION: Final[int] = 5 # How many pixels to move between collision checks => lower is better.
-    # 5 was chosen as door rect width is 5 pixels
-
     def __init__(self, player_rect: pygame.Rect | None, rect: pygame.Rect, direction: bool, speed: int, environment_obstacles: List[List[List[KDS.Build.Tile]]], damage: int, texture: Optional[pygame.Surface] = None, maxDistance: int = 2000, slope: float = 0): #Direction should be 1 or -1; Speed should be -1 if you want the bullet to be hitscanner; Environment obstacles should be 2d array or 2d list; If you don't give a texture, bullet will be invisible
         """Bullet superclass written for KDS weapons."""
         self.player_rect: pygame.Rect | None = player_rect
@@ -451,8 +460,20 @@ class Bullet:
         target_mv: Final[int] = self.speed if self.speed > -1 else self.maxDistance
         current_mv: int = 0
 
-        for _ in range(KDS.Math.CeilToInt(target_mv / Bullet.RESOLUTION)):
-            mv: int = min(Bullet.RESOLUTION, target_mv - current_mv) # move amount
+        MIN_RESOLUTION: Final[int] = 16 # The maximum amount of pixels to move between collision checks => lower is better.
+        # the smallest entity (by width) I could find was KuuMa which was 17 pixels width, so I set the resolution at 16
+
+        resolution: int = 1 # Use smallest width first and then scale resolution based on tile size
+        # if resolution is defaulted to MIN_RESOLUTION, the first collision check would pass any doors if shot close enough
+
+        # We could potentially optimize this further by checking for entities every MIN_RESOLUTION
+        # and scale tile checks by tile size, but this is fine for now
+
+        while current_mv < target_mv:
+            mv: int = min(resolution, target_mv - current_mv)
+            # move amount
+
+            current_mv += mv
 
             self.rect.x += mv * self.direction_multiplier
             self.movedDistance += mv
@@ -475,8 +496,13 @@ class Bullet:
                 player_health -= self.damage
                 return "wall", player_health
 
-            if collision_test_fast(self.rect, self.environment_obstacles) is not None:
-                return "wall", player_health
+            # Custom collision handling so we can adjust the bullet resolution
+            resolution = MIN_RESOLUTION
+            for tile in _iter_nearby_tiles(self.rect, self.environment_obstacles):
+                if tile.rect.width < resolution:
+                    resolution = tile.rect.width
+                if collision_test_single(self.rect, tile):
+                    return "wall", player_health
 
             if self.movedDistance > self.maxDistance:
                 return "air", player_health
@@ -501,15 +527,15 @@ class Bullet:
         if KDS.Debug.Enabled:
             pygame.draw.line(
                 Surface,
-                KDS.Colors.EmeraldGreen,
-                (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
-                (self.rect.centerx - scroll[0], self.rect.centery - scroll[1])
-            )
-            pygame.draw.line(
-                Surface,
                 KDS.Colors.White,
                 (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
                 (self.rect.centerx + (self.maxDistance * self.direction_multiplier) - scroll[0], self.rect.centery - scroll[1] + (self.slope * self.maxDistance))
+            )
+            pygame.draw.line(
+                Surface,
+                KDS.Colors.EmeraldGreen,
+                (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
+                (self.rect.centerx - scroll[0], self.rect.centery - scroll[1])
             )
 
         # fast weapons like plasmarifle look like two floating bullets layered on top of each other
@@ -543,7 +569,6 @@ class BallisticProjectile:
         self.gravitational_factor = gravitational_factor
 
     def update(self, tiles, Surface, scroll):
-
         self.rect.x += round(self.force)
 
         c = collision_test(self.rect, tiles)
@@ -561,7 +586,7 @@ class BallisticProjectile:
                 self.rect.left = c1.rect.right
                 collisions['right'] = True
 
-        self.rect.y += self.upforce # type: ignore  you can pass float in as well.
+        self.rect.y += self.upforce
         self.upforce += self.gravitational_factor
         if self.upforce > 6:
             self.upforce = 6
