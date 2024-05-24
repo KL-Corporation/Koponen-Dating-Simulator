@@ -41,15 +41,22 @@ for buildType in toBuild.items():
 
     pyinstaller.run([
         "--noconfirm",
+
+        "--onedir",
+        "--contents-directory",
+        ".",
+
         "--distpath",
         BuildPath,
         "--workpath",
         WorkPath,
         "--specpath",
         CachePath,
+
         "--windowed",
         "--icon",
         f"{parentDir}/Assets/Textures/Branding/{iconname}",
+
         "--add-data",
         f"{parentDir}/Assets;Assets/",
         "--paths",

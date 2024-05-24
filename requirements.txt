@@ -9,6 +9,7 @@ Markdown==3.6
 numpy==1.26.4
 psutil==5.9.8
 
+pyinstaller==6.7.0
 
 
 ##### PREVIOUS KNOWN STABLE VERSION #####

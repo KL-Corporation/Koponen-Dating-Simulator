@@ -2,6 +2,7 @@ from __future__ import annotations
 import os
 
 import KDS.LevelBuilder
+import KDS.LevelBuilder.LegacyGameMap
 import KDS.LevelBuilder.LegacyTileProp
 import KDS.LevelBuilder.LevelProp
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -1167,7 +1168,7 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
             rUnit.overrideSerial(unit)
 
     if generateMapString(temporaryGrid) != wholeContents:
-        KDS.Logging.AutoError("Loaded map file does not match generated map file!")
+        KDS.Logging.warning("Loaded map file does not match generated map file!", consoleVisible=True)
 
     def loadProperties():
         nonlocal temporaryGrid
@@ -1468,8 +1469,33 @@ def legacy_upgrade_menu():
     global legacy_upgrade_menu_running
     legacy_upgrade_menu_running = True
 
-    def notImplemented():
-        KDS.Logging.AutoError("This legacy converter has not been implemented yet!")
+    # def notImplemented():
+    #     KDS.Logging.AutoError("This legacy converter has not been implemented yet!")
+
+    def run_func(func: Callable[[Callable[[str], None]], None]):
+        def renderupdate():
+            pygame.event.pump()
+
+            text_surf: pygame.Surface = harbinger_font.render(text, True, KDS.Colors.White)
+            msg_surf: pygame.Surface = harbinger_font_small.render(msg, True, KDS.Colors.White)
+
+            text_pos: tuple[float, float] = ((display.get_width() - text_surf.get_width()) / 2, (display.get_height() - text_surf.get_height()) / 2)
+            msg_pos: tuple[float, float] = ((display.get_width() - msg_surf.get_width()) / 2, text_pos[1] + harbinger_font.get_linesize())
+
+            display.fill((0, 0, 0))
+            display.blit(text_surf, text_pos)
+            display.blit(msg_surf, msg_pos)
+
+            pygame.display.flip()
+        text: str = f"Running: '{KDS.Convert.String.Snake2Sentence(func.__name__)}'..."
+        msg: str = ""
+        def update_msg(msg_str: str):
+            nonlocal msg
+            msg = msg_str
+            renderupdate()
+
+        renderupdate()
+        func(update_msg)
 
     def back():
         global legacy_upgrade_menu_running
@@ -1477,9 +1503,9 @@ def legacy_upgrade_menu():
 
     title = harbinger_font_large.render("UPGRADE LEGACY", True, KDS.Colors.White)
     title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
-    tileprop_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 200, 600, 100), KDS.LevelBuilder.LegacyTileProp.upgradeTileProp, harbinger_font.render("tileprops.kdf", True, KDS.Colors.White))
-    gamemap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 325, 600, 100), notImplemented, harbinger_font.render("game_map.kds + item_map.kds", True, KDS.Colors.White))
-    mapmap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 450, 600, 100), notImplemented, harbinger_font.render(".map files", True, KDS.Colors.White))
+    tileprop_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 200, 600, 100), run_func, harbinger_font.render("tileprops.kdf", True, KDS.Colors.White))
+    gamemap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 325, 600, 100), run_func, harbinger_font.render("game_map.kds + item_map.kds", True, KDS.Colors.White))
+    mapmap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 450, 600, 100), run_func, harbinger_font.render(".map files", True, KDS.Colors.White))
 
     back_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 125, 300, 100), back, harbinger_font.render("Back", True, KDS.Colors.AviatorRed))
 
@@ -1501,9 +1527,9 @@ def legacy_upgrade_menu():
         pygame.draw.rect(display, KDS.Colors.Gray, (title_rect.x - 200, title_rect.y - 25, title_rect.w + 400, title_rect.h + 50))
         display.blit(title, title_rect)
 
-        tileprop_btn.update(display, mouse_pos, clicked)
-        gamemap_btn.update(display, mouse_pos, clicked)
-        mapmap_btn.update(display, mouse_pos, clicked)
+        tileprop_btn.update(display, mouse_pos, clicked, KDS.LevelBuilder.LegacyTileProp.upgradeTileProp)
+        gamemap_btn.update(display, mouse_pos, clicked, KDS.LevelBuilder.LegacyGameMap.upgradeGameMap)
+        mapmap_btn.update(display, mouse_pos, clicked, KDS.LevelBuilder.LegacyGameMap.upgradeMapFiles)
 
         back_btn.update(display, mouse_pos, clicked)
 

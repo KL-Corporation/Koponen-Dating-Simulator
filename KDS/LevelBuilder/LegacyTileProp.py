@@ -1,13 +1,15 @@
 import json
 import os
 from tkinter import filedialog
-from typing import Any
+from typing import Any, Callable
 
 import KDS.System
 import KDS.Logging
 from KDS.LevelBuilder.Shared import *
 
-def upgradeTileProp():
+def upgradeTileProp(msgs: Callable[[str], None]):
+    """tkinter required"""
+
     filename: str = filedialog.askopenfilename(filetypes=(("Tileprops file", "tileprops.kdf"), ("Koponen Data Format file", "*.kdf"), ("All files", "*.*")), title="Select Tileprops File")
     if len(filename) < 1:
         return

@@ -35,6 +35,26 @@ class String:
             KDS.Logging.AutoError(f"Cannot convert \"{string}\" to bool.")
         return fallback
 
+    @staticmethod
+    def Snake2Sentence(snake_case: str, capitalize: bool = False) -> str:
+        split_indexes: list[int] = []
+        for i in range(len(snake_case)):
+            if snake_case[i].isupper():
+                split_indexes.append(i)
+
+        parts: list[str] = []
+        prev_split: int = 0
+        for split in split_indexes:
+            parts.append(snake_case[prev_split:split])
+            prev_split = split
+        parts.append(snake_case[prev_split:])
+
+        if capitalize:
+            for i in range(len(parts)):
+                parts[i] = parts[i].capitalize()
+
+        return ' '.join(parts)
+
 class DateTime:
     @staticmethod
     def Humanize(value: datetime.datetime) -> str:
