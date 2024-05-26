@@ -179,7 +179,7 @@ def AutoType3(value: str) -> Union[str, bool, int, float]:
         return value
     return output
 
-def ToGrayscale(image: pygame.Surface):
+def ToGrayscale(image: pygame.Surface) -> pygame.Surface:
     """Converts an image to grayscale.
 
     Args:
@@ -191,6 +191,8 @@ def ToGrayscale(image: pygame.Surface):
     arr = pygame.surfarray.pixels3d(image)
     arr = arr.dot([0.298, 0.587, 0.114])[:, :, None].repeat(3, axis=2)
     return pygame.surfarray.make_surface(arr)
+    # return pygame.transform.grayscale(image)
+    # tried pygame.transform.grayscale but it has a weird white border around the image... (alpha isn't handled properly)
 
 def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False) -> pygame.Surface:
     mode = "RGB" if not alpha else "RGBA"

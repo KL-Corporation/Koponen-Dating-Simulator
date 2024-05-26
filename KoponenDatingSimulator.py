@@ -1,6 +1,7 @@
 ﻿#region Importing
 from __future__ import annotations
 
+from dataclasses import dataclass
 import os
 #region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -234,6 +235,17 @@ agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").conv
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
+
+def load_campaign_backgrounds():
+    global campaign_backgrounds
+    DIR: str = "Assets/Textures/UI/Menus/Campaign"
+    files = os.listdir(DIR)
+    for f in files:
+        index: int = int(os.path.splitext(f)[0])
+        campaign_backgrounds[index] = os.path.join(DIR, f)
+campaign_backgrounds: dict[int, str] = {}
+load_campaign_backgrounds()
+
 asset_loading_logger.stop("Menu Texture Loading Complete.")
 #endregion
 pygame.event.pump()
@@ -4185,7 +4197,7 @@ def main_menu():
         custom_maps_names = {}
         try:
             with open("Assets/Maps/Campaign/names.dat", "r") as file:
-                tmp = file.read().split("\n")
+                tmp = file.read().strip().split("\n")
                 for t in tmp:
                     tmp_split = t.split(":")
                     for i in range(len(tmp_split)):
@@ -4230,6 +4242,13 @@ def main_menu():
             current_map = f"{current_map_int:02d}"
             KDS.ConfigManager.SetSetting("Player/currentMap", current_map)
     level_pick.pick(level_pick.direction.none)
+
+    @dataclass
+    class CampaignBg:
+        map_index: int
+        surface: pygame.Surface | None
+        surface_job: KDS.Jobs.JobHandle
+        alpha: KDS.Animator.Value
 
     def menu_mode_selector(mode: Mode):
         nonlocal MenuMode
@@ -4299,27 +4318,19 @@ def main_menu():
     campaign_left_button_rect = pygame.Rect(50, 200, 66, 66)
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
     campaign_play_text = KDS.UI.ButtonFont.render("START", True, KDS.Colors.EmeraldGreen)
-    campaign_backgrounds: Dict[int, pygame.Surface] = {
-        1: pygame.image.load("Assets/Textures/UI/Menus/Campaign/1.png").convert(),
-        2: pygame.image.load("Assets/Textures/UI/Menus/Campaign/2.png").convert(),
-        3: pygame.image.load("Assets/Textures/UI/Menus/Campaign/3.png").convert(),
-        4: pygame.image.load("Assets/Textures/UI/Menus/Campaign/4.png").convert(),
-        5: pygame.image.load("Assets/Textures/UI/Menus/Campaign/5.png").convert(),
-        6: pygame.image.load("Assets/Textures/UI/Menus/Campaign/6.png").convert(),
-        7: pygame.image.load("Assets/Textures/UI/Menus/Campaign/7.png").convert(),
-        8: pygame.image.load("Assets/Textures/UI/Menus/Campaign/8.png").convert(),
-        9: pygame.image.load("Assets/Textures/UI/Menus/Campaign/9.png").convert(),
-        10: pygame.image.load("Assets/Textures/UI/Menus/Campaign/10.png").convert()
-    }
-    campaignNoBackgroundSurf: pygame.Surface = pygame.Surface(display_size)
 
-    campaignCurrentBackground: Optional[pygame.Surface] = None
-    campaignLastBackground: Optional[pygame.Surface] = None
-    campaignBackgroundAnim = KDS.Animator.Value(0, 255, 30)
+    campaignBgs: list[CampaignBg] = []
 
     def campaign_play_handler():
         if current_map_int != 0:
             play_function(KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
+
+    def load_campaign_image(index: int) -> pygame.Surface:
+        path: str | None = campaign_backgrounds.get(index)
+        if path is None:
+            return pygame.Surface(display_size)
+        else:
+            return pygame.image.load(path).convert()
 
     campaign_play_button = KDS.UI.Button(campaign_play_button_rect, campaign_play_handler, campaign_play_text)
     campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left, pygame.transform.flip(arrow_button, True, False))
@@ -4394,8 +4405,7 @@ def main_menu():
                             MenuMode = Mode.StoryMenu
                         elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
                             MenuMode = Mode.CampaignMenu
-                            campaignBackgroundAnim.tick = 0
-                            campaignLastBackground = None
+                            campaignBgs.clear()
                             c = False
                         else:
                             KDS.Logging.AutoError(f"Invalid mode_selection_mode! Value: {mode_selection_modes[y]}")
@@ -4459,15 +4469,34 @@ def main_menu():
                     display.blit(rendered, ((rect.width // 2 - rendered.get_width() // 2) + rect.x, (rect.height // 3 - rendered.get_height() // 2) + rect.y))
 
         elif MenuMode == Mode.CampaignMenu:
-            campaign_comp = campaign_backgrounds[current_map_int] if current_map_int in campaign_backgrounds else None
-            if campaign_comp is not campaignCurrentBackground:
-                campaignLastBackground = campaignCurrentBackground
-                campaignCurrentBackground = campaign_comp
-                campaignBackgroundAnim.tick = 0
-            campaignToBlit = (campaignCurrentBackground if campaignCurrentBackground != None else campaignNoBackgroundSurf).copy()
-            campaignToBlit.set_alpha(int(campaignBackgroundAnim.update()))
-            display.blit(campaignLastBackground if campaignLastBackground != None else campaignNoBackgroundSurf, (0, 0))
-            display.blit(campaignToBlit, (0, 0))
+            if len(campaignBgs) < 1 or campaignBgs[-1].map_index != current_map_int:
+                campaignBgs.append(CampaignBg(
+                    current_map_int,
+                    None,
+                    KDS.Jobs.Schedule(load_campaign_image, current_map_int),
+                    KDS.Animator.Value(0, 255, 30)
+                ))
+
+            # looked ugly so I un-added (removed) it
+            # while len(campaignBgs) > 3: # added due to poor performance
+            #     campaignBgs.pop(1) # leave the bottom one as is, it's the one where we first started panning
+
+            for campaignBg in campaignBgs:
+                if campaignBg.surface is None:
+                    if campaignBg.surface_job.IsComplete:
+                        campaignBg.surface = campaignBg.surface_job.Complete()
+                else:
+                    campaignBg.alpha.update()
+
+            while (campaign_anim_finished_count := KDS.Linq.Count(campaignBgs, lambda cbg: cbg.alpha.Finished)) > 1:
+                campaignBgs.pop(0)
+
+            if campaign_anim_finished_count < 1:
+                display.fill((0, 0, 0))
+            for campaignBg in campaignBgs:
+                if campaignBg.surface is not None:
+                    campaignBg.surface.set_alpha(int(campaignBg.alpha.get_value()))
+                    display.blit(campaignBg.surface, (0, 0))
 
             if len(os.listdir(PersistentPaths.CustomMaps)) != len(custom_maps_names):
                 KDS.Logging.debug("New custom maps detected.", True)
@@ -4500,7 +4529,10 @@ def main_menu():
             campaign_right_button.update(display, mouse_pos, c)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData({
+                "FPS": KDS.Clock.GetFPS(3),
+                "Campaign Backgrounds Loaded": len(campaignBgs)
+            }), (0, 0))
 
         c = False
         if not skip_render_this_frame:
@@ -4907,6 +4939,9 @@ while main_running:
                 invPix = pygame.surfarray.pixels2d(screen)
                 invPix ^= 2 ** 32 - 1
                 del invPix
+                # pygame.transform.invert(screen, screen)
+                # pygame.transform is slower (it seems to create a new surface which is slow)
+                # while pixels2d seems to be almost instant (we manipulate the screen directly)
 
             data["repeat_index"] += 1
             if data["repeat_index"] > data["repeat_length"]:

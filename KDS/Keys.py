@@ -293,6 +293,7 @@ def RegisterEvent(event: pygame.event.Event):
         key._register_event(event)
 
 def Update():
+    """Call before event handling!"""
     for key in keys.values():
         key.update()
 

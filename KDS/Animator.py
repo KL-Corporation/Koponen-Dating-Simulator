@@ -275,7 +275,7 @@ class Value:
         self.onAnimationEnd = _OnAnimationEnd
         self.type = Value._animT[_AnimationType] if _AnimationType in Value._animT else None
         self.PingPong = False
-        self.value = From
+        # self.value = From Seems to be a mistake that was left in the codebase, should use get_value instead.
 
     def get_value(self) -> float:
         """Returns the current value.
