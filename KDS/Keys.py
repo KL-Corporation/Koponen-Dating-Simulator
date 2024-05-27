@@ -392,6 +392,8 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
                 # ^^ check for multiple identical bindings for the same key...
                 # We don't allow these kinds of bindings, but I left it here so that in case this behaviour changes later, we already have code that handles it.
                 return ArialFont.render(binding.get_displayname(), True, KDS.Colors.Yellow)
+            elif binding != defaultBinding:
+                return ArialFont.render(binding.get_displayname(), True, (128, 255, 255))
             else:
                 return ArialFont.render(binding.get_displayname(), True, KDS.Colors.White)
 
