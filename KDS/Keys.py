@@ -375,9 +375,18 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     def loadKeyDatas():
         nonlocal keyDatas, keyMaxY
 
-        def renderBindingText(binding: Binding | None) -> pygame.Surface:
+        def renderBindingText(key: Key, isSecondary: bool) -> pygame.Surface:
+            defaultBinding: Binding | None = key._defaultBinding if not isSecondary else key._secondaryDefaultBinding
+            binding: Binding | None = key.binding if not isSecondary else key.secondaryBinding
+
             if binding is None:
                 return ArialFont.render("Unassigned", True, KDS.Colors.LightGray)
+            # XXX: Naive approach using any (making this O(n²)), but this still runs 60 fps, so I don't really care...
+            elif any((binding == k.binding or binding == k.secondaryBinding) and (k is not key or (k.binding == k.secondaryBinding)) for k in keys.values()):
+                # k.binding == binding and k.secondaryBinding == binding => k.binding == k.secondaryBinding
+                # ^^ check for multiple identical bindings for the same key...
+                # We don't allow these kinds of bindings, but I left it here so that in case this behaviour changes later, we already have code that handles it.
+                return ArialFont.render(binding.get_displayname(), True, KDS.Colors.Yellow)
             else:
                 return ArialFont.render(binding.get_displayname(), True, KDS.Colors.White)
 
@@ -385,11 +394,11 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
 
         for index, (label, key) in enumerate(REBINDABLEKEYS):
             b2Rect = pygame.Rect(display_size[0] - buttonWidth - buttonPadding, buttonPadding + index * (buttonHeight + buttonPadding), buttonWidth, buttonHeight)
-            b2Text = renderBindingText(key.secondaryBinding)
+            b2Text = renderBindingText(key, isSecondary=True)
             button2 = KDS.UI.Button(b2Rect, bindKey, b2Text)
 
             b1Rect = pygame.Rect(b2Rect.left - buttonWidth - buttonPadding, b2Rect.top, b2Rect.width, b2Rect.height)
-            b1Text = renderBindingText(key.binding)
+            b1Text = renderBindingText(key, isSecondary=False)
             button1 = KDS.UI.Button(b1Rect, bindKey, b1Text)
 
             keyDatas.append(_KeyData(label.title, label.description, key, button1, button2))
