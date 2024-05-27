@@ -312,8 +312,13 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
     def bindKey(key: Key, isAlt: bool):
         def setBindingValue(binding: Binding | None):
             if isAlt:
+                # Do not allow multiple same bindings to the same key instance
+                if key.binding == binding:
+                    key.binding = None
                 key.secondaryBinding = binding
             else:
+                if key.secondaryBinding == binding:
+                    key.secondaryBinding = None
                 key.binding = binding
             key.saveBindings()
             loadKeyDatas()
@@ -418,7 +423,7 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
 
     reset_button = KDS.UI.Button(pygame.Rect(480, keyMaxY + 4 * buttonPadding, 240, 40), reset_def, KDS.UI.ButtonFontSmall.render("Reset Bindings", True, KDS.Colors.AviatorRed))
     return_button = KDS.UI.Button(pygame.Rect(465, reset_button.rect.bottom + 4 * buttonPadding, 270, 60), return_def, "RETURN")
-    restart_tip: pygame.Surface = ArialFont.render("We recommend restarting the game if any changes were made.", True, KDS.Colors.White)
+    # restart_tip: pygame.Surface = ArialFont.render("We recommend restarting the game if any changes were made.", True, KDS.Colors.White)
     primary_tip: pygame.Surface = ArialFont.render("Primary", True, KDS.Colors.White)
     secondary_tip: pygame.Surface = ArialFont.render("Secondary", True, KDS.Colors.White)
 
@@ -477,7 +482,9 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
         return_button.rect.centery += scroll + headerSize
         return_button.update(display, mouse_pos, left_clicked)
         return_button.rect.centery -= scroll + headerSize
-        display.blit(restart_tip, (return_button.rect.centerx - restart_tip.get_width() // 2, return_button.rect.bottom + scroll + headerSize + 10))
+        # display.blit(restart_tip, (return_button.rect.centerx - restart_tip.get_width() // 2, return_button.rect.bottom + scroll + headerSize + 10))
 
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
         pygame.display.flip()
         KDS.Clock.Tick()
