@@ -4162,7 +4162,8 @@ def settings_menu():
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
         pygame.display.flip()
-        display.fill(KDS.Colors.Black)
+        # display.fill(KDS.Colors.Black)
+        # I don't know why this is here... It made everything flicker when exiting settings
         c = False
         KDS.Clock.Tick()
 
