@@ -1929,7 +1929,6 @@ class CashRegister(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.items: List[KDS.Build.Item] = []
-        self.itemIndexes: Dict[KDS.Build.Item, int] = {}
         self.items_cost: int = 0
         self.discount_items_cost: int = 0
         self.ssBonuscardShown: bool = False
@@ -1950,17 +1949,20 @@ class CashRegister(KDS.Build.Tile):
         self.darkOverlay = None
 
     def update(self) -> Optional[pygame.Surface]:
-        toRm: List[KDS.Build.Item] = []
-        for item in self.items:
-            if item not in self.itemIndexes or self.itemIndexes[item] >= len(Items) or Items[self.itemIndexes[item]] is not item:
-                if item in Items:
-                    self.itemIndexes[item] = Items.index(item) # Index saved, because checking if Item exists would rape the FPS so hard that Python would commit suicide
-                else:
-                    KDS.Missions.Listeners.Shoplifting.Trigger()
-                    toRm.append(item)
+        # Removed so that the user can pay after picking up the item
+        # toRm: List[KDS.Build.Item] = []
+        # for item in self.items:
+        #     if item not in self.itemIndexes or self.itemIndexes[item] >= len(Items) or Items[self.itemIndexes[item]] is not item:
+        #         if item in Items:
+        #             self.itemIndexes[item] = Items.index(item) # Index saved, because checking if Item exists would rape the FPS so hard that Python would commit suicide
+        #         else:
+        #             # Removed as it is not clear what triggered the shoplifting now
+        #             # as TheftDetectors have been fixed and the alarm sounds only when passing the detector
+        #             # KDS.Missions.Listeners.Shoplifting.Trigger()
+        #             toRm.append(item)
 
-        for item in toRm:
-            self.items.remove(item)
+        # for item in toRm:
+        #     self.items.remove(item)
 
         for item in self.items: # Maybe don't need this one, but I still put it just in case
             if item.rect.left > self.itemsLeftMoveRange[1]:
@@ -2018,6 +2020,10 @@ class CashRegister(KDS.Build.Tile):
             for item in self.items:
                 item.storePrice = 0
 
+                # fix price total rising when scanning item multiple times after showing ss-card
+                if item.storeDiscountPrice is not None:
+                    item.storeDiscountPrice = 0
+
     def addItem(self, item: KDS.Build.Item) -> bool:
         global Items
         if item.storePrice == None:
@@ -2031,37 +2037,58 @@ class CashRegister(KDS.Build.Tile):
         return True
 
 class TheftDetector(KDS.Build.Tile):
+    alarmTicks: int = 0
+    alarmWaitTicks: Final[int] = 180
+
+    theftDetectorSoundIsPlaying: bool = False
+    theftDetectorSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Tiles/theft_detector.ogg")
+    theftDetectorSound.set_volume(0.5)
+
+    @staticmethod
+    def globalUpdate() -> None:
+        TheftDetector.alarmTicks -= 1
+        if not TheftDetector.get_running():
+            TheftDetector.theftDetectorSound.stop()
+            TheftDetector.theftDetectorSoundIsPlaying = False
+            TheftDetector.alarmTicks = 0
+
+    @staticmethod
+    def globalReset() -> None:
+        TheftDetector.alarmTicks = 0
+        TheftDetector.globalUpdate()
+
+    @staticmethod
+    def get_running() -> bool:
+        return TheftDetector.alarmTicks > 0
+
+    @staticmethod
+    def _shoplifting() -> None:
+        if not TheftDetector.theftDetectorSoundIsPlaying:
+            TheftDetector.theftDetectorSoundIsPlaying = True
+            KDS.Audio.PlaySound(TheftDetector.theftDetectorSound, loops=-1)
+
+        TheftDetector.alarmTicks = TheftDetector.alarmWaitTicks
+        KDS.Missions.Listeners.Shoplifting.Trigger()
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.animation = KDS.Animator.Animation("theft_detector", 2, 15, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-        self.sound = pygame.mixer.Sound("Assets/Audio/Tiles/theft_detector.ogg")
-        self.sound.set_volume(0.5)
-        self.alarmTicks: int = 0
-        self.alarmWaitTicks: int = 180
 
     def lateInit(self) -> None:
         self.darkOverlay = None
 
     def update(self) -> Optional[pygame.Surface]:
-        if self.alarmTicks <= 0:
-            self.sound.stop()
+        if self.rect.colliderect(Player.rect):
+            for item in Player.inventory:
+                if item != None and item.storePrice != None:
+                    TheftDetector._shoplifting()
+                    break
+
+        if TheftDetector.get_running():
+            return self.animation.update()
+        else:
             self.animation.tick = 0
-
-            if self.rect.colliderect(Player.rect):
-                for item in Player.inventory:
-                    if item != None and item.storePrice != None:
-                        self.alarmTicks = self.alarmWaitTicks
-                        KDS.Audio.PlaySound(self.sound, loops=-1)
-                        KDS.Missions.Listeners.Shoplifting.Trigger()
-                        break
             return self.texture
-
-        self.alarmTicks -= 1
-
-        if abs(self.rect.centerx - Player.rect.centerx) > screen_size[0] / 2: # To stop sound playing infinitely
-            self.alarmTicks = 0
-
-        return self.animation.update()
 
 
 class BaseTeleport(KDS.Build.Tile):
@@ -3869,6 +3896,8 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load:
     Player = PlayerClass()
 
     #region World Data
+    TheftDetector.globalReset()
+
     global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones, Particles
     Items.clear()
     Explosions.clear()
@@ -4732,6 +4761,9 @@ while main_running:
             for entity in Entities:
                 if KDS.Math.getDistance(entity.rect.center, Player.rect.center) <= 800:
                     entity.health -= random.randint(500, 1000)
+
+    # MUST BE BEFORE TILE RENDER (which is called by KDS.Build.Tile.renderUpdate)
+    TheftDetector.globalUpdate()
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
