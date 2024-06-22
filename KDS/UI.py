@@ -398,7 +398,7 @@ class KeybindFormattedText:
     def _generate_binding_vector(self) -> tuple[KDS.Keys.Binding | None, ...]:
         return tuple(b.key.get_primary_binding() for b in self._text_bindings)
 
-    def _regenerate_surface(self, binding_vector: tuple[KDS.Keys.Binding | None, ...]) -> None:
+    def _generate_formatted_text(self, binding_vector: tuple[KDS.Keys.Binding | None, ...]) -> str:
         text: str = self._text
 
         mod: int = 0
@@ -411,8 +411,11 @@ class KeybindFormattedText:
             text = text[:(textbind.start + mod)] + binding_text + text[(textbind.end + mod):]
             mod += binding_length - format_length
 
-        surf: pygame.Surface = self._font.render(text, self._antialias, self._color, self._background_color)
+        return text
 
+    def _regenerate_surface(self, binding_vector: tuple[KDS.Keys.Binding | None, ...]) -> None:
+        text: str = self._generate_formatted_text(binding_vector)
+        surf: pygame.Surface = self._font.render(text, self._antialias, self._color, self._background_color)
         self._surface = KeybindFormattedText._RenderedSurface(surf, binding_vector)
 
     def get_surface(self) -> pygame.Surface:
@@ -428,3 +431,9 @@ class KeybindFormattedText:
 
         assert self._surface is not None
         return self._surface.surface
+
+    def build_raw_text(self) -> str:
+        bvec = self._generate_binding_vector()
+        assert(len(bvec) == len(self._text_bindings))
+
+        return self._generate_formatted_text(bvec)
