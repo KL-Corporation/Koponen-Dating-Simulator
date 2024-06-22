@@ -322,7 +322,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Missions.InitialiseTask("red_key", "pick_key", "Nouda punainen avain yläkerrasta", (KDS.Missions.Listeners.ItemPickup, 13, 1.0))
 
             Presets.LevelExit()
-        elif index == 10:
+        elif index == 15:
             KDS.Missions.InitialiseMission("r1", "Tehtävä Koposelta")
             KDS.Missions.InitialiseTask("r1", "talk", "Puhu Koposelle", (KDS.Missions.Listeners.KoponenTalk, 1.0))
             KDS.Missions.InitialiseTask("r1", "mission", "Pyydä Tehtävää Koposelta", (KDS.Missions.Listeners.KoponenRequestMission, 1.0))
@@ -365,6 +365,9 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
             KDS.Koponen.Talk.Conversation.schedule("Loistavaa työtä", KDS.Koponen.Prefixes.koponen, True)
             KDS.Koponen.Talk.Conversation.schedule("Tulisitko kanssani treffeille?", KDS.Koponen.Prefixes.sina, True)
             KDS.Koponen.Talk.Conversation.schedule("Tulen kanssasi", KDS.Koponen.Prefixes.koponen, True)
+        elif index == 16:
+            KDS.Missions.InitialiseMission("kill_all_enemies", "Viholliset")
+            KDS.Missions.InitialiseTask("kill_all_enemies", "exit", "Tapa Kaikki Viholliset", (KDS.Missions.Listeners.EnemyDeath, 0.051)) # .001 to account for floating point inaccuracies
         else:
             Presets.LevelExit()
     elif gamemode == Modes.CustomCampaign:
