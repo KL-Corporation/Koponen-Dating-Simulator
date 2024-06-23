@@ -1921,6 +1921,12 @@ class PistokoeDoor(KDS.Build.Tile):
         return self.animation.update()
 
 class CashRegister(KDS.Build.Tile):
+    class ItemAnimation:
+        def __init__(self, item: KDS.Build.Item, item_rect: pygame.Rect) -> None:
+            assert(item_rect is item.rect)
+            self.expected_rect: pygame.Rect = item_rect.copy()
+            self.item: KDS.Build.Item = item
+
     dropItemTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Aseta ostos [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     payTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Maksa euro [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     ssCardTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Nayta SS-Etukortti [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
@@ -1929,14 +1935,16 @@ class CashRegister(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.items: List[KDS.Build.Item] = []
+        self.items_animating: List[CashRegister.ItemAnimation] = []
         self.items_cost: int = 0
+        self.cost_render: tuple[int, pygame.Surface] | None = None
         self.discount_items_cost: int = 0
         self.ssBonuscardShown: bool = False
         self.dropItemsRect: pygame.Rect = pygame.Rect(124 + self.rect.x, 0 + self.rect.y, 80, 102)
         self.payRect: pygame.Rect = pygame.Rect(57 + self.rect.x, 0 + self.rect.y, 41, 102)
         self.itemsBottomTarget: int = 72 + self.rect.y
         self.itemsLeftMoveRange: Tuple[int, int] = (45 + self.rect.x, 4 + self.rect.x)
-        self.itemsMoveSpeed: int = -1
+        self.itemsMoveSpeed: int = 1
 
     @property
     def Cost(self) -> int:
@@ -1964,9 +1972,28 @@ class CashRegister(KDS.Build.Tile):
         # for item in toRm:
         #     self.items.remove(item)
 
-        for item in self.items: # Maybe don't need this one, but I still put it just in case
-            if item.rect.left > self.itemsLeftMoveRange[1]:
-                item.rect.left += self.itemsMoveSpeed
+        # fix for animation still running after item pickup
+        # as we removed the toRm function
+        stop_animate: list[CashRegister.ItemAnimation] = []
+        for animate_item in self.items_animating: # It is possible to re-enable the animation if the item is put on the exactly correct spot, but I'm not too worried about that very rare case
+            if animate_item.expected_rect != animate_item.item.rect:
+                stop_animate.append(animate_item)
+            else: # only animate if item is exactly where we expect it to be
+                animate_distance: int = animate_item.expected_rect.left - self.itemsLeftMoveRange[1] # do not overshoot
+                animate_move: int = min(self.itemsMoveSpeed, animate_distance) # animation move amount
+                animate_item.expected_rect.left -= animate_move
+                animate_item.item.rect.left -= animate_move
+                assert(animate_item.expected_rect.left == animate_item.item.rect.left)
+
+        for stop_animate_item in stop_animate:
+            self.items_animating.remove(stop_animate_item)
+
+        # TODO: Implement item removal
+
+        # removed as we handle this in a separate list now
+        # for item in self.items: # Maybe don't need this one, but I still put it just in case
+        #     if item.rect.left > self.itemsLeftMoveRange[1]:
+        #         item.rect.left += self.itemsMoveSpeed
 
         if self.payRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
@@ -1982,7 +2009,7 @@ class CashRegister(KDS.Build.Tile):
                 screen.blit(ssCardTip, (self.payRect.centerx - ssCardTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
                 if KDS.Keys.functionKey.clicked:
                     self.ssBonuscardShown = True
-                    self.moneyUpdate()
+                    self.purchaseStateUpdate()
         elif self.dropItemsRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
             if isinstance(hndItm, KDS.Build.Item) and hndItm.storePrice != None:
@@ -1996,9 +2023,14 @@ class CashRegister(KDS.Build.Tile):
                         else:
                             Player.inventory.pickupItem(drpd)
 
+        cost_txt: int = self.Cost
+        if self.cost_render is None or self.cost_render[0] != cost_txt:
+            cost_render: pygame.Surface = tip_font.render(f"{self.Cost}.00", True, KDS.Colors.Green)
+            self.cost_render = (cost_txt, cost_render)
+
         assert self.texture != None, "Cash register texture should not be None!"
         screen.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
-        screen.blit(tip_font.render(f"{self.Cost}.00", True, KDS.Colors.Green), (self.rect.x - scroll[0] + 67, self.rect.y - scroll[1] + 51))
+        screen.blit(self.cost_render[1], (self.rect.x - scroll[0] + 77 - int(self.cost_render[1].get_width() / 2), self.rect.y - scroll[1] + 51))
 
         return None
 
@@ -2007,34 +2039,36 @@ class CashRegister(KDS.Build.Tile):
             return False
         self.items_cost -= 1
         self.discount_items_cost -= 1
-        self.moneyUpdate()
+        self.purchaseStateUpdate()
         return True
 
-    def moneyUpdate(self):
+    def purchaseStateUpdate(self):
         if self.Cost <= 0:
             for item in self.items:
                 item.storePrice = None
                 item.storeDiscountPrice = None
                 KDS.Missions.Listeners.ItemPurchase.Trigger(item.serialNumber)
             self.items.clear()
-        else:
-            for item in self.items:
-                item.storePrice = 0
-
-                # fix price total rising when scanning item multiple times after showing ss-card
-                if item.storeDiscountPrice is not None:
-                    item.storeDiscountPrice = 0
 
     def addItem(self, item: KDS.Build.Item) -> bool:
         global Items
-        if item.storePrice == None:
+        if item.storePrice is None:
             return False
-        self.items.append(item)
-        Items.append(item)
-        self.items_cost += item.storePrice
-        self.discount_items_cost += item.storeDiscountPrice if item.storeDiscountPrice != None else item.storePrice
+
         item.rect.bottomleft = (self.itemsLeftMoveRange[0], self.itemsBottomTarget)
-        self.moneyUpdate()
+
+        existing_animations: tuple[CashRegister.ItemAnimation, ...] = tuple(KDS.Linq.Where(self.items_animating, lambda ia: item is ia.item))
+        for ea in existing_animations:
+            self.items_animating.remove(ea)
+        self.items_animating.append(CashRegister.ItemAnimation(item, item.rect))
+
+        if item not in self.items:
+            self.items.append(item)
+            self.items_cost += item.storePrice
+            self.discount_items_cost += item.storeDiscountPrice if item.storeDiscountPrice != None else item.storePrice
+            self.purchaseStateUpdate()
+
+        Items.append(item)
         return True
 
 class TheftDetector(KDS.Build.Tile):
@@ -4879,8 +4913,7 @@ while main_running:
         tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - tip_rnd_surf.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
         screen.blit(tip_rnd_surf, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
         if KDS.Build.Item.tipItem.storePrice != None:
-            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 euroa " + (f"""[SS-Etukortilla: {KDS.Build.Item.tipItem.storeDiscountPrice}.00{" ostoksen ohessa" if KDS.Build.Item.tipItem.storeDiscountPrice == 0 else ""}]""" if KDS.Build.Item.tipItem.storeDiscountPrice != None else ""), True, KDS.Colors.White)
-            #                           if storePrice == 0, bulldogs will be angry if nothing else of value was bought
+            price_tip = tip_font.render(f"{KDS.Build.Item.tipItem.storePrice}.00 euroa " + (f"""[SS-Etukortilla: {KDS.Build.Item.tipItem.storeDiscountPrice}.00]""" if KDS.Build.Item.tipItem.storeDiscountPrice != None else ""), True, KDS.Colors.White)
             screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + tip_rnd_surf.get_height() - scroll[1]))
 
     #Valojen käsittely
