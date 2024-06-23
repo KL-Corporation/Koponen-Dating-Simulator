@@ -1982,6 +1982,7 @@ class CashRegister(KDS.Build.Tile):
                 screen.blit(ssCardTip, (self.payRect.centerx - ssCardTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
                 if KDS.Keys.functionKey.clicked:
                     self.ssBonuscardShown = True
+                    self.moneyUpdate()
         elif self.dropItemsRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
             if isinstance(hndItm, KDS.Build.Item) and hndItm.storePrice != None:
