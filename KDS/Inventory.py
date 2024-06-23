@@ -60,6 +60,7 @@ class Inventory:
     def render(self, Surface: pygame.Surface):
         RECT_WIDTH: int = 3
         RECT_BORDER_RADIUS: int = round(RECT_WIDTH / 2)
+        # ^^^^ the reason we use border radius: https://github.com/KL-Corporation/Koponen-Dating-Simulator/issues/102
 
         pygame.draw.rect(Surface, (192, 192, 192), (self.offset[0], self.offset[1], self.size * 34, 34), RECT_WIDTH, border_radius=RECT_BORDER_RADIUS)
 
