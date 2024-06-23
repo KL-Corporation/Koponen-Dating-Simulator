@@ -2112,8 +2112,16 @@ class TheftDetector(KDS.Build.Tile):
     def lateInit(self) -> None:
         self.darkOverlay = None
 
+        top: int = self.rect.top
+        height: int = self.rect.height
+
+        center: int = self.rect.centerx
+        width: float = self.rect.width / 2
+
+        self.detection_rect: pygame.Rect = pygame.Rect(center - (width / 2), top, width, height)
+
     def update(self) -> Optional[pygame.Surface]:
-        if self.rect.colliderect(Player.rect):
+        if self.detection_rect.colliderect(Player.rect):
             for item in Player.inventory:
                 if item != None and item.storePrice != None:
                     TheftDetector._shoplifting()
@@ -2124,7 +2132,6 @@ class TheftDetector(KDS.Build.Tile):
         else:
             self.animation.tick = 0
             return self.texture
-
 
 class BaseTeleport(KDS.Build.Tile):
     class TeleportData:
