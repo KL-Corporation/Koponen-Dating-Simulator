@@ -1,4 +1,5 @@
 import shutil
+from typing import NamedTuple
 import PyInstaller.__main__ as pyinstaller
 import os
 import KDS.System
@@ -14,30 +15,53 @@ if os.path.isdir(CachePath): shutil.rmtree(CachePath)
 parentDir = os.path.dirname(os.path.abspath(__file__))
 
 BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-EditorTexturesPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Textures", "Editor")
-toBuild = {
-    "Koponen Dating Simulator": {
-        "filename": "KoponenDatingSimulator.py",
-        "iconname": "gameIcon.ico",
-        "keepEditor": False
-    },
-    "Level Builder": {
-        "filename": "LevelBuilder.py",
-        "iconname": "levelBuilderIcon.ico",
-        "keepEditor": True
-    }
-}
+EditorDirectoryPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Editor")
+
+class BuildTask(NamedTuple):
+    display_name: str
+    """The display name of the build task."""
+
+    filename: str
+    """The filename of the main Python script located in the project's root."""
+
+    icon_filename: str
+    """A filename of an icon file located in Assets/Textures/Branding/"""
+
+    keep_editor: bool = False
+    """Whether to keep the Assets/Editor/ directory or not. Defaults to False."""
+
+build_tasks: list[BuildTask] = [
+    BuildTask(
+        display_name="Koponen Dating Simulator",
+        filename="KoponenDatingSimulator.py",
+        icon_filename="gameIcon.ico"
+    ),
+    BuildTask(
+        display_name="Level Builder",
+        filename="LevelBuilder.py",
+        icon_filename="levelBuilderIcon.ico",
+        keep_editor=True
+    ),
+]
+
+def printInfo(msg: str):
+    print(KDS.System.Console.Colored(msg, "cyan"))
+def printSuccess(msg: str):
+    print(KDS.System.Console.Colored(msg, "green"))
+def printWarning(msg: str):
+    print(KDS.System.Console.Colored(msg, "yellow"))
+def printError(msg: str):
+    print(KDS.System.Console.Colored(msg, "red"))
 
 def clearCache():
     if os.path.isdir(CachePath):
-        print("Clearing cache...")
+        printInfo("Clearing cache...")
         shutil.rmtree(CachePath)
 
-for buildType in toBuild.items():
-    clearCache()
+for build in build_tasks:
+    printInfo(f"Compiling {build.display_name}...")
 
-    filename = buildType[1]["filename"]
-    iconname = buildType[1]["iconname"]
+    clearCache()
 
     pyinstaller.run([
         "--noconfirm",
@@ -55,19 +79,24 @@ for buildType in toBuild.items():
 
         "--windowed",
         "--icon",
-        f"{parentDir}/Assets/Textures/Branding/{iconname}",
+        f"{parentDir}/Assets/Textures/Branding/{build.icon_filename}",
 
         "--add-data",
         f"{parentDir}/Assets;Assets/",
         "--paths",
         f"{parentDir}/KDS",
-        f"{parentDir}/{filename}"
+        f"{parentDir}/{build.filename}"
     ])
-    if not buildType[1]["keepEditor"] and os.path.isdir(EditorTexturesPath):
-        shutil.rmtree(EditorTexturesPath)
-        print(f"Deleted Editor Textures directory at {EditorTexturesPath}")
+
+    if not build.keep_editor:
+        if os.path.isdir(EditorDirectoryPath):
+            shutil.rmtree(EditorDirectoryPath)
+            printInfo(f"Deleted Editor Textures directory at: \"{EditorDirectoryPath}\"")
+        else:
+            printWarning(f"Could not find Editor Textures directory at: \"{EditorDirectoryPath}\"")
 
 clearCache()
-for buildType in toBuild.items():
-    cutName = os.path.splitext(buildType[1]["filename"])[0]
-    print(KDS.System.Console.Colored(f"Built {buildType[0]} at: \"" + os.path.join(BuildPath, cutName, f"{cutName}.exe") + "\"", "green"))
+
+for build in build_tasks:
+    cutName = os.path.splitext(build.filename)[0]
+    printSuccess(f"Built {build.display_name} at: \"" + os.path.join(BuildPath, cutName, f"{cutName}.exe") + "\"")

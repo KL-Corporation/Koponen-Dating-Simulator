@@ -184,7 +184,7 @@ class TextureHolder:
             return self.data[UnitType(int(serialNumber[0]))][serialNumber]
         except Exception as e:
             KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! {type(e).__name__}: {e}")
-            return TextureHolder.TextureData("----", "Assets/Textures/Editor/missing.png", "<error>", None)
+            return TextureHolder.TextureData("----", "Assets/Editor/Textures/missing.png", "<error>", None)
 
     def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
         return self.GetData(serialNumber).texture
