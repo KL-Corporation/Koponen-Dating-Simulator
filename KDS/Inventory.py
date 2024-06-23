@@ -58,12 +58,15 @@ class Inventory:
         self.storage = [EMPTYSLOT for _ in range(self.size)]
 
     def render(self, Surface: pygame.Surface):
-        pygame.draw.rect(Surface, (192, 192, 192), (self.offset[0], self.offset[1], self.size * 34, 34), 3)
+        RECT_WIDTH: int = 3
+        RECT_BORDER_RADIUS: int = round(RECT_WIDTH / 2)
+
+        pygame.draw.rect(Surface, (192, 192, 192), (self.offset[0], self.offset[1], self.size * 34, 34), RECT_WIDTH, border_radius=RECT_BORDER_RADIUS)
 
         item = self.storage[self.SIndex]
         slotwidth = 34 if isinstance(item, str) or item.serialNumber not in KDS.Build.Item.inventoryDoubles else 68
 
-        pygame.draw.rect(Surface, (70, 70, 70), (self.SIndex * 34 + self.offset[0], self.offset[1], slotwidth, 34), 3)
+        pygame.draw.rect(Surface, (70, 70, 70), (self.SIndex * 34 + self.offset[0], self.offset[1], slotwidth, 34), RECT_WIDTH, border_radius=RECT_BORDER_RADIUS)
 
         for index, item in enumerate(self.storage):
             if not isinstance(item, str) and item.serialNumber in KDS.Build.Item._textures:
