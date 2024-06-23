@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Set, SupportsFloat, Tuple
+import sys
+from typing import Any, Optional, SupportsFloat
 import pygame
 from pygame.locals import *
 import random
@@ -29,35 +30,38 @@ class Timer:
     def start(self) -> None:
         self.start_time = perf_counter()
 
-    def get_time(self) -> Tuple[str, float]:
+    def get_time(self) -> tuple[str, float]:
         self.time -= perf_counter() - self.start_time
         self.start_time = perf_counter()
         time = divmod(int(self.time), 60)
         return f"{round(time[0]):02d}:{round(time[1]):02d}", self.time
 
-SurnamesSet: Set[str]
-WomenFornamesSet: Set[str]
-Surnames: Optional[List[str]]
-GradeWeights: Tuple[int, ...]
+        # { lowercase: default_casing }
+SurnamesLookup: dict[str, str] # dict allows for case-insensitive search and is smaller (in bytes) than a set.
+WomenForenamesLookup: dict[str, str] # could be a set, but a set uses more memory for some reason
+Surnames: list[str] | None
+GradeWeights: tuple[int, ...]
 
 def init(display: pygame.Surface):
-    global Display, Surnames, SurnamesSet, WomenFornamesSet, GradeWeights
+    global Display, Surnames, SurnamesLookup, WomenForenamesLookup, GradeWeights
     Display = display
 
     try:
         with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
             Surnames = f.read().splitlines()
-            SurnamesSet = set(Surnames)
+            SurnamesLookup = { s.lower(): s for s in Surnames }
     except Exception as e:
         KDS.Logging.AutoError(f"Could not load surnames. Exception below:\n{e}")
         Surnames = None
-        SurnamesSet = set()
+        SurnamesLookup = dict()
 
     try:
-        with open("Assets/Data/women_fornames.txt", encoding="utf-8") as f:
-            WomenFornamesSet = set(f.read().splitlines())
+        with open("Assets/Data/women_forenames.txt", encoding="utf-8") as f:
+            WomenForenames: list[str] = f.read().splitlines()
+            WomenForenamesLookup = { fn.lower(): fn for fn in WomenForenames }
     except Exception as e:
-        WomenFornamesSet = set()
+        KDS.Logging.AutoError(f"Could not load women forenames. Exception below:\n{e}")
+        WomenForenamesLookup = dict()
 
     GradeWeights = tuple(KDS.ConfigManager.GetGameData("Certificate/Grading/weights").values())
 
@@ -86,7 +90,7 @@ def Exam(showtitle = True):
     question_indent = 20
 
     class Question:
-        def __init__(self, question: str, _options: Dict[str, bool]):
+        def __init__(self, question: str, _options: dict[str, bool]):
 
             def splitToRows(string_value, max_width):
                 _t_rows = []
@@ -104,7 +108,7 @@ def Exam(showtitle = True):
 
             t_rows = splitToRows(question, question_maxwidth)
 
-            options: Dict[str, Dict[str, Any]] = {}
+            options: dict[str, dict[str, Any]] = {}
 
             option_keys_shuffled = list(_options.keys())
             random.shuffle(option_keys_shuffled)
@@ -162,7 +166,7 @@ def Exam(showtitle = True):
             KDS.Clock.Tick()
             counter += 1
 
-    def checkAnswers(lstc: List[List[Question]]) -> float:
+    def checkAnswers(lstc: list[list[Question]]) -> float:
         questions_correct = 0
         questions_amount = 0
         for page in lstc:
@@ -186,7 +190,7 @@ def Exam(showtitle = True):
     def loadQuestions(path: str, amount = 5):
         qs = []
         loaded_questions = []
-        rawData: Dict[str, Dict[str, bool]] = {}
+        rawData: dict[str, dict[str, bool]] = {}
         with open(path, "r", encoding="utf-8") as qfile:
             tmp = qfile.read()
             rawData = json.loads(tmp)
@@ -411,7 +415,7 @@ def Exam(showtitle = True):
     exam()
     return _quit, exam_score
 
-def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] | None = None) -> bool:
+def Certificate(display: pygame.Surface, BackgroundColor: tuple[int, int, int] | None = None) -> bool:
     pygame.key.set_repeat(500, 31) #temp... Fuck... Apparently not
     displaySize = display.get_size()
 
@@ -428,15 +432,16 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] |
         GRADE = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 17)
         ANTIALIASING: bool = True
 
-    surname = None
-    if Surnames != None:
+    surname: str | None = None
+    if Surnames is not None:
         username = KDS.System.GetUserNameEx(KDS.System.EXTENDED_NAME_FORMAT.NameDisplay)
-        if username != None:
+        if username is not None:
             for check in reversed(username.split(" ")): # reversed because surname is usually after first name and if there are two matches, it picks the most likely one.
-                if len(check) > 0 and check in SurnamesSet: # Will be case sensitive, but case insensitivity would be too demanding to process.
-                    surname = check
+                lookedup_surname: str | None = SurnamesLookup.get(check.lower())
+                if lookedup_surname is not None:
+                    surname = lookedup_surname
                     break
-        if surname == None:
+        if surname is None:
             surname = random.choice(Surnames[0:50])
             KDS.Logging.info(f"Username: {username} did not contain a surname.", True)
     else:
@@ -444,6 +449,8 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] |
 
     if AlignOverride:
         surname = "[ALIGN Surname]"
+
+    assert(isinstance(surname, str))
 
     forename = (KDS.ConfigManager.Save.Active.Story.playerName if KDS.ConfigManager.Save.Active != None else "<name-error>") if not AlignOverride else "[ALIGN Forename]"
     name = f"{surname} {forename}"
@@ -463,7 +470,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] |
 
         yksiloNro = random.randint(2, 999)
         yksiloNroEven = yksiloNro % 2 == 0
-        woman = forename in WomenFornamesSet # Prefers males, but they are more likely to put a name like Xx_PENISMIES69_xX
+        woman = forename in WomenForenamesLookup # Prefers males, but they are more likely to put a name like Xx_PENISMIES69_xX
         if woman:
             if not yksiloNroEven:
                 yksiloNro -= 1
@@ -513,7 +520,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] |
     certificate.blit(Fonts.NAME.render(name, Fonts.ANTIALIASING, KDS.Colors.Black), (65, 167))
     certificate.blit(Fonts.SSN.render(socialSecurityNumber, Fonts.ANTIALIASING, KDS.Colors.Black), (65, 189))
 
-    yList: List[int] = [
+    yList: list[int] = [
         302,
         342,
         382,
@@ -532,7 +539,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: Tuple[int, int, int] |
         661,
         683
     ]
-    verbalGrades: Dict[int, str] = {
+    verbalGrades: dict[int, str] = {
         4: "Hylätty",
         5: "Välttävä",
         6: "Kohtalainen",
