@@ -4,32 +4,33 @@ import pygame.time
 import time
 import KDS.Math
 
-class _customClock:
-    def __init__(self) -> None:
-        self.prev_ns: int = time.perf_counter_ns()
-        self.fps: float = 0.0
-        self.delta_time: float = 0.0
+# _customClock() custom clock broke everything... Should've considered it a bit earlier
+# class _customClock:
+#     def __init__(self) -> None:
+#         self.prev_ns: int = time.perf_counter_ns()
+#         self.fps: float = 0.0
+#         self.delta_time: float = 0.0
+#
+#     def tick(self, framerate: int):
+#         curr_ns = time.perf_counter_ns()
+#         diff = curr_ns - self.prev_ns
+#         diff_seconds = diff / 1_000_000_000
+#         delay_seconds = max(1.0 / framerate - diff_seconds, 0)
+#         time.sleep(delay_seconds)
+#         self.delta_time = delay_seconds + diff_seconds
+#         self.fps = 1.0 / self.delta_time
+#         self.prev_ns = curr_ns
+#
+#     def tick_busy_loop(self, framerate: int):
+#         self.tick(framerate)
+#
+#     def get_fps(self) -> float:
+#         return self.fps
+#
+#     def get_time(self) -> float:
+#         return self.delta_time * 1000 # Multiplying for pygame clock compatibility
 
-    def tick(self, framerate: int):
-        curr_ns = time.perf_counter_ns()
-        diff = curr_ns - self.prev_ns
-        diff_seconds = diff / 1_000_000_000
-        delay_seconds = max(1.0 / framerate - diff_seconds, 0)
-        time.sleep(delay_seconds)
-        self.delta_time = delay_seconds + diff_seconds
-        self.fps = 1.0 / self.delta_time
-        self.prev_ns = curr_ns
-
-    def tick_busy_loop(self, framerate: int):
-        self.tick(framerate)
-
-    def get_fps(self) -> float:
-        return self.fps
-
-    def get_time(self) -> float:
-        return self.delta_time * 1000 # Multiplying for pygame clock compatibility
-
-_clock: Union[pygame.time.Clock, _customClock] = pygame.time.Clock() # _customClock() custom clock broke everything... Should've considered it a bit earlier
+_clock: pygame.time.Clock = pygame.time.Clock()
 
 DEFAULT_FRAMERATE: Final[int] = 60
 framerate: int = DEFAULT_FRAMERATE

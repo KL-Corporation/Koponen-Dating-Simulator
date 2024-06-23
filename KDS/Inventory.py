@@ -128,17 +128,26 @@ class Inventory:
     def pickupItemToIndex(self, index: int, item: KDS.Build.Item, *, force: bool = False, set_index: bool = False) -> bool:
         if self.storage[index] != EMPTYSLOT and not force:
             return False
+
+        add_doubleitem: bool = False
         if item.serialNumber in KDS.Build.Item.inventoryDoubles:
             if index >= self.size - 1:
                 index = self.size - 2
-            if self.storage[index + 1] != EMPTYSLOT and index > 0:
+            if self.storage[index + 1] != EMPTYSLOT and index > 0 and not force:
                 index -= 1
             if self.storage[index + 1] != EMPTYSLOT and not force:
                 return False
             if self.storage[index] != EMPTYSLOT and not force:
                 return False
-            self.storage[index + 1] = DOUBLEITEM
+            add_doubleitem = True
+
+        if force and index < (len(self.storage) - 1) and self.storage[index + 1] == DOUBLEITEM:
+            self.storage[index + 1] = EMPTYSLOT
+
         self.storage[index] = item
+        if add_doubleitem:
+            self.storage[index + 1] = DOUBLEITEM
+
         if set_index:
             self.SIndex = index
         return True
@@ -155,8 +164,13 @@ class Inventory:
             startingIndex: int = self.SIndex
             for i_offset in range(self.size + 1): # size + 1 so that if inventory is full, we have returned to the original offset index
                 self.SIndex = (startingIndex + i_offset) % self.size
-                if self.pickupItemToIndex(self.SIndex, item, force=force, set_index=True):
+                if self.pickupItemToIndex(self.SIndex, item, force=False, set_index=True):
                     return True
+
+            if force:
+                find_force_picked: bool = self.pickupItemToIndex(self.SIndex, item, force=True, set_index=True)
+                assert(find_force_picked)
+                return True
 
             assert(not force) # force should always return True
             return False

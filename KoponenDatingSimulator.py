@@ -3574,7 +3574,7 @@ def console(oldSurf: pygame.Surface):
                             KDS.Logging.AutoError(f"Unexpected data type. Expected: {str.__name__}, Got: {type(consoleItemSerial)}")
                             return
                         consoleItemSerialInt = int(consoleItemSerial)
-                        Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerialInt]((0, 0), consoleItemSerialInt), force=True)
+                        Player.inventory.pickupItem(KDS.Build.Item.serialNumbers[consoleItemSerialInt]((0, 0), consoleItemSerialInt), allow_find_empty_slot=True, force=True)
                         KDS.Console.Feed.append(f"Item was given: [{consoleItemSerial}: {command_list[1]}]")
                     else: KDS.Console.Feed.append(f"Item not found.")
                 else:
