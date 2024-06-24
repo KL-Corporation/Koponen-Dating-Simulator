@@ -3204,7 +3204,7 @@ class Enemy:
     def _internalEnemyHandler(enemy: KDS.AI.HostileEnemy):
         global Items
         projectiles, itms = enemy.update(screen, scroll, Tiles, Player.rect)
-        if enemy.health > 0 and not KDS.Math.IsPositiveInfinity(enemy.health):
+        if renderUI and enemy.health > 0 and not KDS.Math.IsPositiveInfinity(enemy.health):
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
         for r in projectiles:
