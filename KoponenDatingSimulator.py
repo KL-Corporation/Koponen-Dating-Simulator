@@ -2889,6 +2889,21 @@ class Ppsh41(KDS.Build.Weapon):
         KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, 15)
 
 class Awm(KDS.Build.Weapon):
+    AimOffset: int = 0
+
+    @staticmethod
+    def globalUpdate(isHandItem: bool):
+        if not isHandItem:
+            Awm.AimOffset = 0
+        elif Player.movement[0] != 0 or not Player.is_grounded or Player.crouching:
+            Awm.AimOffset = 0
+        else:
+            if KDS.Keys.aim.onDown:
+                if Awm.AimOffset == 0:
+                    Awm.AimOffset = 250
+                else:
+                    Awm.AimOffset = 0
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.internalInit(130, 5, awm_f_texture, awm_shot)
@@ -3297,6 +3312,7 @@ class PlayerClass:
         self.wasOnLadder: bool = False
         self.crouching: bool = False
         self.running: bool = False
+        self.is_grounded: bool = False
         self.visible: bool = True
         self.lockMovement: bool = False
         self.animations.reset()
@@ -3412,6 +3428,11 @@ class PlayerClass:
                 crouch(False)
 
             collisions = self.mover.move(self.rect, self.movement if not self.lockMovement else (0.0, 0.0), Tiles, playWalkSound=playWalkSound)
+
+            # HACK: Apparently the bottom doesn't collide each frame when the y-axis movement rounds to 0
+            # so we implement this dirty solution so that AWM can know when we are grounded
+            # so that AWM can allow the player to aim.
+            self.is_grounded = collisions.bottom or round(self.movement[1]) == 0
 
             if collisions.bottom:
                 self.air_timer = 0
@@ -4785,8 +4806,13 @@ while main_running:
 
     Lights.clear()
 
-    true_scroll[0] += (Player.rect.centerx - true_scroll[0] - (screen_size[0] / 2)) / 12
-    true_scroll[1] += (Player.rect.y - true_scroll[1] - 220) / 12
+    scroll_target: tuple[int, int] = (
+        Player.rect.centerx + (Awm.AimOffset * KDS.Convert.ToMultiplier(Player.direction)),
+        Player.rect.y
+    )
+
+    true_scroll[0] += (scroll_target[0] - true_scroll[0] - (screen_size[0] / 2)) / 12
+    true_scroll[1] += (scroll_target[1] - true_scroll[1] - 220) / 12
 
     scroll = [round(true_scroll[0]), round(true_scroll[1])]
     if level_background_img != None:
@@ -4847,6 +4873,8 @@ while main_running:
     if Player.health > 0 and Player.visible:
         Player.inventory.useItemsByClasses((Lantern, WalkieTalkie), Player.rect, Player.direction, screen, scroll)
         Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
+
+        Awm.globalUpdate(isinstance(Player.inventory.getHandItem(), Awm))
 
     for Zone in Zones:
         Zone.update(Player.rect)
