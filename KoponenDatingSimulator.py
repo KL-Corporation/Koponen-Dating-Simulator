@@ -1930,10 +1930,12 @@ class CashRegister(KDS.Build.Tile):
     dropItemTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Aseta ostos [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     payTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Maksa euro [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     ssCardTip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Nayta SS-Etukortti [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
-    sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Tiles/cashregister.ogg")
+    sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Tiles/cashregister_new.opus")
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
+        self.animation = KDS.Animator.Animation("cashRegister", 2, 40, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+
         self.items: List[KDS.Build.Item] = []
         self.items_animating: List[CashRegister.ItemAnimation] = []
         self.items_cost: int = 0
@@ -1942,7 +1944,7 @@ class CashRegister(KDS.Build.Tile):
         self.ssBonuscardShown: bool = False
         self.dropItemsRect: pygame.Rect = pygame.Rect(124 + self.rect.x, 0 + self.rect.y, 80, 102)
         self.payRect: pygame.Rect = pygame.Rect(57 + self.rect.x, 0 + self.rect.y, 41, 102)
-        self.itemsBottomTarget: int = 72 + self.rect.y
+        self.itemsBottomTarget: int = 74 + self.rect.y
         self.itemsLeftMoveRange: Tuple[int, int] = (45 + self.rect.x, 4 + self.rect.x)
         self.itemsMoveSpeed: int = 1
 
@@ -2029,8 +2031,8 @@ class CashRegister(KDS.Build.Tile):
             self.cost_render = (cost_txt, cost_render)
 
         assert self.texture != None, "Cash register texture should not be None!"
-        screen.blit(self.texture, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
-        screen.blit(self.cost_render[1], (self.rect.x - scroll[0] + 77 - int(self.cost_render[1].get_width() / 2), self.rect.y - scroll[1] + 51))
+        screen.blit(self.animation.update(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        screen.blit(self.cost_render[1], (self.rect.x - scroll[0] + 109 - int(self.cost_render[1].get_width() / 2), self.rect.y - scroll[1] + 56))
 
         return None
 

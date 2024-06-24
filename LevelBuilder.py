@@ -1118,9 +1118,11 @@ def loadLevelProp(dirPath: str):
             return
         entityData = lpData["Entities"]
         if "Koponen" in entityData and "startPos" in entityData["Koponen"]:
-            tmpPos = entityData["Koponen"]["startPos"]
+            tmpKoponenData: dict[str, Any] = entityData["Koponen"]
+            tmpPos = tmpKoponenData["startPos"]
+            tmpEnabled = tmpKoponenData.get("enabled", False) # if not found, Koponen is disabled.
             LevelPropData.KoponenPos = (tmpPos[0], tmpPos[1])
-            LevelPropData.ShowKoponen = True
+            LevelPropData.ShowKoponen = tmpEnabled
         if "Player" in entityData:
             playerData = entityData["Player"]
             if "startPos" in playerData:
