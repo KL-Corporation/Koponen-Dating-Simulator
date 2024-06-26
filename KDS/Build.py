@@ -203,7 +203,7 @@ class Item:
         self.texture: Final[pygame.Surface]
         """
         ### DO NOT MODIFY THIS TEXTURE
-        Final value can be reassigned if you are COMPLETELY SURE that the old and new texture's contents are same. \\
+        Final value can be reassigned if you are COMPLETELY SURE that the old and new texture's content bounding boxes are same. \\
         (texture.get_bounding_rect() are equal between the old and new texture)
         """
 
