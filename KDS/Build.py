@@ -77,11 +77,14 @@ class Tile:
         Tile._textures.clear()
         Tile._textures.update(textures)
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
+    def __init__(self, position: Tuple[int, int], serialNumber: int, textureLookupOverride: dict[int, pygame.Surface] | None = None):
         self.serialNumber = serialNumber
-        self.texture: pygame.Surface | None = Tile._textures[self.serialNumber] if serialNumber != -1 else None # teleports pass -1 and set their own texture
+
+        # teleport texture lookup is in a different dict
+        texture_lookup: dict[int, pygame.Surface] = Tile._textures if textureLookupOverride is None else textureLookupOverride
+        self.texture: pygame.Surface = texture_lookup[self.serialNumber]
         """
-        ### DO NOT MODIFY THIS TEXTURE
+        ### DO NOT MODIFY THIS TEXTURE (reassigning is allowed though)
         You can modify the texture's alpha or colorkey inside the tiles.kdf file.
 
         Available options are (might not be exhaustive):
@@ -89,7 +92,7 @@ class Tile:
             - textureOverrideColorkey
         """
 
-        self.texture_size: tuple[int, int] = self.texture.get_size() if self.texture != None else (0, 0)
+        self.texture_size: tuple[int, int] = self.texture.get_size()
 
         if serialNumber in Tile.trueScale:
             assert self.texture != None, f"Truescale tile's serialNumber is -1?? Serial: {self.serialNumber}"
@@ -107,8 +110,7 @@ class Tile:
     @staticmethod
     def renderUnit(unit: Tile, surface: pygame.Surface, scroll: Sequence[int]):
         if not unit.specialTileFlag:
-            if unit.texture is not None:
-                surface.blit(unit.texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
+            surface.blit(unit.texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
         else:
             texture = unit.update()
             if texture is not None:

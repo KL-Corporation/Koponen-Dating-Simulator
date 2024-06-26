@@ -999,6 +999,7 @@ class Ladder(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         assert(self.texture is not None)
+        assert(self.texture_size is not None)
         self.rect = pygame.Rect(position[0] + round(17 - self.texture_size[0] / 2), position[1] + round(17 - self.texture_size[1] / 2), self.texture_size[0], self.texture_size[1])
         self.checkCollision = False
 
@@ -1195,7 +1196,6 @@ class LevelEnderDoor(KDS.Build.Tile):
 class LevelEnderTransparent(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = None
         self.triggered: bool = False
 
         self.listener = None
@@ -1367,7 +1367,6 @@ class FlickerTrigger(KDS.Build.Tile):
         self.readyToTrigger: bool = True
         self.animation: bool = False
         self.repeating: bool = repeating
-        self.texture = None
         self.listener = None
         self.listenerItem = None
         self.listenerInstance: Optional[Union[KDS.Missions.Listener, KDS.Missions.ItemListener]] = None
@@ -1410,7 +1409,7 @@ class FlickerTrigger(KDS.Build.Tile):
         else:
             self.exited = True
 
-        return self.texture
+        return None
 
 class ImpaledBody(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
@@ -1725,7 +1724,6 @@ class Sound(KDS.Build.Tile):
         self.checkCollision = False
         self.exited: bool = True
         self.readyToTrigger: bool = True
-        self.texture = None
         self.repeating: bool = repeating
         self.filepath: Optional[str] = None
         self.volume: float = -1.0
@@ -1746,7 +1744,7 @@ class Sound(KDS.Build.Tile):
             self.readyToTrigger = self.repeating
             self.exited = True
 
-        return self.texture
+        return None
 
 class FluorescentTube(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
@@ -2126,9 +2124,8 @@ class BaseTeleport(KDS.Build.Tile):
         self.interactable: bool = True
         self.setDark: Optional[int] = None
 
-        super().__init__(position, -1)
-        self.serialNumber: int = serialNumber
-        self.texture: pygame.Surface | None = telep_textures[self.serialNumber]
+        super().__init__(position, serialNumber, textureLookupOverride=telep_textures)
+        self.texture = telep_textures[self.serialNumber]
         self.checkCollision: bool = False
         self.specialTileFlag: bool = True
         self.resetScroll: bool = True
@@ -2202,7 +2199,6 @@ class InvisibleTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.lastCollision: bool = False
-        self.texture = None
 
     def update(self):
         collision = bool(self.rect.colliderect(Player.rect))
