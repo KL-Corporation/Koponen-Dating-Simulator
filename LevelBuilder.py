@@ -144,6 +144,8 @@ class TextureHolder:
         self.trueScale: Final[set[str]] = set()
         self.noCollision: Final[set[str]] = set()
 
+        self.NotFoundFallback: TextureHolder.TextureData | None = None
+
     def __iter__(self):
         self.iterIndex: int = 0
         self.iterValues: List[TextureHolder.TextureData] = []
@@ -192,9 +194,11 @@ class TextureHolder:
     def GetData(self, serialNumber: str) -> TextureHolder.TextureData:
         try:
             return self.data[UnitType(int(serialNumber[0]))][serialNumber]
-        except Exception as e:
-            KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! {type(e).__name__}: {e}")
-            return TEXTURE_NOT_FOUND
+        except Exception:
+            if self.NotFoundFallback is not None:
+                return self.NotFoundFallback
+            else:
+                raise
 
     def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
         return self.GetData(serialNumber).texture
@@ -210,9 +214,10 @@ class TextureHolder:
         for t in self.data.values():
             for d in t.values():
                 d.rescaleTexture()
-        LevelPropData.rescale()
 
-TEXTURE_NOT_FOUND = TextureHolder.TextureData("----", "<error>", pygame.image.load("Assets/Editor/Textures/missing.png").convert())
+        if self.NotFoundFallback is not None:
+            self.NotFoundFallback.rescaleTexture()
+        LevelPropData.rescale()
 
 #region Textures
 Textures = TextureHolder()
@@ -238,6 +243,8 @@ Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo"
 Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa")
 Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
 Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC")
+
+Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", pygame.image.load("Assets/Editor/Textures/missing.png").convert())
 #endregion
 
 ### GLOBAL VARIABLES ###
@@ -1718,10 +1725,11 @@ def main():
     if not mainRunning: return
 
     textureRescaleHandle: Optional[KDS.Jobs.JobHandle] = None
+    new_rescale_requested: bool = False
 
     def zoom(add: int, scroll: List[int], grid: List[List[UnitData]]):
         global scalesize, scaleMultiplier
-        nonlocal textureRescaleHandle
+        nonlocal new_rescale_requested
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         hitPos = grid[int(KDS.Math.Clamp(mouse_pos_scaled[1], 0, gridSize[1] - 1))][int(KDS.Math.Clamp(mouse_pos_scaled[0], 0, gridSize[0] - 1))].pos
@@ -1735,8 +1743,8 @@ def main():
         mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
         scroll[0] += hitPos[0] - mouse_pos_scaled[0]
         scroll[1] += hitPos[1] - mouse_pos_scaled[1]
-        if textureRescaleHandle != None: textureRescaleHandle.future.cancel() # Try to cancel process. If not possible; just run it parallel... This should not break anything, because CPython still has it's stupid GIL
-        textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
+
+        new_rescale_requested = True
 
     openCommandTerminal: bool = False
 
@@ -1863,6 +1871,11 @@ def main():
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         # second event check fixes some race conditions and edge cases
+
+        if new_rescale_requested:
+            if textureRescaleHandle is None or textureRescaleHandle.IsComplete:
+                textureRescaleHandle = KDS.Jobs.Schedule(Textures.RescaleTextures)
+                new_rescale_requested = False
 
         if openCommandTerminal:
             inputConsole_output: Final = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
