@@ -531,8 +531,13 @@ class Bullet:
         # Early return so that the bullet has no chance of dealing damage (or rendering) if the gun is embedded into a wall
         if not self.player_rect_handled:
             if self.player_rect is not None:
-                pr_pos: tuple[int, int] = (self.player_rect.centerx, self.rect.top)
-                pr_test = pygame.Rect(pr_pos[0], pr_pos[1], self.rect.right - pr_pos[0], self.rect.height)
+                test_leftright: tuple[int, int]
+                if self.rect.centerx > self.player_rect.centerx:
+                    test_leftright = (self.player_rect.centerx, self.rect.right)
+                else:
+                    test_leftright = (self.rect.left, self.player_rect.centerx)
+
+                pr_test = pygame.Rect(test_leftright[0], self.rect.top, test_leftright[1] - test_leftright[0], self.rect.height)
                 pr_had_col: bool = collision_test_fast(pr_test, self.environment_obstacles) is not None # increase overscan if necessary
                 if KDS.Debug.Enabled:
                     pygame.draw.rect(Surface, KDS.Colors.AviatorRed if pr_had_col else KDS.Colors.Gray, (pr_test.x - scroll[0], pr_test.y - scroll[1], *pr_test.size))
