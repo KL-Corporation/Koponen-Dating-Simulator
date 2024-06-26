@@ -1,7 +1,8 @@
 {
     "Invisible Teleport": {
         "serialNumber": 1,
-        "path": "telep.png"
+        "path": "telep.png",
+        "textureOverrideColorkey": null
     },
     "Door Teleport": {
         "serialNumber": 2,

@@ -709,6 +709,7 @@
     "Glass Pane": {
         "serialNumber": 102,
         "path": "glass_pane.png",
+        "textureOverrideAlpha": 30,
         "specialTile": true,
         "noCollision": false,
         "trueScale": false
@@ -891,6 +892,7 @@
     "Avarn Car": {
         "serialNumber": 128,
         "path": "avarn_car.png",
+        "textureOverrideColorkey": "#00FFFF",
         "specialTile": true,
         "noCollision": true,
         "trueScale": true

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 
+import KDS.BuildData
 import KDS.LevelBuilder
 import KDS.LevelBuilder.LegacyGameMap
 import KDS.LevelBuilder.LegacyTileProp
@@ -114,29 +115,12 @@ harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15)
 
 class TextureHolder:
     class TextureData:
-        def __init__(self, serialNumber: str, path: Optional[str], name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]], alpha: int = -1) -> None:
+        def __init__(self, serialNumber: str, name: str, texture: pygame.Surface) -> None:
             self.serialNumber = serialNumber
-            if path != None:
-                self.path: str = path
-                self.directory, self.filename = os.path.split(self.path)
-                self.texture: pygame.Surface = pygame.image.load(path).convert()
-            else:
-                self.path: str = "<error>"
-                KDS.Logging.AutoError("Texture path was None.")
-                self.directory = "<error>"
-                self.filename = "<error>"
-                self.texture: pygame.Surface = pygame.Surface((gamesize, gamesize))
+            self.texture = texture
             self.texture_size: Tuple[int, int] = self.texture.get_size()
             self.name = name
-            if colorkey != None:
-                if len(colorkey) == 3:
-                    self.texture.set_colorkey(colorkey)
-                elif len(colorkey) == 2:
-                    self.texture.set_colorkey(self.texture.get_at(colorkey))
-                else:
-                    KDS.Logging.AutoError("Invalid colorkey.")
-            if 0 <= alpha <= 255:
-                self.texture.set_alpha(alpha)
+
             self.rescaleTexture()
 
         def rescaleTexture(self):
@@ -157,6 +141,9 @@ class TextureHolder:
         self.serials: List[str] = []
         self.names: List[str] = []
 
+        self.trueScale: Final[set[str]] = set()
+        self.noCollision: Final[set[str]] = set()
+
     def __iter__(self):
         self.iterIndex: int = 0
         self.iterValues: List[TextureHolder.TextureData] = []
@@ -171,20 +158,43 @@ class TextureHolder:
         self.iterIndex += 1
         return output
 
-    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: Optional[Union[Tuple[int, int, int], Tuple[int, int]]] = KDS.Colors.White, alpha: int = -1) -> None:
-        try:
-            self.data[UnitType(int(serialNumber[0]))][serialNumber] = TextureHolder.TextureData(serialNumber, path, name, colorkey, alpha)
-            self.serials.append(serialNumber)
-            self.names.append(name)
-        except Exception as e:
-            KDS.Logging.AutoError(f"Could not add texture \"{serialNumber}\" at path: \"{path}\"! Exception: {e}")
+    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: tuple[int, int, int] | None = KDS.Colors.White, alpha: int | None = None) -> None:
+        texture: pygame.Surface = pygame.image.load(path).convert()
+        if colorkey is not None:
+            texture.set_colorkey(colorkey)
+        if alpha is not None:
+            texture.set_alpha(alpha)
+
+        self._Add(TextureHolder.TextureData(serialNumber, name, texture))
+
+    def AddBuildData(self, serialPrefix: int, buildData: KDS.BuildData.BuildData, checkTruescale: bool = False, checkNoCollision: bool = False):
+        if serialPrefix < 0 or serialPrefix > 9:
+            raise ValueError("Invalid serial prefix.")
+
+        for dName, d in buildData.data.items():
+            localSerial: int = d["serialNumber"]
+            globalSerial: str = f"""{serialPrefix}{localSerial:03d}"""
+
+            if checkTruescale and d["trueScale"] == True:
+                self.trueScale.add(globalSerial)
+            if checkNoCollision and d["noCollision"] == True:
+                self.noCollision.add(globalSerial)
+
+            self._Add(TextureHolder.TextureData(globalSerial, dName, buildData.textures[localSerial]))
+
+    def _Add(self, texture_data: TextureData):
+        serialNumber: str = texture_data.serialNumber
+
+        self.data[UnitType(int(serialNumber[0]))][serialNumber] = texture_data
+        self.serials.append(serialNumber)
+        self.names.append(texture_data.name)
 
     def GetData(self, serialNumber: str) -> TextureHolder.TextureData:
         try:
             return self.data[UnitType(int(serialNumber[0]))][serialNumber]
         except Exception as e:
             KDS.Logging.AutoError(f"Could not fetch data \"{serialNumber}\"! {type(e).__name__}: {e}")
-            return TextureHolder.TextureData("----", "Assets/Editor/Textures/missing.png", "<error>", None)
+            return TEXTURE_NOT_FOUND
 
     def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
         return self.GetData(serialNumber).texture
@@ -202,44 +212,26 @@ class TextureHolder:
                 d.rescaleTexture()
         LevelPropData.rescale()
 
+TEXTURE_NOT_FOUND = TextureHolder.TextureData("----", "<error>", pygame.image.load("Assets/Editor/Textures/missing.png").convert())
+
 #region Textures
 Textures = TextureHolder()
-trueScale: Set[str] = set()
-noCollision: Set[str] = set()
 
-with open("Assets/Data/Build/tiles.kdf") as f:
-    tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-for dName, d in tileData.items():
-    srl = f"""0{d["serialNumber"]:03d}"""
-    Textures.AddTexture(srl, f"""Assets/Textures/Tiles/{d["path"]}""", dName, colorkey=KDS.Colors.White if srl != "0128" else KDS.Colors.Cyan, alpha= -1 if srl != "0102" else 30)
-    if d["trueScale"] == True:
-        trueScale.add(srl)
-    if d["noCollision"] == True:
-        noCollision.add(srl)
+Textures.AddBuildData(0, KDS.BuildData.load_tiles(), checkTruescale=True, checkNoCollision=True)
+Textures.AddBuildData(1, KDS.BuildData.load_items())
+Textures.AddBuildData(3, KDS.BuildData.load_teleports())
 
-with open("Assets/Data/Build/items.kdf") as f:
-    itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-for dName, d in itemData.items():
-    srl = f"""1{d["serialNumber"]:03d}"""
-    Textures.AddTexture(srl, f"""Assets/Textures/Items/{d["path"]}""", dName)
-
-with open("Assets/Data/Build/teleports.kdf") as f:
-    teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-for dName, d in teleportData.items():
-    srl = f"""3{d["serialNumber"]:03d}"""
-    Textures.AddTexture(srl, f"""Assets/Textures/Teleports/{d["path"]}""", dName, KDS.Colors.White if srl != "3001" else None)
-
-Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "Imp", (0, 0))
-Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "Seargeant", (0, 0))
-Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "Drug Dealer", (0, 0))
-Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "Turbo Shotgunner", (0, 0))
-Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "Mafiaman", (0, 0))
-Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", (0, 0))
-Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", (0, 0))
-Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy", (0, 0))
-Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", (0, 0))
-Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog", (0, 0))
-Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie", (0, 0))
+Textures.AddTexture("2001", "Assets/Textures/Animations/imp_walking_0.png", "Imp")
+Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png", "Seargeant")
+Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "Drug Dealer")
+Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "Turbo Shotgunner")
+Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "Mafiaman")
+Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", KDS.Colors.Cyan)
+Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", KDS.Colors.Cyan)
+Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy")
+Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", KDS.Colors.Cyan)
+Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog")
+Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie")
 
 Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
 Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
@@ -501,7 +493,7 @@ class UnitData:
     @staticmethod
     def renderSerial(surface: pygame.Surface, properties: Optional[PropertiesData], serial: str, pos: Tuple[int, int], lightOverlay: bool = False):
         textureData = Textures.GetData(serial)
-        blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
+        blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in Textures.trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
 
         #region Blitting
@@ -512,7 +504,7 @@ class UnitData:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
-                    if textureData.serialNumber not in noCollision: # and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
+                    if textureData.serialNumber not in Textures.noCollision: # and textureData.darkOverlay is not None: # I don't know if pygame.Surface has a custom equals operator.
                         surface.blit(textureData.darkOverlay, blitPos)
                 else:
                     pygame.draw.rect(surface, KDS.Colors.White, (pos[0], pos[1], scalesize, scalesize))
@@ -1433,7 +1425,8 @@ def materialMenu(previousMaterial: str) -> str:
         for selection in selectorRects:
             selection: selectorRect
             rndY = selection.rect.y - yCalc
-            scaledTex = KDS.Convert.AspectScale(selection.data.texture, (BLOCKSIZE, BLOCKSIZE))
+            margin_removed_subsurface = selection.data.texture.subsurface(selection.data.texture.get_bounding_rect())
+            scaledTex = KDS.Convert.AspectScale(margin_removed_subsurface, (BLOCKSIZE, BLOCKSIZE))
             display.blit(scaledTex, (selection.rect.x + selection.rect.width // 2 - scaledTex.get_width() // 2, rndY + selection.rect.height // 2 - scaledTex.get_height() // 2))
             if selection.rect.collidepoint(mpos[0], mpos[1] + yCalc):
                 pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, rndY, BLOCKSIZE, BLOCKSIZE), 3)

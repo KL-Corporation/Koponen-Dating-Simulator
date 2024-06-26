@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import os
+
+import KDS.BuildData
 #region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -615,43 +617,6 @@ class WorldData:
 #region Data
 game_initialization_logger.start("Loading Data...")
 
-def load_tiles() -> KDS.Build.DataInitArgs:
-    with open("Assets/Data/Build/tiles.kdf", "r", encoding="utf-8") as f:
-        tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-        texture: pygame.Surface = pygame.image.load(f"""Assets/Textures/Tiles/{d["path"]}""").convert()
-        texture.set_colorkey(KDS.Colors.White)
-
-        setAlpha: int | None = d.get("setTextureAlpha")
-        if setAlpha is not None:
-            texture.set_alpha(setAlpha)
-
-        t_textures[d_srl] = texture
-
-    return KDS.Build.DataInitArgs(tileData, t_textures)
-
-def load_teleports() -> dict[int, pygame.Surface]:
-    with open("Assets/Data/Build/teleports.kdf", "r", encoding="utf-8") as f:
-        teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-    telep_textures: Dict[int, pygame.Surface] = {}
-    for d in teleportData.values():
-        d_srl = d["serialNumber"]
-        texture: pygame.Surface = pygame.image.load(f"""Assets/Textures/Teleports/{d["path"]}""").convert()
-        texture.set_colorkey(KDS.Colors.White)
-        telep_textures[d_srl] = texture
-
-    return telep_textures
-
-def load_items() -> KDS.Build.DataInitArgs:
-    with open("Assets/Data/Build/items.kdf", "r", encoding="utf-8") as f:
-        itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-    i_textures: Dict[int, pygame.Surface] = {}
-    for d in itemData.values():
-        d_srl = d["serialNumber"]
-        i_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Items/{d["path"]}""").convert()
-        i_textures[d_srl].set_colorkey(KDS.Colors.White)
-
-    return KDS.Build.DataInitArgs(itemData, i_textures)
-
 def load_path_sounds() -> dict[str, list[pygame.mixer.Sound]]:
     path_sounds: Dict[str, List[pygame.mixer.Sound]] = {}
     default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
@@ -664,9 +629,9 @@ def load_path_sounds() -> dict[str, list[pygame.mixer.Sound]]:
 
     return path_sounds
 
-KDS.Build.init(tile_data=load_tiles(), item_data=load_items())
+KDS.Build.init(tile_data=KDS.BuildData.load_tiles(), item_data=KDS.BuildData.load_items())
 
-telep_textures: dict[int, pygame.Surface] = load_teleports()
+telep_textures: dict[int, pygame.Surface] = KDS.BuildData.load_teleports().textures
 path_sounds: Final[dict[str, list[pygame.mixer.Sound]]] = load_path_sounds()
 
 def defaultEventHandler(event: pygame.event.Event, *, ignore_quit: bool = False) -> bool:
@@ -1720,8 +1685,6 @@ class HotelBed(Sleepable):
 class AvarnCar(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
-        assert self.texture != None
-        self.texture.set_colorkey(KDS.Colors.Cyan) # !!! FUCK
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
         l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3))) # WTF???
         self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)
@@ -2024,7 +1987,6 @@ class CashRegister(KDS.Build.Tile):
             cost_render: pygame.Surface = tip_font.render(f"{self.Cost}.00", True, KDS.Colors.Green)
             self.cost_render = (cost_txt, cost_render)
 
-        assert self.texture != None, "Cash register texture should not be None!"
         screen.blit(self.animation.update(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         screen.blit(self.cost_render[1], (self.rect.x - scroll[0] + 109 - int(self.cost_render[1].get_width() / 2), self.rect.y - scroll[1] + 56))
 
@@ -2452,7 +2414,6 @@ class WoodDoorSideTeleport(WoodDoorTeleport):
 class NysseTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        assert self.texture != None, "Nysse teleport should have a texture!"
         self.rect = pygame.Rect(position[0], position[1] - self.texture_size[1] + 34, self.texture_size[0], self.texture_size[1])
         self.blinker: bool = True
         self.headlights: bool = True

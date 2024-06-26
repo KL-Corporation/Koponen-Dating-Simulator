@@ -1,7 +1,8 @@
 from __future__ import annotations
 import dataclasses
-from typing import Dict, Any, Literal, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
+from typing import Dict, Any, Final, NamedTuple, Self, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
 import pygame
+import KDS.BuildData
 import KDS.UI
 import KDS.World
 import KDS.ConfigManager
@@ -25,11 +26,13 @@ if TYPE_CHECKING:
 else:
     PlayerClass = None
 
-def init(tileData: Dict[str, Dict[str, Any]], itemData: Dict[str, Dict[str, Any]], t_textures: Dict[int, pygame.Surface], i_textures: Dict[int, pygame.Surface]):
+
+
+def init(tile_data: KDS.BuildData.BuildData, item_data: KDS.BuildData.BuildData):
     Tile.noCollision.clear()
     Tile.trueScale.clear()
     Tile.specialTiles.clear()
-    for d in tileData.values():
+    for d in tile_data.data.values():
         srl = d["serialNumber"]
         if d["noCollision"] == True:
             Tile.noCollision.add(srl)
@@ -41,7 +44,7 @@ def init(tileData: Dict[str, Dict[str, Any]], itemData: Dict[str, Dict[str, Any]
     Item.inventoryItems.clear()
     Item.inventoryDoubles.clear()
     Item.contraband.clear()
-    for d in itemData.values():
+    for d in item_data.data.values():
         srl = d["serialNumber"]
         if d["supportsInventory"] == True:
             Item.inventoryItems.add(srl)
@@ -51,10 +54,15 @@ def init(tileData: Dict[str, Dict[str, Any]], itemData: Dict[str, Dict[str, Any]
             Item.contraband.add(srl)
 
     Tile._renderPadding = KDS.ConfigManager.GetSetting("Renderer/Tile/renderPadding", ...)
-    Tile._textures = t_textures
-    Item._textures = i_textures
+    Tile.initTextures(tile_data.textures)
+    Tile.DATA = tile_data.data
+
+    Item.initTextures(item_data.textures)
+    Item.DATA = item_data.data
 
 class Tile:
+    DATA: dict[str, dict[str, Any]]
+
     specialTilesClasses: Dict[int, Type[Tile]] = {}
 
     noCollision: Set[int] = set()
@@ -64,14 +72,31 @@ class Tile:
     _renderPadding: int = 0
     _textures: Dict[int, pygame.Surface] = {}
 
+    @staticmethod
+    def initTextures(textures: dict[int, pygame.Surface]):
+        Tile._textures.clear()
+        Tile._textures.update(textures)
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         self.serialNumber = serialNumber
-        self.texture = Tile._textures[self.serialNumber] if serialNumber != -1 else None
+        self.texture: pygame.Surface | None = Tile._textures[self.serialNumber] if serialNumber != -1 else None # teleports pass -1 and set their own texture
+        """
+        ### DO NOT MODIFY THIS TEXTURE
+        You can modify the texture's alpha or colorkey inside the tiles.kdf file.
+
+        Available options are (might not be exhaustive):
+            - textureOverrideAlpha
+            - textureOverrideColorkey
+        """
+
+        self.texture_size: tuple[int, int] = self.texture.get_size() if self.texture != None else (0, 0)
+
         if serialNumber in Tile.trueScale:
             assert self.texture != None, f"Truescale tile's serialNumber is -1?? Serial: {self.serialNumber}"
             self.rect = pygame.Rect(position[0] - self.texture.get_width() + 34, position[1] - self.texture.get_height() + 34, self.texture.get_width(), self.texture.get_height())
         else:
             self.rect = pygame.Rect(position[0], position[1], 34, 34)
+
         self.specialTileFlag = serialNumber in Tile.specialTiles
         self.checkCollision = serialNumber not in Tile.noCollision
         self.collisionDirection = KDS.World.CollisionDirection.All
@@ -82,14 +107,14 @@ class Tile:
     @staticmethod
     def renderUnit(unit: Tile, surface: pygame.Surface, scroll: Sequence[int]):
         if not unit.specialTileFlag:
-            if unit.texture != None:
+            if unit.texture is not None:
                 surface.blit(unit.texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
         else:
             texture = unit.update()
-            if texture != None:
+            if texture is not None:
                 surface.blit(texture, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
 
-        if unit.darkOverlay != None:
+        if unit.darkOverlay is not None:
             surface.blit(unit.darkOverlay, (unit.rect.x - scroll[0], unit.rect.y - scroll[1]))
 
     @staticmethod
@@ -133,7 +158,20 @@ class Tile:
     def onDestroy(self) -> None:
         pass
 
+class _ItemTexture(NamedTuple):
+    texture: pygame.Surface
+    content_rect: pygame.Rect
+
+    @classmethod
+    def construct_from_texture(cls, texture: pygame.Surface) -> Self:
+        return cls(
+            texture,
+            texture.get_bounding_rect()
+        )
+
 class Item:
+    DATA: dict[str, dict[str, Any]]
+
     infiniteAmmo: bool = False
 
     _canPickupItem: bool = True
@@ -149,14 +187,28 @@ class Item:
     inventoryDoubles: Set[int] = set()
     contraband: Set[int] = set()
 
-    _textures: Dict[int, pygame.Surface] = {}
+    _textures: Dict[int, _ItemTexture] = {}
+
+    @staticmethod
+    def initTextures(textures: dict[int, pygame.Surface]):
+        Item._textures.clear()
+        for serial, tex in textures.items():
+            Item._textures[serial] = _ItemTexture.construct_from_texture(tex)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         if not isinstance(self, Item.serialNumbers[serialNumber]):
             raise TypeError(f"Invalid type {type(self).__name__} for item with serial {serialNumber}")
-        self.texture = Item._textures[serialNumber]
-        self.texture_size = self.texture.get_size() if self.texture != None else (0, 0)
-        self.rect = pygame.Rect(position[0], position[1] + (34 - self.texture_size[1]), self.texture_size[0], self.texture_size[1])
+        self.texture: Final[pygame.Surface]
+        """
+        ### DO NOT MODIFY THIS TEXTURE
+        Final value can be reassigned if you are COMPLETELY SURE that the old and new texture's contents are same. \\
+        (texture.get_bounding_rect() are equal between the old and new texture)
+        """
+
+        self.content_rect: Final[pygame.Rect]
+        self.texture, self.content_rect = Item._textures[serialNumber]
+
+        self.rect = pygame.Rect(position[0], position[1] + (34 - self.content_rect.height), self.content_rect.width, self.content_rect.height)
         self.serialNumber = serialNumber
         self.physics = False
         self.vertical_momentum: float = 0.0
@@ -172,8 +224,10 @@ class Item:
         for renderable in Item_list:
             if KDS.Debug.Enabled:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
-            if renderable.texture != None:
-                Surface.blit(renderable.texture, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1]))
+            Surface.blit(renderable.texture,
+                         (renderable.rect.x - renderable.content_rect.x - scroll[0],
+                          renderable.rect.y - renderable.content_rect.y - scroll[1])
+            )
             if renderable.physics:
                 renderable.vertical_momentum = min(renderable.vertical_momentum + Item.fall_speed, Item.fall_max_velocity)
                 collisions = KDS.World.EntityMover().move(renderable.rect, (renderable.horizontal_momentum, renderable.vertical_momentum), Tile_list)
