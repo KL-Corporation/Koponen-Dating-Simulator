@@ -615,39 +615,59 @@ class WorldData:
 #region Data
 game_initialization_logger.start("Loading Data...")
 
-with open("Assets/Data/Build/tiles.kdf", "r", encoding="utf-8") as f:
-    tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-t_textures: Dict[int, pygame.Surface] = {}
-for d in tileData.values():
-    d_srl = d["serialNumber"]
-    t_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Tiles/{d["path"]}""").convert()
-    t_textures[d_srl].set_colorkey(KDS.Colors.White)
+def load_tiles() -> KDS.Build.DataInitArgs:
+    with open("Assets/Data/Build/tiles.kdf", "r", encoding="utf-8") as f:
+        tileData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+        texture: pygame.Surface = pygame.image.load(f"""Assets/Textures/Tiles/{d["path"]}""").convert()
+        texture.set_colorkey(KDS.Colors.White)
 
-with open("Assets/Data/Build/teleports.kdf", "r", encoding="utf-8") as f:
-    teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-telep_textures: Dict[int, Optional[pygame.Surface]] = {}
-for d in teleportData.values():
-    telep_textures[d["serialNumber"]] = pygame.image.load(f"""Assets/Textures/Teleports/{d["path"]}""").convert()
+        setAlpha: int | None = d.get("setTextureAlpha")
+        if setAlpha is not None:
+            texture.set_alpha(setAlpha)
 
-with open("Assets/Data/Build/items.kdf", "r", encoding="utf-8") as f:
-    itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
-i_textures: Dict[int, pygame.Surface] = {}
-for d in itemData.values():
-    d_srl = d["serialNumber"]
-    i_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Items/{d["path"]}""").convert()
-    i_textures[d_srl].set_colorkey(KDS.Colors.White)
+        t_textures[d_srl] = texture
 
-path_sounds: Dict[str, List[pygame.mixer.Sound]] = {}
-default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
-sounds = []
-for p in default_paths:
-    sounds.append(pygame.mixer.Sound(os.path.join("Assets/Audio/Tiles/path_sounds/default", p)))
-path_sounds["default"] = sounds
-#for p in path_sounds_temp:
-#    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
-del default_paths, sounds
+    return KDS.Build.DataInitArgs(tileData, t_textures)
 
-KDS.Build.init(tileData, itemData, t_textures, i_textures)
+def load_teleports() -> dict[int, pygame.Surface]:
+    with open("Assets/Data/Build/teleports.kdf", "r", encoding="utf-8") as f:
+        teleportData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+    telep_textures: Dict[int, pygame.Surface] = {}
+    for d in teleportData.values():
+        d_srl = d["serialNumber"]
+        texture: pygame.Surface = pygame.image.load(f"""Assets/Textures/Teleports/{d["path"]}""").convert()
+        texture.set_colorkey(KDS.Colors.White)
+        telep_textures[d_srl] = texture
+
+    return telep_textures
+
+def load_items() -> KDS.Build.DataInitArgs:
+    with open("Assets/Data/Build/items.kdf", "r", encoding="utf-8") as f:
+        itemData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+    i_textures: Dict[int, pygame.Surface] = {}
+    for d in itemData.values():
+        d_srl = d["serialNumber"]
+        i_textures[d_srl] = pygame.image.load(f"""Assets/Textures/Items/{d["path"]}""").convert()
+        i_textures[d_srl].set_colorkey(KDS.Colors.White)
+
+    return KDS.Build.DataInitArgs(itemData, i_textures)
+
+def load_path_sounds() -> dict[str, list[pygame.mixer.Sound]]:
+    path_sounds: Dict[str, List[pygame.mixer.Sound]] = {}
+    default_paths = os.listdir("Assets/Audio/Tiles/path_sounds/default")
+    sounds = []
+    for p in default_paths:
+        sounds.append(pygame.mixer.Sound(os.path.join("Assets/Audio/Tiles/path_sounds/default", p)))
+    path_sounds["default"] = sounds
+    #for p in path_sounds_temp:
+    #    path_sounds[int(p)] = pygame.mixer.Sound(path_sounds_temp[p])
+
+    return path_sounds
+
+KDS.Build.init(tile_data=load_tiles(), item_data=load_items())
+
+telep_textures: dict[int, pygame.Surface] = load_teleports()
+path_sounds: Final[dict[str, list[pygame.mixer.Sound]]] = load_path_sounds()
 
 def defaultEventHandler(event: pygame.event.Event, *, ignore_quit: bool = False) -> bool:
     KDS.Keys.RegisterEvent(event)
@@ -772,7 +792,6 @@ class Toilet(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):
         super().__init__(position, serialNumber)
         self.burning = _burning
-        self.texture = t_textures[serialNumber]
         self.animation = KDS.Animator.Animation("toilet_anim", 3, 5, (KDS.Colors.White), KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
@@ -801,7 +820,6 @@ class Trashcan(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int, _burning=False):
         super().__init__(position, serialNumber)
         self.burning = _burning
-        self.texture = t_textures[serialNumber]
         self.animation = KDS.Animator.Animation("trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.checkCollision = True
         self.light_scale = 150
@@ -854,7 +872,6 @@ class Jukebox(KDS.Build.Tile):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.checkCollision = False
 
         self.lastPlayed = [-69 for _ in range(5)]
@@ -951,7 +968,6 @@ class Door(KDS.Build.Tile):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, closingCounter = -1):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.opentexture = door_open
         self.rect = pygame.Rect(position[0], position[1], 5, 68)
         self.open = False
@@ -997,7 +1013,6 @@ class Door(KDS.Build.Tile):
 class Landmine(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] + 26, 22, 11)
         self.checkCollision = False
 
@@ -1018,8 +1033,8 @@ class Ladder(KDS.Build.Tile):
     ct = 0
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
-        self.rect = pygame.Rect(position[0] + round(17 - self.texture.get_width() / 2), position[1] + round(17 - self.texture.get_height() / 2), self.texture.get_width(), self.texture.get_height())
+        assert(self.texture is not None)
+        self.rect = pygame.Rect(position[0] + round(17 - self.texture_size[0] / 2), position[1] + round(17 - self.texture_size[1] / 2), self.texture_size[0], self.texture_size[1])
         self.checkCollision = False
 
     def update(self):
@@ -1033,7 +1048,6 @@ class Ladder(KDS.Build.Tile):
 class Lamp(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1], 14, 21)
         self.checkCollision = True
         self.coneheight = 90
@@ -1063,7 +1077,6 @@ class Lamp(KDS.Build.Tile):
 class LampChain(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0] + 6, position[1], 1, 34)
         self.checkCollision = True
 
@@ -1075,7 +1088,6 @@ class DecorativeHead(KDS.Build.Tile):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]-26, 28, 60)
         self.checkCollision = False
         self.praying = False
@@ -1117,7 +1129,6 @@ class DecorativeHead(KDS.Build.Tile):
 class Tree(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]-50, 47, 84)
         self.checkCollision = False
 
@@ -1127,7 +1138,6 @@ class Tree(KDS.Build.Tile):
 class Rock0(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1]+19, 32, 15)
         self.checkCollision = True
 
@@ -1137,7 +1147,7 @@ class Rock0(KDS.Build.Tile):
 class Torch(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.animation = KDS.Animator.Animation("tall_torch_burning", 4, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1] - 16, 20, 50)
         self.checkCollision = False
         self.light_scale = 150
@@ -1152,7 +1162,7 @@ class Torch(KDS.Build.Tile):
         if random.randint(0, 4) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y + 8), random.randint(3, 6), 30, 1))
         Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(self.light_scale, 1900), True))
-        return self.texture.update()
+        return self.animation.update()
 
 class GoryHead(KDS.Build.Tile):
     blh: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/bloody_h.png").convert()
@@ -1160,7 +1170,6 @@ class GoryHead(KDS.Build.Tile):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 28, 34, 62)
         self.checkCollision = False
         self.gibbed = False
@@ -1178,7 +1187,6 @@ class LevelEnder(KDS.Build.Tile):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0], position[1] - 16, 34, 50)
         self.checkCollision = False
 
@@ -1189,12 +1197,11 @@ class LevelEnder(KDS.Build.Tile):
             screen.blit(level_ender_tip, (self.rect.centerx - level_ender_tip.get_width() / 2 - scroll[0], self.rect.centery - 50 - scroll[1]))
             if KDS.Keys.functionKey.clicked:
                 KDS.Missions.Listeners.LevelEnder.Trigger()
-        return t_textures[self.serialNumber]
+        return self.texture
 
 class LevelEnderDoor(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.opentexture = exit_door_open
         self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         self.checkCollision = False
@@ -1256,7 +1263,7 @@ class LevelEnderTransparent(KDS.Build.Tile):
 class Candle(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.animation = KDS.Animator.Animation("candle_burning", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0], position[1]+14, 20, 20)
         self.checkCollision = False
         self.light_scale = 40
@@ -1267,12 +1274,11 @@ class Candle(KDS.Build.Tile):
         if random.randint(0, 50) == 0:
             Particles.append(KDS.World.Lighting.Fireparticle((self.rect.centerx - 3, self.rect.y), random.randint(3, 6), 20, 0.01))
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx - self.light_scale // 2, self.rect.y - self.light_scale // 2), KDS.World.Lighting.Shapes.circle.get(self.light_scale, 2000)))
-        return self.texture.update()
+        return self.animation.update()
 
 class LampPoleLamp(KDS.Build.Tile):
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]-6, position[1]-6, 40, 40)
         self.checkCollision = False
 
@@ -1283,7 +1289,6 @@ class LampPoleLamp(KDS.Build.Tile):
 class Chair(KDS.Build.Tile):
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]-6, position[1]-8, 40, 42)
         self.checkCollision = False
 
@@ -1293,7 +1298,6 @@ class Chair(KDS.Build.Tile):
 class SkullTile(KDS.Build.Tile):
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0]+7, position[1]+7, 27, 27)
         self.checkCollision = False
 
@@ -1321,7 +1325,6 @@ class RespawnAnchor(KDS.Build.Tile):
 
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.ontexture = RespawnAnchor.respawn_anchor_on
         self.checkCollision = False
         RespawnAnchor.rspP_list.append(self)
@@ -1347,7 +1350,6 @@ class RespawnAnchor(KDS.Build.Tile):
 class Spruce(KDS.Build.Tile):
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0] - 10, position[1] - 40, 63, 75)
         self.checkCollision = False
 
@@ -1357,7 +1359,6 @@ class Spruce(KDS.Build.Tile):
 class AllahmasSpruce(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.rect = pygame.Rect(position[0] - 10, position[1] - 40, 63, 75)
         self.checkCollision = False
         self.spruce_colors = (0.0, 60.0, 120.0, 240.0)
@@ -1449,7 +1450,6 @@ class FlickerTrigger(KDS.Build.Tile):
 class ImpaledBody(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.animation = KDS.Animator.Animation("impaled_corpse", 2, 50, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         self.rect = pygame.Rect(position[0] - (self.animation.get_width() - 34), position[1] - (self.animation.get_height() - 34), self.animation.get_width(), self.animation.get_height())
         self.checkCollision = False
@@ -1552,8 +1552,6 @@ class GlassPane(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
         self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        self.texture = t_textures[serialNumber]
-        self.texture.set_alpha(30)
 
     def lateInit(self):
         self.darkOverlay = None
@@ -1564,8 +1562,7 @@ class GlassPane(KDS.Build.Tile):
 class RoofPlanks(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
-        w, h = self.texture.get_size()
+        w, h = self.texture_size
         w34 = 34 - w
         h34 = 34 - h
         self.rect = pygame.Rect(position[0] + w34, position[1] + h34, w, h)
@@ -1581,7 +1578,6 @@ class Patja(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
         # Rect is handled by trueScale
-        self.texture = t_textures[serialNumber]
         self.kaatunutTexture = Patja.kaatunut_texture
         self.checkCollision = False
         self.kaatunut = False
@@ -1616,7 +1612,6 @@ class Crackhead(KDS.Build.Tile):
 class DoorFront(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         self.opentexture = exit_door_open
         self.rect = pygame.Rect(position[0], position[1] - 34, 34, 68)
         self.checkCollision = False
@@ -1703,7 +1698,6 @@ class Sleepable(KDS.Build.Tile):
 class Tent(Sleepable):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.texture = t_textures[serialNumber]
         #Rect will be set automatically with trueScale.
         self.checkCollision = False
         self.inTent: bool = False
@@ -1727,7 +1721,7 @@ class AvarnCar(KDS.Build.Tile):
     def __init__(self, position, serialNumber) -> None:
         super().__init__(position, serialNumber)
         assert self.texture != None
-        self.texture.set_colorkey(KDS.Colors.Cyan)
+        self.texture.set_colorkey(KDS.Colors.Cyan) # !!! FUCK
         l_shape = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_narrow.texture, True, True)
         l_shape = pygame.transform.scale(l_shape, (int(l_shape.get_width() * 0.3), int(l_shape.get_height() * 0.3))) # WTF???
         self.light = KDS.World.Lighting.Light((self.rect.x - l_shape.get_width() + 20, self.rect.y - 7), l_shape)
@@ -2172,9 +2166,7 @@ class BaseTeleport(KDS.Build.Tile):
 
         super().__init__(position, -1)
         self.serialNumber: int = serialNumber
-        self.texture: Optional[pygame.Surface] = telep_textures[self.serialNumber]
-        if self.texture != None:
-            self.texture.set_colorkey(KDS.Colors.White)
+        self.texture: pygame.Surface | None = telep_textures[self.serialNumber]
         self.checkCollision: bool = False
         self.specialTileFlag: bool = True
         self.resetScroll: bool = True
@@ -2461,7 +2453,7 @@ class NysseTeleport(BaseTeleport):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         assert self.texture != None, "Nysse teleport should have a texture!"
-        self.rect = pygame.Rect(position[0], position[1] - self.texture.get_height() + 34, self.texture.get_width(), self.texture.get_height())
+        self.rect = pygame.Rect(position[0], position[1] - self.texture_size[1] + 34, self.texture_size[0], self.texture_size[1])
         self.blinker: bool = True
         self.headlights: bool = True
         self.blinkerIndex = 0
@@ -2662,7 +2654,8 @@ class iPuhelin(KDS.Build.Item):
             self.useCount += 1
         if self.useCount > 7:
             self.useCount = 7
-            self.texture = iPuhelin.realistic_texture
+            # HACK: Reassign Final variable to restore original iPuhelin behaviour with the new texture rendering behaviour.
+            self.texture = iPuhelin.realistic_texture # type: ignore
         return self.texture
 
     def pickup(self) -> None:
@@ -2986,7 +2979,7 @@ class Grenade(KDS.Build.Item):
         if KDS.Keys.actionKey.pressed:
             KDS.Audio.PlaySound(grenade_throw)
             Player.inventory.dropItem(forceDrop=True)
-            BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), Grenade.Slope, Grenade.Force, Player.direction, gravitational_factor=0.4, flight_time=140, texture = i_textures[29]))
+            BallisticObjects.append(KDS.World.BallisticProjectile(pygame.Rect(Player.rect.centerx, Player.rect.centery - 25, 10, 10), Grenade.Slope, Grenade.Force, Player.direction, gravitational_factor=0.4, flight_time=140, texture=self.texture))
         return self.texture
 
     def pickup(self) -> None:
@@ -3516,7 +3509,7 @@ def console(oldSurf: pygame.Surface):
     go_to_console = False
 
     itemDict: Dict[str, Union[str, Dict[str, str]]] = {}
-    for itemName, _data in itemData.items():
+    for itemName, _data in KDS.Build.Item.DATA.items():
         if _data["supportsInventory"] != True:
             continue
         modName = itemName.replace(" ", "_").lower().replace("(", "").replace(")", "")
