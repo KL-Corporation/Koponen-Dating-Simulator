@@ -245,12 +245,14 @@ class Save:
 @dataclass(frozen=True)
 class CampaignRun:
     score: int
+    deaths: int
     duration: timedelta
 
     @classmethod
-    def from_scores(cls, scores: KDS.Scores.CalculatedScores) -> Self:
+    def from_scores(cls, scores: KDS.Scores.RunScores) -> Self:
         return cls(
             score=scores.total_score,
+            deaths=scores.deathless_bonus.deathCount,
             duration=scores.time_bonus.gametime
         )
 
@@ -258,6 +260,7 @@ class CampaignRun:
     def to_json_obj(cls, run: Self) -> dict[str, Any]:
         return {
             "score": run.score,
+            "deaths": run.deaths,
             "duration": run.duration.total_seconds()
         }
 
@@ -266,12 +269,16 @@ class CampaignRun:
         score: int = json["score"]
         assert(isinstance(score, int))
 
+        deaths: int = json["deaths"]
+        assert(isinstance(deaths, int))
+
         duration_seconds: int | float = json["duration"]
         assert(isinstance(score, (int, float)))
         duration: timedelta = timedelta(duration_seconds)
 
         return cls(
             score=score,
+            deaths=deaths,
             duration=duration
         )
 
@@ -286,6 +293,9 @@ class CampaignSave:
 
     def get_min_duration(self) -> timedelta:
         return min(self._runs, key=lambda r: r.duration).duration
+
+    def get_total_deaths(self) -> int:
+        return sum(r.deaths for r in self._runs)
 
     def get_run_count(self) -> int:
         return len(self._runs)

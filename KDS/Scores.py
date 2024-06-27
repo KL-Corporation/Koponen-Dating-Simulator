@@ -229,14 +229,22 @@ class TimeBonusScore:
         return round(timeBonusFloat)
 
 @dataclass(frozen=True)
-class CalculatedScores:
+class DeathlessBonusScore:
+    deathCount: int
+
+    @property
+    def score(self) -> int:
+        return 500 if self.deathCount < 1 else 0
+
+@dataclass(frozen=True)
+class RunScores:
     score: int
-    deathless_bonus: int
+    deathless_bonus: DeathlessBonusScore
     time_bonus: TimeBonusScore
 
     @property
     def total_score(self) -> int:
-        return self.score + self.deathless_bonus + self.time_bonus.score
+        return self.score + self.deathless_bonus.score + self.time_bonus.score
 
 class ScoreCounter:
     @staticmethod
@@ -263,7 +271,7 @@ class ScoreCounter:
         GameTime.Stop()
 
     @staticmethod
-    def CalculateScores() -> CalculatedScores:
+    def GetScores() -> RunScores:
         global score, levelDeaths
         tb_start: Optional[int] = KDS.MapProp.LevelProp.Get("Data/TimeBonus/start", None)
         tb_end: Optional[int] = KDS.MapProp.LevelProp.Get("Data/TimeBonus/end", None)
@@ -271,12 +279,11 @@ class ScoreCounter:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})")
             tb_start = 1
             tb_end = 2
-        deathlessBonus = 500 if levelDeaths < 1 else 0
 
         gametime: timedelta = GameTime.GetGameTime()
-        return CalculatedScores(
+        return RunScores(
             score=score,
-            deathless_bonus=deathlessBonus,
+            deathless_bonus=DeathlessBonusScore(levelDeaths),
             time_bonus=TimeBonusScore(bonus_start=tb_start, bonus_end=tb_end, gametime=gametime)
         )
 
@@ -288,9 +295,9 @@ class ScoreAnimation:
     finished = False
 
     @staticmethod
-    def init(calcscores: CalculatedScores):
+    def init(calcscores: RunScores):
         score: Final[int] = calcscores.score
-        deathlessBonus: Final[int] = calcscores.deathless_bonus
+        deathlessBonus: Final[int] = calcscores.deathless_bonus.score
         timeBonus: Final[int] = calcscores.time_bonus.score
         totalScore: Final[int] = calcscores.total_score
 

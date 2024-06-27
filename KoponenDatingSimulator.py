@@ -4655,7 +4655,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
 
     KDS.Audio.Music.Play("Assets/Audio/Music/level_cleared.ogg")
 
-    calculated_scores: Final = KDS.Scores.ScoreCounter.CalculateScores()
+    calculated_scores: Final = KDS.Scores.ScoreCounter.GetScores()
     KDS.Scores.ScoreAnimation.init(calculated_scores)
 
     if KDS.MapProp.CampaignProp.data is not None and KDS.MapProp.CampaignProp.data.countScores:
