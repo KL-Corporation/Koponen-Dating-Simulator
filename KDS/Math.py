@@ -145,11 +145,17 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
 #endregion
 
 #region Slope
-def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]):
+def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
     """
     Calculates slope of a given straight going trough two points
     """
-    return (p2[1] - p1[1]) / (p2[0]- p1[0])
+    # try-excepts are nowadays zero-cost
+    # we use try-except because division by zero is VERY RARE (we didn't have this zero division check for many years and the game crashed for the first time just a moment ago)
+    # so we don't slow down the normal execution path of slope computation
+    try:
+        return (p2[1] - p1[1]) / (p2[0]- p1[0])
+    except ZeroDivisionError:
+        return INFINITY
 
 def getSlope2(angle: float) -> float: #Angle in degrees
     """
