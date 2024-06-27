@@ -61,7 +61,7 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
 
     waitTicks = 0
 
-    KDS.Audio.Music.Play("Assets/Audio/Music/Prologue.ogg", 0)
+    KDS.Audio.Music.Play("Assets/Audio/Music/Prologue.ogg", loop=False)
 
     running = True
     while running:

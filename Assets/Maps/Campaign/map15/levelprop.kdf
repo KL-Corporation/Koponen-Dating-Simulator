@@ -1,5 +1,6 @@
 {
     "Data": {
+        "missionsId": "campaign_legacy1",
         "TimeBonus": {
             "end": 60,
             "start": 30

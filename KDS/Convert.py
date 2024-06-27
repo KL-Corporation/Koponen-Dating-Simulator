@@ -98,7 +98,7 @@ class DateTime:
 #         return value.strftime(format)
 
 # The shittier version of String.ToBool
-def ToBool2(value: Any, fallbackValue: Any = False, hideErrorMessage: bool = False) -> Union[bool, Any]:
+def ToBool2(value: Any, fallbackValue: _T = False, hideErrorMessage: bool = False) -> Union[bool, _T]:
     """Converts a value to bool with these rules:
         1. String: [t, true = True] [f, false = False] (Not case dependent)
         2. Int: [0 > True] [0 <= False]

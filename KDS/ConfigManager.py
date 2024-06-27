@@ -1,10 +1,12 @@
 #region Importing
+from dataclasses import dataclass
 from datetime import datetime
 import json
 import os
 import shutil
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Self, Union
+from uuid import UUID
 
 import KDS.AI
 import KDS.Animator
@@ -160,13 +162,16 @@ def GetGameData(path: str):
     return JSON.Get("Assets/GameData.kdf", path, None, False, True)
 
 class LevelProp:
-    cachedValues: Dict[str, Any] = {}
+    _cachedValues: Dict[str, Any] = {}
 
     @staticmethod
     def init(MapPath: str):
+        path: str = os.path.join(MapPath, "levelprop.kdf")
+        KDS.Logging.debug(f"Loading new LevelProp: '{path}'...", consoleVisible=True)
         try:
-            with open(os.path.join(MapPath, "levelprop.kdf"), "r") as f:
-                LevelProp.cachedValues = json.loads(f.read())
+            with open(path, "r") as f:
+                LevelProp._cachedValues = json.loads(f.read())
+            LevelProp._initialised_map_path = MapPath
         except IOError as e:
             KDS.Logging.AutoError(e)
         except json.decoder.JSONDecodeError as e:
@@ -175,7 +180,7 @@ class LevelProp:
     @staticmethod
     def Get(path: str, DefaultValue: Any) -> Any:
         paths: List[str] = JSON.ToKeyList(path)
-        tmpvals = LevelProp.cachedValues
+        tmpvals = LevelProp._cachedValues
         for i in range(len(paths)):
             p = paths[i]
             if p not in tmpvals:
@@ -185,6 +190,52 @@ class LevelProp:
 
         KDS.Logging.AutoError("This code should not execute!")
         return DefaultValue
+
+@dataclass
+class CampaignProp:
+    levelName: str
+
+    countScores: bool
+    scoresGuid: UUID | None
+
+    @classmethod
+    def load(cls, filepath: str) -> Self:
+        name = JSON.Get(filepath, "Level/name", None, writeMissing=False, warnMissing=True)
+        if not isinstance(name, str):
+            name = "<error>"
+
+        scoresEnabled = JSON.Get(filepath, "Scores/enabled", None, writeMissing=False, warnMissing=True)
+        if not isinstance(scoresEnabled, bool):
+            scoresEnabled = False
+
+        scoresGuid: str | None = JSON.Get(filepath, "Scores/guid", None, writeMissing=False, warnMissing=True)
+        if not isinstance(scoresGuid, str):
+            KDS.Logging.warning("No valid scores GUID found in campaignprop.kdf. Disabling score counting...")
+            scoresGuid = None
+            scoresEnabled = False
+
+        return cls(
+            levelName=name,
+            countScores=scoresEnabled,
+            scoresGuid=UUID(scoresGuid) if scoresGuid is not None else None,
+        )
+
+    @classmethod
+    def default(cls) -> Self:
+        return cls(
+            levelName="unnamed",
+            countScores=False,
+            scoresGuid=None
+        )
+
+    @classmethod
+    def errored(cls) -> Self:
+        return cls(
+            levelName="<error>",
+            countScores=False,
+            scoresGuid=None
+        )
+
 
 class Save:
     Active = None

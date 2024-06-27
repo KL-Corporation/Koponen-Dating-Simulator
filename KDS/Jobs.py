@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from concurrent.futures import *
 import os
-from typing import Any, Callable, Sequence, Union
+from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar, Union
 import KDS.Math
 import KDS.Logging
+
+_T = TypeVar("_T")
+_P = ParamSpec("_P")
 
 def init():
     global executor
@@ -17,25 +20,21 @@ def init():
 def quit():
     executor.shutdown(wait=True, cancel_futures=True)
 
-class JobHandle:
-    def __init__(self, future: Future) -> None:
-        self.future = future
+class JobHandle(Generic[_T]):
+    def __init__(self, *, _future: Future[_T]) -> None:
+        self._future = _future
 
     @property
     def IsComplete(self) -> bool:
-        return self.future.done()
+        return self._future.done()
 
-    def Complete(self):
+    def Complete(self) -> _T:
         """Ensures that the job has completed.
 
         Returns:
             Any: The job function's output.
         """
-        res = self.future.result()
-        exc = self.future.exception()
-        if exc != None:
-            KDS.Logging.AutoError(str(exc))
-        return res
+        return self._future.result()
 
     @staticmethod
     def CompleteAll(jobs: Sequence[JobHandle]) -> None:
@@ -44,9 +43,9 @@ class JobHandle:
         Args:
             jobs (Sequence[JobHandle]): The jobs to complete.
         """
-        wait([f.future for f in jobs], return_when=ALL_COMPLETED)
+        wait((f._future for f in jobs), return_when=ALL_COMPLETED)
 
-def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
+def Schedule(function: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs) -> JobHandle[_T]:
     """Schedule the job for execution on a worker thread.
 
     Args:
@@ -56,7 +55,7 @@ def Schedule(function: Callable, *args: Any, **kwargs: Any) -> JobHandle:
     Returns:
         JobHandle: The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
     """
-    return JobHandle(executor.submit(function, *args, **kwargs))
+    return JobHandle(_future=executor.submit(function, *args, **kwargs))
 
 #region OLD KDS.THREADING CODE
 # import concurrent.futures  # Tätä tarvitaan toivottavasti tulevaisuudessa. (Haha, tulevaisuudessa... Hauska vitsi)

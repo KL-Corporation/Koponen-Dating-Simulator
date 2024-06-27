@@ -15,14 +15,14 @@
     },
     "Physics": {
         "Items": {
-            "fallMaxVelocity": 8,
-            "fallSpeed": 1
+            "fallMaxVelocity": 8.0,
+            "fallSpeed": 0.4
         },
         "Koponen": {
             "speed": 1
         },
         "Player": {
-            "fallMaxVelocity": 8,
+            "fallMaxVelocity": 8.0,
             "fallMultiplier": 2.5,
             "fallSpeed": 0.4
         }
@@ -31,9 +31,10 @@
         "levelCount": 11
     },
     "Campaign": {
-        "officialLevelCount": 9
+        "officialLevelCount": 9,
+        "totalLevelCount": 20
     },
     "Debug": {
-        "allowConsoleInStoryMode": false
+        "allowConsoleInStoryMode": true
     }
 }

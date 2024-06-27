@@ -16,7 +16,7 @@ import random
 import shutil
 import traceback
 from enum import IntEnum, IntFlag, auto
-from typing import Any, Callable, Dict, Final, List, NamedTuple, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Dict, Final, List, NamedTuple, Optional, Self, Sequence, Tuple, Type, Union
 
 import pygame
 import pygame.mixer
@@ -162,8 +162,7 @@ game_initialization_logger.stop("Cursors and surface arrays initialised.")
 game_initialization_logger.start("Loading Settings...")
 tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
 quickload: Final[bool] = KDS.ConfigManager.GetSetting("Data/quickload", False)
-current_map: str = KDS.ConfigManager.GetSetting("Player/currentMap", ...)
-current_map_name: str = ""
+current_map_index: int = int(KDS.ConfigManager.GetSetting("Player/currentMap", ...)) # if it is already int, nothing will happen
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", ...)
 play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", ...)
 game_initialization_logger.stop("Settings Loaded.")
@@ -237,17 +236,6 @@ agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").conv
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
-
-def load_campaign_backgrounds():
-    global campaign_backgrounds
-    DIR: str = "Assets/Textures/UI/Menus/Campaign"
-    files = os.listdir(DIR)
-    for f in files:
-        index: int = int(os.path.splitext(f)[0])
-        campaign_backgrounds[index] = os.path.join(DIR, f)
-campaign_backgrounds: dict[int, str] = {}
-load_campaign_backgrounds()
-
 asset_loading_logger.stop("Menu Texture Loading Complete.")
 #endregion
 pygame.event.pump()
@@ -378,18 +366,26 @@ fall_speed: float = 0.4
 fall_multiplier: float = 2.5
 fall_max_velocity: float = 8.0
 def LoadGameSettings():
-    global fall_speed, fall_multiplier, fall_max_velocity, item_fall_speed, item_fall_max_velocity
+    global fall_speed, fall_multiplier, fall_max_velocity
     fall_speed = KDS.ConfigManager.GetGameData("Physics/Player/fallSpeed")
     fall_multiplier = KDS.ConfigManager.GetGameData("Physics/Player/fallMultiplier")
     fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Player/fallMaxVelocity")
-    item_fall_speed = KDS.ConfigManager.GetGameData("Physics/Items/fallSpeed")
-    item_fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Items/fallMaxVelocity")
+
+    KDS.Build.Item.fall_speed = KDS.ConfigManager.GetGameData("Physics/Items/fallSpeed")
+    KDS.Build.Item.fall_max_velocity = KDS.ConfigManager.GetGameData("Physics/Items/fallMaxVelocity")
 try:
     LoadGameSettings()
 except:
     KDS.Logging.AutoError("Game Settings could not be loaded!")
 
 debug_gamesetting_allow_console_in_storymode: bool = KDS.ConfigManager.GetGameData("Debug/allowConsoleInStoryMode")
+
+storyLevelCount: Final[int] = KDS.ConfigManager.GetGameData("Story/levelCount")
+assert(isinstance(storyLevelCount, int))
+campaignOfficialLevelCount: Final[int] = KDS.ConfigManager.GetGameData("Campaign/officialLevelCount")
+assert(isinstance(campaignOfficialLevelCount, int))
+campaignTotalLevelCount: Final[int] = KDS.ConfigManager.GetGameData("Campaign/totalLevelCount")
+assert(isinstance(campaignTotalLevelCount, int))
 #endregion
 #region World Data
 class WorldData:
@@ -409,9 +405,12 @@ class WorldData:
     Map Directory: {os.path.isdir(MapPath)}
         Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
         LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
-        Level Music File (optional): {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+        Level Music Audio File (optional): {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
         Properties File (optional): {os.path.isfile(os.path.join(MapPath, "properties.kdf"))}
-        Level Background File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
+        Level Background Image File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
+
+        CampaignProp File (optional): {os.path.isfile(os.path.join(MapPath, "campaignprop.kdf"))}
+        Campaign Preview Image File (optional): {os.path.isfile(os.path.join(MapPath, "campaign_preview.png"))}
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
@@ -3877,11 +3876,11 @@ class PlayCustomLoadscreen(NamedTuple):
     start: Callable[[], None]
     end: Callable[[], None]
 
-def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load: PlayCustomLoadscreen | None = None, auto_play_music: bool = True):
+def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load: PlayCustomLoadscreen | None = None, auto_play_music: bool = True):
     game_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
     game_loading_logger.start("Loading Game...")
 
-    global main_menu_running, current_map, true_scroll, selectedSave
+    global main_menu_running, true_scroll, selectedSave
 
     pygame.mouse.set_visible(False)
     KDS.Audio.Music.Stop()
@@ -3891,20 +3890,19 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load:
     else:
         KDS.Loading.Circle.Start(display)
 
-    level_index: int
     if gamemode == KDS.Gamemode.Modes.CustomCampaign:
-        mapPath = os.path.join(PersistentPaths.CustomMaps, current_map_name)
+        assert(mapPath is not None)
         gamemode = KDS.Gamemode.Modes.Campaign
-        level_index = int(current_map)
     elif gamemode == KDS.Gamemode.Modes.Story:
         assert KDS.ConfigManager.Save.Active != None, "Could not load story mode map! No save active."
+        assert(mapPath is None)
         mapPath = os.path.join("Assets/Maps/Story", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
-        level_index = KDS.ConfigManager.Save.Active.Story.index
     else:
-        mapPath = os.path.join("Assets/Maps/Campaign", f"map{current_map}")
-        level_index = int(current_map)
+        assert(gamemode == KDS.Gamemode.Modes.Campaign)
+        campaignMapPath: Final[str] = os.path.join("Assets/Maps/Campaign", f"map{current_map_index:02d}")
+        assert(mapPath is None or mapPath == campaignMapPath)
+        mapPath = campaignMapPath
 
-    KDS.Gamemode.SetGamemode(gamemode, level_index)
     KDS.World.Lighting.Shapes.clear()
 
     global Player
@@ -3931,15 +3929,17 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load:
     ScreenEffects.Clear()
     #endregion
 
-    #region Ammo Resetting
+    #region Reset ammo
+    # TODO: We don't seem to be using this old style ammo handling anymore...
+    # consider removing
     for c in KDS.Build.Item.serialNumbers.values():
         defaultAmmo = getattr(c, "defaultAmmunition", None)
         if defaultAmmo != None:
             setattr(c, "ammunition", defaultAmmo)
     #endregion
 
-    LoadGameSettings()
-
+    # It's probably fine if we only load this during startup
+    # LoadGameSettings()
 
     loadMapHandle = KDS.Jobs.Schedule(WorldData.LoadMap, mapPath)
     while not loadMapHandle.IsComplete:
@@ -3948,11 +3948,16 @@ def play_function(gamemode: KDS.Gamemode.Modes, reset_scroll: bool, custom_load:
                 KDS_Quit()
         pygame.time.wait(100)
     wdata = loadMapHandle.Complete()
+
     # Stupid idea
     # KDS.System.gc.collect() # Collecting here since player has already waited for long and this application uses a shit ton of RAM
+
     if not wdata:
         pygame.mouse.set_visible(True)
         return
+
+    KDS.Gamemode.SetGamemode(gamemode, KDS.ConfigManager.LevelProp.Get("Data/missionsId", "missing"), Enemy.total)
+
     Player.rect.topleft, _ = wdata
 
     #region Set Game Data
@@ -4008,7 +4013,7 @@ def play_story(saveIndex: int, newSave: bool = True, oldSurf: Optional[pygame.Su
 
     assert KDS.ConfigManager.Save.Active != None, "play_story function failed. No save loaded."
 
-    if KDS.ConfigManager.Save.Active.Story.index > KDS.ConfigManager.GetGameData("Story/levelCount"):
+    if KDS.ConfigManager.Save.Active.Story.index > storyLevelCount:
         KDS.Story.EndCredits(display, KDS.Story.EndingType.Happy)
         main_menu()
         return
@@ -4047,7 +4052,7 @@ def play_story(saveIndex: int, newSave: bool = True, oldSurf: Optional[pygame.Su
         custom_load = None
 
     KDS.Koponen.setPlayerPrefix(KDS.ConfigManager.Save.Active.Story.playerName)
-    play_function(KDS.Gamemode.Modes.Story, True, custom_load=custom_load, auto_play_music=False)
+    play_function(None, KDS.Gamemode.Modes.Story, True, custom_load=custom_load, auto_play_music=False)
     if KDS.Audio.Music.Loaded != None:
         KDS.Audio.Music.Play()
 
@@ -4212,7 +4217,7 @@ def settings_menu():
         KDS.Clock.Tick()
 
 def main_menu():
-    global current_map, current_map_name
+    global current_map_index, current_map_name
 
     pygame.mouse.set_visible(True)
 
@@ -4223,8 +4228,6 @@ def main_menu():
         CampaignMenu = 3
     MenuMode: Mode = Mode.MainMenu
 
-    current_map_int = int(current_map)
-
     global main_menu_running, main_running, go_to_main_menu
     go_to_main_menu = False
 
@@ -4234,32 +4237,15 @@ def main_menu():
 
     KDS.Audio.Music.Play("Assets/Audio/Music/lobbymusic.ogg" if KDS.ConfigManager.GetSetting("Mixer/legacyLobbyMusic", False) == False else "Assets/Audio/Music/Legacy/lobbymusic.ogg")
 
-    map_names: Dict[int, str] = {}
-    custom_maps_names = {}
-    def load_map_names():
-        nonlocal map_names, custom_maps_names
-        map_names = {}
-        custom_maps_names = {}
+    custom_maps_paths: list[str] = []
+    def load_custom_maps():
+        nonlocal custom_maps_paths
+        custom_maps_paths.clear()
         try:
-            with open("Assets/Maps/Campaign/names.dat", "r") as file:
-                tmp = file.read().strip().split("\n")
-                for t in tmp:
-                    tmp_split = t.split(":")
-                    for i in range(len(tmp_split)):
-                        tmp_split[i] = tmp_split[i].strip()
-                    if len(tmp_split) == 2:
-                        map_names[int(tmp_split[0])] = tmp_split[1]
-                    else:
-                        KDS.Logging.AutoError(f"Map name \"{t}\" is broken!")
+            for p in os.listdir(PersistentPaths.CustomMaps):
+                custom_maps_paths.append(os.path.join(PersistentPaths.CustomMaps, p))
         except IOError as e:
             KDS.Logging.AutoError(f"IO Error! Details: {e}")
-        try:
-            for i, p in enumerate(os.listdir(PersistentPaths.CustomMaps)):
-                custom_maps_names[i + 1] = p
-        except IOError as e:
-            KDS.Logging.AutoError(f"IO Error! Details: {e}")
-    if len(map_names) < 1:
-        load_map_names()
 
     class level_pick:
         class direction:
@@ -4277,23 +4263,75 @@ def main_menu():
 
         @staticmethod
         def pick(direction: int):
-            global current_map
-            current_map_int = int(current_map)
+            global current_map_index
             if direction == level_pick.direction.left:
-                current_map_int -= 1
+                current_map_index -= 1
             elif direction == level_pick.direction.right:
-                current_map_int += 1
-            current_map_int = KDS.Math.Clamp(current_map_int, -len(custom_maps_names), len(map_names))
-            current_map = f"{current_map_int:02d}"
-            KDS.ConfigManager.SetSetting("Player/currentMap", current_map)
+                current_map_index += 1
+            if len(custom_maps_paths) > 0:
+                current_map_index = KDS.Math.Clamp(current_map_index, -len(custom_maps_paths), campaignTotalLevelCount)
+            else:
+                current_map_index = KDS.Math.Clamp(current_map_index, 1, campaignTotalLevelCount)
+            KDS.ConfigManager.SetSetting("Player/currentMap", current_map_index)
     level_pick.pick(level_pick.direction.none)
 
     @dataclass
-    class CampaignBg:
+    class CampaignData:
         map_index: int
-        surface: pygame.Surface | None
-        surface_job: KDS.Jobs.JobHandle
-        alpha: KDS.Animator.Value
+        map_dirpath: str | None
+
+        load_job: KDS.Jobs.JobHandle[None] | None
+
+        campaign: KDS.ConfigManager.CampaignProp | None = None
+        preview: pygame.Surface | None = None
+
+        @classmethod
+        def load(cls, map_index: int) -> Self:
+            map_dirpath: str | None
+            if map_index < 0:
+                custom_map_index: int = abs(map_index)
+                if custom_map_index < len(custom_maps_paths):
+                    map_dirpath = os.path.join(PersistentPaths.CustomMaps, custom_maps_paths[custom_map_index])
+            elif map_index > 0:
+                map_dirpath = os.path.join("Assets/Maps/Campaign", f"map{current_map_index:02d}")
+                if not os.path.isdir(map_dirpath):
+                    map_dirpath = None
+            else: # map_index == 0
+                map_dirpath = None
+
+            dat = cls(
+                map_index=map_index,
+                map_dirpath=map_dirpath,
+                load_job=None
+            )
+            dat.load_job = KDS.Jobs.Schedule(dat._load)
+            return dat
+
+        def _load(self):
+            campaign_prop: KDS.ConfigManager.CampaignProp | None = None
+            if self.map_dirpath is not None:
+                campaign_prop_path: str = os.path.join(self.map_dirpath, "campaignprop.kdf")
+                if os.path.isfile(campaign_prop_path):
+                    try:
+                        campaign_prop = KDS.ConfigManager.CampaignProp.load(campaign_prop_path)
+                    except Exception as e:
+                        KDS.Logging.AutoError(f"CampaignProp loading failed with error:\n{e}")
+                        campaign_prop = KDS.ConfigManager.CampaignProp.errored()
+                else:
+                    campaign_prop = KDS.ConfigManager.CampaignProp.default()
+            else:
+                campaign_prop = KDS.ConfigManager.CampaignProp.errored()
+            self.campaign = campaign_prop
+
+            campaign_preview: pygame.Surface | None = None
+            if self.map_dirpath is not None:
+                campaign_preview_path: str = os.path.join(self.map_dirpath, "campaign_preview.png")
+                if os.path.isfile(campaign_preview_path):
+                    try:
+                        campaign_preview = pygame.image.load(campaign_preview_path).convert()
+                    except Exception as e:
+                        KDS.Logging.AutoError(f"Campaign preview image loading failed with error:\n{e}")
+            self.preview = campaign_preview if campaign_preview is not None else pygame.Surface(display_size)
 
     def menu_mode_selector(mode: Mode):
         nonlocal MenuMode
@@ -4364,18 +4402,13 @@ def main_menu():
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
     campaign_play_text = KDS.UI.ButtonFont.render("START", True, KDS.Colors.EmeraldGreen)
 
-    campaignBgs: list[CampaignBg] = []
+    campaignDatas: dict[int, CampaignData] = {}
+    campaignAnimatingBackgrounds: list[tuple[CampaignData, KDS.Animator.Value]] = []
 
-    def campaign_play_handler():
-        if current_map_int != 0:
-            play_function(KDS.Gamemode.Modes.Campaign if current_map_int > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
-
-    def load_campaign_image(index: int) -> pygame.Surface:
-        path: str | None = campaign_backgrounds.get(index)
-        if path is None:
-            return pygame.Surface(display_size)
-        else:
-            return pygame.image.load(path).convert()
+    def campaign_play_handler(data: CampaignData):
+        if data.map_index != 0:
+            assert(data.map_dirpath is not None)
+            play_function(data.map_dirpath, KDS.Gamemode.Modes.Campaign if data.map_index > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
 
     campaign_play_button = KDS.UI.Button(campaign_play_button_rect, campaign_play_handler, campaign_play_text)
     campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left, pygame.transform.flip(arrow_button, True, False))
@@ -4450,7 +4483,7 @@ def main_menu():
                             MenuMode = Mode.StoryMenu
                         elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
                             MenuMode = Mode.CampaignMenu
-                            campaignBgs.clear()
+                            campaignAnimatingBackgrounds.clear()
                             c = False
                         else:
                             KDS.Logging.AutoError(f"Invalid mode_selection_mode! Value: {mode_selection_modes[y]}")
@@ -4514,57 +4547,59 @@ def main_menu():
                     display.blit(rendered, ((rect.width // 2 - rendered.get_width() // 2) + rect.x, (rect.height // 3 - rendered.get_height() // 2) + rect.y))
 
         elif MenuMode == Mode.CampaignMenu:
-            if len(campaignBgs) < 1 or campaignBgs[-1].map_index != current_map_int:
-                campaignBgs.append(CampaignBg(
-                    current_map_int,
-                    None,
-                    KDS.Jobs.Schedule(load_campaign_image, current_map_int),
-                    KDS.Animator.Value(0, 255, 30)
-                ))
+            while len(campaignDatas) > 5: # remove old campaign datas before inserting new ones as sometimes the current data was unloaded before it was accessed...
+                campaignDatas.pop(next(iter(campaignDatas))) # remove oldest element
+
+            if current_map_index not in campaignDatas:
+                campaignDatas[current_map_index] = CampaignData.load(current_map_index)
+            if current_map_index + 1 not in campaignDatas:
+                campaignDatas[current_map_index + 1] = CampaignData.load(current_map_index + 1)
+            if current_map_index - 1 not in campaignDatas:
+                campaignDatas[current_map_index - 1] = CampaignData.load(current_map_index - 1)
+
+            current_map_data: CampaignData = campaignDatas[current_map_index]
+            assert(current_map_data.map_index == current_map_index)
 
             # looked ugly so I un-added (removed) it
             # while len(campaignBgs) > 3: # added due to poor performance
             #     campaignBgs.pop(1) # leave the bottom one as is, it's the one where we first started panning
 
-            for campaignBg in campaignBgs:
-                if campaignBg.surface is None:
-                    if campaignBg.surface_job.IsComplete:
-                        campaignBg.surface = campaignBg.surface_job.Complete()
-                else:
-                    campaignBg.alpha.update()
+            if len(campaignAnimatingBackgrounds) < 1 or campaignAnimatingBackgrounds[-1][0].map_index != current_map_data.map_index:
+                campaignAnimatingBackgrounds.append((current_map_data, KDS.Animator.Value(0, 255, 30)))
 
-            while (campaign_anim_finished_count := KDS.Linq.Count(campaignBgs, lambda cbg: cbg.alpha.Finished)) > 1:
-                campaignBgs.pop(0)
+            campaign_anim_finished_count: int = 0
+            for cmpDat, bgAlphaAnim in campaignAnimatingBackgrounds:
+                if cmpDat.preview is not None:
+                    bgAlphaAnim.update()
+                    if bgAlphaAnim.Finished:
+                        campaign_anim_finished_count += 1
+
+            for _ in range(campaign_anim_finished_count - 1):
+                campaignAnimatingBackgrounds.pop(0)
 
             if campaign_anim_finished_count < 1:
                 display.fill((0, 0, 0))
-            for campaignBg in campaignBgs:
-                if campaignBg.surface is not None:
-                    campaignBg.surface.set_alpha(int(campaignBg.alpha.get_value()))
-                    display.blit(campaignBg.surface, (0, 0))
+            for cmpDat, bgAlphaAnim in campaignAnimatingBackgrounds:
+                if cmpDat.preview is not None:
+                    cmpDat.preview.set_alpha(int(bgAlphaAnim.get_value()))
+                    display.blit(cmpDat.preview, (0, 0))
 
-            if len(os.listdir(PersistentPaths.CustomMaps)) != len(custom_maps_names):
+            if len(os.listdir(PersistentPaths.CustomMaps)) != len(custom_maps_paths):
                 KDS.Logging.debug("New custom maps detected.", True)
-                load_map_names()
+                load_custom_maps()
                 level_pick.pick(level_pick.direction.none)
 
             pygame.draw.rect(display, KDS.Colors.LightGray, (50, 200, int(display_size[0] - 100), 66))
 
-            current_map_int = int(current_map)
-
-            if current_map_int in map_names:
-                current_map_name = map_names[current_map_int]
-            elif current_map_int < 0 and abs(current_map_int) in custom_maps_names:
-                current_map_name = custom_maps_names[abs(current_map_int)]
-            else:
-                current_map_name = "[ ERROR ]"
-
-            if current_map_int > 0:
-                render_map_name = f"{current_map} - {current_map_name}"
-            elif current_map_int == 0:
+            render_map_name: str | None = None
+            if current_map_index > 0:
+                if current_map_data.campaign is not None:
+                    render_map_name = f"{current_map_index} - {current_map_data.campaign.levelName}"
+            elif current_map_index < 0:
+                if current_map_data.campaign is not None:
+                    render_map_name = f"CUSTOM - {current_map_data.campaign.levelName}"
+            else: # current_map_index == 0
                 render_map_name = "<= Custom                Campaign =>"
-            else:
-                render_map_name = f"CUSTOM - {current_map_name}"
             level_text = KDS.UI.ButtonFont.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (125, 209))
 
@@ -4576,7 +4611,8 @@ def main_menu():
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({
                 "FPS": KDS.Clock.GetFPS(3),
-                "Campaign Backgrounds Loaded": len(campaignBgs)
+                "Campaign Datas Loaded": len(campaignDatas),
+                "Campaign Backgrounds Rendering": len(campaignAnimatingBackgrounds)
             }), (0, 0))
 
         c = False
@@ -4620,14 +4656,14 @@ def level_finished_menu(oldSurf: pygame.Surface):
 
     render_level_finished: bool = True
     def next_level():
-        global level_finished_running, current_map
+        global level_finished_running, current_map_index
         nonlocal render_level_finished
         level_finished_running = False
-        current_map = f"{int(current_map) + 1:02}"
-        play_function(KDS.Gamemode.Modes.Campaign, True)
+        current_map_index += 1
+        play_function(None, KDS.Gamemode.Modes.Campaign, True)
         render_level_finished = False
 
-    next_level_bool = int(current_map) < int(KDS.ConfigManager.GetGameData("Campaign/officialLevelCount"))
+    next_level_bool = current_map_index < campaignOfficialLevelCount
 
     main_menu_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 220, menu_rect.bottom - padding, 200, 30), goto_main_menu, KDS.UI.ButtonFontSmall.render("Main Menu", True, KDS.Colors.White))
     next_level_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 20, menu_rect.bottom - padding, 200, 30), next_level, KDS.UI.ButtonFontSmall.render("Next Level", True, KDS.Colors.White), enabled=next_level_bool)

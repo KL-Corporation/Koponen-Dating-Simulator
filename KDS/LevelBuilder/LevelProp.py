@@ -9,16 +9,21 @@ def generateLevelProp():
     """
     p_start_pos = KDS.Console.Start("Player Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="100, 100", autoFormat=True)
     k_enabled = KDS.Console.Start("Koponen Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
-    k_start_pos: tuple[int, int] = (0, 0)
+    k_start_pos: tuple[int, int]
     if k_enabled:
         k_start_pos = KDS.Console.Start("Koponen Start Position: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 0), defVal="200, 200", autoFormat=True)
+    else:
+        k_start_pos = (0, 0)
 
     dark = KDS.Console.Start("Darkness Enabled: (bool)", False, KDS.Console.CheckTypes.Bool(), autoFormat=True)
-    darkness: int = 0
-    player_light: bool = False
+    darkness: int
+    player_light: bool
     if dark:
         darkness = KDS.Console.Start("Darkness Strength: (int[0, 255])", False, KDS.Console.CheckTypes.Int(0, 255), autoFormat=True)
         player_light = KDS.Console.Start("Player Light: (bool)", False, KDS.Console.CheckTypes.Bool(), defVal="true", autoFormat=True)
+    else:
+        darkness = 0
+        player_light = False
 
     tb_start, tb_end = KDS.Console.Start("Time Bonus Range in seconds: (full points: int, no points: int)", False, KDS.Console.CheckTypes.Tuple(2, 0, requireIncrease=True), autoFormat=True)
 
@@ -37,6 +42,7 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/Darkness/playerLight", player_light)
         #endregion
         #region Defaults
+        KDS.ConfigManager.JSON.Set(savePath, "Data/missionsId", "default")
         KDS.ConfigManager.JSON.Set(savePath, "Data/infiniteAmmo", False)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/forceTalk", False)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/startWithTalk", False)

@@ -1,5 +1,6 @@
 {
     "Data": {
+        "missionsId": "campaign_tutorial",
         "TimeBonus": {
             "end": 180,
             "start": 60

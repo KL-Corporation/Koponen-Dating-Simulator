@@ -3,6 +3,7 @@ import os
 
 import KDS.BuildData
 import KDS.LevelBuilder
+import KDS.LevelBuilder.CampaignProp
 import KDS.LevelBuilder.LegacyGameMap
 import KDS.LevelBuilder.LegacyTileProp
 import KDS.LevelBuilder.LevelProp
@@ -32,7 +33,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 from KDS.LevelBuilder.Shared import *
 
@@ -344,12 +345,12 @@ class Undo:
         Undo.overflowCount = 0
 
 def LB_Quit():
-    global matMenRunning, btn_menu, mainRunning, legacy_upgrade_menu_running
+    global matMenRunning, btn_menu, mainRunning, multiselect_menu_running
     if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
         return
     matMenRunning = False
     btn_menu = False
-    legacy_upgrade_menu_running = False
+    multiselect_menu_running = False
     mainRunning = False
 
 KDS.Console.init(display, pygame.Surface((1200, 800)), _Offset=(200, 0), _KDS_Quit = LB_Quit)
@@ -1467,10 +1468,57 @@ def materialMenu(previousMaterial: str) -> str:
 
     return previousMaterial
 
-def legacy_upgrade_menu():
-    global legacy_upgrade_menu_running
-    legacy_upgrade_menu_running = True
+def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], None]]]):
+    global multiselect_menu_running
+    multiselect_menu_running = True
 
+    def back():
+        global multiselect_menu_running
+        multiselect_menu_running = False
+
+    title = harbinger_font_large.render(title_text, True, KDS.Colors.White)
+    title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
+
+    buttons: list[KDS.UI.Button] = [
+        KDS.UI.Button(
+            pygame.Rect(display_size[0] // 2 - 300, 200 + 125 * i, 600, 100),
+            data[1],
+            harbinger_font.render(data[0], True, KDS.Colors.White)
+        )
+        for i, data in enumerate(options)
+    ]
+
+    back_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 125, 300, 100), back, harbinger_font.render("Back", True, KDS.Colors.AviatorRed))
+
+    while multiselect_menu_running:
+        clicked: bool = False
+        for event in pygame.event.get():
+            if defaultEventHandler(event, DROPFILE):
+                continue
+            elif event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    clicked = True
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    multiselect_menu_running = False
+
+        display.fill((34, 34, 34))
+        mouse_pos: Final = pygame.mouse.get_pos()
+
+        pygame.draw.rect(display, KDS.Colors.Gray, (title_rect.x - 200, title_rect.y - 25, title_rect.w + 400, title_rect.h + 50))
+        display.blit(title, title_rect)
+
+        for btn in buttons:
+            btn.update(display, mouse_pos, clicked)
+        back_btn.update(display, mouse_pos, clicked)
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+
+        pygame.display.flip()
+        KDS.Clock.Tick()
+
+def legacy_upgrade_menu():
     # def notImplemented():
     #     KDS.Logging.AutoError("This legacy converter has not been implemented yet!")
 
@@ -1499,47 +1547,23 @@ def legacy_upgrade_menu():
         renderupdate()
         func(update_msg)
 
-    def back():
-        global legacy_upgrade_menu_running
-        legacy_upgrade_menu_running = False
+    multiselect_menu(
+        "UPGRADE LEGACY",
+        [
+            ("tileprops.kdf", lambda: run_func(KDS.LevelBuilder.LegacyTileProp.upgradeTileProp)),
+            ("game_map.kds + item_map.kds", lambda: run_func(KDS.LevelBuilder.LegacyGameMap.upgradeGameMap)),
+            (".map files", lambda: run_func(KDS.LevelBuilder.LegacyGameMap.upgradeMapFiles))
+        ]
+    )
 
-    title = harbinger_font_large.render("UPGRADE LEGACY", True, KDS.Colors.White)
-    title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
-    tileprop_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 200, 600, 100), run_func, harbinger_font.render("tileprops.kdf", True, KDS.Colors.White))
-    gamemap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 325, 600, 100), run_func, harbinger_font.render("game_map.kds + item_map.kds", True, KDS.Colors.White))
-    mapmap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 300, 450, 600, 100), run_func, harbinger_font.render(".map files", True, KDS.Colors.White))
-
-    back_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 125, 300, 100), back, harbinger_font.render("Back", True, KDS.Colors.AviatorRed))
-
-    while legacy_upgrade_menu_running:
-        clicked: bool = False
-        for event in pygame.event.get():
-            if defaultEventHandler(event, DROPFILE):
-                continue
-            elif event.type == MOUSEBUTTONUP:
-                if event.button == 1:
-                    clicked = True
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    legacy_upgrade_menu_running = False
-
-        display.fill((34, 34, 34))
-        mouse_pos: Final = pygame.mouse.get_pos()
-
-        pygame.draw.rect(display, KDS.Colors.Gray, (title_rect.x - 200, title_rect.y - 25, title_rect.w + 400, title_rect.h + 50))
-        display.blit(title, title_rect)
-
-        tileprop_btn.update(display, mouse_pos, clicked, KDS.LevelBuilder.LegacyTileProp.upgradeTileProp)
-        gamemap_btn.update(display, mouse_pos, clicked, KDS.LevelBuilder.LegacyGameMap.upgradeGameMap)
-        mapmap_btn.update(display, mouse_pos, clicked, KDS.LevelBuilder.LegacyGameMap.upgradeMapFiles)
-
-        back_btn.update(display, mouse_pos, clicked)
-
-        if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
-
-        pygame.display.flip()
-        KDS.Clock.Tick()
+def generate_menu():
+    multiselect_menu(
+        "GENERATE",
+        [
+            ("levelprop.kdf", KDS.LevelBuilder.LevelProp.generateLevelProp),
+            ("campaignprop.kdf", KDS.LevelBuilder.CampaignProp.generateCampaignProp)
+        ]
+    )
 
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
@@ -1559,7 +1583,7 @@ def menu():
     newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
     openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       250, 400, 150), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))
     upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425, 450, 400, 100), legacy_upgrade_menu, harbinger_font.render("Upgrade Legacy", True, KDS.Colors.White))
-    genProp_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), KDS.LevelBuilder.LevelProp.generateLevelProp, harbinger_font.render("Generate levelProp.kdf", True, KDS.Colors.White))
+    gen_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), generate_menu, harbinger_font.render("Generate", True, KDS.Colors.White))
     quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed))
 
     txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and/or maintenance.", True, KDS.Colors.CloudWhite)
@@ -1581,7 +1605,7 @@ def menu():
         newMap_btn.update(display, mouse_pos, clicked)
         openMap_btn.update(display, mouse_pos, clicked, True)
         upgradeProps_btn.update(display, mouse_pos, clicked)
-        genProp_btn.update(display, mouse_pos, clicked)
+        gen_btn.update(display, mouse_pos, clicked)
         quit_btn.update(display, mouse_pos, clicked)
 
         display.blit(txt, (2, display_size[1] - harbinger_font_small.get_height() - 2))

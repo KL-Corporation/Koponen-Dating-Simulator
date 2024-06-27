@@ -182,6 +182,8 @@ class Item:
 
     tipItem = None
 
+    # GameData.kdf overrides these
+    # keep the default values between this and GameData.kdf identical
     fall_speed: float = 0.4
     fall_max_velocity: float = 8.0
 
