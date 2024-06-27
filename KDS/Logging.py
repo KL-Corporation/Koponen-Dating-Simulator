@@ -112,12 +112,12 @@ I=====[ DEBUG INFO ]=====I
     - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 
-def _log(message: Union[str, Exception], consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
+def _log(message: str | BaseException, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
     if not running:
         print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
         return
 
-    if isinstance(message, Exception):
+    if isinstance(message, BaseException):
         message = f"{type(message).__name__}: {str(message)}"
     logging.log(logLevel, message, stack_info=stack_info, stacklevel=3, **kwargs)
     if stack_info:
@@ -133,19 +133,19 @@ _logLevelColors: dict[int, str] = {
     logging.WARNING: "yellow",
     logging.ERROR: "red",
 }
-def debug(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def debug(message: str | BaseException, consoleVisible: bool = False, stack_info: bool = False) -> None:
     _log(message, consoleVisible, stack_info, logging.DEBUG, "green")
 
-def info(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def info(message: str | BaseException, consoleVisible: bool = False, stack_info: bool = False) -> None:
     _log(message, consoleVisible, stack_info, logging.INFO, "blue")
 
-def warning(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def warning(message: str | BaseException, consoleVisible: bool = False, stack_info: bool = False) -> None:
     _log(message, consoleVisible, stack_info, logging.WARNING, "yellow")
 
-def error(message: Union[str, Exception], consoleVisible: bool = False, stack_info: bool = False) -> None:
+def error(message: str | BaseException, consoleVisible: bool = False, stack_info: bool = False) -> None:
     _log(message, consoleVisible, stack_info, logging.ERROR, "red")
 
-def AutoError(message: Union[str, Exception], **kwargs: Any) -> None:
+def AutoError(message: str | BaseException, **kwargs: Any) -> None:
     """Generates an automatic error message.
 
     Args:

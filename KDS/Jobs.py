@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from concurrent.futures import *
 import os
-from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar, Union
+from typing import Any, Callable, Generic, ParamSpec, Self, Sequence, TypeVar, Union
 import KDS.Math
 import KDS.Logging
 
@@ -35,6 +35,16 @@ class JobHandle(Generic[_T]):
             Any: The job function's output.
         """
         return self._future.result()
+
+    def AddErrorLogger(self) -> Self:
+        self._future.add_done_callback(JobHandle._handle_error_callback)
+        return self
+
+    @staticmethod
+    def _handle_error_callback(future: Future) -> None:
+        exc: BaseException | None = future.exception()
+        if exc is not None:
+            KDS.Logging.AutoError(exc)
 
     @staticmethod
     def CompleteAll(jobs: Sequence[JobHandle]) -> None:

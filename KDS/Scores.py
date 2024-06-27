@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 import time
-from typing import Optional, Tuple
+from typing import Final, Optional, Tuple
 
+from uuid import UUID
 import weakref
 
 import pygame
@@ -12,6 +14,7 @@ import KDS.Animator
 import KDS.Audio
 import KDS.ConfigManager
 import KDS.Logging
+import KDS.MapProp
 import KDS.Math
 import KDS.Gamemode
 import KDS.Clock
@@ -44,6 +47,8 @@ class ItemScoreHandler:
         # In these cases the new item can be reregistered for item score
         # but this is still vastly better than getting score for every single pickup possible
 
+        # TODO: Save the score inside every item instance and set it as 0 when used.
+
         if ItemScoreHandler._items is None:
             raise RuntimeError("Item Score Handler has not been started!")
 
@@ -63,7 +68,7 @@ class ItemScoreHandler:
                 KDS.Logging.info(f"Ignoring item score for item, item has already been picked up.")
                 return
             else:
-                KDS.Logging.info(f"Item at address {hex(itemMemoryAddr)} has been replaced by a new item instance, score will be added.")
+                KDS.Logging.info(f"Item at address {hex(itemMemoryAddr)} has been replaced by a new item instance, score will be added.", consoleVisible=True)
 
         ItemScoreHandler._items[itemMemoryAddr] = weakref.ref(item)
 
@@ -143,21 +148,21 @@ class GameTimeTimerDateTime(GameTimeTimer):
 
     def Start(self) -> None:
         self.cumPause = timedelta()
-        self.start = datetime.utcnow()
+        self.start = datetime.now(UTC)
 
     def Pause(self) -> None:
         if self.pauseStart != None:
             raise RuntimeError("Calling pause start while paused!")
-        self.pauseStart = datetime.utcnow()
+        self.pauseStart = datetime.now(UTC)
 
     def Unpause(self) -> None:
         if self.pauseStart == None:
             raise RuntimeError("Calling pause end when not paused!")
-        self.cumPause += datetime.utcnow() - self.pauseStart
+        self.cumPause += datetime.now(UTC) - self.pauseStart
         self.pauseStart = None
 
     def Stop(self) -> None:
-        self.end = datetime.utcnow()
+        self.end = datetime.now(UTC)
 
     def GetGameTime(self) -> timedelta:
         if self.start == None or self.end == None:
@@ -211,13 +216,36 @@ class GameTime:
         seconds = round(totalSeconds % 60)
         return f"{minutes}m {seconds}s"
 
+@dataclass(frozen=True)
+class TimeBonusScore:
+    bonus_start: float
+    bonus_end: float
+    gametime: timedelta
+
+    @property
+    def score(self) -> int:
+        clampedGameTime = KDS.Math.Clamp(self.gametime.total_seconds(), self.bonus_start, self.bonus_end)
+        timeBonusFloat: float = KDS.Math.Remap(clampedGameTime, self.bonus_start, self.bonus_end, maxTimeBonus, 0)
+        return round(timeBonusFloat)
+
+@dataclass(frozen=True)
+class CalculatedScores:
+    score: int
+    deathless_bonus: int
+    time_bonus: TimeBonusScore
+
+    @property
+    def total_score(self) -> int:
+        return self.score + self.deathless_bonus + self.time_bonus.score
+
 class ScoreCounter:
     @staticmethod
     def Start():
         global score, levelDeaths
         score = 0
-        ItemScoreHandler.internalStart()
         levelDeaths = 0
+
+        ItemScoreHandler.internalStart()
         storyMode = KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story
         GameTime.Start(GameTimerType.PerfCounter if not storyMode else GameTimerType.DateTime)
 
@@ -235,22 +263,22 @@ class ScoreCounter:
         GameTime.Stop()
 
     @staticmethod
-    def CalculateScores():
+    def CalculateScores() -> CalculatedScores:
         global score, levelDeaths
-        tb_start: Optional[int] = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/start", None)
-        tb_end: Optional[int] = KDS.ConfigManager.LevelProp.Get("Data/TimeBonus/end", None)
+        tb_start: Optional[int] = KDS.MapProp.LevelProp.Get("Data/TimeBonus/start", None)
+        tb_end: Optional[int] = KDS.MapProp.LevelProp.Get("Data/TimeBonus/end", None)
         if tb_start == None or tb_end == None:
             KDS.Logging.AutoError(f"Time Bonus is not defined! Values: (start: {tb_start}, end: {tb_end})")
             tb_start = 1
             tb_end = 2
-        clampedGameTime = KDS.Math.Clamp(GameTime.GetGameTime().total_seconds(), tb_start, tb_end)
-        timeBonusFloat: float = KDS.Math.Remap(clampedGameTime, tb_start, tb_end, maxTimeBonus, 0)
-        timeBonus = round(timeBonusFloat)
         deathlessBonus = 500 if levelDeaths < 1 else 0
 
-        totalScore: int = score + deathlessBonus + timeBonus
-
-        return score, deathlessBonus, timeBonus, totalScore
+        gametime: timedelta = GameTime.GetGameTime()
+        return CalculatedScores(
+            score=score,
+            deathless_bonus=deathlessBonus,
+            time_bonus=TimeBonusScore(bonus_start=tb_start, bonus_end=tb_end, gametime=gametime)
+        )
 
 class ScoreAnimation:
     animationIndex = 0
@@ -260,8 +288,11 @@ class ScoreAnimation:
     finished = False
 
     @staticmethod
-    def init():
-        score, deathlessBonus, timeBonus, totalScore = ScoreCounter.CalculateScores()
+    def init(calcscores: CalculatedScores):
+        score: Final[int] = calcscores.score
+        deathlessBonus: Final[int] = calcscores.deathless_bonus
+        timeBonus: Final[int] = calcscores.time_bonus.score
+        totalScore: Final[int] = calcscores.total_score
 
         ScoreAnimation.animationIndex = 0
         ScoreAnimation.finished = False
