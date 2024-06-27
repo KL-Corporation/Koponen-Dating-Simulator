@@ -4559,13 +4559,16 @@ def main_menu():
 
             if current_map_index not in campaignDatas:
                 campaignDatas[current_map_index] = CampaignData.load(current_map_index)
-            for load_padding in range(2):
-                campaign_loadpad_next: int = current_map_index + load_padding
-                campaign_loadpad_prev: int = current_map_index - load_padding
-                if campaign_loadpad_next not in campaignDatas:
-                    campaignDatas[campaign_loadpad_next] = CampaignData.load(campaign_loadpad_next)
-                if campaign_loadpad_prev not in campaignDatas:
-                    campaignDatas[campaign_loadpad_prev] = CampaignData.load(campaign_loadpad_prev)
+            for load_padding in (1,): # dict can be extended if necessary (i.e.: 1, 2)
+                for multiplier in (-1, 1):
+                    campaign_loadpad: int = current_map_index + (load_padding * multiplier)
+                    if campaign_loadpad not in campaignDatas:
+                        campaignDatas[campaign_loadpad] = CampaignData.load(campaign_loadpad)
+                    else:
+                        # remove and re-add so that the data is at the bottom of the dictionary
+                        # so that it isn't removed when campaignDatas length is over maximum
+                        campaign_loadpad_tmp_rmv: CampaignData = campaignDatas.pop(campaign_loadpad)
+                        campaignDatas[campaign_loadpad] = campaign_loadpad_tmp_rmv
 
             current_map_data: Final[CampaignData] = campaignDatas[current_map_index]
             assert(current_map_data.map_index == current_map_index)
@@ -4621,7 +4624,8 @@ def main_menu():
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({
                 "FPS": KDS.Clock.GetFPS(3),
-                "Campaign Datas Loaded": len(campaignDatas),
+                "Campaign Datas In Memory": len(campaignDatas),
+                "Campaign Datas Loading": KDS.Linq.Count(campaignDatas.values(), lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
                 "Campaign Backgrounds Rendering": len(campaignAnimatingBackgrounds)
             }), (0, 0))
 
