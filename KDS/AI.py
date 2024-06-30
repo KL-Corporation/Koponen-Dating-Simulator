@@ -421,7 +421,7 @@ class SergeantZombie(HostileEnemy):
         dist /= 1200
         shotgunShot.set_volume(dist)
         KDS.Audio.PlaySound(shotgunShot)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 35), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 35), slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
         items = []
@@ -464,7 +464,7 @@ class DrugDealer(HostileEnemy):
         dist /= 1200
         pistol_shot.set_volume(dist)
         KDS.Audio.PlaySound(pistol_shot)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction))]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(40, 60), slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction))]
 
     def onDeath(self):
         items = []
@@ -509,7 +509,7 @@ class TurboShotgunner(HostileEnemy):
         dist /= 1200
         double_barrel_fire.set_volume(dist)
         KDS.Audio.PlaySound(double_barrel_fire)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction)+(3-fd)*1.5 ) for fd in range(6)]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction)+(3-fd)*1.5 ) for fd in range(6)]
 
     def onDeath(self):
         items = []
@@ -551,7 +551,7 @@ class MafiaMan(HostileEnemy):
         dist /= 1200
         basicGunshot.set_volume(dist)
         KDS.Audio.PlaySound(basicGunshot)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*18*KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 25), slope=KDS.Math.getSlope(self.rect.center, target.center)*KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -592,7 +592,7 @@ class MethMaker(HostileEnemy):
         dist /= 1200
         basicGunshot.set_volume(dist)
         KDS.Audio.PlaySound(basicGunshot)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 17), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 17), slope=KDS.Math.getSlope(self.rect.center, target.center) * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -635,7 +635,7 @@ class CaveMonster(HostileEnemy):
         dist /= 1200
         cavemonster_gun.set_volume(dist)
         KDS.Audio.PlaySound(cavemonster_gun)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.centerx + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.centerx + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery - 20, 10, 10), self.direction, -1, env_obstacles, random.randint(10, 20), slope=KDS.Math.getSlope(self.rect.center, target.center) * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -670,7 +670,7 @@ class Mummy(HostileEnemy):
 
     def attack(self, slope, env_obstacles, target, *args):
         KDS.Audio.PlaySound(random.choice(Mummy.soundboard_hits))
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(20, 40), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.centerx + (self.rect.width / 2 + 1) * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(20, 40), maxDistance=18, slope=KDS.Math.getSlope(self.rect.center, target.center) * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
@@ -793,7 +793,6 @@ class SecurityGuard(HostileEnemy):
         if self.direction != targetDirection and not self.attackRunning and (abs(distance) > 170 or self.ticksSinceSwitch > 120) and self.health > 0: # If over five blocks away from target or hasn't turned for two seconds while player is behind; turn around
             self.direction = not self.direction
             self.movement[0] = -self.movement[0]
-            self.lastTargetDirection = targetDirection
             self.ticksSinceSwitch = 0
         self.ticksSinceSwitch += 1
         return tmp
@@ -804,7 +803,7 @@ class SecurityGuard(HostileEnemy):
         dist = 1200 - dist
         dist /= 1200
         KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)
-        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center) * 18 * KDS.Convert.ToMultiplier(self.direction) )]
+        return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center) * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):
         items = []
