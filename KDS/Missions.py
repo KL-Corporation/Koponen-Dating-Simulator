@@ -1,5 +1,5 @@
 #region Importing
-from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import Dict, Final, Iterable, List, Optional, Tuple, Union, cast
 
 import pygame
 
@@ -34,10 +34,10 @@ TextOffset = 2
 HeaderHeight = 25
 TaskHeight = 10
 class Padding:
-    left = 10
-    top = 5
-    right = 10
-    bottom = 5
+    left: Final[int] = 10
+    top: Final[int] = 5
+    right: Final[int] = 10
+    bottom: Final[int] = 5
 #endregion
 #region Listeners
 class Listener:
@@ -289,20 +289,25 @@ class Mission:
                 self.color.To = MissionUnFinishedColor
         self.lastFinished = self.finished
 
-    def Render(self) -> Tuple[pygame.Surface, int]:
+    def Render(self) -> pygame.Surface:
         _taskHeight = TaskHeight + Padding.top + Padding.bottom
+
         _taskWidth = max(t.text.get_surface().get_width() for t in self.tasks.values())
-        # for task in self.tasks.values():
-        #     _taskWidth = max(_taskWidth, task.renderedText.get_surface().get_width())
         _taskWidth += Padding.left + Padding.right + TextOffset + hundredSize[0]
-        surface = pygame.Surface((_taskWidth, HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))))
-        surface.fill(self.color.update(not self.finished))
 
         renderedText: pygame.Surface = self.text.get_surface()
-        surface.blit(renderedText, ((_taskWidth // 2) - (renderedText.get_width() // 2), (HeaderHeight // 2) - (renderedText.get_height() // 2)))
+
+        header_width: int = renderedText.get_width() + Padding.left + Padding.right
+        surf_width: int = max(_taskWidth, header_width)
+        surf_height: int = HeaderHeight + ((TaskHeight + Padding.top + Padding.bottom) * len(self.tasks))
+
+        surface = pygame.Surface((surf_width, surf_height))
+        surface.fill(self.color.update(not self.finished))
+
+        surface.blit(renderedText, ((surf_width - renderedText.get_width()) // 2, (HeaderHeight - renderedText.get_height()) // 2))
         for i, t in enumerate(self.tasks.values()):
-            surface.blit(t.Update(_taskWidth, _taskHeight, self._playTaskSound if self.playSound else False), (0, HeaderHeight + (i * _taskHeight)))
-        return surface, int(_taskWidth)
+            surface.blit(t.Update(surf_width, _taskHeight, self._playTaskSound if self.playSound else False), (0, HeaderHeight + (i * _taskHeight)))
+        return surface
 
 class MissionHolder:
     def __init__(self) -> None:
@@ -400,8 +405,8 @@ def Render(surface: pygame.Surface):
     Missions.finished = False
     tmpMsn = Missions.GetMission(Active_Mission)
     if tmpMsn != None:
-        rendered, offset = tmpMsn.Render()
-        surface.blit(rendered, (surface.get_width() - offset, 0))
+        rendered = tmpMsn.Render()
+        surface.blit(rendered, (surface.get_width() - rendered.get_width(), 0))
     else:
         KDS.Logging.AutoError("Tried to render a non-existing mission!")
 #endregion
