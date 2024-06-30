@@ -141,7 +141,7 @@ KDS.Scores.init()
 KDS.Koponen.init()
 KDS.Console.init(display, display, _KDS_Quit = KDS_Quit)
 KDS.School.init(display)
-# more initialisations in build data loading (these initialisations need textures)
+# more initialisations in build data loading (those initialisations need textures)
 KDS.Keys.LoadCustomBindings()
 game_initialization_logger.stop("KDS modules initialised.")
 
@@ -534,6 +534,7 @@ class WorldData:
                         if serialNumber < 900:
                             value = KDS.Build.Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                         else:
+                            assert(KDS.Build.Item.serialNumbers[900] is Wallet)
                             value = Wallet((x * 34, y * 34), serialNumber=serialNumber)
                         Items.append(value)
                     elif pointer == 2:
