@@ -19,7 +19,7 @@ import random
 import shutil
 import traceback
 from enum import IntEnum, IntFlag, auto
-from typing import Any, Callable, Dict, Final, List, NamedTuple, Optional, Self, Sequence, Tuple, Type, Union
+from typing import Any, Callable, Dict, Final, Iterable, List, NamedTuple, Optional, Self, Sequence, Tuple, Type, Union
 
 import pygame
 import pygame.mixer
@@ -3118,8 +3118,8 @@ class Wallet(KDS.Build.Item):
         Inventory: use serial (900 => 0 €, 905 => 5 €, 925 => 25 €, 969 => 69 €, ...)
     """
 
-    Balance: KDS.Money.Euro = KDS.Money.Euro.from_parts(euros=0)
-    SelectedIndex: int = 0
+    Balance: KDS.Money.Euro
+    _SelectedIndex: int = 0
 
     _BalanceUnits: tuple[KDS.Money.Euro, list[KDS.Money.Euro]] | None = None
     _Animations: list[KDS.Math.SmoothDamp] = []
@@ -3135,8 +3135,17 @@ class Wallet(KDS.Build.Item):
         Wallet.Balance += KDS.Money.Euro.from_float(self.balance)
         self.balance = 0
 
+    def use(self):
+        if KDS.Keys.actionKey.held:
+            Wallet._SelectedIndex = 0
+        if KDS.Keys.actionKey.clicked and not KDS.Keys.actionKey.holdClicked:
+            Wallet._SelectedIndex += 1
+
+        return self.texture
+
     @staticmethod
     def _renderReset() -> None:
+        Wallet._SelectedIndex = 0
         for a in Wallet._Animations:
             a.value = 0.0
             a.velocity = 0.0
@@ -3146,8 +3155,20 @@ class Wallet(KDS.Build.Item):
         return KDS.Math.SmoothDamp(0.0, smooth_time=0.15, max_speed=10000.0)
 
     @staticmethod
-    def globalRenderUpdate(surface: pygame.Surface, isHandItem: bool, playerAliveAndVisible: bool) -> None:
-        if not isHandItem or not playerAliveAndVisible:
+    def iterateUnitsOrdered() -> Iterable[tuple[int, KDS.Money.Euro]]:
+        assert(Wallet._BalanceUnits is not None)
+        units: list[KDS.Money.Euro] = Wallet._BalanceUnits[1]
+        for tmp_i in range(len(units)):
+            i: int = (tmp_i + Wallet._SelectedIndex) % len(units)
+            yield i, units[i]
+
+    @staticmethod
+    def globalReset() -> None:
+        Wallet.Balance = KDS.Money.Euro.from_parts(euros=0)
+
+    @staticmethod
+    def globalRenderUpdate(surface: pygame.Surface, isHandItem: bool, renderUI: bool) -> None:
+        if not isHandItem:
             Wallet._renderReset()
             return
 
@@ -3157,34 +3178,37 @@ class Wallet(KDS.Build.Item):
             if split[1] != 0:
                 KDS.Logging.AutoError(f"Unaccounted cents in wallet: {split[1]}")
 
-        units: list[KDS.Money.Euro] = Wallet._BalanceUnits[1]
-        unit_count: int = len(units)
+        unit_count: int = len(Wallet._BalanceUnits[1])
         while len(Wallet._Animations) > unit_count:
             Wallet._Animations.pop(-1)
         while len(Wallet._Animations) < unit_count:
             Wallet._Animations.append(Wallet._create_animation())
 
         if unit_count > 0:
-            Wallet.SelectedIndex %= unit_count
+            Wallet._SelectedIndex %= unit_count
         else:
-            Wallet.SelectedIndex = 0
+            Wallet._SelectedIndex = 0
 
         current_x: int | None = None
-        for tmp_i in range(unit_count):
-            i: int = (tmp_i + Wallet.SelectedIndex) % unit_count
-            euro_tex: pygame.Surface = KDS.Money.get_texture(units[i])
-
+        units_ordered: tuple[tuple[int, KDS.Money.Euro], ...] = tuple(Wallet.iterateUnitsOrdered())
+        for index, unit in units_ordered:
             x: int
+            width: int = KDS.Money.get_texture(unit).get_width()
             if current_x is None:
                 x = 0
-                current_x = euro_tex.get_width()
+                current_x = width
             else:
                 current_x += Wallet.RENDER_SPACING
                 x = current_x
-                current_x += euro_tex.get_width()
+                current_x += width
 
-            rend_x: float = Wallet._Animations[i].update(x)
-            surface.blit(euro_tex, (Wallet.RENDER_POS[0] + round(rend_x), Wallet.RENDER_POS[1]))
+            Wallet._Animations[index].update(x)
+
+        if renderUI:
+            # render reversed so that overlapping animations are ordered correctly (the one moving to the end of the list is below)
+            for index, unit in reversed(units_ordered):
+                rend_x: float = Wallet._Animations[index].value
+                surface.blit(KDS.Money.get_texture(unit), (Wallet.RENDER_POS[0] + round(rend_x), Wallet.RENDER_POS[1]))
 
 KDS.Build.Item.serialNumbers = {
     1: BlueKey,
@@ -4047,6 +4071,7 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
 
     #region World Data
     TheftDetector.globalReset()
+    Wallet.globalReset()
 
     global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones, Particles
     Items.clear()
@@ -5082,7 +5107,7 @@ while main_running:
     Wallet.globalRenderUpdate(
         screen,
         isHandItem=isinstance(Player.inventory.getHandItem(), Wallet),
-        playerAliveAndVisible=(Player.health > 0 and Player.visible)
+        renderUI=(renderUI and Player.health > 0 and Player.visible)
     )
 
     for Zone in Zones:
