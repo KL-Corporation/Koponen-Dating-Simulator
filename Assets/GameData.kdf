@@ -35,6 +35,6 @@
         "totalLevelCount": 20
     },
     "Debug": {
-        "allowConsoleInStoryMode": true
+        "allowConsoleInStoryMode": false
     }
 }
