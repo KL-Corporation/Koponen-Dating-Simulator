@@ -389,8 +389,16 @@ def ToRational(value: float) -> str:
         integer += 1
     return f"{integer}{mark}"
 
-def FormatDuration(duration: datetime.timedelta) -> str:
-    totalSeconds: float = duration.total_seconds()
-    minutes = int(totalSeconds // 60)
-    seconds = round(totalSeconds % 60)
+def FormatDuration(duration: datetime.timedelta | float) -> str:
+    """either `datetime.timedelta` or `float` seconds."""
+    seconds: float
+    if isinstance(duration, datetime.timedelta):
+        seconds = duration.total_seconds()
+    elif isinstance(duration, float):
+        seconds = duration
+    else:
+        raise ValueError(f"Invalid duration type: {type(duration)}")
+
+    minutes = int(seconds // 60)
+    seconds = round(seconds % 60)
     return f"{minutes}m {seconds}s"
