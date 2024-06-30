@@ -7,6 +7,7 @@ from uuid import UUID
 
 import KDS.BuildData
 import KDS.MapProp
+import KDS.Money
 #region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
@@ -140,6 +141,7 @@ KDS.Scores.init()
 KDS.Koponen.init()
 KDS.Console.init(display, display, _KDS_Quit = KDS_Quit)
 KDS.School.init(display)
+# more initialisations in build data loading (these initialisations need textures)
 KDS.Keys.LoadCustomBindings()
 game_initialization_logger.stop("KDS modules initialised.")
 
@@ -529,7 +531,10 @@ class WorldData:
                             value = KDS.Build.Tile.specialTilesClasses[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                             Tiles[y][x].append(value)
                     elif pointer == 1:
-                        value = KDS.Build.Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                        if serialNumber < 900:
+                            value = KDS.Build.Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
+                        else:
+                            value = Wallet((x * 34, y * 34), serialNumber=serialNumber)
                         Items.append(value)
                     elif pointer == 2:
                         value = Enemy.serialNumbers[serialNumber]((x * 34,y * 34))
@@ -634,6 +639,7 @@ def load_path_sounds() -> dict[str, list[pygame.mixer.Sound]]:
     return path_sounds
 
 KDS.Build.init(tile_data=KDS.BuildData.load_tiles(), item_data=KDS.BuildData.load_items())
+KDS.Money.init()
 
 telep_textures: dict[int, pygame.Surface] = KDS.BuildData.load_teleports().textures
 path_sounds: Final[dict[str, list[pygame.mixer.Sound]]] = load_path_sounds()
@@ -3094,6 +3100,91 @@ class Euro_DEPRECATED(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
 
+    def use(self):
+        if KDS.Keys.actionKey.pressed:
+            # give Wallet with one euro stored in the balance (stored in the lower part of the serial number)
+            wallet = Wallet((0, 0), 901)
+            picked: bool = Player.inventory.pickupItem(wallet, force=True)
+            assert(picked)
+            wallet.pickup() # give the one euro stored in the serial number
+
+        return self.texture
+
+class Wallet(KDS.Build.Item):
+    """
+    To set balance:
+        LevelBuilder: use `balance` property
+        Inventory: use serial (900 => 0 €, 905 => 5 €, 925 => 25 €, 969 => 69 €, ...)
+    """
+
+    Balance: KDS.Money.Euro = KDS.Money.Euro.from_parts(euros=0)
+    SelectedIndex: int = 0
+
+    _BalanceUnits: tuple[KDS.Money.Euro, list[KDS.Money.Euro]] | None = None
+    _Animations: list[KDS.Math.SmoothDamp] = []
+
+    RENDER_POS: Final[tuple[int, int]] = (10, 150)
+    RENDER_SPACING: int = 10
+
+    def __init__(self, position: Tuple[int, int], serialNumber: int):
+        super().__init__(position, 900)
+        self.balance: int | float = serialNumber - 900
+
+    def pickup(self) -> None:
+        Wallet.Balance += KDS.Money.Euro.from_float(self.balance)
+        self.balance = 0
+
+    @staticmethod
+    def _renderReset() -> None:
+        for a in Wallet._Animations:
+            a.value = 0.0
+            a.velocity = 0.0
+
+    @staticmethod
+    def _create_animation() -> KDS.Math.SmoothDamp:
+        return KDS.Math.SmoothDamp(0.0, smooth_time=0.15, max_speed=10000.0)
+
+    @staticmethod
+    def globalRenderUpdate(surface: pygame.Surface, isHandItem: bool, playerAliveAndVisible: bool) -> None:
+        if not isHandItem or not playerAliveAndVisible:
+            Wallet._renderReset()
+            return
+
+        if Wallet._BalanceUnits is None or Wallet._BalanceUnits[0] != Wallet.Balance:
+            split = Wallet.Balance.split_units()
+            Wallet._BalanceUnits = (Wallet.Balance, split[0])
+            if split[1] != 0:
+                KDS.Logging.AutoError(f"Unaccounted cents in wallet: {split[1]}")
+
+        units: list[KDS.Money.Euro] = Wallet._BalanceUnits[1]
+        unit_count: int = len(units)
+        while len(Wallet._Animations) > unit_count:
+            Wallet._Animations.pop(-1)
+        while len(Wallet._Animations) < unit_count:
+            Wallet._Animations.append(Wallet._create_animation())
+
+        if unit_count > 0:
+            Wallet.SelectedIndex %= unit_count
+        else:
+            Wallet.SelectedIndex = 0
+
+        current_x: int | None = None
+        for tmp_i in range(unit_count):
+            i: int = (tmp_i + Wallet.SelectedIndex) % unit_count
+            euro_tex: pygame.Surface = KDS.Money.get_texture(units[i])
+
+            x: int
+            if current_x is None:
+                x = 0
+                current_x = euro_tex.get_width()
+            else:
+                current_x += Wallet.RENDER_SPACING
+                x = current_x
+                current_x += euro_tex.get_width()
+
+            rend_x: float = Wallet._Animations[i].update(x)
+            surface.blit(euro_tex, (Wallet.RENDER_POS[0] + round(rend_x), Wallet.RENDER_POS[1]))
+
 KDS.Build.Item.serialNumbers = {
     1: BlueKey,
     2: Cell,
@@ -3134,7 +3225,9 @@ KDS.Build.Item.serialNumbers = {
     37: BucketOfBlood,
     38: HotelKeycard,
     39: SurveyAnswers,
-    40: Euro_DEPRECATED
+    40: Euro_DEPRECATED,
+
+    900: Wallet
 }
 game_initialization_logger.stop("Item Loading Complete.")
 #endregion
@@ -3531,6 +3624,9 @@ def console(oldSurf: pygame.Surface):
         },
         "fly": trueFalseTree,
         "godmode": trueFalseTree,
+        "money": { str(Wallet.Balance): "break" },
+        "rosebud": "break",
+        "motherlode": "break",
         "runprog": {
             "exam": "break",
             "story_sad_ending": "break",
@@ -3775,6 +3871,31 @@ def console(oldSurf: pygame.Surface):
                         KDS.Console.Feed.append("Please provide a proper state for godmode")
                 else:
                     KDS.Console.Feed.append("Please provide a proper state for godmode")
+            elif command_list[0] == "money":
+                if len(command_list) == 2:
+                    moneyAmount: float | None
+                    try:
+                        moneyAmount = float(command_list[1])
+                    except ValueError:
+                        moneyAmount = None
+
+                    if moneyAmount is not None:
+                        Wallet.Balance = KDS.Money.Euro.from_float(moneyAmount)
+                        KDS.Console.Feed.append(f"Wallet money balance has been set to: {Wallet.Balance}")
+                    else:
+                        KDS.Console.Feed.append("Please provide a proper amount of money")
+                else:
+                    KDS.Console.Feed.append("Please provide a proper amount of money")
+            elif command_list[0] == "rosebud":
+                if len(command_list) == 1:
+                    Wallet.Balance += KDS.Money.Euro.from_parts(euros=1)
+                else:
+                    KDS.Console.Feed.append("rosebud does not take any arguments")
+            elif command_list[0] == "motherlode":
+                if len(command_list) == 1:
+                    Wallet.Balance += KDS.Money.Euro.from_parts(euros=50)
+                else:
+                    KDS.Console.Feed.append("motherlode does not take any arguments")
             elif command_list[0] == "runprog":
                 if len(command_list) == 2:
                     if command_list[1] == "exam":
@@ -3792,12 +3913,12 @@ def console(oldSurf: pygame.Surface):
                     KDS.Console.Feed.append("Please provide a proper program for runprog")
             elif command_list[0] == "tickspeed":
                 if len(command_list) == 2:
-                    command_tickspeed: int | None
+                    command_tickspeed: float | None
                     if command_list[1] == "default":
                         command_tickspeed = KDS.Clock.DEFAULT_FRAMERATE
                     else:
                         try:
-                            command_tickspeed = int(command_list[1])
+                            command_tickspeed = float(command_list[1])
                         except ValueError:
                             command_tickspeed = None
 
@@ -3828,6 +3949,9 @@ Console Help:
         If value is not given, infinity is toggled.
     - godmode: Activate God Mode.
         Gives the player some buffs like infinite health
+    - money: Set the amount of money stored in the wallet.
+    - rosebud: Give 1 €
+    - motherlode: Give 50 €
     - runprog: Run an internal KDS program.
     - tickspeed: Change the runtime tick speed (framerate) of the program.
     - help: Show the list of commands.""")
@@ -4911,6 +5035,7 @@ while main_running:
 
     # MUST BE BEFORE TILE RENDER (which is called by KDS.Build.Tile.renderUpdate)
     TheftDetector.globalUpdate()
+
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
@@ -4952,6 +5077,12 @@ while main_running:
         Player.inventory.useItem(Player.rect, Player.direction, screen, scroll)
 
         Awm.globalUpdate(isinstance(Player.inventory.getHandItem(), Awm))
+
+    Wallet.globalRenderUpdate(
+        screen,
+        isHandItem=isinstance(Player.inventory.getHandItem(), Wallet),
+        playerAliveAndVisible=(Player.health > 0 and Player.visible)
+    )
 
     for Zone in Zones:
         Zone.update(Player.rect)

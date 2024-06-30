@@ -32,8 +32,11 @@ import KDS.Math
 
 _clock: pygame.time.Clock = pygame.time.Clock()
 
-DEFAULT_FRAMERATE: Final[int] = 60
-framerate: int = DEFAULT_FRAMERATE
+DEFAULT_FRAMERATE: Final[float] = 62.5
+# 60 fps rounds to 62.5 due to pygame inaccuracies. We set 62.5 manually in case this behaviour changes in the future.
+# DO NOT CHANGE THIS BACK TO 60!! KDS.Math.SmoothDamp depends on this new value.
+
+framerate: float = DEFAULT_FRAMERATE
 def Tick(framerate_override: int | None = None):
     _clock.tick_busy_loop(framerate_override if framerate_override is not None else framerate)
 

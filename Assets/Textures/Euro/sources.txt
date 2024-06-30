@@ -1,0 +1,9 @@
+EU website has images of coin and banknote faces, but the banknotes have SPECIMEN written on top of them.
+This PDF has the sides without watermark at a very low resolution:
+https://www.ecb.europa.eu/pub/pdf/other/euroleafleten.pdf
+we import it at 32dpi and extract the banknotes.
+
+Coins source: https://www.ecb.europa.eu/euro/coins/common/html/index.en.html
+we download the common variant (not new-common) as our extracted banknotes are also the old version.
+Background is removed (tolerance: 30%) and image is rescaled to 6 % of the original size.
+Alpha is removed using Assets/Textures/Teachers/removeAlpha.py and background is switched to white.

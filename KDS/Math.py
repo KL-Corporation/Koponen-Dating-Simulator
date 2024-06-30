@@ -1,4 +1,4 @@
-from typing import Iterable, List, Sequence, SupportsFloat, Tuple, TypeVar, Union, cast
+from typing import Final, Iterable, List, NamedTuple, Self, Sequence, SupportsFloat, Tuple, TypeVar, Union, cast
 import sys
 import enum
 
@@ -22,17 +22,21 @@ from math import pi as PI
 T = TypeVar("T")
 Value = TypeVar("Value", int, float)
 
+import KDS.Clock
 import KDS.Logging
 
 #region Constants
-EPSILON = sys.float_info.epsilon
-INFINITY = float("inf")
-NEGATIVEINFINITY = float("-inf")
-NAN = float("nan")
-DEG2RAD = (PI * 2) / 360
-RAD2DEG = 1 / DEG2RAD
-MAXVALUE = sys.maxsize
-MINVALUE = -MAXVALUE - 1
+EPSILON: Final[float] = sys.float_info.epsilon
+
+INFINITY: Final[float] = float("inf")
+NEGATIVEINFINITY: Final[float] = float("-inf")
+NAN: Final[float] = float("nan")
+
+DEG2RAD: Final[float] = (PI * 2) / 360
+RAD2DEG: Final[float] = 1 / DEG2RAD
+
+MAXVALUE: Final[int] = sys.maxsize
+MINVALUE: Final[int] = -MAXVALUE - 1
 #endregion
 
 #region Default Math Functions
@@ -292,6 +296,49 @@ def Closest(value: float, iterable: Iterable[Value]) -> Value:
 def Furthest(value: float, iterable: Iterable[Value]) -> Value:
     COMPARISONFUNCTION = lambda k: abs(k - value)
     return max(iterable, key=COMPARISONFUNCTION)
+#endregion
+
+#region Smooth Damp
+class SmoothDamp:
+    MIN_SMOOTH_TIME: Final[float] = 0.0001
+
+    def __init__(self, starting_value: float, *, smooth_time: float = MIN_SMOOTH_TIME, max_speed: float = INFINITY) -> None:
+        self.value: float = starting_value
+        self.velocity: float = 0.0
+
+        self.smooth_time: Final[float] = max(SmoothDamp.MIN_SMOOTH_TIME, smooth_time)
+        self.max_speed: Final[float] = max_speed
+
+    def update(self, target: float) -> float:
+        """Update this instance on every gametick."""
+
+        delta_time: float = 1 / KDS.Clock.DEFAULT_FRAMERATE
+
+        # https://github.com/Unity-Technologies/UnityCsReference/blob/c4a2a4d90d91496bf3d4602778223a0e660c2a56/Runtime/Export/Math/Mathf.cs#L309
+        omega: float = 2.0 / self.smooth_time
+
+        x: float = omega * delta_time
+        exp: float = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+        change: float = self.value - target
+        originalTo: float = target
+
+        # Clamp maximum speed
+        maxChange: float = self.max_speed * self.smooth_time
+        change = Clamp(change, -maxChange, maxChange)
+        target = self.value - change
+
+        temp: float = (self.velocity + omega * change) * delta_time
+        self.velocity = (self.velocity - omega * temp) * exp
+        output: float = target + (change + temp) * exp
+
+        # Prevent overshooting
+        if ((originalTo - self.value) > 0.0) == (output > originalTo):
+            output = originalTo
+            self.velocity = (output - originalTo) / delta_time
+
+        self.value = output
+        return self.value
+
 #endregion
 
 #region Scrapped
