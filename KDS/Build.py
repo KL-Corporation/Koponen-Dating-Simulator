@@ -212,15 +212,20 @@ class Item:
         self.content_rect: Final[pygame.Rect]
         self.texture, self.content_rect = Item._textures[serialNumber]
 
-        self.rect = pygame.Rect(position[0], position[1] + (34 - self.content_rect.height), self.content_rect.width, self.content_rect.height)
-        self.serialNumber = serialNumber
+        self.rect: pygame.Rect = pygame.Rect(position[0], position[1] + (34 - self.content_rect.height), self.content_rect.width, self.content_rect.height)
+        self.serialNumber: Final[int] = serialNumber
+
         self.physics = False
         self.vertical_momentum: float = 0.0
         self.horizontal_momentum: float = 0.0
+
         self.doubleSize: bool = self.serialNumber in Item.inventoryDoubles
         self.supportsInventory = self.serialNumber in Item.inventoryItems
+
         self.storePrice: Optional[int] = None
         self.storeDiscountPrice: Optional[int] = None
+
+        self.__pickup_score_given: bool = False
 
     @staticmethod
     # Item_list is a list
@@ -300,6 +305,16 @@ class Item:
         item.vertical_momentum = player.vertical_momentum
         item.horizontal_momentum = player.movement[0]
         Item_list.append(item)
+
+    def try_give_pickup_score(self, score: int) -> bool:
+        """Returns True if the score was given. False if otherwise (score already given, etc.)"""
+
+        if self.__pickup_score_given:
+            return False
+
+        KDS.Scores.score += score
+        self.__pickup_score_given = True
+        return True
 
     def pickup(self) -> None:
         pass
@@ -427,6 +442,6 @@ class Ammo(Item):
         return self.texture
 
     def pickup(self) -> None:
-        KDS.Scores.ItemScoreHandler.registerItemPickupScore(self, self.score)
+        self.try_give_pickup_score(self.score)
         KDS.Audio.PlaySound(self.sound)
         Weapon.addAmmo(self.type, self.add)

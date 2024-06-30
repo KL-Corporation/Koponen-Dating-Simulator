@@ -29,57 +29,6 @@ maxTimeBonus = 500
 score: int = 0
 levelDeaths: int = 0
 
-class ItemScoreHandler:
-    _items: dict[int, weakref.ref[object]] | None = None
-
-    @staticmethod
-    def internalStart():
-        ItemScoreHandler._items = dict()
-
-    @staticmethod
-    def registerItemPickupScore(item: object, addScore: int):
-        """
-        Item should be the item instance that triggers the pickup.
-        This should be instance of `KDS.Build.Item`, but we cannot verify it due to Python being stupid. (cannot import item)
-        """
-        # NOTE: This isn't a foolproof system
-        # as some items are destroyed/created in the lifecycle of the game
-        # i.e. meth flask => empty flask (drinking)
-        # In these cases the new item can be reregistered for item score
-        # but this is still vastly better than getting score for every single pickup possible
-
-        # TODO: Save the score inside every item instance and set it as 0 when used.
-
-        if ItemScoreHandler._items is None:
-            raise RuntimeError("Item Score Handler has not been started!")
-
-        itemMemoryAddr: int = id(item)
-
-        # Check if memory address is used first
-        # We check memory address instead of set contains in case any items have overridden the __eq__ method
-        # After that the item needs to be verified because GC can free the memory for new items to be allocated in the same spot
-        existingObject: weakref.ref[object] | None = ItemScoreHandler._items.get(itemMemoryAddr, None)
-        if existingObject is not None:
-            # We keep a weak reference to this object in the dictionary so that the garbage collector can clear unused items
-            # so that we don't have a memory leak
-
-            # We check 'is item' to verify that the memory address belongs to the same object
-            # if a new object was allocated on its space, we replate the item at that memory location reference.
-            if existingObject() is item:
-                KDS.Logging.info(f"Ignoring item score for item, item has already been picked up.")
-                return
-            else:
-                KDS.Logging.info(f"Item at address {hex(itemMemoryAddr)} has been replaced by a new item instance, score will be added.", consoleVisible=True)
-
-        ItemScoreHandler._items[itemMemoryAddr] = weakref.ref(item)
-
-        global score
-        score += addScore
-
-    @staticmethod
-    def internalStop():
-        ItemScoreHandler._items = None
-
 def init():
     global pointSound
     pointSound = pygame.mixer.Sound("Assets/Audio/Effects/point_count.ogg")
@@ -244,7 +193,6 @@ class ScoreCounter:
         score = 0
         levelDeaths = 0
 
-        ItemScoreHandler.internalStart()
         storyMode = KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story
         GameTime.Start(GameTimerType.PerfCounter if not storyMode else GameTimerType.DateTime)
 
@@ -258,7 +206,6 @@ class ScoreCounter:
 
     @staticmethod
     def Stop():
-        ItemScoreHandler.internalStop()
         GameTime.Stop()
 
     @staticmethod
