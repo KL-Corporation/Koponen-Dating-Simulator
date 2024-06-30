@@ -71,45 +71,71 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
     if not debugInfo:
         return
 
+    def _format_version(ver: tuple[int, int, int] | None):
+        if ver is None:
+            return "null"
+        else:
+            return f"{ver[0]}.{ver[1]}.{ver[2]}"
+
+    def _format_bool(b: bool) -> str:
+        return "Yes" if b else "No"
+
+    def _format_accel(accel: bool, hw: bool):
+        out: str = _format_bool(accel)
+        if accel:
+            out += f" ({'hardware' if hw else 'software'})"
+        return out
+
     display_info = pygame.display.Info()
-    mixer_version: Tuple = pygame.mixer.get_sdl_mixer_version()
+    cpu_inst_info = pygame.system.get_cpu_instruction_sets()
+
     platform_info = platform.uname()
+    architecture_info = platform.architecture()
+
     memory_info = psutil.virtual_memory()
+
+    hw_accel: bool = bool(display_info.hw)
+    blit_accel: bool = bool(display_info.blit_hw if hw_accel else display_info.blit_sw)
+    blit_CC_accel: bool = bool(display_info.blit_hw_CC if hw_accel else display_info.blit_sw_CC)
+    blit_A_accel: bool = bool(display_info.blit_hw_A if hw_accel else display_info.blit_sw_A)
+
     debug(f"""
 I=====[ DEBUG INFO ]=====I
     [Version Info]
     - Application: {KDS.Application.VERSION}
-    - pygame: {pygame.version.ver}
-    - SDL: {pygame.version.SDL.major}.{pygame.version.SDL.minor}.{pygame.version.SDL.patch}
-    - SDL Mixer: {mixer_version[0]}.{mixer_version[1]}.{mixer_version[2]}
-    - Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}
+    - pygame: {_format_version(pygame.version.vernum)}
+    - SDL: {_format_version(pygame.get_sdl_version())}
+        - Mixer: {_format_version(pygame.mixer.get_sdl_mixer_version())}
+        - TTF: {_format_version(pygame.font.get_sdl_ttf_version())}
+        - Image: {_format_version(pygame.image.get_sdl_image_version())}
+    - Python: {platform.python_implementation()} {_format_version(sys.version_info[0:3])}
     - {platform_info.system} {platform_info.release}: {platform_info.version}
 
-    [Video Info]
+    [Driver Info]
     - SDL Video Driver: {pygame.display.get_driver()}
-    - Hardware Acceleration: {bool(display_info.hw)}
-    - Window Allowed: {bool(display_info.wm)}
-    - Video Memory: {display_info.video_mem if display_info.video_mem != 0 else "N/A"}
+    - SDL Mixer Driver: {pygame.mixer.get_driver()}
 
-    [Pixel Info]
-    - Bit Size: {display_info.bitsize}
-    - Byte Size: {display_info.bytesize}
-    - Masks: {display_info.masks}
-    - Shifts: {display_info.shifts}
-    - Losses: {display_info.losses}
+    [Video Info]
+    - Hardware Acceleration: {_format_bool(hw_accel)}
+        - Accelerated blit: {_format_accel(blit_accel, hw_accel)}
+        - Accelerated colorkey blit: {_format_accel(blit_CC_accel, hw_accel)}
+        - Accelerated pixel alpha blit: {_format_accel(blit_A_accel, hw_accel)}
+    - Pixel Format: {display_info.pixel_format}
+    - Window Allowed: {_format_bool(bool(display_info.wm))}
 
     [System Info]
-    - Architecture: {platform_info.machine}
-    - Processor (Cores: {psutil.cpu_count(logical=False)}, Threads: {psutil.cpu_count(logical=True)}): {platform_info.processor}
+    - Machine: {platform_info.machine}
+    - Architecture: {architecture_info[0]}
+    - Linkage: {architecture_info[1]}
+    - Processor: {KDS.System.GetProcessorName()}
+        - Cores: {psutil.cpu_count(logical=False)}
+        - Threads: {psutil.cpu_count(logical=True)}
+        - Max Frequency: {psutil.cpu_freq().max / 1000} GHz
+        - Supports:
+            - SSE2: {_format_bool(cpu_inst_info["SSE2"])}
+            - AVX2: {_format_bool(cpu_inst_info["AVX2"])}
+            - NEON: {_format_bool(cpu_inst_info["NEON"])}
     - RAM: {memory_info.available / 1_073_741_824} GB Available ({memory_info.total / 1_073_741_824} GB Total)
-
-    [Hardware Acceleration]
-    - Hardware Blitting: {bool(display_info.blit_hw)}
-    - Hardware Colorkey Blitting: {bool(display_info.blit_hw_CC)}
-    - Hardware Pixel Alpha Blitting: {bool(display_info.blit_hw_A)}
-    - Software Blitting: {bool(display_info.blit_sw)}
-    - Software Colorkey Blitting: {bool(display_info.blit_sw_CC)}
-    - Software Pixel Alpha Blitting: {bool(display_info.blit_sw_A)}
 I=====[ DEBUG INFO ]=====I""")
 
 def _log(message: str | BaseException, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:

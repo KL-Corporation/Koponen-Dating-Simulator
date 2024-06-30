@@ -278,5 +278,25 @@ def GetUserNameEx(NameDisplay: EXTENDED_NAME_FORMAT) -> Optional[str]:
     GetUserNameEx(NameDisplay.value, nameBuffer, size)
     return nameBuffer.value
 
+def GetProcessorName() -> str:
+    if ISLINUX:
+        return platform.processor()
+
+    output: str | None
+    try:
+        output = subprocess.check_output(
+            ["wmic", "cpu", "get", "Name", "/format:list"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            encoding="utf8",
+        )
+    except (OSError, subprocess.CalledProcessError):
+        output = None
+
+    if output is None or len(output) < 1:
+        return platform.processor()
+    else:
+        return output.strip().removeprefix("Name=")
+
 def OpenURL(url: str):
     webbrowser.open_new_tab(url)
