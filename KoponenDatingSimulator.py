@@ -4280,12 +4280,40 @@ def main_menu():
             KDS.ConfigManager.SetSetting("Player/currentMap", current_map_index)
     level_pick.pick(level_pick.direction.none)
 
+    @dataclass(frozen=True)
+    class CampaignShowScores:
+        surface: pygame.Surface | None
+        """None if campaign scores cannot be calculated."""
+
+        height_animation: KDS.Animator.Value
+
+        @classmethod
+        def load(cls, save_uuid: UUID, surface_size: tuple[int, int], background_color: tuple[int, int, int]) -> KDS.Jobs.JobHandle[Self]:
+            def _construct() -> Self:
+                surf: pygame.Surface | None = KDS.Scores.render_campaign_scores(
+                    save_uuid,
+                    font=ArialFont,
+                    size=surface_size,
+                    padding=16,
+                    background_color=background_color
+                )
+
+                return cls(
+                    surface=surf,
+                    height_animation=KDS.Animator.Value(0, 1, 60, KDS.Animator.AnimationType.EaseInOutCubic)
+                )
+
+            return KDS.Jobs.Schedule(_construct)
+
     @dataclass
     class CampaignData:
         map_index: int
         map_dirpath: str | None
 
         load_job: KDS.Jobs.JobHandle[None] | None
+
+        show_scores_countdown: int | None = None
+        show_scores: KDS.Jobs.JobHandle[CampaignShowScores] | None = None
 
         campaign: KDS.MapProp.CampaignPropData | None = None
         preview: pygame.Surface | None = None
@@ -4409,6 +4437,12 @@ def main_menu():
     campaign_play_button_rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 300, 300, 100)
     campaign_play_text = KDS.UI.ButtonFont.render("START", True, KDS.Colors.EmeraldGreen)
 
+    campaign_map_name_rect = pygame.Rect(50, 200, int(display_size[0] - 100), 66)
+    # campaign stats are centered vertically inside rect, switch rect y position to 'campaign_map_name_rect.bottom + 50' if more space is needed
+    campaign_stats_rect = pygame.Rect(campaign_play_button_rect.right + 50, campaign_play_button_rect.top, 0, 0)
+    campaign_stats_rect.width = (display_size[0] - 50) - campaign_stats_rect.x
+    campaign_stats_rect.height = (display_size[1] - 50) - campaign_stats_rect.y
+
     campaignDatas: dict[int, CampaignData] = {}
     campaignAnimatingBackgrounds: list[tuple[CampaignData, KDS.Animator.Value]] = []
 
@@ -4490,7 +4524,9 @@ def main_menu():
                             MenuMode = Mode.StoryMenu
                         elif mode_selection_modes[y] == KDS.Gamemode.Modes.Campaign:
                             MenuMode = Mode.CampaignMenu
-                            campaignAnimatingBackgrounds.clear()
+                            campaignAnimatingBackgrounds.clear() # reset background animation
+                            for cmpDat in campaignDatas.values(): # reset show scores
+                                cmpDat.show_scores_countdown = None
                             c = False
                         else:
                             KDS.Logging.AutoError(f"Invalid mode_selection_mode! Value: {mode_selection_modes[y]}")
@@ -4540,7 +4576,7 @@ def main_menu():
                             None,
                             f"""Exam Grade: {KDS.Convert.ToRational(data["grade"])}""" if data["grade"] != -1 else None,
                             f"""Score: {data["score"]}""",
-                            f"""Playtime: {KDS.Scores.GameTime.GetFormattedString(data["playtime"])}""",
+                            f"""Playtime: {KDS.Convert.FormatDuration(data["playtime"])}""",
                             f"""Last Played: {KDS.Convert.DateTime.Humanize(datetime.fromtimestamp(data["lastPlayedTimestamp"]))}"""
                         ]
                         for i, line in enumerate(lines):
@@ -4573,6 +4609,17 @@ def main_menu():
             current_map_data: Final[CampaignData] = campaignDatas[current_map_index]
             assert(current_map_data.map_index == current_map_index)
 
+            for cmpDat in campaignDatas.values():
+                if cmpDat is not current_map_data or cmpDat.show_scores_countdown is None:
+                    cmpDat.show_scores_countdown = 180
+                    cmpDat.show_scores = None
+                else:
+                    cmpDat.show_scores_countdown -= 1
+                    if cmpDat.show_scores_countdown < 0:
+                        cmpDat.show_scores_countdown = 0
+                        if cmpDat.show_scores is None and cmpDat.campaign is not None and cmpDat.campaign.scoresGuid is not None:
+                            cmpDat.show_scores = CampaignShowScores.load(cmpDat.campaign.scoresGuid, surface_size=campaign_stats_rect.size, background_color=(100, 100, 100))
+
             # looked ugly so I un-added (removed) it
             # while len(campaignBgs) > 3: # added due to poor performance
             #     campaignBgs.pop(1) # leave the bottom one as is, it's the one where we first started panning
@@ -4602,7 +4649,20 @@ def main_menu():
                 load_custom_maps()
                 level_pick.pick(level_pick.direction.none)
 
-            pygame.draw.rect(display, KDS.Colors.LightGray, (50, 200, int(display_size[0] - 100), 66))
+            pygame.draw.rect(display, KDS.Colors.LightGray, campaign_map_name_rect)
+
+            if current_map_data.show_scores is not None and current_map_data.show_scores.IsComplete:
+                show_scores: CampaignShowScores = current_map_data.show_scores.Complete()
+                if show_scores.surface is not None:
+                    show_scores_unscaled: pygame.Surface = show_scores.surface
+                    show_scores_scaled: pygame.Surface
+                    if not show_scores.height_animation.Finished:
+                        show_scores_height: int = int(show_scores_unscaled.height * show_scores.height_animation.update())
+                        show_scores_scaled = pygame.transform.smoothscale(show_scores_unscaled, (show_scores_unscaled.width, show_scores_height))
+                    else:
+                        show_scores_scaled = show_scores_unscaled
+
+                    display.blit(show_scores_scaled, (campaign_stats_rect.left, campaign_stats_rect.centery - (show_scores_unscaled.height // 2)))
 
             render_map_name: str | None = None
             if current_map_index > 0:
@@ -4736,7 +4796,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
             level_f_surf.blit(scoreTexts[i], (menu_rect.left + padding, textY))
 
         if KDS.Scores.ScoreAnimation.finished:
-            timeTakenText = ArialFont.render(f"Time Taken: {KDS.Scores.GameTime.GetFormattedString()}", True, score_color)
+            timeTakenText = ArialFont.render(f"Time Taken: {KDS.Convert.FormatDuration(KDS.Scores.GameTime.GetGameTime())}", True, score_color)
             textY = textStartVertOffset + (len(values) - 1) * textVertOffset + totalVertOffset
             level_f_surf.blit(timeTakenText, (menu_rect.left + padding, textY + timeTakenVertOffset))
 

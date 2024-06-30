@@ -18,6 +18,7 @@ import KDS.MapProp
 import KDS.Math
 import KDS.Gamemode
 import KDS.Clock
+import KDS.Convert
 
 waitMilliseconds = 500 #The amount of milliseconds ScoreAnimation will wait before updating the next animation
 maxAnimationLength = 120 #The maximum amount of ticks one value of ScoreAnimation can take
@@ -206,16 +207,6 @@ class GameTime:
             raise RuntimeError("Cannot get game time before stopping timer!")
         return GameTime.Timer.GetGameTime()
 
-    @staticmethod
-    def GetFormattedString(secondsOverride: Optional[float] = None) -> str:
-        totalSeconds = secondsOverride
-        if totalSeconds == None:
-            time = GameTime.GetGameTime()
-            totalSeconds = time.total_seconds()
-        minutes = int(totalSeconds // 60)
-        seconds = round(totalSeconds % 60)
-        return f"{minutes}m {seconds}s"
-
 @dataclass(frozen=True)
 class TimeBonusScore:
     bonus_start: float
@@ -335,3 +326,54 @@ class ScoreAnimation:
             animation: KDS.Animator.Value
             animation.tick = animation.ticks + 1
             animation.update()
+
+def render_campaign_scores(save_uuid: UUID, font: pygame.Font, size: tuple[int, int], padding: int, background_color: tuple[int, int, int]) -> pygame.Surface | None:
+    save: Final = KDS.ConfigManager.CampaignSave.load(save_uuid)
+    if not save.can_be_scored:
+        return None
+
+    datas: list[list[tuple[str, str]]] = [
+        [
+            ("Highest Score", str(save.get_max_score())),
+            ("Fastest Run", KDS.Convert.FormatDuration(save.get_min_duration())),
+        ],
+        [
+            ("Total Deaths", str(save.get_total_deaths())),
+            ("Total Runs", str(save.get_run_count()))
+        ]
+    ]
+
+    logical_size: Final = (size[0] - 2 * padding, size[1] - 2 * padding)
+
+    data_surfs: list[pygame.Surface] = [
+        _render_campaign_data(font=font, width=logical_size[0], data=data, background_color=background_color)
+        for data in datas
+    ]
+    data_surf_total_height: int = sum(ds.height for ds in data_surfs)
+    space_between: float = (logical_size[1] - data_surf_total_height) / (len(data_surfs) - 1)
+
+    surf: Final = pygame.Surface(size)
+    surf.fill(background_color)
+
+    blitted_height: int = 0
+    for i, ds in enumerate(data_surfs):
+        y: int = padding + blitted_height + round(i * space_between)
+        surf.blit(ds, (padding, round(y)))
+        blitted_height += ds.height
+    return surf
+
+def _render_campaign_data(*, font: pygame.Font, width: int, data: list[tuple[str, str]], background_color: tuple[int, int, int]) -> pygame.Surface:
+    lineheight: int = font.get_linesize()
+    height: int = len(data) * lineheight
+
+    surf: Final = pygame.Surface((width, height))
+    surf.fill(background_color)
+    for i, (title, value) in enumerate(data):
+        tsurf = font.render(title, True, (255, 255, 255))
+        vsurf = font.render(value, True, (255, 255, 255))
+
+        y: int = i * lineheight
+        surf.blit(tsurf, (0, y))
+        surf.blit(vsurf, (width - vsurf.width, y))
+
+    return surf

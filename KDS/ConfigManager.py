@@ -274,7 +274,7 @@ class CampaignRun:
 
         duration_seconds: int | float = json["duration"]
         assert(isinstance(score, (int, float)))
-        duration: timedelta = timedelta(duration_seconds)
+        duration: timedelta = timedelta(seconds=duration_seconds)
 
         return cls(
             score=score,
@@ -287,6 +287,10 @@ class CampaignRun:
 class CampaignSave:
     def __init__(self, *, _runs: Iterable[CampaignRun]) -> None:
         self._runs: tuple[CampaignRun, ...] = tuple(_runs)
+
+    @property
+    def can_be_scored(self) -> bool:
+        return len(self._runs) > 0
 
     def get_max_score(self) -> int:
         return max(self._runs, key=lambda r: r.score).score

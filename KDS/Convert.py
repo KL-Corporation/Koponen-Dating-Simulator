@@ -388,3 +388,9 @@ def ToRational(value: float) -> str:
     if closest > 0.5:
         integer += 1
     return f"{integer}{mark}"
+
+def FormatDuration(duration: datetime.timedelta) -> str:
+    totalSeconds: float = duration.total_seconds()
+    minutes = int(totalSeconds // 60)
+    seconds = round(totalSeconds % 60)
+    return f"{minutes}m {seconds}s"
