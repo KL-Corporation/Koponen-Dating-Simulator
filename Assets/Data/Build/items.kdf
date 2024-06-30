@@ -272,7 +272,7 @@
         "supportsInventory": true,
         "isContraband": false
     },
-    "Euro": {
+    "Euro (deprecated)": {
         "serialNumber": 40,
         "path": "euro.png",
         "doubleSize": false,

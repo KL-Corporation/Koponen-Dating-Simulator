@@ -1958,7 +1958,7 @@ class CashRegister(KDS.Build.Tile):
 
         if self.payRect.colliderect(Player.rect):
             hndItm = Player.inventory.getHandItem()
-            if isinstance(hndItm, Euro):
+            if isinstance(hndItm, Euro_DEPRECATED):
                 payTip = CashRegister.payTip.get_surface()
                 screen.blit(payTip, (self.payRect.centerx - payTip.get_width() // 2 - scroll[0], self.payRect.y - 10 - scroll[1]))
                 if KDS.Keys.functionKey.clicked and self.payEuro():
@@ -3083,7 +3083,7 @@ class SurveyAnswers(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
 
-class Euro(KDS.Build.Item):
+class Euro_DEPRECATED(KDS.Build.Item):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
 
@@ -3127,7 +3127,7 @@ KDS.Build.Item.serialNumbers = {
     37: BucketOfBlood,
     38: HotelKeycard,
     39: SurveyAnswers,
-    40: Euro
+    40: Euro_DEPRECATED
 }
 game_initialization_logger.stop("Item Loading Complete.")
 #endregion
