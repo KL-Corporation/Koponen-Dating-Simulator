@@ -332,50 +332,36 @@ class Value:
 
 class Color:
     def __init__(self, From: Tuple[int, int, int], To: Tuple[int, int, int], Duration: int, _AnimationType: AnimationType = AnimationType.Linear, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop) -> None:
-        self._r = Value(From[0], To[0], Duration, _AnimationType, _OnAnimationEnd)
-        self._g = Value(From[1], To[1], Duration, _AnimationType, _OnAnimationEnd)
-        self._b = Value(From[2], To[2], Duration, _AnimationType, _OnAnimationEnd)
+        self._t: Final = Value(0.0, 1.0, Duration=Duration, _AnimationType=_AnimationType, _OnAnimationEnd=_OnAnimationEnd)
 
-    @property
-    def From(self) -> Tuple[int, int, int]:
-        return (int(self._r.From), int(self._g.From), int(self._b.From))
-
-    @From.setter
-    def From(self, value: Tuple[int, int, int]):
-        self._r.From = value[0]
-        self._g.From = value[1]
-        self._b.From = value[2]
-
-    @property
-    def To(self) -> Tuple[int, int, int]:
-        return (int(self._r.To), int(self._g.To), int(self._b.To))
-
-    @To.setter
-    def To(self, value: Tuple[int, int, int]):
-        self._r.To = value[0]
-        self._g.To = value[1]
-        self._b.To = value[2]
+        self.From: tuple[int, int, int] = From
+        self.To: tuple[int, int, int] = To
 
     @property
     def Finished(self) -> bool:
-        return self._r.Finished and self._g.Finished and self._b.Finished
+        return self._t.Finished
 
     @property
     def tick(self) -> int:
-        return self._r.tick
+        return self._t.tick
 
     @tick.setter
     def tick(self, value: int):
-        self._r.tick = value
-        self._g.tick = value
-        self._b.tick = value
+        self._t.tick = value
 
     @property
     def ticks(self) -> int:
-        return self._r.ticks
+        return self._t.ticks
 
     def get_value(self) -> Tuple[int, int, int]:
-        return (round(self._r.get_value()), round(self._g.get_value()), round(self._b.get_value()))
+        return self._get_value(self._t.get_value())
 
     def update(self, reverse: bool = False) -> Tuple[int, int, int]:
-        return (round(self._r.update(reverse)), round(self._g.update(reverse)), round(self._b.update(reverse)))
+        return self._get_value(self._t.update(reverse=reverse))
+
+
+    def _value(self, index: int, t: float) -> int:
+        return round(KDS.Math.LerpUnclamped(self.From[index], self.To[index], t))
+
+    def _get_value(self, t: float) -> tuple[int, int, int]:
+        return (self._value(0, t), self._value(1, t), self._value(2, t))
