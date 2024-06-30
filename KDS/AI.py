@@ -778,21 +778,19 @@ class SecurityGuard(HostileEnemy):
         # del aim_im, shoot_im
         #endregion
 
-        self.lastTargetDirection = False
         self.ticksSinceSwitch = 0
 
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=random.choice(SecurityGuard.sight_sounds), death_sound=SecurityGuard.death_sound, health=health, mv=[1, 8], attackPropability=40)
 
     def lateInit(self):
         super().lateInit()
-        self.lastTargetDirection = KDS.Math.Sign(self.movement[0])
-        self.ticksSinceSwitch = 0
+        self.ticksSinceSwitch: int = 0
 
     def update(self, Surface: pygame.Surface, scroll: Union[Tuple[int, int], List[int]], tiles, targetRect: pygame.Rect):
         tmp = super().update(Surface, scroll, tiles, targetRect)
         distance = self.rect.centerx - targetRect.centerx
-        targetDirection = KDS.Math.Sign(distance)
-        if self.lastTargetDirection != targetDirection and (abs(distance) > 170 or self.ticksSinceSwitch > 120) and self.health > 0: # If over five blocks away from target or hasn't turned for two seconds while player is behind; turn around
+        targetDirection: bool = KDS.Math.Sign(distance) >= 0
+        if self.direction != targetDirection and not self.attackRunning and (abs(distance) > 170 or self.ticksSinceSwitch > 120) and self.health > 0: # If over five blocks away from target or hasn't turned for two seconds while player is behind; turn around
             self.direction = not self.direction
             self.movement[0] = -self.movement[0]
             self.lastTargetDirection = targetDirection
