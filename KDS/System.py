@@ -20,27 +20,27 @@ BASEDIR = str(os.path.dirname(os.path.abspath(__file__)))
 
 ISLINUX = platform.system() == "Linux"
 
-def hide(path: str):
-    """Hides the file or directory specified by path.
-
-    Args:
-        path (str): The path to the file or directory to be hidden.
+def hide(path: str) -> bool:
+    """
+    Hides the file or directory specified by path.
+    Returns True on success, False otherwise (not supported, returned error)
     """
     if ISLINUX:
-        return
+        return False
 
-    subprocess.call(["attrib", "+H", path])
+    returncode: int = subprocess.call(["attrib", "+H", path])
+    return returncode == 0
 
-def unhide(path: str):
-    """Unhides the file or directory specified by path.
-
-    Args:
-        path (str): The path to the file or directory to be unhidden.
+def unhide(path: str) -> bool:
+    """
+    Unhides the file or directory specified by path.
+    Returns True on success, False otherwise (not supported, returned error)
     """
     if ISLINUX:
-        return
+        return False
 
-    subprocess.call(["attrib", "-H", path])
+    returncode: int = subprocess.call(["attrib", "-H", path])
+    return returncode == 0
 
 def emptdir(dirpath: str):
     """Removes all children from the specified directory.
@@ -57,14 +57,14 @@ def emptdir(dirpath: str):
         else:
             KDS.Logging.AutoError(f"Cannot determine child type of path: \"{itemPath}\".")
 
-def GetLineCount(path: str) -> int:
-    with open(path, "r") as f:
-        lines = f.read().splitlines()
+# def GetLineCount(path: str) -> int:
+#     with open(path, "r") as f:
+#         lines = f.read().splitlines()
 
-    while len(lines) > 0 and len(lines[-1]) < 1:
-        lines.pop(-1)
+#     while len(lines) > 0 and len(lines[-1]) < 1:
+#         lines.pop(-1)
 
-    return len(lines)
+#     return len(lines)
 
 class MessageBox:
     class Buttons(IntEnum):
@@ -269,34 +269,40 @@ def GetUserNameEx(NameDisplay: EXTENDED_NAME_FORMAT) -> Optional[str]:
         lgin = os.getlogin()
         return lgin if len(lgin) > 0 else None
 
-    GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
+    try:
+        GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
 
-    size = ctypes.pointer(ctypes.c_ulong(0))
-    GetUserNameEx(NameDisplay.value, None, size)
+        size = ctypes.pointer(ctypes.c_ulong(0))
+        GetUserNameEx(NameDisplay.value, None, size)
+        if size.contents.value < 1:
+            return None
 
-    nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
-    GetUserNameEx(NameDisplay.value, nameBuffer, size)
-    return nameBuffer.value
+        nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
+        GetUserNameEx(NameDisplay.value, nameBuffer, size)
+        return nameBuffer.value
+    except Exception as e:
+        KDS.Logging.AutoError(f"User name fetch failed! Error:\n{e}")
+        return None
 
 def GetProcessorName() -> str:
     if ISLINUX:
         return platform.processor()
 
-    output: str | None
+    cpuname: str | None
     try:
-        output = subprocess.check_output(
+        cpuname = subprocess.check_output(
             ["wmic", "cpu", "get", "Name", "/format:list"],
             stderr=subprocess.DEVNULL,
             text=True,
             encoding="utf8",
-        )
+        ).strip().removeprefix("Name=")
     except (OSError, subprocess.CalledProcessError):
-        output = None
+        cpuname = None
 
-    if output is None or len(output) < 1:
-        return platform.processor()
+    if cpuname is not None and len(cpuname) > 0:
+        return cpuname
     else:
-        return output.strip().removeprefix("Name=")
+        return platform.processor()
 
 def OpenURL(url: str):
     webbrowser.open_new_tab(url)

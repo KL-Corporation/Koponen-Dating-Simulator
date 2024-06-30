@@ -120,7 +120,7 @@ I=====[ DEBUG INFO ]=====I
         - Accelerated blit: {_format_accel(blit_accel, hw_accel)}
         - Accelerated colorkey blit: {_format_accel(blit_CC_accel, hw_accel)}
         - Accelerated pixel alpha blit: {_format_accel(blit_A_accel, hw_accel)}
-    - Pixel Format: {display_info.pixel_format}
+    - Pixel Format: {display_info.pixel_format.removeprefix("PIXELFORMAT_")}
     - Window Allowed: {_format_bool(bool(display_info.wm))}
 
     [System Info]
