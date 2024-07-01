@@ -678,23 +678,38 @@ class ScreenEffects:
 
     class EffectData:
         class Flicker:
-            repeat_rate: int = 2
-            repeat_length: int = 12
-            repeat_index: int = 0
+            repeat_rate: int
+            repeat_length: int
+            repeat_index: int
+
+            @classmethod
+            def reset(cls):
+                cls.repeat_rate = 2
+                cls.repeat_length = 12
+                cls.repeat_index = 0
 
         class FadeInOut:
             animation: Final = KDS.Animator.Value(0.0, 255.0, 120)
-            reversed: bool = False
-            wait_index: int = 0
-            wait_length: int = 240
+            reversed: bool
+            wait_index: int
+            wait_length: int
             surface: Final = pygame.Surface(screen_size).convert()
 
-        class Glitch:
-            repeat_rate: int = 2
-            repeat_index: int = 0
+            @classmethod
+            def reset(cls):
+                cls.animation.tick = 0
+                cls.reversed = False
+                cls.wait_index = 0
+                cls.wait_length = 240
 
+        class Glitch:
             # no idea what this tuple is supposed to represent...
             current_glitch: tuple[tuple[int, int, int, int], tuple[int, int]] = ((0, 0, 0, 0), (0, 0))
+
+            @classmethod
+            def reset(cls):
+                cls.repeat_rate = 2
+                cls.repeat_index = 0
 
         class Drunk:
             phase: float
@@ -706,14 +721,14 @@ class ScreenEffects:
 
             wave_count: Final[int] = 6
 
-            @staticmethod
-            def reset():
-                ScreenEffects.EffectData.Drunk.phase = 0.0
+            @classmethod
+            def reset(cls):
+                cls.phase = 0.0
 
-                ScreenEffects.EffectData.Drunk.amplitude_rise.tick = 0
-                # ScreenEffects.EffectData.Drunk.amplitude_rise.Finished = False
-                ScreenEffects.EffectData.Drunk.amplitude_fall.tick = 0
-                # ScreenEffects.EffectData.Drunk.amplitude_fall.Finished = False
+                cls.amplitude_rise.tick = 0
+                # cls.amplitude_rise.Finished = False
+                cls.amplitude_fall.tick = 0
+                # cls.amplitude_fall.Finished = False
 
     @staticmethod
     def Queued() -> bool:
@@ -733,10 +748,15 @@ class ScreenEffects:
         ScreenEffects.OnEffectFinish.Invoke(effect)
 
     @staticmethod
-    def Clear():
+    def Reset():
         ScreenEffects.triggered = ScreenEffects.Effects(0)
-ScreenEffects.Clear()
-ScreenEffects.EffectData.Drunk.reset()
+
+        ScreenEffects.EffectData.Flicker.reset()
+        ScreenEffects.EffectData.FadeInOut.reset()
+        ScreenEffects.EffectData.Glitch.reset()
+        ScreenEffects.EffectData.Drunk.reset()
+
+ScreenEffects.Reset()
 
 #region Animations
 animation_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(8 * " ")
@@ -3746,6 +3766,8 @@ def console(oldSurf: pygame.Surface):
         keyDict[key] = "break"
     itemDict["key"] = keyDict
 
+    effectDict: dict[str, ScreenEffects.Effects] = {str(e.name).lower(): e for e in ScreenEffects.Effects}
+
     trueFalseTree = {"true": "break", "false": "break"}
 
     commandTree = {
@@ -3793,6 +3815,9 @@ def console(oldSurf: pygame.Surface):
         "money": { str(Wallet.get_balance()): "break" },
         "rosebud": "break",
         "motherlode": "break",
+        "effect": {
+            e: "break" for e in effectDict.keys()
+        },
         "runprog": {
             "exam": "break",
             "story_sad_ending": "break",
@@ -4063,6 +4088,12 @@ def console(oldSurf: pygame.Surface):
                     Wallet.add_balance(KDS.Money.Euro.from_parts(euros=50))
                 else:
                     KDS.Console.Feed.append("motherlode does not take any arguments")
+            elif command_list[0] == "effect":
+                if command_list[1] in effectDict:
+                    screenEffect: ScreenEffects.Effects = effectDict[command_list[1]]
+                    ScreenEffects.Trigger(screenEffect)
+                    KDS.Console.Feed.append(f"Effect triggered: {screenEffect.name}")
+                else: KDS.Console.Feed.append(f"Effect not found: '{command_list[1]}'")
             elif command_list[0] == "runprog":
                 if len(command_list) == 2:
                     if command_list[1] == "exam":
@@ -4230,7 +4261,7 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
     KDS.World.Zone.StaffOnlyCollisions = 0
     RespawnAnchor.active = None
     BaseTeleport.teleportDatas = {}
-    ScreenEffects.Clear()
+    ScreenEffects.Reset()
     #endregion
 
     #region Reset ammo
