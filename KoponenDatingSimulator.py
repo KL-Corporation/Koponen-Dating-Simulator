@@ -671,28 +671,49 @@ class ScreenEffects:
         Flicker = 1
         FadeInOut = 2
         Glitch = 4
+        Drunk = 8
 
     triggered: Effects
     OnEffectFinish = KDS.Events.Event()
 
     class EffectData:
-        Flicker = {
-            "repeat_rate": 2,
-            "repeat_length": 12,
-            "repeat_index": 0
-        }
-        FadeInOut = {
-            "animation": KDS.Animator.Value(0.0, 255.0, 120),
-            "reversed": False,
-            "wait_index": 0,
-            "wait_length": 240,
-            "surface": pygame.Surface(screen_size).convert()
-        }
-        Glitch = {
-            "repeat_rate": 2,
-            "repeat_index": 0,
-            "current_glitch": ((0, 0, 0, 0), (0, 0))
-        }
+        class Flicker:
+            repeat_rate: int = 2
+            repeat_length: int = 12
+            repeat_index: int = 0
+
+        class FadeInOut:
+            animation: Final = KDS.Animator.Value(0.0, 255.0, 120)
+            reversed: bool = False
+            wait_index: int = 0
+            wait_length: int = 240
+            surface: Final = pygame.Surface(screen_size).convert()
+
+        class Glitch:
+            repeat_rate: int = 2
+            repeat_index: int = 0
+
+            # no idea what this tuple is supposed to represent...
+            current_glitch: tuple[tuple[int, int, int, int], tuple[int, int]] = ((0, 0, 0, 0), (0, 0))
+
+        class Drunk:
+            phase: float
+            phase_speed: Final[float] = 0.05
+            phase_length: Final[float] = 2 * KDS.Math.PI
+
+            amplitude_rise: Final = KDS.Animator.Value(0.0, 10.0, 180, KDS.Animator.AnimationType.EaseOutCubic)
+            amplitude_fall: Final = KDS.Animator.Value(10.0, 0.0, 540, KDS.Animator.AnimationType.EaseInCubic)
+
+            wave_count: Final[int] = 6
+
+            @staticmethod
+            def reset():
+                ScreenEffects.EffectData.Drunk.phase = 0.0
+
+                ScreenEffects.EffectData.Drunk.amplitude_rise.tick = 0
+                # ScreenEffects.EffectData.Drunk.amplitude_rise.Finished = False
+                ScreenEffects.EffectData.Drunk.amplitude_fall.tick = 0
+                # ScreenEffects.EffectData.Drunk.amplitude_fall.Finished = False
 
     @staticmethod
     def Queued() -> bool:
@@ -715,6 +736,7 @@ class ScreenEffects:
     def Clear():
         ScreenEffects.triggered = ScreenEffects.Effects(0)
 ScreenEffects.Clear()
+ScreenEffects.EffectData.Drunk.reset()
 
 #region Animations
 animation_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(8 * " ")
@@ -3194,7 +3216,20 @@ class Euro_DEPRECATED(KDS.Build.Item):
         return self.texture
 
 class Lager(KDS.Build.Item):
-    pass
+    sound: Final[pygame.mixer.Sound] = pygame.mixer.Sound("Assets/Audio/Items/lager_open_stolenfromoispakaljaa.mp3")
+
+    def use(self):
+        if KDS.Keys.actionKey.clicked:
+            if self.storePrice is None:
+                dropped: KDS.Build.Item | None = Player.inventory.dropItem(forceDrop=True)
+                if dropped is None:
+                    KDS.Logging.AutoError("Could not remove Lager from inventory after use.")
+                KDS.Audio.PlaySound(Lager.sound)
+                ScreenEffects.Trigger(ScreenEffects.Effects.Drunk)
+            else:
+                Notifications.append(KDS.UI.Notification(f"Lager must be purchased before drinking.", color=(217, 98, 59)))
+
+        return self.texture
 
 class Wallet(KDS.Build.Item):
     """
@@ -5291,7 +5326,6 @@ while main_running:
         tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - tip_rnd_surf.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
         screen.blit(tip_rnd_surf, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
 
-
         if KDS.Build.Item.tipItem.storePrice is not None:
             price_tip_txt: str | None = None
             if KDS.Build.Item.tipItem.storeDiscountPrice is not None:
@@ -5393,7 +5427,7 @@ while main_running:
         if ScreenEffects.Get(ScreenEffects.Effects.Flicker):
             data = ScreenEffects.EffectData.Flicker # Should be the same instance...
 
-            if int(data["repeat_index"]) % int(data["repeat_rate"]) == 0:
+            if int(data.repeat_index) % int(data.repeat_rate) == 0:
                 invPix = pygame.surfarray.pixels2d(screen)
                 invPix ^= 2 ** 32 - 1
                 del invPix
@@ -5401,44 +5435,68 @@ while main_running:
                 # pygame.transform is slower (it seems to create a new surface which is slow)
                 # while pixels2d seems to be almost instant (we manipulate the screen directly)
 
-            data["repeat_index"] += 1
-            if data["repeat_index"] > data["repeat_length"]:
-                data["repeat_index"] = 0
+            data.repeat_index += 1
+            if data.repeat_index > data.repeat_length:
+                data.repeat_index = 0
                 ScreenEffects.Finish(ScreenEffects.Effects.Flicker)
         if ScreenEffects.Get(ScreenEffects.Effects.FadeInOut):
             data = ScreenEffects.EffectData.FadeInOut # Should be the same instance...
-            anim: KDS.Animator.Value = data["animation"] # Should be the same instance...
-            rev: bool = data["reversed"]
-            surf = data["surface"]
-            surf.set_alpha(anim.update(rev))
+            anim: KDS.Animator.Value = data.animation # Should be the same instance...
+            rev: bool = data.reversed
+            surf = data.surface
+            surf.set_alpha(round(anim.update(rev)))
             screen.blit(surf, (0, 0))
             if anim.Finished:
                 if not rev:
-                    data["wait_index"] += 1
-                    if data["wait_index"] > data["wait_length"]:
-                        data["reversed"] = True
+                    data.wait_index += 1
+                    if data.wait_index > data.wait_length:
+                        data.reversed = True
                 else:
-                    data["reversed"] = False
-                    data["wait_index"] = 0
+                    data.reversed = False
+                    data.wait_index = 0
                     ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
         if ScreenEffects.Get(ScreenEffects.Effects.Glitch):
             data = ScreenEffects.EffectData.Glitch
-            rptIndx = (int(data["repeat_index"]) + 1) % int(data["repeat_rate"])
-            data["repeat_index"] = rptIndx
+            rptIndx = (int(data.repeat_index) + 1) % int(data.repeat_rate)
+            data.repeat_index = rptIndx
             if rptIndx == 0:
                 glitchRandX = random.randrange(0, screen_size[0])
                 glitchRandY = random.randrange(0, screen_size[1])
                 # glitchRandW = random.randrange(screen_size[0], screen_size[0] + 1)
                 glitchRandW = screen_size[0]
                 glitchRandH = random.randrange(10, 50)
-                data["current_glitch"] = (
+                data.current_glitch = (
                     (glitchRandX, glitchRandY, min(glitchRandW, screen_size[0] - glitchRandX), min(glitchRandH, screen_size[1] - glitchRandY)),
                     (random.randint(-10, 10) + glitchRandX, glitchRandY) # random.randint(0, 0) + glitchRandY)
                 )
-            current_glitch = data["current_glitch"]
-            glitch_surf = screen.subsurface(current_glitch[0]).copy()
+            current_glitch = data.current_glitch
+            glitch_surf = screen.subsurface(current_glitch[0]).copy() # Copy is necessary as otherwise the screen will be kept locked
             if 0 <= current_glitch[1][0] < screen_size[0] and 0 <= current_glitch[1][1] < screen_size[1]:
                 screen.blit(glitch_surf, current_glitch[1])
+        if ScreenEffects.Get(ScreenEffects.Effects.Drunk):
+            data = ScreenEffects.EffectData.Drunk
+            data.phase += data.phase_speed
+            data.phase %= data.phase_length
+
+            drunkAmplitude: float = data.amplitude_rise.update()
+            if data.amplitude_rise.Finished:
+                drunkAmplitude = data.amplitude_fall.update()
+
+            for y in range(screen.get_height()):
+                drunkLocalPhase: float = data.wave_count * data.phase_length * (y / screen.get_height())
+                drunkLocalPhase *= -1 # reverse so that waves move downwards
+
+                # ceil because otherwise the animation will round to 0 but still run
+                # thus disallowing new animations to proceed.
+                offset: int = KDS.Math.CeilToInt(drunkAmplitude * KDS.Math.Sin(drunkLocalPhase + data.phase))
+                drunk_surf = screen.subsurface((0, y, screen.get_width(), 1)).copy()
+                screen.blit(drunk_surf, (offset, y))
+
+            # we check rise and fall since we don't update fall before rise has finished
+            # and thus fall can have its old Finished value.
+            if data.amplitude_rise.Finished and data.amplitude_fall.Finished:
+                data.reset()
+                ScreenEffects.Finish(ScreenEffects.Effects.Drunk)
 
     if screen_overlay != None:
         screen.blit(screen_overlay, (0, 0))
