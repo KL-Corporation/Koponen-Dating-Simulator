@@ -19,6 +19,7 @@ import KDS.Teachers
 import KDS.Audio
 import KDS.Animator
 import KDS.Debug
+import KDS.Money
 import KDS.NPC
 
 if TYPE_CHECKING:
@@ -222,8 +223,8 @@ class Item:
         self.doubleSize: bool = self.serialNumber in Item.inventoryDoubles
         self.supportsInventory = self.serialNumber in Item.inventoryItems
 
-        self.storePrice: Optional[int] = None
-        self.storeDiscountPrice: Optional[int] = None
+        self.storePrice: Optional[KDS.Money.Euro] = None
+        self.storeDiscountPrice: Optional[KDS.Money.Euro] = None
 
         self.__pickup_score_given: bool = False
 

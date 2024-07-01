@@ -403,7 +403,7 @@ class KeybindFormattedText:
 
         mod: int = 0
         for textbind, binding in zip(self._text_bindings, binding_vector, strict=True):
-            binding_text: str = binding.get_displayname() if binding is not None else "null"
+            binding_text: str = KeybindFormattedText.get_binding_text(binding)
 
             format_length: int = textbind.end - textbind.start
             binding_length: int = len(binding_text)
@@ -437,3 +437,11 @@ class KeybindFormattedText:
         assert(len(bvec) == len(self._text_bindings))
 
         return self._generate_formatted_text(bvec)
+
+    @staticmethod
+    def get_binding_text(binding: KDS.Keys.Binding | None) -> str:
+        """
+        Expose the binding text to other functions.
+        Please make sure that your binding text is updated appropriately when using this function.
+        """
+        return binding.get_displayname() if binding is not None else "null"

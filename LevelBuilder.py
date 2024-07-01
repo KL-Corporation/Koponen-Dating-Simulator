@@ -69,6 +69,9 @@ O: Set Overlay
 G: Select Refrence Map File
 Z or Y: Toggle Zone Mode
 
+TAB: Set store price
+SHIFT + TAB: Set store discount price
+
 CTRL + A: Select All
 CTRL + S: Save Project
 CTRL + SHIFT + S: Save Project As
@@ -485,6 +488,9 @@ class UnitData:
     def hasTile(self) -> bool:
         return KDS.Linq.Any(self.serials, lambda s: s[0] == "0" and s != UnitData.EMPTY)
 
+    def hasItem(self) -> bool:
+        return KDS.Linq.Any(self.serials, lambda s: s[0] == "1")
+
     def hasTeleport(self) -> bool:
         return KDS.Linq.Any(self.serials, lambda s: s[0] == "3")
 
@@ -580,7 +586,17 @@ class UnitData:
                                     if newTeleportIdentifier != None:
                                         unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
 
-                    if keys_pressed[K_f]:
+                    if keys_pressed[K_TAB] and unit.hasItem():
+                        storePriceDiscounted: bool = keys_pressed[K_LSHIFT]
+                        storePriceKey: str = "storePrice" if not storePriceDiscounted else "storeDiscountPrice"
+                        storePriceMsg: str = "Enter Price:" if not storePriceDiscounted else "Enter Discount Price:"
+                        storePriceStr: str | None = KDS.Console.Start(storePriceMsg, allowEscape=False, checkType=KDS.Console.CheckTypes.Float()) # do not allow escape as it removes the price as well
+                        if storePriceStr is not None and len(storePriceStr) > 0:
+                            unit.properties.Set(UnitType.Item, storePriceKey, float(storePriceStr))
+                        else:
+                            unit.properties.Remove(UnitType.Item, storePriceKey)
+
+                    elif keys_pressed[K_f]:
                         autoFill = {}
                         for t in UnitType:
                             autoFill[t.name] = "break"
@@ -1575,10 +1591,11 @@ def menu():
             # Button menu is turned off if openMap was succesful
             btn_menu = not openMap()
         else:
-            g = KDS.Console.Start("Grid Size: (int, int)", False, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
-            gridSize = (int(g[0]), int(g[1]))
-            grid = loadGrid(gridSize)
-            btn_menu = False
+            g = KDS.Console.Start("Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
+            if g is not None and len(g) > 1: # if escaped, g is a one element list
+                gridSize = (int(g[0]), int(g[1]))
+                grid = loadGrid(gridSize)
+                btn_menu = False
 
     newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
     openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       250, 400, 150), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))

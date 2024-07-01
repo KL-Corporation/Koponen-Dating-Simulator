@@ -279,6 +279,14 @@
         "supportsInventory": true,
         "isContraband": false
     },
+    "Lager": {
+        "serialNumber": 41,
+        "path": "lager.png",
+        "doubleSize": false,
+        "supportsInventory": true,
+        "isContraband": true
+    },
+
     "Wallet": {
         "serialNumber": 900,
         "path": "wallet.png",
