@@ -189,7 +189,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Missions.InitialiseMission("rules", "Ohjeistus")
         KDS.Missions.InitialiseTask("rules", "listen", "Kuuntele Koposen ohjeistus", (KDS.Missions.Listeners.KoponenTalk, 1.0))
 
-        KDS.Koponen.Talk.Conversation.schedule("Tervetuloa Clarioniin. Ennen huoneisiin lähtöä haluaisin kertoa teille hieman turvallisuussäännöistä. Seuraa tätä tarkkaan, sillä tulen esittämään teille hotellimme turvaominaisuudet.", KDS.Koponen.Prefixes.koponen, True)
+        KDS.Koponen.Talk.Conversation.schedule("Tervetuloa Clarion Hotelliin. Ennen huoneisiin lähtöä haluaisin kertoa teille hieman turvallisuussäännöistä. Seuraa tätä tarkkaan, sillä tulen esittämään teille hotellimme turvaominaisuudet.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Älypuhelimia ja muita kannettavia elektronisia laitteita voidaan käyttää aulasta huoneisiin hotellitilassa ja normaalitilassa huoneisiin pääsyn jälkeen.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Muut elektroniset laitteet, kuten kannettavat tietokoneet täytyy sammuttaa ja pakata huoneeseen menemisen ajaksi.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Varmista, että jalkasi ovat kävelyasennossa ja silmäsi ovat auki. Nosta selkäsi pystyasentoon ja pakkaa reppusi.", KDS.Koponen.Prefixes.koponen, True)
