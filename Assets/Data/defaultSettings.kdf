@@ -2,6 +2,7 @@
     "Data": {
         "settingsFileVersion": 1,
         "quickload": false,
+        "allowConsoleInStoryMode": false,
         "Terms": {
             "accepted": false
         }

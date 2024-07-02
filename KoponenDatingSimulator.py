@@ -166,11 +166,13 @@ game_initialization_logger.stop("Cursors and surface arrays initialised.")
 #region Loading
 #region Settings
 game_initialization_logger.start("Loading Settings...")
-tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
-quickload: Final[bool] = KDS.ConfigManager.GetSetting("Data/quickload", False)
+tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", ...)
+quickload: Final[bool] = KDS.ConfigManager.GetSetting("Data/quickload", ...)
+allow_console_in_storymode: Final[bool] = KDS.ConfigManager.GetSetting("Data/allowConsoleInStoryMode", ...)
 current_map_index: int = int(KDS.ConfigManager.GetSetting("Player/currentMap", ...)) # if it is already int, nothing will happen
 maxParticles: int = KDS.ConfigManager.GetSetting("Renderer/Particle/maxCount", ...)
 play_walk_sound: bool = KDS.ConfigManager.GetSetting("Mixer/walkSound", ...)
+pause_on_focus_loss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", ...)
 game_initialization_logger.stop("Settings Loaded.")
 #endregion
 game_initialization_logger.start("Loading Assets...")
@@ -303,8 +305,6 @@ black_tint = pygame.Surface(screen_size, SRCALPHA)
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 
-pauseOnFocusLoss: bool = KDS.ConfigManager.GetSetting("Game/pauseOnFocusLoss", ...)
-
 remove_data_on_quit = False
 
 main_running = True
@@ -386,8 +386,6 @@ try:
     LoadGameSettings()
 except:
     KDS.Logging.AutoError("Game Settings could not be loaded!")
-
-debug_gamesetting_allow_console_in_storymode: bool = KDS.ConfigManager.GetGameData("Debug/allowConsoleInStoryMode")
 
 storyLevelCount: Final[int] = KDS.ConfigManager.GetGameData("Story/levelCount")
 assert(isinstance(storyLevelCount, int))
@@ -4481,7 +4479,7 @@ def esc_menu_f(oldSurf: pygame.Surface):
         KDS.Clock.Tick()
 
 def settings_menu():
-    global main_menu_running, esc_menu, main_running, settings_running, pauseOnFocusLoss, play_walk_sound
+    global main_menu_running, esc_menu, main_running, settings_running, pause_on_focus_loss, play_walk_sound
     c = False
     settings_running = True
 
@@ -4546,7 +4544,7 @@ def settings_menu():
         if tmp != lastLobbymusicState:
             lastLobbymusicState = tmp
             KDS.Audio.Music.Play("Assets/Audio/Music/lobbymusic.ogg" if lastLobbymusicState == False else "Assets/Audio/Music/Legacy/lobbymusic.ogg")
-        pauseOnFocusLoss = pause_loss_switch.update(display, mouse_pos, c)
+        pause_on_focus_loss = pause_loss_switch.update(display, mouse_pos, c)
 
         return_button.update(display, mouse_pos, c)
         controls_settings_button.update(display, mouse_pos, c)
@@ -5184,7 +5182,7 @@ while main_running:
             else:
                 for _ in range(abs(tmpAmount)): Player.inventory.moveLeft()
         elif event.type == WINDOWFOCUSLOST:
-            if pauseOnFocusLoss: esc_menu = True
+            if pause_on_focus_loss: esc_menu = True
 
     if KDS.Keys.dropItem.onDown:
         if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
@@ -5199,7 +5197,7 @@ while main_running:
     if KDS.Keys.hideUI.onDown:
         renderUI = not renderUI
     if KDS.Keys.terminal.onDown: # onDown required double tap to enter console because console swallowed up the event
-        if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or debug_gamesetting_allow_console_in_storymode: # Console is disabled in story mode if debug setting not overridden in GameData.
+        if KDS.Gamemode.gamemode != KDS.Gamemode.Modes.Story or allow_console_in_storymode: # Console is disabled in story mode if debug setting not overridden in GameData.
             go_to_console = True
     if KDS.Keys.screenshot.onDown:
         pygame.image.save(screen, os.path.join(PersistentPaths.Screenshots, datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f") + ".png"))

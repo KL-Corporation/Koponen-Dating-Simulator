@@ -33,8 +33,5 @@
     "Campaign": {
         "officialLevelCount": 9,
         "totalLevelCount": 20
-    },
-    "Debug": {
-        "allowConsoleInStoryMode": false
     }
 }
