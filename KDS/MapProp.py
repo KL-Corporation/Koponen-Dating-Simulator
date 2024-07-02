@@ -95,5 +95,5 @@ class CampaignProp:
             KDS.Logging.debug(f"Loading new CampaignProp: '{path}'...", consoleVisible=True)
             CampaignProp.data = CampaignPropData.load(path)
         else:
-            KDS.Logging.debug(f"No CampaignProp file found.", consoleVisible=True)
+            KDS.Logging.debug(f"CampaignProp loading not needed: No CampaignProp file found.", consoleVisible=True)
             CampaignProp.data = None
