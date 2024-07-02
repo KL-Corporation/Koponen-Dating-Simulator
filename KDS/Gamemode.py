@@ -52,7 +52,7 @@ def SetGamemode(Gamemode: Modes, MissionsId: str, EnemyCount: int):
             KDS.Missions.InitialiseTask("reach_level_exit", "exit", "Löydä Uloskäynti", (KDS.Missions.Listeners.LevelEnder, 1.0))
 
     KDS.Missions.Clear()
-    KDS.Koponen.Talk.Conversation.clear()
+    KDS.Koponen.Talk.Conversation.reset()
     KDS.Koponen.requestReturnAlt = None
     KDS.Missions.Listeners.TileFireCreated.OnTrigger -= KDS.Story.badStoryEndingFunc
     KDS.Missions.Listeners.KoponenTalkEmbed1.OnTrigger -= KDS.Story.switchToStoryHappyTalkMusic

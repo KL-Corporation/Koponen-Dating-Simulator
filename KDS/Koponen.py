@@ -166,7 +166,7 @@ class Talk:
         WAITFORMISSIONRETURN = "<wait-for-mission-return>"
         WAITFORTILEFIRE = "<wait-for-tile_fire>"
         WAITFORSTORYENDING = "<wait-for-story-ending>"
-        _INTERNALTILEFIREEVENT = "<wait-for-internal_tile_fire>"
+        _INTERNALTILEFIREEVENT = "<wait-for-tile_fire_internalevent>"
         PRINCIPALNAMEINPUT = "<rehtori-name-input>"
         GIVEHOTELCARD = "<give-hotel-card>"
         TRIGGERLISTENER0 = "<trigger-listener-0>"
@@ -176,10 +176,10 @@ class Talk:
         @staticmethod
         def scrollToBottom():
             Talk.Conversation.scroll = max(len(Talk.lines) - Talk.lineCount, 0)
-        scroll = 0
-        animationProgress = -1
-        animationWidth = 0
-        newAnimation = False
+        scroll: int
+        animationProgress: float = -1
+        animationWidth: int = 0
+        newAnimation:  bool = False
 
         @staticmethod
         def _handleTileFire():
@@ -205,7 +205,10 @@ class Talk:
                 if i == 0 and forcePrefix:
                     Talk.scheduled.append("!" + prefix + lineSplit[i])
                 else:
-                    Talk.scheduled.append(prefix + lineSplit[i])
+                    # I added - for when prefix is not forced as a small performance optimisation
+                    # since now we don't have to remove the prefix
+                    # and thus need to make one less string allocation
+                    Talk.scheduled.append("-" + prefix + lineSplit[i])
 
         @staticmethod
         def update(surfSize: Tuple[int, int], playerInventory: KDS.Inventory.Inventory):
@@ -261,15 +264,12 @@ class Talk:
             lastIncluded = False
             for i in range(Talk.Conversation.scroll, min(Talk.Conversation.scroll + Talk.lineCount + 1, len(Talk.lines))):
                 text = Talk.lines[i]
-                forcePrefix = False
-                if text[0] == "!":
-                    forcePrefix = True
-                    text = text[1:]
-                prefix = _renderedPrefixes[text[:2]]
+                forcePrefix = (text[0] == "!")
+                prefix = _renderedPrefixes[text[1:3]]
                 offsetX = text_padding.left + prefix.get_width()
                 offsetY = text_padding.top + (i - Talk.Conversation.scroll) * line_spacing
-                Talk.display.blit(text_font.render(text[2:], True, text_color), (offsetX, offsetY))
-                if i <= 0 or forcePrefix or text[:2] != Talk.lines[i - 1].removeprefix("!")[:2]:
+                Talk.display.blit(text_font.render(text[3:], True, text_color), (offsetX, offsetY))
+                if i <= 0 or forcePrefix or text[1:3] != Talk.lines[i - 1][1:3]:
                     Talk.display.blit(prefix, (text_padding.left, offsetY))
 
                 # if len(Talk.lines) - Talk.Conversation.scroll > Talk.lineCount + auto_scroll_offset_index: scrollToBottomButton.update(Talk.display, mouse_pos, clicked)
@@ -280,10 +280,10 @@ class Talk:
             animationRectTarget: pygame.Rect | None
             if len(Talk.lines) > 0:
                 lastLine = Talk.lines[-1]
-                if lastLine.startswith("!"):
-                    lastLine = lastLine.removeprefix("!")
-                animationRectTarget = pygame.Rect(text_padding.left + _renderedPrefixes[lastLine[:2]].get_width(),
-                                                text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(lastLine[2:])[0], text_font.get_height())
+                # if lastLine.startswith("!"):
+                #     lastLine = lastLine.removeprefix("!")
+                animationRectTarget = pygame.Rect(text_padding.left + _renderedPrefixes[lastLine[1:3]].get_width(),
+                                                text_padding.top + (len(Talk.lines) - 1 - Talk.Conversation.scroll) * line_spacing, text_font.size(lastLine[3:])[0], text_font.get_height())
             else:
                 animationRectTarget = None
 
@@ -305,9 +305,16 @@ class Talk:
             return Talk.display
 
         @staticmethod
-        def clear():
+        def reset():
             Talk.lines.clear()
             Talk.scheduled.clear()
+
+            # initialise the values lazily here instead.
+            # see: https://github.com/KL-Corporation/Koponen-Dating-Simulator/issues/105
+            Talk.Conversation.scroll = 0
+            Talk.Conversation.animationProgress = -1
+            Talk.Conversation.animationWidth = 0
+            Talk.Conversation.newAnimation = False
 
     @staticmethod
     def renderMenu(surface: pygame.Surface, mouse_pos: Tuple[int, int], clicked: bool, playerInventory: KDS.Inventory.Inventory, updateConversation: bool = True):
@@ -540,8 +547,8 @@ class KoponenEntity:
         self.animations.update()
         Surface.blit(self.animations.get_frame(), (self.rect.x - scroll[0], self.rect.y - scroll[1]))
 
-    def reset(self) -> None:
-        pass
+    # def reset(self) -> None:
+    #     pass
 
     def stopAutoMove(self) -> None:
         self._move = False
