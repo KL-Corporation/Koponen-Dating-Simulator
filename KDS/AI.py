@@ -855,7 +855,7 @@ class Bulldog(HostileEnemy):
         return bullets, []
 
     def attack(self, slope, env_obstacles: List[List[List[KDS.Build.Tile]]], target: pygame.Rect, *args) -> List[KDS.World.Bullet]:
-        if random.randint(0, 30) == 0:
+        if random.randint(0, 20) == 0:
             return [KDS.World.Bullet(None, pygame.Rect((self.rect.centerx + (KDS.Math.Ceil(self.rect.width / 2) + 6) * KDS.Convert.ToMultiplier(self.direction)) - 5, self.rect.centery, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
         return []
 
