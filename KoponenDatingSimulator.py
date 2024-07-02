@@ -329,6 +329,7 @@ mode_selection_running = False
 settings_running = False
 
 price_tip_tick: int = 0
+price_tip_last_item: KDS.Build.Item | None = None
 
 renderPlayer = True
 
@@ -466,6 +467,7 @@ class WorldData:
                 Player.inventory.pickupItemToIndex(int(k), KDS.Build.Item.serialNumbers[v]((0, 0), v), force=True)
             else:
                 KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
+        Wallet.set_balance(KDS.Money.Euro.from_float(KDS.MapProp.LevelProp.Get("Entities/Player/walletBalance", 0)))
         KDS.Build.Item.infiniteAmmo = KDS.MapProp.LevelProp.Get("Data/infiniteAmmo", False)
 
         WorldData.PlayerStartPos: Tuple[int, int] = KDS.MapProp.LevelProp.Get("Entities/Player/startPos", (100, 100))
@@ -533,11 +535,7 @@ class WorldData:
                             value = KDS.Build.Tile.specialTilesClasses[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                             Tiles[y][x].append(value)
                     elif pointer == 1:
-                        if serialNumber < 900:
-                            value = KDS.Build.Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
-                        else:
-                            assert(KDS.Build.Item.serialNumbers[900] is Wallet)
-                            value = Wallet((x * 34, y * 34), serialNumber=serialNumber)
+                        value = KDS.Build.Item.serialNumbers[serialNumber]((x * 34, y * 34), serialNumber=serialNumber)
                         Items.append(value)
                     elif pointer == 2:
                         value = Enemy.serialNumbers[serialNumber]((x * 34,y * 34))
@@ -1977,11 +1975,11 @@ class CashRegister(KDS.Build.Tile):
             self.show_rounded_price: bool = False
 
         def ss_bonuscard_shown(self) -> None:
-            if not self._payment_given:
+            if not self._payment_given and self._tick < CashRegister.PriceAnimation.RAW_PRICE_TICKS:
                 self.reset()
 
         def any_payment_given(self) -> None:
-            if not self._payment_given:
+            if not self._payment_given and self._tick < CashRegister.PriceAnimation.RAW_PRICE_TICKS:
                 self._tick = CashRegister.PriceAnimation.RAW_PRICE_TICKS
             self._payment_given = True
 
@@ -3227,8 +3225,9 @@ class Euro_DEPRECATED(KDS.Build.Item):
 
     def use(self):
         if KDS.Keys.actionKey.pressed:
-            # give Wallet with one euro stored in the balance (stored in the lower part of the serial number)
-            wallet = Wallet((0, 0), 901)
+            # give Wallet with one euro stored in the balance
+            assert(KDS.Build.Item.serialNumbers[42] is Wallet)
+            wallet = Wallet((0, 0), 42, balance=1)
             picked: bool = Player.inventory.pickupItem(wallet, force=True)
             assert(picked)
             wallet.pickup() # give the one euro stored in the serial number
@@ -3255,20 +3254,24 @@ class Wallet(KDS.Build.Item):
     """
     To set balance:
         LevelBuilder: use `balance` property
-        Inventory: use serial (900 => 0 €, 905 => 5 €, 925 => 25 €, 969 => 69 €, ...)
+        Inventory: set `walletBalance` in levelprop.kdf
+        Code: set the `balance` argument
     """
 
     _SelectedIndex: int = 0
     _Balance: Final[list[tuple[KDS.Money.Euro, KDS.Math.SmoothDamp]]] = []
+    # Balance is reset when a new levelProp.kdf is loaded.
 
     RENDER_POS: Final[tuple[int, int]] = (10, 150)
     RENDER_SPACING: int = 10
 
     TIP: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Rotate Wallet [{{binding:{KDS.Keys.rotate_wallet.name}}}]", True, KDS.Colors.White)
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
-        super().__init__(position, 900)
-        self.balance: int | float = serialNumber - 900
+    def __init__(self, position: Tuple[int, int], serialNumber: int, *, balance: int | float = 0):
+        super().__init__(position, serialNumber)
+        self.balance: int | float = balance
+
+        self._press_was_registered: bool = False
 
     def pickup(self) -> None:
         Wallet.add_balance(KDS.Money.Euro.from_float(self.balance))
@@ -3308,10 +3311,21 @@ class Wallet(KDS.Build.Item):
         return Wallet._Balance[Wallet._SelectedIndex % len(Wallet._Balance)][0]
 
     def use(self):
-        if KDS.Keys.rotate_wallet.held:
-            Wallet._SelectedIndex = 0
-        if KDS.Keys.rotate_wallet.clicked and not KDS.Keys.rotate_wallet.holdClicked:
-            Wallet._SelectedIndex += 1
+        if KDS.Keys.rotate_wallet.pressed:
+            self._press_was_registered = True
+
+        # do not check for click events when press wasn't registered
+        # so for example when we come out of Koponen talk by clicking exit the wallet isn't rotated
+        # We check press instead of onDown, because unlike onDown, pressed will be set as False once the koponen talk exit click button is raised
+        # when checking onDown, we have a situation where both onDown and onUp are True which means the rotate gets executed.
+        if self._press_was_registered:
+            if KDS.Keys.rotate_wallet.held:
+                Wallet._SelectedIndex = 0
+            if KDS.Keys.rotate_wallet.clicked and not KDS.Keys.rotate_wallet.holdClicked:
+                Wallet._SelectedIndex += 1
+
+        if not KDS.Keys.rotate_wallet.pressed:
+            self._press_was_registered = False
 
         return self.texture
 
@@ -3332,10 +3346,6 @@ class Wallet(KDS.Build.Item):
         for tmp_i in range(len(units)):
             i: int = (tmp_i + Wallet._SelectedIndex) % len(units)
             yield units[i]
-
-    @staticmethod
-    def globalReset() -> None:
-        Wallet._Balance.clear()
 
     @staticmethod
     def globalRenderUpdate(surface: pygame.Surface, isHandItem: bool, renderUI: bool) -> None:
@@ -3368,7 +3378,8 @@ class Wallet(KDS.Build.Item):
             for unit, animation in reversed(units_ordered):
                 rend_x: float = animation.value
                 surface.blit(KDS.Money.get_texture(unit), (Wallet.RENDER_POS[0] + round(rend_x), Wallet.RENDER_POS[1]))
-            surface.blit(Wallet.TIP.get_surface(), (Wallet.RENDER_POS[0], Wallet.RENDER_POS[1] + 37)) # 50 € is 35 tall
+            if len(units_ordered) > 0:
+                surface.blit(Wallet.TIP.get_surface(), (Wallet.RENDER_POS[0], Wallet.RENDER_POS[1] + 37)) # 50 € is 35 tall
 
 KDS.Build.Item.serialNumbers = {
     1: BlueKey,
@@ -3412,8 +3423,7 @@ KDS.Build.Item.serialNumbers = {
     39: SurveyAnswers,
     40: Euro_DEPRECATED,
     41: Lager,
-
-    900: Wallet
+    42: Wallet
 }
 game_initialization_logger.stop("Item Loading Complete.")
 #endregion
@@ -4244,7 +4254,8 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
 
     #region World Data
     TheftDetector.globalReset()
-    Wallet.globalReset()
+    # Wallet.globalReset()
+    # levelprop.kdf defines the level's wallet balance so this isn't needed anymore
 
     global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones, Particles
     Items.clear()
@@ -5358,6 +5369,10 @@ while main_running:
         screen.blit(tip_rnd_surf, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
 
         if KDS.Build.Item.tipItem.storePrice is not None:
+            if KDS.Build.Item.tipItem is not price_tip_last_item:
+                price_tip_last_item = KDS.Build.Item.tipItem
+                price_tip_tick = 0
+
             price_tip_txt: str | None = None
             if KDS.Build.Item.tipItem.storeDiscountPrice is not None:
                 price_tip_tick += 1
@@ -5370,7 +5385,7 @@ while main_running:
             price_tip = tip_font.render(price_tip_txt, True, KDS.Colors.White)
             screen.blit(price_tip, (KDS.Build.Item.tipItem.rect.centerx - price_tip.get_width() // 2 - scroll[0], tip_rnd_pos[1] + tip_rnd_surf.get_height() - scroll[1]))
         else:
-            price_tip_tick = 0
+            price_tip_last_item = None
 
     #Valojen käsittely
     if KDS.World.Dark.enabled:

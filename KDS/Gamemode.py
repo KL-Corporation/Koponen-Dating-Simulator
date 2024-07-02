@@ -242,7 +242,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Koponen.Talk.Conversation.schedule("{principalName} antoi minulle potkut!", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Mukamas \"oppilaiden viihdyttäminen oppitunneilla on ehdottomasti kielletty tässä koulussa\" sekä \"kiusaamistilanteeseen ei saa missään nimessä puuttua\".", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Kostan tämän hänelle...", KDS.Koponen.Prefixes.koponen, True)
-        KDS.Koponen.Talk.Conversation.schedule("Polttaisin tämän koulun, mutta minulla on vain kaksi euroa ja halvimmat sytytyspalat maksavat kolme euroa.", KDS.Koponen.Prefixes.koponen, True)
+        KDS.Koponen.Talk.Conversation.schedule("Polttaisin tämän koulun, mutta minulla on vain kuusi euroa ja halvimmat sytytyspalat maksavat seitsemän euroa.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Hetkinen... Televisiossahan oli hetki sitten mainos tarjouksesta SS-Etukortin omistajalle... Olen varma, että biologian opettajalla on sellainen. Olen nähnyt hänet useasti käyttämässä sitä ostaessaan materiaaleja oppitunneillensa.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Ostavatko opettajat materiaaleja oppitunneillensa?", KDS.Koponen.Prefixes.player, True)
         KDS.Koponen.Talk.Conversation.schedule("Pakkohan sitä, kun koulu ei voi maksaa...", KDS.Koponen.Prefixes.koponen, True)

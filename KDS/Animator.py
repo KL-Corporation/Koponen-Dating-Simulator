@@ -18,6 +18,9 @@ class _SurfaceCacheKey(NamedTuple):
     texture_path: str
     alpha: bool
 
+    def __str__(self) -> str:
+        return f"{self.texture_path}?alpha={'true' if self.alpha else 'false'}"
+
 class _CachedAnimationSurface:
     def __init__(self, key: _SurfaceCacheKey, surf: pygame.Surface) -> None:
         self.key: Final[_SurfaceCacheKey] = key
@@ -76,7 +79,7 @@ class Animation:
                 surf = _CachedAnimationSurface(cache_key, image)
                 _surfaceCache[cache_key] = surf
 
-                KDS.Logging.debug(f"Loaded shared animation image: {texture_path}")
+                KDS.Logging.debug(f"Loaded shared animation image: {cache_key}")
 
             # We switched to shared surfaces so we assert this just in case
             verify_colorkey: Final[tuple[int, int, int, int] | None] = surf.surface.get_colorkey()
@@ -97,6 +100,9 @@ class Animation:
         for img in self._images: # when destroyed, decrement refcount
             img.refcount -= 1
             if img.refcount <= 0:
+                # we only have a hadful of animations so unloading them is not that needed
+                # but from my testing unloading and reloading didn't give a significant performance boost
+                # so we'll just unload them then to save a bit of RAM
                 del _surfaceCache[img.key]
                 KDS.Logging.debug(f"Unloaded shared animation image: {img.key}")
 

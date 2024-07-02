@@ -286,9 +286,8 @@
         "supportsInventory": true,
         "isContraband": true
     },
-
     "Wallet": {
-        "serialNumber": 900,
+        "serialNumber": 42,
         "path": "wallet.png",
         "doubleSize": false,
         "supportsInventory": true,

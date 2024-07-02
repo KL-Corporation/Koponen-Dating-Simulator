@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Final, Literal, NamedTuple, Self
+from typing import Final, Literal, NamedTuple, NoReturn, Self
 
 import pygame
 import KDS.Colors
@@ -7,6 +7,8 @@ import KDS.Money
 
 @dataclass(frozen=True, init=False, eq=False, unsafe_hash=False)
 class Euro:
+    """Negative values can be represented, but some methods do not work with negative numbers."""
+
     __slots__ = "_value"
     _value: int
 
@@ -27,17 +29,26 @@ class Euro:
         """
         float is rounded to the nearest cent.
         int might be a bit more accurate due to floating point rounding errors.
+
+        This method checks if the value is of the correct type as we use it in many unsafe places in KDS.
         """
+        assert(isinstance(value, (int, float)))
         return cls(_value=round(value * 100))
+
+    @staticmethod
+    def _euros(val: int) -> int:
+        assert(val >= 0)
+
+        e: int = val // 100
+        assert(isinstance(e, int)) # sometimes // gives a float?
+        return e
 
     @property
     def euros(self) -> int:
-        e: int = self._value // 100
-        if e < 0: # handle negative sign correctly as // rounds the value towards negative infinity
-            e += 1
-
-        assert(isinstance(e, int)) # sometimes // gives a float?
-        return e
+        if self._value >= 0:
+            return Euro._euros(self._value)
+        else:
+            return -1 * Euro._euros(-1 * self._value)
 
     @property
     def cents(self) -> int:
@@ -51,13 +62,10 @@ class Euro:
     def split_units(self):
         """
         Returns the money split into base units.
+
         Tuple second value is non-zero when some money wasn't accounted during splitting.
-
-        Only non-negative values can be split.
+        Negative values are always not accounted during splitting.
         """
-
-        if self._value < 0:
-            raise ValueError("Cannot split negative money into base units.")
 
         # iterate from largest to smallest
         val: int = self._value
@@ -73,7 +81,10 @@ class Euro:
     def is_base_unit(self) -> bool:
         return self in _units
 
-    def __round__(self): # Haven't tested if this works with negative values, presumably it does
+    def __round__(self):
+        # this should work with negative values
+        # at least it seemed to work last time I tested it in the terminal...
+
         _lastUnit: int = self._value % 10
         _base: int = self._value - _lastUnit
 
@@ -86,10 +97,9 @@ class Euro:
             return Euro(_value=(_base + 10))
 
     def __str__(self) -> str:
-        if self._value >= 0:
-            return f"{self.euros}.{self.cents:02d}"
-        else:
-            return f"-{abs(self.euros)}.{abs(self.cents):02d}"
+        sign: str = '-' if self._value < 0 else ''
+        absval: Euro = abs(self)
+        return f"{sign}{absval.euros}.{absval.cents:02d}"
 
     def __eq__(self, value: object) -> bool:
         return isinstance(value, Euro) and self._value == value._value
