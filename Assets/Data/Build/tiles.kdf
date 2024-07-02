@@ -1173,6 +1173,7 @@
     "Theft Detector": {
         "serialNumber": 169,
         "path": "theft_detector.png",
+        "texturePerPixelAlpha": true,
         "specialTile": true,
         "noCollision": true,
         "trueScale": true

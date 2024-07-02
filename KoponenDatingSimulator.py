@@ -2197,7 +2197,7 @@ class TheftDetector(KDS.Build.Tile):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.animation = KDS.Animator.Animation("theft_detector", 2, 15, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+        self.animation = KDS.Animator.Animation("theft_detector", 2, 15, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, alpha=True)
 
     def lateInit(self) -> None:
         self.darkOverlay = None
@@ -5486,7 +5486,7 @@ while main_running:
                     data.reversed = False
                     data.wait_index = 0
                     ScreenEffects.Finish(ScreenEffects.Effects.FadeInOut)
-        if ScreenEffects.Get(ScreenEffects.Effects.Glitch):
+        if ScreenEffects.Get(ScreenEffects.Effects.Glitch): # pygame.surfarray.pixels2d was tested on these. It was slower.
             data = ScreenEffects.EffectData.Glitch
             rptIndx = (int(data.repeat_index) + 1) % int(data.repeat_rate)
             data.repeat_index = rptIndx
@@ -5504,7 +5504,7 @@ while main_running:
             glitch_surf = screen.subsurface(current_glitch[0]).copy() # Copy is necessary as otherwise the screen will be kept locked
             if 0 <= current_glitch[1][0] < screen_size[0] and 0 <= current_glitch[1][1] < screen_size[1]:
                 screen.blit(glitch_surf, current_glitch[1])
-        if ScreenEffects.Get(ScreenEffects.Effects.Drunk):
+        if ScreenEffects.Get(ScreenEffects.Effects.Drunk): # pygame.surfarray.pixels2d was tested on these. It was slower.
             data = ScreenEffects.EffectData.Drunk
             data.phase += data.phase_speed
             data.phase %= data.phase_length

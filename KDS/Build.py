@@ -91,6 +91,7 @@ class Tile:
         Available options are (might not be exhaustive):
             - textureOverrideAlpha
             - textureOverrideColorkey
+            - texturePerPixelAlpha
         """
 
         self.texture_size: tuple[int, int] = self.texture.get_size()

@@ -14,20 +14,24 @@ class OnAnimationEnd(IntEnum):
     Loop = auto()
     PingPong = auto()
 
+class _SurfaceCacheKey(NamedTuple):
+    texture_path: str
+    alpha: bool
+
 class _CachedAnimationSurface:
-    def __init__(self, surf_id: str, surf: pygame.Surface) -> None:
-        self.id: Final[str] = surf_id
+    def __init__(self, key: _SurfaceCacheKey, surf: pygame.Surface) -> None:
+        self.key: Final[_SurfaceCacheKey] = key
         self.surface: Final[pygame.Surface] = surf
         self.refcount: int = 0
 
-_surfaceCache: dict[str, _CachedAnimationSurface] = {}
+_surfaceCache: dict[_SurfaceCacheKey, _CachedAnimationSurface] = {}
 
 class ShootFrametime(NamedTuple):
     frame_index: int
     frame_duration: int
 
 class Animation:
-    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[List[int], Tuple[int, int, int]] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, filetype: str = ".png", animation_dir: str = "Animations", load_in_reverse: bool = False) -> None:
+    def __init__(self, animation_name: str, number_of_images: int, duration: int, colorkey: Union[list[int], Tuple[int, int, int], None] = KDS.Colors.White, _OnAnimationEnd: OnAnimationEnd = OnAnimationEnd.Stop, *, filetype: str = ".png", animation_dir: str = "Animations", alpha: bool = False, load_in_reverse: bool = False) -> None:
         """Initialises an animation.
 
         Args:
@@ -43,9 +47,10 @@ class Animation:
             KDS.Logging.AutoError(f"Number of images or duration cannot be less than 1! Number of images: {number_of_images}, duration: {duration}")
         self._images: List[_CachedAnimationSurface] = []
         self._duration = duration
+
         self.ticks = number_of_images * duration - 1
         self.tick = 0
-        self.colorkey = colorkey
+
         self.onAnimationEnd = _OnAnimationEnd
         self.PingPong = False
         self.done = False
@@ -54,18 +59,34 @@ class Animation:
         iterRange = (0, number_of_images, 1) if not load_in_reverse else (number_of_images - 1, -1, -1)
         for i in range(*iterRange):
             converted_animation_name = animation_name + "_" + str(i) + filetype
-            animation_id: str = f"{animation_dir}/{converted_animation_name}"
-            surf: _CachedAnimationSurface | None = _surfaceCache.get(animation_id)
+            texture_path: str = f"{animation_dir}/{converted_animation_name}"
+            cache_key: _SurfaceCacheKey = _SurfaceCacheKey(texture_path, alpha=alpha)
+            surf: _CachedAnimationSurface | None = _surfaceCache.get(cache_key)
             if surf is None:
-                path = "Assets/Textures/" + animation_id
-                image: pygame.Surface = pygame.image.load(path).convert()
-                image.set_colorkey(self.colorkey)
-                surf = _CachedAnimationSurface(animation_id, image)
-                _surfaceCache[animation_id] = surf
-                KDS.Logging.debug(f"Loaded shared animation image: {animation_id}")
+                path = "Assets/Textures/" + texture_path
+                loaded_image: Final[pygame.Surface] = pygame.image.load(path)
+                image: pygame.Surface
+                if alpha:
+                    image = loaded_image.convert_alpha()
+                else:
+                    image = loaded_image.convert()
+                if colorkey is not None:
+                    image.set_colorkey(colorkey)
 
-            # We switches to shared surfaces so we assert this just in case
-            assert(surf.surface.get_colorkey() == (*self.colorkey, 255))
+                surf = _CachedAnimationSurface(cache_key, image)
+                _surfaceCache[cache_key] = surf
+
+                KDS.Logging.debug(f"Loaded shared animation image: {texture_path}")
+
+            # We switched to shared surfaces so we assert this just in case
+            verify_colorkey: Final[tuple[int, int, int, int] | None] = surf.surface.get_colorkey()
+            if colorkey is None:
+                if verify_colorkey is not None:
+                    raise ValueError("Cached animation texture's colorkey does not match the requested colorkey.")
+            else:
+                if verify_colorkey != (*colorkey, 255):
+                    raise ValueError("Cached animation texture's colorkey does not match the requested colorkey.")
+
             self._images.append(surf) # for each append we add a refcount
             surf.refcount += 1
             # KDS.Logging.debug(f"Initialised animation image: {animation_id}")
@@ -76,8 +97,8 @@ class Animation:
         for img in self._images: # when destroyed, decrement refcount
             img.refcount -= 1
             if img.refcount <= 0:
-                del _surfaceCache[img.id]
-                KDS.Logging.debug(f"Unloaded shared animation image: {img.id}")
+                del _surfaceCache[img.key]
+                KDS.Logging.debug(f"Unloaded shared animation image: {img.key}")
 
     # HACK: I can't be bothered to refactor this old KDS codebase
     # so we create a special method to restore the old animation behaviour for AI shoot

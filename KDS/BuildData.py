@@ -31,7 +31,15 @@ def _load(data_filepath: str, texture_dirpath: str) -> BuildData:
 
         texture_name: str = d["path"]
         assert(isinstance(texture_name, str))
-        texture: pygame.Surface = pygame.image.load(os.path.join(texture_dirpath, texture_name)).convert()
+        loaded_tex: pygame.Surface = pygame.image.load(os.path.join(texture_dirpath, texture_name))
+
+        perPixelAlpha: bool = d.get("texturePerPixelAlpha", False)
+        assert(isinstance(perPixelAlpha, bool))
+        texture: pygame.Surface
+        if perPixelAlpha:
+            texture = loaded_tex.convert_alpha()
+        else:
+            texture = loaded_tex.convert()
 
         overrideAlpha: int | None = d.get("textureOverrideAlpha")
         if overrideAlpha is not None:
