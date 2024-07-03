@@ -301,7 +301,7 @@ game_initialization_logger.stop("Asset Loading Complete.")
 #region Variable Initialisation
 game_initialization_logger.start("Defining Variables...")
 ambient_tint = pygame.Surface(screen_size)
-black_tint = pygame.Surface(screen_size, SRCALPHA)
+black_tint = pygame.Surface(screen_size) # , SRCALPHA) I don't think we need SRCALPHA as we use BLEND_RGB_MULT on blit so the alpha would be ignored anyways
 black_tint.fill((20, 20, 20))
 black_tint.set_alpha(170)
 
@@ -952,8 +952,9 @@ class Jukebox(KDS.Build.Tile):
             jukebox_volume = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
             self.playing.SetLocalVolume(jukebox_volume)
 
-            if KDS.World.Dark.enabled:
-                Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
+            # if check is useless, light isn't rendered if dark is disabled.
+            # if KDS.World.Dark.enabled:
+            Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(100, 1000), True))
 
             self.last_particle_counter += 1
             if self.last_particle_counter > Jukebox.MIN_PARTICLE_RATE:
@@ -1142,7 +1143,7 @@ class DecorativeHead(KDS.Build.Tile):
             self.praying = False
 
         if self.prayed:
-            if KDS.World.Dark.enabled:
+            if KDS.World.Dark.GetEnabled():
                 Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 1900), True))
             else:
                 day_light = KDS.World.Lighting.Shapes.circle.get(150, 1900).copy()
@@ -1354,7 +1355,7 @@ class RespawnAnchor(KDS.Build.Tile):
 
     def update(self):
         if RespawnAnchor.active is self:
-            if KDS.World.Dark.enabled:
+            if KDS.World.Dark.GetEnabled():
                 Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle.get(150, 2400), True))
             else:
                 day_light = KDS.World.Lighting.Shapes.circle.get(150, 2400).copy()
@@ -2252,7 +2253,9 @@ class BaseTeleport(KDS.Build.Tile):
         self.identifier: Optional[int] = None
         self.order: int = KDS.Math.MAXVALUE
         self.interactable: bool = True
-        self.setDark: Optional[int] = None
+        # self.setDark: Optional[int] = None
+        # Didn't seem like it was being used
+        # and I didn't like that it reset the darkness on every teleport
 
         super().__init__(position, serialNumber, textureLookupOverride=telep_textures)
         self.texture = telep_textures[self.serialNumber]
@@ -2315,10 +2318,10 @@ class BaseTeleport(KDS.Build.Tile):
             true_scroll[0] += Player.rect.x - true_scroll[0] - SCROLL_OFFSET[0]
             true_scroll[1] += Player.rect.y - true_scroll[1] - SCROLL_OFFSET[1]
         # Setting Dark
-        if self.setDark != None:
-            KDS.World.Dark.Set(True, self.setDark)
-        else:
-            KDS.World.Dark.Reset()
+        # if self.setDark != None:
+        #     KDS.World.Dark.Set(True, self.setDark)
+        # else:
+        #     KDS.World.Dark.Reset()
         # Triggering Listener
         KDS.Missions.Listeners.Teleport.Trigger()
 
@@ -4261,8 +4264,10 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
     BallisticObjects.clear()
     Projectiles.clear()
     Entities.clear()
-    Zones.clear()
     Particles.clear()
+
+    Zones.clear()
+    KDS.World.Zone.reset()
     #endregion
     #region Class Data
     KDS.NPC.NPC.InstanceList.clear()
@@ -5386,9 +5391,10 @@ while main_running:
             price_tip_last_item = None
 
     #Valojen käsittely
-    if KDS.World.Dark.enabled:
+    darkness_value: Final[tuple[int, int, int]] | None = KDS.World.Dark.Update()
+    if darkness_value is not None:
         if not KDS.World.Dark.Disco.enabled:
-            black_tint.fill(KDS.World.Dark.darkness)
+            black_tint.fill(darkness_value)
         else:
             black_tint.fill(KDS.World.Dark.Disco.colorAnimation.update())
             if KDS.World.Dark.Disco.colorAnimation.Finished:
@@ -5406,14 +5412,19 @@ while main_running:
 
         if Player.light and Player.visible:
             Lights.append(KDS.World.Lighting.Light(Player.rect.center, KDS.World.Lighting.Shapes.circle_soft.get(300, 5500), True))
-        for light in Lights:
-            black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
-            if KDS.Debug.Enabled:
-                rectSurf = pygame.Surface(light.surf.get_size())
-                rectSurf.fill(KDS.Colors.Yellow)
-                rectSurf.set_alpha(128)
-                screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
-            #black_tint.blit(KDS.World.Lighting.Shapes.circle.get(40, 40000), (20, 20))
+        if KDS.World.Dark.GetEnabled():
+            for light in Lights:
+                black_tint.blit(light.surf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
+                if KDS.Debug.Enabled:
+                    rectSurf = pygame.Surface(light.surf.get_size())
+                    rectSurf.fill(KDS.Colors.Yellow)
+                    rectSurf.set_alpha(128)
+                    screen.blit(rectSurf, (int(light.position[0] - scroll[0]), int(light.position[1] - scroll[1])))
+                #black_tint.blit(KDS.World.Lighting.Shapes.circle.get(40, 40000), (20, 20))
+
+        # !!! This made colored lights lighter... !!!
+        # if not KDS.World.Dark.Disco.enabled: # fix lights being black when darkness is small
+        #     black_tint.fill(darkness_value, special_flags=BLEND_MAX)
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
     #UI
     if renderUI:

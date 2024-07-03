@@ -654,10 +654,15 @@ class Explosion:
         return self.animation.done, self.animation.tick
 
 class Dark:
-    enabled: bool = False
-    darkness: Tuple[int, int, int] = (0, 0, 0)
-    _defaultEnabled: bool = False
-    _defaultDarknessStrength: int = -1
+    _SPEED: Final[int] = 5
+
+    _current_enabled: bool
+    _target_enabled: bool
+    _current_strength: int
+    _target_strength: int
+
+    _defaultEnabled: bool
+    _defaultDarknessStrength: int
 
     class Disco:
         enabled: bool = False
@@ -668,20 +673,65 @@ class Dark:
         circleX: int = 0
 
     @staticmethod
-    def Set(enabled: bool, strength: int):
-        Dark.enabled = enabled
-        tmp = 255 - strength
-        Dark.darkness = (tmp, tmp, tmp)
+    def GetEnabled() -> bool:
+        """
+        Whether any lights should be rendered.
+
+        NOTE: Even though this method might return False, it does not guarantee that the darkness strength will be 0.
+        """
+
+        # If we are targeting enabled, we will wait until the animation is finished
+        # if we are targeting disabled, disable lights immediately
+        #
+        # this is done like this because on small darkness values, lights were rendered as black
+        # which I couldn't seem to fix using any other methods
+        # so now I just wait until the animation is finished before rendering any lights
+        # if darkness is always enabled during the animation, lights should keep rendering
+        if Dark._target_enabled:
+            return Dark._current_enabled
+        else:
+            return Dark._target_enabled
 
     @staticmethod
-    def Reset():
-        Dark.Set(Dark._defaultEnabled, Dark._defaultDarknessStrength)
+    def Set(enabled: bool, strength: int, *, instant: bool):
+        assert(strength >= 0 and strength <= 255)
+
+        Dark._target_enabled = enabled
+        Dark._target_strength = strength
+        if instant or strength == Dark._current_strength:
+            Dark._current_enabled = Dark._target_enabled
+            Dark._current_strength = Dark._target_strength
+
+    @staticmethod
+    def Update() -> tuple[int, int, int] | None:
+        dist: int = abs(Dark._current_strength - Dark._target_strength)
+        sign: int = -1 if Dark._current_strength > Dark._target_strength else 1
+
+        if dist <= Dark._SPEED:
+            Dark._current_strength += dist * sign
+
+            # 0 <= dist <= Dark._Speed so...
+            # end was reached, so update currently enabled
+            Dark._current_enabled = Dark._target_enabled
+        else:
+            Dark._current_strength += Dark._SPEED * sign
+
+        if Dark._current_enabled or Dark._target_enabled:
+            assert(Dark._current_strength >= 0 and Dark._current_strength <= 255)
+            darkVal: int = 255 - Dark._current_strength
+            return (darkVal, darkVal, darkVal)
+        else:
+            return None
+
+    @staticmethod
+    def Reset(*, instant: bool):
+        Dark.Set(Dark._defaultEnabled, Dark._defaultDarknessStrength, instant=instant)
 
     @staticmethod
     def Configure(enabled: bool, strength: int):
         Dark._defaultEnabled = enabled
         Dark._defaultDarknessStrength = strength
-        Dark.Reset()
+        Dark.Reset(instant=True)
 
 class Zone:
     StaffOnlyCollisions: int = 0
@@ -710,7 +760,7 @@ class Zone:
 
         assert(zone.darkness is not None)
         Zone._darknessList.append(zone)
-        Dark.Set(True, zone.darkness)
+        Dark.Set(True, zone.darkness, instant=zone.darknessIsInstant)
 
     @staticmethod
     def _removeDarkness(zone: Zone) -> None:
@@ -724,9 +774,15 @@ class Zone:
             # get the last darkness that was registered
             last_darkness: Zone = Zone._darknessList[-1]
             assert(last_darkness.darkness is not None)
-            Dark.Set(True, last_darkness.darkness)
+            # use darknessIsInstant of the removed zone, not the last one in the list
+            Dark.Set(True, last_darkness.darkness, instant=zone.darknessIsInstant)
         else:
-            Dark.Reset()
+            Dark.Reset(instant=zone.darknessIsInstant)
+
+    @staticmethod
+    def reset() -> None:
+        Zone.StaffOnlyCollisions = 0
+        Zone._darknessList.clear()
 
     def _onEnter(self):
         if self.darkness is not None:

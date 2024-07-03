@@ -2106,5 +2106,5 @@
 "198-32":{"0":{"checkCollision":false}},
 "196-33":{"0":{"checkCollision":false}},
 "198-33":{"0":{"checkCollision":false}},
-"zones":{"92-6-70-4":{"darkness":96},"179-0-14-14":{"levelEnder":true},"163-20-9-10":{"darkness":235}}
+"zones":{"92-6-70-4":{"darkness":96},"179-0-14-14":{"levelEnder":true,"darkness":96,"darknessIsInstant":true},"163-20-9-10":{"darkness":235}}
 }
