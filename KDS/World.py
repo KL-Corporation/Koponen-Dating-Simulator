@@ -258,7 +258,7 @@ class Lighting:
     @staticmethod
     def lamp_cone(topwidth, bottomwidth, height, color):
         surf = pygame.Surface((bottomwidth, height))
-        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0), (bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)]) # type: ignore
+        pygame.draw.polygon(surf, color, [(bottomwidth / 2 + topwidth / 2, 0), (bottomwidth / 2 - topwidth / 2, 0), (0, height), (bottomwidth, height)])
         surf.set_colorkey((0, 0, 0))
         return surf
 
@@ -685,22 +685,52 @@ class Dark:
 
 class Zone:
     StaffOnlyCollisions: int = 0
+    _darknessList: list[Zone] = []
 
     def __init__(self, rect: pygame.Rect, properties: Dict[str, Union[str, int, float, bool]]) -> None:
         self.rect = rect
         self.playerInside: bool = False
+
         self.staffOnly = bool("staffOnly" in properties and properties["staffOnly"] == True)
         self.levelEnder = bool("levelEnder" in properties and properties["levelEnder"] == True)
         self.disco = bool("disco" in properties and properties["disco"] == True)
+        self.darknessIsInstant = bool("darknessIsInstant" in properties and properties["darknessIsInstant"] == True)
+
         self.darkness: Optional[int] = None
         if "darkness" in properties:
             setDark = properties["darkness"]
             if isinstance(setDark, int):
                 self.darkness = setDark
 
-    def onEnter(self):
-        if self.darkness != None:
-            Dark.Set(True, self.darkness)
+    @staticmethod
+    def _addDarkness(zone: Zone) -> None:
+        if zone in Zone._darknessList:
+            KDS.Logging.AutoError("Zone darkness already registered. Add request ignored.")
+            return
+
+        assert(zone.darkness is not None)
+        Zone._darknessList.append(zone)
+        Dark.Set(True, zone.darkness)
+
+    @staticmethod
+    def _removeDarkness(zone: Zone) -> None:
+        try:
+            Zone._darknessList.remove(zone)
+        except ValueError:
+            KDS.Logging.AutoError("Zone darkness not registered. Remove request ignored.")
+            return
+
+        if len(Zone._darknessList) > 0:
+            # get the last darkness that was registered
+            last_darkness: Zone = Zone._darknessList[-1]
+            assert(last_darkness.darkness is not None)
+            Dark.Set(True, last_darkness.darkness)
+        else:
+            Dark.Reset()
+
+    def _onEnter(self):
+        if self.darkness is not None:
+            Zone._addDarkness(self)
         if self.staffOnly:
             Zone.StaffOnlyCollisions += 1
         if self.levelEnder:
@@ -708,9 +738,9 @@ class Zone:
         if self.disco:
             Dark.Disco.enabled = True
 
-    def onExit(self):
-        if self.darkness != None:
-            Dark.Reset()
+    def _onExit(self):
+        if self.darkness is not None:
+            Zone._removeDarkness(self)
         if self.staffOnly:
             Zone.StaffOnlyCollisions -= 1
         if self.disco:
@@ -720,7 +750,7 @@ class Zone:
         if self.rect.colliderect(playerRect):
             if not self.playerInside:
                 self.playerInside = True
-                self.onEnter()
+                self._onEnter()
         elif self.playerInside:
             self.playerInside = False
-            self.onExit()
+            self._onExit()
