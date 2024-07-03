@@ -31,7 +31,7 @@ from tkinter import filedialog
 import json
 import traceback
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, StrEnum
 
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
@@ -255,7 +255,6 @@ Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", pygame.
 
 scroll: List[int] = [0, 0]
 currentSaveName = ''
-currentLoadName = ''
 grid: List[List[UnitData]] = [[]]
 gridSize: Tuple[int, int] = (0, 0)
 
@@ -723,15 +722,16 @@ class UnitData:
                 grid[y][x].matchesRefrence = grid[y][x].Equals(refrenceGrid[y][x])
 
 class PropertiesData:
-    class ZoneSetting(Enum):
+    class ZoneSetting(StrEnum):
         StaffOnly = "staffOnly"
         Darkness = "darkness"
+        DarknessInstant = "darknessIsInstant"
         LevelEnder = "levelEnder"
         Disco = "disco"
 
     class ZoneData:
         def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
-            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(v[0].copy(), v[1]) for v in values]
+            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(v[0].copy(), v[1].copy()) for v in values]
 
         def __getitem__(self, index: int) -> Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
             return self.zones[index]
@@ -882,7 +882,7 @@ class PropertiesData:
         return result
 
     @staticmethod
-    def Deserialize(jsonString: str, grid: List[List[UnitData]]) -> None:
+    def Deserialize(jsonString: str, grid: List[List[UnitData]], *, load_zones: bool = True) -> None:
         if len(jsonString) < 1 or jsonString.isspace():
             return
         deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
@@ -898,7 +898,8 @@ class PropertiesData:
                     unitProp.values = {UnitType(int(k)): v for k, v in toSet.items()}
                     unit.properties = unitProp
 
-        PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"] if "zones" in deserialized else {}))
+        if load_zones:
+            PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"] if "zones" in deserialized else {}))
 
 class BrushData:
     def __init__(self) -> None:
@@ -1038,7 +1039,7 @@ class DragData:
         if onDragClear != None:
             self.c_onDragClear[mode].append(onDragClear)
 
-Drag = DragData()
+Drag: Final = DragData()
 Drag.registerCalls(DragMode.Zone, PropertiesData.ZoneData.NewDragRect, PropertiesData.ZoneData.UpdateDragRect, PropertiesData.ZoneData.UpdateDragRect, None)
 
 def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
@@ -1050,7 +1051,7 @@ def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
         rlist.append(row)
     return rlist
 
-def resizeGrid(size: Tuple[int, int], grid: list):
+def resizeGrid(size: Tuple[int, int], grid: list[list[UnitData]]) -> None:
     grid_size = (len(grid[0]), len(grid))
     size_difference = (size[0] - grid_size[0], size[1] - grid_size[1])
     if size_difference[1] > 0:
@@ -1073,7 +1074,65 @@ def resizeGrid(size: Tuple[int, int], grid: list):
                 row.pop()
     global gridSize
     gridSize = size
-    return grid
+
+def unsafeAddGridTopLeft(size: tuple[int, int], grid: list[list[UnitData]], zones: PropertiesData.ZoneData) -> None:
+    original_grid_size: tuple[int, int] = (len(grid[0]), len(grid))
+    size_diff: tuple[int, int] = (size[0] - original_grid_size[0], size[1] - original_grid_size[1])
+    if size[0] < original_grid_size[0] or size[1] < original_grid_size[1]:
+        raise ValueError("This method cannot reduce grid size. Use unsafeRemoveGridTopLeft instead.")
+
+    # add rows
+    while len(grid) < size[1]:
+        for row in grid:
+            for unit in row:
+                unit.pos = (unit.pos[0], unit.pos[1] + 1)
+        insert_row: list[UnitData] = [UnitData((x, 0)) for x in range(original_grid_size[0])]
+        grid.insert(0, insert_row)
+
+    # add columns
+    while len(grid[0]) < size[0]:
+        for y, row in enumerate(grid):
+            for unit in row:
+                unit.pos = (unit.pos[0] + 1, unit.pos[1])
+            row.insert(0, (UnitData((0, y))))
+
+    for zone_i in range(len(zones.zones)):
+        # modify element in-place
+        zone_rect: pygame.Rect = zones.zones[zone_i][0]
+        zone_rect.x += size_diff[0]
+        zone_rect.y += size_diff[1]
+
+    global gridSize
+    gridSize = size
+
+def unsafeRemoveGridTopLeft(size: tuple[int, int], grid: list[list[UnitData]], zones: PropertiesData.ZoneData) -> None:
+    original_grid_size: tuple[int, int] = (len(grid[0]), len(grid))
+    size_diff: tuple[int, int] = (size[0] - original_grid_size[0], size[1] - original_grid_size[1])
+    if size[0] > original_grid_size[0] or size[1] > original_grid_size[1]:
+        raise ValueError("This method cannot increase grid size. Use unsafeAddGridTopLeft instead.")
+
+    # remove rows
+    while len(grid) > size[1]:
+        for row in grid:
+            for unit in row:
+                unit.pos = (unit.pos[0], unit.pos[1] - 1)
+        grid.pop(0)
+
+    # remove columns
+    while len(grid[0]) > size[0]:
+        for row in grid:
+            for unit in row:
+                unit.pos = (unit.pos[0] - 1, unit.pos[1])
+            row.pop(0)
+
+    for zone_i in range(len(zones.zones)):
+        # modify element in-place
+        zone_rect: pygame.Rect = zones.zones[zone_i][0]
+        zone_rect.x += size_diff[0]
+        zone_rect.y += size_diff[1]
+
+    global gridSize
+    gridSize = size
 
 def generateMapString(grid: List[List[UnitData]]) -> str:
     outputString = ''
@@ -1151,9 +1210,8 @@ def loadLevelProp(dirPath: str):
                     KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
                 LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
 
-def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
-    global display, clock, currentLoadName
-    currentLoadName = path
+def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
+    global display
 
     with open(path, 'r') as f:
         wholeContents = f.read()
@@ -1179,6 +1237,8 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
                 else:
                     unit += " "
             while len(unit) > len(UnitData.EMPTYSERIAL):
+                if unit[-1] not in (' ', '0'):
+                    KDS.Logging.warning(f"Broken serial fix will truncate out a non-zero serial: '{unit}'", consoleVisible=True)
                 unit = unit[:-1]
             if KDS.Linq.Any(unit.split(" "), lambda n: len(n) != len(UnitData.EMPTY)):
                 KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
@@ -1188,16 +1248,18 @@ def internalLoadMap(path: str) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
     if generateMapString(temporaryGrid) != wholeContents:
         KDS.Logging.warning("Loaded map file does not match generated map file!", consoleVisible=True)
 
-    def loadProperties():
+    def loadProperties(*, load_zones: bool):
         nonlocal temporaryGrid
         pPath = os.path.join(os.path.dirname(path), "properties.kdf")
         if not os.path.isfile(pPath):
             return
         with open(pPath, 'r', encoding="utf-8") as f:
-            PropertiesData.Deserialize(f.read(), temporaryGrid)
+            PropertiesData.Deserialize(f.read(), temporaryGrid, load_zones=load_zones)
 
-    loadProperties()
-    loadLevelProp(os.path.dirname(path))
+
+    loadProperties(load_zones=modifyGlobals)
+    if modifyGlobals:
+        loadLevelProp(os.path.dirname(path))
     return temporaryGrid, temporaryGridSize
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
@@ -1249,14 +1311,22 @@ commandTree = {
         "brush": {n: "break" for n in consoleTextureNameSerials.keys()},
         **{n: "break" for n in consoleTextureNameSerials.keys()},
     },
-    "add": {
+    "add": { # extend map
         "rows": "break",
         "cols": "break"
     },
-    "rmv": {
+    "rmv": { # shrink map
         "rows": "break",
         "cols": "break"
         # "stacks": "break"
+    },
+    "insert": { # extend map, insert on top/left, might break things
+        "rows": "break",
+        "cols": "break"
+    },
+    "purge": { # shrink map, purge from top/left, might break things
+        "rows": "break",
+        "cols": "break"
     }
 }
 def consoleHandler(commandlist: List[str]) -> int:
@@ -1300,54 +1370,48 @@ def consoleHandler(commandlist: List[str]) -> int:
         else:
             KDS.Console.Feed.append("Invalid set command.")
             return 1
-    elif commandlist[0] == "add":
+    elif commandlist[0] in ("add", "rmv", "insert", "purge"):
+        add_rows: int = 0
+        add_cols: int = 0
         if commandlist[1] == "rows":
             if commandlist[2].isnumeric():
-                resizeGrid((gridSize[0], gridSize[1] + int(commandlist[2])), grid)
+                add_rows = int(commandlist[2])
+            else:
+                KDS.Console.Feed.append("Row count is not a valid value.")
+                return 1
+        elif commandlist[1] == "cols":
+            if commandlist[2].isnumeric():
+                add_cols = int(commandlist[2])
+            else:
+                KDS.Console.Feed.append("Column count is not a valid value.")
+                return 1
+        else:
+            KDS.Console.Feed.append(f"Invalid {commandlist[0]} command.")
+            return 1
+
+        if commandlist[0] in ("rmv", "purge"):
+            add_rows = -add_rows
+            add_cols = -add_cols
+
+        if commandlist[0] in ("add", "rmv"):
+            resizeGrid((gridSize[0] + add_cols, gridSize[1] + add_rows), grid)
+            if add_rows > 0:
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} rows.")
-                return 0
-            else:
-                KDS.Console.Feed.append("Row add count is not a valid value.")
-                return 1
-        elif commandlist[1] == "cols":
-            if commandlist[2].isnumeric():
-                resizeGrid((gridSize[0] + int(commandlist[2]), gridSize[1]), grid)
+            if add_cols > 0:
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} columns.")
-                return 0
-            else:
-                KDS.Console.Feed.append("Column add count is not a valid value.")
-                return 1
-        else:
-            KDS.Console.Feed.append("Invalid add command.")
-            return 1
-    elif commandlist[0] == "rmv":
-        if commandlist[1] == "rows":
-            if commandlist[2].isnumeric():
-                resizeGrid((gridSize[0], gridSize[1] - int(commandlist[2])), grid)
+            if add_rows < 0:
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} rows.")
-                return 0
-            else:
-                KDS.Console.Feed.append("Row add count is not a valid value.")
-                return 1
-        elif commandlist[1] == "cols":
-            if commandlist[2].isnumeric():
-                resizeGrid((gridSize[0] - int(commandlist[2]), gridSize[1]), grid)
+            if add_cols < 0:
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} columns.")
-                return 0
-            else:
-                KDS.Console.Feed.append("Column add count is not a valid value.")
-                return 1
-        # This command was too dangerous (make an accidental mistake and you are fucked)
-        # elif commandlist[1] == "stacks":
-        #     for row in grid:
-        #         for unit in row:
-        #             for i in range(1, len(unit.serials)):
-        #                 unit.setSerialToSlot(UnitData.EMPTY, i)
-        #     KDS.Console.Feed.append("Removed all stacks found in this map.")
-        #     return 0
         else:
-            KDS.Console.Feed.append("Invalid remove command.")
-            return 1
+            if add_rows >= 0 and add_cols >= 0:
+                unsafeAddGridTopLeft((gridSize[0] + add_cols, gridSize[1] + add_rows), grid, PropertiesData.Zones)
+            elif add_rows <= 0 and add_cols <= 0:
+                unsafeRemoveGridTopLeft((gridSize[0] + add_cols, gridSize[1] + add_rows), grid, PropertiesData.Zones)
+            else:
+                raise RuntimeError("Combined insert-purge not supported.")
+
+        return 0
     else:
         KDS.Console.Feed.append("Invalid command.")
         return 1
@@ -1375,7 +1439,7 @@ def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
         PropertiesData.Zones.RemoveSetting(zoneRect, command_setting)
         return
 
-    if command_setting in (PropertiesData.ZoneSetting.StaffOnly, PropertiesData.ZoneSetting.LevelEnder, PropertiesData.ZoneSetting.Disco):
+    if command_setting in (PropertiesData.ZoneSetting.StaffOnly, PropertiesData.ZoneSetting.LevelEnder, PropertiesData.ZoneSetting.Disco, PropertiesData.ZoneSetting.DarknessInstant):
         parsedBool = KDS.Convert.String.ToBool(commandlist[1], hideError=True)
         if parsedBool == None:
             KDS.Logging.info(f"{commandlist[1]} is not a valid bool.", consoleVisible=True)
@@ -1829,7 +1893,7 @@ def main():
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None:
-                        grid = resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
+                        resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     tmpBrush = materialMenu(brush.brush)
                     tmpProps: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
@@ -1895,17 +1959,19 @@ def main():
                     else:
                         refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
                         if len(refrencePath) > 0 and not refrencePath.isspace():
-                            refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath)
+                            refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath, modifyGlobals=False)
                 elif event.key == K_F5:
-                    loadLevelProp(os.path.dirname(currentLoadName))
+                    if len(currentSaveName) > 0:
+                        loadLevelProp(os.path.dirname(currentSaveName))
             elif event.type == MOUSEWHEEL:
+                move_multiplier: int = 1 if not keys_pressed[K_LALT] else 10
                 if keys_pressed[K_LCTRL]:
                     zoom(event.y * 5, scroll, grid)
                 elif keys_pressed[K_LSHIFT]:
-                    scroll[0] -= event.y
+                    scroll[0] -= event.y * move_multiplier
                 else:
-                    scroll[1] -= event.y
-                scroll[0] += event.x
+                    scroll[1] -= event.y * move_multiplier
+                scroll[0] += event.x * move_multiplier
 
         # AFTER EVENTS
         mouse_pos = pygame.mouse.get_pos()
@@ -1971,7 +2037,7 @@ def main():
             tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
 
-        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed, allow_drag=allowTilePlacement)
+        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed, allow_drag=(allowTilePlacement or zoneMode))
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
@@ -2039,12 +2105,25 @@ def main():
 
                 zoneScreen.blit(zoneSurf, zoneRectScaled.topleft)
 
+                zoneSettingsCutoff: float = 1.25 * scalesize
+                if harbinger_font_small.get_height() < zoneSettingsCutoff:
+                    for zoneSettingIndex, (zoneSetting, zoneSettingValue) in enumerate(zoneData.items()):
+                        zoneSettingY: int = zoneSettingIndex * harbinger_font_small.get_linesize()
+                        # this hides some vital settings when zooming out
+                        # if zoneSettingY > zoneSettingsCutoff:
+                        #     break
+                        zoneSettingRender: pygame.Surface = harbinger_font_small.render(f"{zoneSetting.name}: {zoneSettingValue}", True, KDS.Colors.AviatorRed)
+                        # if zoneSettingRender.width > zoneRectScaled.width:
+                        #     zoneSettingRender = zoneSettingRender.subsurface((0, 0, zoneRectScaled.width, zoneSettingRender.height))
+                        zoneScreen.blit(zoneSettingRender, (zoneRectScaled.left, zoneRectScaled.top + zoneSettingY))
+
                 if keys_pressed[K_p] and zoneRectScaled.collidepoint(*mouse_pos):
                     zone_command_tree = {
-                        "staffOnly": {"true": "break", "false": "break", "null": "break"},
-                        "levelEnder": {"true": "break", "false": "break", "null": "break"},
-                        "disco": {"true": "break", "false": "break", "null": "break"},
-                        "darkness": {"[int]": "break", "null": "break"}
+                        PropertiesData.ZoneSetting.StaffOnly: {"true": "break", "false": "break", "null": "break"},
+                        PropertiesData.ZoneSetting.LevelEnder: {"true": "break", "false": "break", "null": "break"},
+                        PropertiesData.ZoneSetting.Disco: {"true": "break", "false": "break", "null": "break"},
+                        PropertiesData.ZoneSetting.DarknessInstant: {"true": "break", "false": "break", "null": "break"},
+                        PropertiesData.ZoneSetting.Darkness: {"[int]": "break", "null": "break"}
                     }
                     zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
                     zoneConsoleHandler(zone_command, zoneRect)
