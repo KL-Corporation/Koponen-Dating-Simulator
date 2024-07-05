@@ -1,5 +1,4 @@
 from __future__ import annotations
-import itertools
 import os
 
 import KDS.BuildData
@@ -32,9 +31,9 @@ from tkinter import filedialog
 import json
 import traceback
 from dataclasses import dataclass
-from enum import Enum, IntEnum, StrEnum
+from enum import IntEnum, StrEnum
 
-from typing import Any, Callable, Dict, Final, Iterable, List, NamedTuple, Optional, Self, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Final, Iterable, NamedTuple, Optional, Self, Sequence, Union
 
 from KDS.LevelBuilder.Shared import *
 
@@ -98,7 +97,7 @@ if not KDS.System.ISLINUX:
     root.iconbitmap("Assets/Textures/Branding/levelBuilderIcon.ico")
 pygame.init()
 display: pygame.Surface = pygame.Surface((2, 2)) # Dunder surface for linting
-display_size: Tuple[int, int] = (1600, 800)
+display_size: tuple[int, int] = (1600, 800)
 monitor_info = pygame.display.Info()
 scalesize = 68
 gamesize = 34
@@ -109,7 +108,7 @@ DEFAULTZOOM = scalesize
 
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
-def SetDisplaySize(size: Tuple[int, int] = (0, 0)):
+def SetDisplaySize(size: tuple[int, int] = (0, 0)):
     global display, display_size, display_info
     display = pygame.display.set_mode(size, RESIZABLE | DOUBLEBUF | HWSURFACE)
     display_size = display.get_size()
@@ -131,14 +130,14 @@ class TextureHolder:
         def __init__(self, serialNumber: str, name: str, texture: pygame.Surface) -> None:
             self.serialNumber = serialNumber
             self.texture = texture
-            self.texture_size: Tuple[int, int] = self.texture.get_size()
+            self.texture_size: tuple[int, int] = self.texture.get_size()
             self.name = name
 
             self.rescaleTexture()
 
         def rescaleTexture(self):
             self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (round(self.texture.get_width() * scaleMultiplier), round(self.texture.get_height() * scaleMultiplier)))
-            self.scaledTexture_size: Tuple[int, int] = self.scaledTexture.get_size()
+            self.scaledTexture_size: tuple[int, int] = self.scaledTexture.get_size()
 
             drkOvl = self.scaledTexture.convert_alpha()
             drkOvl.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
@@ -150,9 +149,9 @@ class TextureHolder:
             self.lightOverlay: pygame.Surface = lghtOvl
 
     def __init__(self) -> None:
-        self.data: Dict[UnitType, Dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
-        self.serials: List[str] = []
-        self.names: List[str] = []
+        self.data: dict[UnitType, dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
+        self.serials: list[str] = []
+        self.names: list[str] = []
 
         self.trueScale: Final[set[str]] = set()
         self.noCollision: Final[set[str]] = set()
@@ -161,7 +160,7 @@ class TextureHolder:
 
     def __iter__(self):
         self.iterIndex: int = 0
-        self.iterValues: List[TextureHolder.TextureData] = []
+        self.iterValues: list[TextureHolder.TextureData] = []
         for d in self.data.values():
             self.iterValues.extend([v for v in d.values()])
         return self
@@ -219,7 +218,7 @@ class TextureHolder:
     def GetScaledTexture(self, serialNumber: str) -> pygame.Surface:
         return self.GetData(serialNumber).scaledTexture
 
-    def GetScaledTextureWithSize(self, serialNumber: str) -> Tuple[pygame.Surface, Tuple[int, int]]:
+    def GetScaledTextureWithSize(self, serialNumber: str) -> tuple[pygame.Surface, tuple[int, int]]:
         data = self.GetData(serialNumber)
         return data.scaledTexture, data.scaledTexture_size
 
@@ -262,12 +261,12 @@ Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", pygame.
 
 ### GLOBAL VARIABLES ###
 
-scroll: List[int] = [0, 0]
+scroll: list[int] = [0, 0]
 currentSaveName = ''
-grid: List[List[UnitData]] = [[]]
-gridSize: Tuple[int, int] = (0, 0)
+grid: list[list[UnitData]] = [[]]
+gridSize: tuple[int, int] = (0, 0)
 
-refrenceGrid: Optional[List[List[UnitData]]] = None
+refrenceGrid: Optional[list[list[UnitData]]] = None
 refrenceGridSize: tuple[int, int] = (0, 0)
 refrenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 
@@ -280,12 +279,12 @@ class LevelPropData:
         LevelPropData.PlayerTextureRescaled = KDS.Convert.AspectScale(LevelPropData.PlayerTexture, (int(LevelPropData.PlayerTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
 
     ShowKoponen: bool = False
-    KoponenPos: Tuple[int, int] = (0, 0)
+    KoponenPos: tuple[int, int] = (0, 0)
     KoponenTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/koponen_idle_0.png").convert()
     KoponenTexture.set_colorkey(KDS.Colors.White)
     KoponenTexture.set_alpha(64)
     ShowPlayer: bool = False
-    PlayerPos: Tuple[int, int] = (0, 0)
+    PlayerPos: tuple[int, int] = (0, 0)
     PlayerTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
     PlayerTexture.set_colorkey(KDS.Colors.White)
     PlayerTexture.set_alpha(64)
@@ -295,7 +294,7 @@ class LevelPropData:
 LevelPropData.rescale()
 
 class Undo:
-    changes: List[UnitData] = []
+    changes: list[UnitData] = []
     index = 0
     overflowCount = 0
     totalOffset = 0
@@ -375,7 +374,7 @@ class UnitData:
 
     DOORSERIALS: set[str] = { "0023", "0024", "0025", "0026" }
 
-    def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
+    def __init__(self, position: tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
         self.matchesRefrence = False
@@ -403,10 +402,10 @@ class UnitData:
         data.properties = self.properties.Copy(parentOverride=data)
         return data
 
-    def setProperties(self, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+    def setProperties(self, properties: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
         self.properties.SetAll(properties)
 
-    def addProperties(self, properties: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+    def addProperties(self, properties: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
         for _type, value in properties.items():
             for k, v in value.items():
                 self.properties.Set(_type, k, v)
@@ -513,7 +512,7 @@ class UnitData:
         return f"{srlNumber} 0000 0000 0000"
 
     @staticmethod
-    def renderSerial(surface: pygame.Surface, properties: Optional[PropertiesData], serial: str, pos: Tuple[int, int], lightOverlay: bool = False):
+    def renderSerial(surface: pygame.Surface, properties: Optional[PropertiesData], serial: str, pos: tuple[int, int], lightOverlay: bool = False):
         textureData = Textures.GetData(serial)
         blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in Textures.trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
@@ -539,7 +538,7 @@ class UnitData:
             surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
-    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, pickTile: bool = False):
+    def renderUpdate(surface: pygame.Surface, scroll: list[int], renderList: list[list[UnitData]], brush: BrushData, pickTile: bool = False):
         global allowTilePlacement
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
@@ -561,8 +560,8 @@ class UnitData:
         mpos = pygame.mouse.get_pos()
         mpos_tilepos: tuple[int, int] | None = (int(mpos[0] / scalesize) + scroll[0], int(mpos[1] / scalesize) + scroll[1])
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
-        doorRenders: List[Tuple[str, Tuple[int, int], bool]] = []
-        overlayRenders: List[Tuple[str, Tuple[int, int], bool]] = []
+        doorRenders: list[tuple[str, tuple[int, int], bool]] = []
+        overlayRenders: list[tuple[str, tuple[int, int], bool]] = []
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
@@ -726,19 +725,19 @@ class PropertiesData:
         Disco = "disco"
 
     class ZoneData:
-        def __init__(self, values: Iterable[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
-            self.zones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(v[0].copy(), v[1].copy()) for v in values]
+        def __init__(self, values: Iterable[tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
+            self.zones: list[tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = [(v[0].copy(), v[1].copy()) for v in values]
 
-        def __getitem__(self, index: int) -> Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
+        def __getitem__(self, index: int) -> tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]:
             return self.zones[index]
 
-        def __setitem__(self, index: int, value: Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]):
+        def __setitem__(self, index: int, value: tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]):
             self.zones[index] = value
 
         def __len__(self) -> int:
             return len(self.zones)
 
-        def RemoveCollidePoint(self, mouse_pos: Tuple[int, int]) -> None:
+        def RemoveCollidePoint(self, mouse_pos: tuple[int, int]) -> None:
             mouse_pos_scaled = (int(mouse_pos[0] / scalesize + scroll[0]), int(mouse_pos[1] / scalesize + scroll[1]))
             for zone in reversed(self.zones):
                 if zone[0].collidepoint(mouse_pos_scaled):
@@ -758,7 +757,7 @@ class PropertiesData:
             assert Drag.Rect != None, "UpdateDragRect from null!"
             PropertiesData.Zones.zones[-1] = (pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), PropertiesData.Zones.zones[-1][1])
 
-        def _returnCorrectZone(self, zoneRect: pygame.Rect) -> Optional[Dict[PropertiesData.ZoneSetting, str | int | float | bool]]:
+        def _returnCorrectZone(self, zoneRect: pygame.Rect) -> Optional[dict[PropertiesData.ZoneSetting, str | int | float | bool]]:
             for zone in self.zones:
                 if zone[0].x == zoneRect.x and zone[0].y == zoneRect.y and zone[0].width == zoneRect.width and zone[0].height == zoneRect.height:
                     return zone[1]
@@ -783,7 +782,7 @@ class PropertiesData:
 
     def __init__(self, parent: UnitData) -> None:
         self.parent = parent
-        self.values: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] = {}
+        self.values: dict[UnitType, dict[str, Union[str, int, float, bool]]] = {}
 
     def __eq__(self, other) -> bool:
         """ == operator """
@@ -801,7 +800,7 @@ class PropertiesData:
         Undo.register(self.parent)
         self.values[_type][key] = value
 
-    def SetAll(self, data: Dict[UnitType, Dict[str, Union[str, int, float, bool]]]):
+    def SetAll(self, data: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
         Undo.register(self.parent)
         self.values = {k: {ik: iv for ik, iv in v.items()} for k, v in data.items()}
 
@@ -823,7 +822,7 @@ class PropertiesData:
             return default
         return self.values[_type][key]
 
-    def GetAll(self) -> Dict[UnitType, Dict[str, Union[str, int, float, bool]]]:
+    def GetAll(self) -> dict[UnitType, dict[str, Union[str, int, float, bool]]]:
         return {k: v.copy() for k, v in self.values.items()}
 
     def RemoveUnused(self):
@@ -849,22 +848,22 @@ class PropertiesData:
 
     @staticmethod
     def _zonesSerializer():
-        parsableZones: Dict[str, Dict[str, Union[str, int, float, bool]]] = {}
+        parsableZones: dict[str, dict[str, Union[str, int, float, bool]]] = {}
         for rect, data in PropertiesData.Zones:
             parsableZones[f"{rect.x}-{rect.y}-{rect.width}-{rect.height}"] = {k.value: v for k, v in data.items()}
         return f"\"zones\":{json.dumps(parsableZones, separators=(',', ':'))}"
 
     @staticmethod
-    def _zonesDeserializer(data: Dict[str, Dict[str, Union[str, int, float, bool]]]) -> List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]]:
-        parsedZones: List[Tuple[pygame.Rect, Dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []
+    def _zonesDeserializer(data: dict[str, dict[str, Union[str, int, float, bool]]]) -> list[tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]]:
+        parsedZones: list[tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []
         for rect, d in data.items():
             x, y, w, h = rect.split("-")
             parsedZones.append((pygame.Rect(int(x), int(y), int(w), int(h)), {PropertiesData.ZoneSetting(t): v for t, v in d.items()}))
         return parsedZones
 
     @staticmethod
-    def Serialize(grid: List[List[UnitData]]) -> str:
-        strings: List[str] = []
+    def Serialize(grid: list[list[UnitData]]) -> str:
+        strings: list[str] = []
         for row in grid:
             for unit in row:
                 pString = str(unit.properties)
@@ -878,10 +877,10 @@ class PropertiesData:
         return result
 
     @staticmethod
-    def Deserialize(jsonString: str, grid: List[List[UnitData]], *, load_zones: bool = True) -> None:
+    def Deserialize(jsonString: str, grid: list[list[UnitData]], *, load_zones: bool = True) -> None:
         if len(jsonString) < 1 or jsonString.isspace():
             return
-        deserialized: Dict[str, Dict[str, Dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
+        deserialized: dict[str, dict[str, dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
         for row in grid:
             for unit in row:
                 key = f"{unit.pos[0]}-{unit.pos[1]}"
@@ -914,7 +913,7 @@ class BrushShape(IntEnum):
 class BrushData:
     def __init__(self) -> None:
         self._brush: str = UnitData.EMPTY
-        self._properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+        self._properties: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None
 
         self._pos: tuple[int, int] | None = None
         self._allow_add_or_insert: bool = False
@@ -934,7 +933,7 @@ class BrushData:
     def currentMaterial(self) -> str:
         return self._brush
 
-    def SetBrush(self, brush: str = UnitData.EMPTY, properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None):
+    def SetBrush(self, brush: str = UnitData.EMPTY, properties: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None):
         self._brush = brush
         self._properties = None
         if not self.IsEmpty and properties != None:
@@ -946,7 +945,7 @@ class BrushData:
     def PickBrush(self, unit: UnitData, *, get_properties: bool):
         brush = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != self._brush)
 
-        props: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+        props: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None
         if brush is None:
             brush = unit.getSerial(0)
         elif brush[0] == "3":
@@ -1183,7 +1182,7 @@ class DragMode(IntEnum):
 
 @dataclass
 class DragStyle:
-    color: Tuple[int, int, int]
+    color: tuple[int, int, int]
     alpha: int
     border_width: int
 
@@ -1194,11 +1193,11 @@ class DragData:
         self.Rect: Optional[pygame.Rect] = None
         self.Mode: DragMode = DragMode.Default
 
-        self.startPos: Optional[Tuple[int, int]] = None
-        self.c_onDragStart: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
-        self.c_onDragUpdate: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
-        self.c_onDragEnd: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
-        self.c_onDragClear: Dict[DragMode, List[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.startPos: Optional[tuple[int, int]] = None
+        self.c_onDragStart: dict[DragMode, list[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragUpdate: dict[DragMode, list[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragEnd: dict[DragMode, list[Callable[[], None]]] = {m: [] for m in DragMode}
+        self.c_onDragClear: dict[DragMode, list[Callable[[], None]]] = {m: [] for m in DragMode}
 
         self.lastL = False
 
@@ -1214,7 +1213,7 @@ class DragData:
         self.startPos = None
         [onClear() for onClear in self.c_onDragClear[self.Mode]]
 
-    def render(self, style: DragStyle, surface: pygame.Surface, scroll: List[int]):
+    def render(self, style: DragStyle, surface: pygame.Surface, scroll: list[int]):
         if self.Rect == None:
             return
 
@@ -1231,7 +1230,7 @@ class DragData:
         hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
-    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper, *, allow_drag: bool) -> bool:
+    def update(self, mouse_pos: tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper, *, allow_drag: bool) -> bool:
         if not brush.IsEmpty:
             if self.Rect is not None:
                 self.clear()
@@ -1287,7 +1286,7 @@ class DragData:
 Drag: Final = DragData()
 Drag.registerCalls(DragMode.Zone, PropertiesData.ZoneData.NewDragRect, PropertiesData.ZoneData.UpdateDragRect, PropertiesData.ZoneData.UpdateDragRect, None)
 
-def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
+def loadGrid(size: tuple[int, int]) -> list[list[UnitData]]:
     rlist = []
     for y in range(size[1]):
         row = []
@@ -1296,7 +1295,7 @@ def loadGrid(size: Tuple[int, int]) -> List[List[UnitData]]:
         rlist.append(row)
     return rlist
 
-def resizeGrid(size: Tuple[int, int], grid: list[list[UnitData]]) -> None:
+def resizeGrid(size: tuple[int, int], grid: list[list[UnitData]]) -> None:
     grid_size = (len(grid[0]), len(grid))
     size_difference = (size[0] - grid_size[0], size[1] - grid_size[1])
     if size_difference[1] > 0:
@@ -1379,7 +1378,7 @@ def unsafeRemoveGridTopLeft(size: tuple[int, int], grid: list[list[UnitData]], z
     global gridSize
     gridSize = size
 
-def generateMapString(grid: List[List[UnitData]]) -> str:
+def generateMapString(grid: list[list[UnitData]]) -> str:
     outputString = ''
     for row in grid:
         for unit in row:
@@ -1387,7 +1386,7 @@ def generateMapString(grid: List[List[UnitData]]) -> str:
         outputString = outputString.removesuffix(" / ") + "\n"
     return outputString
 
-def saveMap(grid: List[List[UnitData]], name: str):
+def saveMap(grid: list[list[UnitData]], name: str):
     #region Map
     with open(name, 'w', encoding="utf-8") as f:
         f.write(generateMapString(grid))
@@ -1433,7 +1432,7 @@ def loadLevelProp(dirPath: str):
     if not os.path.isfile(lPath):
         return
     with open(lPath, "r", encoding="utf-8") as f:
-        lpData: Dict[str, Dict[str, Any]] = json.loads(f.read())
+        lpData: dict[str, dict[str, Any]] = json.loads(f.read())
         if "Entities" not in lpData:
             return
         entityData = lpData["Entities"]
@@ -1455,7 +1454,7 @@ def loadLevelProp(dirPath: str):
                     KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
                 LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
 
-def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> Tuple[List[List[UnitData]], Tuple[int, int]]:
+def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> tuple[list[list[UnitData]], tuple[int, int]]:
     global display
 
     with open(path, 'r') as f:
@@ -1574,7 +1573,7 @@ commandTree = {
         "cols": "break"
     }
 }
-def consoleHandler(commandlist: List[str]) -> int:
+def consoleHandler(commandlist: list[str]) -> int:
     """Return 0 on success, 1 on error"""
 
     global brush, grid
@@ -1661,7 +1660,7 @@ def consoleHandler(commandlist: List[str]) -> int:
         KDS.Console.Feed.append("Invalid command.")
         return 1
 
-def zoneConsoleHandler(commandlist: Optional[List[str]], zoneRect: pygame.Rect):
+def zoneConsoleHandler(commandlist: Optional[list[str]], zoneRect: pygame.Rect):
     Undo.overflowCount += 1
     if commandlist == None:
         return
@@ -1710,12 +1709,12 @@ def materialMenu(previousMaterial: str) -> str:
     OFFSET = (display_size[0] // 2 - SPACING[0] * COLUMNS // 2 - BLOCKSIZE // 2, 40)
 
     class selectorRect:
-        def __init__(self, pos: Tuple[int, int], data: TextureHolder.TextureData):
+        def __init__(self, pos: tuple[int, int], data: TextureHolder.TextureData):
             self.pos = pos
             self.rect: pygame.Rect = pygame.Rect(pos[0] * SPACING[0] + OFFSET[0], pos[1] * SPACING[1] + OFFSET[1], BLOCKSIZE, BLOCKSIZE)
             self.data: TextureHolder.TextureData = data
 
-    selectorRects: List[selectorRect] = []
+    selectorRects: list[selectorRect] = []
 
     y = 0
     x = 0
@@ -1945,15 +1944,15 @@ def menu():
         KDS.Clock.Tick()
 
 class Selected:
-    units: List[UnitData] = []
+    units: list[UnitData] = []
 
     @staticmethod
-    def Set(serialOverride: str | None = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
+    def Set(serialOverride: str | None = None, propertiesOverride: dict[UnitType, dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
         global grid #                                                                                                        ^^ Undo is now registered each time mouse button 1 (left click) is pressed. Change this if something breaks.
         Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, clear_selected=clear_selected)
 
     @staticmethod
-    def SetCustomGrid(grid: List[List[UnitData]], serialOverride: str | None = None, propertiesOverride: Dict[UnitType, Dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
+    def SetCustomGrid(grid: list[list[UnitData]], serialOverride: str | None = None, propertiesOverride: dict[UnitType, dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
@@ -1993,8 +1992,8 @@ class Selected:
         Selected.Set(serialOverride=UnitData.EMPTYSERIAL, propertiesOverride={}, clear_selected=False)
 
     @staticmethod
-    def ToString(serializeProperties: bool = False) -> Union[str, Tuple[str, str]]:
-        units2d: Dict[int, Dict[int, UnitData]] = {} # Dictionaries are ordered
+    def ToString(serializeProperties: bool = False) -> Union[str, tuple[str, str]]:
+        units2d: dict[int, dict[int, UnitData]] = {} # Dictionaries are ordered
         for u in Selected.units:
             if u.pos[1] not in units2d:
                 units2d[u.pos[1]] = {}
@@ -2015,7 +2014,7 @@ class Selected:
 
     @staticmethod
     def FromString(string: str, properties: str | None = None):
-        units: List[UnitData] = []
+        units: list[UnitData] = []
         contents = string.splitlines()
         while len(contents[-1]) < 1: contents = contents[:-1]
 
@@ -2081,7 +2080,7 @@ def main():
     textureRescaleHandle: Optional[KDS.Jobs.JobHandle] = None
     new_rescale_requested: bool = False
 
-    def zoom(add: int, scroll: List[int], grid: List[List[UnitData]]):
+    def zoom(add: int, scroll: list[int], grid: list[list[UnitData]]):
         global scalesize, scaleMultiplier
         nonlocal new_rescale_requested
         mouse_pos = pygame.mouse.get_pos()
@@ -2147,7 +2146,7 @@ def main():
                         resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
                     tmpBrush = materialMenu(brush.currentMaterial)
-                    tmpProps: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+                    tmpProps: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None
                     if tmpBrush[0] == "3":
                         tmpProps = {UnitType.Teleport: {"identifier": 1}}
                     brush.SetBrush(tmpBrush, tmpProps)
@@ -2381,7 +2380,7 @@ def main():
                         PropertiesData.ZoneSetting.DarknessInstant: {"true": "break", "false": "break", "null": "break"},
                         PropertiesData.ZoneSetting.Darkness: {"[int]": "break", "null": "break"}
                     }
-                    zone_command: Optional[List[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
+                    zone_command: Optional[list[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
                     zoneConsoleHandler(zone_command, zoneRect)
             zoneScreen.set_alpha(128)
             display.blit(zoneScreen, (0, 0))
