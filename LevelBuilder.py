@@ -1,4 +1,5 @@
 from __future__ import annotations
+import itertools
 import os
 
 import KDS.BuildData
@@ -33,7 +34,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum, IntEnum, StrEnum
 
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, Final, Iterable, List, NamedTuple, Optional, Self, Sequence, Set, Tuple, Union
 
 from KDS.LevelBuilder.Shared import *
 
@@ -43,16 +44,24 @@ KEYMAP_STR: Final[str] = """
 Middle Mouse: Get Serial
 Middle Mouse + SHIFT: Move Camera
 Middle Mouse + CTRL: Get Serial with Properties
+Middle Mouse + ALT: Change Brush Shape
+
 Left Mouse: Set Serial
 Left Mouse + SHIFT: Add Serial At Top
 Left Mouse + CTRL: Insert Serial At Bottom
+Left Mouse + C: No Collision
+Left Mouse + ALT + C: Force Collision
+
 Right Mouse: Reset Serial
 Right Mouse + SHIFT: Remove Serial From Top
 Right Mouse + CTRL: Remove Serial From Bottom
-Left Mouse + C: No Collision
-Left Mouse + ALT + C: Force Collision
 Right Mouse + C: Remove Collision Attribute
 Right Mouse + ALT + C: Remove Collision Attribute
+
+Mouse Scroll: Scroll Vertically
+Mouse Scroll + SHIFT: Scroll Horizontally
+Mouse Scroll + CTRL: Zoom
+Mouse Scroll + ALT: Change Brush Size
 
 CTRL + Z: Undo
 CTRL + Y: Redo
@@ -360,13 +369,11 @@ KDS.Console.init(display, pygame.Surface((1200, 800)), _Offset=(200, 0), _KDS_Qu
 ####################################################################################################
 
 class UnitData:
-    releasedButtons = { 0: True, 2: True }
-    placedOnTile = None
     EMPTYSERIAL = "0000 0000 0000 0000"
     EMPTY = "0000"
     SLOTCOUNT = 4
 
-    DOORSERIALS: Set[str] = {"0023", "0024", "0025", "0026"}
+    DOORSERIALS: set[str] = { "0023", "0024", "0025", "0026" }
 
     def __init__(self, position: Tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
@@ -443,8 +450,10 @@ class UnitData:
                 if srlNumber not in self.serials:
                     if srlNumber[0] != "3" or not self.hasTeleport():
                         self.setSerialToSlot(srlNumber, index)
-                    else: KDS.Logging.info("Only one teleport is allowed per unit.", True)
-                else: KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
+                    else:
+                        KDS.Logging.info("Only one teleport is allowed per unit.", True)
+                else:
+                    KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
@@ -530,7 +539,7 @@ class UnitData:
             surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
-    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, middleMouseOnDown: bool = False):
+    def renderUpdate(surface: pygame.Surface, scroll: List[int], renderList: List[List[UnitData]], brush: BrushData, pickTile: bool = False):
         global allowTilePlacement
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
@@ -547,18 +556,16 @@ class UnitData:
         scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize) + 1, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize) + 1, gridSize[1] - 1)
         #endregion
-        bpos = (-1, -1)
 
         tip_renders = []
         mpos = pygame.mouse.get_pos()
-        mpos_scaled = (mpos[0] + scroll[0] * scalesize, mpos[1] + scroll[1] * scalesize)
+        mpos_tilepos: tuple[int, int] | None = (int(mpos[0] / scalesize) + scroll[0], int(mpos[1] / scalesize) + scroll[1])
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
         doorRenders: List[Tuple[str, Tuple[int, int], bool]] = []
         overlayRenders: List[Tuple[str, Tuple[int, int], bool]] = []
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
-                unitRect = pygame.Rect(unit.pos[0] * scalesize, unit.pos[1] * scalesize, scalesize, scalesize)
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
                 if isinstance(overlayTileprops, str):
                     overlayRenders.append((overlayTileprops, normalBlitPos, unit.matchesRefrence))
@@ -571,7 +578,7 @@ class UnitData:
 
                     UnitData.renderSerial(surface, unit.properties, number, normalBlitPos, unit.matchesRefrence)
 
-                if unitRect.collidepoint(mpos_scaled):
+                if unit.pos == mpos_tilepos:
                     if unit.hasTeleport():
                         teleportIdentifier = unit.properties.Get(UnitType.Teleport, "identifier", None)
                         if teleportIdentifier == None:
@@ -631,60 +638,50 @@ class UnitData:
                     if len(unit.filledSerials) > 1: # If more than one tile
                         for sr in unit.filledSerials: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
 
-                    if middleMouseOnDown and not keys_pressed[K_LSHIFT]:
-                        tempbrushtemp = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != brush.brush)
-                        teleportBrushProperties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
-                        if tempbrushtemp == None:
-                            tempbrushtemp = unit.getSerial(0)
-                        elif tempbrushtemp[0] == "3":
-                            tmpProp = unit.properties.Get(UnitType.Teleport, "identifier", 1)
-                            if isinstance(tmpProp, int):
-                                teleportBrushProperties = {UnitType.Teleport:{"identifier":tmpProp}}
+                    if pickTile:
+                        brush.PickBrush(unit, get_properties=keys_pressed[K_LCTRL])
+        del unit
 
-                        if keys_pressed[K_LCTRL]:
-                            teleportBrushProperties = unit.properties.GetAll()
+        brush.RenderUpdate(mpos_tilepos, mouse_pressed, surface if Drag.Rect is None else None)
+        if allowTilePlacement:
+            if mouse_pressed[0]:
+                if keys_pressed[K_c]:
+                    for brush_unit in brush.IterUnits(grid=grid):
+                        if brush_unit.hasTile():
+                            setVal = False
+                            if keys_pressed[K_LALT]:
+                                setVal = True
+                            brush_unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
+                elif not brush.IsEmpty:
+                    if keys_pressed[K_LSHIFT]:
+                        brush.Add(grid)
+                    elif keys_pressed[K_LCTRL]:
+                        brush.Insert(grid)
+                    else:
+                        brush.Set(grid)
+            elif mouse_pressed[2]:
+                for brush_unit in brush.IterUnits(grid=grid):
+                    if keys_pressed[K_c]:
+                            brush_unit.properties.Remove(UnitType.Tile, "checkCollision")
+                    else:
+                        if keys_pressed[K_LSHIFT]:
+                            brush_unit.removeSerial()
+                        elif keys_pressed[K_LCTRL]:
+                            brush_unit.removeSerialFromStart()
+                        else:
+                            brush_unit.resetSerial()
+        # UnitData.placedOnTile = unit
 
-                        brush.SetValues(tempbrushtemp, teleportBrushProperties)
-
-                    pygame.draw.rect(surface, (20, 20, 20), (normalBlitPos[0], normalBlitPos[1], scalesize, scalesize), 2)
-                    bpos = unit.pos
-                    if allowTilePlacement:
-                        if mouse_pressed[0]:
-                            if not brush.IsEmpty() or keys_pressed[K_c]:
-                                if not keys_pressed[K_c]:
-                                    if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
-                                        brush.SetOnUnit(unit)
-                                    elif UnitData.releasedButtons[0] or UnitData.placedOnTile != unit:
-                                        if keys_pressed[K_LSHIFT]:
-                                            brush.AddOnUnit(unit)
-                                        else: # At this point only CTRL can be pressed.
-                                            brush.InsertOnUnit(unit)
-                                elif unit.hasTile():
-                                    setVal = False
-                                    if keys_pressed[K_LALT]:
-                                        setVal = True
-                                    unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
-                        elif mouse_pressed[2]:
-                            if not keys_pressed[K_c]:
-                                if not keys_pressed[K_LSHIFT] and not keys_pressed[K_LCTRL]:
-                                    unit.resetSerial()
-                                elif UnitData.releasedButtons[2] or UnitData.placedOnTile != unit:
-                                    if keys_pressed[K_LSHIFT]:
-                                        unit.removeSerial()
-                                    else: # At this point only CTRL can be pressed.
-                                        unit.removeSerialFromStart()
-                            else:
-                                unit.properties.Remove(UnitType.Tile, "checkCollision")
-                    UnitData.placedOnTile = unit
-
-                    tipProps = unit.properties.GetAll()
-                    for _type, properties in tipProps.items():
-                        color = _TYPECOLORS[_type]
-                        for k, v in properties.items():
-                            if k in ("checkCollision", "identifier"):
-                                continue
-                            rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
-                            tip_renders.append(rendered_tip)
+        if mpos_tilepos[0] < len(grid) and mpos_tilepos[1] < len(grid[1]):
+            tipUnit: UnitData = grid[mpos_tilepos[0]][mpos_tilepos[1]]
+            tipProps = tipUnit.properties.GetAll()
+            for _type, properties in tipProps.items():
+                color = _TYPECOLORS[_type]
+                for k, v in properties.items():
+                    if k in ("checkCollision", "identifier"):
+                        continue
+                    rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
+                    tip_renders.append(rendered_tip)
 
         [UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay) for doorSrl, doorPos, lightOverlay in doorRenders]
         [UnitData.renderSerial(surface, None, ovs, ovp, ovov) for ovs, ovp, ovov in overlayRenders]
@@ -703,12 +700,11 @@ class UnitData:
                 display.blit(tip, (mpos[0] + 15 + maxWidth // 2 - tip.get_width() // 2, mpos[1] + 15 + cumHeight))
                 cumHeight += tip.get_height() + 8
 
-        if bpos != (-1, -1):
-            mousePosText = harbinger_font.render(str(bpos), True, KDS.Colors.AviatorRed)
-            display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
+        mousePosText = harbinger_font.render(str(mpos_tilepos), True, KDS.Colors.AviatorRed)
+        display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
 
-        UnitData.releasedButtons[0] = not mouse_pressed[0]
-        UnitData.releasedButtons[2] = not mouse_pressed[2]
+        # UnitData.releasedButtons[0] = not mouse_pressed[0]
+        # UnitData.releasedButtons[2] = not mouse_pressed[2]
 
     @staticmethod
     def refrenceUpdate():
@@ -901,40 +897,284 @@ class PropertiesData:
         if load_zones:
             PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"] if "zones" in deserialized else {}))
 
+
+class BrushShape(IntEnum):
+    circle = 0
+
+    square = 1
+    tall = 2
+    wide = 3
+
+    @classmethod
+    def next_value(cls, val: Self) -> Self:
+        values: tuple[BrushShape, ...] = tuple(cls)
+        i: int = values.index(val)
+        return values[(i + 1) % len(values)]
+
 class BrushData:
     def __init__(self) -> None:
-        self.brush: str = UnitData.EMPTY
-        self.properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+        self._brush: str = UnitData.EMPTY
+        self._properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
 
-    def SetValues(self, brush: str = UnitData.EMPTY, properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None):
-        self.brush = brush
-        self.properties = None
-        if not self.IsEmpty() and properties != None:
+        self._pos: tuple[int, int] | None = None
+        self._allow_add_or_insert: bool = False
+
+        self._size: int = 0
+        """The radius of the circle, or half of the width of the rectangle."""
+        self.shape: BrushShape = BrushShape.circle
+
+    @property
+    def size(self) -> int:
+        return self._size
+    @size.setter
+    def size(self, s: int) -> None:
+        self._size = KDS.Math.Clamp(s, 0, 10)
+
+    @property
+    def currentMaterial(self) -> str:
+        return self._brush
+
+    def SetBrush(self, brush: str = UnitData.EMPTY, properties: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None):
+        self._brush = brush
+        self._properties = None
+        if not self.IsEmpty and properties != None:
             correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
             if correctType != None:
                 propValues = properties[correctType]
-                self.properties = {correctType: {ik: iv for ik, iv in propValues.items()}}
+                self._properties = {correctType: {ik: iv for ik, iv in propValues.items()}}
 
-    def SetOnUnit(self, unit: UnitData):
-        unit.setSerial(self.brush)
-        if self.properties != None:
-            unit.setProperties(self.properties)
-        unit.properties.RemoveUnused()
+    def PickBrush(self, unit: UnitData, *, get_properties: bool):
+        brush = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != self._brush)
 
-    def AddOnUnit(self, unit: UnitData):
-        unit.addSerial(self.brush)
-        if self.properties != None:
-            unit.addProperties(self.properties)
-        unit.properties.RemoveUnused()
+        props: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
+        if brush is None:
+            brush = unit.getSerial(0)
+        elif brush[0] == "3":
+            tmpProp = unit.properties.Get(UnitType.Teleport, "identifier", 1)
+            if isinstance(tmpProp, int):
+                props = {UnitType.Teleport:{"identifier":tmpProp}}
 
-    def InsertOnUnit(self, unit: UnitData):
-        unit.insertSerial(self.brush)
-        if self.properties != None:
-            unit.addProperties(self.properties)
-        unit.properties.RemoveUnused()
+        if get_properties:
+            props = unit.properties.GetAll()
 
+        self.SetBrush(brush, props)
+
+    def IterPositions(self) -> Iterable[tuple[int, int]]:
+        if self.size == 0:
+            return self._IterSingle()
+        else:
+            if self.shape == BrushShape.circle:
+                return self._IterCircle()
+            else:
+                return self._IterSquare()
+
+    def IterUnits(self, grid: list[list[UnitData]]) -> Iterable[UnitData]:
+        for position in self.IterPositions():
+            unit = self.__TryGetUnit(position, grid)
+            if unit is not None:
+                yield unit
+
+    def _IterSingle(self) -> Iterable[tuple[int, int]]:
+        if self._pos is None:
+            raise ValueError("No position set.")
+        return (self._pos,)
+
+    def _GetSquareRect(self) -> pygame.Rect:
+        if self._pos is None:
+            raise ValueError("No position set.")
+        pos: tuple[int, int] = self._pos
+
+        left: int = pos[0]
+        right: int = pos[0] + 1
+        top: int = pos[1]
+        bottom: int = pos[1] + 1
+        if self.shape in (BrushShape.square, BrushShape.wide):
+            left = pos[0] - self.size
+            right = pos[0] + self.size + 1
+        if self.shape in (BrushShape.square, BrushShape.tall):
+            top = pos[1] - self.size
+            bottom = pos[1] + self.size + 1
+
+        return pygame.Rect(left, top, right - left, bottom - top)
+
+    def _IterSquare(self) -> Iterable[tuple[int, int]]:
+        if self._pos is None:
+            raise ValueError("No position set.")
+
+        rect: pygame.Rect = self._GetSquareRect()
+        for x in range(rect.left, rect.right):
+            for y in range(rect.top, rect.bottom):
+                yield (x, y)
+
+    @staticmethod
+    def _IterCirclePoints(radius: int) -> Iterable[tuple[int, int]]:
+        """Points need to be transformed into local space as the returned points' origin is (0, 0)"""
+        # https://stackoverflow.com/questions/15856411/finding-all-the-points-within-a-circle-in-2d-space/15856549#15856549
+
+        for x in range(radius + 1):
+            for y in range(radius + 1):
+                if (x*x + y*y) <= radius*radius:
+                    yield (x, y) # Quadrant IV
+                    if y != 0:
+                        yield (x, -y) # Quadrant I
+                    if x != 0:
+                        yield (-x, y) # Quadrant II
+                    if x != 0 and y != 0:
+                        yield (-x, -y) # Quadrant III
+
+    def _IterCircle(self) -> Iterable[tuple[int, int]]:
+        if self._pos is None:
+            raise ValueError("No position set.")
+        pos: tuple[int, int] = self._pos
+
+        for p in self._IterCirclePoints(radius=self.size):
+            yield (p[0] + pos[0], p[1] + pos[1])
+
+    @staticmethod
+    def __TryGetUnit(pos: tuple[int, int], grid: list[list[UnitData]]) -> UnitData | None:
+        x, y = pos
+        if y < 0:
+            return None
+        if y > len(grid):
+            return None
+        row = grid[y]
+        if x < 0:
+            return None
+        if x > len(row):
+            return None
+        return row[x]
+
+    def Set(self, grid: list[list[UnitData]]):
+        for unit in self.IterUnits(grid=grid):
+            unit.setSerial(self._brush)
+            if self._properties is not None:
+                unit.setProperties(self._properties)
+            unit.properties.RemoveUnused()
+
+    def Add(self, grid: list[list[UnitData]]):
+        if self._allow_add_or_insert:
+            for unit in self.IterUnits(grid=grid):
+                unit.addSerial(self._brush)
+                if self._properties is not None:
+                    unit.addProperties(self._properties)
+                unit.properties.RemoveUnused()
+
+    def Insert(self, grid: list[list[UnitData]]):
+        if self._allow_add_or_insert:
+            for unit in self.IterUnits(grid=grid):
+                unit.insertSerial(self._brush)
+                if self._properties is not None:
+                    unit.addProperties(self._properties)
+                unit.properties.RemoveUnused()
+
+    def RenderUpdate(self, position: tuple[int, int] | None, mouse_pressed: tuple[bool, ...], surface: pygame.Surface | None):
+        if position != self._pos:
+            self._pos = position
+            self._allow_add_or_insert = True
+
+        if not (mouse_pressed[0] or mouse_pressed[1]):
+            self._allow_add_or_insert = True
+
+        if surface is not None:
+            self._Render(surface=surface)
+            if not self.IsEmpty:
+                textureData = Textures.GetData(self._brush)
+                tex: pygame.Surface = textureData.scaledTexture.copy().subsurface((0, 0, scalesize, scalesize))
+                tex.set_alpha(32)
+                surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in self.IterPositions()))
+
+    def _Render(self, surface: pygame.Surface):
+        if self.size == 0:
+            self._RenderSingle(surface=surface)
+        else:
+            if self.shape == BrushShape.circle:
+                return self._RenderCircle(surface=surface)
+            else:
+                return self._RenderSquare(surface=surface)
+
+    def _RenderSingle(self, surface: pygame.Surface) -> None:
+        if self._pos is None:
+            raise ValueError("No position set.")
+        pos: tuple[int, int] = self._pos
+
+        pygame.draw.rect(
+            surface=surface,
+            color=(20, 20, 20),
+            rect=((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize, scalesize, scalesize),
+            width=2
+        )
+
+    def _RenderSquare(self, surface: pygame.Surface) -> None:
+        rect: pygame.Rect = self._GetSquareRect()
+
+        pygame.draw.rect(
+            surface=surface,
+            color=(20, 20, 20),
+            rect=((rect.left - scroll[0]) * scalesize, (rect.top - scroll[1]) * scalesize, rect.width * scalesize, rect.height * scalesize),
+            width=2
+        )
+
+    def _RenderCircle(self, surface: pygame.Surface) -> None:
+        if self._pos is None:
+            raise ValueError("No position set.")
+
+        offset: tuple[int, int] = self._pos
+        radius: int = self.size
+
+        points: list[tuple[int, int]] = []
+
+        # generate points
+        for x in range(radius + 1):
+            for y in range(radius, -1, -1):
+                if (x*x + y*y) <= radius*radius:
+                    points.append((x, y))
+                    break
+
+        # there are some unnecessary points but I'm too lazy to cull them
+        # it shouldn't be that much of a performance issue...
+
+        # add inner corners
+        inner_corner_index_offset: int = 0
+        for i in range(1, len(points)):
+            i += inner_corner_index_offset
+
+            p1 = points[i - 1]
+            p2 = points[i]
+            points.insert(i, (p1[0], p2[1]))
+            inner_corner_index_offset += 1
+
+        # mirror vertically
+        vertical_mirror_length: int = len(points)
+        for i in range(vertical_mirror_length - 1, -1, -1):
+            p: tuple[int, int] = points[i]
+            points.append((p[0], -p[1] - 1))
+
+        # mirror horizontally
+        horizontal_mirror_length: int = len(points)
+        for i in range(horizontal_mirror_length - 1, -1, -1):
+            p: tuple[int, int] = points[i]
+            points.append((-p[0] - 1, p[1]))
+
+        # transform into screenspace
+        for i in range(len(points)):
+            p: tuple[int, int] = points[i]
+            points[i] = (
+                (p[0] + 1 + offset[0] - scroll[0]) * scalesize,
+                (p[1] + 1 + offset[1] - scroll[1]) * scalesize
+            )
+
+        pygame.draw.lines(
+            surface=surface,
+            color=(20, 20, 20),
+            points=points,
+            closed=True,
+            width=2
+        )
+
+
+    @property
     def IsEmpty(self):
-        return self.brush == UnitData.EMPTY
+        return self._brush == UnitData.EMPTY
 brush = BrushData()
 
 class DragMode(IntEnum):
@@ -991,14 +1231,17 @@ class DragData:
         hRnd = harbinger_font.render(str(self.Rect.height), True, KDS.Colors.CloudWhite)
         surface.blit(hRnd, (selectDrawRect.x - 10 - hRnd.get_width(), selectDrawRect.y + selectDrawRect.height // 2 - hRnd.get_height() // 2))
 
-    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper, *, allow_drag: bool):
-        if not brush.IsEmpty():
-            if self.Rect != None:
+    def update(self, mouse_pos: Tuple[int, int], left_down: bool, right_down: bool, keys_down: pygame.key.ScancodeWrapper, *, allow_drag: bool) -> bool:
+        if not brush.IsEmpty:
+            if self.Rect is not None:
                 self.clear()
-            return
+            return False
         if right_down:
-            self.clear()
-            return
+            if self.Rect is not None:
+                self.clear()
+                return True
+            else:
+                return False
         if self.lastL != left_down:
             self.lastL = left_down
             if left_down:
@@ -1006,12 +1249,12 @@ class DragData:
             else:
                 [onEnd() for onEnd in self.c_onDragEnd[self.Mode]]
         if not left_down:
-            return
+            return False
         if keys_down[K_c]:
-            return
+            return False
 
         if not allow_drag:
-            return
+            return False
 
         startCallFlag = False
         if self.startPos == None:
@@ -1028,6 +1271,8 @@ class DragData:
             [onStart() for onStart in self.c_onDragStart[self.Mode]]
         else:
             [onUpdate() for onUpdate in self.c_onDragUpdate[self.Mode]]
+
+        return False
 
     def registerCalls(self, mode: DragMode, onDragStart: Optional[Callable[[], None]], onDragUpdate: Optional[Callable[[], None]], onDragEnd: Optional[Callable[[], None]], onDragClear: Optional[Callable[[], None]]):
         if onDragStart != None:
@@ -1342,11 +1587,11 @@ def consoleHandler(commandlist: List[str]) -> int:
                 return 1
             if commandlist[2] in consoleTextureNameSerials:
                 data = Textures.GetData(consoleTextureNameSerials[commandlist[2]])
-                brush.SetValues(data.serialNumber)
+                brush.SetBrush(data.serialNumber)
                 KDS.Console.Feed.append(f"Brush set: [{data.serialNumber}: {data.name}]")
                 return 0
             elif commandlist[2] in textureSerials:
-                brush.SetValues(commandlist[2])
+                brush.SetBrush(commandlist[2])
                 KDS.Console.Feed.append(f"Brush set: [{commandlist[2]}: {textureNames[textureSerials.index(commandlist[2])]}]")
                 return 0
             else:
@@ -1822,7 +2067,11 @@ def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
         #     return True
     return False
 
-allowTilePlacement = True
+class BeforeMoveData(NamedTuple):
+    mouse_pos: tuple[int, int]
+    scroll: tuple[int, int]
+
+allowTilePlacement: bool = False
 def main():
     global currentSaveName, brush, grid, gridSize, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode, refrenceGridHandle
 
@@ -1853,10 +2102,9 @@ def main():
 
     openCommandTerminal: bool = False
 
-    mouse_pos_beforeMove = pygame.mouse.get_pos()
-    scroll_beforeMove = scroll
+    before_move: BeforeMoveData | None = None
     while mainRunning:
-        middleMouseOnDown = False
+        pickTile: bool = False
         pygame.key.set_repeat(500, 31)
 
         # BEFORE EVENTS
@@ -1869,15 +2117,18 @@ def main():
                 continue
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 2:
-                    mouse_pos_beforeMove = mouse_pos
-                    scroll_beforeMove = scroll.copy()
-                    middleMouseOnDown = True
+                    if keys_pressed[K_LALT]:
+                        brush.shape = BrushShape.next_value(brush.shape)
+                    elif keys_pressed[K_LSHIFT]:
+                        before_move = BeforeMoveData(mouse_pos, (scroll[0], scroll[1]))
+                    else:
+                        pickTile = True
                 elif event.button == 3:
                     if zoneMode:
                         PropertiesData.Zones.RemoveCollidePoint(mouse_pos)
             elif event.type == MOUSEBUTTONUP:
-                if event.button == 1:
-                    allowTilePlacement = True
+                if event.button == 2:
+                    before_move = None
             elif event.type == KEYDOWN:
                 if event.key == K_z or event.key == K_y:
                     if keys_pressed[K_LCTRL]:
@@ -1895,12 +2146,12 @@ def main():
                     if resize_output != None:
                         resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
                 elif event.key == K_e:
-                    tmpBrush = materialMenu(brush.brush)
+                    tmpBrush = materialMenu(brush.currentMaterial)
                     tmpProps: Optional[Dict[UnitType, Dict[str, Union[str, int, float, bool]]]] = None
                     if tmpBrush[0] == "3":
                         tmpProps = {UnitType.Teleport: {"identifier": 1}}
-                    brush.SetValues(tmpBrush, tmpProps)
-                    allowTilePlacement = not pygame.mouse.get_pressed()[0]
+                    brush.SetBrush(tmpBrush, tmpProps)
+                    allowTilePlacement = False
                 elif event.key == K_DELETE:
                     Selected.Set(UnitData.EMPTYSERIAL)
                     Selected.Update()
@@ -1965,10 +2216,12 @@ def main():
                         loadLevelProp(os.path.dirname(currentSaveName))
             elif event.type == MOUSEWHEEL:
                 move_multiplier: int = 1 if not keys_pressed[K_LALT] else 10
-                if keys_pressed[K_LCTRL]:
-                    zoom(event.y * 5, scroll, grid)
+                if keys_pressed[K_LALT]:
+                    brush.size -= event.y
                 elif keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y * move_multiplier
+                elif keys_pressed[K_LCTRL]:
+                    zoom(event.y * 5, scroll, grid)
                 else:
                     scroll[1] -= event.y * move_multiplier
                 scroll[0] += event.x * move_multiplier
@@ -1978,6 +2231,12 @@ def main():
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         # second event check fixes some race conditions and edge cases
+
+        if not mouse_pressed[0] and not mouse_pressed[2]:
+            allowTilePlacement = True
+        drag_was_just_cleared_by_rightclick: bool = Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed, allow_drag=(allowTilePlacement or zoneMode))
+        if drag_was_just_cleared_by_rightclick:
+            allowTilePlacement = False
 
         if new_rescale_requested:
             if textureRescaleHandle is None or textureRescaleHandle.IsComplete:
@@ -1992,12 +2251,12 @@ def main():
             else:
                 openCommandTerminal = False
 
-        if mouse_pressed[1] and keys_pressed[K_LSHIFT]:
-            mid_scroll_x = (mouse_pos_beforeMove[0] - mouse_pos[0]) // scalesize
-            mid_scroll_y = (mouse_pos_beforeMove[1] - mouse_pos[1]) // scalesize
+        if before_move is not None:
+            mid_scroll_x = (before_move.mouse_pos[0] - mouse_pos[0]) // scalesize
+            mid_scroll_y = (before_move.mouse_pos[1] - mouse_pos[1]) // scalesize
             if mid_scroll_x > 0 or mid_scroll_y > 0 or mid_scroll_x < 0 or mid_scroll_y < 0:
-                scroll[0] = scroll_beforeMove[0] + mid_scroll_x
-                scroll[1] = scroll_beforeMove[1] + mid_scroll_y
+                scroll[0] = before_move.scroll[0] + mid_scroll_x
+                scroll[1] = before_move.scroll[1] + mid_scroll_y
 
         if keys_pressed[K_s] and keys_pressed[K_LCTRL]:
             if len(currentSaveName) < 1 or currentSaveName.isspace():
@@ -2023,7 +2282,7 @@ def main():
                 refrenceGridHandle = None
 
         display.fill((30, 20, 60))
-        UnitData.renderUpdate(display, scroll, grid, brush, middleMouseOnDown)
+        UnitData.renderUpdate(display, scroll, grid, brush, pickTile)
 
         undoTotal = Undo.index + Undo.overflowCount
         if undoTotal > 0:
@@ -2033,11 +2292,9 @@ def main():
             else: _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
 
-        if not brush.IsEmpty():
-            tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.brush), (68, 68))
+        if not brush.IsEmpty:
+            tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.currentMaterial), (68, 68))
             display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
-
-        Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed, allow_drag=(allowTilePlacement or zoneMode))
 
         if len(Selected.units) > 0:
             for unit in Selected.units:
@@ -2049,8 +2306,7 @@ def main():
             Drag.render(Drag.DEFAULT_STYLE, display, scroll)
 
         if zoneMode:
-            if brush.brush != UnitData.EMPTY:
-                brush.SetValues()
+            brush.SetBrush() # Clear brush
             if Drag.Mode != DragMode.Zone:
                 Drag.clear()
                 Drag.Mode = DragMode.Zone
