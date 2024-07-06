@@ -1078,8 +1078,11 @@ class BrushData:
             self._Render(surface=surface)
             if not self.IsEmpty:
                 textureData = Textures.GetData(self._brush)
-                tex: pygame.Surface = textureData.scaledTexture.copy().subsurface((0, 0, scalesize, scalesize))
+
+                tex: pygame.Surface = textureData.scaledTexture.copy()
+                tex = tex.subsurface((0, 0, min(scalesize, tex.width), min(scalesize, tex.height)))
                 tex.set_alpha(32)
+
                 surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in self.IterPositions()))
 
     def _Render(self, surface: pygame.Surface):
