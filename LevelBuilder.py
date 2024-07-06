@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import deque
 import os
 
 import KDS.BuildData
@@ -33,7 +34,7 @@ import traceback
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
-from typing import Any, Callable, Final, Iterable, NamedTuple, Optional, Self, Sequence, Union
+from typing import Any, Callable, Final, Iterable, NamedTuple, Optional, Self, Sequence, TypeAlias, Union
 
 from KDS.LevelBuilder.Shared import *
 
@@ -74,8 +75,8 @@ R: Resize Map
 F: Set Property
 P: Set teleport index
 O: Set Overlay
-G: Select Refrence Map File
-Z or Y: Toggle Zone Mode
+G: Select Reference Map File
+Z: Toggle Zone Mode
 
 TAB: Set store price
 SHIFT + TAB: Set store discount price
@@ -263,12 +264,14 @@ Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", pygame.
 
 scroll: list[int] = [0, 0]
 currentSaveName = ''
-grid: list[list[UnitData]] = [[]]
-gridSize: tuple[int, int] = (0, 0)
 
-refrenceGrid: Optional[list[list[UnitData]]] = None
-refrenceGridSize: tuple[int, int] = (0, 0)
-refrenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
+grid: GridType
+gridSize: tuple[int, int]
+undo: Undo | None = None
+
+referenceGrid: Optional[GridType] = None
+referenceGridSize: tuple[int, int] = (0, 0)
+referenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 
 zoneMode = False
 
@@ -293,70 +296,187 @@ class LevelPropData:
     PlayerFlipped: bool = False
 LevelPropData.rescale()
 
+class UndoRecord:
+    class _Change(NamedTuple):
+        unit: UnitData
+        before: UnitData
+        after: UnitData
+
+    class _Recording:
+        def __init__(self, unit: UnitData) -> None:
+            self.unit: Final[UnitData] = unit
+
+            self._befores: list[UnitData] = []
+            self._afters: list[UnitData] = []
+
+            self._completed: bool = False
+
+        def add_before(self, unit: UnitData) -> None:
+            if self._completed:
+                raise RuntimeError("Recording has completed.")
+
+            self._befores.append(unit.Copy())
+
+        def add_after(self, unit: UnitData) -> None:
+            if self._completed:
+                raise RuntimeError("Recording has completed.")
+
+            self._afters.append(unit.Copy())
+
+        def complete(self) -> UndoRecord._Change:
+            """Returns tuple (before, after)"""
+            self._completed = True
+
+            assert(len(self._befores) > 0)
+            if len(self._afters) != len(self._befores):
+                raise RuntimeError(f"Before and after state counts don't match. Before count: {len(self._befores)}, After count: {len(self._afters)}")
+
+            return UndoRecord._Change(
+                unit=self.unit,
+                before=self._befores[0],
+                after=self._afters[-1]
+            )
+
+    def __init__(self) -> None:
+        self._parent: Undo | None = None
+
+        self._changes: list[UndoRecord._Change] = []
+
+        self._recording: UndoRecord._Recording | None = None
+
+    def __del__(self) -> None:
+        if self._parent is None:
+            raise RuntimeError("UndoRecord was destroyed before registering with a parent Undo.")
+
+    def record_before(self, unit: UnitData | PropertiesData) -> None:
+        if isinstance(unit, PropertiesData):
+            unit = unit.parent
+        assert(isinstance(unit, UnitData))
+
+        if self._parent is not None:
+            raise RuntimeError("Cannot record change. Undo record already registered.")
+
+        if self._recording is not None and self._recording.unit is not unit:
+            self._changes.append(self._recording.complete())
+            self._recording = None
+
+        if self._recording is None:
+            self._recording = UndoRecord._Recording(unit)
+        self._recording.add_before(unit)
+
+    def record_after(self, unit: UnitData | PropertiesData) -> None:
+        if isinstance(unit, PropertiesData):
+            unit = unit.parent
+        assert(isinstance(unit, UnitData))
+
+        if self._parent is not None:
+            raise RuntimeError("Cannot record change. Undo record already registered.")
+
+        if self._recording is None:
+            raise ValueError("Cannot record change. No change recording has been started.")
+        if self._recording.unit is not unit:
+            raise ValueError("Cannot record change. Another unit's change recording has been started.")
+
+        self._recording.add_after(unit)
+
+    def _register(self, parent: Undo) -> None:
+        self._parent = parent
+
+    def _rollback(self, grid: GridType) -> None:
+        for c in self._changes:
+            self.__roll(c[1], c[0], unit=c.unit, grid=grid)
+
+    def _rollforward(self, grid: GridType) -> None:
+        for c in self._changes:
+            self.__roll(c[0], c[1], unit=c.unit, grid=grid)
+
+    def __roll(self, /, _from: UnitData, _to: UnitData, *, unit: UnitData, grid: GridType) -> None:
+        assert(_from.pos == _to.pos)
+        x: int
+        y: int
+        x, y = _from.pos
+
+        original_value: UnitData = grid[y][x]
+        if original_value != _from:
+            KDS.Logging.warning(f"Source unit data does not match grid unit data. There might have been some changes that were unaccounted in undo/redo.", consoleVisible=True)
+
+        assert(grid[y][x] is unit)
+        grid[y][x].CopyFrom(None, _from, undo_can_be_none=True)
+
 class Undo:
-    changes: list[UnitData] = []
-    index = 0
-    overflowCount = 0
-    totalOffset = 0
+    def __init__(self, grid: GridType) -> None:
+        self._grid: GridType = grid
 
-    @staticmethod
-    def register(unit: UnitData):
-        del Undo.changes[Undo.index + 1:]
-        if len(Undo.changes) > 0 and unit == Undo.changes[-1]:
+        self._changes_before_save: int = 0
+
+        self._undo: deque[UndoRecord] = deque(maxlen=1000)
+        self._redo: deque[UndoRecord] = deque(maxlen=1000)
+
+    def register(self, record: UndoRecord) -> None:
+        self._undo.append(record)
+        self._redo.clear()
+
+        self._changes_before_save += 1
+
+    def undo(self) -> None:
+        assert self._grid is grid
+
+        if len(self._undo) < 1:
+            KDS.Logging.info("No undo history left.", consoleVisible=True)
             return
-        Undo.changes.append(unit.Copy())
-        while len(Undo.changes) > 128:
-            del Undo.changes[0]
-            Undo.overflowCount += 1
-        Undo.index = len(Undo.changes) - 1
-        """
-        global grid, dragRect
-        if Undo.index == len(Undo.points) - 1:
-            last = Undo.points[Undo.index]
-            if last["grid"] == grid and last["dragRect"] == dragRect:
-                if Undo.totalOffset == 0 and Undo.index == 0 and Undo.overflowCount == 0:
-                    Undo.totalOffset = 1
-                return
 
-        toSave = {
-            "grid": [[t.Copy() for t in r] for r in grid], # deepcopy replacement
-            "dragRect": dragRect.copy() if dragRect != None else None
-        }
+        record: UndoRecord = self._undo.pop()
+        record._rollback(grid=grid)
+        self._redo.appendleft(record)
 
-        Selected.SetCustomGrid(toSave["grid"], registerUndo=False)
-        removedCount = len(Undo.points[Undo.index + 1:])
-        del Undo.points[Undo.index + 1:]
-        if Undo.index == 0 and len(Undo.points) == 1 and removedCount > 0: del Undo.points[0]
-        Undo.points.append(toSave)
-        while len(Undo.points) > 64:
-            del Undo.points[0]
-            Undo.overflowCount += 1
-        Undo.index = len(Undo.points) - 1
-        """
+        self._changes_before_save -= 1
 
-    @staticmethod
-    def request(redo: bool = False):
-        global grid
-        redoSub = KDS.Convert.ToMultiplier(redo)
-        Undo.index = KDS.Math.Clamp(Undo.index - redoSub, 0, len(Undo.changes) - 1)
-        subIndex = Undo.index - redoSub
-        if 0 <= subIndex < len(Undo.changes) and Undo.changes[subIndex].pos == Undo.changes[Undo.index].pos:
-            Undo.index = subIndex
-        change = Undo.changes[Undo.index]
-        if grid[change.pos[1]][change.pos[0]].pos != change.pos: # Scrapped finding by iterating, because too slow.
-            KDS.Logging.AutoError(f"Unit at position: {change.pos} not found in grid!")
+    def redo(self) -> None:
+        assert self._grid is grid
+
+        if len(self._undo) < 1:
+            KDS.Logging.info("No redo history left.", consoleVisible=True)
             return
-        grid[change.pos[1]][change.pos[0]] = change.Copy()
 
-    @staticmethod
-    def clear():
-        Undo.changes.clear()
-        Undo.index = 0
-        Undo.overflowCount = 0
+        record: UndoRecord = self._redo.popleft()
+        record._rollforward(grid=grid)
+        self._undo.append(record)
+
+        self._changes_before_save += 1
+
+    def register_zone_new(self) -> None:
+        self._changes_before_save += 1
+
+    def register_zone_update(self) -> None:
+        pass # when dragging, zone is updated every frame
+             # pass, as we don't want to spam increment the changes value
+
+    def register_zone_properties_update(self) -> None:
+        self._changes_before_save += 1
+
+    def register_was_saved(self) -> None:
+        self._changes_before_save = 0
+
+    @property
+    def unsaved_changes(self) -> int:
+        return self._changes_before_save > 0
+
+def UnsavedChangesInterrupt() -> bool:
+    if undo is None:
+        return False
+    if undo.unsaved_changes > 0:
+        return False
+    resp: KDS.System.MessageBox.Responses = KDS.System.MessageBox.Show(
+        "Unsaved Changes.",
+        "There are unsaved changes. Are you sure you want to quit?",
+        KDS.System.MessageBox.Buttons.YESNO,
+        KDS.System.MessageBox.Icon.WARNING
+    )
+    return resp != KDS.System.MessageBox.Responses.YES
 
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning, multiselect_menu_running
-    if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Are you sure you want to quit?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) != KDS.System.MessageBox.Responses.YES:
+    if UnsavedChangesInterrupt():
         return
     matMenRunning = False
     btn_menu = False
@@ -368,18 +488,23 @@ KDS.Console.init(display, pygame.Surface((1200, 800)), _Offset=(200, 0), _KDS_Qu
 ####################################################################################################
 
 class UnitData:
-    EMPTYSERIAL = "0000 0000 0000 0000"
-    EMPTY = "0000"
-    SLOTCOUNT = 4
+    EMPTYSERIAL: Final[str] = "0000 0000 0000 0000"
+    EMPTY: Final[str] = "0000"
+    SLOTCOUNT: Final[int] = 4
 
     DOORSERIALS: set[str] = { "0023", "0024", "0025", "0026" }
 
     def __init__(self, position: tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
-        self.matchesRefrence = False
+        self.matchesReference = False
         self._updateSplit()
-        self.properties = PropertiesData(self)
+
+        self._properties = PropertiesData(self)
+
+    @property
+    def properties(self) -> PropertiesData:
+        return self._properties
 
     def __eq__(self, other) -> bool:
         """ == operator """
@@ -395,20 +520,46 @@ class UnitData:
         return self.serialNumber
 
     def Equals(self, other: UnitData) -> bool:
-        return self.pos == other.pos and self.serialNumber == other.serialNumber and self.properties == other.properties
+        if self.pos != other.pos:
+            return False
+        if self.serialNumber != other.serialNumber:
+            return False
+        if self.properties != other.properties:
+            return False
+        return True
 
     def Copy(self) -> UnitData:
         data = UnitData(position=self.pos, serialNumber=self.serialNumber)
-        data.properties = self.properties.Copy(parentOverride=data)
+        data._properties = self.properties.Copy(parentOverride=data)
         return data
 
-    def setProperties(self, properties: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
-        self.properties.SetAll(properties)
+    def CopyFrom(self, undo: UndoRecord | None, unit: UnitData, *, undo_can_be_none: bool = False) -> None:
+        if not undo_can_be_none and undo is None:
+            raise ValueError("Undo cannot be None. If you are ABSOLUTELY sure that it can, please set undo_can_be_none=True")
 
-    def addProperties(self, properties: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
+        if undo is not None:
+            undo.record_before(self)
+
+        self.pos = unit.pos
+        self.serialNumber = unit.serialNumber
+        self.matchesReference = unit.matchesReference
+        self._updateSplit()
+        self._properties = unit.properties.Copy()
+
+        if undo is not None:
+            undo.record_after(self)
+
+    def setProperties(self, undo: UndoRecord, properties: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
+        self.properties.SetAll(undo, properties)
+
+    def addProperties(self, undo: UndoRecord, properties: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
+        undo.record_before(self)
+
         for _type, value in properties.items():
             for k, v in value.items():
-                self.properties.Set(_type, k, v)
+                self.properties.Set(undo, _type, k, v)
+
+        undo.record_after(self)
 
     def _updateSplit(self):
         self.serials = tuple(self.serialNumber.split(" "))
@@ -416,48 +567,70 @@ class UnitData:
             KDS.Logging.AutoError(f"Serials length does not match slot count! Serials length: {len(self.serials)} | Slot Count: {UnitData.SLOTCOUNT} | Serials: {self.serials} | Serial Number: {self.serialNumber}")
         self.filledSerials = tuple(KDS.Linq.Where(self.serials, lambda s: s != UnitData.EMPTY))
 
-    def overrideData(self, _from: UnitData):
-        self.overrideSerial(_from.serialNumber)
-        self._updateSplit()
-        self.properties.SetAll(_from.properties.GetAll())
+    def overrideData(self, undo: UndoRecord, _from: UnitData):
+        undo.record_before(self)
 
-    def overrideSerial(self, newSerial: str):
-        Undo.register(self)
+        self.overrideSerial(undo, _from.serialNumber)
+        self._updateSplit()
+        self.properties.SetAll(undo, _from.properties.GetAll())
+
+        undo.record_after(self)
+
+    def overrideSerial(self, undo: UndoRecord | None, newSerial: str, *, undo_can_be_none: bool = False):
+        if not undo_can_be_none and undo is None:
+            raise ValueError("Undo cannot be None. If you are ABSOLUTELY sure that it can, please set undo_can_be_none=True")
+
+        if undo is not None:
+            undo.record_before(self)
+
         self.serialNumber = newSerial
         self._updateSplit()
 
-    def setSerial(self, srlNumber: str):
-        Undo.register(self)
+        if undo is not None:
+            undo.record_after(self)
+
+    def setSerial(self, undo: UndoRecord, srlNumber: str):
+        undo.record_before(self)
+
         self.serialNumber = f"{srlNumber} 0000 0000 0000"
         self._updateSplit()
 
-    def setSerialToSlot(self, srlNumber: str, slot: int):
+        undo.record_after(self)
+
+    def setSerialToSlot(self, undo: UndoRecord, srlNumber: str, slot: int):
         if slot >= UnitData.SLOTCOUNT or slot < 0:
             raise ValueError(f"Slot {slot} is an invalid index!")
-        Undo.register(self)
+
+        undo.record_before(self)
+
         self.serialNumber = self.serialNumber[:slot * 4 + slot] + srlNumber + self.serialNumber[slot * 4 + 4 + slot:]
         self._updateSplit()
+
+        undo.record_after(self)
 
     def getSerial(self, slot: int):
         slot = slot + 1 if slot > 0 else slot
         return self.serialNumber[slot : slot + 4]
 
-    def addSerial(self, srlNumber: str):
-        Undo.register(self)
+    def addSerial(self, undo: UndoRecord, srlNumber: str):
         for index, number in enumerate(self.serials):
             if int(number) == 0:
                 if srlNumber not in self.serials:
                     if srlNumber[0] != "3" or not self.hasTeleport():
-                        self.setSerialToSlot(srlNumber, index)
+                        undo.record_before(self)
+
+                        self.setSerialToSlot(undo, srlNumber, index)
+
+                        undo.record_after(self)
                     else:
                         KDS.Logging.info("Only one teleport is allowed per unit.", True)
                 else:
                     KDS.Logging.info(f"Serial {srlNumber} already in {self.pos}!", True)
                 return
+
         KDS.Logging.info(f"No empty slots at {self.pos} available for serial {srlNumber}!", True)
 
-    def insertSerial(self, srlNumber: str):
-        Undo.register(self)
+    def insertSerial(self, undo: UndoRecord, srlNumber: str):
         if srlNumber[0] != "3" and self.hasTeleport():
             KDS.Logging.info("Only one teleport is allowed per unit.", True)
             return
@@ -468,23 +641,13 @@ class UnitData:
             KDS.Logging.info(f"No empty slots at {self.pos} available to insert serial {srlNumber}!", True)
             return
 
+        undo.record_before(self)
+
         for index, number in enumerate(self.filledSerials): # No need to copy because tuple
-            self.setSerialToSlot(number, index + 1)
-        self.setSerialToSlot(srlNumber, 0)
+            self.setSerialToSlot(undo, number, index + 1)
+        self.setSerialToSlot(undo, srlNumber, 0)
 
-    def removeSerial(self):
-        for index, number in reversed(list(enumerate(self.serials))):
-            if int(number) != 0:
-                self.setSerialToSlot(UnitData.EMPTY, index)
-                return
-
-    def removeSerialFromStart(self):
-        srlist = self.serials
-        for index in range(len(srlist)):
-            if index >= len(srlist) - 1:
-                self.setSerialToSlot(UnitData.EMPTY, index)
-            else:
-                self.setSerialToSlot(srlist[index + 1], index)
+        undo.record_after(self)
 
     def getSlot(self, serial: str) -> Optional[int]:
         try:
@@ -501,11 +664,34 @@ class UnitData:
     def hasTeleport(self) -> bool:
         return KDS.Linq.Any(self.serials, lambda s: s[0] == "3")
 
-    def resetSerial(self):
-        Undo.register(self)
+    def removeSerial(self, undo: UndoRecord):
+        for index, number in reversed(list(enumerate(self.serials))):
+            if int(number) != 0:
+                undo.record_before(self)
+                self.setSerialToSlot(undo, UnitData.EMPTY, index)
+                undo.record_after(self)
+                return
+
+    def removeSerialFromStart(self, undo: UndoRecord):
+        undo.record_before(self)
+
+        srlist = self.serials
+        for index in range(len(srlist)):
+            if index >= len(srlist) - 1:
+                self.setSerialToSlot(undo, UnitData.EMPTY, index)
+            else:
+                self.setSerialToSlot(undo, srlist[index + 1], index)
+
+        undo.record_after(self)
+
+    def resetSerial(self, undo: UndoRecord):
+        undo.record_before(self)
+
         self.serialNumber = UnitData.EMPTYSERIAL
         self._updateSplit()
-        self.properties.RemoveUnused()
+        self.properties.RemoveUnused(undo)
+
+        undo.record_after(self)
 
     @staticmethod
     def toSerialString(srlNumber: str):
@@ -538,8 +724,12 @@ class UnitData:
             surface.blit(textureData.lightOverlay, blitPos)
 
     @staticmethod
-    def renderUpdate(surface: pygame.Surface, scroll: list[int], renderList: list[list[UnitData]], brush: BrushData, pickTile: bool = False):
+    def renderUpdate(surface: pygame.Surface, scroll: list[int], renderList: GridType, brush: BrushData,
+                     keys_pressed: pygame.key.ScancodeWrapper, mouse_pressed: tuple[bool, ...], mouse_pressed_undo: list[UndoRecord | None], pickTile: bool = False):
         global allowTilePlacement
+
+        assert(undo is not None)
+
         _TYPECOLORS = {
             UnitType.Tile: KDS.Colors.EmeraldGreen,
             UnitType.Item: KDS.Colors.RiverBlue,
@@ -549,8 +739,6 @@ class UnitData:
             UnitType.Unspecified: KDS.Colors.Magenta
         }
 
-        keys_pressed = pygame.key.get_pressed()
-        mouse_pressed = pygame.mouse.get_pressed()
         #region Scroll Clamping
         scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize) + 1, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize) + 1, gridSize[1] - 1)
@@ -567,39 +755,46 @@ class UnitData:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
                 overlayTileprops = unit.properties.Get(UnitType.Unspecified, "overlay", None)
                 if isinstance(overlayTileprops, str):
-                    overlayRenders.append((overlayTileprops, normalBlitPos, unit.matchesRefrence))
+                    overlayRenders.append((overlayTileprops, normalBlitPos, unit.matchesReference))
                 for number in unit.serials:
                     if number == UnitData.EMPTY:
                         continue
                     if number in UnitData.DOORSERIALS:
-                        doorRenders.append((number, (normalBlitPos[0], normalBlitPos[1] + scalesize), unit.matchesRefrence))
+                        doorRenders.append((number, (normalBlitPos[0], normalBlitPos[1] + scalesize), unit.matchesReference))
                         continue
 
-                    UnitData.renderSerial(surface, unit.properties, number, normalBlitPos, unit.matchesRefrence)
+                    UnitData.renderSerial(surface, unit.properties, number, normalBlitPos, unit.matchesReference)
 
                 if unit.pos == mpos_tilepos:
                     if unit.hasTeleport():
                         teleportIdentifier = unit.properties.Get(UnitType.Teleport, "identifier", None)
-                        if teleportIdentifier == None:
-                            unit.properties.Set(UnitType.Teleport, "identifier", 1)
-                            teleportIdentifier = 1
-                        if isinstance(teleportIdentifier, int):
-                            tip_renders.append(harbinger_font_small.render(f"teleport id: {teleportIdentifier}", True, KDS.Colors.AviatorRed))
-                            if keys_pressed[K_p]:
-                                if not zoneMode:
-                                    newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport ID: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
-                                    if newTeleportIdentifier != None:
-                                        unit.properties.Set(UnitType.Teleport, "identifier", newTeleportIdentifier)
+                        # if teleportIdentifier == None:
+                        #     unit.properties.Set(UnitType.Teleport, "identifier", 1)
+                        #     teleportIdentifier = 1
+                        teleportIdentifierTip: str = f"teleport id: {teleportIdentifier}"
+                        if not isinstance(teleportIdentifier, int):
+                            teleportIdentifierTip += " (invalid)"
+                        tip_renders.append(harbinger_font_small.render(teleportIdentifierTip, True, KDS.Colors.AviatorRed))
+
+                        if keys_pressed[K_p]:
+                            if not zoneMode:
+                                newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport ID: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
+                                if newTeleportIdentifier != None:
+                                    newTeleportIdentifierUndo: Final = UndoRecord()
+                                    unit.properties.Set(newTeleportIdentifierUndo, UnitType.Teleport, "identifier", newTeleportIdentifier)
+                                    undo.register(newTeleportIdentifierUndo)
 
                     if keys_pressed[K_TAB] and unit.hasItem():
                         storePriceDiscounted: bool = keys_pressed[K_LSHIFT]
                         storePriceKey: str = "storePrice" if not storePriceDiscounted else "storeDiscountPrice"
                         storePriceMsg: str = "Enter Price:" if not storePriceDiscounted else "Enter Discount Price:"
                         storePriceStr: str | None = KDS.Console.Start(storePriceMsg, allowEscape=False, checkType=KDS.Console.CheckTypes.Float()) # do not allow escape as it removes the price as well
+                        storePriceUndo: Final = UndoRecord()
                         if storePriceStr is not None and len(storePriceStr) > 0:
-                            unit.properties.Set(UnitType.Item, storePriceKey, float(storePriceStr))
+                            unit.properties.Set(storePriceUndo, UnitType.Item, storePriceKey, float(storePriceStr))
                         else:
-                            unit.properties.Remove(UnitType.Item, storePriceKey)
+                            unit.properties.Remove(storePriceUndo, UnitType.Item, storePriceKey)
+                        undo.register(storePriceUndo)
 
                     elif keys_pressed[K_f]:
                         autoFill = {}
@@ -615,24 +810,31 @@ class UnitData:
                                     setPropVal = setPropValUnformatted
                                 else:
                                     setPropVal = KDS.Convert.AutoType(setPropValUnformatted, setPropValUnformatted) # If cannot be parsed to int, bool or float; return string
+
+                                setPropUndo: Final = UndoRecord()
                                 if len(setPropValUnformatted) > 0:
-                                    unit.properties.Set(propType, setPropKey, setPropVal)
+                                    unit.properties.Set(setPropUndo, propType, setPropKey, setPropVal)
                                 else:
-                                    unit.properties.Remove(propType, setPropKey)
+                                    unit.properties.Remove(setPropUndo, propType, setPropKey)
+                                undo.register(setPropUndo)
                         elif len(setPropType) > 0:
                             KDS.Logging.warning(f"\"{setPropType}\" could not be parsed to any type!", True)
                     elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
                         overlayId = materialMenu(UnitData.EMPTY)
                         allowTilePlacement = False
+                        overlayUndo: Final = UndoRecord()
                         if overlayId != UnitData.EMPTY:
-                            unit.properties.Set(UnitType.Unspecified, "overlay", overlayId)
+                            unit.properties.Set(overlayUndo, UnitType.Unspecified, "overlay", overlayId)
                         else:
-                            unit.properties.Remove(UnitType.Unspecified, "overlay")
+                            unit.properties.Remove(overlayUndo, UnitType.Unspecified, "overlay")
+                        undo.register(overlayUndo)
                     elif keys_pressed[K_q]:
-                        if refrenceGrid != None and unit.pos[1] < len(refrenceGrid):
-                            refrence2 = refrenceGrid[unit.pos[1]]
-                            if unit.pos[0] < len(refrence2):
-                                unit.overrideData(refrence2[unit.pos[0]])
+                        if referenceGrid != None and unit.pos[1] < len(referenceGrid):
+                            reference2 = referenceGrid[unit.pos[1]]
+                            if unit.pos[0] < len(reference2):
+                                tmpReferenceUndo: Final = UndoRecord()
+                                unit.overrideData(tmpReferenceUndo, reference2[unit.pos[0]])
+                                undo.register(tmpReferenceUndo)
 
                     if len(unit.filledSerials) > 1: # If more than one tile
                         for sr in unit.filledSerials: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
@@ -644,31 +846,37 @@ class UnitData:
         brush.RenderUpdate(mpos_tilepos, mouse_pressed, surface if Drag.Rect is None else None)
         if allowTilePlacement:
             if mouse_pressed[0]:
+                mp0_undo = mouse_pressed_undo[0]
+                assert mp0_undo is not None
+
                 if keys_pressed[K_c]:
                     for brush_unit in brush.IterUnits(grid=grid):
                         if brush_unit.hasTile():
                             setVal = False
                             if keys_pressed[K_LALT]:
                                 setVal = True
-                            brush_unit.properties.Set(UnitType.Tile, "checkCollision", setVal)
+                            brush_unit.properties.Set(mp0_undo, UnitType.Tile, "checkCollision", setVal)
                 elif not brush.IsEmpty:
                     if keys_pressed[K_LSHIFT]:
-                        brush.Add(grid)
+                        brush.Add(mp0_undo, grid)
                     elif keys_pressed[K_LCTRL]:
-                        brush.Insert(grid)
+                        brush.Insert(mp0_undo, grid)
                     else:
-                        brush.Set(grid)
+                        brush.Set(mp0_undo, grid)
             elif mouse_pressed[2]:
+                mp2_undo = mouse_pressed_undo[2]
+                assert mp2_undo is not None
+
                 for brush_unit in brush.IterUnits(grid=grid):
                     if keys_pressed[K_c]:
-                            brush_unit.properties.Remove(UnitType.Tile, "checkCollision")
+                            brush_unit.properties.Remove(mp2_undo, UnitType.Tile, "checkCollision")
                     else:
                         if keys_pressed[K_LSHIFT]:
-                            brush_unit.removeSerial()
+                            brush_unit.removeSerial(mp2_undo)
                         elif keys_pressed[K_LCTRL]:
-                            brush_unit.removeSerialFromStart()
+                            brush_unit.removeSerialFromStart(mp2_undo)
                         else:
-                            brush_unit.resetSerial()
+                            brush_unit.resetSerial(mp2_undo)
         # UnitData.placedOnTile = unit
 
         if mpos_tilepos[0] < len(grid) and mpos_tilepos[1] < len(grid[1]):
@@ -706,15 +914,17 @@ class UnitData:
         # UnitData.releasedButtons[2] = not mouse_pressed[2]
 
     @staticmethod
-    def refrenceUpdate():
-        global grid, refrenceGrid, gridSize, refrenceGridSize
-        for x in range(min(gridSize[0], refrenceGridSize[0])):
-            # if refrenceGridSize == None:
+    def referenceUpdate():
+        global grid, referenceGrid, gridSize, referenceGridSize
+        for x in range(min(gridSize[0], referenceGridSize[0])):
+            # if referenceGridSize == None:
             #     return
-            for y in range(min(gridSize[1], refrenceGridSize[1])):
-                if refrenceGrid == None:
+            for y in range(min(gridSize[1], referenceGridSize[1])):
+                if referenceGrid == None:
                     return
-                grid[y][x].matchesRefrence = grid[y][x].Equals(refrenceGrid[y][x])
+                grid[y][x].matchesReference = grid[y][x].Equals(referenceGrid[y][x])
+
+GridType: TypeAlias = tuple[tuple[UnitData, ...], ...]
 
 class PropertiesData:
     class ZoneSetting(StrEnum):
@@ -748,7 +958,9 @@ class PropertiesData:
         def NewDragRect():
             assert Drag.Rect != None, "NewDragRect from null!"
             PropertiesData.Zones.zones.append((pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), {}))
-            Undo.overflowCount += 1
+
+            assert(undo is not None)
+            undo.register_zone_new()
 
         @staticmethod
         def UpdateDragRect():
@@ -756,6 +968,9 @@ class PropertiesData:
                 return
             assert Drag.Rect != None, "UpdateDragRect from null!"
             PropertiesData.Zones.zones[-1] = (pygame.Rect(Drag.Rect.left, Drag.Rect.top, Drag.Rect.width, Drag.Rect.height), PropertiesData.Zones.zones[-1][1])
+
+            assert(undo is not None)
+            undo.register_zone_update()
 
         def _returnCorrectZone(self, zoneRect: pygame.Rect) -> Optional[dict[PropertiesData.ZoneSetting, str | int | float | bool]]:
             for zone in self.zones:
@@ -770,6 +985,9 @@ class PropertiesData:
                 return
             zone[setting] = value
 
+            assert(undo is not None)
+            undo.register_zone_properties_update()
+
         def RemoveSetting(self, zoneRect: pygame.Rect, setting: PropertiesData.ZoneSetting):
             zone = self._returnCorrectZone(zoneRect)
             if zone == None:
@@ -778,11 +996,18 @@ class PropertiesData:
             if setting in zone:
                 zone.pop(setting)
 
+            assert(undo is not None)
+            undo.register_zone_properties_update()
+
     Zones = ZoneData()
 
     def __init__(self, parent: UnitData) -> None:
         self.parent = parent
-        self.values: dict[UnitType, dict[str, Union[str, int, float, bool]]] = {}
+        self._values: dict[UnitType, dict[str, Union[str, int, float, bool]]] = {}
+
+    @property
+    def values(self) -> dict[UnitType, dict[str, Union[str, int, float, bool]]]:
+        return self._values
 
     def __eq__(self, other) -> bool:
         """ == operator """
@@ -794,28 +1019,41 @@ class PropertiesData:
         """ != operator """
         return not self.__eq__(other)
 
-    def Set(self, _type: UnitType, key: str, value: Union[str, int, float, bool]) -> None:
+    def Set(self, undo: UndoRecord, _type: UnitType, key: str, value: Union[str, int, float, bool]) -> None:
+        """Add value or override if exists."""
+
+        undo.record_before(self)
+
         if _type not in self.values:
             self.values[_type] = {}
-        Undo.register(self.parent)
         self.values[_type][key] = value
 
-    def SetAll(self, data: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
-        Undo.register(self.parent)
-        self.values = {k: {ik: iv for ik, iv in v.items()} for k, v in data.items()}
+        undo.record_after(self)
 
-    def Remove(self, _type: UnitType, key: str) -> None:
+    def SetAll(self, undo: UndoRecord, data: dict[UnitType, dict[str, Union[str, int, float, bool]]]):
+        """Override all values and remove any unreferenced values."""
+
+        undo.record_before(self)
+        self._values = {k: {ik: iv for ik, iv in v.items()} for k, v in data.items()}
+        undo.record_after(self)
+
+    def Remove(self, undo: UndoRecord, _type: UnitType, key: str) -> None:
         """Removes the specified key in type if found.
 
         Args:
             _type (UnitType): The type specifying what the key controls.
             key (str): The key to remove.
         """
+
         if _type in self.values and key in self.values[_type]:
-            Undo.register(self.parent)
+            undo.record_before(self)
+
             self.values[_type].pop(key)
             if len(self.values[_type]) < 1:
                 self.values.pop(_type)
+
+            undo.record_after(self)
+
 
     def Get(self, _type: UnitType, key: str, default: Optional[Union[str, int, float, bool]]) -> Optional[Union[str, int, float, bool]]:
         if _type not in self.values or key not in self.values[_type]:
@@ -825,7 +1063,13 @@ class PropertiesData:
     def GetAll(self) -> dict[UnitType, dict[str, Union[str, int, float, bool]]]:
         return {k: v.copy() for k, v in self.values.items()}
 
-    def RemoveUnused(self):
+    def RemoveUnused(self, undo: UndoRecord | None, *, undo_can_be_none: bool = False):
+        if not undo_can_be_none and undo is None:
+            raise ValueError("Undo cannot be None. If you are ABSOLUTELY sure that it can, please set undo_can_be_none=True")
+
+        if undo is not None:
+            undo.record_before(self)
+
         for _type in self.values.copy():
             if _type == UnitType.Unspecified:
                 continue
@@ -833,13 +1077,17 @@ class PropertiesData:
             if not KDS.Linq.Any(self.parent.serials, lambda v: int(v[0]) == _type.value and int(v) != 0):
                 self.values.pop(_type)
 
+        if undo is not None:
+            undo.record_after(self)
+
     def Copy(self, parentOverride: UnitData | None = None) -> PropertiesData:
         new = PropertiesData(parentOverride if parentOverride != None else self.parent)
-        new.values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
+        new._values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
         return new
 
     def __str__(self) -> Optional[str]:
-        self.RemoveUnused()
+        self.RemoveUnused(undo=None)
+
         if KDS.Linq.All(self.values.values(), lambda v: len(v) < 1): # The dictionary should be empty if there are no values, but let's check just in case.
             return ""
         key = f"{self.parent.pos[0]}-{self.parent.pos[1]}"
@@ -862,7 +1110,7 @@ class PropertiesData:
         return parsedZones
 
     @staticmethod
-    def Serialize(grid: list[list[UnitData]]) -> str:
+    def Serialize(grid: Sequence[Sequence[UnitData]]) -> str:
         strings: list[str] = []
         for row in grid:
             for unit in row:
@@ -877,7 +1125,7 @@ class PropertiesData:
         return result
 
     @staticmethod
-    def Deserialize(jsonString: str, grid: list[list[UnitData]], *, load_zones: bool = True) -> None:
+    def Deserialize(jsonString: str, grid: Sequence[Sequence[UnitData]], *, load_zones: bool = True) -> None:
         if len(jsonString) < 1 or jsonString.isspace():
             return
         deserialized: dict[str, dict[str, dict[str, Union[str, int, float, bool]]]] = json.loads(jsonString)
@@ -890,8 +1138,8 @@ class PropertiesData:
                         KDS.Logging.AutoError(f"Invalid value type occured during deserialization. Key for data: {key}")
                         continue
                     unitProp = PropertiesData(unit)
-                    unitProp.values = {UnitType(int(k)): v for k, v in toSet.items()}
-                    unit.properties = unitProp
+                    unitProp._values = {UnitType(int(k)): v for k, v in toSet.items()}
+                    unit._properties = unitProp
 
         if load_zones:
             PropertiesData.Zones = PropertiesData.ZoneData(PropertiesData._zonesDeserializer(deserialized["zones"] if "zones" in deserialized else {}))
@@ -967,7 +1215,7 @@ class BrushData:
             else:
                 return self._IterSquare()
 
-    def IterUnits(self, grid: list[list[UnitData]]) -> Iterable[UnitData]:
+    def IterUnits(self, grid: GridType) -> Iterable[UnitData]:
         for position in self.IterPositions():
             unit = self.__TryGetUnit(position, grid)
             if unit is not None:
@@ -1030,7 +1278,7 @@ class BrushData:
             yield (p[0] + pos[0], p[1] + pos[1])
 
     @staticmethod
-    def __TryGetUnit(pos: tuple[int, int], grid: list[list[UnitData]]) -> UnitData | None:
+    def __TryGetUnit(pos: tuple[int, int], grid: GridType) -> UnitData | None:
         x, y = pos
         if y < 0:
             return None
@@ -1043,28 +1291,28 @@ class BrushData:
             return None
         return row[x]
 
-    def Set(self, grid: list[list[UnitData]]):
+    def Set(self, undo: UndoRecord, grid: GridType):
         for unit in self.IterUnits(grid=grid):
-            unit.setSerial(self._brush)
+            unit.setSerial(undo, self._brush)
             if self._properties is not None:
-                unit.setProperties(self._properties)
-            unit.properties.RemoveUnused()
+                unit.setProperties(undo, self._properties)
+            unit.properties.RemoveUnused(undo)
 
-    def Add(self, grid: list[list[UnitData]]):
+    def Add(self, undo: UndoRecord, grid: GridType):
         if self._allow_add_or_insert:
             for unit in self.IterUnits(grid=grid):
-                unit.addSerial(self._brush)
+                unit.addSerial(undo, self._brush)
                 if self._properties is not None:
-                    unit.addProperties(self._properties)
-                unit.properties.RemoveUnused()
+                    unit.addProperties(undo, self._properties)
+                unit.properties.RemoveUnused(undo)
 
-    def Insert(self, grid: list[list[UnitData]]):
+    def Insert(self, undo: UndoRecord, grid: GridType):
         if self._allow_add_or_insert:
             for unit in self.IterUnits(grid=grid):
-                unit.insertSerial(self._brush)
+                unit.insertSerial(undo, self._brush)
                 if self._properties is not None:
-                    unit.addProperties(self._properties)
-                unit.properties.RemoveUnused()
+                    unit.addProperties(undo, self._properties)
+                unit.properties.RemoveUnused(undo)
 
     def RenderUpdate(self, position: tuple[int, int] | None, mouse_pressed: tuple[bool, ...], surface: pygame.Surface | None):
         if position != self._pos:
@@ -1289,99 +1537,118 @@ class DragData:
 Drag: Final = DragData()
 Drag.registerCalls(DragMode.Zone, PropertiesData.ZoneData.NewDragRect, PropertiesData.ZoneData.UpdateDragRect, PropertiesData.ZoneData.UpdateDragRect, None)
 
-def loadGrid(size: tuple[int, int]) -> list[list[UnitData]]:
-    rlist = []
+def loadGrid(size: tuple[int, int]) -> GridType:
+    rlist: list[tuple[UnitData, ...]] = []
     for y in range(size[1]):
         row = []
         for x in range(size[0]):
             row.append(UnitData((x, y)))
-        rlist.append(row)
-    return rlist
+        rlist.append(tuple(row))
+    return tuple(rlist)
 
-def resizeGrid(size: tuple[int, int], grid: list[list[UnitData]]) -> None:
+def resizeGrid(size: tuple[int, int]) -> None:
+    global grid, gridSize
+
     grid_size = (len(grid[0]), len(grid))
+    assert(grid_size == gridSize)
+
+    rGrid: list[list[UnitData]] = list(list(row) for row in grid)
+
     size_difference = (size[0] - grid_size[0], size[1] - grid_size[1])
     if size_difference[1] > 0:
         for y in range(grid_size[1], size[1]):
             row = []
             for x in range(grid_size[0]):
                 row.append(UnitData((x, y)))
-            grid.append(row)
+            rGrid.append(row)
     else:
         for y in range(abs(size_difference[1])):
-            grid.pop()
+            rGrid.pop()
     if size_difference[0] > 0:
-        for y in range(len(grid)):
-            row = grid[y]
+        for y in range(len(rGrid)):
+            row = rGrid[y]
             while len(row) < size[0]:
                 row.append(UnitData(((len(row)), y)))
     else:
-        for row in grid:
+        for row in rGrid:
             while len(row) > size[0]:
                 row.pop()
-    global gridSize
+
+    grid = tuple(tuple(row) for row in rGrid)
     gridSize = size
 
-def unsafeAddGridTopLeft(size: tuple[int, int], grid: list[list[UnitData]], zones: PropertiesData.ZoneData) -> None:
+def unsafeAddGridTopLeft(size: tuple[int, int]) -> None:
+    global grid, gridSize
+
     original_grid_size: tuple[int, int] = (len(grid[0]), len(grid))
+    assert(original_grid_size == gridSize)
+
     size_diff: tuple[int, int] = (size[0] - original_grid_size[0], size[1] - original_grid_size[1])
     if size[0] < original_grid_size[0] or size[1] < original_grid_size[1]:
         raise ValueError("This method cannot reduce grid size. Use unsafeRemoveGridTopLeft instead.")
 
+    rGrid: list[list[UnitData]] = list(list(row) for row in grid)
+
     # add rows
-    while len(grid) < size[1]:
-        for row in grid:
+    while len(rGrid) < size[1]:
+        for row in rGrid:
             for unit in row:
                 unit.pos = (unit.pos[0], unit.pos[1] + 1)
         insert_row: list[UnitData] = [UnitData((x, 0)) for x in range(original_grid_size[0])]
-        grid.insert(0, insert_row)
+        rGrid.insert(0, insert_row)
 
     # add columns
-    while len(grid[0]) < size[0]:
-        for y, row in enumerate(grid):
+    while len(rGrid[0]) < size[0]:
+        for y, row in enumerate(rGrid):
             for unit in row:
                 unit.pos = (unit.pos[0] + 1, unit.pos[1])
             row.insert(0, (UnitData((0, y))))
 
-    for zone_i in range(len(zones.zones)):
+    for zone_i in range(len(PropertiesData.Zones.zones)):
         # modify element in-place
-        zone_rect: pygame.Rect = zones.zones[zone_i][0]
+        zone_rect: pygame.Rect = PropertiesData.Zones.zones[zone_i][0]
         zone_rect.x += size_diff[0]
         zone_rect.y += size_diff[1]
 
-    global gridSize
+    grid = tuple(tuple(row) for row in rGrid)
     gridSize = size
 
-def unsafeRemoveGridTopLeft(size: tuple[int, int], grid: list[list[UnitData]], zones: PropertiesData.ZoneData) -> None:
+def unsafeRemoveGridTopLeft(size: tuple[int, int]) -> None:
+    global grid, gridSize
+
     original_grid_size: tuple[int, int] = (len(grid[0]), len(grid))
+    assert(original_grid_size == gridSize)
+
     size_diff: tuple[int, int] = (size[0] - original_grid_size[0], size[1] - original_grid_size[1])
     if size[0] > original_grid_size[0] or size[1] > original_grid_size[1]:
         raise ValueError("This method cannot increase grid size. Use unsafeAddGridTopLeft instead.")
 
+    rGrid: list[list[UnitData]] = list(list(row) for row in grid)
+
     # remove rows
-    while len(grid) > size[1]:
-        for row in grid:
+    while len(rGrid) > size[1]:
+        for row in rGrid:
             for unit in row:
                 unit.pos = (unit.pos[0], unit.pos[1] - 1)
-        grid.pop(0)
+        rGrid.pop(0)
 
     # remove columns
-    while len(grid[0]) > size[0]:
-        for row in grid:
+    while len(rGrid[0]) > size[0]:
+        for row in rGrid:
             for unit in row:
                 unit.pos = (unit.pos[0] - 1, unit.pos[1])
             row.pop(0)
 
-    for zone_i in range(len(zones.zones)):
+    for zone_i in range(len(PropertiesData.Zones.zones)):
         # modify element in-place
-        zone_rect: pygame.Rect = zones.zones[zone_i][0]
+        zone_rect: pygame.Rect = PropertiesData.Zones.zones[zone_i][0]
         zone_rect.x += size_diff[0]
         zone_rect.y += size_diff[1]
 
-    global gridSize
+    grid = tuple(tuple(row) for row in rGrid)
     gridSize = size
 
-def generateMapString(grid: list[list[UnitData]]) -> str:
+def generateMapString(grid: GridType) -> str:
     outputString = ''
     for row in grid:
         for unit in row:
@@ -1389,7 +1656,7 @@ def generateMapString(grid: list[list[UnitData]]) -> str:
         outputString = outputString.removesuffix(" / ") + "\n"
     return outputString
 
-def saveMap(grid: list[list[UnitData]], name: str):
+def saveMap(grid: GridType, name: str):
     #region Map
     with open(name, 'w', encoding="utf-8") as f:
         f.write(generateMapString(grid))
@@ -1419,7 +1686,8 @@ def saveMap(grid: list[list[UnitData]], name: str):
         with open(propertiesPath, "w", encoding="utf-8") as f:
             f.write(propertiesString)
     #endregion
-    Undo.clear()
+    assert(undo is not None)
+    undo.register_was_saved()
 
 def saveMapName():
     global currentSaveName, grid
@@ -1457,7 +1725,7 @@ def loadLevelProp(dirPath: str):
                     KDS.Logging.AutoError(f"Unexpected type of spawnInverted. Expected: {bool.__name__}, Got: {type(spawnInverted).__name__}")
                 LevelPropData.PlayerFlipped = playerData["spawnInverted"] == True # Will default to false if spawnInverted is not a bool
 
-def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> tuple[list[list[UnitData]], tuple[int, int]]:
+def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> tuple[GridType, tuple[int, int]]:
     global display
 
     with open(path, 'r') as f:
@@ -1490,7 +1758,7 @@ def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> tuple[list[list
             if KDS.Linq.Any(unit.split(" "), lambda n: len(n) != len(UnitData.EMPTY)):
                 KDS.Logging.AutoError(f"Serial: {unit} contains a broken serial. Please fix this manually.")
             #endregion
-            rUnit.overrideSerial(unit)
+            rUnit.overrideSerial(None, unit, undo_can_be_none=True)
 
     if generateMapString(temporaryGrid) != wholeContents:
         KDS.Logging.warning("Loaded map file does not match generated map file!", consoleVisible=True)
@@ -1510,7 +1778,7 @@ def internalLoadMap(path: str, *, modifyGlobals: bool = True) -> tuple[list[list
     return temporaryGrid, temporaryGridSize
 
 def loadMap(path: str) -> bool: # bool indicates if the map loading was succesful
-    global currentSaveName, gridSize, grid, display, clock
+    global currentSaveName, gridSize, grid, display, undo
     if len(path) < 1:
         KDS.Logging.info(f"Path \"{path}\" of map file is not valid.", True)
         return False
@@ -1518,7 +1786,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         KDS.Logging.info(f"Map file at path \"{path}\" is not a valid type.", True)
         return False
 
-    if Undo.index + Undo.overflowCount > 0 and KDS.System.MessageBox.Show("Unsaved Changes.", "There are unsaved changes. Do you want to save them?", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
+    if UnsavedChangesInterrupt():
         if len(currentSaveName) < 1 or currentSaveName.isspace():
             saveMapName()
         else:
@@ -1535,8 +1803,8 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         pygame.time.wait(1000)
     currentSaveName = path
     grid, gridSize = handle.Complete()
+    undo = Undo(grid)
 
-    Undo.clear()
     if not KDS.System.ISLINUX:
         KDS.Loading.Circle.Stop()
 
@@ -1641,7 +1909,7 @@ def consoleHandler(commandlist: list[str]) -> int:
             add_cols = -add_cols
 
         if commandlist[0] in ("add", "rmv"):
-            resizeGrid((gridSize[0] + add_cols, gridSize[1] + add_rows), grid)
+            resizeGrid((gridSize[0] + add_cols, gridSize[1] + add_rows))
             if add_rows > 0:
                 KDS.Console.Feed.append(f"Added {int(commandlist[2])} rows.")
             if add_cols > 0:
@@ -1652,9 +1920,9 @@ def consoleHandler(commandlist: list[str]) -> int:
                 KDS.Console.Feed.append(f"Removed {int(commandlist[2])} columns.")
         else:
             if add_rows >= 0 and add_cols >= 0:
-                unsafeAddGridTopLeft((gridSize[0] + add_cols, gridSize[1] + add_rows), grid, PropertiesData.Zones)
+                unsafeAddGridTopLeft((gridSize[0] + add_cols, gridSize[1] + add_rows))
             elif add_rows <= 0 and add_cols <= 0:
-                unsafeRemoveGridTopLeft((gridSize[0] + add_cols, gridSize[1] + add_rows), grid, PropertiesData.Zones)
+                unsafeRemoveGridTopLeft((gridSize[0] + add_cols, gridSize[1] + add_rows))
             else:
                 raise RuntimeError("Combined insert-purge not supported.")
 
@@ -1664,7 +1932,6 @@ def consoleHandler(commandlist: list[str]) -> int:
         return 1
 
 def zoneConsoleHandler(commandlist: Optional[list[str]], zoneRect: pygame.Rect):
-    Undo.overflowCount += 1
     if commandlist == None:
         return
 
@@ -1895,7 +2162,7 @@ def generate_menu():
 def menu():
     global currentSaveName, brush, grid, gridSize, btn_menu, gamesize, scaleMultiplier, scalesize, mainRunning
     btn_menu = True
-    grid = [[]]
+
     def button_handler(_openMap: bool = False):
         global btn_menu, grid, gridSize
         if _openMap:
@@ -1955,15 +2222,17 @@ class Selected:
         Selected.SetCustomGrid(grid=grid, serialOverride=serialOverride, propertiesOverride=propertiesOverride, clear_selected=clear_selected)
 
     @staticmethod
-    def SetCustomGrid(grid: list[list[UnitData]], serialOverride: str | None = None, propertiesOverride: dict[UnitType, dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
+    def SetCustomGrid(grid: GridType, serialOverride: str | None = None, propertiesOverride: dict[UnitType, dict[str, Union[str, int, float, bool]]] | None = None, clear_selected: bool = True):
+        gridSetUndo: Final = UndoRecord()
+
         for unit in Selected.units:
             unitCopy = unit.Copy()
             if serialOverride != None:
-                unitCopy.overrideSerial(serialOverride)
+                unitCopy.overrideSerial(gridSetUndo, serialOverride)
             if propertiesOverride != None:
-                unitCopy.properties.values = propertiesOverride
+                unitCopy.properties.SetAll(gridSetUndo, propertiesOverride)
             try:
-                grid[unit.pos[1]][unit.pos[0]] = unitCopy
+                grid[unit.pos[1]][unit.pos[0]].CopyFrom(gridSetUndo, unitCopy)
             except IndexError:
                 warnSize = f"({len(grid[0])}, {len(grid)})" if len(grid) > 0 else "(<invalid-grid-size>, <invalid-grid-size>)"
                 KDS.Logging.warning(f"Index error while setting unit at position: \"{unit.pos}\". Grid size: {warnSize}", consoleVisible=True)
@@ -2013,7 +2282,7 @@ class Selected:
             for y, row in enumerate(unitsNormalizedPositions):
                 for x, u in enumerate(row):
                     u.pos = (x, y)
-            return output, PropertiesData.Serialize(unitsNormalizedPositions)
+            return (output, PropertiesData.Serialize(unitsNormalizedPositions))
 
     @staticmethod
     def FromString(string: str, properties: str | None = None):
@@ -2075,7 +2344,7 @@ class BeforeMoveData(NamedTuple):
 
 allowTilePlacement: bool = False
 def main():
-    global currentSaveName, brush, grid, gridSize, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, refrenceGrid, refrenceGridSize, zoneMode, refrenceGridHandle
+    global currentSaveName, brush, grid, gridSize, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, referenceGrid, referenceGridSize, zoneMode, referenceGridHandle
 
     menu()
     if not mainRunning: return
@@ -2083,7 +2352,7 @@ def main():
     textureRescaleHandle: Optional[KDS.Jobs.JobHandle] = None
     new_rescale_requested: bool = False
 
-    def zoom(add: int, scroll: list[int], grid: list[list[UnitData]]):
+    def zoom(add: int, scroll: list[int], grid: GridType):
         global scalesize, scaleMultiplier
         nonlocal new_rescale_requested
         mouse_pos = pygame.mouse.get_pos()
@@ -2104,8 +2373,12 @@ def main():
 
     openCommandTerminal: bool = False
 
+    mouse_pressed_undo: list[UndoRecord | None] = []
+
     before_move: BeforeMoveData | None = None
     while mainRunning:
+        assert(undo is not None)
+
         pickTile: bool = False
         pygame.key.set_repeat(500, 31)
 
@@ -2132,12 +2405,14 @@ def main():
                 if event.button == 2:
                     before_move = None
             elif event.type == KEYDOWN:
-                if event.key == K_z or event.key == K_y:
+                if event.key == K_z:
                     if keys_pressed[K_LCTRL]:
-                        Undo.request(event.key == K_y)
-                        Selected.Update()
+                        undo.undo()
                     else:
                         zoneMode = not zoneMode
+                elif event.key == K_y:
+                    if keys_pressed[K_LCTRL]:
+                        undo.redo()
                 elif event.key == K_t:
                     openCommandTerminal = True
                 elif event.key == K_h:
@@ -2146,7 +2421,7 @@ def main():
                 elif event.key == K_r:
                     resize_output = KDS.Console.Start("New Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000), defVal=f"{gridSize[0]}, {gridSize[1]}", autoFormat=True)
                     if resize_output != None:
-                        resizeGrid((int(resize_output[0]), int(resize_output[1])), grid)
+                        resizeGrid((int(resize_output[0]), int(resize_output[1])))
                 elif event.key == K_e:
                     tmpBrush = materialMenu(brush.currentMaterial)
                     tmpProps: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None
@@ -2204,15 +2479,15 @@ def main():
                         except Exception:
                             KDS.Logging.AutoError(f"Paste from clipboard failed. Exception: {traceback.format_exc()}")
                 elif event.key == K_g:
-                    if refrenceGrid != None:
-                        refrenceGrid = None
+                    if referenceGrid != None:
+                        referenceGrid = None
                         for row in grid:
                             for unit in row:
-                                unit.matchesRefrence = False
+                                unit.matchesReference = False
                     else:
-                        refrencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Refrence Map File", initialdir="Assets/Maps/Refrence")
-                        if len(refrencePath) > 0 and not refrencePath.isspace():
-                            refrenceGrid, refrenceGridSize = internalLoadMap(refrencePath, modifyGlobals=False)
+                        referencePath: str = filedialog.askopenfilename(filetypes=(("Data file", "*.dat"), ("All files", "*.*")), title="Open Reference Map File", initialdir="Assets/Maps/Reference")
+                        if len(referencePath) > 0 and not referencePath.isspace():
+                            referenceGrid, referenceGridSize = internalLoadMap(referencePath, modifyGlobals=False)
                 elif event.key == K_F5:
                     if len(currentSaveName) > 0:
                         loadLevelProp(os.path.dirname(currentSaveName))
@@ -2233,6 +2508,20 @@ def main():
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
         # second event check fixes some race conditions and edge cases
+
+        while len(mouse_pressed_undo) < len(mouse_pressed):
+            mouse_pressed_undo.append(None)
+        while len(mouse_pressed_undo) > len(mouse_pressed):
+            mouse_pressed_undo.pop()
+        for mouse_pressed_undo_index, mouse_pressed_undo_pressed in enumerate(mouse_pressed):
+            mouse_pressed_undo_value: Final = mouse_pressed_undo[mouse_pressed_undo_index]
+            if mouse_pressed_undo_pressed:
+                if mouse_pressed_undo_value is None:
+                    mouse_pressed_undo[mouse_pressed_undo_index] = UndoRecord()
+            else:
+                if mouse_pressed_undo_value is not None:
+                    undo.register(mouse_pressed_undo_value)
+                    mouse_pressed_undo[mouse_pressed_undo_index] = None
 
         if not mouse_pressed[0] and not mouse_pressed[2]:
             allowTilePlacement = True
@@ -2273,25 +2562,27 @@ def main():
             if not openMapSuccess:
                 KDS.Logging.info("Map opening cancelled.", True)
 
-        if refrenceGrid != None:
-            if refrenceGridHandle == None or refrenceGridHandle.IsComplete:
-                if refrenceGridHandle != None:
-                    refrenceGridHandle.Complete()
-                refrenceGridHandle = KDS.Jobs.Schedule(UnitData.refrenceUpdate)
-        elif refrenceGridHandle != None:
-            if refrenceGridHandle.IsComplete:
-                refrenceGridHandle.Complete()
-                refrenceGridHandle = None
+        if referenceGrid != None:
+            if referenceGridHandle == None or referenceGridHandle.IsComplete:
+                if referenceGridHandle != None:
+                    referenceGridHandle.Complete()
+                referenceGridHandle = KDS.Jobs.Schedule(UnitData.referenceUpdate)
+        elif referenceGridHandle != None:
+            if referenceGridHandle.IsComplete:
+                referenceGridHandle.Complete()
+                referenceGridHandle = None
 
         display.fill((30, 20, 60))
-        UnitData.renderUpdate(display, scroll, grid, brush, pickTile)
+        UnitData.renderUpdate(display, scroll, grid, brush,
+                              keys_pressed, mouse_pressed, mouse_pressed_undo, pickTile)
 
-        undoTotal = Undo.index + Undo.overflowCount
-        if undoTotal > 0:
-            if undoTotal < 50:
+        if undo.unsaved_changes > 0:
+            if undo.unsaved_changes < 50:
                 _color = KDS.Colors.Yellow
-            elif 100 >= undoTotal >= 50: _color = KDS.Colors.Orange
-            else: _color = KDS.Colors.Red
+            elif undo.unsaved_changes < 100:
+                _color = KDS.Colors.Orange
+            else:
+                _color = KDS.Colors.Red
             pygame.draw.circle(display, _color, (10, 10), 5)
 
         if not brush.IsEmpty:
