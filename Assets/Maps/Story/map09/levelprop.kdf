@@ -15,8 +15,8 @@
             "listeners": [],
             "lscript": [],
             "startPos": [
-                3842,
-                923
+                1972,
+                1263
             ],
             "talk": true
         },
@@ -24,8 +24,8 @@
             "Inventory": {},
             "spawnInverted": true,
             "startPos": [
-                4624,
-                918
+                2754,
+                1263
             ]
         }
     },
