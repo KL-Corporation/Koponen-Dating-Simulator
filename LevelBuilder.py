@@ -275,6 +275,9 @@ referenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 
 zoneMode = False
 
+build_undo: UndoRecord | None = None
+remove_undo: UndoRecord | None = None
+
 class LevelPropData:
     @staticmethod
     def rescale():
@@ -297,7 +300,8 @@ class LevelPropData:
 LevelPropData.rescale()
 
 class UndoRecord:
-    class _Change(NamedTuple):
+    @dataclass(frozen=True)
+    class _Change:
         unit: UnitData
         before: UnitData
         after: UnitData
@@ -324,7 +328,6 @@ class UndoRecord:
             self._afters.append(unit.Copy())
 
         def complete(self) -> UndoRecord._Change:
-            """Returns tuple (before, after)"""
             self._completed = True
 
             assert(len(self._befores) > 0)
@@ -361,6 +364,7 @@ class UndoRecord:
             self._recording = None
 
         if self._recording is None:
+            assert(grid[unit.pos[1]][unit.pos[0]] is unit)
             self._recording = UndoRecord._Recording(unit)
         self._recording.add_before(unit)
 
@@ -380,28 +384,33 @@ class UndoRecord:
         self._recording.add_after(unit)
 
     def _register(self, parent: Undo) -> None:
+        if self._recording is not None:
+            self._changes.append(self._recording.complete())
         self._parent = parent
 
     def _rollback(self, grid: GridType) -> None:
-        for c in self._changes:
-            self.__roll(c[1], c[0], unit=c.unit, grid=grid)
+        # reversed so that when we change the same tile multiple times, we also revert it in the correct order
+        for c in reversed(self._changes):
+            self.__roll(c.after, c.before, unit=c.unit, grid=grid)
 
     def _rollforward(self, grid: GridType) -> None:
         for c in self._changes:
-            self.__roll(c[0], c[1], unit=c.unit, grid=grid)
+            self.__roll(c.before, c.after, unit=c.unit, grid=grid)
 
     def __roll(self, /, _from: UnitData, _to: UnitData, *, unit: UnitData, grid: GridType) -> None:
-        assert(_from.pos == _to.pos)
         x: int
         y: int
-        x, y = _from.pos
-
-        original_value: UnitData = grid[y][x]
-        if original_value != _from:
-            KDS.Logging.warning(f"Source unit data does not match grid unit data. There might have been some changes that were unaccounted in undo/redo.", consoleVisible=True)
+        x, y = unit.pos
+        assert(_from.pos == unit.pos)
+        assert(_to.pos == unit.pos)
 
         assert(grid[y][x] is unit)
-        grid[y][x].CopyFrom(None, _from, undo_can_be_none=True)
+
+        if unit != _from:
+            KDS.Logging.warning(f"Source unit data does not match grid unit data. There might have been some changes that were unaccounted in undo/redo.", consoleVisible=True)
+
+        unit.CopyFrom(None, _to, undo_can_be_none=True)
+        assert(unit == _to)
 
 class Undo:
     def __init__(self, grid: GridType) -> None:
@@ -413,6 +422,8 @@ class Undo:
         self._redo: deque[UndoRecord] = deque(maxlen=1000)
 
     def register(self, record: UndoRecord) -> None:
+        record._register(self)
+
         self._undo.append(record)
         self._redo.clear()
 
@@ -434,7 +445,7 @@ class Undo:
     def redo(self) -> None:
         assert self._grid is grid
 
-        if len(self._undo) < 1:
+        if len(self._redo) < 1:
             KDS.Logging.info("No redo history left.", consoleVisible=True)
             return
 
@@ -497,10 +508,12 @@ class UnitData:
     def __init__(self, position: tuple[int, int], serialNumber: str = EMPTYSERIAL):
         self.pos = position
         self.serialNumber = serialNumber
-        self.matchesReference = False
         self._updateSplit()
 
         self._properties = PropertiesData(self)
+
+        self.matchesReference = False
+        """State variable, will not be copied."""
 
     @property
     def properties(self) -> PropertiesData:
@@ -530,7 +543,7 @@ class UnitData:
 
     def Copy(self) -> UnitData:
         data = UnitData(position=self.pos, serialNumber=self.serialNumber)
-        data._properties = self.properties.Copy(parentOverride=data)
+        data._properties = self.properties.Copy(overrideParent=data)
         return data
 
     def CopyFrom(self, undo: UndoRecord | None, unit: UnitData, *, undo_can_be_none: bool = False) -> None:
@@ -542,9 +555,11 @@ class UnitData:
 
         self.pos = unit.pos
         self.serialNumber = unit.serialNumber
-        self.matchesReference = unit.matchesReference
         self._updateSplit()
-        self._properties = unit.properties.Copy()
+        self._properties = unit.properties.Copy(overrideParent=self)
+
+        # do not set, is handled by reference grid
+        # self.matchesReference = unit.matchesReference
 
         if undo is not None:
             undo.record_after(self)
@@ -725,8 +740,8 @@ class UnitData:
 
     @staticmethod
     def renderUpdate(surface: pygame.Surface, scroll: list[int], renderList: GridType, brush: BrushData,
-                     keys_pressed: pygame.key.ScancodeWrapper, mouse_pressed: tuple[bool, ...], mouse_pressed_undo: list[UndoRecord | None], pickTile: bool = False):
-        global allowTilePlacement
+                     keys_pressed: pygame.key.ScancodeWrapper, mouse_pressed: tuple[bool, ...], pickTile: bool = False):
+        global allowTilePlacement, build_undo, remove_undo
 
         assert(undo is not None)
 
@@ -844,10 +859,14 @@ class UnitData:
         del unit
 
         brush.RenderUpdate(mpos_tilepos, mouse_pressed, surface if Drag.Rect is None else None)
+
+        build_undo_was_used: bool = False
+        remove_undo_was_used: bool = False
         if allowTilePlacement:
             if mouse_pressed[0]:
-                mp0_undo = mouse_pressed_undo[0]
-                assert mp0_undo is not None
+                if build_undo is None:
+                    build_undo = UndoRecord()
+                build_undo_was_used = True
 
                 if keys_pressed[K_c]:
                     for brush_unit in brush.IterUnits(grid=grid):
@@ -855,28 +874,36 @@ class UnitData:
                             setVal = False
                             if keys_pressed[K_LALT]:
                                 setVal = True
-                            brush_unit.properties.Set(mp0_undo, UnitType.Tile, "checkCollision", setVal)
+                            brush_unit.properties.Set(build_undo, UnitType.Tile, "checkCollision", setVal)
                 elif not brush.IsEmpty:
                     if keys_pressed[K_LSHIFT]:
-                        brush.Add(mp0_undo, grid)
+                        brush.Add(build_undo, grid)
                     elif keys_pressed[K_LCTRL]:
-                        brush.Insert(mp0_undo, grid)
+                        brush.Insert(build_undo, grid)
                     else:
-                        brush.Set(mp0_undo, grid)
+                        brush.Set(build_undo, grid)
             elif mouse_pressed[2]:
-                mp2_undo = mouse_pressed_undo[2]
-                assert mp2_undo is not None
+                if remove_undo is None:
+                    remove_undo = UndoRecord()
+                remove_undo_was_used = True
 
                 for brush_unit in brush.IterUnits(grid=grid):
                     if keys_pressed[K_c]:
-                            brush_unit.properties.Remove(mp2_undo, UnitType.Tile, "checkCollision")
+                            brush_unit.properties.Remove(remove_undo, UnitType.Tile, "checkCollision")
                     else:
                         if keys_pressed[K_LSHIFT]:
-                            brush_unit.removeSerial(mp2_undo)
+                            brush_unit.removeSerial(remove_undo)
                         elif keys_pressed[K_LCTRL]:
-                            brush_unit.removeSerialFromStart(mp2_undo)
+                            brush_unit.removeSerialFromStart(remove_undo)
                         else:
-                            brush_unit.resetSerial(mp2_undo)
+                            brush_unit.resetSerial(remove_undo)
+
+        if not build_undo_was_used and build_undo is not None:
+            undo.register(build_undo)
+            build_undo = None
+        if not remove_undo_was_used and remove_undo is not None:
+            undo.register(remove_undo)
+            remove_undo = None
         # UnitData.placedOnTile = unit
 
         if mpos_tilepos[0] < len(grid) and mpos_tilepos[1] < len(grid[1]):
@@ -1002,7 +1029,7 @@ class PropertiesData:
     Zones = ZoneData()
 
     def __init__(self, parent: UnitData) -> None:
-        self.parent = parent
+        self.parent: Final[UnitData] = parent
         self._values: dict[UnitType, dict[str, Union[str, int, float, bool]]] = {}
 
     @property
@@ -1080,8 +1107,8 @@ class PropertiesData:
         if undo is not None:
             undo.record_after(self)
 
-    def Copy(self, parentOverride: UnitData | None = None) -> PropertiesData:
-        new = PropertiesData(parentOverride if parentOverride != None else self.parent)
+    def Copy(self, overrideParent: UnitData | None) -> PropertiesData:
+        new = PropertiesData(overrideParent if overrideParent != None else self.parent)
         new._values = {k: {ik: iv for ik, iv in v.items()} for k, v in self.values.items()} #deepcopy replacement. Some values are not copied, because they are single-instance variables.
         return new
 
@@ -2373,8 +2400,6 @@ def main():
 
     openCommandTerminal: bool = False
 
-    mouse_pressed_undo: list[UndoRecord | None] = []
-
     before_move: BeforeMoveData | None = None
     while mainRunning:
         assert(undo is not None)
@@ -2509,20 +2534,6 @@ def main():
         mouse_pressed = pygame.mouse.get_pressed()
         # second event check fixes some race conditions and edge cases
 
-        while len(mouse_pressed_undo) < len(mouse_pressed):
-            mouse_pressed_undo.append(None)
-        while len(mouse_pressed_undo) > len(mouse_pressed):
-            mouse_pressed_undo.pop()
-        for mouse_pressed_undo_index, mouse_pressed_undo_pressed in enumerate(mouse_pressed):
-            mouse_pressed_undo_value: Final = mouse_pressed_undo[mouse_pressed_undo_index]
-            if mouse_pressed_undo_pressed:
-                if mouse_pressed_undo_value is None:
-                    mouse_pressed_undo[mouse_pressed_undo_index] = UndoRecord()
-            else:
-                if mouse_pressed_undo_value is not None:
-                    undo.register(mouse_pressed_undo_value)
-                    mouse_pressed_undo[mouse_pressed_undo_index] = None
-
         if not mouse_pressed[0] and not mouse_pressed[2]:
             allowTilePlacement = True
         drag_was_just_cleared_by_rightclick: bool = Drag.update(mouse_pos, mouse_pressed[0], mouse_pressed[2], keys_pressed, allow_drag=(allowTilePlacement or zoneMode))
@@ -2574,7 +2585,7 @@ def main():
 
         display.fill((30, 20, 60))
         UnitData.renderUpdate(display, scroll, grid, brush,
-                              keys_pressed, mouse_pressed, mouse_pressed_undo, pickTile)
+                              keys_pressed, mouse_pressed, pickTile)
 
         if undo.unsaved_changes > 0:
             if undo.unsaved_changes < 50:
