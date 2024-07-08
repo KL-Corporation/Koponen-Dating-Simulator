@@ -313,6 +313,8 @@ class UndoRecord(ABC):
         raise NotImplementedError()
 
 class ResizeUndoRecord(UndoRecord):
+    """### DO NOT MODIFY ANY GridUnit INSTANCES, ONLY CREATE NEW ONES."""
+
     def __init__(self, original_grid: GridType) -> None:
         self.original_grid: Final[GridType] = original_grid
         self._resized_grid: GridType | None = None
