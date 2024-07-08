@@ -1082,12 +1082,12 @@ class Lamp(KDS.Build.Tile):
         y = 0
         r = True
         while r:
-            y += 33
+            y += 34
             for row in Tiles:
                 for unit in row:
                     for tile in unit:
-                        if tile.rect.collidepoint((self.rect.centerx, self.rect.y + self.rect.height + y)) and tile.serialNumber != 22 and tile.checkCollision:
-                            y = y - (self.rect.y + self.rect.height + y - tile.rect.y) + 8
+                        if tile.rect.collidepoint((self.rect.centerx, self.rect.bottom + y)) and tile.serialNumber != 22 and tile.checkCollision:
+                            y = y - (self.rect.bottom + y - tile.rect.y) + 5
                             r = False
             if y > 154:
                 r = False
@@ -1095,8 +1095,9 @@ class Lamp(KDS.Build.Tile):
 
     def update(self):
         if random.randint(0, 10) != 10:
-            btmidth = int(self.coneheight * 80 / 90)
-            Lights.append(KDS.World.Lighting.Light((self.rect.x - btmidth // 2 + 7, self.rect.y + 16), KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))))
+            btmidth: int = int(self.coneheight * 80 / 90)
+            light_shape: pygame.Surface = KDS.World.Lighting.lamp_cone(10, btmidth, self.coneheight, (200, 200, 200))
+            Lights.append(KDS.World.Lighting.Light((self.rect.centerx - light_shape.get_width() // 2 - 1, self.rect.y + 18), light_shape))
         return self.texture
 
 class LampChain(KDS.Build.Tile):
