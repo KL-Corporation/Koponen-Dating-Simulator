@@ -1137,7 +1137,8 @@ class DecorativeHead(KDS.Build.Tile):
                 if not KDS.Keys.functionKey.pressed:
                     pray_sound.stop()
                     self.praying = False
-                if Player.health > 0:
+                if Player.health > 0 and Player.health < 100:
+                    # check < 100 so that we don't remove any health if health is above 100
                     Player.health = min(Player.health + 0.01, 100)
         else:
             pray_sound.stop()
@@ -1332,13 +1333,29 @@ class SkullTile(KDS.Build.Tile):
 class WallLight(KDS.Build.Tile):
     def __init__(self, position, serialNumber: int):
         super().__init__(position, serialNumber)
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
-        self.checkCollision = False
-        self.direction = serialNumber == 72
-        self.light_t = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False)
+        self.direction: bool = serialNumber == 72
+        self.light_t: pygame.Surface = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard.get(100, 6200), self.direction, False)
+
+    def lateInit(self) -> None:
+        assert(self.checkCollision == False)
+        self.darkOverlay = None
 
     def update(self):
         Lights.append(KDS.World.Lighting.Light((self.rect.centerx - (17 * KDS.Convert.ToMultiplier(self.direction)), self.rect.centery), self.light_t, True))
+        return self.texture
+
+class WallLightVertical(KDS.Build.Tile):
+    def __init__(self, position, serialNumber: int):
+        super().__init__(position, serialNumber)
+        self.direction: bool = serialNumber == 180
+        self.light_t: pygame.Surface = pygame.transform.flip(KDS.World.Lighting.Shapes.cone_hard_up.get(100, 6200), False, self.direction)
+
+    def lateInit(self) -> None:
+        assert(self.checkCollision == False)
+        self.darkOverlay = None
+
+    def update(self) -> pygame.Surface | None:
+        Lights.append(KDS.World.Lighting.Light((self.rect.centerx, self.rect.centery + (17 * KDS.Convert.ToMultiplier(self.direction))), self.light_t, positionFromCenter=True))
         return self.texture
 
 class RespawnAnchor(KDS.Build.Tile):
@@ -2654,7 +2671,9 @@ KDS.Build.Tile.specialTilesClasses = {
     161: PistokoeDoor,
     164: HotelBed,
     168: CashRegister,
-    169: TheftDetector
+    169: TheftDetector,
+    179: WallLightVertical,
+    180: WallLightVertical
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -5292,12 +5311,6 @@ while main_running:
 
         Awm.globalUpdate(isinstance(Player.inventory.getHandItem(), Awm))
 
-    Wallet.globalRenderUpdate(
-        screen,
-        isHandItem=isinstance(Player.inventory.getHandItem(), Wallet),
-        renderUI=(renderUI and Player.health > 0 and Player.visible)
-    )
-
     for Zone in Zones:
         Zone.update(Player.rect)
 
@@ -5427,7 +5440,13 @@ while main_running:
         # if not KDS.World.Dark.Disco.enabled: # fix lights being black when darkness is small
         #     black_tint.fill(darkness_value, special_flags=BLEND_MAX)
         screen.blit(black_tint, (0, 0), special_flags=BLEND_MULT)
+
     #UI
+    Wallet.globalRenderUpdate(
+        screen,
+        isHandItem=isinstance(Player.inventory.getHandItem(), Wallet),
+        renderUI=(renderUI and Player.health > 0 and Player.visible)
+    )
     if renderUI:
         yellow_indicator_states: Dict[str, bool] = {
             "visible_contraband": False

@@ -39,6 +39,7 @@ def init():
     Lighting.Shapes.circle_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_hard.png").convert_alpha())
     Lighting.Shapes.circle_hardest = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/circle_hardest.png").convert_alpha())
     Lighting.Shapes.cone_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_hard.png").convert_alpha())
+    Lighting.Shapes.cone_hard_up = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_hard_up.png").convert_alpha())
     Lighting.Shapes.cone_small_hard = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_small_hard.png").convert_alpha())
     Lighting.Shapes.cone_narrow = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/cone_narrow.png").convert_alpha())
     Lighting.Shapes.splatter = Lighting.Shapes.LightShape(pygame.image.load("Assets/Textures/Lighting/splatter.png").convert_alpha())
@@ -235,18 +236,19 @@ class Lighting:
                 if isinstance(v, Lighting.Shapes.LightShape):
                     v.rendered = {}
 
-        circle_softest: LightShape = LightShape(pygame.Surface((0, 0)))
-        circle_soft: LightShape = LightShape(pygame.Surface((0, 0)))
-        circle_softer: LightShape = LightShape(pygame.Surface((0, 0)))
-        circle: LightShape = LightShape(pygame.Surface((0, 0)))
-        circle_harder: LightShape = LightShape(pygame.Surface((0, 0)))
-        circle_hard: LightShape = LightShape(pygame.Surface((0, 0)))
-        circle_hardest: LightShape = LightShape(pygame.Surface((0, 0)))
-        cone_hard: LightShape = LightShape(pygame.Surface((0, 0)))
-        cone_small_hard: LightShape = LightShape(pygame.Surface((0, 0)))
-        cone_narrow: LightShape = LightShape(pygame.Surface((0, 0)))
-        splatter: LightShape = LightShape(pygame.Surface((0, 0)))
-        fluorecent: LightShape = LightShape(pygame.Surface((0, 0)))
+        circle_softest: LightShape
+        circle_soft: LightShape
+        circle_softer: LightShape
+        circle: LightShape
+        circle_harder: LightShape
+        circle_hard: LightShape
+        circle_hardest: LightShape
+        cone_hard: LightShape
+        cone_hard_up: LightShape
+        cone_small_hard: LightShape
+        cone_narrow: LightShape
+        splatter: LightShape
+        fluorecent: LightShape
 
     @staticmethod
     def circle_surface(radius, color):

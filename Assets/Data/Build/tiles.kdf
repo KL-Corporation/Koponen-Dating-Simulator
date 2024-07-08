@@ -493,14 +493,14 @@
         "serialNumber": 71,
         "path": "wall_light.png",
         "specialTile": true,
-        "noCollision": false,
+        "noCollision": true,
         "trueScale": false
     },
-    "Mirrored Wall Light": {
+    "Wall Light (Mirrored)": {
         "serialNumber": 72,
         "path": "wall_light_mirrored.png",
         "specialTile": true,
-        "noCollision": false,
+        "noCollision": true,
         "trueScale": false
     },
     "Level Ender Door": {
@@ -1239,6 +1239,20 @@
         "path": "scratched_steel.png",
         "specialTile": false,
         "noCollision": false,
+        "trueScale": false
+    },
+    "Wall Light (Floor)": {
+        "serialNumber": 179,
+        "path": "wall_light_floor.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": false
+    },
+    "Wall Light (Ceiling)": {
+        "serialNumber": 180,
+        "path": "wall_light_floor_mirrored.png",
+        "specialTile": true,
+        "noCollision": true,
         "trueScale": false
     }
 }
