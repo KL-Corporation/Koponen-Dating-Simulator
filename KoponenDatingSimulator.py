@@ -765,10 +765,10 @@ ScreenEffects.Reset()
 animation_loading_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(8 * " ")
 animation_loading_logger.start("Loading Animations...")
 
-koponen_animations = KDS.Animator.MultiAnimation(
-    idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
-    walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
-)
+# koponen_animations = KDS.Animator.MultiAnimation(
+#     idle = KDS.Animator.Animation("koponen_idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player"),
+#     walk = KDS.Animator.Animation("koponen_walk", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Player")
+# )
 menu_gasburner_animation = KDS.Animator.Animation(
     "main_menu_bc_gasburner", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 gasburner_animation_object = KDS.Animator.Animation("gasburner_on", 2, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
@@ -776,42 +776,27 @@ menu_toilet_animation = KDS.Animator.Animation(
     "menu_toilet_anim", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 menu_trashcan_animation = KDS.Animator.Animation(
     "menu_trashcan", 3, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
-explosion_animation = KDS.Animator.Animation(
-    "explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+# burning_tree = KDS.Animator.Animation("tree_burning", 4, 5, (0, 0, 0), KDS.Animator.OnAnimationEnd.Loop)
+# explosion_animation = KDS.Animator.Animation("explosion", 7, 5, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 plasmarifle_animation = KDS.Animator.Animation(
     "plasmarifle_firing", 2, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-zombie_death_animation = KDS.Animator.Animation(
-    "z_death", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-zombie_walk_animation = KDS.Animator.Animation(
-    "z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-zombie_attack_animation = KDS.Animator.Animation(
-    "z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-sergeant_walk_animation = KDS.Animator.Animation(
-    "seargeant_walking", 4, 8, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-sergeant_shoot_animation = KDS.Animator.Animation(
-    "seargeant_shooting", 2, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+# zombie_death_animation = KDS.Animator.Animation("z_death", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+# zombie_walk_animation = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# zombie_attack_animation = KDS.Animator.Animation("z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# sergeant_walk_animation = KDS.Animator.Animation("seargeant_walking", 4, 8, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# sergeant_shoot_animation = KDS.Animator.Animation("seargeant_shooting", 2, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 
-archvile_run_animation = KDS.Animator.Animation(
-    "archvile_run", 3, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-arhcvile_attack_animation = KDS.Animator.Animation(
-    "archvile_attack", 6, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-archvile_death_animation = KDS.Animator.Animation(
-    "archvile_death", 7, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-flames_animation = KDS.Animator.Animation(
-    "flames", 5, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-bulldog_run_animation = KDS.Animator.Animation(
-    "bulldog", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# archvile_run_animation = KDS.Animator.Animation("archvile_run", 3, 9, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# arhcvile_attack_animation = KDS.Animator.Animation("archvile_attack", 6, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+# archvile_death_animation = KDS.Animator.Animation("archvile_death", 7, 12, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+# flames_animation = KDS.Animator.Animation("flames", 5, 3, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# bulldog_run_animation = KDS.Animator.Animation("bulldog", 5, 6, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
-imp_walking = KDS.Animator.Animation(
-    "imp_walking", 4, 19, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-imp_attacking = KDS.Animator.Animation(
-    "imp_attacking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
-imp_dying = KDS.Animator.Animation(
-    "imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
+# imp_walking = KDS.Animator.Animation("imp_walking", 4, 19, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# imp_attacking = KDS.Animator.Animation("imp_attacking", 2, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+# imp_dying = KDS.Animator.Animation("imp_dying", 5, 16, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
 
-knife_animation_object = KDS.Animator.Animation(
-    "knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+knife_animation_object = KDS.Animator.Animation("knife", 2, 20, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
 animation_loading_logger.stop("Animation Loading Complete.")
 #endregion
