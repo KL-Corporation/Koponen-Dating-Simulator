@@ -2374,7 +2374,7 @@ def menu():
     btn_menu = True
 
     def button_handler(_openMap: bool = False):
-        global btn_menu, grid, gridSize
+        global btn_menu, grid, gridSize, undo
         if _openMap:
             # Button menu is turned off if openMap was succesful
             btn_menu = not openMap()
@@ -2383,6 +2383,7 @@ def menu():
             if g is not None and len(g) > 1: # if escaped, g is a one element list
                 gridSize = (int(g[0]), int(g[1]))
                 grid = loadGrid(gridSize)
+                undo = Undo()
                 btn_menu = False
 
     newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
