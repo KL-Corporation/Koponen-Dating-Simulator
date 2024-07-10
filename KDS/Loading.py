@@ -152,7 +152,7 @@ class Story:
                     pygame.event.pump()
             Story.handle = None
 
-FAKE_LOAD_SECONDS: float = 3.0
+FAKE_LOAD_SECONDS: float = 2.0
 def fake_load_extra(loadtime: float, quickload: bool, *, pump_events: bool = True):
     """
     Sleeps until the target load time is reached.
