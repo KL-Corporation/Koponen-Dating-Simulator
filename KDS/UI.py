@@ -105,16 +105,16 @@ class Button:
             lerp_duration (int, optional): The duration it takes to switch from one color to another. Defaults to 3.
             enabled (bool, optional): Determines if the button is enabled or disabled from the start. Defaults to True.
         """
-        self.rect = rect
-        self.function = function
-        self.overlay = overlay if not isinstance(overlay, str) else ButtonFont.render(overlay, True, KDS.Colors.White)
-        self.button_default_color = button_default_color
-        self.button_highlighted_color = button_highlighted_color
-        self.button_pressed_color = button_pressed_color
-        self.button_disabled_color = button_disabled_color
-        self.button_old_color = button_default_color if enabled else button_disabled_color
-        self.button_color_fade = KDS.Animator.Value(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
-        self.enabled = enabled
+        self.rect: pygame.Rect = rect
+        self.function: Callable = function
+        self.overlay: pygame.Surface | None = overlay if not isinstance(overlay, str) else ButtonFont.render(overlay, True, KDS.Colors.White)
+        self.button_default_color: tuple[int, int, int] = button_default_color
+        self.button_highlighted_color: tuple[int, int, int] = button_highlighted_color
+        self.button_pressed_color: tuple[int, int, int] = button_pressed_color
+        self.button_disabled_color: tuple[int, int, int] = button_disabled_color
+        self.button_old_color: tuple[int, int, int] = button_default_color if enabled else button_disabled_color
+        self.button_color_fade: Final = KDS.Animator.Value(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+        self.enabled: bool = enabled
 
         """Updates and draws the button onto a surface.
 

@@ -54,6 +54,7 @@ def SetGamemode(Gamemode: Modes, MissionsId: str, EnemyCount: int):
     KDS.Missions.Clear()
     KDS.Koponen.Talk.Conversation.reset()
     KDS.Koponen.requestReturnAlt = None
+    KDS.Koponen.storyDateOverride = False
     KDS.Missions.Listeners.TileFireCreated.OnTrigger -= KDS.Story.badStoryEndingFunc
     KDS.Missions.Listeners.KoponenTalkEmbed1.OnTrigger -= KDS.Story.switchToStoryHappyTalkMusic
     KDS.Story.BadEndingTrigger = False
@@ -284,7 +285,8 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORSTORYENDING, None)
 
         KDS.Missions.InitialiseMission("exit", "Pakene Tulta")
-        KDS.Missions.InitialiseTask("exit", "run", "Juokse pois koulusta", (KDS.Missions.Listeners.KoponenTalkEmbed1, 1.0))
+        KDS.Missions.InitialiseTask("exit", "run", "Juokse pois koulusta")#, (KDS.Missions.Listeners.KoponenTalkEmbed1, 1.0))
+                                                                          # We don't need the listener anymore as we force the ending through STORYDATEKOPONENENDING
         KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.TRIGGERLISTENER1, None)
 
         KDS.Missions.Listeners.KoponenTalkEmbed1.OnTrigger += KDS.Story.switchToStoryHappyTalkMusic
@@ -293,6 +295,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Koponen.Talk.Conversation.schedule("Nähtyäni surusi tajusin jotain... Sinä olet elämäni tarkoitus. Sinä tuot merkitystä elämääni. Olet ollut ihana minulle enkä minä saa tuottaa sinulle pettymystä.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Saatan olla rakastunut sinuun...", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Tulisitko kanssani treffeille?", KDS.Koponen.Prefixes.koponen, True)
+        KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.STORYDATEKOPONENENDING, None)
     #endregion
     #region Campaign
     elif MissionsId == "campaign_tutorial":

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import random
 import math
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Final, List, Optional, Tuple
 
 import pygame
 from pygame.locals import *
@@ -76,6 +76,7 @@ talk_ad = talk_ads[0]
 randChance: Callable[[int], bool] = lambda v: random.uniform(0, 1) <= 1 / v
 
 requestReturnAlt: Optional[str] = None
+storyDateOverride: bool = False
 
 class Prefixes:
     player = "p:"
@@ -162,16 +163,31 @@ class Talk:
     scheduledTokens: List[Dict[int, str]] = []
 
     class Conversation:
-        WAITFORMISSIONREQUEST = "<wait-for-mission-request>"
-        WAITFORMISSIONRETURN = "<wait-for-mission-return>"
-        WAITFORTILEFIRE = "<wait-for-tile_fire>"
-        WAITFORSTORYENDING = "<wait-for-story-ending>"
-        _INTERNALTILEFIREEVENT = "<wait-for-tile_fire_internalevent>"
-        PRINCIPALNAMEINPUT = "<rehtori-name-input>"
-        GIVEHOTELCARD = "<give-hotel-card>"
-        TRIGGERLISTENER0 = "<trigger-listener-0>"
-        TRIGGERLISTENER1 = "<trigger-listener-1>"
-        TRIGGERLISTENER2 = "<trigger-listener-2>"
+        WAITFORMISSIONREQUEST: Final = "<wait-for-mission-request>"
+        WAITFORMISSIONRETURN: Final = "<wait-for-mission-return>"
+        WAITFORTILEFIRE: Final = "<wait-for-tile_fire>"
+        WAITFORSTORYENDING: Final = "<wait-for-story-ending>"
+        _INTERNALTILEFIREEVENT: Final = "<wait-for-tile_fire_internalevent>"
+        PRINCIPALNAMEINPUT: Final = "<rehtori-name-input>"
+        GIVEHOTELCARD: Final = "<give-hotel-card>"
+        TRIGGERLISTENER0: Final = "<trigger-listener-0>"
+        TRIGGERLISTENER1: Final = "<trigger-listener-1>"
+        TRIGGERLISTENER2: Final = "<trigger-listener-2>"
+        STORYDATEKOPONENENDING: Final = "<story-date-koponen-ending>"
+
+        ALL_EVENTS: Final[tuple[str, ...]] = (
+            WAITFORMISSIONREQUEST,
+            WAITFORMISSIONRETURN,
+            WAITFORTILEFIRE,
+            WAITFORSTORYENDING,
+            _INTERNALTILEFIREEVENT,
+            PRINCIPALNAMEINPUT,
+            GIVEHOTELCARD,
+            TRIGGERLISTENER0,
+            TRIGGERLISTENER1,
+            TRIGGERLISTENER2,
+            STORYDATEKOPONENENDING
+        )
 
         @staticmethod
         def scrollToBottom():
@@ -195,7 +211,7 @@ class Talk:
                     prefixForced = True
                 return
 
-            if text in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation.WAITFORSTORYENDING, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2):
+            if text in Talk.Conversation.ALL_EVENTS:
                 Talk.scheduled.append(text)
                 return
             assert prefix != None, "A prefix must be specified if text is not an event (for example: WAITFORMISSIONREQUEST)."
@@ -212,7 +228,7 @@ class Talk:
 
         @staticmethod
         def update(surfSize: Tuple[int, int], playerInventory: KDS.Inventory.Inventory):
-            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation.WAITFORSTORYENDING, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2):
+            if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in Talk.Conversation.ALL_EVENTS:
                 toShow = Talk.scheduled.pop(0)
                 for token in re.findall(r"\{.+?\}", toShow):
                     assert KDS.ConfigManager.Save.Active != None, "No save loaded to replace tokens!"
@@ -226,7 +242,7 @@ class Talk:
 #                     Talk.Conversation.scroll = max(Talk.Conversation.scroll - deleteCount, 0)
 
 #           WTF IS THIS IF ELSE SHIT?? IT'S EASIER TO READ A FUCKING STONE AGE POEM
-            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in (Talk.Conversation.WAITFORMISSIONREQUEST, Talk.Conversation.WAITFORMISSIONRETURN, Talk.Conversation.PRINCIPALNAMEINPUT, Talk.Conversation.GIVEHOTELCARD, Talk.Conversation.WAITFORTILEFIRE, Talk.Conversation.WAITFORSTORYENDING, Talk.Conversation._INTERNALTILEFIREEVENT, Talk.Conversation.TRIGGERLISTENER0, Talk.Conversation.TRIGGERLISTENER1, Talk.Conversation.TRIGGERLISTENER2)) and Talk.Conversation.animationProgress == -1:
+            elif (len(Talk.scheduled) < 1 or Talk.scheduled[0] in Talk.Conversation.ALL_EVENTS) and Talk.Conversation.animationProgress == -1:
                 if len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.PRINCIPALNAMEINPUT:
                     KDS.Clock.Sleep(500)
                     Talk.scheduled.pop(0)
@@ -252,6 +268,10 @@ class Talk:
                 elif len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.WAITFORTILEFIRE:
                     Talk.scheduled[0] = Talk.Conversation._INTERNALTILEFIREEVENT
                     KDS.Missions.Listeners.TileFireCreated.OnTrigger += Talk.Conversation._handleTileFire
+                elif len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.STORYDATEKOPONENENDING:
+                    global storyDateOverride
+                    storyDateOverride = True
+                    Talk.storyTrigger = True
                 else:
                     if Talk.autoExit:
                         Talk.stop(forceExit=True)
@@ -331,10 +351,15 @@ class Talk:
 
     @staticmethod
     def start(display: pygame.Surface, player_inventory: KDS.Inventory.Inventory, defaultEventHandler: Callable[[pygame.event.Event], bool], autoExit: bool = False) -> bool: # Tells the caller if the story mode event should kick in
+        def _request_mission():
+            Mission.Request()
+        def _return_mission():
+            nonlocal player_inventory
+            Mission.Return(player_inventory)
+
         originalMusicVolume = KDS.Audio.MusicVolume
         KDS.Audio.Music.SetVolume(originalMusicVolume / 4)
 
-        global requestReturnAlt
         pygame.mouse.set_visible(True)
         Talk.storyTrigger = False
         global talk_ad, old_ads
@@ -346,14 +371,16 @@ class Talk:
         del old_ads[0]
         old_ads.append(ad_index)
         talk_ad = talk_ads[ad_index]
-        display_size = display.get_size()
+
         Talk.running = True
         Talk.autoExit = autoExit
 
-        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.ButtonFont.render("EXIT", True, (KDS.Colors.AviatorRed)))
+        storyDateOverrideText: Final[pygame.Surface] = KDS.UI.ButtonFont.render("YES", True, KDS.Colors.EmeraldGreen)
+
+        exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.ButtonFont.render("EXIT", True, KDS.Colors.AviatorRed))
         ReqRet = "MISSION" if requestReturnAlt == None else requestReturnAlt
-        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), Mission.Request, f"REQUEST {ReqRet}")
-        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), Mission.Return, f"RETURN {ReqRet}")
+        request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), _request_mission, f"REQUEST {ReqRet}")
+        return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), _return_mission, f"RETURN {ReqRet}")
 
         KDS.Missions.Listeners.KoponenTalk.Trigger()
 
@@ -374,11 +401,19 @@ class Talk:
                 elif event.type == MOUSEWHEEL:
                     Talk.Conversation.scroll = KDS.Math.Clamp(Talk.Conversation.scroll - line_scroll_speed * event.y, 0, max(len(Talk.lines) - Talk.lineCount, 0))
 
+            if storyDateOverride:
+                exit_button.overlay = storyDateOverrideText
+                exit_button.function = Talk.stop
+                request_mission_button.overlay = storyDateOverrideText
+                request_mission_button.function = Talk.stop
+                return_mission_button.overlay = storyDateOverrideText
+                return_mission_button.function = Talk.stop
+
             Talk.renderMenu(display, mouse_pos, c, player_inventory)
 
             exit_button.update(display, mouse_pos, c)
             request_mission_button.update(display, mouse_pos, c)
-            return_mission_button.update(display, mouse_pos, c, player_inventory)
+            return_mission_button.update(display, mouse_pos, c)
 
             pygame.display.flip()
             display.fill(KDS.Colors.Black)
