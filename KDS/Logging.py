@@ -14,9 +14,7 @@ import faulthandler
 import re
 import psutil
 from datetime import datetime
-from typing import Any, List, Optional, Self, Tuple, Union
-
-from contextlib import contextmanager
+from typing import Any, List, Optional, Self
 import time
 
 running = False
@@ -193,14 +191,32 @@ def Profiler(enabled: bool = True):
     elif not enabled and profiler_running:
         profiler_running = False
         profile.disable()
-        try:
-            with open(logFileName, "a+") as f:
-                f.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n\n")
-                ps = pstats.Stats(profile, stream=f)
-                ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
-                ps.print_stats()
-                f.write(f"I=========================[ EXPORTED PROFILER DATA ]=========================I\n")
-        except IOError as e: AutoError(f"IO Error! Details: {e}")
+        _dump_profile_stats(profile, title="EXPORTED PROFILER DATA")
+
+class MapLoadingProfiler:
+    def __init__(self, *, _profile: cProfile.Profile) -> None:
+        self._profile: cProfile.Profile = _profile
+
+    @classmethod
+    def start(cls) -> Self:
+        p: cProfile.Profile = cProfile.Profile()
+        instance: Self = cls(_profile=p)
+        p.enable()
+        return instance
+
+    def stop(self):
+        self._profile.disable()
+        _dump_profile_stats(self._profile, title="MAP LOADING PROFILER DATA")
+
+def _dump_profile_stats(profile: cProfile.Profile, *, title: str):
+    try:
+        with open(logFileName, "a+") as f:
+            f.write(f"I=========================[ {title} ]=========================I\n\n")
+            ps = pstats.Stats(profile, stream=f)
+            ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
+            ps.print_stats()
+            f.write(f"I=========================[ {title} ]=========================I\n")
+    except IOError as e: AutoError(f"IO Error! Details:\n{e}")
 
 class ExecutionTimeLogger:
     def __init__(self, logLevel: int, msg_prefix: str) -> None:

@@ -401,6 +401,10 @@ class WorldData:
 
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
+        map_load_profiler: KDS.Logging.MapLoadingProfiler | None = None
+        if KDS.Debug.Enabled:
+            map_load_profiler = KDS.Logging.MapLoadingProfiler.start()
+
         map_whole_load_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD: ")
         map_load_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD: ")
         map_whole_load_logger.start("Loading map...")
@@ -623,6 +627,9 @@ class WorldData:
 
         map_whole_load_logger.stop("Map loading complete.")
         KDS.Logging.debug(f"Unmeasured loading execution time: {map_whole_load_logger.accumulatedTime - map_load_logger.accumulatedTime:.3f}")
+
+        if map_load_profiler is not None:
+            map_load_profiler.stop()
 
         assert(not map_whole_load_logger.is_running)
         assert(not map_load_logger.is_running)
@@ -1083,12 +1090,23 @@ class Lamp(KDS.Build.Tile):
         r = True
         while r:
             y += 34
-            for row in Tiles:
-                for unit in row:
-                    for tile in unit:
-                        if tile.rect.collidepoint((self.rect.centerx, self.rect.bottom + y)) and tile.serialNumber != 22 and tile.checkCollision:
-                            y = y - (self.rect.bottom + y - tile.rect.y) + 5
-                            r = False
+            # BRUH THIS CHECKS THE ENTIRE MAP WTFFFFF
+            # for row in Tiles:
+            #     for unit in row:
+            #         for tile in unit:
+            #             if tile.rect.collidepoint() and tile.serialNumber != 22 and tile.checkCollision:
+            #                 y = y - (self.rect.bottom + y - tile.rect.y) + 5
+            #                 r = False
+
+            # NOTE: This collision check does not do any overscan
+            # problems might arise with big collidable objects like Molok.
+            check_pos: tuple[int, int] = (self.rect.centerx, self.rect.bottom + y)
+            grid_pos: tuple[int, int] = (int(check_pos[0] / 34), int(check_pos[1] / 34))
+            for tile in Tiles[grid_pos[1]][grid_pos[0]]:
+                if tile.rect.collidepoint(check_pos) and tile.serialNumber != 22 and tile.checkCollision:
+                    y = y - (self.rect.bottom + y - tile.rect.y) + 5
+                    r = False
+
             if y > 154:
                 r = False
         self.coneheight = y
