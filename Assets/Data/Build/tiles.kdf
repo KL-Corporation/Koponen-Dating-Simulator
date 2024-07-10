@@ -1254,5 +1254,13 @@
         "specialTile": true,
         "noCollision": true,
         "trueScale": false
+    },
+    "Glass Pane (less transparent)": {
+        "serialNumber": 181,
+        "path": "glass_pane.png",
+        "textureOverrideAlpha": 60,
+        "specialTile": true,
+        "noCollision": false,
+        "trueScale": false
     }
 }

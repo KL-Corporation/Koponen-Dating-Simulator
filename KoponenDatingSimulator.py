@@ -2699,7 +2699,8 @@ KDS.Build.Tile.specialTilesClasses = {
     168: CashRegister,
     169: TheftDetector,
     179: WallLightVertical,
-    180: WallLightVertical
+    180: WallLightVertical,
+    181: GlassPane
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
