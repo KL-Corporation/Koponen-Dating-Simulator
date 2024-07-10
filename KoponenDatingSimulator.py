@@ -3630,9 +3630,16 @@ class PlayerClass:
             # 0.0 <= strength < 1.0 (end is exclusive)
             strength: float = random.random()
 
-            self.direction = not direction
-            self.vertical_momentum = -int(KDS.Math.Lerp(12, 17, strength))
-            self.archvile_knockback_momentum_x = int(KDS.Math.Lerp(4, 7, strength)) * KDS.Convert.ToMultiplier(direction)
+            horizontal: int = int(KDS.Math.Lerp(5, 8, strength))
+            vertical: int = int(KDS.Math.Lerp(13, 18, strength))
+
+            # adjust direction so we don't do the same knockback every time
+            adjust_direction: int = random.randint(-1, 1)
+            horizontal -= adjust_direction
+            vertical += adjust_direction
+
+            self.vertical_momentum = -vertical
+            self.archvile_knockback_momentum_x = horizontal * KDS.Convert.ToMultiplier(direction)
             self.health -= int(KDS.Math.Lerp(10, 51, strength))
 
     def update(self):
