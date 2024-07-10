@@ -78,6 +78,7 @@ P: Set teleport index
 O: Set Overlay
 G: Select Reference Map File
 Z: Toggle Zone Mode
+Y: Toggle Overlay Visibility
 
 TAB: Set store price
 SHIFT + TAB: Set store discount price
@@ -274,7 +275,8 @@ referenceGrid: Optional[GridType] = None
 referenceGridSize: tuple[int, int] = (0, 0)
 referenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 
-zoneMode = False
+renderOverlays: bool = True
+zoneMode: bool = False
 
 build_undo: ChangeUndoRecord | None = None
 remove_undo: ChangeUndoRecord | None = None
@@ -1002,7 +1004,8 @@ class UnitData:
                     tip_renders.append(rendered_tip)
 
         [UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay) for doorSrl, doorPos, lightOverlay in doorRenders]
-        [UnitData.renderSerial(surface, None, ovs, ovp, ovov) for ovs, ovp, ovov in overlayRenders]
+        if renderOverlays:
+            [UnitData.renderSerial(surface, None, ovs, ovp, ovov) for ovs, ovp, ovov in overlayRenders]
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -1268,14 +1271,14 @@ class PropertiesData:
 
 class BrushShape(IntEnum):
     circle = 0
-
     square = 1
-    tall = 2
-    wide = 3
 
-    @classmethod
-    def next_value(cls, val: Self) -> Self:
-        values: tuple[BrushShape, ...] = tuple(cls)
+    tall = 2 # this value is not used as this brush shape was deemed unpractical
+    wide = 3 # this value is not used as this brush shape was deemed unpractical
+
+    @staticmethod
+    def next_value(val: BrushShape) -> BrushShape:
+        values: tuple[BrushShape, ...] = (BrushShape.circle, BrushShape.square)
         i: int = values.index(val)
         return values[(i + 1) % len(values)]
 
@@ -2032,6 +2035,10 @@ commandTree: dict[str, str | dict[str, str | dict[str, str]]] = {
         "rows": "break",
         "cols": "break"
     },
+    "flip": {
+        "horizontal": "break",
+        "vertical": "break"
+    },
     "replace": {
         **{n: consoleTextureCommandTree for n in consoleTextureNameSerials.keys()}
     }
@@ -2118,6 +2125,21 @@ def consoleHandler(commandlist: list[str]) -> int:
                 raise RuntimeError("Combined insert-purge not supported.")
 
         return 0
+    elif commandlist[0] == "flip":
+        if len(commandlist) != 2 or not (Drag.Mode == DragMode.Default and Drag.Rect != None):
+            KDS.Console.Feed.append("Invalid flip command.")
+            return 1
+
+        if commandlist[1] == "horizontal":
+            Selected.Flip(horizontal=True)
+            return 0
+        elif commandlist[1] == "vertical":
+            Selected.Flip(vertical=True)
+            return 0
+        else:
+            KDS.Console.Feed.append(f"Invalid flip: '{commandlist[1]}'")
+            return 1
+
     elif commandlist[0] == "replace":
         if len(commandlist) != 3 or not (Drag.Mode == DragMode.Default and Drag.Rect != None):
             KDS.Console.Feed.append("Invalid replace command.")
@@ -2478,6 +2500,22 @@ class Selected:
         undo.register(gridReplaceUndo)
 
     @staticmethod
+    def Flip(*, horizontal: bool = False, vertical: bool = False) -> None:
+        if Drag.Rect == None:
+            return
+
+        rect: pygame.Rect = Drag.Rect.copy()
+
+        for u in Selected.units:
+            dist_from_right: int = rect.right - u.pos[0]
+            dist_from_bottom: int = rect.bottom - u.pos[1]
+
+            if horizontal:
+                u.pos = (rect.left + dist_from_right - 1, u.pos[1])
+            if vertical:
+                u.pos = (u.pos[0], rect.top + dist_from_bottom - 1)
+
+    @staticmethod
     def Move(x: int, y: int):
         if Drag.Rect == None:
             return
@@ -2582,7 +2620,7 @@ class BeforeMoveData(NamedTuple):
 
 allowTilePlacement: bool = False
 def main():
-    global currentSaveName, brush, grid, gridSize, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, referenceGrid, referenceGridSize, zoneMode, referenceGridHandle
+    global currentSaveName, brush, grid, gridSize, gamesize, scaleMultiplier, scalesize, mainRunning, allowTilePlacement, referenceGrid, referenceGridSize, zoneMode, referenceGridHandle, renderOverlays
 
     menu()
     if not mainRunning: return
@@ -2649,6 +2687,8 @@ def main():
                 elif event.key == K_y:
                     if keys_pressed[K_LCTRL]:
                         undo.redo()
+                    else:
+                        renderOverlays = not renderOverlays
                 elif event.key == K_t:
                     openCommandTerminal = True
                 elif event.key == K_h:
