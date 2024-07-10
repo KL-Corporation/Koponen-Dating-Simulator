@@ -546,14 +546,14 @@ class Undo:
         assert(total >= 0)
         return total
 
-def UnsavedChangesInterrupt() -> bool:
+def UnsavedChangesInterrupt(followup_question: str) -> bool:
     if undo is None:
         return False
     if undo.unsaved_changes <= 0:
         return False
     resp: KDS.System.MessageBox.Responses = KDS.System.MessageBox.Show(
         "Unsaved Changes.",
-        "There are unsaved changes. Are you sure you want to quit?",
+        f"There are unsaved changes. {followup_question}",
         KDS.System.MessageBox.Buttons.YESNO,
         KDS.System.MessageBox.Icon.WARNING
     )
@@ -561,7 +561,7 @@ def UnsavedChangesInterrupt() -> bool:
 
 def LB_Quit():
     global matMenRunning, btn_menu, mainRunning, multiselect_menu_running
-    if UnsavedChangesInterrupt():
+    if UnsavedChangesInterrupt("Are you sure you want to quit?"):
         return
     matMenRunning = False
     btn_menu = False
@@ -1974,7 +1974,7 @@ def loadMap(path: str) -> bool: # bool indicates if the map loading was succesfu
         KDS.Logging.info(f"Map file at path \"{path}\" is not a valid type.", True)
         return False
 
-    if UnsavedChangesInterrupt():
+    if UnsavedChangesInterrupt("Do you want to save them?"):
         if len(currentSaveName) < 1 or currentSaveName.isspace():
             saveMapName()
         else:
