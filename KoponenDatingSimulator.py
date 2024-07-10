@@ -3313,7 +3313,7 @@ class Wallet(KDS.Build.Item):
     RENDER_POS: Final[tuple[int, int]] = (10, 150)
     RENDER_SPACING: int = 10
 
-    TIP: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Rotate Wallet [{{binding:{KDS.Keys.rotate_wallet.name}}}]", True, KDS.Colors.White)
+    TIP: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Rotate Wallet [{{binding:{KDS.Keys.aim.name}}}]", True, KDS.Colors.White)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, *, balance: int | float = 0):
         super().__init__(position, serialNumber)
@@ -3359,7 +3359,7 @@ class Wallet(KDS.Build.Item):
         return Wallet._Balance[Wallet._SelectedIndex % len(Wallet._Balance)][0]
 
     def use(self):
-        if KDS.Keys.rotate_wallet.pressed:
+        if KDS.Keys.aim.pressed:
             self._press_was_registered = True
 
         # do not check for click events when press wasn't registered
@@ -3367,12 +3367,12 @@ class Wallet(KDS.Build.Item):
         # We check press instead of onDown, because unlike onDown, pressed will be set as False once the koponen talk exit click button is raised
         # when checking onDown, we have a situation where both onDown and onUp are True which means the rotate gets executed.
         if self._press_was_registered:
-            if KDS.Keys.rotate_wallet.held:
+            if KDS.Keys.aim.held:
                 Wallet._SelectedIndex = 0
-            if KDS.Keys.rotate_wallet.clicked and not KDS.Keys.rotate_wallet.holdClicked:
+            if KDS.Keys.aim.clicked and not KDS.Keys.aim.holdClicked:
                 Wallet._SelectedIndex += 1
 
-        if not KDS.Keys.rotate_wallet.pressed:
+        if not KDS.Keys.aim.pressed:
             self._press_was_registered = False
 
         return self.texture
