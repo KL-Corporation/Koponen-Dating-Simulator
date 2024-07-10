@@ -2424,12 +2424,17 @@ class HotelDoor(DoorTeleport):
         super().__init__(position, serialNumber)
         self.resetStateTimer = 0
         self.state = HotelDoor.DoorState.Default
+        self.allowEnterWithoutKeycard = False
         self.lightPos = (self.rect.x + 26, self.rect.y + 25)
 
     def update(self) -> Optional[pygame.Surface]:
         if self.rect.colliderect(Player.rect):
             self.messageOffset = (0, -50)
+
+            allowEnter: bool = bool(self.allowEnterWithoutKeycard)
             if isinstance(Player.inventory.getHandItem(), HotelKeycard):
+                allowEnter = True
+
                 self.messageOffset = (0, -50 - tip_font_extended.get_height() - 5)
                 messageSize = self.renderedMessage.get_size() if self.renderedMessage != None else (0, 0)
                 normalMessagePos = (self.rect.centerx - messageSize[0] // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - messageSize[1] // 2 - scroll[1] + self.messageOffset[1])
@@ -2437,12 +2442,12 @@ class HotelDoor(DoorTeleport):
                 tip_render: pygame.Surface = HotelDoor.tip_render.get_surface()
                 screen.blit(tip_render, (self.rect.centerx - tip_render.get_width() // 2 - scroll[0], normalMessagePos[1] + messageSize[1] + 5))
 
-                if KDS.Keys.functionKey.clicked:
-                    if self.interactable:
-                        self.state = HotelDoor.DoorState.Accept
-                        KDS.Audio.PlaySound(HotelDoor.acceptSound)
-                    else:
-                        self.state = HotelDoor.DoorState.Decline
+            if allowEnter and KDS.Keys.functionKey.clicked:
+                if self.interactable:
+                    self.state = HotelDoor.DoorState.Accept
+                    KDS.Audio.PlaySound(HotelDoor.acceptSound)
+                else:
+                    self.state = HotelDoor.DoorState.Decline
             self.renderMessage()
 
         if self.state != HotelDoor.DoorState.Default:
@@ -2463,6 +2468,9 @@ class HotelDoorMirrored(HotelDoor):
         self.lightPos = (self.rect.x + 9, self.rect.y + 25)
 
 class HotelGuardDoor(DoorTeleport):
+    MUFFLED_VOLUME_MIN: Final[float] = 0.30
+    MUFFLED_VOLUME_MAX: Final[float] = 0.75
+
     tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Knock [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     alt_tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Enter [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
@@ -2478,7 +2486,7 @@ class HotelGuardDoor(DoorTeleport):
         self.song: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/jumputus.ogg")
         self.song.set_volume(0.0)
         self.song_muffled: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/jumputus_lowpass.ogg")
-        self.song_muffled.set_volume(0.15)
+        self.song_muffled.set_volume(HotelGuardDoor.MUFFLED_VOLUME_MIN)
         e = KDS.NPC.DoorGuardNPC((self.rect.right, self.rect.top + 34))
         e.enabled = False
         self.entity = e
@@ -2533,8 +2541,8 @@ class HotelGuardDoor(DoorTeleport):
             self.song_muffled.set_volume(0.0)
         else:
             self.song.set_volume(0.0)
-            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
-            muffled_volume = KDS.Math.Lerp(0.75, 0.15, lerp_multiplier)
+            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 300 # Bigger value means volume gets smaller at a smaller rate
+            muffled_volume = KDS.Math.Lerp(HotelGuardDoor.MUFFLED_VOLUME_MAX, HotelGuardDoor.MUFFLED_VOLUME_MIN, lerp_multiplier)
             if self.open:
                 muffled_volume *= 2
             self.song_muffled.set_volume(muffled_volume)
@@ -5229,8 +5237,8 @@ while main_running:
 
     if KDS.Keys.dropItem.onDown:
         if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
-            droppedItem: Optional[KDS.Build.Item] = Player.inventory.dropItem()
-            if droppedItem != None:
+            droppedItem: Final = Player.inventory.dropItem()
+            if droppedItem is not None:
                 KDS.Build.Item.modDroppedPropertiesAndAddToList(Items, droppedItem, Player)
     if KDS.Keys.fart.onDown:
         if Player.stamina == 100:

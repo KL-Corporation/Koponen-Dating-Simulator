@@ -19,7 +19,7 @@ import KDS.Inventory
 
 import os
 import random
-from typing import Optional, Sequence, TYPE_CHECKING, Tuple, List
+from typing import Final, Optional, Sequence, TYPE_CHECKING, Tuple, List
 from enum import IntEnum, auto
 
 if TYPE_CHECKING:
@@ -184,6 +184,8 @@ class StudentNPC(NPC):
         return output
 
 class DoorGuardNPC(NPC):
+    SHOOT_SLOWER_FRACTION: Final[int] = 3
+
     def __init__(self, pos: Tuple[int, int]) -> None:
         rect = pygame.Rect(pos[0], pos[1] - 34, 21, 68)
         idle_anim = KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="NPC/DoorGuard")
@@ -213,7 +215,7 @@ class DoorGuardNPC(NPC):
                 self.direction = not self.direction
 
             self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
-            self.counterSlowdowner = (self.counterSlowdowner + 1) % 2
+            self.counterSlowdowner = (self.counterSlowdowner + 1) % DoorGuardNPC.SHOOT_SLOWER_FRACTION
             if self.counterSlowdowner == 0:
                 self.weaponData.counter += 1
             KDS.Inventory.Inventory.renderItemTexture(self.weapon.texture, self.rect, self.direction, surface, scroll)
@@ -239,7 +241,9 @@ class Room309NPC(NPC):
 
         self.pistolShootTick: int = 0
         self.pistolShootTime: int = random.randint(180, 240)
-        self.shootPistol: bool = False
+
+        self.shootPistol = True
+        self._shootPistol: bool = False
 
         weapon = KDS.Build.Item.serialNumbers[10]((0, 0), 10)
         assert isinstance(weapon, KDS.Build.Weapon), "Door Guard weapon should be a pistol...?"
@@ -258,7 +262,7 @@ class Room309NPC(NPC):
                 if self.pistolShootTick < self.pistolShootTime:
                     self.pistolShootTick += 1
                 else:
-                    self.shootPistol = True
+                    self._shootPistol = True
 
         output = super().update(surface, scroll, tiles, items, player)
 
@@ -270,11 +274,12 @@ class Room309NPC(NPC):
         if self.renderPistol:
             KDS.Inventory.Inventory.renderItemTexture(self.weapon.texture, self.rect, self.direction, surface, scroll)
 
-        _lineOfSight, _ = KDS.AI.searchRect(player.rect, pygame.Rect(self.rect.left, self.rect.top - 10, self.rect.width, self.rect.height),
+        if self.shootPistol and self._shootPistol:
+            _lineOfSight, _ = KDS.AI.searchRect(player.rect, pygame.Rect(self.rect.left, self.rect.top - 10, self.rect.width, self.rect.height),
                                                 self.direction, surface, scroll, tiles, maxSearchUnits=10)
-        if self.shootPistol and _lineOfSight:
-            self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
-            self.weaponData.counter += random.randint(0, 1)
+            if _lineOfSight:
+                self.weapon.shoot(KDS.Build.Weapon.WeaponHolderData.fromEntity(self))
+                self.weaponData.counter += random.randint(0, 1)
 
         return output
 

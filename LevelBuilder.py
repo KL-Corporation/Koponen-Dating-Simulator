@@ -990,8 +990,8 @@ class UnitData:
             remove_undo = None
         # UnitData.placedOnTile = unit
 
-        if mpos_tilepos[0] < len(grid) and mpos_tilepos[1] < len(grid[1]):
-            tipUnit: UnitData = grid[mpos_tilepos[0]][mpos_tilepos[1]]
+        if mpos_tilepos[1] < len(grid) and mpos_tilepos[0] < len(grid[0]):
+            tipUnit: UnitData = grid[mpos_tilepos[1]][mpos_tilepos[0]]
             tipProps = tipUnit.properties.GetAll()
             for _type, properties in tipProps.items():
                 color = _TYPECOLORS[_type]
