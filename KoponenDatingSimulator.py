@@ -1542,7 +1542,7 @@ class GroundFire(KDS.Build.Tile):
 
 class TileFire(KDS.Build.Tile):
     # Has to be cached... Otherwise it will use way too much RAM
-    cachedAnimation = KDS.Animator.Animation("tileFire", 32, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="Tiles")
+    cachedAnimation = KDS.Animator.Animation("tileFire", 32, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
