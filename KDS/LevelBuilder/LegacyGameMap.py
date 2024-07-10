@@ -98,7 +98,7 @@ TRANSLATE_TABLE: Final[TranslateTable] = TranslateTable(
     # ENEMIES
     TranslatedSerial(ConvertCategory.enemies, "zombie", "Z", (0, 255, 0), "2011"),
     TranslatedSerial(ConvertCategory.enemies, "sergeant", "S", (255, 0, 0), "2002"),
-    TranslatedSerial(ConvertCategory.enemies, "archvile", "V", (0, 0, 255), None),
+    TranslatedSerial(ConvertCategory.enemies, "archvile", "V", (0, 0, 255), "2012"),
     TranslatedSerial(ConvertCategory.enemies, "bulldog", "K", (255, 255, 0), "2010"),
 
     # there are two definitions for Imp?

@@ -252,6 +252,7 @@ Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "M
 Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", KDS.Colors.Cyan)
 Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog")
 Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie")
+Textures.AddTexture("2012", "Assets/Textures/Animations/archvile_run_0.png", "Archvile")
 
 Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
 Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")

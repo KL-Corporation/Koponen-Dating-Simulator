@@ -3473,7 +3473,8 @@ class Enemy:
         8: KDS.AI.Mummy,
         9: KDS.AI.SecurityGuard,
         10: KDS.AI.Bulldog,
-        11: KDS.AI.Zombie
+        11: KDS.AI.Zombie,
+        12: KDS.AI.Archvile
     }
 
     death_count = 0
@@ -3490,8 +3491,7 @@ class Enemy:
         if renderUI and enemy.health > 0 and not KDS.Math.IsPositiveInfinity(enemy.health):
             healthTxt = score_font.render(str(enemy.health), True, KDS.Colors.AviatorRed)
             screen.blit(healthTxt, (enemy.rect.centerx - healthTxt.get_width() // 2 - scroll[0], enemy.rect.top - 20 - scroll[1]))
-        for r in projectiles:
-            Projectiles.append(r)
+        Projectiles.extend(projectiles)
         for serialNumber in itms:
             tempItem = KDS.Build.Item.serialNumbers[serialNumber](enemy.rect.center, serialNumber)
             tempItem.physics = True
@@ -3565,6 +3565,8 @@ class PlayerClass:
         self.deathSound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/Audio/Effects/player_death.ogg")
         self.mover = KDS.World.EntityMover(w_sounds=path_sounds)
 
+        self.archvile_fire_anim: Final = KDS.Animator.Animation("flames", 5, 3, _OnAnimationEnd=KDS.Animator.OnAnimationEnd.Loop)
+
         self.reset()
 
     def reset(self, clear_inventory: bool = True, clear_keys: bool = True, load_levelprop: bool = False):
@@ -3601,6 +3603,10 @@ class PlayerClass:
         self.animations.reset()
         self.deathSound.stop()
 
+        self.archvile_knockback_momentum_x: int | None = None
+        self.archvile_fire: bool = False
+        # animation in PlayerClass.__init__()
+
         if load_levelprop:
             self.load_levelprop()
 
@@ -3618,6 +3624,16 @@ class PlayerClass:
         if value < self._health and value > 0 and not KDS.Math.IsPositiveInfinity(self._health):
             KDS.Audio.PlaySound(hurt_sound)
         self._health = max(value, 0)
+
+    def archvile_attack(self, direction: bool):
+        if not self.fly and self.health > 0:
+            # 0.0 <= strength < 1.0 (end is exclusive)
+            strength: float = random.random()
+
+            self.direction = not direction
+            self.vertical_momentum = -int(KDS.Math.Lerp(12, 17, strength))
+            self.archvile_knockback_momentum_x = int(KDS.Math.Lerp(4, 7, strength)) * KDS.Convert.ToMultiplier(direction)
+            self.health -= int(KDS.Math.Lerp(10, 51, strength))
 
     def update(self):
         if self.infiniteHealth:
@@ -3710,7 +3726,14 @@ class PlayerClass:
             else:
                 crouch(False)
 
-            collisions = self.mover.move(self.rect, self.movement if not self.lockMovement else (0.0, 0.0), Tiles, playWalkSound=playWalkSound)
+            mover_movement: Sequence[float]
+            if self.lockMovement:
+                mover_movement = (0.0, 0.0)
+            elif self.archvile_knockback_momentum_x is not None:
+                mover_movement = (self.archvile_knockback_momentum_x, self.movement[1])
+            else:
+                mover_movement = self.movement
+            collisions = self.mover.move(self.rect, mover_movement, Tiles, playWalkSound=playWalkSound)
 
             # HACK: Apparently the bottom doesn't collide each frame when the y-axis movement rounds to 0
             # so we implement this dirty solution so that AWM can know when we are grounded
@@ -3720,6 +3743,7 @@ class PlayerClass:
             if collisions.bottom:
                 self.air_timer = 0
                 self.vertical_momentum = 0
+                self.archvile_knockback_momentum_x = None
             else:
                 if collisions.top:
                     self.vertical_momentum = 0
@@ -3731,6 +3755,9 @@ class PlayerClass:
                 KDS.Missions.Listeners.Movement.Trigger()
             else:
                 self.walking = False
+
+            if self.archvile_knockback_momentum_x is not None:
+                self.direction = self.archvile_knockback_momentum_x > 0
 
             if self.walking:
                 if not self.running:
@@ -3775,6 +3802,16 @@ class PlayerClass:
             crouch(False)
             self.animations.trigger("death")
 
+            # use subset of movement to finish last archvile knockback after being killed
+            if self.archvile_knockback_momentum_x is not None:
+                player_dead_archvile_vertical_mv: float = self.vertical_momentum
+                self.vertical_momentum = min(self.vertical_momentum + (fall_speed * fall_multiplier), fall_max_velocity)
+                collisions = self.mover.move(self.rect, (self.archvile_knockback_momentum_x, player_dead_archvile_vertical_mv), Tiles, playWalkSound=False)
+                if collisions.bottom:
+                    self.archvile_knockback_momentum_x = None
+                elif collisions.top:
+                    self.vertical_momentum = 0
+
             if self.dead and self.animations.active.tick >= self.animations.active.ticks:
                 self.dead = False
                 self.deathAnimFinished = True
@@ -3790,6 +3827,25 @@ class PlayerClass:
         #endregion
 
 Player = PlayerClass()
+
+def archvile_fire_func(enabled: bool, verify_target: pygame.Rect) -> None:
+    global Player
+
+    if verify_target is Player.rect:
+        Player.archvile_fire = enabled
+    else:
+        KDS.Logging.AutoError("Archvile target rect is not player rect.")
+def archvile_attack_func(archvile_rect: pygame.Rect, target_rect: pygame.Rect) -> None:
+    global Player
+
+    if target_rect is Player.rect:
+        KDS.Audio.PlaySound(KDS.AI.Archvile.landmine_sound)
+        Player.archvile_attack(direction=(target_rect.centerx < archvile_rect.centerx))
+    else:
+        KDS.Logging.AutoError("Archvile target rect is not player rect.")
+KDS.AI.Archvile.global_fire_func = archvile_fire_func
+KDS.AI.Archvile.global_attack_func = archvile_attack_func
+
 game_initialization_logger.stop("Player Loading Complete.")
 #endregion
 #region Console
@@ -5382,6 +5438,8 @@ while main_running:
         pygame.draw.rect(screen, KDS.Colors.Green, (Player.rect.x - scroll[0], Player.rect.y - scroll[1], Player.rect.width, Player.rect.height))
     if Player.visible:
         screen.blit(pygame.transform.flip(Player.animations.update(), Player.direction, False), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.animations.active.size[0]) // 2, int(Player.rect.bottomleft[1] - scroll[1] - Player.animations.active.size[1])))
+        if Player.archvile_fire:
+            screen.blit(Player.archvile_fire_anim.update(), (Player.rect.topleft[0] - scroll[0] + (Player.rect.width - Player.archvile_fire_anim.get_width()) // 2, Player.rect.y - scroll[1] - 20))
     if Koponen.enabled:
         Koponen.render(screen, scroll)
 

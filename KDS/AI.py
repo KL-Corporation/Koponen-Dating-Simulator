@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Callable, Final, List, Optional, Sequence, Tuple, Union
 
 import pygame
 import pygame.draw
@@ -895,4 +895,49 @@ class Zombie(HostileEnemy):
     def attack(self, slope, env_obstacles, target, *args):
         if random.randint(0, 60) == 0:
             return [KDS.World.Bullet(None, pygame.Rect((self.rect.centerx + (KDS.Math.Ceil(self.rect.width / 2) + 6) * KDS.Convert.ToMultiplier(self.direction)) - 5, self.rect.centery, 10, 10), self.direction, 1, env_obstacles, 10, maxDistance=2)]
+        return []
+
+class Archvile(HostileEnemy):
+    global_fire_func: Callable[[bool, pygame.Rect], None]
+    # assigned in KoponenDatingSimulator.py
+    global_attack_func: Callable[[pygame.Rect, pygame.Rect], None]
+
+    # used in KoponenDatingSimulator.py
+    landmine_sound: Final = pygame.mixer.Sound("Assets/Audio/Tiles/landmine_explosion.ogg")
+
+    death_sound: Final = pygame.mixer.Sound("Assets/Audio/Entities/archvile_death.ogg")
+    flame_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/flame.ogg")
+
+    def __init__(self, pos):
+        health = 170
+        w_anim = KDS.Animator.Animation("archvile_run", 3, 9, _OnAnimationEnd=KDS.Animator.OnAnimationEnd.Loop)
+        i_anim = KDS.Animator.Animation("archvile_run", 3, 9, _OnAnimationEnd=KDS.Animator.OnAnimationEnd.Loop)
+        a_anim = KDS.Animator.Animation("archvile_attack", 6, 16)
+        d_anim = KDS.Animator.Animation("archvile_death", 7, 12)
+
+        rect = pygame.Rect(pos[0], pos[1] - 51, 65, 85)
+        self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=None, death_sound=None, health=health, mv=[2, 8], attackPropability=60, sleep=False)
+        self.allowJump = False
+
+        self.show_flames: bool = False
+        self.show_flames_prev_frame: bool = self.show_flames
+
+    def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
+        output = super().update(Surface, scroll, tiles, targetRect)
+
+        self.show_flames = self.attackRunning
+        if self.show_flames:
+            if not self.show_flames_prev_frame:
+                KDS.Audio.PlaySound(Archvile.flame_sound)
+                Archvile.global_fire_func(True, targetRect)
+                self.show_flames_prev_frame = True
+        else:
+            if self.show_flames_prev_frame:
+                Archvile.global_fire_func(False, targetRect)
+                self.show_flames_prev_frame = False
+
+        return output
+
+    def attack(self, slope, env_obstacles, target, *args):
+        Archvile.global_attack_func(self.rect, target)
         return []
