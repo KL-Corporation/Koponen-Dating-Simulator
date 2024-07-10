@@ -174,6 +174,8 @@ class Talk:
         TRIGGERLISTENER1: Final = "<trigger-listener-1>"
         TRIGGERLISTENER2: Final = "<trigger-listener-2>"
         STORYDATEKOPONENENDING: Final = "<story-date-koponen-ending>"
+        REQUESTRETURNPALAT: Final = "<request-return-palat>"
+        REQUESTRETURNCLEAR: Final = "<request-return-clear>"
 
         ALL_EVENTS: Final[tuple[str, ...]] = (
             WAITFORMISSIONREQUEST,
@@ -186,7 +188,9 @@ class Talk:
             TRIGGERLISTENER0,
             TRIGGERLISTENER1,
             TRIGGERLISTENER2,
-            STORYDATEKOPONENENDING
+            STORYDATEKOPONENENDING,
+            REQUESTRETURNPALAT,
+            REQUESTRETURNCLEAR
         )
 
         @staticmethod
@@ -228,6 +232,8 @@ class Talk:
 
         @staticmethod
         def update(surfSize: Tuple[int, int], playerInventory: KDS.Inventory.Inventory):
+            global requestReturnAlt
+
             if Talk.Conversation.animationProgress == -1 and len(Talk.scheduled) > 0 and Talk.scheduled[0] not in Talk.Conversation.ALL_EVENTS:
                 toShow = Talk.scheduled.pop(0)
                 for token in re.findall(r"\{.+?\}", toShow):
@@ -272,6 +278,13 @@ class Talk:
                     global storyDateOverride
                     storyDateOverride = True
                     Talk.storyTrigger = True
+                    Talk.scheduled.pop(0)
+                elif len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.REQUESTRETURNPALAT:
+                    requestReturnAlt = "PALAT" # modify global variable
+                    Talk.scheduled.pop(0)
+                elif len(Talk.scheduled) > 0 and Talk.scheduled[0] == Talk.Conversation.REQUESTRETURNCLEAR:
+                    requestReturnAlt = None # modify global variable
+                    Talk.scheduled.pop(0)
                 else:
                     if Talk.autoExit:
                         Talk.stop(forceExit=True)
@@ -378,7 +391,7 @@ class Talk:
         storyDateOverrideText: Final[pygame.Surface] = KDS.UI.ButtonFont.render("YES", True, KDS.Colors.EmeraldGreen)
 
         exit_button = KDS.UI.Button(pygame.Rect(940, 700, 230, 80), Talk.stop, KDS.UI.ButtonFont.render("EXIT", True, KDS.Colors.AviatorRed))
-        ReqRet = "MISSION" if requestReturnAlt == None else requestReturnAlt
+        ReqRet: Final[str] = "MISSION" if requestReturnAlt == None else requestReturnAlt
         request_mission_button = KDS.UI.Button(pygame.Rect(50, 700, 450, 80), _request_mission, f"REQUEST {ReqRet}")
         return_mission_button = KDS.UI.Button(pygame.Rect(510, 700, 420, 80), _return_mission, f"RETURN {ReqRet}")
 

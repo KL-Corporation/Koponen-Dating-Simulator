@@ -252,6 +252,8 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Koponen.Talk.Conversation.schedule("Kortin saatuasi voisit mennä vanhan koulurakennuksen kautta SS-Marketille.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Tässä rahasi.", KDS.Koponen.Prefixes.koponen, True)
 
+        KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.REQUESTRETURNPALAT, None)
+
         KDS.Missions.InitialiseMission("hot", "Kuumat Paikat")
         KDS.Missions.InitialiseTask("hot", "search", "Etsi ase", (KDS.Missions.Listeners.AnyWeaponPickup, 1.0))
         KDS.Missions.InitialiseTask("hot", "kill", "Murhaa biologian opettaja", (KDS.Missions.Listeners.KuuMaDeath, 1.0))
@@ -263,6 +265,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Missions.InitialiseKoponenTask("end", "return", "Anna sytytyspalat Koposelle", 8, removeItems=False)
 
         KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.WAITFORMISSIONRETURN, None)
+        KDS.Koponen.Talk.Conversation.schedule(KDS.Koponen.Talk.Conversation.REQUESTRETURNCLEAR, None)
         KDS.Koponen.Talk.Conversation.schedule("Ei sinun tarvitse noita minulle antaa... Sinä saat kunnian tehdä tämän.", KDS.Koponen.Prefixes.koponen, True)
         KDS.Koponen.Talk.Conversation.schedule("Oletko varma?", KDS.Koponen.Prefixes.player, True)
         KDS.Koponen.Talk.Conversation.schedule("Olen täysin varma.", KDS.Koponen.Prefixes.koponen, True)
