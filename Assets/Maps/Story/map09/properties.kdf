@@ -2901,5 +2901,5 @@
 "198-42":{"0":{"checkCollision":false}},
 "196-43":{"0":{"checkCollision":false}},
 "198-43":{"0":{"checkCollision":false}},
-"zones":{"36-16-71-4":{"darkness":96},"179-10-14-14":{"levelEnder":true,"darkness":96,"darknessIsInstant":true},"106-0-6-31":{"darkness":96,"darknessIsInstant":true},"111-34-13-10":{"darkness":235},"108-30-14-4":{"darkness":96,"darknessIsInstant":true},"141-25-19-6":{"darkness":96,"darknessIsInstant":true}}
+"zones":{"36-16-71-4":{"darkness":96},"179-10-14-14":{"levelEnder":true,"darkness":96,"darknessIsInstant":true},"106-0-6-31":{"darkness":96},"111-34-13-10":{"darkness":235},"108-30-14-4":{"darkness":96},"141-25-19-6":{"darkness":96,"darknessIsInstant":true}}
 }
