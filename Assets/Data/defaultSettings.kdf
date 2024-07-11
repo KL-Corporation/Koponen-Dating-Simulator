@@ -1,6 +1,6 @@
 {
     "Data": {
-        "settingsFileVersion": 1,
+        "settingsFileVersion": 2,
         "quickload": false,
         "allowConsoleInStoryMode": false,
         "Terms": {
@@ -13,8 +13,8 @@
     "Mixer": {
         "channelCount": 128,
         "Volume": {
-            "music": 0.25,
-            "effect": 0.75
+            "music": 0.5,
+            "effect": 1.0
         },
         "walkSound": false,
         "legacyLobbyMusic": false
