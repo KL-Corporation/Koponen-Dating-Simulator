@@ -33,7 +33,7 @@ from tkinter import filedialog
 import json
 import traceback
 from dataclasses import dataclass
-from enum import IntEnum, StrEnum
+from enum import IntEnum, IntFlag, StrEnum
 
 from typing import Any, Callable, Final, Iterable, NamedTuple, Optional, Self, Sequence, TypeAlias, Union
 
@@ -942,8 +942,12 @@ class UnitData:
                         tileWasPicked = True
         del unit
 
-        if pickTile and not tileWasPicked:
-            brush.SetBrush()
+        if pickTile:
+            if not tileWasPicked: # if no tiles were touching mouse when iterating, a tile wasn't picked, so we reset the brush.
+                brush.SetBrush()
+            brush.styles |= BrushStyles.pick_brush
+        else:
+            brush.styles &= ~BrushStyles.pick_brush
 
         brush.RenderUpdate(mpos_tilepos, mouse_pressed, surface if Drag.Rect is None else None)
 
@@ -1283,6 +1287,10 @@ class BrushShape(IntEnum):
         i: int = values.index(val)
         return values[(i + 1) % len(values)]
 
+class BrushStyles(IntFlag):
+    default = 0
+    pick_brush = 1 << 0 # 1
+
 class BrushData:
     def __init__(self) -> None:
         self._brush: str = UnitData.EMPTY
@@ -1291,9 +1299,12 @@ class BrushData:
         self._pos: tuple[int, int] | None = None
         self._allow_add_or_insert: bool = False
 
+        self.random_remove_count: int = 0
+
         self._size: int = 0
         """The radius of the circle, or half of the width of the rectangle."""
         self.shape: BrushShape = BrushShape.circle
+        self.styles: BrushStyles = BrushStyles.default
 
     @property
     def is_locked(self) -> bool:
@@ -1309,6 +1320,10 @@ class BrushData:
     @property
     def currentMaterial(self) -> str:
         return self._brush
+
+    @property
+    def hasProperties(self) -> bool:
+        return self._properties is not None
 
     def SetBrush(self, brush: str = UnitData.EMPTY, properties: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None):
         self._brush = brush
@@ -1494,32 +1509,36 @@ class BrushData:
 
         if surface is not None:
             self._Render(surface=surface)
+
             if not self.IsEmpty:
                 textureData = Textures.GetData(self._brush)
 
                 tex: pygame.Surface = textureData.scaledTexture.copy()
-                tex = tex.subsurface((0, 0, min(scalesize, tex.width), min(scalesize, tex.height)))
+                tex = tex.subsurface((max(tex.width - scalesize, 0), max(tex.height - scalesize, 0), min(scalesize, tex.width), min(scalesize, tex.height)))
                 tex.set_alpha(32)
 
                 surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in self.IterPositions()))
+
+            if BrushStyles.pick_brush in self.styles:
+                self._RenderSingle(surface=surface, color=(255, 0, 0))
 
     def _Render(self, surface: pygame.Surface):
         if self.size == 0:
             self._RenderSingle(surface=surface)
         else:
             if self.shape == BrushShape.circle:
-                return self._RenderCircle(surface=surface)
+                self._RenderCircle(surface=surface)
             else:
-                return self._RenderSquare(surface=surface)
+                self._RenderSquare(surface=surface)
 
-    def _RenderSingle(self, surface: pygame.Surface) -> None:
+    def _RenderSingle(self, surface: pygame.Surface, *, color: tuple[int, int, int] = (20, 20, 20)) -> None:
         if self._pos is None:
             raise ValueError("No position set.")
         pos: tuple[int, int] = self._pos
 
         pygame.draw.rect(
             surface=surface,
-            color=(20, 20, 20),
+            color=color,
             rect=((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize, scalesize, scalesize),
             width=2
         )
@@ -2651,10 +2670,10 @@ def main():
     openCommandTerminal: bool = False
 
     before_move: BeforeMoveData | None = None
+    pickTile: bool = False
     while mainRunning:
         assert(undo is not None)
 
-        pickTile: bool = False
         pygame.key.set_repeat(500, 31)
 
         # BEFORE EVENTS
@@ -2679,6 +2698,7 @@ def main():
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 2:
                     before_move = None
+                    pickTile = False
             elif event.type == KEYDOWN:
                 if event.key == K_z:
                     if keys_pressed[K_LCTRL]:
@@ -2849,8 +2869,23 @@ def main():
             pygame.draw.circle(display, _color, (10, 10), 5)
 
         if not brush.IsEmpty:
-            tmpScaled = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.currentMaterial), (68, 68))
-            display.blit(tmpScaled, (display_size[0] - 10 - tmpScaled.get_width(), 10))
+            brushPreviewTmpSize: tuple[int, int] = (68, 68)
+            brushPreviewTmpPos: tuple[int, int] = (display_size[0] - 10 - brushPreviewTmpSize[0], 10)
+            brushPreviewPropertiesWidth: int = 2
+            brushPreviewTmpScaled: pygame.Surface = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.currentMaterial), brushPreviewTmpSize)
+            display.blit(brushPreviewTmpScaled, brushPreviewTmpPos)
+            if brush.hasProperties:
+                pygame.draw.rect(
+                    display,
+                    (255, 0, 255),
+                    (
+                        brushPreviewTmpPos[0] - brushPreviewPropertiesWidth,
+                        brushPreviewTmpPos[1] - brushPreviewPropertiesWidth,
+                        brushPreviewTmpSize[0] + (2 * brushPreviewPropertiesWidth),
+                        brushPreviewTmpSize[1] + (2 * brushPreviewPropertiesWidth)
+                    ),
+                    width=brushPreviewPropertiesWidth
+                )
 
         if len(Selected.units) > 0:
             for unit in Selected.units:

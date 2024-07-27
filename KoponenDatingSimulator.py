@@ -14,7 +14,6 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 #endregion
 from datetime import datetime
 
-import json
 import random
 import shutil
 import traceback
