@@ -85,7 +85,7 @@ Y: Toggle Overlay Visibility
 TAB: Set store price
 SHIFT + TAB: Set store discount price
 
-CTRL + A: Select All
+CTRL + A: Select All (NOT RECOMMENDED)
 CTRL + S: Save Project
 CTRL + SHIFT + S: Save Project As
 CTRL + O: Open Project
