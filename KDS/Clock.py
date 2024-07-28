@@ -37,7 +37,7 @@ DEFAULT_FRAMERATE: Final[float] = 62.5
 # DO NOT CHANGE THIS BACK TO 60!! KDS.Math.SmoothDamp depends on this new value.
 
 framerate: float = DEFAULT_FRAMERATE
-def Tick(framerate_override: int | None = None):
+def Tick(framerate_override: float | None = None):
     _clock.tick_busy_loop(framerate_override if framerate_override is not None else framerate)
 
 def GetFPS(roundingDigits: Optional[int] = None) -> float:

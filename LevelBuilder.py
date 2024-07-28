@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import deque
 import os
+import random
 
 import KDS.BuildData
 import KDS.LevelBuilder
@@ -63,6 +64,7 @@ Mouse Scroll: Scroll Vertically
 Mouse Scroll + SHIFT: Scroll Horizontally
 Mouse Scroll + CTRL: Zoom
 Mouse Scroll + ALT: Change Brush Size
+Mouse Scroll + ALT + CTRL: Change Brush Density
 
 CTRL + Z: Undo
 CTRL + Y: Redo
@@ -949,7 +951,7 @@ class UnitData:
         else:
             brush.styles &= ~BrushStyles.pick_brush
 
-        brush.RenderUpdate(mpos_tilepos, mouse_pressed, surface if Drag.Rect is None else None)
+        brush.RenderUpdate(mpos_tilepos, grid, mouse_pressed, surface if Drag.Rect is None else None)
 
         build_undo_was_used: bool = False
         remove_undo_was_used: bool = False
@@ -960,7 +962,7 @@ class UnitData:
                 build_undo_was_used = True
 
                 if keys_pressed[K_c]:
-                    for brush_unit in brush.IterUnits(grid=grid):
+                    for brush_unit in brush.IterAllUnits(grid=grid):
                         if brush_unit.hasTile():
                             setVal = False
                             if keys_pressed[K_LALT]:
@@ -979,7 +981,7 @@ class UnitData:
                 remove_undo_was_used = True
 
                 if keys_pressed[K_c]:
-                    for brush_unit in brush.IterUnits(grid=grid):
+                    for brush_unit in brush.IterAllUnits(grid=grid):
                         brush_unit.properties.Remove(remove_undo, UnitType.Tile, "checkCollision")
                 else:
                     if keys_pressed[K_LSHIFT]:
@@ -1292,30 +1294,63 @@ class BrushStyles(IntFlag):
     pick_brush = 1 << 0 # 1
 
 class BrushData:
+    class _CurrentPositions(NamedTuple):
+        all_positions: frozenset[tuple[int, int]]
+        selected_positions: frozenset[tuple[int, int]]
+        modifiable_units: tuple[UnitData, ...]
+        was_created_by_modify: bool
+
     def __init__(self) -> None:
         self._brush: str = UnitData.EMPTY
         self._properties: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None
 
         self._pos: tuple[int, int] | None = None
-        self._allow_add_or_insert: bool = False
+        self._previous_positions: frozenset[tuple[int, int]] | None = None
+        self._current_positions: BrushData._CurrentPositions | None = None
 
-        self.random_remove_count: int = 0
+        self.__random_rmv_count: int = 0
+        self._random_rmv_template: frozenset[tuple[int, int]] | None = None
 
-        self._size: int = 0
+        self.__size: int = 0
         """The radius of the circle, or half of the width of the rectangle."""
-        self.shape: BrushShape = BrushShape.circle
+        self.__shape: BrushShape = BrushShape.circle
         self.styles: BrushStyles = BrushStyles.default
 
     @property
-    def is_locked(self) -> bool:
-        return not self._allow_add_or_insert
-
-    @property
     def size(self) -> int:
-        return self._size
+        return self.__size
     @size.setter
     def size(self, s: int) -> None:
-        self._size = KDS.Math.Clamp(s, 0, 10)
+        self.__size = KDS.Math.Clamp(s, 0, 10)
+
+        self._clamp_random_positions_count()
+        self._current_positions = None
+
+    @property
+    def shape(self) -> BrushShape:
+        return self.__shape
+    @shape.setter
+    def shape(self, value: BrushShape) -> None:
+        self.__shape = value
+
+        self._clamp_random_positions_count()
+        self._current_positions = None
+
+    @property
+    def random_rmv_count(self) -> int:
+        return self.__random_rmv_count
+    @random_rmv_count.setter
+    def random_rmv_count(self, value: int) -> None:
+        self.__random_rmv_count = value
+        self._clamp_random_positions_count()
+
+        if self._current_positions is not None:
+            self._random_rmv_template = self._current_positions.selected_positions
+        self._current_positions = None
+
+    def _clamp_random_positions_count(self):
+        position_count: int = len(tuple(self.IterAllPositions()))
+        self.__random_rmv_count = KDS.Math.Clamp(self.__random_rmv_count, 0, position_count - 1)
 
     @property
     def currentMaterial(self) -> str:
@@ -1326,13 +1361,17 @@ class BrushData:
         return self._properties is not None
 
     def SetBrush(self, brush: str = UnitData.EMPTY, properties: Optional[dict[UnitType, dict[str, Union[str, int, float, bool]]]] = None):
-        self._brush = brush
+        if brush != self._brush:
+            self._brush = brush
+            self._current_positions = None
+
         self._properties = None
         if not self.IsEmpty and properties != None:
             correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
             if correctType != None:
                 propValues = properties[correctType]
                 self._properties = {correctType: {ik: iv for ik, iv in propValues.items()}}
+
 
     def PickBrush(self, unit: UnitData, *, get_properties: bool):
         brush = KDS.Linq.FirstOrNone(unit.filledSerials, lambda s: s != self._brush)
@@ -1350,7 +1389,7 @@ class BrushData:
 
         self.SetBrush(brush, props)
 
-    def IterPositions(self) -> Iterable[tuple[int, int]]:
+    def IterAllPositions(self) -> Iterable[tuple[int, int]]:
         if self.size == 0:
             return self._IterSingle()
         else:
@@ -1359,11 +1398,93 @@ class BrushData:
             else:
                 return self._IterSquare()
 
-    def IterUnits(self, grid: GridType) -> Iterable[UnitData]:
-        for position in self.IterPositions():
+
+    def IterAllUnits(self, grid: GridType) -> Iterable[UnitData]:
+        for position in self.IterAllPositions():
             unit = self.__TryGetUnit(position, grid)
             if unit is not None:
                 yield unit
+
+    def __TakeRandom(self, all_positions: frozenset[tuple[int, int]], selected: frozenset[tuple[int, int]], grid: GridType) -> frozenset[tuple[int, int]]:
+        def unit_matches(pos: tuple[int, int]) -> bool:
+            unit: UnitData | None = self.__TryGetUnit(pos, grid)
+            return unit is not None and self._brush in unit.filledSerials
+
+        if self.random_rmv_count < 1:
+            return selected
+
+        target_count: int = len(all_positions) - self.random_rmv_count
+        count: int = KDS.Linq.Count(all_positions, lambda nm: unit_matches(nm))
+
+        output: set[tuple[int, int]] = set()
+        if self._random_rmv_template is not None:
+            output.update(self._random_rmv_template)
+            self._random_rmv_template = None
+        count += len(output)
+
+        available_slots: list[tuple[int, int]] = list(selected.difference(output))
+        while count < target_count:
+            assert(len(available_slots) > 0)
+            random_index: int = random.randrange(len(available_slots))
+            random_pos: tuple[int, int] = available_slots.pop(random_index)
+            assert random_pos not in output
+            output.add(random_pos)
+            count += 1
+
+        while count > target_count and len(output) > 0:
+            # SLOW
+            # but this condition is rarely true (only when resizing brush downwards)
+            # so I'm not too conserned with it...
+            output_tuple: tuple[tuple[int, int], ...] = tuple(output)
+            random_pos: tuple[int, int] = random.choice(output_tuple)
+            output.remove(random_pos)
+            count -= 1
+
+        # len might be over as the grid might already contain more tiles of the current brush type
+        # assert((len(output) + ) >= target_count)
+        # do not check as len(output) can also be less since len(all_positions) > len(selected)
+        return frozenset(output)
+
+    def __UpdateCurrentPositions(self, *, will_modify: bool) -> _CurrentPositions:
+        assert(self._current_positions is not None)
+        output: BrushData._CurrentPositions
+        reset_modifiable_units: bool = will_modify and len(self._current_positions.modifiable_units) > 0
+
+        # if current positions were created by modify, we shouldn't modify the same tiles twice so we replace modifiable before returning output
+        if self._current_positions.was_created_by_modify:
+            if reset_modifiable_units:
+                self._current_positions = self._current_positions._replace(modifiable_units=frozenset())
+            output = self._current_positions
+        # otherwise the positions haven't yet been modified so we should return the original modifiable_units
+        else:
+            output = self._current_positions
+            if reset_modifiable_units:
+                self._current_positions = self._current_positions._replace(modifiable_units=frozenset())
+
+        return output
+
+
+    def _UpdateUnits(self, grid: GridType, *, will_modify: bool = True) -> _CurrentPositions:
+        all_positions: frozenset[tuple[int, int]] = frozenset(self.IterAllPositions())
+
+        if self._current_positions is not None:
+            return self.__UpdateCurrentPositions(will_modify=will_modify)
+
+        selected: frozenset[tuple[int, int]]
+        if self._previous_positions is None:
+            selected = all_positions
+        else:
+            selected = all_positions.difference(self._previous_positions)
+
+        selected = self.__TakeRandom(all_positions=all_positions, selected=selected, grid=grid)
+        self._current_positions = BrushData._CurrentPositions(
+            all_positions=all_positions,
+            selected_positions=selected,
+            modifiable_units=tuple(unit for unit in (self.__TryGetUnit(s, grid) for s in selected) if unit is not None),
+            was_created_by_modify=will_modify
+        )
+
+        return self._current_positions
 
     def _IterSingle(self) -> Iterable[tuple[int, int]]:
         if self._pos is None:
@@ -1436,7 +1557,7 @@ class BrushData:
         return row[x]
 
     def Set(self, undo: ChangeUndoRecord, grid: GridType):
-        for unit in self.IterUnits(grid=grid):
+        for unit in self._UpdateUnits(grid=grid).modifiable_units:
             unit.setSerial(undo, self._brush)
             if self._properties is not None:
                 unit.setProperties(undo, self._properties)
@@ -1444,12 +1565,7 @@ class BrushData:
 
     def Add(self, undo: ChangeUndoRecord, grid: GridType):
         """Add to end"""
-
-        if not self._allow_add_or_insert:
-            return
-        self._allow_add_or_insert = False
-
-        for unit in self.IterUnits(grid=grid):
+        for unit in self._UpdateUnits(grid=grid).modifiable_units:
             unit.addSerial(undo, self._brush)
             if self._properties is not None:
                 unit.addProperties(undo, self._properties)
@@ -1457,55 +1573,44 @@ class BrushData:
 
     def Insert(self, undo: ChangeUndoRecord, grid: GridType):
         """Add to start"""
-
-        if not self._allow_add_or_insert:
-            return
-        self._allow_add_or_insert = False
-
-        for unit in self.IterUnits(grid=grid):
+        for unit in self._UpdateUnits(grid=grid).modifiable_units:
             unit.insertSerial(undo, self._brush)
             if self._properties is not None:
                 unit.addProperties(undo, self._properties)
             unit.properties.RemoveUnused(undo)
 
     def Reset(self, undo: ChangeUndoRecord, grid: GridType):
-        if not self._allow_add_or_insert:
-            return
-        self._allow_add_or_insert = False
-
-        for unit in self.IterUnits(grid=grid):
+        for unit in self._UpdateUnits(grid=grid).modifiable_units:
             unit.resetSerial(undo)
             unit.properties.RemoveUnused(undo)
 
     def Remove(self, undo: ChangeUndoRecord, grid: GridType):
         """Remove from end"""
-
-        if not self._allow_add_or_insert:
-            return
-        self._allow_add_or_insert = False
-
-        for unit in self.IterUnits(grid=grid):
+        for unit in self._UpdateUnits(grid=grid).modifiable_units:
             unit.removeSerial(undo)
             unit.properties.RemoveUnused(undo)
 
     def Purge(self, undo: ChangeUndoRecord, grid: GridType):
         """Remove from start"""
-
-        if not self._allow_add_or_insert:
-            return
-        self._allow_add_or_insert = False
-
-        for unit in self.IterUnits(grid=grid):
+        for unit in self._UpdateUnits(grid=grid).modifiable_units:
             unit.removeSerialFromStart(undo)
             unit.properties.RemoveUnused(undo)
 
-    def RenderUpdate(self, position: tuple[int, int] | None, mouse_pressed: tuple[bool, ...], surface: pygame.Surface | None):
+    def RenderUpdate(self, position: tuple[int, int] | None, grid: GridType, mouse_pressed: tuple[bool, ...], surface: pygame.Surface | None):
         if position != self._pos:
             self._pos = position
-            self._allow_add_or_insert = True
+
+            if self._current_positions is not None:
+                self._previous_positions = self._current_positions.all_positions
+                self._current_positions = None
+            else:
+                self._previous_positions = None
 
         if not mouse_pressed[0] and not mouse_pressed[2]:
-            self._allow_add_or_insert = True
+            self._previous_positions = None
+            # self._current_positions = None
+            # do not modify current positions so that the positions rendered match what is placed
+            # we reset this to None when the position changes
 
         if surface is not None:
             self._Render(surface=surface)
@@ -1517,7 +1622,7 @@ class BrushData:
                 tex = tex.subsurface((max(tex.width - scalesize, 0), max(tex.height - scalesize, 0), min(scalesize, tex.width), min(scalesize, tex.height)))
                 tex.set_alpha(32)
 
-                surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in self.IterPositions()))
+                surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in self._UpdateUnits(grid, will_modify=False).selected_positions))
 
             if BrushStyles.pick_brush in self.styles:
                 self._RenderSingle(surface=surface, color=(255, 0, 0))
@@ -2323,18 +2428,16 @@ def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], 
         multiselect_menu_running = False
 
     title = harbinger_font_large.render(title_text, True, KDS.Colors.White)
-    title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
-
     buttons: list[KDS.UI.Button] = [
         KDS.UI.Button(
-            pygame.Rect(display_size[0] // 2 - 300, 200 + 125 * i, 600, 100),
+            pygame.Rect(0, 0, 0, 0),
             data[1],
             harbinger_font.render(data[0], True, KDS.Colors.White)
         )
         for i, data in enumerate(options)
     ]
 
-    back_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 125, 300, 100), back, harbinger_font.render("Back", True, KDS.Colors.AviatorRed))
+    back_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), back, harbinger_font.render("Back", True, KDS.Colors.AviatorRed))
 
     while multiselect_menu_running:
         clicked: bool = False
@@ -2351,11 +2454,14 @@ def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], 
         display.fill((34, 34, 34))
         mouse_pos: Final = pygame.mouse.get_pos()
 
+        title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
         pygame.draw.rect(display, KDS.Colors.Gray, (title_rect.x - 200, title_rect.y - 25, title_rect.w + 400, title_rect.h + 50))
         display.blit(title, title_rect)
 
-        for btn in buttons:
+        for i, btn in enumerate(buttons):
+            btn.rect = pygame.Rect(display_size[0] // 2 - 300, 200 + 125 * i, 600, 100)
             btn.update(display, mouse_pos, clicked)
+        back_btn.rect = pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 125, 300, 100)
         back_btn.update(display, mouse_pos, clicked)
 
         if KDS.Debug.Enabled:
@@ -2428,11 +2534,11 @@ def menu():
                 undo = Undo()
                 btn_menu = False
 
-    newMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425,       250, 400, 150), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
-    openMap_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       250, 400, 150), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))
-    upgradeProps_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 425, 450, 400, 100), legacy_upgrade_menu, harbinger_font.render("Upgrade Legacy", True, KDS.Colors.White))
-    gen_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 + 25,       450, 400, 100), generate_menu, harbinger_font.render("Generate", True, KDS.Colors.White))
-    quit_btn = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, 600, 300, 100), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed))
+    newMap_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
+    openMap_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))
+    upgradeProps_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), legacy_upgrade_menu, harbinger_font.render("Upgrade Legacy", True, KDS.Colors.White))
+    gen_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), generate_menu, harbinger_font.render("Generate", True, KDS.Colors.White))
+    quit_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed))
 
     txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and/or maintenance.", True, KDS.Colors.CloudWhite)
     txt_icon = KDS.Convert.AspectScale(pygame.image.load("Assets/Textures/Branding/levelBuilderTextIcon.png").convert_alpha(), (0, 150), aspectMode=KDS.Convert.AspectMode.HeightControlsWidth)
@@ -2448,8 +2554,16 @@ def menu():
             elif event.type == DROPFILE:
                 # Button menu is turned off if loadMap was succesful
                 btn_menu = not loadMap(event.file)
+
         display.fill((34, 34, 34))
         mouse_pos = pygame.mouse.get_pos()
+
+        newMap_btn.rect =       pygame.Rect(display_size[0] // 2 - 425, display_size[1] // 2 - 100, 400, 150)
+        openMap_btn.rect =      pygame.Rect(display_size[0] // 2 + 25,  display_size[1] // 2 - 100, 400, 150)
+        upgradeProps_btn.rect = pygame.Rect(display_size[0] // 2 - 425, display_size[1] // 2 + 100, 400, 100)
+        gen_btn.rect =          pygame.Rect(display_size[0] // 2 + 25,  display_size[1] // 2 + 100, 400, 100)
+        quit_btn.rect =         pygame.Rect(display_size[0] // 2 - 150, display_size[1] // 2 + 250, 300, 100)
+
         newMap_btn.update(display, mouse_pos, clicked)
         openMap_btn.update(display, mouse_pos, clicked, True)
         upgradeProps_btn.update(display, mouse_pos, clicked)
@@ -2457,7 +2571,7 @@ def menu():
         quit_btn.update(display, mouse_pos, clicked)
 
         display.blit(txt, (2, display_size[1] - harbinger_font_small.get_height() - 2))
-        display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, 50))
+        display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, display_size[1] // 2 - 300))
 
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
@@ -2791,7 +2905,10 @@ def main():
             elif event.type == MOUSEWHEEL:
                 move_multiplier: int = 1 if not keys_pressed[K_LALT] else 10
                 if keys_pressed[K_LALT]:
-                    brush.size += event.y
+                    if keys_pressed[K_LCTRL]:
+                        brush.random_rmv_count -= event.y
+                    else:
+                        brush.size += event.y
                 elif keys_pressed[K_LSHIFT]:
                     scroll[0] -= event.y * move_multiplier
                 elif keys_pressed[K_LCTRL]:

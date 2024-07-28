@@ -36,12 +36,16 @@ matchChars = r" ; , \/ \\ \" "
 #endregion
 
 def init(_window: pygame.Surface, _display: pygame.Surface, _Offset: Optional[Tuple[int, int]] = None, _KDS_Quit: Optional[Callable[[], None]] = None):
-    global window, display, display_size, defaultBackground, KDS_Quit, rndrOffset
+    global window, display, display_size, defaultBackground, defaultBackgroundTextBackground, KDS_Quit, rndrOffset
     window = _window
     display = _display
     display_size = display.get_size()
     rndrOffset = _Offset if _Offset != None else (0, 0)
     defaultBackground = pygame.image.load("Assets/Textures/UI/Menus/console.png").convert()
+
+    defaultBackgroundTextBackground = pygame.Surface((feedRect.width, console_font.get_height()))
+    defaultBackgroundTextBackground.set_alpha(192)
+
     KDS_Quit = _KDS_Quit
 
 class CheckTypes:
@@ -380,7 +384,10 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
             # as clamp's order of operations is wrong for this situation ( max(min()) )
             console_feed_y = min(max(console_feed_y, -len(Feed) + 1), 0) # +1 so that we show at least one line
             for i, line in enumerate(Feed.iter_from_end(visible_line_count, offset=console_feed_y)):
-                display.blit(console_font.render(line, True, feedTextColor), (feedRect.left, feedRect.bottom - console_font.get_height() - (i * console_font.get_height())))
+                feed_line_pos: tuple[int, int] = (feedRect.left, feedRect.bottom - console_font.get_height() - (i * console_font.get_height()))
+                if background is None:
+                    display.blit(defaultBackgroundTextBackground, feed_line_pos)
+                display.blit(console_font.render(line, True, feedTextColor), feed_line_pos)
         #endregion
 
         #region Type Checking
