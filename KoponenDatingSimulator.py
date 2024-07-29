@@ -130,6 +130,33 @@ if KDS.ConfigManager.GetSetting("Renderer/fullscreen", ...):
     pygame.display.toggle_fullscreen()
 game_initialization_logger.stop("Display Driver initialised.")
 
+game_initialization_logger.start("Initialising cursors and surface arrays...")
+cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
+
+match cursorIndex:
+    case 1:
+        cursor1Surface: Final = pygame.image.load("Assets/Textures/UI/Cursors/cursor1.png")
+        cursor1Surface.set_colorkey((255, 255, 255))
+        pygame.mouse.set_cursor(pygame.Cursor((1, 1), cursor1Surface))
+    case 2:
+        pygame.mouse.set_cursor(*pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"))
+    case 3:
+        cursor3Surface: Final = pygame.image.load("Assets/Textures/UI/Cursors/cursor3.png")
+        cursor3Surface.set_colorkey((255, 0, 0))
+        pygame.mouse.set_cursor(pygame.Cursor((1, 1), cursor3Surface))
+    case 4:
+        pygame.mouse.set_cursor(pygame.cursors.arrow)
+    case 5:
+        pygame.mouse.set_cursor(pygame.cursors.tri_left)
+    case _:
+        pass # Use default cursor
+
+surfarrayLagFix = pygame.surfarray.pixels2d(screen)
+# Creating a surfarray for the first time is not noticeable on faster hardware like my desktop,
+# but lags the shit out of the game on my laptop with an amazing two-core processor.
+del surfarrayLagFix
+game_initialization_logger.stop("Cursors and surface arrays initialised.")
+
 game_initialization_logger.start("Initialising KDS modules...")
 KDS.Audio.init()
 KDS.Jobs.init()
@@ -143,24 +170,6 @@ KDS.School.init(display)
 # more initialisations in build data loading (those initialisations need textures)
 KDS.Keys.LoadCustomBindings()
 game_initialization_logger.stop("KDS modules initialised.")
-
-game_initialization_logger.start("Initialising cursors and surface arrays...")
-cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
-cursorData = {
-    1: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor1.xbm", "Assets/Textures/UI/Cursors/cursor1.xbm"),
-    2: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"),
-    3: pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor3.xbm", "Assets/Textures/UI/Cursors/cursor3.xbm"),
-    4: pygame.cursors.arrow,
-    5: pygame.cursors.tri_left
-}
-if cursorIndex in cursorData: pygame.mouse.set_cursor(*cursorData[cursorIndex])
-del cursorData
-
-surfarrayLagFix = pygame.surfarray.pixels2d(screen)
-# Creating a surfarray for the first time is not noticeable on faster hardware like my desktop,
-# but lags the shit out of the game on my laptop with an amazing two-core processor.
-del surfarrayLagFix
-game_initialization_logger.stop("Cursors and surface arrays initialised.")
 #endregion
 #region Loading
 #region Settings
