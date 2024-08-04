@@ -108,7 +108,7 @@ def _load_cursor(cursor: CursorData) -> None:
 
     default: pygame.Cursor = _internal_load_cursor(cursor.default)
     select: pygame.Cursor = _internal_load_cursor(cursor.select) if cursor.select is not None else default
-    text: pygame.Cursor = _internal_load_cursor(cursor.text) if cursor.text is not None else default
+    text: pygame.Cursor = _internal_load_cursor(cursor.text) if cursor.text is not None else select
 
     preview: pygame.Surface = pygame.image.load(cursor.preview_path).convert_alpha()
 
