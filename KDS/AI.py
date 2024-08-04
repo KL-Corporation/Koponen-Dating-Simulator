@@ -925,7 +925,7 @@ class Archvile(HostileEnemy):
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         output = super().update(Surface, scroll, tiles, targetRect)
 
-        self.show_flames = self.attackRunning
+        self.show_flames = self.attackRunning and self.health > 0
         if self.show_flames:
             if not self.show_flames_prev_frame:
                 KDS.Audio.PlaySound(Archvile.flame_sound)
