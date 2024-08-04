@@ -1,0 +1,4 @@
+# dev requirements for any DevScript_* files
+
+# GenerateCursorPreview:
+pywin32==306

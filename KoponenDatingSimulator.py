@@ -6,6 +6,7 @@ import os
 from uuid import UUID
 
 import KDS.BuildData
+import KDS.Cursor
 import KDS.MapProp
 import KDS.Money
 #region Startup Config
@@ -57,9 +58,6 @@ import KDS.World
 #endregion
 #region Priority Initialisation
 pygame.init()
-
-# No longer required as pygame doesn't force its ugly cursor on you anymore.
-# pygame.mouse.set_cursor(SYSTEM_CURSOR_ARROW)
 
 CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
 
@@ -131,26 +129,7 @@ if KDS.ConfigManager.GetSetting("Renderer/fullscreen", ...):
 game_initialization_logger.stop("Display Driver initialised.")
 
 game_initialization_logger.start("Initialising cursors and surface arrays...")
-cursorIndex: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
-
-match cursorIndex:
-    case 1:
-        cursor1Surface: Final = pygame.image.load("Assets/Textures/UI/Cursors/cursor1.png")
-        cursor1Surface.set_colorkey((255, 255, 255))
-        pygame.mouse.set_cursor(pygame.Cursor((1, 1), cursor1Surface))
-    case 2:
-        pygame.mouse.set_cursor(*pygame.cursors.load_xbm("Assets/Textures/UI/Cursors/cursor2.xbm", "Assets/Textures/UI/Cursors/cursor2.xbm"))
-    case 3:
-        cursor3Surface: Final = pygame.image.load("Assets/Textures/UI/Cursors/cursor3.png")
-        cursor3Surface.set_colorkey((255, 0, 0))
-        pygame.mouse.set_cursor(pygame.Cursor((1, 1), cursor3Surface))
-    case 4:
-        pygame.mouse.set_cursor(pygame.cursors.arrow)
-    case 5:
-        pygame.mouse.set_cursor(pygame.cursors.tri_left)
-    case _:
-        pass # Use default cursor
-
+KDS.Cursor.init()
 surfarrayLagFix = pygame.surfarray.pixels2d(screen)
 # Creating a surfarray for the first time is not noticeable on faster hardware like my desktop,
 # but lags the shit out of the game on my laptop with an amazing two-core processor.
@@ -250,6 +229,7 @@ main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/Main/main_men
 settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
 agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
 arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
+arrow_button_slim = pygame.image.load("Assets/Textures/UI/Buttons/Arrow_slim.png").convert_alpha()
 main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
 asset_loading_logger.stop("Menu Texture Loading Complete.")
@@ -4589,7 +4569,28 @@ def esc_menu_f(oldSurf: pygame.Surface):
 def settings_menu():
     global main_menu_running, esc_menu, main_running, settings_running, pause_on_focus_loss, play_walk_sound
     c = False
+    KDS.Cursor.reset_interactables()
     settings_running = True
+
+    def outline_text(text: pygame.Surface, outline: int = 2, outline_color: tuple[int, int, int] = KDS.Colors.DefaultBackground) -> pygame.Surface:
+        # reference: https://stackoverflow.com/questions/60987711/have-an-outline-of-text-in-pygame/60988595#60988595
+
+        outlineSurf = text.copy()
+        outlineSurf.fill(outline_color, special_flags=BLEND_RGB_MULT)
+
+        outlineSize = outlineSurf.size
+        textSurf = pygame.Surface((outlineSize[0] + (2 * outline), outlineSize[1] + (2 * outline)), flags=pygame.SRCALPHA)
+        textRect = textSurf.get_rect()
+        offsets = [(ox, oy)
+            for ox in range(-outline, (2 * outline), outline)
+            for oy in range(-outline, (2 * outline), outline)
+            if ox != 0 or ox != 0]
+        for ox, oy in offsets:
+            px, py = textRect.center
+            textSurf.blit(outlineSurf, outlineSurf.get_rect(center = (px+ox, py+oy)))
+        textSurf.blit(text, text.get_rect(center = textRect.center))
+
+        return textSurf
 
     def return_def():
         global settings_running
@@ -4599,28 +4600,45 @@ def settings_menu():
         return_def()
         oldTerms = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
         KDS.ConfigManager.OverrideDefaultSettings()
+        KDS.Cursor.init() # re-init to switch to the new cursor given by settings
         KDS.ConfigManager.SetSetting("Data/Terms/accepted", oldTerms)
 
     def remove_data():
         if KDS.System.MessageBox.Show("Remove Data", "Are you sure you want to remove all Koponen Dating Simulator data? This cannot be undone.", KDS.System.MessageBox.Buttons.YESNO, KDS.System.MessageBox.Icon.WARNING) == KDS.System.MessageBox.Responses.YES:
             KDS_Quit(remove_data_s=True)
 
+    def binding_menu():
+        KDS.Cursor.reset_interactables()
+        KDS.Keys.StartBindingMenu(display, defaultEventHandler)
+        KDS.Cursor.reset_interactables()
+
+    def give_feedback():
+        KDS.System.OpenURL("https://github.com/KL-Corporation/Koponen-Dating-Simulator/issues")
+
     return_button = KDS.UI.Button(pygame.Rect(465, 700, 270, 60), return_def, "RETURN")
+
     music_volume_slider = KDS.UI.Slider("musicVolume", pygame.Rect(450, 135, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/music")
     effect_volume_slider = KDS.UI.Slider("effectVolume", pygame.Rect(450, 185, 340, 20), (20, 30), ..., custom_path="Mixer/Volume/effect")
+
     walk_sound_switch = KDS.UI.Switch("playWalkSound", pygame.Rect(450, 235, 100, 30), (30, 50), ..., custom_path="Mixer/walkSound")
     legacy_lobbymusic_switch = KDS.UI.Switch("legacyLobbyMusic", pygame.Rect(450, 305, 100, 30), (30, 50), ..., custom_path="Mixer/legacyLobbyMusic")
     lastLobbymusicState = legacy_lobbymusic_switch.state
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 375, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
-    controls_settings_button = KDS.UI.Button(pygame.Rect(480, 485, 260, 50), lambda: KDS.Keys.StartBindingMenu(display, defaultEventHandler), KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
-    reset_settings_button = KDS.UI.Button(pygame.Rect(220, 595, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White))
-    give_feedback_button = KDS.UI.Button(pygame.Rect(480, 595, 240, 40), lambda: KDS.System.OpenURL("https://github.com/KL-Corporation/Koponen-Dating-Simulator/issues"), KDS.UI.ButtonFontSmall.render("Give Feedback", True, KDS.Colors.EmeraldGreen))
-    remove_data_button = KDS.UI.Button(pygame.Rect(740, 595, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White))
+
+    reset_settings_button = KDS.UI.Button(pygame.Rect(30, 675, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White), button_highlighted_color=(255, 128, 0), button_pressed_color=(128, 64, 0))
+    give_feedback_button = KDS.UI.Button(pygame.Rect(30, 592, 240, 40), give_feedback, KDS.UI.ButtonFontSmall.render("Give Feedback", True, KDS.Colors.EmeraldGreen))
+    remove_data_button = KDS.UI.Button(pygame.Rect(30, 730, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White), button_highlighted_color=(255, 0, 0), button_pressed_color=(128, 0, 0))
+
+    previous_cursor_button = KDS.UI.Button(pygame.Rect(330, 445, 68, 40), KDS.Cursor.previous_cursor, pygame.transform.flip(arrow_button_slim, True, False))
+    next_cursor_button = KDS.UI.Button(pygame.Rect(previous_cursor_button.rect.x + 68 + 68, previous_cursor_button.rect.y, 68, 40), KDS.Cursor.next_cursor, arrow_button_slim)
+    controls_settings_button = KDS.UI.Button(pygame.Rect(470, 588, 260, 50), binding_menu, KDS.UI.ButtonFontSmall.render("Controls", True, KDS.Colors.White))
+
     music_volume_text = KDS.UI.ButtonFontSmall.render("Music Volume", True, KDS.Colors.White)
     effect_volume_text = KDS.UI.ButtonFontSmall.render("Sound Effect Volume", True, KDS.Colors.White)
-    walk_sound_text = KDS.UI.ButtonFontSmall.render("Play footstep sounds", True, KDS.Colors.White)
+    walk_sound_text = outline_text(KDS.UI.ButtonFontSmall.render("Play footstep sounds", True, KDS.Colors.White))
     legacy_lobbymusic_text = KDS.UI.ButtonFontSmall.render("Play Legacy Menu Music", True, KDS.Colors.White)
     pause_loss_text = KDS.UI.ButtonFontSmall.render("Pause On Focus Loss", True, KDS.Colors.White)
+    cursor_text = outline_text(KDS.UI.ButtonFontSmall.render("Cursor", True, KDS.Colors.White))
 
     while settings_running:
         mouse_pos = pygame.mouse.get_pos()
@@ -4640,11 +4658,14 @@ def settings_menu():
         display.blit(pygame.transform.flip(
             menu_trashcan_animation.update(), False, False), (279, 515))
 
-        display.blit(music_volume_text, (50, 135))
-        display.blit(effect_volume_text, (50, 185))
-        display.blit(walk_sound_text, (50, 235))
-        display.blit(legacy_lobbymusic_text, (50, 305))
-        display.blit(pause_loss_text, (50, 375))
+
+        display.blit(music_volume_text, (40, 135))
+        display.blit(effect_volume_text, (40, 185))
+        display.blit(walk_sound_text, (40, 235))
+        display.blit(legacy_lobbymusic_text, (40, 305))
+        display.blit(pause_loss_text, (40, 375))
+        display.blit(cursor_text, (previous_cursor_button.rect.x - cursor_text.width - 20, previous_cursor_button.rect.y))
+
         KDS.Audio.Music.SetVolume(music_volume_slider.update(display, mouse_pos))
         KDS.Audio.SetVolume(effect_volume_slider.update(display, mouse_pos))
         play_walk_sound = walk_sound_switch.update(display, mouse_pos, c)
@@ -4659,6 +4680,21 @@ def settings_menu():
         reset_settings_button.update(display, mouse_pos, c)
         remove_data_button.update(display, mouse_pos, c)
         give_feedback_button.update(display, mouse_pos, c)
+
+        cursor_preview: pygame.Surface = KDS.Cursor.get_preview()
+        cursor_preview_bounding_rect: pygame.Rect = cursor_preview.get_bounding_rect()
+        if cursor_preview_bounding_rect.height < previous_cursor_button.rect.height:
+            cursor_preview_size_diff: int = previous_cursor_button.rect.height - cursor_preview_bounding_rect.height
+            cursor_preview_bounding_rect.y -= cursor_preview_size_diff // 2
+            cursor_preview_bounding_rect.height += cursor_preview_size_diff
+        cursor_preview = cursor_preview.subsurface((0, cursor_preview_bounding_rect.y, cursor_preview.width, cursor_preview_bounding_rect.height))
+        cursor_preview_pos: tuple[int, int] = (previous_cursor_button.rect.right, previous_cursor_button.rect.y - (cursor_preview.height - previous_cursor_button.rect.height) // 2)
+        pygame.draw.rect(display, (100, 100, 100), (cursor_preview_pos, cursor_preview.size))
+        display.blit(cursor_preview, cursor_preview_pos)
+
+        previous_cursor_button.update(display, mouse_pos, c)
+        next_cursor_button.update(display, mouse_pos, c)
+
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
 
@@ -4852,6 +4888,8 @@ def main_menu():
     campaign_mode_button = pygame.Rect(0, display_size[1] // 2, display_size[0], display_size[1] // 2)
     mode_selection_buttons.append(story_mode_button)
     mode_selection_buttons.append(campaign_mode_button)
+
+    mode_selection_mouse_selectable_object: object = object()
     #endregion
     return_text = KDS.UI.ButtonFont.render("RETURN", True, (KDS.Colors.AviatorRed))
     return_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 150, display_size[1] - 150, 300, 100), menu_mode_selector, return_text)
@@ -4923,6 +4961,11 @@ def main_menu():
             elif event.type == QUIT:
                 KDS_Quit()
 
+        if MenuMode == Mode.ModeSelectionMenu:
+            KDS.Cursor.add_interactable_reference(mode_selection_mouse_selectable_object)
+        else:
+            KDS.Cursor.remove_interactable_reference(mode_selection_mouse_selectable_object)
+
         if MenuMode == Mode.MainMenu:
             Frame1.blit(main_menu_background, (0, 0))
 
@@ -4955,7 +4998,6 @@ def main_menu():
                 frames[current_frame - 1].set_alpha(255)
 
         elif MenuMode == Mode.ModeSelectionMenu:
-
             display.blit(gamemode_bc_1_1, (0, 0))
             display.blit(gamemode_bc_2_1, (0, display_size[1] // 2))
             for y in range(len(mode_selection_buttons)):

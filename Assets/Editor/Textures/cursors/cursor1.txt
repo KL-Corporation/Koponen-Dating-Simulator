@@ -1,0 +1,2 @@
+The one used in KDS is a modified version of this image
+(the white inside the cursor was changed from (255, 255, 255) to (254, 254, 254) to fix colorkey issues)

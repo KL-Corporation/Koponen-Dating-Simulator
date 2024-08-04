@@ -197,6 +197,8 @@ def ToGrayscale(image: pygame.Surface) -> pygame.Surface:
 def ToBlur(image: pygame.Surface, strength: int, alpha: bool = False) -> pygame.Surface:
     mode = "RGB" if not alpha else "RGBA" # pygame.transform.gaussian_blur was tested, it was slower
 
+    # TODO: Investigate if frombuffer/tobuffer is faster
+    # or modify the underlying pygame surface buffer with PIL...
     toBlur = pygame.image.tostring(image, mode)
     blurredImage = PIL_Image.frombytes(mode, image.get_size(), toBlur).filter(PIL_ImageFilter.GaussianBlur(radius=strength))
     blurredString = blurredImage.tobytes("raw", mode)

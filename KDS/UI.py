@@ -8,6 +8,7 @@ import KDS.Animator
 import KDS.Colors
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Cursor
 import KDS.Keys
 import KDS.Logging
 import KDS.Math
@@ -69,8 +70,10 @@ class Slider:
             position = self.handle_rect.centerx
             if self.handle_rect.collidepoint(mouse_pos) and slider_dragged == None:
                 handle_color = self.handle_highlighted_color
+                KDS.Cursor.add_interactable_reference(self)
             else:
                 handle_color = self.handle_default_color
+                KDS.Cursor.remove_interactable_reference(self)
         self.handle_rect.centerx = position
 
         if handle_color != self.handle_old_color:
@@ -144,11 +147,15 @@ class Button:
                 if clicked:
                     self.function(*args, **kwargs)
                     executed = True
+                    KDS.Cursor.remove_interactable_reference(self)
+                else:
+                    KDS.Cursor.add_interactable_reference(self)
                 button_color = self.button_highlighted_color
                 if pygame.mouse.get_pressed()[0]:
                     button_color = self.button_pressed_color
             else:
                 button_color = self.button_default_color
+                KDS.Cursor.remove_interactable_reference(self)
         if button_color != self.button_old_color:
             fade = self.button_color_fade.update()
             if fade == 1.0:
@@ -207,12 +214,14 @@ class Switch:
         """
         if self.switch_rect.collidepoint(mouse_pos) or self.handle_rect.collidepoint(mouse_pos):
             handle_color = self.handle_highlighted_color
+            KDS.Cursor.add_interactable_reference(self)
             if clicked:
                 self.state = not self.state
             if pygame.mouse.get_pressed()[0]:
                 handle_color = self.handle_pressed_color
         else:
             handle_color = self.handle_default_color
+            KDS.Cursor.remove_interactable_reference(self)
 
         if handle_color != self.handle_old_color:
             fade = self.handle_color_fade.update()
