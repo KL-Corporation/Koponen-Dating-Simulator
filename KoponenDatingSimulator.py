@@ -4626,7 +4626,7 @@ def settings_menu():
     pause_loss_switch = KDS.UI.Switch("pauseOnFocusLoss", pygame.Rect(450, 375, 100, 30), (30, 50), ..., custom_path="Game/pauseOnFocusLoss")
 
     reset_settings_button = KDS.UI.Button(pygame.Rect(30, 675, 240, 40), reset_settings, KDS.UI.ButtonFontSmall.render("Reset Settings", True, KDS.Colors.White), button_highlighted_color=(255, 128, 0), button_pressed_color=(128, 64, 0))
-    give_feedback_button = KDS.UI.Button(pygame.Rect(30, 592, 240, 40), give_feedback, KDS.UI.ButtonFontSmall.render("Give Feedback", True, KDS.Colors.EmeraldGreen))
+    # give_feedback_button = KDS.UI.Button(pygame.Rect(30, 592, 240, 40), give_feedback, KDS.UI.ButtonFontSmall.render("Give Feedback", True, KDS.Colors.EmeraldGreen))
     remove_data_button = KDS.UI.Button(pygame.Rect(30, 730, 240, 40), remove_data, KDS.UI.ButtonFontSmall.render("Remove Data", True, KDS.Colors.White), button_highlighted_color=(255, 0, 0), button_pressed_color=(128, 0, 0))
 
     previous_cursor_button = KDS.UI.Button(pygame.Rect(330, 445, 68, 40), KDS.Cursor.previous_cursor, pygame.transform.flip(arrow_button_slim, True, False))
@@ -4679,7 +4679,7 @@ def settings_menu():
         controls_settings_button.update(display, mouse_pos, c)
         reset_settings_button.update(display, mouse_pos, c)
         remove_data_button.update(display, mouse_pos, c)
-        give_feedback_button.update(display, mouse_pos, c)
+        # give_feedback_button.update(display, mouse_pos, c)
 
         cursor_preview: pygame.Surface = KDS.Cursor.get_preview()
         cursor_preview_bounding_rect: pygame.Rect = cursor_preview.get_bounding_rect()
