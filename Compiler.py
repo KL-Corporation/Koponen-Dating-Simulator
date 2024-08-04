@@ -1,3 +1,4 @@
+from enum import IntEnum
 import shutil
 from typing import NamedTuple
 import PyInstaller.__main__ as pyinstaller
@@ -17,6 +18,12 @@ parentDir = os.path.dirname(os.path.abspath(__file__))
 BuildPath = os.path.join(BuildsPath, "build_" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 EditorDirectoryPath = os.path.join(BuildPath, "KoponenDatingSimulator", "Assets", "Editor")
 
+class ConsoleType(IntEnum):
+    CONSOLE_YES = 0
+    CONSOLE_NO = 1
+    CONSOLE_HIDE = 2
+    """Windows only"""
+
 class BuildTask(NamedTuple):
     display_name: str
     """The display name of the build task."""
@@ -30,6 +37,8 @@ class BuildTask(NamedTuple):
     keep_editor: bool = False
     """Whether to keep the Assets/Editor/ directory or not. Defaults to False."""
 
+    console_type: ConsoleType = ConsoleType.CONSOLE_NO
+
 build_tasks: list[BuildTask] = [
     BuildTask(
         display_name="Koponen Dating Simulator",
@@ -40,7 +49,8 @@ build_tasks: list[BuildTask] = [
         display_name="Level Builder",
         filename="LevelBuilder.py",
         icon_filename="levelBuilderIcon.ico",
-        keep_editor=True
+        keep_editor=True,
+        console_type=ConsoleType.CONSOLE_HIDE
     ),
 ]
 
@@ -63,6 +73,15 @@ for build in build_tasks:
 
     clearCache()
 
+    console_type: tuple[str, ...]
+    match build.console_type:
+        case ConsoleType.CONSOLE_YES:
+            console_type = ("--console",)
+        case ConsoleType.CONSOLE_NO:
+            console_type = ("--windowed",)
+        case ConsoleType.CONSOLE_HIDE:
+            console_type = ("--hide-console", "minimize-late")
+
     pyinstaller.run([
         "--noconfirm",
 
@@ -77,7 +96,8 @@ for build in build_tasks:
         "--specpath",
         CachePath,
 
-        "--windowed",
+        *console_type,
+
         "--icon",
         f"{parentDir}/Assets/Textures/Branding/{build.icon_filename}",
 
@@ -85,6 +105,7 @@ for build in build_tasks:
         f"{parentDir}/Assets;Assets/",
         "--paths",
         f"{parentDir}/KDS",
+
         f"{parentDir}/{build.filename}"
     ])
 
