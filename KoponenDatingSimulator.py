@@ -4687,6 +4687,15 @@ def settings_menu():
             cursor_preview_size_diff: int = previous_cursor_button.rect.height - cursor_preview_bounding_rect.height
             cursor_preview_bounding_rect.y -= cursor_preview_size_diff // 2
             cursor_preview_bounding_rect.height += cursor_preview_size_diff
+        else:
+            # run twice so that max expand is 2, but 1 is done if 2 is not possible
+            if cursor_preview_bounding_rect.top > 0 and cursor_preview_bounding_rect.bottom < cursor_preview.height:
+                cursor_preview_bounding_rect.y -= 1
+                cursor_preview_bounding_rect.height += 2
+            if cursor_preview_bounding_rect.top > 0 and cursor_preview_bounding_rect.bottom < cursor_preview.height:
+                cursor_preview_bounding_rect.y -= 1
+                cursor_preview_bounding_rect.height += 2
+
         cursor_preview = cursor_preview.subsurface((0, cursor_preview_bounding_rect.y, cursor_preview.width, cursor_preview_bounding_rect.height))
         cursor_preview_pos: tuple[int, int] = (previous_cursor_button.rect.right, previous_cursor_button.rect.y - (cursor_preview.height - previous_cursor_button.rect.height) // 2)
         pygame.draw.rect(display, (100, 100, 100), (cursor_preview_pos, cursor_preview.size))
