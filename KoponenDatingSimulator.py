@@ -4688,6 +4688,7 @@ def settings_menu():
             cursor_preview_bounding_rect.y -= cursor_preview_size_diff // 2
             cursor_preview_bounding_rect.height += cursor_preview_size_diff
         else:
+            # expand rect so that there is a small border around the cursor preview image
             # run twice so that max expand is 2, but 1 is done if 2 is not possible
             if cursor_preview_bounding_rect.top > 0 and cursor_preview_bounding_rect.bottom < cursor_preview.height:
                 cursor_preview_bounding_rect.y -= 1
