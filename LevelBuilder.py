@@ -5,6 +5,7 @@ import os
 import random
 
 import KDS.BuildData
+import KDS.Cursor
 import KDS.LevelBuilder
 import KDS.LevelBuilder.CampaignProp
 import KDS.LevelBuilder.LegacyGameMap
@@ -124,6 +125,7 @@ APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level B
 LOGPATH = os.path.join(APPDATA, "logs")
 os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
+KDS.Cursor.init(cursor_index_override=0)
 KDS.Jobs.init()
 
 harbinger_font = pygame.font.Font("Assets/Fonts/harbinger.otf", 25)
@@ -2341,6 +2343,14 @@ def materialMenu(previousMaterial: str) -> str:
             self.rect: pygame.Rect = pygame.Rect(pos[0] * SPACING[0] + OFFSET[0], pos[1] * SPACING[1] + OFFSET[1], BLOCKSIZE, BLOCKSIZE)
             self.data: TextureHolder.TextureData = data
 
+            self.cursor_attached: bool = False
+
+    def returnWrapper(output: str) -> str:
+        for s in selectorRects:
+            if s.cursor_attached:
+                KDS.Cursor.remove_interactable_reference(s)
+        return output
+
     selectorRects: list[selectorRect] = []
 
     y = 0
@@ -2369,7 +2379,7 @@ def materialMenu(previousMaterial: str) -> str:
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE or event.key == K_e:
                     matMenRunning = False
-                    return previousMaterial
+                    return returnWrapper(previousMaterial)
             elif event.type == MOUSEWHEEL:
                 if event.y > 0:
                     rscroll = max(rscroll - 2, 0)
@@ -2388,14 +2398,21 @@ def materialMenu(previousMaterial: str) -> str:
             scaledTex = KDS.Convert.AspectScale(margin_removed_subsurface, (BLOCKSIZE, BLOCKSIZE))
             display.blit(scaledTex, (selection.rect.x + selection.rect.width // 2 - scaledTex.get_width() // 2, rndY + selection.rect.height // 2 - scaledTex.get_height() // 2))
             if selection.rect.collidepoint(mpos[0], mpos[1] + yCalc):
+                if not selection.cursor_attached:
+                    KDS.Cursor.add_interactable_reference(selection)
+                    selection.cursor_attached = True
+
                 pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, rndY, BLOCKSIZE, BLOCKSIZE), 3)
                 tip_renders.append(harbinger_font_small.render(selection.data.name, True, KDS.Colors.AviatorRed))
                 tip_renders.append(harbinger_font_small.render(selection.data.serialNumber, True, KDS.Colors.RiverBlue))
                 if mouse_pressed[0]:
-                    return selection.data.serialNumber
+                    return returnWrapper(selection.data.serialNumber)
+            elif selection.cursor_attached:
+                KDS.Cursor.remove_interactable_reference(selection)
+                selection.cursor_attached = False
 
         if mouse_pressed[0]:
-            return UnitData.EMPTY
+            return returnWrapper(UnitData.EMPTY)
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -2417,7 +2434,7 @@ def materialMenu(previousMaterial: str) -> str:
         pygame.display.flip()
         KDS.Clock.Tick(-1)
 
-    return previousMaterial
+    return returnWrapper(previousMaterial)
 
 def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], None]]]):
     global multiselect_menu_running
@@ -2527,6 +2544,7 @@ def menu():
             # Button menu is turned off if openMap was succesful
             btn_menu = not openMap()
         else:
+            KDS.Cursor.reset_interactables()
             g = KDS.Console.Start("Grid Size: (int, int)", True, KDS.Console.CheckTypes.Tuple(2, 1, KDS.Math.MAXVALUE, 1000)).replace(" ", "").split(",")
             if g is not None and len(g) > 1: # if escaped, g is a one element list
                 gridSize = (int(g[0]), int(g[1]))
@@ -2534,10 +2552,14 @@ def menu():
                 undo = Undo()
                 btn_menu = False
 
+    def menu_navigation(menu: Callable[[], None]):
+        KDS.Cursor.reset_interactables()
+        menu()
+
     newMap_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), button_handler, harbinger_font.render("New Map", True, KDS.Colors.White))
     openMap_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), button_handler, harbinger_font.render("Open Map", True, KDS.Colors.White))
-    upgradeProps_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), legacy_upgrade_menu, harbinger_font.render("Upgrade Legacy", True, KDS.Colors.White))
-    gen_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), generate_menu, harbinger_font.render("Generate", True, KDS.Colors.White))
+    upgradeProps_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), menu_navigation, harbinger_font.render("Upgrade Legacy", True, KDS.Colors.White))
+    gen_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), menu_navigation, harbinger_font.render("Generate", True, KDS.Colors.White))
     quit_btn = KDS.UI.Button(pygame.Rect(0, 0, 0, 0), LB_Quit, harbinger_font.render("Quit", True, KDS.Colors.AviatorRed))
 
     txt = harbinger_font_small.render("The software is provided \"as is\" without warranty of any kind. This is an in-house application and therefore is not applicable to any upkeep and/or maintenance.", True, KDS.Colors.CloudWhite)
@@ -2566,8 +2588,8 @@ def menu():
 
         newMap_btn.update(display, mouse_pos, clicked)
         openMap_btn.update(display, mouse_pos, clicked, True)
-        upgradeProps_btn.update(display, mouse_pos, clicked)
-        gen_btn.update(display, mouse_pos, clicked)
+        upgradeProps_btn.update(display, mouse_pos, clicked, legacy_upgrade_menu)
+        gen_btn.update(display, mouse_pos, clicked, generate_menu)
         quit_btn.update(display, mouse_pos, clicked)
 
         display.blit(txt, (2, display_size[1] - harbinger_font_small.get_height() - 2))

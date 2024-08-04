@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Final, NamedTuple, Self, TypeAlias
 import pygame
 
@@ -30,15 +31,18 @@ class PygameCursor(NamedTuple):
 
 Cursor: TypeAlias = CustomCursor | PygameCursor
 
-class CursorData(NamedTuple):
+@dataclass(frozen=True, eq=False, kw_only=True)
+class CursorData:
     default: Cursor
-    select: Cursor | None
+    select: Cursor | None = None
+    text: Cursor | None = None
 
     preview_path: str
 
 class LoadedCursor(NamedTuple):
     default: pygame.Cursor
     select: pygame.Cursor
+    text: pygame.Cursor
 
     preview: pygame.Surface
 
@@ -46,6 +50,7 @@ CURSORS: Final[tuple[CursorData, ...]] = (
     CursorData(
         default=PygameCursor.system(pygame.SYSTEM_CURSOR_ARROW, debug_name="SYSTEM_ARROW"),
         select=PygameCursor.system(pygame.SYSTEM_CURSOR_HAND, debug_name="SYSTEM_HAND"),
+        text=PygameCursor.system(pygame.SYSTEM_CURSOR_IBEAM, debug_name="SYSTEM_IBEAM"),
         preview_path="Assets/Textures/UI/Cursors/Preview/cursor0.png"
     ),
     CursorData(
@@ -54,7 +59,6 @@ CURSORS: Final[tuple[CursorData, ...]] = (
             texture_path="Assets/Textures/UI/Cursors/cursor1.png",
             colorkey=(255, 255, 255)
         ),
-        select=None,
         preview_path="Assets/Textures/UI/Cursors/Preview/cursor1.png"
     ),
     CursorData(
@@ -74,24 +78,21 @@ CURSORS: Final[tuple[CursorData, ...]] = (
             texture_path="Assets/Textures/UI/Cursors/cursor3.png",
             colorkey=(255, 0, 0)
         ),
-        select=None,
         preview_path="Assets/Textures/UI/Cursors/Preview/cursor3.png"
     ),
     CursorData(
         default=PygameCursor(pygame.cursors.arrow, debug_name="PYGAME_ARROW"),
-        select=None,
         preview_path="Assets/Textures/UI/Cursors/Preview/cursor4.png"
     ),
     CursorData(
         default=PygameCursor(pygame.cursors.tri_left, debug_name="PYGAME_TRI_LEFT"),
-        select=None,
         preview_path="Assets/Textures/UI/Cursors/Preview/cursor5.png"
-    ),
+    )
 )
 
 _current_cursor: tuple[CursorData, LoadedCursor]
-def init():
-    _switch_cursor(offset=0)
+def init(*, cursor_index_override: int | None = None):
+    _switch_cursor(index_override=cursor_index_override, offset=0)
 
 def get_preview() -> pygame.Surface:
     _, loaded = _current_cursor
@@ -107,10 +108,11 @@ def _load_cursor(cursor: CursorData) -> None:
 
     default: pygame.Cursor = _internal_load_cursor(cursor.default)
     select: pygame.Cursor = _internal_load_cursor(cursor.select) if cursor.select is not None else default
+    text: pygame.Cursor = _internal_load_cursor(cursor.text) if cursor.text is not None else default
 
     preview: pygame.Surface = pygame.image.load(cursor.preview_path).convert_alpha()
 
-    loaded: LoadedCursor = LoadedCursor(default=default, select=select, preview=preview)
+    loaded: LoadedCursor = LoadedCursor(default=default, select=select, text=text, preview=preview)
 
     _current_cursor = (cursor, loaded)
 
@@ -121,9 +123,18 @@ def _update_cursor() -> bool:
     special_cursor: pygame.Cursor | None = None
     if len(_interacts) > 0:
         special_cursor = loaded.select
+    if _textedit:
+        special_cursor = loaded.text
 
     pygame.mouse.set_cursor(special_cursor if special_cursor else loaded.default)
     return special_cursor is not None
+
+_textedit: bool = False
+def set_textedit(enabled: bool):
+    global _textedit
+    if _textedit != enabled:
+        _textedit = enabled
+        _update_cursor()
 
 _interacts: set[object] = set()
 def reset_interactables() -> None:
@@ -164,15 +175,22 @@ def next_cursor():
 def previous_cursor():
     _switch_cursor(offset=-1)
 
-def _switch_cursor(*, offset: int):
-    """offset defines how many positions to offset from the current cursor."""
+def _switch_cursor(*, index_override: int | None = None, offset: int):
+    """
+    Offset defines how many positions to offset from the current cursor.
+    If index is overridden, load the cursor at index ignoring setting loading/saving completely (used by LevelBuilder).
+    """
 
-    index: int = KDS.ConfigManager.GetSetting("UI/cursor", ...)
-    assert(isinstance(index, int))
+    index: int
+    if index_override is None:
+        index = KDS.ConfigManager.GetSetting("UI/cursor", ...)
+        assert(isinstance(index, int))
 
-    if offset != 0:
-        index = KDS.Math.Clamp(index + offset, 0, len(CURSORS) - 1)
-        KDS.ConfigManager.SetSetting("UI/cursor", index)
+        if offset != 0:
+            index = KDS.Math.Clamp(index + offset, 0, len(CURSORS) - 1)
+            KDS.ConfigManager.SetSetting("UI/cursor", index)
+    else:
+        index = KDS.Math.Clamp(index_override, 0, len(CURSORS) - 1)
 
     _load_cursor(CURSORS[index])
     _update_cursor()

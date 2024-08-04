@@ -8,6 +8,7 @@ from pygame.locals import *
 import KDS.Animator
 import KDS.Colors
 import KDS.Convert
+import KDS.Cursor
 import KDS.Logging
 import KDS.Math
 import KDS.Clock
@@ -212,6 +213,8 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
         Key_Down = False
         tmp_events = pygame.event.get()
         keys_pressed: pygame.key.ScancodeWrapper = pygame.key.get_pressed()
+        mouse_pos: tuple[int, int] = pygame.mouse.get_pos()
+        KDS.Cursor.set_textedit(text_input_rect.collidepoint(*mouse_pos))
         for event in tmp_events:
             if event.type == TEXTINPUT:
                 addText(event.text)
@@ -348,7 +351,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                         addText("")
             elif event.type == MOUSEBUTTONDOWN:
                 caret_animation.tick = 0
-                if text_input_rect.collidepoint(pygame.mouse.get_pos()):
+                if text_input_rect.collidepoint(*mouse_pos):
                     pygame.key.start_text_input()
                     textInput = True
                 else:
@@ -627,6 +630,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
         window.fill(KDS.Colors.Black)
         KDS.Clock.Tick(framerate_override=KDS.Clock.DEFAULT_FRAMERATE)
 
+    KDS.Cursor.set_textedit(False)
     pygame.key.stop_text_input()
     pygame.key.set_repeat(0, 0)
     if enableOld and len(cmd) > 0: _OldCommands.append(cmd)
