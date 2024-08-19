@@ -3,13 +3,13 @@
 # Python Version: 3.11.9
 # Python 3.12 debugger (debugpy) seems to shit itself with KDS for some reason
 
-pygame-ce==2.5.0
-pillow==10.3.0
-Markdown==3.6
-numpy==2.0.0
+pygame-ce==2.5.1
+pillow==10.4.0
+Markdown==3.7
+numpy==2.1.0
 psutil==6.0.0
 
-pyinstaller==6.9.0 # compiler dependency
+pyinstaller==6.10.0 # compiler dependency
 
 
 ##### PREVIOUS KNOWN STABLE VERSION #####
