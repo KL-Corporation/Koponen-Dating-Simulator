@@ -4,6 +4,11 @@
 <br />
 <br />
 <br />
+<br />
+
+You can pick up the latest release [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator/releases/latest). <br />
+All versions are listed [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator/releases)
+and some legacy versions are also available [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator-Releases/releases).
 
 ---
 
