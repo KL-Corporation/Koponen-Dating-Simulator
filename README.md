@@ -6,7 +6,9 @@
 <br />
 <br />
 
-You can pick up the latest release [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator/releases/latest). <br />
+You can pick up the latest release [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator/releases/latest)
+or install it through [NLauncher](https://nalstudio.github.io/NLauncher/store/koponen-dating-simulator).
+<br />
 All versions are listed [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator/releases)
 and some legacy versions are also available [here](https://github.com/KL-Corporation/Koponen-Dating-Simulator-Releases/releases).
 
