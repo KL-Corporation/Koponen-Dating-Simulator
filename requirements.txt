@@ -13,7 +13,16 @@ psutil==7.0.0
 pyinstaller==6.12.0
 
 
-##### PREVIOUS KNOWN STABLE VERSION #####
+##### PREVIOUS KNOWN STABLE VERSIONS #####
+
+# Python Version 3.11.9
+
+# pygame-ce==2.5.1
+# pillow==10.4.0
+# Markdown==3.7
+# numpy==2.1.0
+# psutil==6.0.0
+
 
 # Python Version: 3.11.5
 
@@ -23,4 +32,4 @@ pyinstaller==6.12.0
 # numpy==1.26.4
 # psutil==5.9.8
 
-##### PREVIOUS KNOWN STABLE VERSION #####
+##### PREVIOUS KNOWN STABLE VERSIONS #####
