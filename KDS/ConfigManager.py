@@ -172,22 +172,19 @@ class Save:
         return os.path.join(SaveDirPath, f"{index}.kds")
 
     @staticmethod
-    def GetMenuData():
-        retu: List[Optional[Dict[str, Any]]] = []
-        for i in range(3):
-            path = Save.ToPath(i)
-            if os.path.isfile(path):
-                retu.append({
-                    "name": JSON.Get(path, "Story/playerName", "<name-error>", False, True),
-                    "progress": ((JSON.Get(path, "Story/index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
-                    "grade": JSON.Get(path, "Story/examGrade", -1.0, False, True),
-                    "score": JSON.Get(path, "Stats/score", -1, False, True),
-                    "playtime": JSON.Get(path, "Stats/playtime", -1, False, True),
-                    "lastPlayedTimestamp": JSON.Get(path, "Stats/lastPlayed", -1, False, True)
-                })
-            else:
-                retu.append(None)
-        return tuple(retu)
+    def GetMenuData(index: int) -> dict[str, Any] | None:
+        path = Save.ToPath(index)
+        if os.path.isfile(path):
+            return {
+                "name": JSON.Get(path, "Story/playerName", "<name-error>", False, True),
+                "progress": ((JSON.Get(path, "Story/index", -1, False, True) - 1) / GetGameData("Story/levelCount")),
+                "grade": JSON.Get(path, "Story/examGrade", -1.0, False, True),
+                "score": JSON.Get(path, "Stats/score", -1, False, True),
+                "playtime": JSON.Get(path, "Stats/playtime", -1, False, True),
+                "lastPlayedTimestamp": JSON.Get(path, "Stats/lastPlayed", -1, False, True)
+            }
+        else:
+            return None
 
     class StoryData:
         def __init__(self) -> None:

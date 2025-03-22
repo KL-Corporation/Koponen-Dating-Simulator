@@ -4798,6 +4798,44 @@ def main_menu():
 
             return KDS.Jobs.Schedule(_construct)
 
+
+    @dataclass
+    class StoryData:
+        has_data: bool
+
+        toplines: list[pygame.Surface]
+        bottomlines: list[pygame.Surface]
+
+        load_job: KDS.Jobs.JobHandle[None] | None
+
+        @classmethod
+        def load(cls, font: pygame.Font, index: int) -> Self:
+            dat = cls(has_data=True, toplines=[], bottomlines=[], load_job=None)
+            dat.load_job = KDS.Jobs.Schedule(dat._load, font, index).AddErrorLogger()
+            return dat
+
+        def _load(self, font: pygame.Font, index: int):
+            data: dict[str, Any] | None = KDS.ConfigManager.Save.GetMenuData(index)
+            if data is None:
+                self.has_data = False
+                return
+
+            toplines: tuple[str, ...] = (
+                data["name"],
+                f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100, KDS.Math.MidpointRounding.AwayFromZero)}%"""
+            )
+            for tl in toplines:
+                self.toplines.append(font.render(tl, True, KDS.Colors.White))
+
+            bottomlines: tuple[str | None, ...] = (
+                f"""Exam Grade: {KDS.Convert.ToRational(data["grade"])}""" if data["grade"] != -1 else None,
+                f"""Score: {data["score"]}""",
+                f"""Playtime: {KDS.Convert.FormatDuration(data["playtime"])}""",
+                f"""Last Played: {KDS.Convert.DateTime.Humanize(datetime.fromtimestamp(data["lastPlayedTimestamp"]))}"""
+            )
+            for bl in bottomlines:
+                self.bottomlines.append(font.render(bl, True, KDS.Colors.White))
+
     @dataclass
     class CampaignData:
         map_index: int
@@ -4916,14 +4954,16 @@ def main_menu():
         play_story(index)
         skip_render_this_frame = True
 
-    story_save_button_0_rect = pygame.Rect(14, 14, 378, 400)
-    story_save_button_1_rect = pygame.Rect(410, 14, 378, 400)
-    story_save_button_2_rect = pygame.Rect(806, 14, 378, 400)
-    story_save_button_0 = KDS.UI.Button(story_save_button_0_rect, storyStartMiddleman)
-    story_save_button_1 = KDS.UI.Button(story_save_button_1_rect, storyStartMiddleman)
-    story_save_button_2 = KDS.UI.Button(story_save_button_2_rect, storyStartMiddleman)
+    story_save_button_border_radius: Final[int] = 8
+
+    def create_story_button(pos: int) -> KDS.UI.Button:
+        return KDS.UI.Button(pygame.Rect(pos, 14, 378, 400), storyStartMiddleman, border_radius=story_save_button_border_radius)
+
+    story_save_button_0 = create_story_button(14)
+    story_save_button_1 = create_story_button(410)
+    story_save_button_2 = create_story_button(806)
     story_new_save_button = KDS.UI.Button(pygame.Rect(display_size[0] // 2 - 175, display_size[1] - 325, 350, 125), newSave, "<error>")
-    story_menu_data = None
+    story_menu_data: tuple[StoryData, ...] = tuple(StoryData.load(harbinger_font, story_data_index) for story_data_index in range(3))
     story_background: pygame.Surface = pygame.image.load("Assets/Textures/UI/Menus/story_menu.png").convert()
     #endregion
     #region Campaign Menu
@@ -5043,44 +5083,30 @@ def main_menu():
             font = harbinger_font
             fontHeight = font.get_height()
 
-            text_offset = (10, 10)
-            line_offset = 25
+            text_offset = (16, 16)
+            line_offset = 16
 
-            if story_menu_data == None:
-                story_menu_data = KDS.ConfigManager.Save.GetMenuData()
-
-            pygame.draw.rect(
-                display, KDS.Colors.DarkGray, story_save_button_0_rect, 10)
-            pygame.draw.rect(
-                display, KDS.Colors.DarkGray, story_save_button_1_rect, 10)
-            pygame.draw.rect(
-                display, KDS.Colors.DarkGray, story_save_button_2_rect, 10)
-
-            story_save_button_0.update(display, mouse_pos, c, 0)
-            story_save_button_1.update(display, mouse_pos, c, 1)
-            story_save_button_2.update(display, mouse_pos, c, 2)
+            story_save_buttons = (story_save_button_0, story_save_button_1, story_save_button_2)
 
             story_new_save_button.overlay = KDS.UI.ButtonFont.render("NEW SAVE", True, KDS.Colors.EmeraldGreen if not story_new_save_override else KDS.Colors.AviatorRed)
             story_new_save_button.update(display, mouse_pos, c)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
 
             for index, data in enumerate(story_menu_data):
-                rect = (story_save_button_0_rect, story_save_button_1_rect, story_save_button_2_rect)[index]
+                story_save_btn = story_save_buttons[index]
+                rect = story_save_btn.rect
+
+                # Render button
+                story_save_btn.update(display, mouse_pos, c, index)
+                pygame.draw.rect(display, KDS.Colors.DarkGray, story_save_btn.rect, width=4, border_radius=story_save_button_border_radius)
+
+                # Render overlay
                 if not story_new_save_override:
-                    if data != None:
-                        lines = [
-                            data["name"],
-                            f"""Progress: {KDS.Math.RoundCustomInt(data["progress"] * 100, KDS.Math.MidpointRounding.AwayFromZero)}%""",
-                            None,
-                            None,
-                            f"""Exam Grade: {KDS.Convert.ToRational(data["grade"])}""" if data["grade"] != -1 else None,
-                            f"""Score: {data["score"]}""",
-                            f"""Playtime: {KDS.Convert.FormatDuration(data["playtime"])}""",
-                            f"""Last Played: {KDS.Convert.DateTime.Humanize(datetime.fromtimestamp(data["lastPlayedTimestamp"]))}"""
-                        ]
-                        for i, line in enumerate(lines):
-                            rendered = font.render(line, True, KDS.Colors.White)
-                            display.blit(rendered, (text_offset[0] + rect.x, (i * (fontHeight + line_offset)) + text_offset[1] + rect.y))
+                    if data.has_data:
+                        for i, line in enumerate(data.toplines):
+                            display.blit(line, (text_offset[0] + rect.x, (rect.y + text_offset[1]) + (i * (fontHeight + line_offset))))
+                        for i, line in enumerate(reversed(data.bottomlines)):
+                            display.blit(line, (text_offset[0] + rect.x, (rect.y + rect.h - text_offset[1] - fontHeight) - (i * (fontHeight + line_offset))))
                     else:
                         rendered = font.render("EMPTY SLOT", True, KDS.Colors.White)
                         display.blit(rendered, ((rect.width // 2 - rendered.get_width() // 2) + rect.x, (rect.height // 3 - rendered.get_height() // 2) + rect.y))
@@ -5105,7 +5131,7 @@ def main_menu():
                         campaign_loadpad_tmp_rmv: CampaignData = campaignDatas.pop(campaign_loadpad)
                         campaignDatas[campaign_loadpad] = campaign_loadpad_tmp_rmv
 
-            current_map_data: Final[CampaignData] = campaignDatas[current_map_index]
+            current_map_data: CampaignData = campaignDatas[current_map_index]
             assert(current_map_data.map_index == current_map_index)
 
             for cmpDat in campaignDatas.values():
@@ -5173,7 +5199,7 @@ def main_menu():
             else: # current_map_index == 0
                 render_map_name = "<= Custom                Campaign =>"
             level_text = KDS.UI.ButtonFont.render(render_map_name, True, (0, 0, 0))
-            display.blit(level_text, (125, 209))
+            display.blit(level_text, (129, 209))
 
             skip_render_this_frame = campaign_play_button.update(display, mouse_pos, c, current_map_data)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
@@ -5183,8 +5209,9 @@ def main_menu():
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({
                 "FPS": KDS.Clock.GetFPS(3),
-                "Campaign Datas In Memory": len(campaignDatas),
+                "Story Datas Loading": KDS.Linq.Count(story_menu_data if story_menu_data is not None else [], lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
                 "Campaign Datas Loading": KDS.Linq.Count(campaignDatas.values(), lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
+                "Campaign Datas In Memory": len(campaignDatas),
                 "Campaign Backgrounds Rendering": len(campaignAnimatingBackgrounds)
             }), (0, 0))
 
@@ -5346,7 +5373,7 @@ while main_running:
 
     if KDS.Keys.dropItem.onDown:
         if Player.inventory.getHandItem() != KDS.Inventory.EMPTYSLOT and Player.inventory.getHandItem() != KDS.Inventory.DOUBLEITEM:
-            droppedItem: Final = Player.inventory.dropItem()
+            droppedItem = Player.inventory.dropItem()
             if droppedItem is not None:
                 KDS.Build.Item.modDroppedPropertiesAndAddToList(Items, droppedItem, Player)
     if KDS.Keys.fart.onDown:
@@ -5421,7 +5448,7 @@ while main_running:
         if Koponen.rect.colliderect(Player.rect):
             Koponen.stopAutoMove()
             if Koponen.allow_talk:
-                _koponen_talk_tip_surf: Final[pygame.Surface] = koponen_talk_tip.get_surface()
+                _koponen_talk_tip_surf: pygame.Surface = koponen_talk_tip.get_surface()
                 screen.blit(_koponen_talk_tip_surf, (Koponen.rect.centerx - scroll[0] - _koponen_talk_tip_surf.get_width() // 2, Koponen.rect.top - scroll[1] - 20))
                 if KDS.Keys.functionKey.pressed:
                     KDS.Keys.Reset()
@@ -5518,7 +5545,7 @@ while main_running:
 
     #Item Tip
     if KDS.Build.Item.tipItem != None:
-        tip_rnd_surf: Final[pygame.Surface] = itemTip.get_surface()
+        tip_rnd_surf: pygame.Surface = itemTip.get_surface()
         tip_rnd_pos = (KDS.Build.Item.tipItem.rect.centerx - tip_rnd_surf.get_width() // 2, KDS.Build.Item.tipItem.rect.bottom - 45)
         screen.blit(tip_rnd_surf, (tip_rnd_pos[0] - scroll[0], tip_rnd_pos[1] - scroll[1]))
 

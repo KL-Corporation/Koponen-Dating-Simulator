@@ -94,7 +94,7 @@ class Slider:
         return value
 
 class Button:
-    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Optional[Union[pygame.Surface, str]] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 6, enabled: bool = True):
+    def __init__(self, rect: pygame.Rect, function: Callable, overlay: Optional[Union[pygame.Surface, str]] = None, button_default_color: Tuple[int, int, int] = (100, 100, 100), button_highlighted_color: Tuple[int, int, int] = (115, 115, 115), button_pressed_color: Tuple[int, int, int] = (90, 90, 90), button_disabled_color: Tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 6, border_radius: int = -1, enabled: bool = True):
         """Instantiates a new Button
 
         Args:
@@ -117,6 +117,7 @@ class Button:
         self.button_disabled_color: tuple[int, int, int] = button_disabled_color
         self.button_old_color: tuple[int, int, int] = button_default_color if enabled else button_disabled_color
         self.button_color_fade: Final = KDS.Animator.Value(0.0, 1.0, lerp_duration, KDS.Animator.AnimationType.Linear, KDS.Animator.OnAnimationEnd.Loop)
+        self.border_radius: int = border_radius
         self.enabled: bool = enabled
 
         """Updates and draws the button onto a surface.
@@ -165,7 +166,7 @@ class Button:
                 draw_color = (round(KDS.Math.Lerp(self.button_old_color[0], button_color[0], fade)), round(KDS.Math.Lerp(self.button_old_color[1], button_color[1], fade)), round(KDS.Math.Lerp(self.button_old_color[2], button_color[2], fade)))
         else:
             draw_color = button_color
-        pygame.draw.rect(surface, draw_color, self.rect)
+        pygame.draw.rect(surface, draw_color, self.rect, border_radius=self.border_radius)
 
         if self.overlay != None:
             surface.blit(self.overlay, (self.rect.center[0] - self.overlay.get_width() // 2, self.rect.center[1] - self.overlay.get_height() // 2))

@@ -67,7 +67,7 @@ class Animation:
             surf: _CachedAnimationSurface | None = _surfaceCache.get(cache_key)
             if surf is None:
                 path = "Assets/Textures/" + texture_path
-                loaded_image: Final[pygame.Surface] = pygame.image.load(path)
+                loaded_image: pygame.Surface = pygame.image.load(path)
                 image: pygame.Surface
                 if alpha:
                     image = loaded_image.convert_alpha()
@@ -82,7 +82,7 @@ class Animation:
                 KDS.Logging.debug(f"Loaded shared animation image: {cache_key}")
 
             # We switched to shared surfaces so we assert this just in case
-            verify_colorkey: Final[tuple[int, int, int, int] | None] = surf.surface.get_colorkey()
+            verify_colorkey: tuple[int, int, int, int] | None = surf.surface.get_colorkey()
             if colorkey is None:
                 if verify_colorkey is not None:
                     raise ValueError("Cached animation texture's colorkey does not match the requested colorkey.")
@@ -251,7 +251,7 @@ class AnimationType(IntEnum):
     EaseInOutBounce = auto()
 
 class Value:
-    _animT = {
+    _animT: dict[AnimationType, Callable[[float], float]] = {
         # Multiplying by 0.5 instead of dividing by 2, because Python doesn't have a compiler and multiplying is faster than division.
         AnimationType.EaseInSine: lambda t: 1 - KDS.Math.Cos(t * KDS.Math.PI * 0.5),
         AnimationType.EaseOutSine: lambda t: KDS.Math.Sin(t * KDS.Math.PI * 0.5),
@@ -301,7 +301,7 @@ class Value:
         self.ticks = Duration
         self.tick = 0
         self.onAnimationEnd = _OnAnimationEnd
-        self.type = Value._animT[_AnimationType] if _AnimationType in Value._animT else None
+        self.type: Callable[[float], float] | None = Value._animT[_AnimationType] if _AnimationType in Value._animT else None
         self.PingPong = False
         # self.value = From Seems to be a mistake that was left in the codebase, should use get_value instead.
 
