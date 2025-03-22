@@ -409,7 +409,7 @@ class WorldData:
         Level Background Image File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
 
         CampaignProp File (optional): {os.path.isfile(os.path.join(MapPath, "campaignprop.kdf"))}
-        Campaign Preview Image File (optional): {os.path.isfile(os.path.join(MapPath, "campaign_preview.png"))}
+        Preview Image File (optional): {os.path.isfile(os.path.join(MapPath, "preview.png"))}
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
@@ -561,7 +561,7 @@ class WorldData:
                                         KDS.Logging.AutoError("Invalid collision direction in properties!")
                                 elif (k == "storePrice" or k == "storeDiscountPrice") and isinstance(value, KDS.Build.Item):
                                     if isinstance(v, (int, float)):
-                                        prop_euro: Final = KDS.Money.Euro.from_float(v)
+                                        prop_euro: KDS.Money.Euro = KDS.Money.Euro.from_float(v)
                                         if k == "storePrice":
                                             value.storePrice = prop_euro
                                         else:
@@ -4891,7 +4891,7 @@ def main_menu():
 
             campaign_preview: pygame.Surface | None = None
             if self.map_dirpath is not None:
-                campaign_preview_path: str = os.path.join(self.map_dirpath, "campaign_preview.png")
+                campaign_preview_path: str = os.path.join(self.map_dirpath, "preview.png")
                 if os.path.isfile(campaign_preview_path):
                     try:
                         campaign_preview = pygame.image.load(campaign_preview_path).convert()
