@@ -5834,10 +5834,12 @@ while main_running:
 KDS.Jobs.quit()
 KDS.Audio.Music.Unload()
 # KDS.System.emptdir(PersistentPaths.Cache)
-KDS.Logging.quit()
 pygame.mixer.quit()
 pygame.display.quit()
 pygame.quit()
+
+# Kuit logger before rmtree so we release all log file handles
+KDS.Logging.quit()
 if remove_data_on_quit:
     shutil.rmtree(PersistentPaths.AppData)
 #endregion
