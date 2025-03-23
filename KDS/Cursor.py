@@ -142,6 +142,9 @@ def reset_interactables() -> None:
         _interacts.clear()
         _update_cursor()
 
+def get_currently_interacting_names() -> tuple[str, ...]:
+    return tuple(type(x).__name__ for x in _interacts)
+
 def add_interactable_reference(element: object) -> bool:
     """
     Returns `True` if the element was added.

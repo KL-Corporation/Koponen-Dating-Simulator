@@ -4558,7 +4558,7 @@ def esc_menu_f(oldSurf: pygame.Surface):
         esc_surface.set_alpha(int(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(esc_surface, (0, 0))
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         display.blit(pygame.transform.scale(display, display_size), (0, 0))
         pygame.display.flip()
@@ -4707,7 +4707,7 @@ def settings_menu():
         next_cursor_button.update(display, mouse_pos, c)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         pygame.display.flip()
         # display.fill(KDS.Colors.Black)
@@ -5211,7 +5211,6 @@ def main_menu():
 
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({
-                "FPS": KDS.Clock.GetFPS(3),
                 "Story Datas Loading": KDS.Linq.Count(story_menu_data, lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
                 "Campaign Datas Loading": KDS.Linq.Count(campaignDatas.values(), lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
                 "Campaign Datas In Memory": len(campaignDatas),
@@ -5335,7 +5334,7 @@ def level_finished_menu(oldSurf: pygame.Surface):
         level_f_surf.set_alpha(round(KDS.Math.Lerp(0, 255, anim_x)))
         display.blit(level_f_surf, (0, 0))
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
         if render_level_finished:
             pygame.display.flip()
         KDS.Clock.Tick()
@@ -5764,7 +5763,6 @@ while main_running:
         raw_frametime_ms: int = KDS.Clock.GetRawFrameTimeMs()
 
         display.blit(KDS.Debug.RenderData({
-            "FPS": KDS.Clock.GetFPS(3),
             "Frame Time": f"{frametime_ms} ms",
             "Raw Frame Time": f"{raw_frametime_ms} ms",
             "CPU Bound": f"{'Yes' if raw_frametime_ms >= frametime_ms else 'No'}", # When raw_frametime == frametime, we are CPU bound as we do not sleep anymore. Int comparison so it's accurate.

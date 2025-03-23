@@ -96,7 +96,7 @@ def Tombstones(display: pygame.Surface):
         display.blit(blk, (0, 0))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         pygame.display.flip()
         KDS.Clock.Tick()

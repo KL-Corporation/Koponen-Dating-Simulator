@@ -2429,7 +2429,7 @@ def materialMenu(previousMaterial: str) -> str:
                 cumHeight += tip.get_height() + 8
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         pygame.display.flip()
         KDS.Clock.Tick(-1)
@@ -2482,7 +2482,7 @@ def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], 
         back_btn.update(display, mouse_pos, clicked)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         pygame.display.flip()
         KDS.Clock.Tick()
@@ -2596,7 +2596,7 @@ def menu():
         display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, display_size[1] // 2 - 300))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         if btn_menu:
             pygame.display.flip()
@@ -3125,7 +3125,7 @@ def main():
             display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         pygame.display.flip()
         KDS.Clock.Tick(-1)

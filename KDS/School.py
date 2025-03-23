@@ -416,7 +416,7 @@ def Exam(showtitle = True):
             Display.blit(timerFont.render(strtime, FONTANTIALIASING, KDS.Colors.Red), (10, 10))
 
             if KDS.Debug.Enabled:
-                Display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+                Display.blit(KDS.Debug.RenderData(None), (0, 0))
 
             pygame.display.flip()
             KDS.Clock.Tick()
@@ -604,7 +604,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: tuple[int, int, int] |
         exitButton.update(display, mousePos, c)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
 
         pygame.display.flip()
         KDS.Clock.Tick()

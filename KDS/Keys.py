@@ -489,6 +489,6 @@ def StartBindingMenu(display: pygame.Surface, eventHandler: Callable[[Any], bool
         # display.blit(restart_tip, (return_button.rect.centerx - restart_tip.get_width() // 2, return_button.rect.bottom + scroll + headerSize + 10))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+            display.blit(KDS.Debug.RenderData(None), (0, 0))
         pygame.display.flip()
         KDS.Clock.Tick()

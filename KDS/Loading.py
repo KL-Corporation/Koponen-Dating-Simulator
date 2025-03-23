@@ -66,7 +66,7 @@ class Circle:
             surface.blit(crl, (surface_size[0] // 2 - crl.get_width() // 2 + circleOffset[0], crl.get_height() // 2 + circleOffset[1]))
             angle = (angle + 4) % 360
             if KDS.Debug.Enabled:
-                surface.blit(KDS.Debug.RenderData({"FPS": KDS.Clock.GetFPS(3)}), (0, 0))
+                surface.blit(KDS.Debug.RenderData(None), (0, 0))
 
             KDS.Clock.Tick()
             pygame.display.flip()
