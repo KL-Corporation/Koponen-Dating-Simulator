@@ -192,7 +192,13 @@ class InventoryKey(Key):
 
 def _onDownHandlerDebug():
     KDS.Debug.Enabled = not KDS.Debug.Enabled
-    KDS.Logging.Profiler(KDS.Debug.Enabled)
+
+    if not KDS.Debug.Enabled and KDS.Logging.profiler_running:
+        KDS.Logging.Profiler(False)
+
+def _onDownHandlerProfiler():
+    if KDS.Debug.Enabled:
+        KDS.Logging.Profiler(not KDS.Logging.profiler_running)
 
 def _onDownHandlerFullscreen():
     pygame.display.toggle_fullscreen()
@@ -216,6 +222,7 @@ terminal = Key("terminal", Binding(BindingType.keyboard, K_t), None)
 hideUI = Key("hideUI", Binding(BindingType.keyboard, K_F1), None)
 screenshot = Key("screenshot", Binding(BindingType.keyboard, K_F12), None)
 toggleDebug = Key("toggleDebug", Binding(BindingType.keyboard, K_F3), None, onDownCallback=_onDownHandlerDebug)
+toggleProfiler = Key("toggleProfiler", Binding(BindingType.keyboard, K_F4), None, onDownCallback=_onDownHandlerProfiler)
 toggleFullscreen = Key("toggleFullscreen", Binding(BindingType.keyboard, K_F11), None, onDownCallback=_onDownHandlerFullscreen)
 
 Inventory1 = InventoryKey(Binding(BindingType.keyboard, K_1), 0)
@@ -258,6 +265,7 @@ REBINDABLEKEYS: tuple[tuple[RebindLabel, Key], ...] = (
     (RebindLabel("Hide UI"), hideUI),
     (RebindLabel("Take a Screenshot"), screenshot),
     (RebindLabel("Toggle Debug Mode"), toggleDebug),
+    (RebindLabel("Toggle Profiler"), toggleProfiler),
     (RebindLabel("Toggle Fullscreen"), toggleFullscreen),
 
     (RebindLabel("Inventory Slot 1"), Inventory1),

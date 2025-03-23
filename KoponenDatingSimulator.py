@@ -390,7 +390,7 @@ class WorldData:
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
         map_load_profiler: KDS.Logging.MapLoadingProfiler | None = None
-        if KDS.Debug.Enabled:
+        if KDS.Debug.Enabled and not KDS.Logging.profiler_running:
             map_load_profiler = KDS.Logging.MapLoadingProfiler.start()
 
         map_whole_load_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD: ")
