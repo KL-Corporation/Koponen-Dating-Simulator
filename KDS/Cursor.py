@@ -155,13 +155,12 @@ def add_interactable_reference(element: object) -> bool:
     else:
         return False
 
-def remove_interactable_reference(element: object):
+def remove_interactable_reference(element: object) -> bool:
     """
     Returns `True` if the element was removed.
     If the element doesn't exist, returns `False`.
     """
 
-    output: bool
     if element in _interacts:
         _interacts.remove(element)
         _update_cursor()
