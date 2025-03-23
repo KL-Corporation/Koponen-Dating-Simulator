@@ -14,6 +14,7 @@ import KDS.Colors
 import KDS.Console
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Cursor
 import KDS.Logging
 import KDS.Math
 import KDS.Missions
@@ -370,8 +371,10 @@ class Talk:
             nonlocal player_inventory
             Mission.Return(player_inventory)
 
+        KDS.Cursor.reset_interactables()
+
         originalMusicVolume = KDS.Audio.MusicVolume
-        KDS.Audio.Music.SetVolume(originalMusicVolume / 4)
+        KDS.Audio.Music.SetVolume(originalMusicVolume / 2)
 
         pygame.mouse.set_visible(True)
         Talk.storyTrigger = False
@@ -434,6 +437,8 @@ class Talk:
 
         pygame.mouse.set_visible(False)
         KDS.Audio.Music.SetVolume(originalMusicVolume)
+        KDS.Cursor.reset_interactables()
+
         return Talk.storyTrigger
 
 class KoponenEntity:
