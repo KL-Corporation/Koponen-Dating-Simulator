@@ -4601,6 +4601,7 @@ def settings_menu():
         oldTerms = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
         KDS.ConfigManager.OverrideDefaultSettings()
         KDS.Cursor.init() # re-init to switch to the new cursor given by settings
+        KDS.Audio.re_init()
         KDS.ConfigManager.SetSetting("Data/Terms/accepted", oldTerms)
 
     def remove_data():
@@ -4713,6 +4714,8 @@ def settings_menu():
         # I don't know why this is here... It made everything flicker when exiting settings
         c = False
         KDS.Clock.Tick()
+
+    KDS.Cursor.reset_interactables()
 
 def main_menu():
     global current_map_index
@@ -5209,7 +5212,7 @@ def main_menu():
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData({
                 "FPS": KDS.Clock.GetFPS(3),
-                "Story Datas Loading": KDS.Linq.Count(story_menu_data if story_menu_data is not None else [], lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
+                "Story Datas Loading": KDS.Linq.Count(story_menu_data, lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
                 "Campaign Datas Loading": KDS.Linq.Count(campaignDatas.values(), lambda cd: cd.load_job is not None and not cd.load_job.IsComplete),
                 "Campaign Datas In Memory": len(campaignDatas),
                 "Campaign Backgrounds Rendering": len(campaignAnimatingBackgrounds)

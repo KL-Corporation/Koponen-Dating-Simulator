@@ -25,6 +25,11 @@ def init():
     for c_i in range(_SoundMixer.get_num_channels()):
         EffectChannels.append(_SoundMixer.Channel(c_i))
 
+def re_init():
+    init()
+    SetVolume(EffectVolume)
+    Music.SetVolume(MusicVolume)
+
 class _MusicLoadedContext(NamedTuple):
     filepath: str
 
