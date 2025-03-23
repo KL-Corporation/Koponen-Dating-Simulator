@@ -13,7 +13,7 @@
     "Mixer": {
         "channelCount": 128,
         "Volume": {
-            "music": 0.25,
+            "music": 0.50,
             "effect": 0.75
         },
         "walkSound": false,
