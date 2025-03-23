@@ -12,6 +12,7 @@ import KDS.Colors
 import KDS.Audio
 import KDS.ConfigManager
 import KDS.Convert
+import KDS.Cursor
 import KDS.System
 import KDS.Math
 import KDS.Logging
@@ -143,16 +144,24 @@ def Exam(showtitle = True):
             self.qsurf.set_colorkey(KDS.Colors.White)
 
         def update(self, relative_mouse_position, clicked):
+            any_option_collided: bool = False
             for option in self.options.keys():
-                if self.options[option]["rect"].collidepoint(relative_mouse_position) and clicked:
-                    if not self.options[option]["selected"]:
-                        KDS.Audio.PlaySound(random.choice(pencil_scribbles))
-                        self.options[option]["selected"] = True
-                        self.qsurf.blit(pygame.transform.smoothscale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)
-                    else:
-                        self.options[option]["selected"] = False
-                        pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
-                        pygame.draw.rect(self.qsurf, KDS.Colors.Black, self.options[option]["rect"], 1)
+                if self.options[option]["rect"].collidepoint(relative_mouse_position):
+                    any_option_collided = True
+                    if clicked:
+                        if not self.options[option]["selected"]:
+                            KDS.Audio.PlaySound(random.choice(pencil_scribbles))
+                            self.options[option]["selected"] = True
+                            self.qsurf.blit(pygame.transform.smoothscale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)
+                        else:
+                            self.options[option]["selected"] = False
+                            pygame.draw.rect(self.qsurf, KDS.Colors.White, self.options[option]["rect"])
+                            pygame.draw.rect(self.qsurf, KDS.Colors.Black, self.options[option]["rect"], 1)
+
+            if any_option_collided:
+                KDS.Cursor.add_interactable_reference(self)
+            else:
+                KDS.Cursor.remove_interactable_reference(self)
 
     def showTitle(_title: pygame.Surface):
         counter = 0
@@ -234,12 +243,18 @@ def Exam(showtitle = True):
                 self.rect = pygame.Rect(position[0], position[1], texture.get_width(), texture.get_height())
                 self.function = function
 
-            def update(self, mouse_pos, clicked):
-                if self.rect.collidepoint(mouse_pos):
-                    Display.blit(self.h_texture, self.rect.topleft)
-                    if clicked: self.function()
+            def update(self, mouse_pos: tuple[int, int], clicked: bool, hidden: bool = False):
+                if not hidden:
+                    if self.rect.collidepoint(mouse_pos):
+                        KDS.Cursor.add_interactable_reference(self)
+                        Display.blit(self.h_texture, self.rect.topleft)
+                        if clicked:
+                            self.function()
+                    else:
+                        KDS.Cursor.remove_interactable_reference(self)
+                        Display.blit(self.texture, self.rect.topleft)
                 else:
-                    Display.blit(self.texture, self.rect.topleft)
+                    KDS.Cursor.remove_interactable_reference(self)
 
         exam_running = True
         Display.blit(background, (0, 0))
@@ -258,6 +273,7 @@ def Exam(showtitle = True):
 
         def return_exam():
             nonlocal exam_running, _quit, exam_score
+            KDS.Cursor.reset_interactables()
             oldSurf = Display.copy()
             exam_music.stop()
             exam_returned = pygame.mixer.Sound("Assets/Audio/Effects/exam_returned.ogg")
@@ -384,10 +400,8 @@ def Exam(showtitle = True):
 
             mouse_position = pygame.mouse.get_pos()
             strtime, nmtime = timer.get_time()
-            if page_index > 0:
-                page_return_button.update(mouse_position, c)
-            if page_index < len(pages) - 1:
-                page_next_button.update(mouse_position, c)
+            page_return_button.update(mouse_position, c, hidden=page_index <= 0)
+            page_next_button.update(mouse_position, c, hidden=page_index >= (len(pages) - 1))
             exam_return_button.update(mouse_position, c)
             if nmtime < 0:
                 exam_music.stop()
@@ -411,8 +425,9 @@ def Exam(showtitle = True):
         exam_music.stop()
         pygame.mouse.set_visible(False)
 
-
+    KDS.Cursor.reset_interactables()
     exam()
+    KDS.Cursor.reset_interactables()
     return _quit, exam_score
 
 def Certificate(display: pygame.Surface, BackgroundColor: tuple[int, int, int] | None = None) -> bool:
