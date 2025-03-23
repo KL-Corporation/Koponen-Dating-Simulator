@@ -201,7 +201,7 @@ class Save:
 
     def __init__(self, index: int) -> None:
         Save.Active = self
-        self.index = index
+        self.index: Final[int] = index
         self.Story = Save.StoryData()
         self.Stats = Save.StatsData()
         if os.path.isfile(Save.ToPath(self.index)):

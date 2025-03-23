@@ -5798,6 +5798,8 @@ while main_running:
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             if KDS.ConfigManager.Save.Active != None and KDS.Story.BadEndingTrigger:
                 KDS.Scores.ScoreCounter.Stop()
+
+                KDS.ConfigManager.Save.Active.Story.index += 1 # Do not allow the player to retry, finish the story instead
                 KDS.ConfigManager.Save.Active.save()
                 KDS.ConfigManager.Save.Active = None
 
