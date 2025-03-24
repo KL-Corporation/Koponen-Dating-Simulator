@@ -79,9 +79,10 @@ def Clamp(value: Value, _min: Value, _max: Value) -> Value:
     """
     return max(_min, min(value, _max))
 
-def Clamp01(value: Value) -> Value:
-    return Clamp(value, 0, 1) # Should be fine without being the same type...? # type: ignore
-                              # Not casting, because it will call two extra functions and slow the code down.
+def Clamp01(value: float) -> float:
+    # Type as float, so that we don't have to cast min and max.
+    # We rarely want to clamp integers between 0 and 1 anyway
+    return Clamp(value, 0.0, 1.0)
 
 def Remap(value: float, from1: float, to1: float, from2: float, to2: float) -> float:
     """
@@ -139,10 +140,9 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
     Calculates the distance between two points.
     """
     try:
-        q = point1[0] - point2[0]
-        w = point1[1] - point2[1]
-        r = q ** 2 + w ** 2
-        return Sqrt(r)
+        x = point1[0] - point2[0]
+        y = point1[1] - point2[1]
+        return Sqrt(x*x + y*y)
     except Exception as e:
         KDS.Logging.AutoError(e)
         return 0
@@ -157,8 +157,9 @@ def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
     # we use try-except because division by zero is VERY RARE (we didn't have this zero division check for many years and the game crashed for the first time just a moment ago)
     # so we don't slow down the normal execution path of slope computation
     try:
-        return (p2[1] - p1[1]) / (p2[0]- p1[0])
-    except ZeroDivisionError:
+        return (p2[1] - p1[1]) / (p2[0] - p1[0])
+    except ZeroDivisionError as e:
+        KDS.Logging.AutoError(e)
         return INFINITY
 
 def getSlope2(angle: float) -> float: #Angle in degrees
@@ -187,7 +188,7 @@ def GetAngle(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
         KDS.Logging.AutoError(e)
         return NAN
 
-def GetAngle2(p1: Tuple[int, int], p2: Tuple[int, int]):
+def GetAngle2(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
         """Calculates the angle between two vectors.
         Args:
             p1 (tuple): First vector

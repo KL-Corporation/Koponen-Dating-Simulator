@@ -5650,7 +5650,7 @@ while main_running:
 
         KDS.UI.Indicator.combat = any(KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList)
         KDS.UI.Indicator.searching = any(KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList)
-        KDS.UI.Indicator.trespassing = KDS.World.Zone.StaffOnlyCollisions > 0
+        KDS.UI.Indicator.trespassing = bool(KDS.World.Zone.StaffOnlyCollisions > 0) # Comparisons returning a boolean wasn't a guarantee in older Python versions, I don't know whether this has changed or not
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             KDS.UI.Indicator.render(screen)
 
