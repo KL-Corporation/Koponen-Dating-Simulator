@@ -5648,9 +5648,9 @@ while main_running:
         if Player.keys["blue"]:
             screen.blit(blue_key, (38, 20))
 
-        KDS.UI.Indicator.combat = any([KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList]) # Doing it by iterating whole list to have more consistent performance.
-        KDS.UI.Indicator.searching = any([KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList])
-        KDS.UI.Indicator.trespassing = bool(KDS.World.Zone.StaffOnlyCollisions > 0)
+        KDS.UI.Indicator.combat = any(KDS.Teachers.TeacherState.Combat in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList)
+        KDS.UI.Indicator.searching = any(KDS.Teachers.TeacherState.Searching in t.state and t.health > 0 for t in KDS.Teachers.Teacher.InstanceList)
+        KDS.UI.Indicator.trespassing = KDS.World.Zone.StaffOnlyCollisions > 0
         if KDS.Gamemode.gamemode == KDS.Gamemode.Modes.Story:
             KDS.UI.Indicator.render(screen)
 

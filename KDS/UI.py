@@ -252,10 +252,10 @@ class Switch:
 class Indicator:
     Enabled: bool = True
 
-    combat = False
-    searching = False
-    trespassing = False
-    visible_contraband = False
+    combat: bool = False
+    searching: bool = False
+    trespassing: bool = False
+    visible_contraband: bool = False
 
     combat_texture: Optional[pygame.Surface] = None
     searching_texture: Optional[pygame.Surface] = None
