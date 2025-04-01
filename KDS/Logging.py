@@ -101,7 +101,7 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
 I=====[ DEBUG INFO ]=====I
     [Version Info]
     - Application: {KDS.Application.VERSION}
-    - pygame: {_format_version(pygame.version.vernum)}
+    - pygame-ce: {_format_version(pygame.version.vernum)}
     - SDL: {_format_version(pygame.get_sdl_version())}
         - Mixer: {_format_version(pygame.mixer.get_sdl_mixer_version())}
         - TTF: {_format_version(pygame.font.get_sdl_ttf_version())}
@@ -133,7 +133,7 @@ I=====[ DEBUG INFO ]=====I
             - SSE2: {_format_bool(cpu_inst_info["SSE2"])}
             - AVX2: {_format_bool(cpu_inst_info["AVX2"])}
             - NEON: {_format_bool(cpu_inst_info["NEON"])}
-    - RAM: {memory_info.available / 1_073_741_824} GB Available ({memory_info.total / 1_073_741_824} GB Total)
+    - RAM: {memory_info.available / 1_073_741_824:.2f} GB Available ({memory_info.total / 1_073_741_824:.2f} GB Total)
 I=====[ DEBUG INFO ]=====I""")
 
 def _log(message: str | BaseException, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
