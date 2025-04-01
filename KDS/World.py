@@ -728,6 +728,7 @@ class Dark:
     @staticmethod
     def Reset(*, instant: bool):
         Dark.Set(Dark._defaultEnabled, Dark._defaultDarknessStrength, instant=instant)
+        Dark.Disco.enabled = False
 
     @staticmethod
     def Configure(enabled: bool, strength: int):

@@ -5585,9 +5585,10 @@ while main_running:
             circleSize: int = 20
             circleSpacing: int = 10
             circleSpeed: int = 1
-            KDS.World.Dark.Disco.circleX = (KDS.World.Dark.Disco.circleX + circleSpeed) % (circleSize + circleSpacing)
-            for x in range(KDS.World.Dark.Disco.circleX - (circleSize + circleSpeed), black_tint.get_width(), (circleSize + circleSpeed)):
-                for y in range(circleSpacing, black_tint.get_height() - circleSpacing - circleSize, (circleSpacing + circleSize)):
+            circleTotalSize: int = circleSize + circleSpacing
+            KDS.World.Dark.Disco.circleX = (KDS.World.Dark.Disco.circleX + circleSpeed) % circleTotalSize
+            for x in range(KDS.World.Dark.Disco.circleX - circleTotalSize, black_tint.get_width(), circleTotalSize):
+                for y in range(0, black_tint.get_height(), circleTotalSize):
                     black_tint.blit(KDS.World.Lighting.Shapes.circle_hard.get(circleSize // 2, 6000), (x, y))
 
         if Player.light and Player.visible:
