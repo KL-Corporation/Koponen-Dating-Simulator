@@ -154,7 +154,8 @@ class NPC:
     def panickNearby(rect: pygame.Rect):
         for npc in NPC.InstanceList:
             if abs(rect.centerx - npc.rect.centerx) < 16 * 34 and abs(rect.centery - npc.rect.centery) < 34:
-                npc.panicked = True
+                if not npc.noPanick:
+                    npc.panicked = True
 
 class StudentNPC(NPC):
     Task: Optional[KDS.Missions.StudentTask] = None
@@ -191,8 +192,10 @@ class DoorGuardNPC(NPC):
         idle_anim = KDS.Animator.Animation("idle", 2, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop, animation_dir="NPC/DoorGuard")
         die_anim = KDS.Animator.Animation("die", 9, 7, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop, animation_dir="NPC/DoorGuard")
         self.internalInit(rect, Type.Idle, idle_anim, idle_anim, die_anim, idle_anim, 100, 0, 0)
-        self.noPanick = True
         self.guardAgro: bool = False
+
+        # Disabled to display guard health, run speed is 0 so this shouldn't do anything?
+        # self.noPanick = True
 
         weapon = KDS.Build.Item.serialNumbers[10]((0, 0), 10)
         assert isinstance(weapon, KDS.Build.Weapon), "Door Guard weapon should be a pistol...?"
