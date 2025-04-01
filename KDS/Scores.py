@@ -285,8 +285,8 @@ def render_campaign_scores(save_uuid: UUID, font: pygame.Font, size: tuple[int, 
             ("Fastest Run", KDS.Convert.FormatDuration(save.get_min_duration())),
         ],
         [
-            ("Total Deaths", str(save.get_total_deaths())),
-            ("Total Runs", str(save.get_run_count()))
+            ("Total Runs", str(save.get_run_count())),
+            ("Total Deaths", str(save.get_total_deaths()))
         ]
     ]
 

@@ -103,7 +103,7 @@ class PersistentPaths:
     AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
     # Cache = os.path.join(AppData, "cache")
     Saves = os.path.join(AppData, "saves")
-    CampaignSaves = os.path.join(AppData, "saves_campaign")
+    CampaignSaves = os.path.join(AppData, "runs")
     Logs = os.path.join(AppData, "logs")
     Screenshots = os.path.join(AppData, "screenshots")
     CustomMaps = os.path.join(AppData, "custom_maps")
