@@ -16,7 +16,7 @@ import KDS.Clock
 import KDS.Debug
 import KDS.UI
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass
@@ -102,22 +102,25 @@ def Tombstones(display: pygame.Surface):
         KDS.Clock.Tick()
 
 class WalkieTalkieEffect:
-    phaseTwoIndex = 0
-    phaseIndex = 0
-    phaseZeroChannel = None
-    phaseOneChannel = None
-    phaseThreeStarted: bool = False
-    blackSurf = None
-    alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
+    phaseTwoIndex: int
+    phaseIndex: int
+    phaseZeroChannel: pygame.mixer.Channel | None
+    phaseOneChannel: pygame.mixer.Channel | None
+    phaseThreeStarted: bool
+    blackSurf: pygame.Surface
+    alpha_anim: KDS.Animator.Value
 
     @staticmethod
-    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface) -> bool:
+    def Start(newCall: bool, player: PlayerClass, display: pygame.Surface) -> tuple[bool, bool]:
         if newCall:
             WalkieTalkieEffect.phaseTwoIndex = 0
             WalkieTalkieEffect.phaseIndex = 0
             WalkieTalkieEffect.phaseZeroChannel = None
             WalkieTalkieEffect.phaseOneChannel = None
+            WalkieTalkieEffect.phaseThreeStarted = False
             WalkieTalkieEffect.blackSurf = pygame.Surface(display.get_size())
+            WalkieTalkieEffect.alpha_anim = KDS.Animator.Value(255.0, 0.0, 240)
+
             player.lockMovement = True
             KDS.Audio.Music.Fadeout(1.0)
 
@@ -145,39 +148,50 @@ class WalkieTalkieEffect:
 
                 KDS.World.Dark.Configure(True, 224)
                 player.health = 15.0
+                player.direction = True
 
-            display.blit(pygame.Surface(display.get_size()), (0, 0)) # display.fill didn't work for some reason
+            display.fill((0, 0, 0))
 
             WalkieTalkieEffect.phaseTwoIndex += 1
             return False if WalkieTalkieEffect.phaseTwoIndex < 60 * 8 else True
 
-        def phaseThree() -> bool:
+        def phaseThree() -> tuple[bool, bool]:
+            run_glitch: bool = False
             if not WalkieTalkieEffect.phaseThreeStarted:
                 KDS.Audio.Music.Play("Assets/Audio/Effects/glitch.ogg")
+                run_glitch = True
                 WalkieTalkieEffect.phaseThreeStarted = True
             if WalkieTalkieEffect.blackSurf != None:
                 WalkieTalkieEffect.blackSurf.set_alpha(int(WalkieTalkieEffect.alpha_anim.update()))
                 display.blit(WalkieTalkieEffect.blackSurf, (0, 0))
 
-                return False if not WalkieTalkieEffect.alpha_anim.Finished else True
+                return (WalkieTalkieEffect.alpha_anim.Finished, run_glitch)
             else:
-                KDS.Logging.AutoError("alpha_anim is None!")
-                return False
+                KDS.Logging.AutoError("No black surface initialized!")
+                return (True, run_glitch)
 
-        phases = (
+        phases: tuple[Callable[[], bool | tuple[bool, bool]], ...] = (
             phaseZero,
             phaseOne,
             phaseTwo,
             phaseThree
         )
 
-        if phases[WalkieTalkieEffect.phaseIndex]():
-            WalkieTalkieEffect.phaseIndex += 1
+        run_glitch: bool = False
+        phase_output: bool | tuple[bool, bool] = phases[WalkieTalkieEffect.phaseIndex]()
+        if isinstance(phase_output, bool):
+            if phase_output:
+                WalkieTalkieEffect.phaseIndex += 1
+        else:
+            if phase_output[0]:
+                WalkieTalkieEffect.phaseIndex += 1
+            if phase_output[1]:
+                run_glitch = True
 
         if WalkieTalkieEffect.phaseIndex >= len(phases):
             player.lockMovement = False
-            return True
+            return (True, run_glitch)
 
-        return False
+        return (False, run_glitch)
 
         # Game state will be changed in main (NOT IMPLEMENTED) (or is it? I can't remember)

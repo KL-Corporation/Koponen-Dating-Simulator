@@ -1701,14 +1701,16 @@ class Sleepable(KDS.Build.Tile):
             KDS.Audio.PlayFromFile(self.audiofile)
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
+            Player.visible = False
+            Player.lockMovement = True
         else:
             KDS.Missions.Listeners.TileSleepEnd.Trigger()
-        #region Position Player Correctly
+            Player.visible = True
+            Player.lockMovement = False
+
+        # Position Player Correctly
         Player.rect.bottomright = (self.rect.right - (34 - Player.rect.width) // 2, self.rect.bottom) # The camera will follow the player, but whatever... This is done so that Story enemy makes it's sound correctly
         Player.direction = False
-        #endregion
-        Player.visible = not Player.visible
-        Player.lockMovement = not Player.lockMovement
 
     def update(self):
         if self.disableSleep:
@@ -3744,7 +3746,7 @@ class PlayerClass:
                     self.vertical_momentum = 0
                 self.air_timer += 1
 
-            if self.movement[0] != 0:
+            if self.movement[0] != 0 and not self.lockMovement:
                 self.direction = self.movement[0] < 0
                 self.walking = True
                 KDS.Missions.Listeners.Movement.Trigger()
@@ -5777,12 +5779,14 @@ while main_running:
     #endregion
 
     if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
-        if KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display):
+        walkie_talkie_finished, walkie_talkie_start_glitch = KDS.Story.WalkieTalkieEffect.Start(WalkieTalkie.storyTrigger, Player, display)
+        if walkie_talkie_finished:
             KDS.Missions.SetProgress("explore", "find_walkie_talkie", 1.0)
             WalkieTalkie.storyRunning = False
-            ScreenEffects.Trigger(ScreenEffects.Effects.Glitch)
         else:
             WalkieTalkie.storyRunning = True
+        if walkie_talkie_start_glitch:
+            ScreenEffects.Trigger(ScreenEffects.Effects.Glitch)
         WalkieTalkie.storyTrigger = False
 
     pygame.display.flip()
