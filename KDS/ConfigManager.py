@@ -319,7 +319,7 @@ class CampaignSave:
 
         complete_json: str
         if partial_json is not None:
-            complete_json = '[' + partial_json.removesuffix(',') + ']'
+            complete_json = '[' + partial_json.rstrip().removesuffix(',') + ']'
         else:
             complete_json = "[]"
 
@@ -337,4 +337,4 @@ class CampaignSave:
 
         with open(CampaignSave._get_path(uuid), "a+", encoding="utf-8") as f:
             f.write(run_json)
-            f.write(',')
+            f.write(",\n")
