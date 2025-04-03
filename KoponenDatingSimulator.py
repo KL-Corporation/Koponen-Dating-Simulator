@@ -3650,12 +3650,13 @@ class PlayerClass:
                     self.rect = pygame.Rect(self.rect.x, self.rect.y + (stand_size[1] - crouch_size[1]), crouch_size[0], crouch_size[1])
                     self.crouching = True
             elif self.crouching:
-                # If more than zero collisions; do not release crouch
-                test_rect: pygame.Rect = pygame.Rect(Player.rect.x, Player.rect.y - crouch_size[1], Player.rect.width, Player.rect.height)
-                if KDS.World.collision_test_fast(test_rect, Tiles) is not None:
-                    return
-                self.rect = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
-                self.crouching = False
+                if KDS.Debug.Enabled:
+                    assert KDS.World.collision_test_fast(self.rect, Tiles) is None
+
+                stand_rect: Final = pygame.Rect(self.rect.x, self.rect.y + (crouch_size[1] - stand_size[1]), stand_size[0], stand_size[1])
+                if all(KDS.World.CollisionDirection.Bottom not in col.collisionDirection for col in KDS.World.collision_test(stand_rect, Tiles)):
+                    self.rect = stand_rect
+                    self.crouching = False
 
         def jump(ladderOverride: bool = False):
             if KDS.Keys.moveUp.pressed and not KDS.Keys.moveDown.pressed:
