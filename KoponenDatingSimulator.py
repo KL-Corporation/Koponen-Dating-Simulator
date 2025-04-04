@@ -454,9 +454,19 @@ class WorldData:
         tmpInventory: Dict[str, int] = KDS.MapProp.LevelProp.Get("Entities/Player/Inventory", {})
         for k, v in tmpInventory.items():
             if k.isnumeric() and int(k) < len(Player.inventory) and v in KDS.Build.Item.serialNumbers:
-                Player.inventory.pickupItemToIndex(int(k), KDS.Build.Item.serialNumbers[v]((0, 0), v), force=True)
+                inv_picked_up: bool = Player.inventory.pickupItemToIndex(int(k), KDS.Build.Item.serialNumbers[v]((0, 0), v), force=True)
+                if not inv_picked_up:
+                    KDS.Logging.AutoError(f"Value: {v} failed to assign to index: {k} of Player Inventory.")
             else:
                 KDS.Logging.AutoError(f"Value: {v} cannot be assigned to index: {k} of Player Inventory.")
+
+        tmpKeys: list[str] = KDS.MapProp.LevelProp.Get("Entities/Player/keys", [])
+        for k in tmpKeys:
+            if k in Player.keys:
+                Player.keys[k] = True
+            else:
+                KDS.Logging.AutoError(f"Key: '{k}' cannot be given to the player.")
+
         Wallet.set_balance(KDS.Money.Euro.from_float(KDS.MapProp.LevelProp.Get("Entities/Player/walletBalance", 0)))
         KDS.Build.Item.infiniteAmmo = KDS.MapProp.LevelProp.Get("Data/infiniteAmmo", False)
 

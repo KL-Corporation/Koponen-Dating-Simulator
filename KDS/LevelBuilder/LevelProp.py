@@ -51,6 +51,7 @@ def generateLevelProp():
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/lscript", [])
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Koponen/listeners", [])
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/Inventory", {})
+        KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/keys", [])
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/walletBalance", 0)
         KDS.ConfigManager.JSON.Set(savePath, "Entities/Player/spawnInverted", False)
         KDS.ConfigManager.JSON.Set(savePath, "Rendering/AmbientLight/enabled", False)
