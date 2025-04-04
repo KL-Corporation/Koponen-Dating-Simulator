@@ -6110,10 +6110,10 @@
 "198-252":{"0":{"checkCollision":false}},
 "199-252":{"0":{"checkCollision":false}},
 "200-252":{"0":{"checkCollision":false}},
-"201-252":{"0":{"checkCollision":false},"1":{"storePrice":6.99,"storeDiscountPrice":3.99,"requireTaskWithName":"lappisytytyspalat_ignite"}},
+"201-252":{"0":{"checkCollision":false},"1":{"storePrice":6.99,"storeDiscountPrice":3.99,"requireTaskWithName":"lappisytytyspalat_ignite","requireZoneWithId":"sytytyspalat_paakaytava"}},
 "202-252":{"0":{"checkCollision":false},"1":{"storePrice":0.99}},
 "203-252":{"0":{"checkCollision":false}},
-"204-252":{"0":{"checkCollision":false},"1":{"storePrice":3.0,"storeDiscountPrice":2.0}},
+"204-252":{"0":{"checkCollision":false},"1":{"storePrice":3.0,"storeDiscountPrice":1.85}},
 "205-252":{"0":{"checkCollision":false},"1":{"storePrice":349.99,"storeDiscountPrice":299.99}},
 "206-252":{"0":{"checkCollision":false}},
 "207-252":{"0":{"checkCollision":false}},
@@ -7941,5 +7941,5 @@
 "237-298":{"0":{"checkCollision":false},"2":{"listener":"Shoplifting","disableDamage":true}},
 "238-298":{"0":{"checkCollision":false},"9":{"overlay":"0112"},"2":{"listener":"Shoplifting","disableDamage":true}},
 "239-298":{"2":{"listener":"Shoplifting","disableDamage":true}},
-"zones":{"46-188-59-5":{"staffOnly":true},"39-156-80-6":{"staffOnly":true},"44-104-73-6":{"staffOnly":true},"168-134-37-10":{"darkness":128,"staffOnly":true,"darknessIsInstant":true},"175-245-40-15":{"levelEnder":true}}
+"zones":{"46-188-59-5":{"staffOnly":true},"39-156-80-6":{"staffOnly":true},"44-104-73-6":{"staffOnly":true},"168-134-37-10":{"darkness":128,"staffOnly":true,"darknessIsInstant":true},"175-245-40-15":{"levelEnder":true},"66-150-25-5":{"customId":"sytytyspalat_paakaytava"}}
 }

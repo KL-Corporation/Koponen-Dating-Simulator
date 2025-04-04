@@ -15,8 +15,8 @@
             "listeners": [],
             "lscript": [],
             "startPos": [
-                3298,
-                5206
+                6024,
+                4762
             ],
             "startWithTalk": true,
             "talk": true
@@ -25,11 +25,14 @@
             "Inventory": {
                 "0": 42
             },
+            "keys": [
+                "red"
+            ],
             "walletBalance": 6,
             "spawnInverted": false,
             "startPos": [
-                3264,
-                5206
+                5988,
+                4764
             ]
         }
     },
