@@ -37,7 +37,7 @@ import traceback
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag, StrEnum
 
-from typing import Any, Callable, Final, Iterable, NamedTuple, Optional, Self, Sequence, TypeAlias, Union
+from typing import Any, Callable, Final, ItemsView, Iterable, NamedTuple, Optional, Self, Sequence, TypeAlias, Union
 
 from KDS.LevelBuilder.Shared import *
 
@@ -156,28 +156,18 @@ class TextureHolder:
             self.lightOverlay: pygame.Surface = lghtOvl
 
     def __init__(self) -> None:
-        self.data: dict[UnitType, dict[str, TextureHolder.TextureData]] = {t: {} for t in UnitType}
+        self.textures: dict[str, TextureHolder.TextureData] = {}
         self.serials: list[str] = []
         self.names: list[str] = []
 
         self.trueScale: Final[set[str]] = set()
         self.noCollision: Final[set[str]] = set()
 
+        self.TeleportOverlay: TextureHolder.TextureData | None = None
         self.NotFoundFallback: TextureHolder.TextureData | None = None
 
     def __iter__(self):
-        self.iterIndex: int = 0
-        self.iterValues: list[TextureHolder.TextureData] = []
-        for d in self.data.values():
-            self.iterValues.extend([v for v in d.values()])
-        return self
-
-    def __next__(self) -> TextureHolder.TextureData:
-        if self.iterIndex >= len(self.iterValues):
-            raise StopIteration
-        output = self.iterValues[self.iterIndex]
-        self.iterIndex += 1
-        return output
+        return iter(self.textures.values())
 
     def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: tuple[int, int, int] | None = KDS.Colors.White, alpha: int | None = None) -> None:
         texture: pygame.Surface = pygame.image.load(path).convert()
@@ -204,20 +194,26 @@ class TextureHolder:
             self._Add(TextureHolder.TextureData(globalSerial, dName, buildData.textures[localSerial]))
 
     def _Add(self, texture_data: TextureData):
-        serialNumber: str = texture_data.serialNumber
-
-        self.data[UnitType(int(serialNumber[0]))][serialNumber] = texture_data
-        self.serials.append(serialNumber)
+        self.textures[texture_data.serialNumber] = texture_data
+        self.serials.append(texture_data.serialNumber)
         self.names.append(texture_data.name)
 
     def GetData(self, serialNumber: str) -> TextureHolder.TextureData:
-        try:
-            return self.data[UnitType(int(serialNumber[0]))][serialNumber]
-        except Exception:
-            if self.NotFoundFallback is not None:
-                return self.NotFoundFallback
-            else:
-                raise
+        # try:
+        #     return self.textures[serialNumber]
+        # except Exception:
+        #     if self.NotFoundFallback is not None:
+        #         return self.NotFoundFallback
+        #     else:
+        #         raise
+
+        # The above optimization did made performance worse...?
+        # Either dictionary __getitem__ is slow or the try-catch didn't work well with the Python 3.13 JIT compiler
+
+        tex: TextureHolder.TextureData | None = self.textures.get(serialNumber, self.NotFoundFallback)
+        if tex is None:
+            raise KeyError(f"No texture found for serial number: '{serialNumber}'")
+        return tex
 
     def GetDefaultTexture(self, serialNumber: str) -> pygame.Surface:
         return self.GetData(serialNumber).texture
@@ -230,10 +226,10 @@ class TextureHolder:
         return data.scaledTexture, data.scaledTexture_size
 
     def RescaleTextures(self) -> None:
-        for t in self.data.values():
-            for d in t.values():
-                d.rescaleTexture()
-
+        for t in self.textures.values():
+            t.rescaleTexture()
+        if self.TeleportOverlay is not None:
+            self.TeleportOverlay.rescaleTexture()
         if self.NotFoundFallback is not None:
             self.NotFoundFallback.rescaleTexture()
         LevelPropData.rescale()
@@ -265,6 +261,10 @@ Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png"
 Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC")
 
 Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", pygame.image.load("Assets/Editor/Textures/missing.png").convert())
+
+telep_overlay_tex: Final = pygame.image.load("Assets/Textures/Teleports/telep.png").convert()
+telep_overlay_tex.set_alpha(100)
+Textures.TeleportOverlay = TextureHolder.TextureData("3001", "<error>", telep_overlay_tex) # Set serial so that this overlay isn't drawn over tile 3001
 #endregion
 
 ### GLOBAL VARIABLES ###
@@ -803,11 +803,11 @@ class UnitData:
         blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in Textures.trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
 
-        #region Blitting
+        # blitting
         surface.blit(textureData.scaledTexture, blitPos)
-        #endregion
 
-        if serial[0] == "0" and properties != None:
+        ser0: str = serial[0]
+        if ser0 == "0" and properties is not None:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
                 if not checkCollision:
@@ -816,10 +816,11 @@ class UnitData:
                 else:
                     pygame.draw.rect(surface, KDS.Colors.White, (pos[0], pos[1], scalesize, scalesize))
                     KDS.Logging.warning(f"checkCollision forced on at: {pos}. This is generally not recommended.", True)
-        elif serial[0] == "3" and serial != "3001":
-            telepOverlay = Textures.GetScaledTexture("3001").copy()
-            telepOverlay.set_alpha(100)
-            surface.blit(telepOverlay, pos)
+        elif ser0 == "3" and Textures.TeleportOverlay is not None and serial != Textures.TeleportOverlay.serialNumber:
+            # telepOverlay = Textures.GetScaledTexture("3001").copy()
+            # telepOverlay.set_alpha(100)
+            surface.blit(Textures.TeleportOverlay.scaledTexture, pos)
+
         if lightOverlay: # I don't know if pygame.Surface has a custom equals operator.
             surface.blit(textureData.lightOverlay, blitPos)
 
@@ -843,7 +844,6 @@ class UnitData:
         scroll[0] = KDS.Math.Clamp(scroll[0], KDS.Math.CeilToInt(-display_size[0] / scalesize) + 1, gridSize[0] - 1)
         scroll[1] = KDS.Math.Clamp(scroll[1], KDS.Math.CeilToInt(-display_size[1] / scalesize) + 1, gridSize[1] - 1)
         #endregion
-
 
         tip_renders = []
         mpos = pygame.mouse.get_pos()
@@ -882,7 +882,7 @@ class UnitData:
                             if not zoneMode:
                                 newTeleportIdentifier: Optional[int] = KDS.Console.Start(f"Set teleport ID: (int[0, 2147483647])", True, KDS.Console.CheckTypes.Int(0, 2147483647), defVal=str(teleportIdentifier), autoFormat=True)
                                 if newTeleportIdentifier != None:
-                                    newTeleportIdentifierUndo: Final = ChangeUndoRecord()
+                                    newTeleportIdentifierUndo: ChangeUndoRecord = ChangeUndoRecord()
                                     unit.properties.Set(newTeleportIdentifierUndo, UnitType.Teleport, "identifier", newTeleportIdentifier)
                                     undo.register(newTeleportIdentifierUndo)
 
@@ -891,7 +891,7 @@ class UnitData:
                         storePriceKey: str = "storePrice" if not storePriceDiscounted else "storeDiscountPrice"
                         storePriceMsg: str = "Enter Price:" if not storePriceDiscounted else "Enter Discount Price:"
                         storePriceStr: str | None = KDS.Console.Start(storePriceMsg, allowEscape=False, checkType=KDS.Console.CheckTypes.Float()) # do not allow escape as it removes the price as well
-                        storePriceUndo: Final = ChangeUndoRecord()
+                        storePriceUndo: ChangeUndoRecord = ChangeUndoRecord()
                         if storePriceStr is not None and len(storePriceStr) > 0:
                             unit.properties.Set(storePriceUndo, UnitType.Item, storePriceKey, float(storePriceStr))
                         else:
@@ -913,7 +913,7 @@ class UnitData:
                                 else:
                                     setPropVal = KDS.Convert.AutoType(setPropValUnformatted, setPropValUnformatted) # If cannot be parsed to int, bool or float; return string
 
-                                setPropUndo: Final = ChangeUndoRecord()
+                                setPropUndo: ChangeUndoRecord = ChangeUndoRecord()
                                 if len(setPropValUnformatted) > 0:
                                     unit.properties.Set(setPropUndo, propType, setPropKey, setPropVal)
                                 else:
@@ -924,7 +924,7 @@ class UnitData:
                     elif keys_pressed[K_o] and not keys_pressed[K_LCTRL]:
                         overlayId = materialMenu(UnitData.EMPTY)
                         allowTilePlacement = False
-                        overlayUndo: Final = ChangeUndoRecord()
+                        overlayUndo: ChangeUndoRecord = ChangeUndoRecord()
                         if overlayId != UnitData.EMPTY:
                             unit.properties.Set(overlayUndo, UnitType.Unspecified, "overlay", overlayId)
                         else:
@@ -934,7 +934,7 @@ class UnitData:
                         if referenceGrid != None and unit.pos[1] < len(referenceGrid):
                             reference2 = referenceGrid[unit.pos[1]]
                             if unit.pos[0] < len(reference2):
-                                tmpReferenceUndo: Final = ChangeUndoRecord()
+                                tmpReferenceUndo: ChangeUndoRecord = ChangeUndoRecord()
                                 unit.overrideData(tmpReferenceUndo, reference2[unit.pos[0]])
                                 undo.register(tmpReferenceUndo)
 
@@ -1012,9 +1012,11 @@ class UnitData:
                     rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
                     tip_renders.append(rendered_tip)
 
-        [UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay) for doorSrl, doorPos, lightOverlay in doorRenders]
+        for doorSrl, doorPos, lightOverlay in doorRenders:
+            UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay)
         if renderOverlays:
-            [UnitData.renderSerial(surface, None, ovs, ovp, ovov) for ovs, ovp, ovov in overlayRenders]
+            for ovs, ovp, ovov in overlayRenders:
+                UnitData.renderSerial(surface, None, ovs, ovp, ovov)
 
         if len(tip_renders) > 0:
             totHeight = 0
@@ -1032,6 +1034,10 @@ class UnitData:
 
         mousePosText = harbinger_font.render(str(mpos_tilepos), True, KDS.Colors.AviatorRed)
         display.blit(mousePosText, (display_size[0] - mousePosText.get_width(), display_size[1] - mousePosText.get_height()))
+        if KDS.Debug.Enabled:
+            mpos_pixelpos: Final[tuple[int, int]] = (int(34 * mpos[0] / scalesize) + (34 * scroll[0]), int(34 * mpos[1] / scalesize) + (34 * scroll[1]))
+            pixelMousePosText: Final = harbinger_font_small.render(str(mpos_pixelpos), True, KDS.Colors.RiverBlue)
+            display.blit(pixelMousePosText, (display_size[0] - pixelMousePosText.width, display_size[1] - mousePosText.height - 4 - pixelMousePosText.height))
 
         # UnitData.releasedButtons[0] = not mouse_pressed[0]
         # UnitData.releasedButtons[2] = not mouse_pressed[2]
@@ -1183,10 +1189,11 @@ class PropertiesData:
             undo.record_after(self)
 
 
-    def Get(self, _type: UnitType, key: str, default: Optional[Union[str, int, float, bool]]) -> Optional[Union[str, int, float, bool]]:
-        if _type not in self.values or key not in self.values[_type]:
+    def Get(self, _type: UnitType, key: str, default: Optional[str | int | float | bool]) -> Optional[str | int | float | bool]:
+        if _type in self.values:
+            return self.values[_type].get(key, default)
+        else:
             return default
-        return self.values[_type][key]
 
     def GetAll(self) -> dict[UnitType, dict[str, Union[str, int, float, bool]]]:
         return {k: v.copy() for k, v in self.values.items()}
@@ -2355,19 +2362,20 @@ def materialMenu(previousMaterial: str) -> str:
 
     y = 0
     x = 0
-    for i, collection in enumerate(Textures.data.values()):
-        for data in sorted(collection.values(), key=lambda k: k.name.lower()):
+    texture_data = KDS.Linq.GroupBy(Textures, lambda x: x.serialNumber[0])
+    for i, (key, tex) in enumerate(sorted(texture_data, key=lambda x: x[0])):
+        for data in sorted(tex, key=lambda k: k.name.lower()):
             selectorRects.append(selectorRect((x, y), data))
             x += 1
             if x > COLUMNS:
                 x = 0
                 y += 1
 
-        if i < len(Textures.data) - 1: # Skips the line adding for the last collection
+        # if i < len(texture_data) - 1: # Skips the line adding for the last collection
+        y += 1
+        if x > 0:
+            x = 0
             y += 1
-            if x > 0:
-                x = 0
-                y += 1
 
     ROWS = y
 
@@ -2469,7 +2477,7 @@ def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], 
                     multiselect_menu_running = False
 
         display.fill((34, 34, 34))
-        mouse_pos: Final = pygame.mouse.get_pos()
+        mouse_pos: tuple[int, int] = pygame.mouse.get_pos()
 
         title_rect = pygame.Rect((display_size[0] - title.get_width()) // 2, 50, title.get_width(), title.get_height())
         pygame.draw.rect(display, KDS.Colors.Gray, (title_rect.x - 200, title_rect.y - 25, title_rect.w + 400, title_rect.h + 50))
@@ -2755,8 +2763,11 @@ def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
     elif event.type == KEYDOWN:
         if event.key == K_F3:
             KDS.Debug.Enabled = not KDS.Debug.Enabled
-            KDS.Logging.Profiler(KDS.Debug.Enabled)
+            KDS.Logging.Profiler(False)
             return True
+        if event.key == K_F4:
+            if KDS.Debug.Enabled:
+                KDS.Logging.Profiler(not KDS.Logging.profiler_running)
     elif event.type == VIDEORESIZE:
         SetDisplaySize((event.w, event.h))
         return True
@@ -2957,9 +2968,9 @@ def main():
                 new_rescale_requested = False
 
         if openCommandTerminal:
-            inputConsole_output: Final = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
+            inputConsole_output: Any = KDS.Console.Start("Enter Command:", True, KDS.Console.CheckTypes.Commands(), commands=commandTree, showFeed=True, autoFormat=True, enableOld=True)
             if inputConsole_output != None:
-                console_exit_code: Final[int] = consoleHandler(inputConsole_output)
+                console_exit_code: int = consoleHandler(inputConsole_output)
                 openCommandTerminal = (console_exit_code > 0)
             else:
                 openCommandTerminal = False

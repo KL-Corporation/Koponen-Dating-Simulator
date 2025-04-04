@@ -1,7 +1,8 @@
-from typing import Callable, Iterable, Optional, TypeVar, Union, cast
+from typing import Callable, ItemsView, Iterable, Optional, TypeVar, Union, cast
 
-TSource = TypeVar("TSource", bound=object)
+TSource = TypeVar("TSource")
 TSelector = TypeVar("TSelector", int, float)
+TKey = TypeVar("TKey")
 
 def Any(source: Iterable[TSource], predicate: Callable[[TSource], bool]) -> bool:
     """Determines whether any element of an iterable satisfies a condition.
@@ -168,3 +169,13 @@ def LastOrNone(source: Iterable[TSource], predicate: Callable[[TSource], bool]) 
         if predicate(v) == True:
             return v
     return None
+
+def GroupBy(source: Iterable[TSource], keySelector: Callable[[TSource], TKey]) -> ItemsView[TKey, list[TSource]]:
+    output: dict[TKey, list[TSource]] = {}
+    for value in source:
+        key: TKey = keySelector(value)
+        if key in output:
+            output[key].append(value)
+        else:
+            output[key] = [value]
+    return output.items()
