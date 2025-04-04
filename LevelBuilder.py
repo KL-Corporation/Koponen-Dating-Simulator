@@ -826,7 +826,7 @@ class UnitData:
 
     @staticmethod
     def renderUpdate(surface: pygame.Surface, scroll: list[int], renderList: GridType, brush: BrushData,
-                     keys_pressed: pygame.key.ScancodeWrapper, mouse_pressed: tuple[bool, ...], pickTile: bool = False):
+                     keys_pressed: pygame.key.ScancodeWrapper, mouse_pressed: tuple[bool, ...], pickTile: bool = False, pickLastTile: UnitData | None = None) -> UnitData | None:
         global allowTilePlacement, build_undo, remove_undo
 
         assert(undo is not None)
@@ -851,7 +851,7 @@ class UnitData:
         pygame.draw.rect(surface, (80, 30, 30), (-scroll[0] * scalesize, -scroll[1] * scalesize, gridSize[0] * scalesize, gridSize[1] * scalesize))
         doorRenders: list[tuple[str, tuple[int, int], bool]] = []
         overlayRenders: list[tuple[str, tuple[int, int], bool]] = []
-        tileWasPicked: bool = False
+        picked_tile: UnitData | None = None
         for row in renderList[max(scroll[1], 0) : KDS.Math.CeilToInt(scroll[1] + display_size[1] / scalesize)]:
             for unit in row[max(scroll[0], 0) : KDS.Math.CeilToInt(scroll[0] + display_size[0] / scalesize)]:
                 normalBlitPos = (unit.pos[0] * scalesize - scroll[0] * scalesize, unit.pos[1] * scalesize - scroll[1] * scalesize)
@@ -942,12 +942,15 @@ class UnitData:
                         for sr in unit.filledSerials: tip_renders.append(harbinger_font_small.render(sr, True, KDS.Colors.Red))
 
                     if pickTile:
-                        brush.PickBrush(unit, get_properties=keys_pressed[K_LCTRL])
-                        tileWasPicked = True
+                        if pickLastTile is None or unit.pos != pickLastTile.pos:
+                            brush.PickBrush(unit, get_properties=keys_pressed[K_LCTRL])
+                            picked_tile = unit
+                        else:
+                            picked_tile = pickLastTile
         del unit
 
         if pickTile:
-            if not tileWasPicked: # if no tiles were touching mouse when iterating, a tile wasn't picked, so we reset the brush.
+            if picked_tile is None: # if no tiles were touching mouse when iterating, a tile wasn't picked, so we reset the brush.
                 brush.SetBrush()
             brush.styles |= BrushStyles.pick_brush
         else:
@@ -1041,6 +1044,8 @@ class UnitData:
 
         # UnitData.releasedButtons[0] = not mouse_pressed[0]
         # UnitData.releasedButtons[2] = not mouse_pressed[2]
+
+        return picked_tile
 
     @staticmethod
     def referenceUpdate():
@@ -2818,6 +2823,7 @@ def main():
 
     before_move: BeforeMoveData | None = None
     pickTile: bool = False
+    lastPickedTile: UnitData | None = None
     while mainRunning:
         assert(undo is not None)
 
@@ -3006,8 +3012,9 @@ def main():
                 referenceGridHandle = None
 
         display.fill((30, 20, 60))
-        UnitData.renderUpdate(display, scroll, grid, brush,
-                              keys_pressed, mouse_pressed, pickTile)
+        lastPickedTile = UnitData.renderUpdate(display, scroll, grid, brush,
+                              keys_pressed, mouse_pressed,
+                              pickTile=pickTile, pickLastTile=lastPickedTile)
 
         if undo.unsaved_changes > 0:
             if undo.unsaved_changes < 50:
