@@ -1067,6 +1067,7 @@ class PropertiesData:
         DarknessInstant = "darknessIsInstant"
         LevelEnder = "levelEnder"
         Disco = "disco"
+        CustomId = "customId"
 
     class ZoneData:
         def __init__(self, values: Iterable[tuple[pygame.Rect, dict[PropertiesData.ZoneSetting, Union[str, int, float, bool]]]] = []) -> None:
@@ -2339,6 +2340,8 @@ def zoneConsoleHandler(commandlist: Optional[list[str]], zoneRect: pygame.Rect):
             KDS.Logging.info(f"{intDarkness} is not in the range [0 - 255] of darkness.", consoleVisible=True)
             return
         PropertiesData.Zones.SetSetting(zoneRect, command_setting, intDarkness)
+    elif command_setting == PropertiesData.ZoneSetting.CustomId:
+        PropertiesData.Zones.SetSetting(zoneRect, command_setting, commandlist[1])
 
 def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
@@ -3127,7 +3130,8 @@ def main():
                         PropertiesData.ZoneSetting.LevelEnder: {"true": "break", "false": "break", "null": "break"},
                         PropertiesData.ZoneSetting.Disco: {"true": "break", "false": "break", "null": "break"},
                         PropertiesData.ZoneSetting.DarknessInstant: {"true": "break", "false": "break", "null": "break"},
-                        PropertiesData.ZoneSetting.Darkness: {"[int]": "break", "null": "break"}
+                        PropertiesData.ZoneSetting.Darkness: {"[int]": "break", "null": "break"},
+                        PropertiesData.ZoneSetting.CustomId: {"[string]": "break"}
                     }
                     zone_command: Optional[list[str]] = KDS.Console.Start("Enter Zone property:", True, KDS.Console.CheckTypes.Commands(), commands=zone_command_tree, autoFormat=True)
                     zoneConsoleHandler(zone_command, zoneRect)

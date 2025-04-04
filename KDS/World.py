@@ -738,78 +738,103 @@ class Dark:
 
 class Zone:
     StaffOnlyCollisions: int = 0
-    _darknessList: list[Zone] = []
+    CollidingZones: list[Zone] = []
 
     def __init__(self, rect: pygame.Rect, properties: Dict[str, Union[str, int, float, bool]]) -> None:
         self.rect = rect
         self.playerInside: bool = False
 
-        self.staffOnly = bool("staffOnly" in properties and properties["staffOnly"] == True)
-        self.levelEnder = bool("levelEnder" in properties and properties["levelEnder"] == True)
-        self.disco = bool("disco" in properties and properties["disco"] == True)
-        self.darknessIsInstant = bool("darknessIsInstant" in properties and properties["darknessIsInstant"] == True)
+        self.staffOnly: Final[bool] = bool("staffOnly" in properties and properties["staffOnly"] == True)
+        self.levelEnder: Final[bool] = bool("levelEnder" in properties and properties["levelEnder"] == True)
+        self.disco: Final[bool] = bool("disco" in properties and properties["disco"] == True)
+        self.darknessIsInstant: Final[bool] = bool("darknessIsInstant" in properties and properties["darknessIsInstant"] == True)
 
-        self.darkness: Optional[int] = None
+        setId: str | None = None
+        if "customId" in properties:
+            id = properties["customId"]
+            if isinstance(id, str):
+                setId = id
+            else:
+                KDS.Logging.AutoError(f"The zone custom id property type is invalid: '{type(id).__name__}'")
+        self.customId: Final[str | None] = setId
+
+        setDark: int | None = None
         if "darkness" in properties:
-            setDark = properties["darkness"]
-            if isinstance(setDark, int):
-                self.darkness = setDark
+            dark = properties["darkness"]
+            if isinstance(dark, int):
+                setDark = dark
+            else:
+                KDS.Logging.AutoError(f"The zone darkness property type is invalid: '{type(dark).__name__}'")
+        self.darkness: Final[int | None] = setDark
+
+    @staticmethod
+    def _getDarknessZoneFromCollisions() -> Zone | None:
+        for zone in reversed(Zone.CollidingZones):
+            if zone.darkness is not None:
+                return zone
 
     @staticmethod
     def _addDarkness(zone: Zone) -> None:
-        if zone in Zone._darknessList:
-            KDS.Logging.AutoError("Zone darkness already registered. Add request ignored.")
-            return
-
-        assert(zone.darkness is not None)
-        Zone._darknessList.append(zone)
+        assert zone.darkness is not None
+        assert zone is Zone.CollidingZones[-1]
         Dark.Set(True, zone.darkness, instant=zone.darknessIsInstant)
 
     @staticmethod
     def _removeDarkness(zone: Zone) -> None:
-        try:
-            Zone._darknessList.remove(zone)
-        except ValueError:
-            KDS.Logging.AutoError("Zone darkness not registered. Remove request ignored.")
-            return
+        darkness_zone: Zone | None = None
+        for z in reversed(Zone.CollidingZones):
+            if z.darkness is not None:
+                darkness_zone = z
+                break
 
-        if len(Zone._darknessList) > 0:
-            # get the last darkness that was registered
-            last_darkness: Zone = Zone._darknessList[-1]
-            assert(last_darkness.darkness is not None)
+        if darkness_zone is not None:
+            assert darkness_zone.darkness is not None
+            assert darkness_zone is not zone
             # use darknessIsInstant of the removed zone, not the last one in the list
-            Dark.Set(True, last_darkness.darkness, instant=zone.darknessIsInstant)
+            Dark.Set(True, darkness_zone.darkness, instant=zone.darknessIsInstant)
         else:
             Dark.Reset(instant=zone.darknessIsInstant)
 
     @staticmethod
-    def reset() -> None:
-        Zone.StaffOnlyCollisions = 0
-        Zone._darknessList.clear()
+    def _addCollision(zone: Zone):
+        if zone in Zone.CollidingZones:
+            KDS.Logging.AutoError("Zone collision already registered. Add request ignored.")
+            return
 
-    def _onEnter(self):
-        if self.darkness is not None:
-            Zone._addDarkness(self)
-        if self.staffOnly:
+        Zone.CollidingZones.append(zone)
+        if zone.darkness is not None:
+            Zone._addDarkness(zone)
+        if zone.staffOnly:
             Zone.StaffOnlyCollisions += 1
-        if self.levelEnder:
+        if zone.levelEnder:
             KDS.Missions.Listeners.LevelEnder.Trigger()
-        if self.disco:
+        if zone.disco:
             Dark.Disco.enabled = True
 
-    def _onExit(self):
-        if self.darkness is not None:
-            Zone._removeDarkness(self)
-        if self.staffOnly:
+    @staticmethod
+    def _removeCollision(zone: Zone):
+        if zone not in Zone.CollidingZones:
+            KDS.Logging.AutoError("Zone collision not registered. Remove request ignored.")
+            return
+
+        Zone.CollidingZones.remove(zone)
+        if zone.darkness is not None:
+            Zone._removeDarkness(zone)
+        if zone.staffOnly:
             Zone.StaffOnlyCollisions -= 1
-        if self.disco:
+        if zone.disco:
             Dark.Disco.enabled = False
+
+    @staticmethod
+    def reset() -> None:
+        Zone.StaffOnlyCollisions = 0
+        Zone.CollidingZones.clear()
 
     def update(self, playerRect: pygame.Rect):
         if self.rect.colliderect(playerRect):
             if not self.playerInside:
                 self.playerInside = True
-                self._onEnter()
+                Zone._addCollision(self)
         elif self.playerInside:
             self.playerInside = False
-            self._onExit()
+            Zone._removeCollision(self)

@@ -2817,26 +2817,32 @@ class LappiSytytyspalat(KDS.Build.Item):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.requireTaskWithName: Optional[str] = None
+        self.requireTaskWithName: str | None = None
+        self.requireZoneWithId: str | None = None
 
     def use(self):
         global Tiles
-        allowSytytys: bool
-        if self.requireTaskWithName != None:
+
+        disallowSytytys: bool = False
+
+        if self.requireTaskWithName is not None:
             tmp_miss = KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission)
-            if tmp_miss != None:
-                allowSytytys = tmp_miss.GetTask(self.requireTaskWithName) != None
-            else:
-                allowSytytys = False
-        else:
-            allowSytytys = True
-        if allowSytytys:
+            if tmp_miss is None or tmp_miss.GetTask(self.requireTaskWithName) is None:
+                disallowSytytys = True
+
+        if self.requireZoneWithId is not None:
+            if all(z.customId != self.requireZoneWithId for z in Zone.CollidingZones):
+                disallowSytytys = True
+
+
+        if not disallowSytytys:
             tmpdirctn = KDS.Convert.ToMultiplier(Player.direction)
             pos = (int(Player.rect.centerx / 34) + tmpdirctn + tmpdirctn, int(Player.rect.centery / 34))
             if TileFire.isUnitFreeOfFire(pos)[0]:
                 screen.blit(LappiSytytyspalat.sytytys_tip, (pos[0] * 34 + 17 - scroll[0] - LappiSytytyspalat.sytytys_tip.get_width() // 2, pos[1] * 34 - scroll[1]))
             if KDS.Keys.actionKey.held:
                 TileFire.createInstanceAtPosition(pos)
+
         return self.texture
 
     def pickup(self) -> None:
