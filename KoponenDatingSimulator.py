@@ -1526,8 +1526,15 @@ class GroundFire(KDS.Build.Tile):
 class TileFire(KDS.Build.Tile):
     # Has to be cached... Otherwise it will use way too much RAM
     cachedAnimation = KDS.Animator.Animation("tileFire", 32, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+    fire_count: int = 0
+
+    @staticmethod
+    def globalReset():
+        TileFire.fire_count = 0
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
+        TileFire.fire_count += 1
+
         super().__init__(position, serialNumber)
         self.gridPos = (position[0] // 34, position[1] // 34)
         self.animationOffset = random.randint(0, TileFire.cachedAnimation.ticks - 1)
@@ -1537,7 +1544,13 @@ class TileFire(KDS.Build.Tile):
         self.randomSpreadWait()
 
     def randomSpreadWait(self):
-        self.spreadWait: int = random.randint(5 * 60, 15 * 60)
+        if TileFire.fire_count > 10:
+            self.spreadWait: int = random.randint(4 * 60, 8 * 60)
+        elif TileFire.fire_count > 1:
+            self.spreadWait = random.randint(2 * 60, 4 * 60)
+        else:
+            # First fire
+            self.spreadWait = 3 * 60
 
     def randomSoundWait(self):
         self.soundWait = random.randint(3 * 60, 5 * 60)
@@ -4357,6 +4370,7 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
 
     #region World Data
     TheftDetector.globalReset()
+    TileFire.globalReset()
     # Wallet.globalReset()
     # levelprop.kdf defines the level's wallet balance so this isn't needed anymore
 
