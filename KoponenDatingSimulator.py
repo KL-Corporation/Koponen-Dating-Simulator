@@ -1526,34 +1526,106 @@ class GroundFire(KDS.Build.Tile):
 class TileFire(KDS.Build.Tile):
     # Has to be cached... Otherwise it will use way too much RAM
     cachedAnimation = KDS.Animator.Animation("tileFire", 32, 2, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
+
     fire_count: int = 0
+    can_spread_positions: set[tuple[int, int]] = set()
+    fire_rect: pygame.Rect | None = None
+
+    sound_wait: int | None = None
+    spread_wait: int | None = None
+
+    @staticmethod
+    def globalUpdate():
+        if TileFire.fire_count < 1:
+            return
+
+        if KDS.Debug.Enabled:
+            # This was drawn behind tiles and thus not visible anyways
+            # for debug_can_spread in TileFire.can_spread_positions:
+            #     pygame.draw.rect(screen, KDS.Colors.Orange, (debug_can_spread[0] * 34 - scroll[0], debug_can_spread[1] * 34 - scroll[1], 34, 34))
+            if TileFire.fire_rect is not None:
+                pygame.draw.rect(screen, (128, 64, 0), (TileFire.fire_rect.x - scroll[0], TileFire.fire_rect.y - scroll[1], *TileFire.fire_rect.size))
+
+        TileFire.cachedAnimation.update()
+
+        #region Handle Sound
+        if TileFire.sound_wait is not None:
+            TileFire.sound_wait -= 1
+            if TileFire.sound_wait < 0:
+                dist_to_fire_rect: float | None = TileFire._getDistanceToFireRect(Player.rect.center)
+                if dist_to_fire_rect is not None:
+                    lerp_multiplier = dist_to_fire_rect / 600 # Bigger value means volume gets smaller at a smaller rate
+                    volume_modifier = KDS.Math.Clamp01(KDS.Math.Lerp(1.25, 0, lerp_multiplier))
+                    volume = random.random() * volume_modifier
+                    if volume > 0:
+                        KDS.Audio.PlayFromFile("Assets/Audio/Effects/fire.ogg", clip_volume=volume)
+                TileFire.sound_wait = TileFire.randomSoundWait()
+        else:
+            TileFire.sound_wait = TileFire.randomSoundWait()
+        #endregion
+
+        #region Handle Spread
+        if TileFire.spread_wait is not None:
+            TileFire.spread_wait -= 1
+            if TileFire.spread_wait < 0:
+                if len(TileFire.can_spread_positions) > 0:
+                    spread_pos: Final[tuple[int, int]] = TileFire.can_spread_positions.pop()
+                    TileFire.unsafeCreateInstanceAtPosition(spread_pos)
+                TileFire.spread_wait = TileFire.randomSpreadWait()
+        else:
+            TileFire.spread_wait = TileFire.randomSpreadWait()
+        #endregion
+
+    @staticmethod
+    def _getDistanceToFireRect(point: tuple[int, int]) -> float | None:
+        if TileFire.fire_rect is None:
+            return None
+
+        distX: int
+        if point[0] >= TileFire.fire_rect.left and point[0] <= TileFire.fire_rect.right:
+            distX = 0
+        else:
+            distX = min(abs(point[0] - TileFire.fire_rect.left), abs(point[0] - TileFire.fire_rect.right))
+
+        distY: int = 0
+        if point[1] >= TileFire.fire_rect.top and point[1] <= TileFire.fire_rect.bottom:
+            distY = 0
+        else:
+            distY = min(abs(point[1] - TileFire.fire_rect.top), abs(point[1] - TileFire.fire_rect.bottom))
+
+        return KDS.Math.Sqrt(distX*distX + distY*distY)
 
     @staticmethod
     def globalReset():
         TileFire.fire_count = 0
+        TileFire.can_spread_positions.clear()
+        TileFire.fire_rect = None
+        TileFire.sound_wait = None
+        TileFire.spread_wait = None
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
-        TileFire.fire_count += 1
-
         super().__init__(position, serialNumber)
         self.gridPos = (position[0] // 34, position[1] // 34)
+
+        # Update global values
+        TileFire.fire_count += 1
+
+        # Set local values
         self.animationOffset = random.randint(0, TileFire.cachedAnimation.ticks - 1)
-        self.rect = pygame.Rect(position[0], position[1], 34, 34)
+        # self.rect = pygame.Rect(position[0], position[1], 34, 34)
         self.checkCollision = False
-        self.randomSoundWait()
-        self.randomSpreadWait()
 
-    def randomSpreadWait(self):
-        if TileFire.fire_count > 10:
-            self.spreadWait: int = random.randint(4 * 60, 8 * 60)
-        elif TileFire.fire_count > 1:
-            self.spreadWait = random.randint(2 * 60, 4 * 60)
-        else:
-            # First fire
-            self.spreadWait = 3 * 60
+    @staticmethod
+    def randomSpreadWait() -> int:
+        return round(60 / TileFire.fire_count) + random.randint(0, 60)
 
-    def randomSoundWait(self):
-        self.soundWait = random.randint(3 * 60, 5 * 60)
+    @staticmethod
+    def randomSoundWait() -> int:
+        t: float = TileFire.fire_count / 60
+        base: float = KDS.Math.Lerp(3, 0.5, t)
+        min: int = round(base * 30)
+        max: int = round(base * 120)
+        return random.randint(min, max)
 
     def update(self):
         global Tiles
@@ -1565,43 +1637,54 @@ class TileFire(KDS.Build.Tile):
         if self.rect.colliderect(Player.rect) and random.randint(0, 55) == 20:
             Player.health -= random.randint(5, 10)
 
-        self.soundWait -= 1
-        if self.soundWait < 0:
-            lerp_multiplier = KDS.Math.getDistance(self.rect.midbottom, Player.rect.midbottom) / 600 # Bigger value means volume gets smaller at a smaller rate
-            volume_modifier = KDS.Math.Clamp01(KDS.Math.Lerp(1.5, 0, lerp_multiplier))
-            volume = (random.random() / 4) * volume_modifier
-            if volume > 0:
-                KDS.Audio.PlayFromFile("Assets/Audio/Effects/fire.ogg", clip_volume=volume)
-            self.randomSoundWait()
-
-        self.spreadWait -= 1
-        if self.spreadWait < 0:
-            randomPos = (random.randint(self.gridPos[0] - 1, self.gridPos[0] + 1), random.randint(self.gridPos[1] - 1, self.gridPos[1] + 1))
-            if TileFire.createInstanceAtPosition(randomPos):
-                self.randomSpreadWait()
-
         Lights.append(KDS.World.Lighting.Light(self.rect.center, KDS.World.Lighting.Shapes.circle_harder.get(34 * 5, 1850), True))
 
         return frame
 
     @staticmethod
-    def isUnitFreeOfFire(gridPos: Tuple[int, int]) -> Tuple[bool, Tuple[int, int], List[KDS.Build.Tile]]:
-        clampPos = KDS.Math.Clamp(gridPos[0], 0, WorldData.MapSize[0]), KDS.Math.Clamp(gridPos[1], 0, WorldData.MapSize[1])
-        unit = Tiles[clampPos[1]][clampPos[0]]
-        for t in unit:
-            if isinstance(t, TileFire):
-                return False, clampPos, unit
-        return True, clampPos, unit
+    def canSpreadPositions(gridPos: tuple[int, int]) -> Iterable[tuple[int, int]]:
+        left: int = max(gridPos[0] - 1, 0)
+        right: int = min(gridPos[0] + 1, WorldData.MapSize[0] - 1)
+        top: int = max(gridPos[1] - 1, 0)
+        bottom: int = min(gridPos[1] + 1, WorldData.MapSize[1] - 1)
+        for y in range(top, bottom + 1):
+            for x in range(left, right + 1):
+                pos: tuple[int, int] = (x, y)
+                # Only spread to tiles that have tiles and don't have fire already
+                if len(Tiles[pos[1]][pos[0]]) > 0 and TileFire.unsafeIsUnitFreeOfFire(pos):
+                    yield pos
 
     @staticmethod
-    def createInstanceAtPosition(gridPos: Tuple[int, int]) -> bool:
+    def clampToSafePosition(gridPos: tuple[int, int]) -> tuple[int, int]:
+        return (
+            KDS.Math.Clamp(gridPos[0], 0, WorldData.MapSize[0] - 1),
+            KDS.Math.Clamp(gridPos[1], 0, WorldData.MapSize[1] - 1)
+        )
+
+    @staticmethod
+    def unsafeIsUnitFreeOfFire(gridPos: tuple[int, int]) -> bool:
+        return all(not isinstance(t, TileFire) for t in Tiles[gridPos[1]][gridPos[0]])
+
+    @staticmethod
+    def unsafeCreateInstanceAtPosition(gridPos: Tuple[int, int]) -> None:
         global Tiles
-        isFree, clampPos, unit = TileFire.isUnitFreeOfFire(gridPos)
-        if not isFree:
-            return False
-        unit.append(TileFire((clampPos[0] * 34, clampPos[1] * 34), 151))
+        if not TileFire.unsafeIsUnitFreeOfFire(gridPos):
+            KDS.Logging.AutoError(f"Tile already has fire: {gridPos}")
+            return
+
+        fire: TileFire = TileFire((gridPos[0] * 34, gridPos[1] * 34), 151)
+        Tiles[gridPos[1]][gridPos[0]].append(fire)
+
+        # Update globals
+        for csp in TileFire.canSpreadPositions(gridPos):
+            TileFire.can_spread_positions.add(csp)
+        if TileFire.fire_rect is None:
+            TileFire.fire_rect = fire.rect.copy()
+        else:
+            TileFire.fire_rect.union_ip(fire.rect)
+
+        # Update missions
         KDS.Missions.Listeners.TileFireCreated.Trigger()
-        return True
 
 class GlassPane(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
@@ -2832,6 +2915,7 @@ class LappiSytytyspalat(KDS.Build.Item):
         super().__init__(position, serialNumber)
         self.requireTaskWithName: str | None = None
         self.requireZoneWithId: str | None = None
+        self.canSytytys: bool = False
 
     def use(self):
         global Tiles
@@ -2847,14 +2931,18 @@ class LappiSytytyspalat(KDS.Build.Item):
             if all(z.customId != self.requireZoneWithId for z in Zone.CollidingZones):
                 disallowSytytys = True
 
-
         if not disallowSytytys:
             tmpdirctn = KDS.Convert.ToMultiplier(Player.direction)
-            pos = (int(Player.rect.centerx / 34) + tmpdirctn + tmpdirctn, int(Player.rect.centery / 34))
-            if TileFire.isUnitFreeOfFire(pos)[0]:
-                screen.blit(LappiSytytyspalat.sytytys_tip, (pos[0] * 34 + 17 - scroll[0] - LappiSytytyspalat.sytytys_tip.get_width() // 2, pos[1] * 34 - scroll[1]))
-            if KDS.Keys.actionKey.held:
-                TileFire.createInstanceAtPosition(pos)
+            unsafe_pos: Final[tuple[int, int]] = (int(Player.rect.centerx / 34) + tmpdirctn + tmpdirctn, int(Player.rect.centery / 34))
+            safe_pos: Final[tuple[int, int]] = TileFire.clampToSafePosition(unsafe_pos)
+            if TileFire.unsafeIsUnitFreeOfFire(safe_pos):
+                screen.blit(LappiSytytyspalat.sytytys_tip, (safe_pos[0] * 34 + 17 - scroll[0] - LappiSytytyspalat.sytytys_tip.get_width() // 2, safe_pos[1] * 34 - scroll[1]))
+                if KDS.Keys.actionKey.held and self.canSytytys:
+                    self.canSytytys = False
+                    TileFire.unsafeCreateInstanceAtPosition(safe_pos)
+
+        if not KDS.Keys.actionKey.pressed:
+            self.canSytytys = True
 
         return self.texture
 
@@ -5463,15 +5551,15 @@ while main_running:
                 if KDS.Math.getDistance(entity.rect.center, Player.rect.center) <= 800:
                     entity.health -= random.randint(500, 1000)
 
-    # MUST BE BEFORE TILE RENDER (which is called by KDS.Build.Tile.renderUpdate)
-    TheftDetector.globalUpdate()
+
+    TheftDetector.globalUpdate() # MUST BE BEFORE TILE RENDER (which is called by KDS.Build.Tile.renderUpdate)
+    TileFire.globalUpdate()
 
 #endregion
 #region Rendering
     ###### TÄNNE UUSI ASIOIDEN KÄSITTELY ######
     KDS.Build.Item.checkCollisions(Items, Player.rect, Player.inventory, Notifications)
     KDS.Build.Tile.renderUpdate(Tiles, screen, (Player.rect.centerx - (Player.rect.x - scroll[0] - SCROLL_OFFSET[0]), Player.rect.centery - (Player.rect.y - scroll[1] - SCROLL_OFFSET[1])), scroll)
-    TileFire.cachedAnimation.update()
 
     Entity.update(Entities)
 
@@ -5796,7 +5884,7 @@ while main_running:
         frametime_ms: int = KDS.Clock.GetFrameTimeMs()
         raw_frametime_ms: int = KDS.Clock.GetRawFrameTimeMs()
 
-        display.blit(KDS.Debug.RenderData({
+        debug_render_data: dict[str, Any] = {
             "Frame Time": f"{frametime_ms} ms",
             "Raw Frame Time": f"{raw_frametime_ms} ms",
             "CPU Bound": f"{'Yes' if raw_frametime_ms >= frametime_ms else 'No'}", # When raw_frametime == frametime, we are CPU bound as we do not sleep anymore. Int comparison so it's accurate.
@@ -5806,7 +5894,12 @@ while main_running:
             "Sounds Playing": f"{len(KDS.Audio.GetBusyChannels())} / {KDS.Audio._SoundMixer.get_num_channels()}",
             "Lights Rendering": len(Lights),
             "Particles Rendering": f"{renderedParticleCount} / {maxParticles}"
-        }), (0, 0))
+        }
+
+        if TileFire.fire_count > 0:
+            debug_render_data["Tile Fires"] = f"{TileFire.fire_count} (spread: {len(TileFire.can_spread_positions)})"
+
+        display.blit(KDS.Debug.RenderData(debug_render_data), (0, 0))
     #endregion
 
     if WalkieTalkie.storyTrigger or WalkieTalkie.storyRunning:
