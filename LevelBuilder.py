@@ -125,6 +125,7 @@ APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level B
 LOGPATH = os.path.join(APPDATA, "logs")
 os.makedirs(LOGPATH, exist_ok=True)
 KDS.Logging.init(APPDATA, LOGPATH)
+KDS.Logging.log_debug_info()
 KDS.Cursor.init(cursor_index_override=0)
 KDS.Jobs.init()
 
