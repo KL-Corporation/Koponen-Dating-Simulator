@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, Optional, SupportsFloat
+from typing import Any, Final, Optional, SupportsFloat
 import pygame
 from pygame.locals import *
 import random
@@ -43,10 +43,20 @@ WomenForenamesLookup: dict[str, str] # could be a set, but a set uses more memor
 Surnames: list[str] | None
 GradeWeights: tuple[int, ...]
 
+exam_music: Final = pygame.mixer.Sound("Assets/Audio/Music/exam_music.ogg")
+exam_pencil_scribbles: Final[tuple[pygame.mixer.Sound, ...]] = (pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble1.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble2.ogg"))
+exam_page_turning: Final[tuple[pygame.mixer.Sound, ...]] = (pygame.mixer.Sound("Assets/Audio/Effects/page_turning0.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/page_turning1.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/page_turning2.ogg"))
+exam_failed: Final = pygame.mixer.Sound("Assets/Audio/Effects/exam_failed.ogg")
+exam_passed: Final = pygame.mixer.Sound("Assets/Audio/Effects/exam_passed.ogg")
+exam_timeup: Final = pygame.mixer.Sound("Assets/Audio/Effects/timeup.ogg")
+
+certificate_paper_slide: Final = pygame.mixer.Sound("Assets/Audio/Effects/paper_slide.ogg")
+
 def init(display: pygame.Surface):
     global Display, Surnames, SurnamesLookup, WomenForenamesLookup, GradeWeights
     Display = display
 
+    # Load data
     try:
         with open("Assets/Data/surnames.txt", encoding="utf-8") as f:
             Surnames = f.read().splitlines()
@@ -68,17 +78,18 @@ def init(display: pygame.Surface):
 
 def Exam(showtitle = True):
     _quit = False
+
     background = pygame.image.load("Assets/Textures/UI/exam_background.png").convert()
+
     exam_paper = pygame.image.load("Assets/Textures/UI/exam_paper.png").convert()
     exam_paper = pygame.transform.scale(exam_paper, (round(exam_paper.get_width() * 1.7), round(exam_paper.get_height() * 1.7)))
-    exam_music = pygame.mixer.Sound("Assets/Audio/Music/exam_music.ogg")
-    pencil_scribbles = (pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble1.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/pencil_scribble2.ogg"))
-    page_turning = (pygame.mixer.Sound("Assets/Audio/Effects/page_turning0.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/page_turning1.ogg"), pygame.mixer.Sound("Assets/Audio/Effects/page_turning2.ogg"))
+
     title = "Pistokoe"
     titleFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 100)
     timerFont = pygame.font.Font("Assets/Fonts/Windows/arial.ttf", 40)
     examTestFont = pygame.font.Font("Assets/Fonts/Windows/calibril.ttf", 20)
     gradeFont = pygame.font.Font("Assets/Fonts/Windows/comic.ttf", 45)
+
     FONTANTIALIASING: bool = True
     titleSurf = titleFont.render(title, FONTANTIALIASING, KDS.Colors.White)
 
@@ -150,7 +161,7 @@ def Exam(showtitle = True):
                     any_option_collided = True
                     if clicked:
                         if not self.options[option]["selected"]:
-                            KDS.Audio.PlaySound(random.choice(pencil_scribbles))
+                            KDS.Audio.PlaySound(random.choice(exam_pencil_scribbles))
                             self.options[option]["selected"] = True
                             self.qsurf.blit(pygame.transform.smoothscale(x_texture, self.options[option]["rect"].size), self.options[option]["rect"].topleft)
                         else:
@@ -197,19 +208,16 @@ def Exam(showtitle = True):
 
 
     def loadQuestions(path: str, amount = 5):
-        qs = []
-        loaded_questions = []
-        rawData: dict[str, dict[str, bool]] = {}
+        questions: list[Question] = []
+        question_options: list[tuple[str, dict[str, bool]]]
         with open(path, "r", encoding="utf-8") as qfile:
-            tmp = qfile.read()
-            rawData = json.loads(tmp)
+            question_options = [tuple(x) for x in json.load(qfile).items()]
 
-        while len(qs) < amount:
-            temp_qs = random.choice(list(rawData.keys()))
-            if temp_qs not in loaded_questions:
-                loaded_questions.append(temp_qs)
-                qs.append(Question(temp_qs, rawData[temp_qs]))
-        return qs
+        while len(questions) < amount and len(question_options) > 0:
+            temp_index: int = random.randrange(0, len(question_options))
+            temp_qs: tuple[str, dict[str, bool]] = question_options.pop(temp_index)
+            questions.append(Question(temp_qs[0], temp_qs[1]))
+        return questions
 
     def exam():
         nonlocal _quit
@@ -264,12 +272,12 @@ def Exam(showtitle = True):
         def page_return():
             nonlocal page_index
             page_index -= 1
-            KDS.Audio.PlaySound(random.choice(page_turning))
+            KDS.Audio.PlaySound(random.choice(exam_page_turning))
 
         def page_next():
             nonlocal page_index
             page_index += 1
-            KDS.Audio.PlaySound(random.choice(page_turning))
+            KDS.Audio.PlaySound(random.choice(exam_page_turning))
 
         def return_exam():
             nonlocal exam_running, _quit, exam_score
@@ -323,7 +331,7 @@ def Exam(showtitle = True):
 
                     gradePos = [random.randint(0, Display.get_width()), random.randint(0, Display.get_height())]
                     gradeDestination = (relative_position[0] + exam_paper.get_width() - scoreSurf.get_width() - random.randint(20, 40), relative_position[1] + random.randint(20, 40))
-                    KDS.Audio.PlayFromFile("Assets/Audio/Effects/exam_failed.ogg" if score < passLine else "Assets/Audio/Effects/exam_passed.ogg")
+                    KDS.Audio.PlaySound(exam_failed if score < passLine else exam_passed)
 
                 Display.blit(oldSurf, (0, 0))
 
@@ -378,12 +386,12 @@ def Exam(showtitle = True):
                 last_page_index = page_index
                 page_index = max(0, page_index -1)
                 if last_page_index != page_index:
-                    KDS.Audio.PlaySound(random.choice(page_turning))
+                    KDS.Audio.PlaySound(random.choice(exam_page_turning))
             if KDS.Keys.altRight.onDown:
                 last_page_index = page_index
                 page_index = min(len(pages) - 1, page_index + 1)
                 if last_page_index != page_index:
-                    KDS.Audio.PlaySound(random.choice(page_turning))
+                    KDS.Audio.PlaySound(random.choice(exam_page_turning))
 
             Display.blit(background, (0, 0))
             Display.blit(exam_paper, relative_position)
@@ -406,7 +414,7 @@ def Exam(showtitle = True):
             if nmtime < 0:
                 exam_music.stop()
                 oldSurf = Display.copy()
-                KDS.Audio.PlayFromFile("Assets/Audio/Effects/timeup.ogg")
+                KDS.Audio.PlaySound(exam_timeup)
                 for x in range(0, Display.get_width() + time_ended.get_width(), int(Display.get_width() / 100)):
                     Display.blit(oldSurf, (0, 0))
                     Display.blit(time_ended, (x - time_ended.get_width() + 10, Display.get_height() / 2 - time_ended.get_height() / 2))
@@ -582,7 +590,7 @@ def Certificate(display: pygame.Surface, BackgroundColor: tuple[int, int, int] |
 
     exitButton = KDS.UI.Button(pygame.Rect(displaySize[0] // 2 - 100, 25, 200, 50), exitFunc, "EXIT")
 
-    KDS.Audio.PlayFromFile("Assets/Audio/Effects/paper_slide.ogg")
+    KDS.Audio.PlaySound(certificate_paper_slide)
     while True:
         display.fill(BackgroundColor)
         c = False

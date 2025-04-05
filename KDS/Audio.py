@@ -113,8 +113,8 @@ class Music:
             Music.Load(path=path)
 
         assert(Music.Loaded is not None)
-        _MusicMixer.play(loops=(-1 if loop else 0), start=start)
         _MusicMixer.set_volume(MusicVolume)
+        _MusicMixer.play(loops=(-1 if loop else 0), start=start)
         Music.Playing = _MusicPlayingContext(filepath=Music.Loaded.filepath, loop=loop, start=start)
 
     @staticmethod
@@ -198,13 +198,11 @@ def quit():
     global _MusicMixer, MusicVolume, EffectVolume, EffectChannels
     _SoundMixer.quit()
 
-def PlaySound(sound, volume: float = -1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
+def PlaySound(sound, local_volume: float = 1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
     global _MusicMixer, MusicVolume, EffectVolume, EffectChannels
-    if volume == -1.0:
-        volume = EffectVolume
     play_channel = _SoundMixer.find_channel(True) # Won't return None, because force is true
+    play_channel.set_volume(EffectVolume * local_volume)
     play_channel.play(sound, loops, fade_ms)
-    play_channel.set_volume(volume)
     return play_channel
 
 def StopAllSounds():
@@ -236,10 +234,11 @@ def SetVolume(volume: float):
     for i in range(len(EffectChannels)):
         EffectChannels[i].set_volume(volume)
 
-def PlayFromFile(path: str, volume: float = -1.0, clip_volume: float = 1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
-    sound = _SoundMixer.Sound(path)
-    if clip_volume != 1.0:
-        sound.set_volume(clip_volume)
-    output = PlaySound(sound, volume, loops, fade_ms)
-    del sound
-    return output
+# This was fucking stupid
+# def PlayFromFile(path: str, volume: float = -1.0, clip_volume: float = 1.0, loops: int = 0, fade_ms: int = 0) -> pygame.mixer.Channel:
+#     sound = _SoundMixer.Sound(path)
+#     if clip_volume != 1.0:
+#         sound.set_volume(clip_volume)
+#     output = PlaySound(sound, volume, loops, fade_ms)
+#     del sound
+#     return output

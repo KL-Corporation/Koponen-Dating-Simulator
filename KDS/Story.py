@@ -16,7 +16,7 @@ import KDS.Clock
 import KDS.Debug
 import KDS.UI
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Final
 
 if TYPE_CHECKING:
     from KoponenDatingSimulator import PlayerClass
@@ -24,6 +24,14 @@ else:
     PlayerClass = None
 
 BadEndingTrigger: bool = False
+
+walkie_talkie_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/walkie_talkie.ogg")
+walkie_talkie_sound.set_volume(0.3)
+walkie_talkie_spooky_cut_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/spooky_cut.ogg")
+walkie_talkie_spooky_cut_sound.set_volume(0.3)
+walkie_talkie_pistol_shoot_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/pistol_shoot.ogg")
+tombstones_creepy_music: Final = pygame.mixer.Sound("Assets/Audio/Music/creepy_music_box.ogg")
+tombstones_creepy_music.set_volume(0.5)
 
 def badStoryEndingFunc():
     global BadEndingTrigger
@@ -87,7 +95,7 @@ def Tombstones(display: pygame.Surface):
     animA = KDS.Animator.Value(255.0, 0.0, 7 * 60)
     blk = pygame.Surface(image.get_size())
 
-    chnl = KDS.Audio.PlayFromFile("Assets/Audio/Music/creepy_music_box.ogg", clip_volume=0.5)
+    chnl = KDS.Audio.PlaySound(tombstones_creepy_music)
     while chnl.get_busy():
         blk.set_alpha(round(animA.update()))
         pygame.event.get()
@@ -110,6 +118,7 @@ class WalkieTalkieEffect:
     blackSurf: pygame.Surface
     alpha_anim: KDS.Animator.Value
 
+
     @staticmethod
     def Start(newCall: bool, player: PlayerClass, display: pygame.Surface) -> tuple[bool, bool]:
         if newCall:
@@ -125,20 +134,20 @@ class WalkieTalkieEffect:
             KDS.Audio.Music.Fadeout(1.0)
 
         def phaseZero() -> bool:
-            if WalkieTalkieEffect.phaseZeroChannel == None:
-                WalkieTalkieEffect.phaseZeroChannel = KDS.Audio.PlayFromFile("Assets/Audio/Effects/walkie_talkie.ogg", clip_volume=0.3)
+            if WalkieTalkieEffect.phaseZeroChannel is None:
+                WalkieTalkieEffect.phaseZeroChannel = KDS.Audio.PlaySound(walkie_talkie_sound)
 
             return False if WalkieTalkieEffect.phaseZeroChannel.get_busy() else True
 
         def phaseOne() -> bool:
-            if WalkieTalkieEffect.phaseOneChannel == None:
-                WalkieTalkieEffect.phaseOneChannel = KDS.Audio.PlayFromFile("Assets/Audio/Effects/spooky_cut.ogg", clip_volume=0.3)
+            if WalkieTalkieEffect.phaseOneChannel is None:
+                WalkieTalkieEffect.phaseOneChannel = KDS.Audio.PlaySound(walkie_talkie_spooky_cut_sound)
 
             return False if WalkieTalkieEffect.phaseOneChannel.get_busy() else True
 
         def phaseTwo() -> bool:
             if WalkieTalkieEffect.phaseTwoIndex == 0:
-                KDS.Audio.PlayFromFile("Assets/Audio/Effects/pistol_shoot.ogg")
+                KDS.Audio.PlaySound(walkie_talkie_pistol_shoot_sound)
 
                 slot = player.inventory.getSlot(36)
                 if slot != None:
@@ -161,14 +170,10 @@ class WalkieTalkieEffect:
                 KDS.Audio.Music.Play("Assets/Audio/Effects/glitch.ogg")
                 run_glitch = True
                 WalkieTalkieEffect.phaseThreeStarted = True
-            if WalkieTalkieEffect.blackSurf != None:
-                WalkieTalkieEffect.blackSurf.set_alpha(int(WalkieTalkieEffect.alpha_anim.update()))
-                display.blit(WalkieTalkieEffect.blackSurf, (0, 0))
 
-                return (WalkieTalkieEffect.alpha_anim.Finished, run_glitch)
-            else:
-                KDS.Logging.AutoError("No black surface initialized!")
-                return (True, run_glitch)
+            WalkieTalkieEffect.blackSurf.set_alpha(int(WalkieTalkieEffect.alpha_anim.update()))
+            display.blit(WalkieTalkieEffect.blackSurf, (0, 0))
+            return (WalkieTalkieEffect.alpha_anim.Finished, run_glitch)
 
         phases: tuple[Callable[[], bool | tuple[bool, bool]], ...] = (
             phaseZero,

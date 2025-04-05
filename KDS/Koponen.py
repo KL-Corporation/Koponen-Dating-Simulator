@@ -540,9 +540,9 @@ class KoponenEntity:
             def SetSelfProperty(propertyName: str, value: Any):
                 nonlocal self
                 setattr(self, propertyName, value)
-            @staticmethod
-            def PlaySoundFromFile(filepath: str):
-                KDS.Audio.PlayFromFile(filepath)
+            # @staticmethod
+            # def PlaySoundFromFile(filepath: str):
+            #     KDS.Audio.PlayFromFile(filepath)
             @staticmethod
             def SetMissionProgress(missionName: str, taskName: str, progress: float):
                 KDS.Missions.SetProgress(missionName, taskName, progress)
@@ -550,7 +550,7 @@ class KoponenEntity:
         execFuncs.allowedFuncs = {
             "SetTileProperty": execFuncs.SetTileProperty,
             "SetSelfProperty": execFuncs.SetSelfProperty,
-            "PlaySoundFromFile": execFuncs.PlaySoundFromFile,
+            # "PlaySoundFromFile": execFuncs.PlaySoundFromFile,
             "SetMissionProgress": execFuncs.SetMissionProgress
         }
 

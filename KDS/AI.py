@@ -751,6 +751,7 @@ class SecurityGuard(HostileEnemy):
         pygame.mixer.Sound("Assets/Audio/Entities/security_guard_wakeup2.ogg")
     )
 
+    shoot_sound = pygame.mixer.Sound("Assets/Audio/Entities/gunshot_basic2.ogg")
     death_sound = pygame.mixer.Sound("Assets/Audio/Entities/security_guard_death.ogg")
 
     def __init__(self, pos):
@@ -798,11 +799,9 @@ class SecurityGuard(HostileEnemy):
         return tmp
 
     def attack(self, slope, env_obstacles, target, *args):
-        dist = KDS.Math.getDistance(self.rect.center, target.center)
-        dist = KDS.Math.Clamp(dist, 0, 1200)
-        dist = 1200 - dist
-        dist /= 1200
-        KDS.Audio.PlayFromFile("Assets/Audio/Entities/gunshot_basic2.ogg", dist)
+        dist: float = KDS.Math.getDistance(self.rect.center, target.center)
+        volume: float = (1200 - dist) / 1200
+        KDS.Audio.PlaySound(SecurityGuard.shoot_sound, local_volume=KDS.Math.Clamp01(volume))
         return [KDS.World.Bullet(None, pygame.Rect(self.rect.x + 30 * KDS.Convert.ToMultiplier(self.direction), self.rect.centery-20, 10, 10), self.direction, -1, env_obstacles, random.randint(15, 40), slope=KDS.Math.getSlope(self.rect.center, target.center) * KDS.Convert.ToMultiplier(self.direction) )]
 
     def onDeath(self):

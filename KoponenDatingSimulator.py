@@ -104,7 +104,6 @@ import KDS.Keys
 import KDS.Koponen
 import KDS.Linq
 import KDS.Loading
-import KDS.Logging
 import KDS.Math
 import KDS.Missions
 import KDS.NPC
@@ -1572,7 +1571,7 @@ class TileFire(KDS.Build.Tile):
                     volume_modifier = KDS.Math.Clamp01(KDS.Math.Lerp(1.25, 0, lerp_multiplier))
                     volume = random.random() * volume_modifier
                     if volume > 0:
-                        KDS.Audio.PlayFromFile("Assets/Audio/Effects/fire.ogg", clip_volume=volume)
+                        KDS.Audio.PlaySound(tilefire_fire_sound, local_volume=volume)
                 TileFire.sound_wait = TileFire.randomSoundWait()
         else:
             TileFire.sound_wait = TileFire.randomSoundWait()
@@ -1806,6 +1805,13 @@ class Sleepable(KDS.Build.Tile):
         self.requireTileSleepTask: bool = False
         self.audiofile: str = "Assets/Audio/Effects/zipper.ogg"
         self.disableSleep: bool = False
+        self._audiofile_inst: pygame.mixer.Sound | None = None
+
+    def lateInit(self) -> None:
+        try:
+            self._audiofile_inst = pygame.mixer.Sound(self.audiofile)
+        except Exception as e:
+            KDS.Logging.AutoError(f"Failed to load sleepable audio file: '{self.audiofile}' with error: '{e}'")
 
     def toggleSleep(self, effect: Optional[ScreenEffects.Effects] = None):
         global Player
@@ -1818,7 +1824,7 @@ class Sleepable(KDS.Build.Tile):
         self.sleeping = not self.sleeping
         if self.sleeping:
             KDS.Missions.Listeners.TileSleepStart.Trigger()
-            KDS.Audio.PlayFromFile(self.audiofile)
+            KDS.Audio.PlaySound(self._audiofile_inst)
             if self.fadeAnimation:
                 ScreenEffects.Trigger(ScreenEffects.Effects.FadeInOut)
             Player.visible = False
@@ -1864,6 +1870,7 @@ class Tent(Sleepable):
         self.sleeping = self.inTent
         self.sleepAutoEnd = self.autoOut
         self.requireTileSleepTask = self.forceTentTask
+
         super().lateInit()
 
 class HotelBed(Sleepable):
@@ -1912,24 +1919,33 @@ class Sound(KDS.Build.Tile):
     def __init__(self, position, serialNumber, repeating: bool = False) -> None:
         super().__init__(position, serialNumber)
         self.checkCollision = False
+
         self.exited: bool = True
         self.readyToTrigger: bool = True
         self.repeating: bool = repeating
         self.filepath: Optional[str] = None
-        self.volume: float = -1.0
         self.clip_volume: float = 1.0
+        self._audio_clip: pygame.mixer.Sound | None = None
 
     def lateInit(self):
-        if self.filepath == None:
+        self.darkOverlay = None
+        if self.filepath is not None:
+            try:
+                self._audio_clip = pygame.mixer.Sound(self.filepath)
+                self._audio_clip.set_volume(self.clip_volume)
+            except Exception as e:
+                KDS.Logging.AutoError(f"Failed to load audio clip: '{self.filepath}' with error: '{e}'")
+        else:
             KDS.Logging.AutoError("No filepath specified for Sound tile!")
+
 
     def update(self):
         if self.rect.colliderect(Player.rect):
             if self.exited and self.readyToTrigger:
                 self.readyToTrigger = False
                 self.exited = False
-                if self.filepath != None:
-                    KDS.Audio.PlayFromFile(self.filepath, volume=self.volume, clip_volume=self.clip_volume)
+                if self._audio_clip is not None:
+                    KDS.Audio.PlaySound(self._audio_clip)
         elif not self.exited:
             self.readyToTrigger = self.repeating
             self.exited = True
@@ -2569,6 +2585,8 @@ class HotelGuardDoor(DoorTeleport):
     tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Knock [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
     alt_tip_render: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Enter [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
 
+    knock_sound: Final = pygame.mixer.Sound("Assets/Audio/Tiles/guard_door_knock.ogg")
+
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
         self.currentOpenTicks: int = 0
@@ -2613,7 +2631,7 @@ class HotelGuardDoor(DoorTeleport):
 
             if KDS.Keys.functionKey.clicked and self.interactable:
                 if not self.open:
-                    KDS.Audio.PlayFromFile("Assets/Audio/Tiles/guard_door_knock.ogg")
+                    KDS.Audio.PlaySound(HotelGuardDoor.knock_sound)
                     if self.waitOpenTicks == -1:
                         # Knock mission progress
                         self.waitOpenTicks = 3 * 60
@@ -5479,8 +5497,8 @@ pygame.event.clear()
 if not tcagr:
     agr()
     tcagr: bool = KDS.ConfigManager.GetSetting("Data/Terms/accepted", False)
-if tcagr:
-    main_menu()
+# if tcagr:
+main_menu()
 #endregion
 #region Main Running
 while main_running:

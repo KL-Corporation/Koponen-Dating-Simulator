@@ -1,5 +1,5 @@
 import time
-from typing import Callable, Tuple, Union
+from typing import Callable, Final, Tuple, Union
 
 import pygame
 from pygame.locals import *
@@ -95,6 +95,8 @@ class Circle:
 class Story:
     handle = None
 
+    storystart_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/storystart_MAIN.wav")
+
     @staticmethod
     def rendering(surface: pygame.Surface, oldSurf: Union[pygame.Surface, None], map_name_str: str, titleFont: pygame.font.Font, normalFont: pygame.font.Font):
         anim_lerp_x = KDS.Animator.Value(0.0, 1.0, 120, KDS.Animator.AnimationType.EaseOutSine, KDS.Animator.OnAnimationEnd.Stop)
@@ -129,9 +131,9 @@ class Story:
         story_surf.blit(savingText, (story_surf.get_width() - savingText.get_width() - 10, story_surf.get_height() - savingText.get_height() - 10))
 
         KDS.Audio.Music.Pause()
-        KDS.Audio.PlayFromFile("Assets/Audio/Effects/storystart_MAIN.wav")
+        KDS.Audio.PlaySound(Story.storystart_sound)
         doAnimation(False)
-        pygame.time.wait(3600)
+        pygame.time.wait(3000)
         doAnimation(True)
         pygame.time.wait(1000)
         KDS.Audio.Music.Unpause()
