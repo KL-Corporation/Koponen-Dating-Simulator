@@ -24,7 +24,7 @@ profile = cProfile.Profile()
 faultHandlerEnabled: bool = False
 stderrPath: Optional[str] = None
 
-def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler: bool = True):
+def init(_AppDataPath: str, _LogPath: str, _faultHandler: bool = True):
     global running, AppDataPath, LogPath, stderrPath, faultHandlerEnabled, logFileName
     running = True
     AppDataPath = _AppDataPath
@@ -66,8 +66,9 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
         faulthandler.enable(sys.stderr, all_threads=True)
         debug(f"Enabled faulthandler.")
 
-    if not debugInfo:
-        return
+
+def log_debug_info():
+    """pygame video mode must be initialized before calling this function."""
 
     def _format_version(ver: tuple[int, int, int] | None):
         if ver is None:
@@ -98,43 +99,41 @@ def init(_AppDataPath: str, _LogPath: str, debugInfo: bool = True, _faultHandler
     blit_A_accel: bool = bool(display_info.blit_hw_A if hw_accel else display_info.blit_sw_A)
 
     debug(f"""
-I=====[ DEBUG INFO ]=====I
-    [Version Info]
-    - Application: {KDS.Application.VERSION}
-    - pygame-ce: {_format_version(pygame.version.vernum)}
-    - SDL: {_format_version(pygame.get_sdl_version())}
-        - Mixer: {_format_version(pygame.mixer.get_sdl_mixer_version())}
-        - TTF: {_format_version(pygame.font.get_sdl_ttf_version())}
-        - Image: {_format_version(pygame.image.get_sdl_image_version())}
-    - Python: {platform.python_implementation()} {_format_version(sys.version_info[0:3])}
-    - {platform_info.system} {platform_info.release}: {platform_info.version}
+[Version Info]
+- Application: {KDS.Application.VERSION}
+- pygame-ce: {_format_version(pygame.version.vernum)}
+- SDL: {_format_version(pygame.get_sdl_version())}
+    - Mixer: {_format_version(pygame.mixer.get_sdl_mixer_version())}
+    - TTF: {_format_version(pygame.font.get_sdl_ttf_version())}
+    - Image: {_format_version(pygame.image.get_sdl_image_version())}
+- Python: {platform.python_implementation()} {_format_version(sys.version_info[0:3])}
+- {platform_info.system} {platform_info.release}: {platform_info.version}
 
-    [Driver Info]
-    - SDL Video Driver: {pygame.display.get_driver()}
-    - SDL Mixer Driver: {pygame.mixer.get_driver()}
+[Driver Info]
+- SDL Video Driver: {pygame.display.get_driver()}
+- SDL Mixer Driver: {pygame.mixer.get_driver()}
 
-    [Video Info]
-    - Hardware Acceleration: {_format_bool(hw_accel)}
-        - Accelerated blit: {_format_accel(blit_accel, hw_accel)}
-        - Accelerated colorkey blit: {_format_accel(blit_CC_accel, hw_accel)}
-        - Accelerated pixel alpha blit: {_format_accel(blit_A_accel, hw_accel)}
-    - Pixel Format: {display_info.pixel_format.removeprefix("PIXELFORMAT_")}
-    - Window Allowed: {_format_bool(bool(display_info.wm))}
+[Video Info]
+- Hardware Acceleration: {_format_bool(hw_accel)}
+    - Accelerated blit: {_format_accel(blit_accel, hw_accel)}
+    - Accelerated colorkey blit: {_format_accel(blit_CC_accel, hw_accel)}
+    - Accelerated pixel alpha blit: {_format_accel(blit_A_accel, hw_accel)}
+- Pixel Format: {display_info.pixel_format.removeprefix("PIXELFORMAT_")}
+- Window Allowed: {_format_bool(bool(display_info.wm))}
 
-    [System Info]
-    - Machine: {platform_info.machine}
-    - Architecture: {architecture_info[0]}
-    - Linkage: {architecture_info[1]}
-    - Processor: {KDS.System.GetProcessorName()}
-        - Cores: {psutil.cpu_count(logical=False)}
-        - Threads: {psutil.cpu_count(logical=True)}
-        - Max Frequency: {psutil.cpu_freq().max / 1000} GHz
-        - Supports:
-            - SSE2: {_format_bool(cpu_inst_info["SSE2"])}
-            - AVX2: {_format_bool(cpu_inst_info["AVX2"])}
-            - NEON: {_format_bool(cpu_inst_info["NEON"])}
-    - RAM: {memory_info.available / 1_073_741_824:.2f} GB Available ({memory_info.total / 1_073_741_824:.2f} GB Total)
-I=====[ DEBUG INFO ]=====I""")
+[System Info]
+- Machine: {platform_info.machine}
+- Architecture: {architecture_info[0]}
+- Linkage: {architecture_info[1]}
+- Processor: {KDS.System.GetProcessorName()}
+    - Cores: {psutil.cpu_count(logical=False)}
+    - Threads: {psutil.cpu_count(logical=True)}
+    - Max Frequency: {psutil.cpu_freq().max / 1000} GHz
+    - Supports:
+        - SSE2: {_format_bool(cpu_inst_info["SSE2"])}
+        - AVX2: {_format_bool(cpu_inst_info["AVX2"])}
+        - NEON: {_format_bool(cpu_inst_info["NEON"])}
+- RAM: {memory_info.available / 1_073_741_824:.2f} GB Available ({memory_info.total / 1_073_741_824:.2f} GB Total)""")
 
 def _log(message: str | BaseException, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
     if not running:

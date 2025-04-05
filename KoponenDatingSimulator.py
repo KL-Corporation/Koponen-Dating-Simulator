@@ -1,33 +1,93 @@
-﻿#region Importing
+﻿#region Priority Initialisation
 from __future__ import annotations
-
-from dataclasses import dataclass
+from typing import Any, Callable, Dict, Final, Iterable, List, NamedTuple, Optional, Self, Sequence, Tuple, Type, Union
 import os
-from uuid import UUID
 
-import KDS.BuildData
-import KDS.Cursor
-import KDS.MapProp
-import KDS.Money
 #region Startup Config
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = ""
 #endregion
-from datetime import datetime
-
-import random
-import shutil
-import traceback
-from enum import IntEnum, IntFlag, auto
-from typing import Any, Callable, Dict, Final, Iterable, List, NamedTuple, Optional, Self, Sequence, Tuple, Type, Union
 
 import pygame
 import pygame.mixer
 from pygame.locals import *
+import KDS.Logging
+
+#region Create directories
+class PersistentPaths:
+    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
+    # Cache = os.path.join(AppData, "cache")
+    Saves = os.path.join(AppData, "saves")
+    CampaignSaves = os.path.join(AppData, "runs")
+    Logs = os.path.join(AppData, "logs")
+    Screenshots = os.path.join(AppData, "screenshots")
+    CustomMaps = os.path.join(AppData, "custom_maps")
+os.makedirs(PersistentPaths.AppData, exist_ok=True)
+# os.makedirs(PersistentPaths.Cache, exist_ok=True)
+# KDS.System.emptdir(PersistentPaths.Cache)
+# KDS.System.hide(PersistentPaths.Cache)
+os.makedirs(PersistentPaths.Saves, exist_ok=True)
+os.makedirs(PersistentPaths.CampaignSaves, exist_ok=True)
+os.makedirs(PersistentPaths.Logs, exist_ok=True)
+os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
+os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
+#endregion
+
+KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
+game_whole_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
+game_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(4 * " ")
+game_whole_initialization_logger.start("Initialising Game...")
+
+game_initialization_logger.start("Initialising pygame...")
+pygame.init()
+
+CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
+
+pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/gameIcon.png"))
+pygame.display.set_caption("Koponen Dating Simulator")
+display_size = (1200, 800)
+display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
+
+# SPLASH SCREEN
+# render as early as possible to make the blink from starting the window as short as possible
+display.fill(CompanyLogo.get_at((0, 0)))
+display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
+pygame.display.flip()
+
+screen_size = (600, 400)
+screen = pygame.Surface(screen_size)
+
+pygame.event.set_allowed((
+    MOUSEBUTTONDOWN,
+    MOUSEBUTTONUP,
+    KEYDOWN,
+    KEYUP,
+    MOUSEWHEEL,
+    QUIT,
+    WINDOWFOCUSLOST
+))
+
+KDS.Logging.log_debug_info()
+game_initialization_logger.stop("Pygame initialised.")
+#endregion
+#region Importing
+game_initialization_logger.start("Importing modules...")
+from enum import IntEnum, IntFlag, auto
+from datetime import datetime
+from dataclasses import dataclass
+from uuid import UUID
+
+import random
+import shutil
+import traceback
 
 import KDS.AI
 import KDS.Animator
 import KDS.Application
+import KDS.BuildData
+import KDS.Cursor
+import KDS.MapProp
+import KDS.Money
 import KDS.Audio
 import KDS.Build
 import KDS.Clock
@@ -55,35 +115,7 @@ import KDS.System
 import KDS.Teachers
 import KDS.UI
 import KDS.World
-#endregion
-#region Priority Initialisation
-pygame.init()
-
-CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
-
-pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/gameIcon.png"))
-pygame.display.set_caption("Koponen Dating Simulator")
-display_size = (1200, 800)
-display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
-
-# LOGO (here to make the blink from starting the window much shorter)
-display.fill(CompanyLogo.get_at((0, 0)))
-display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
-pygame.display.flip()
-# LOGO
-
-screen_size = (600, 400)
-screen = pygame.Surface(screen_size)
-
-pygame.event.set_allowed((
-    MOUSEBUTTONDOWN,
-    MOUSEBUTTONUP,
-    KEYDOWN,
-    KEYUP,
-    MOUSEWHEEL,
-    QUIT,
-    WINDOWFOCUSLOST
-))
+game_initialization_logger.stop("Modules imported.")
 #endregion
 #region Quit Handling
 def KDS_Quit(confirm: bool = False, remove_data_s: bool = False):
@@ -98,45 +130,23 @@ def KDS_Quit(confirm: bool = False, remove_data_s: bool = False):
         remove_data_on_quit = remove_data_s
         level_finished_running = False
 #endregion
-#region Initialisation
-class PersistentPaths:
-    AppData = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "Koponen Dating Simulator")
-    # Cache = os.path.join(AppData, "cache")
-    Saves = os.path.join(AppData, "saves")
-    CampaignSaves = os.path.join(AppData, "runs")
-    Logs = os.path.join(AppData, "logs")
-    Screenshots = os.path.join(AppData, "screenshots")
-    CustomMaps = os.path.join(AppData, "custom_maps")
-os.makedirs(PersistentPaths.AppData, exist_ok=True)
-# os.makedirs(PersistentPaths.Cache, exist_ok=True)
-# KDS.System.emptdir(PersistentPaths.Cache)
-# KDS.System.hide(PersistentPaths.Cache)
-os.makedirs(PersistentPaths.Saves, exist_ok=True)
-os.makedirs(PersistentPaths.CampaignSaves, exist_ok=True)
-os.makedirs(PersistentPaths.Logs, exist_ok=True)
-os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
-os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
-
-KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
+#region Initialise modules
+game_initialization_logger.start("Initialising KDS modules...")
 KDS.ConfigManager.init(PersistentPaths.AppData, PersistentPaths.Saves, PersistentPaths.CampaignSaves)
-game_whole_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
-game_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(4 * " ")
-game_whole_initialization_logger.start("Initialising Game...")
 
-game_initialization_logger.start("Initialising Display Driver...")
+# game_initialization_logger.start("Initialising Display Driver...")
 if KDS.ConfigManager.GetSetting("Renderer/fullscreen", ...):
     pygame.display.toggle_fullscreen()
-game_initialization_logger.stop("Display Driver initialised.")
+# game_initialization_logger.stop("Display Driver initialised.")
 
-game_initialization_logger.start("Initialising cursors and surface arrays...")
+# game_initialization_logger.start("Initialising cursors and surface arrays...")
 KDS.Cursor.init()
 surfarrayLagFix = pygame.surfarray.pixels2d(screen)
 # Creating a surfarray for the first time is not noticeable on faster hardware like my desktop,
 # but lags the shit out of the game on my laptop with an amazing two-core processor.
 del surfarrayLagFix
-game_initialization_logger.stop("Cursors and surface arrays initialised.")
+# game_initialization_logger.stop("Cursors and surface arrays initialised.")
 
-game_initialization_logger.start("Initialising KDS modules...")
 KDS.Audio.init()
 KDS.Jobs.init()
 KDS.AI.init()
@@ -237,40 +247,41 @@ asset_loading_logger.stop("Menu Texture Loading Complete.")
 pygame.event.pump()
 #region Audio
 asset_loading_logger.start("Loading Audio Files...")
-gasburner_clip = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
-gasburner_fire = pygame.mixer.Sound("Assets/Audio/Items/gasburner_use.ogg")
-door_opening = pygame.mixer.Sound("Assets/Audio/Tiles/door.ogg")
-door_locked = pygame.mixer.Sound("Assets/Audio/Tiles/door_locked.ogg")
-coffeemug_sound = pygame.mixer.Sound("Assets/Audio/Items/coffeemug.ogg")
-knife_pickup = pygame.mixer.Sound("Assets/Audio/Items/knife_pickup.ogg")
-key_pickup = pygame.mixer.Sound("Assets/Audio/Items/key_pickup.ogg")
-ss_sound = pygame.mixer.Sound("Assets/Audio/Items/ssbonuscard_pickup.ogg")
-lappi_sytytyspalat_sound = pygame.mixer.Sound("Assets/Audio/Items/lappisytytyspalat_pickup.ogg")
+gasburner_clip: Final = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.ogg")
+gasburner_fire: Final = pygame.mixer.Sound("Assets/Audio/Items/gasburner_use.ogg")
+door_opening: Final = pygame.mixer.Sound("Assets/Audio/Tiles/door.ogg")
+door_locked: Final = pygame.mixer.Sound("Assets/Audio/Tiles/door_locked.ogg")
+coffeemug_sound: Final = pygame.mixer.Sound("Assets/Audio/Items/coffeemug.ogg")
+knife_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/knife_pickup.ogg")
+key_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/key_pickup.ogg")
+ss_sound: Final = pygame.mixer.Sound("Assets/Audio/Items/ssbonuscard_pickup.ogg")
+lappi_sytytyspalat_sound: Final = pygame.mixer.Sound("Assets/Audio/Items/lappisytytyspalat_pickup.ogg")
 # ppsh41_shot = pygame.mixer.Sound("Assets/Audio/Items/ppsh41_shoot.ogg")
-landmine_explosion = pygame.mixer.Sound("Assets/Audio/Tiles/landmine_explosion.ogg")
-hurt_sound = pygame.mixer.Sound("Assets/Audio/Effects/player_hurt.ogg")
-plasmarifle_f_sound = pygame.mixer.Sound("Assets/Audio/Items/plasmarifle_shoot.ogg")
-weapon_pickup = pygame.mixer.Sound("Assets/Audio/Items/weapon_pickup.ogg")
-item_pickup = pygame.mixer.Sound("Assets/Audio/Items/default_pickup.ogg")
+landmine_explosion: Final = pygame.mixer.Sound("Assets/Audio/Tiles/landmine_explosion.ogg")
+hurt_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/player_hurt.ogg")
+plasmarifle_f_sound: Final = pygame.mixer.Sound("Assets/Audio/Items/plasmarifle_shoot.ogg")
+weapon_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/weapon_pickup.ogg")
+item_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/default_pickup.ogg")
 # plasma_hitting = pygame.mixer.Sound("Assets/Audio/Effects/plasma_hit.ogg")
-pistol_shot = pygame.mixer.Sound("Assets/Audio/Effects/pistol_shoot.ogg")
-rk62_shot = pygame.mixer.Sound("Assets/Audio/Items/rk62_shoot.ogg")
-glug_sound = pygame.mixer.Sound("Assets/Audio/Effects/glug.ogg")
-shotgun_shot = pygame.mixer.Sound("Assets/Audio/Effects/shotgun_shoot.ogg")
+pistol_shot: Final = pygame.mixer.Sound("Assets/Audio/Effects/pistol_shoot.ogg")
+rk62_shot: Final = pygame.mixer.Sound("Assets/Audio/Items/rk62_shoot.ogg")
+glug_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/glug.ogg")
+shotgun_shot: Final = pygame.mixer.Sound("Assets/Audio/Effects/shotgun_shoot.ogg")
 # archvile_attack = pygame.mixer.Sound("Assets/Audio/Effects/flame.ogg")
 # archvile_death = pygame.mixer.Sound("Assets/Audio/Entities/archvile_death.ogg")
-fart = pygame.mixer.Sound("Assets/Audio/Effects/player_fart.ogg")
+fart: Final = pygame.mixer.Sound("Assets/Audio/Effects/player_fart.ogg")
 # soulsphere_pickup = pygame.mixer.Sound("Assets/Audio/Items/soulsphere_pick.ogg")
-pray_sound = pygame.mixer.Sound("Assets/Audio/Tiles/decorative_head_pray.ogg")
-decorative_head_wakeup_sound = pygame.mixer.Sound("Assets/Audio/Tiles/decorative_head_wakeup.ogg")
-awm_shot = pygame.mixer.Sound("Assets/Audio/Items/awm_shot.ogg")
-smg_shot = pygame.mixer.Sound("Assets/Audio/Items/smg_shoot.ogg")
-grenade_throw = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
-lantern_pickup = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
-camera_shutter = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
-flicker_trigger_sound = pygame.mixer.Sound("Assets/Audio/Tiles/flicker_trigger.ogg")
-patja_kaatuminen = pygame.mixer.Sound("Assets/Audio/Tiles/patja_kaatuminen.ogg")
-respawn_anchor_sounds = [
+pray_sound: Final = pygame.mixer.Sound("Assets/Audio/Tiles/decorative_head_pray.ogg")
+decorative_head_wakeup_sound: Final = pygame.mixer.Sound("Assets/Audio/Tiles/decorative_head_wakeup.ogg")
+awm_shot: Final = pygame.mixer.Sound("Assets/Audio/Items/awm_shot.ogg")
+smg_shot: Final = pygame.mixer.Sound("Assets/Audio/Items/smg_shoot.ogg")
+grenade_throw: Final = pygame.mixer.Sound("Assets/Audio/Items/grenade_throw.ogg")
+lantern_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/lantern_pickup.ogg")
+camera_shutter: Final = pygame.mixer.Sound("Assets/Audio/Effects/camera_shutter.ogg")
+flicker_trigger_sound: Final = pygame.mixer.Sound("Assets/Audio/Tiles/flicker_trigger.ogg")
+patja_kaatuminen: Final = pygame.mixer.Sound("Assets/Audio/Tiles/patja_kaatuminen.ogg")
+tilefire_fire_sound: Final = pygame.mixer.Sound("Assets/Audio/Effects/fire.ogg")
+respawn_anchor_sounds: Final = [
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_0.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_2.ogg")
