@@ -1258,8 +1258,9 @@ class LevelEnderDoor(KDS.Build.Tile):
 class LevelEnderTransparent(KDS.Build.Tile):
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
-        self.triggered: bool = False
+        self.checkCollision = False
 
+        self.triggered: bool = False
         self.listener = None
         self.listenerItem = None
         self.readyToTrigger: bool = True
@@ -1274,9 +1275,10 @@ class LevelEnderTransparent(KDS.Build.Tile):
         self.readyToTrigger = True
 
     def lateInit(self):
-        if self.listener != None:
+        self.darkOverlay = None
+        if self.listener is not None:
             tmpListener: Optional[KDS.Missions.Listener] = getattr(KDS.Missions.Listeners, self.listener, None)
-            if tmpListener != None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem != None):
+            if tmpListener is not None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem is not None):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
                 self.readyToTrigger = False
@@ -1441,6 +1443,7 @@ class FlickerTrigger(KDS.Build.Tile):
     def __init__(self, position, serialNumber, repeating: bool = False) -> None:
         super().__init__(position, serialNumber)
         self.checkCollision = False
+
         self.exited: bool = True
         self.readyToTrigger: bool = True
         self.animation: bool = False
@@ -1466,13 +1469,13 @@ class FlickerTrigger(KDS.Build.Tile):
         self.readyToTrigger = True
 
     def lateInit(self):
+        self.darkOverlay = None
         if self.listener != None:
             tmpListener: Optional[KDS.Missions.Listener] = getattr(KDS.Missions.Listeners, self.listener, None)
             if tmpListener != None and (not isinstance(tmpListener, KDS.Missions.ItemListener) or self.listenerItem != None):
                 self.listenerInstance = tmpListener
                 self.listenerInstance.OnTrigger += self.eventHandler
                 self.readyToTrigger = False
-        self.darkOverlay = None
 
     def update(self):
         if self.rect.colliderect(Player.rect):
