@@ -64,19 +64,39 @@ def init(tile_data: KDS.BuildData.BuildData, item_data: KDS.BuildData.BuildData)
 class Tile:
     DATA: dict[str, dict[str, Any]]
 
-    specialTilesClasses: Dict[int, Type[Tile]] = {}
+    specialTilesClasses: dict[int, Type[Tile]] = {}
 
-    noCollision: Set[int] = set()
-    trueScale: Set[int] = set()
-    specialTiles: Set[int] = set()
+    noCollision: set[int] = set()
+    trueScale: set[int] = set()
+    specialTiles: set[int] = set()
 
     _renderPadding: int = 0
-    _textures: Dict[int, pygame.Surface] = {}
+    _textures: dict[int, pygame.Surface] = {}
+    _darkOverlayTextures: dict[int, pygame.Surface] = {}
 
     @staticmethod
     def initTextures(textures: dict[int, pygame.Surface]):
         Tile._textures.clear()
         Tile._textures.update(textures)
+        for serial, texture in textures.items():
+            Tile._darkOverlayTextures[serial] = Tile.renderDarkOverlayFrom(texture)
+
+    @staticmethod
+    def getCachedDarkOverlay(serial: int, verify_ref_texture: pygame.Surface | None = None) -> pygame.Surface | None:
+        if verify_ref_texture is not None and Tile._textures.get(serial) is not verify_ref_texture:
+            KDS.Logging.warning(f"Serial {serial} texture and the provided reference texture did not match. Dark overlay is thus considered invalid.")
+            return None
+
+        out: pygame.Surface | None = Tile._darkOverlayTextures.get(serial)
+        if out is None:
+            KDS.Logging.warning(f"No dark overlay found for serial: {serial}.")
+        return out
+
+    @staticmethod
+    def renderDarkOverlayFrom(tex: pygame.Surface) -> pygame.Surface:
+        tex = tex.convert_alpha()
+        tex.fill((0, 0, 0, 64), special_flags=pygame.BLEND_RGBA_MULT)
+        return tex
 
     def __init__(self, position: Tuple[int, int], serialNumber: int, textureLookupOverride: dict[int, pygame.Surface] | None = None):
         self.serialNumber = serialNumber
@@ -93,6 +113,11 @@ class Tile:
             - textureOverrideColorkey
             - texturePerPixelAlpha
         """
+        self.darkOverlay: pygame.Surface | None = None
+        """
+        ### DO NOT MODIFY THIS TEXTURE (reassigning is allowed though)
+        You can set this as `None` in lateInit() to disable the dark overlay.
+        """
 
         self.texture_size: tuple[int, int] = self.texture.get_size()
 
@@ -106,7 +131,6 @@ class Tile:
         self.checkCollision = serialNumber not in Tile.noCollision
         self.collisionDirection = KDS.World.CollisionDirection.All
         self.lateRender = False
-        self.darkOverlay: Optional[pygame.Surface] = None
         self.removeFlag: bool = False
 
     @staticmethod
