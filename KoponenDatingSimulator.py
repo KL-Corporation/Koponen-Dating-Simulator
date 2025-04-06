@@ -424,6 +424,8 @@ class WorldData:
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
             KDS.Loading.Circle.Stop()
+            if map_load_profiler is not None:
+                map_load_profiler.stop()
             return None
 
         map_load_logger.start("Loading Properties ...")
