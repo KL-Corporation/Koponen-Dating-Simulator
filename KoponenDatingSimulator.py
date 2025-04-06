@@ -5018,9 +5018,9 @@ def main_menu():
         def load(cls, map_index: int) -> Self:
             map_dirpath: str | None
             if map_index < 0:
-                custom_map_index: int = abs(map_index)
+                custom_map_index: Final[int] = -map_index - 1
                 if custom_map_index < len(custom_maps_paths):
-                    map_dirpath = os.path.join(PersistentPaths.CustomMaps, custom_maps_paths[custom_map_index])
+                    map_dirpath = custom_maps_paths[custom_map_index]
                 else:
                     map_dirpath = None
             elif map_index > 0:
@@ -5148,6 +5148,8 @@ def main_menu():
         if data.map_index != 0:
             assert(data.map_dirpath is not None)
             play_function(data.map_dirpath, KDS.Gamemode.Modes.Campaign if data.map_index > 0 else KDS.Gamemode.Modes.CustomCampaign, True)
+        else:
+            KDS.Logging.AutoError("Play button should be disabled when map index is 0")
 
     campaign_play_button = KDS.UI.Button(campaign_play_button_rect, campaign_play_handler, campaign_play_text)
     campaign_left_button = KDS.UI.Button(campaign_left_button_rect, level_pick.left, pygame.transform.flip(arrow_button, True, False))
@@ -5364,6 +5366,7 @@ def main_menu():
             level_text = KDS.UI.ButtonFont.render(render_map_name, True, (0, 0, 0))
             display.blit(level_text, (129, 209))
 
+            campaign_play_button.enabled = current_map_index != 0
             skip_render_this_frame = campaign_play_button.update(display, mouse_pos, c, current_map_data)
             return_button.update(display, mouse_pos, c, Mode.MainMenu)
             campaign_left_button.update(display, mouse_pos, c)
