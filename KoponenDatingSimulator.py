@@ -999,6 +999,9 @@ class Door(KDS.Build.Tile):
         self.closingCounter = 0
         self.lateRender = True
 
+        # Named differently from other doors since I added this later and did not want to break any existing maps that assumed that this functionality was not implemented on the basic door
+        self.force_locked = False
+
     def lateInit(self):
         self.darkOverlay = None
         self.checkCollision = not self.open
@@ -1015,7 +1018,7 @@ class Door(KDS.Build.Tile):
                 self.open = False
                 self.closingCounter = 0
         if KDS.Math.getDistance(Player.rect.midbottom, self.rect.midbottom) < 20 and KDS.Keys.functionKey.clicked:
-            if self.serialNumber == 23 or Player.keys[Door.key_names[self.serialNumber]]:
+            if not self.force_locked and (self.serialNumber == 23 or Player.keys[Door.key_names[self.serialNumber]]):
                 KDS.Audio.PlaySound(door_opening)
                 self.closingCounter = 0
                 self.open = not self.open
@@ -1029,7 +1032,8 @@ class Door(KDS.Build.Tile):
                         Player.rect.left = self.rect.right
             else:
                 KDS.Audio.PlaySound(door_locked)
-                Notifications.append(KDS.UI.Notification(f"Missing {Door.key_names[self.serialNumber]} key", color=Door.key_colors[self.serialNumber]))
+                if not self.force_locked:
+                    Notifications.append(KDS.UI.Notification(f"Missing {Door.key_names[self.serialNumber]} key", color=Door.key_colors[self.serialNumber]))
                 KDS.Missions.Listeners.KeyDoorLocked.Trigger()
 
         return self.texture if not self.open else self.opentexture

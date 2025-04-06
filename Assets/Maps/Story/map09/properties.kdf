@@ -1175,7 +1175,7 @@
 "110-17":{"0":{"checkCollision":false}},
 "196-17":{"0":{"checkCollision":false}},
 "198-17":{"0":{"checkCollision":false}},
-"18-18":{"0":{"checkCollision":false}},
+"18-18":{"0":{"checkCollision":false,"force_locked":true}},
 "19-18":{"0":{"checkCollision":false}},
 "23-18":{"0":{"checkCollision":false}},
 "27-18":{"0":{"checkCollision":false}},
