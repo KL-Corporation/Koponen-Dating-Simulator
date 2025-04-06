@@ -5025,8 +5025,6 @@ def main_menu():
                     map_dirpath = None
             elif map_index > 0:
                 map_dirpath = os.path.join("Assets/Maps/Campaign", f"map{map_index:02d}")
-                if not os.path.isdir(map_dirpath):
-                    map_dirpath = None
             else: # map_index == 0
                 map_dirpath = None
 
