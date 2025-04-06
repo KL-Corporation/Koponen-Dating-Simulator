@@ -122,7 +122,7 @@ def main():
         pygame.mouse.set_pos(DISPLAY_CENTER)
 
         time.sleep(0.5)
-        generate_and_save_cursor(cursor=cursor.default, image_path=cursor.preview_path, is_default=(i == 0))
+        generate_and_save_cursor(cursor=cursor.default, image_path=KDS.Cursor.get_preview_path_from_index(i), is_default=(i == 0))
         time.sleep(0.5)
 
 

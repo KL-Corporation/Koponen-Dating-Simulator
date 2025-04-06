@@ -3,7 +3,6 @@ from typing import Final, NamedTuple, Self, TypeAlias
 import pygame
 
 import KDS.ConfigManager
-import KDS.Convert
 import KDS.Logging
 import KDS.Math
 
@@ -37,8 +36,6 @@ class CursorData:
     select: Cursor | None = None
     text: Cursor | None = None
 
-    preview_path: str
-
 class LoadedCursor(NamedTuple):
     default: pygame.Cursor
     select: pygame.Cursor
@@ -51,44 +48,37 @@ CURSORS: Final[tuple[CursorData, ...]] = (
         default=PygameCursor.system(pygame.SYSTEM_CURSOR_ARROW, debug_name="SYSTEM_ARROW"),
         select=PygameCursor.system(pygame.SYSTEM_CURSOR_HAND, debug_name="SYSTEM_HAND"),
         text=PygameCursor.system(pygame.SYSTEM_CURSOR_IBEAM, debug_name="SYSTEM_IBEAM"),
-        preview_path="Assets/Textures/UI/Cursors/Preview/cursor0.png"
+    ),
+    CursorData(default=PygameCursor(pygame.cursors.arrow, debug_name="PYGAME_ARROW")),
+    CursorData(default=PygameCursor(pygame.cursors.tri_left, debug_name="PYGAME_TRI_LEFT")),
+    CursorData(
+        default=CustomCursor(
+            hotspot=(1, 1),
+            texture_path="Assets/Textures/UI/Cursors/cursor_arrow.png",
+            colorkey=(255, 0, 0)
+        )
     ),
     CursorData(
         default=CustomCursor(
             hotspot=(1, 1),
-            texture_path="Assets/Textures/UI/Cursors/cursor1.png",
+            texture_path="Assets/Textures/UI/Cursors/cursor_buttplug.png",
             colorkey=(255, 255, 255)
-        ),
-        preview_path="Assets/Textures/UI/Cursors/Preview/cursor1.png"
+        )
     ),
     CursorData(
         default=CustomCursor(
             hotspot=(8, 4),
-            texture_path="Assets/Textures/UI/Cursors/cursor2.png"
+            texture_path="Assets/Textures/UI/Cursors/cursor_dick.png"
         ),
         select=CustomCursor(
             hotspot=(8, 4),
-            texture_path="Assets/Textures/UI/Cursors/cursor2_select.png"
-        ),
-        preview_path="Assets/Textures/UI/Cursors/Preview/cursor2.png"
-    ),
-    CursorData(
-        default=CustomCursor(
-            hotspot=(1, 1),
-            texture_path="Assets/Textures/UI/Cursors/cursor3.png",
-            colorkey=(255, 0, 0)
-        ),
-        preview_path="Assets/Textures/UI/Cursors/Preview/cursor3.png"
-    ),
-    CursorData(
-        default=PygameCursor(pygame.cursors.arrow, debug_name="PYGAME_ARROW"),
-        preview_path="Assets/Textures/UI/Cursors/Preview/cursor4.png"
-    ),
-    CursorData(
-        default=PygameCursor(pygame.cursors.tri_left, debug_name="PYGAME_TRI_LEFT"),
-        preview_path="Assets/Textures/UI/Cursors/Preview/cursor5.png"
+            texture_path="Assets/Textures/UI/Cursors/cursor_dick_select.png"
+        )
     )
 )
+
+def get_preview_path_from_index(index: int) -> str:
+    return f"Assets/Textures/UI/Cursors/Preview/cursor{index}.png"
 
 _current_cursor: tuple[CursorData, LoadedCursor]
 def init(*, cursor_index_override: int | None = None):
@@ -103,14 +93,20 @@ def _internal_load_cursor(cursor: Cursor) -> pygame.Cursor:
         return cursor.load_and_create_cursor()
     return cursor.cursor
 
-def _load_cursor(cursor: CursorData) -> None:
+def _load_cursor(cursor: CursorData, preview_path: str) -> None:
     global _current_cursor
 
     default: pygame.Cursor = _internal_load_cursor(cursor.default)
     select: pygame.Cursor = _internal_load_cursor(cursor.select) if cursor.select is not None else default
     text: pygame.Cursor = _internal_load_cursor(cursor.text) if cursor.text is not None else select
 
-    preview: pygame.Surface = pygame.image.load(cursor.preview_path).convert_alpha()
+    preview: pygame.Surface | None
+    try:
+        preview = pygame.image.load(preview_path).convert_alpha()
+    except Exception as e:
+        KDS.Logging.AutoError(e)
+        preview = pygame.Surface((68, 68))
+        preview.fill((255, 0, 0))
 
     loaded: LoadedCursor = LoadedCursor(default=default, select=select, text=text, preview=preview)
 
@@ -188,11 +184,11 @@ def _switch_cursor(*, index_override: int | None = None, offset: int):
         index = KDS.ConfigManager.GetSetting("UI/cursor", ...)
         assert(isinstance(index, int))
 
-        if offset != 0:
+        if offset != 0 or index < 0 or index >= len(CURSORS):
             index = KDS.Math.Clamp(index + offset, 0, len(CURSORS) - 1)
             KDS.ConfigManager.SetSetting("UI/cursor", index)
     else:
         index = KDS.Math.Clamp(index_override, 0, len(CURSORS) - 1)
 
-    _load_cursor(CURSORS[index])
+    _load_cursor(CURSORS[index], get_preview_path_from_index(index))
     _update_cursor()
