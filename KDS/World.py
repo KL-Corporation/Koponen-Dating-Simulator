@@ -164,26 +164,44 @@ class EntityMover:
         collisions = Collisions()
 
         rect.x += round(movement[0])
-        for tile in collision_test(rect, tiles):
-            # CollisionDirection is inverted, because it is relative to tile
-            if movement[0] > 0 and CollisionDirection.Left in tile.collisionDirection:
-                rect.right = tile.rect.left
-                collisions.right = True
-            elif movement[0] < 0 and CollisionDirection.Right in tile.collisionDirection:
-                rect.left = tile.rect.right
-                collisions.left = True
+        if movement[0] > 0:
+            right: int = rect.right
+            for tile in collision_test(rect, tiles):
+                # CollisionDirection is inverted, because it is relative to tile
+                if CollisionDirection.Left in tile.collisionDirection:
+                    right = min(right, tile.rect.left)
+                    collisions.right = True
+            rect.right = right
+        elif movement[0] < 0:
+            left: int = rect.left
+            for tile in collision_test(rect, tiles):
+                if CollisionDirection.Right in tile.collisionDirection:
+                    left = max(left, tile.rect.right)
+                    collisions.left = True
+            rect.left = left
+
 
         rect.y += round(movement[1])
-        # Has to be checked twice or my testing of merging these two went horribly wrong
-        for tile in collision_test(rect, tiles):
-            if movement[1] > 0 and CollisionDirection.Top in tile.collisionDirection and tile.rect.bottom > rect.bottom:
-                rect.bottom = tile.rect.top
-                collisions.bottom = True
-                if movement[0] != 0 and self.walkSounds != None and playWalkSound:
-                    KDS.Audio.PlaySound(random.choice(self.walkSounds["default"]))
-            elif movement[1] < 0 and CollisionDirection.Bottom in tile.collisionDirection:
-                rect.top = tile.rect.bottom
-                collisions.top = True
+        # Collisions have to be checked for x and y separately or my testing of merging these two went horribly wrong
+        if movement[1] > 0:
+            bottom: int = rect.bottom
+            for tile in collision_test(rect, tiles):
+                # no idea what that second check is for, so I kept it when re-writing the move function...
+                # it has probably something to do with jump force running out while clipping into a tile?
+                if CollisionDirection.Top in tile.collisionDirection and tile.rect.bottom > rect.bottom:
+                    bottom = min(bottom, tile.rect.top)
+                    collisions.bottom = True
+                    if movement[0] != 0 and self.walkSounds is not None and playWalkSound:
+                        KDS.Audio.PlaySound(random.choice(self.walkSounds["default"]))
+            rect.bottom = bottom
+        elif movement[1] < 0:
+            top: int = rect.top
+            for tile in collision_test(rect, tiles):
+                if CollisionDirection.Bottom in tile.collisionDirection:
+                    top = max(top, tile.rect.bottom)
+                    collisions.top = True
+            rect.top = top
+
         return collisions
 
 class Lighting:
