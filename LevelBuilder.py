@@ -1006,7 +1006,11 @@ class UnitData:
         # UnitData.placedOnTile = unit
 
         if mpos_tilepos[1] < len(grid) and mpos_tilepos[0] < len(grid[0]):
-            tipUnit: UnitData = grid[mpos_tilepos[1]][mpos_tilepos[0]]
+            try:
+                tipUnit: UnitData = grid[mpos_tilepos[1]][mpos_tilepos[0]]
+            except IndexError:
+                KDS.Logging.debug(f"Mouse pos out of range: {mpos_tilepos}", consoleVisible=True)
+                raise
             tipProps = tipUnit.properties.GetAll()
             for _type, properties in tipProps.items():
                 color = _TYPECOLORS[_type]
