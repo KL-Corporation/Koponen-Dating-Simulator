@@ -218,7 +218,7 @@ class ToggleButton(Button):
             return None
 
 class Switch:
-    def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 6, move_lerp_duration: int = 15, custom_path: Optional[str] = None):
+    def __init__(self, safe_name: str, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 6, move_lerp_duration: int = 15, custom_path: Optional[str] = None):
         """
         1. safe_name: An identifier that does not conflict with ANY other safe_names. (Slider value will be saved at "Settings", "safe_name")
         2. switch_rect: The pygame.Rect of the slider.

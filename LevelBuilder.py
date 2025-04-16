@@ -292,6 +292,8 @@ referenceGridHandle: Optional[KDS.Jobs.JobHandle] = None
 renderOverlays: bool = True
 zoneMode: bool = False
 
+disabled_filters: dict[str, tuple[str | None, ...]] = {}
+
 build_undo: ChangeUndoRecord | None = None
 remove_undo: ChangeUndoRecord | None = None
 
@@ -2365,7 +2367,8 @@ class MaterialContainer:
     SIZE: int = 70
     SPACING: tuple[int, int] = (30, 20)
 
-    def __init__(self, data: Iterable[TextureHolder.TextureData]) -> None:
+    def __init__(self, datatype: str, data: Iterable[TextureHolder.TextureData]) -> None:
+        self.datatype: Final[str] = datatype
         self.data: Final[tuple[TextureHolder.TextureData, ...]] = tuple(data)
 
         self.selector_filter: Final[dict[str | None, KDS.UI.ToggleButton]] = {}
@@ -2382,20 +2385,16 @@ class MaterialContainer:
             MaterialContainer.FILTER_HEIGHT + MaterialContainer.SPACING[1]
         )
 
-    def _build_filter_buttons(self, categories: Iterable[str | None], existing_values: dict[str | None, bool]) -> None:
+    def _build_filter_buttons(self, categories: Iterable[str | None]) -> None:
         x: int = MaterialContainer._compute_offset()[0]
         for c in sorted(categories, key=lambda x: x if x is not None else ""): # Sort None as first
             text: str = c.capitalize() if c is not None else "Uncategorised"
             rendered = harbinger_font_small.render(text, True, KDS.Colors.White)
             rect = pygame.Rect(x, 0, rendered.width + 2 * MaterialContainer.FILTER_PADDING_X, MaterialContainer.FILTER_HEIGHT)
 
-            default_value: bool
-            if c in existing_values:
-                default_value = existing_values[c]
-            elif c == "story":
-                default_value = False
-            else:
-                default_value = True
+            if self.datatype not in disabled_filters:
+                disabled_filters[self.datatype] = ("story",)
+            default_value: bool = c not in disabled_filters[self.datatype]
 
             # Do not lerp, LevelBuilder FPS is not fixed.
             self.selector_filter[c] = KDS.UI.ToggleButton(rect, self._on_category_toggled, rendered, default_value=default_value, lerp_duration=0)
@@ -2403,6 +2402,7 @@ class MaterialContainer:
             x += rect.width + MaterialContainer.FILTER_SPACING_X
 
     def _on_category_toggled(self, _: bool) -> None:
+        disabled_filters[self.datatype] = tuple(key for key, value in self.selector_filter.items() if not value.state)
         self._rebuild_selectors()
 
     def _build_selectors(self) -> int:
@@ -2438,11 +2438,8 @@ class MaterialContainer:
         self._rebuild_selectors()
 
     def _rebuild_filters(self):
-        categories: set[str | None] = set(d.category for d in self.data)
-
-        existing: dict[str | None, bool] = {key: value.state for key, value in self.selector_filter.items()}
         self._clear_filters()
-        self._build_filter_buttons(categories, existing)
+        self._build_filter_buttons(set(d.category for d in self.data))
 
     def _rebuild_selectors(self):
         self._clear_selectors()
@@ -2528,8 +2525,8 @@ def materialMenu(previousMaterial: str) -> str:
 
     containers: list[MaterialContainer] = []
     texture_data = KDS.Linq.GroupBy(Textures, lambda x: x.serialNumber[0])
-    for _, tex in sorted(texture_data, key=lambda x: x[0]):
-        containers.append(MaterialContainer(sorted(tex, key=lambda k: k.name.lower())))
+    for key, tex in sorted(texture_data, key=lambda x: x[0]):
+        containers.append(MaterialContainer(key, sorted(tex, key=lambda k: k.name.lower())))
 
     def returnWrapper(output: str) -> str:
         for c in containers:
@@ -2550,7 +2547,7 @@ def materialMenu(previousMaterial: str) -> str:
                     matMenRunning = False
                     return returnWrapper(previousMaterial)
             elif event.type == MOUSEWHEEL:
-                y_scroll -= 10 * event.y
+                y_scroll -= 30 * event.y
         y_scroll = KDS.Math.Clamp(y_scroll, MIN_SCROLL, max_scroll)
 
         tip_renders: list[pygame.Surface] = []
