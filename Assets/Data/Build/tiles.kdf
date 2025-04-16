@@ -127,7 +127,6 @@
     },
     "Jukebox": {
         "serialNumber": 19,
-        "category": "interactable",
         "path": "jukebox.png",
         "specialTile": true,
         "noCollision": false,
@@ -1188,7 +1187,7 @@
     },
     "Cash Register": {
         "serialNumber": 168,
-        "category": "interactable",
+        "category": "story",
         "path": "cashRegister.png",
         "specialTile": true,
         "noCollision": true,

@@ -258,16 +258,16 @@ Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png",
 Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", colorkey=KDS.Colors.Cyan)
 Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", colorkey=KDS.Colors.Cyan)
 Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy")
-Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", colorkey=KDS.Colors.Cyan)
-Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog")
+Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", category="story", colorkey=KDS.Colors.Cyan)
+Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog", category="story")
 Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie")
 Textures.AddTexture("2012", "Assets/Textures/Animations/archvile_run_0.png", "Archvile")
 
-Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY")
-Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo")
-Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa")
-Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
-Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC")
+Textures.AddTexture("4003", "Assets/Textures/Teachers/Test/koponen_idle_0.png", "TEST ENTITY", category="story")
+Textures.AddTexture("4001", "Assets/Textures/Teachers/LaaTo/idle_0.png", "LaaTo", category="story")
+Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa", category="story")
+Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student", category="story")
+Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC", category="story")
 
 Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", None, pygame.image.load("Assets/Editor/Textures/missing.png").convert())
 
