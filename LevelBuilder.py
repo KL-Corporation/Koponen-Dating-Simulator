@@ -135,11 +135,15 @@ harbinger_font_small = pygame.font.Font("Assets/Fonts/harbinger.otf", 15)
 
 class TextureHolder:
     class TextureData:
-        def __init__(self, serialNumber: str, name: str, texture: pygame.Surface) -> None:
-            self.serialNumber = serialNumber
-            self.texture = texture
-            self.texture_size: tuple[int, int] = self.texture.get_size()
-            self.name = name
+        def __init__(self, serialNumber: str, name: str, category: str | None, texture: pygame.Surface, metadata: dict[str, Any] | None = None) -> None:
+            self.serialNumber: Final[str] = serialNumber
+            self.name: Final[str] = name
+            self.category: Final[str | None] = category
+
+            self.texture: Final[pygame.Surface] = texture
+            self.texture_size: Final[tuple[int, int]] = self.texture.get_size()
+
+            self.is_contraband: Final[bool] = metadata is not None and metadata.get("isContraband") is True
 
             self.rescaleTexture()
 
@@ -170,14 +174,14 @@ class TextureHolder:
     def __iter__(self):
         return iter(self.textures.values())
 
-    def AddTexture(self, serialNumber: str, path: str, name: str, colorkey: tuple[int, int, int] | None = KDS.Colors.White, alpha: int | None = None) -> None:
+    def AddTexture(self, serialNumber: str, path: str, name: str, category: str | None = None, colorkey: tuple[int, int, int] | None = KDS.Colors.White, alpha: int | None = None, metadata: dict[str, Any] | None = None) -> None:
         texture: pygame.Surface = pygame.image.load(path).convert()
         if colorkey is not None:
             texture.set_colorkey(colorkey)
         if alpha is not None:
             texture.set_alpha(alpha)
 
-        self._Add(TextureHolder.TextureData(serialNumber, name, texture))
+        self._Add(TextureHolder.TextureData(serialNumber, name, category, texture, metadata))
 
     def AddBuildData(self, serialPrefix: int, buildData: KDS.BuildData.BuildData, checkTruescale: bool = False, checkNoCollision: bool = False):
         if serialPrefix < 0 or serialPrefix > 9:
@@ -187,12 +191,16 @@ class TextureHolder:
             localSerial: int = d["serialNumber"]
             globalSerial: str = f"""{serialPrefix}{localSerial:03d}"""
 
+            category: str | None | Any = d.get("category")
+            if not isinstance(category, str):
+                category = None
+
             if checkTruescale and d["trueScale"] == True:
                 self.trueScale.add(globalSerial)
             if checkNoCollision and d["noCollision"] == True:
                 self.noCollision.add(globalSerial)
 
-            self._Add(TextureHolder.TextureData(globalSerial, dName, buildData.textures[localSerial]))
+            self._Add(TextureHolder.TextureData(globalSerial, dName, category, buildData.textures[localSerial], metadata=d))
 
     def _Add(self, texture_data: TextureData):
         self.textures[texture_data.serialNumber] = texture_data
@@ -247,10 +255,10 @@ Textures.AddTexture("2002", "Assets/Textures/Animations/seargeant_walking_0.png"
 Textures.AddTexture("2003", "Assets/Textures/Animations/drug_dealer_walking_0.png", "Drug Dealer")
 Textures.AddTexture("2004", "Assets/Textures/Animations/turbo_shotgunner_walking_0.png", "Turbo Shotgunner")
 Textures.AddTexture("2005", "Assets/Textures/Animations/mafiaman_walking_0.png", "Mafiaman")
-Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", KDS.Colors.Cyan)
-Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", KDS.Colors.Cyan)
+Textures.AddTexture("2006", "Assets/Textures/Animations/methmaker_idle_0.png", "Methmaker", colorkey=KDS.Colors.Cyan)
+Textures.AddTexture("2007", "Assets/Textures/Animations/undead_monster_walking_0.png", "Undead Monster", colorkey=KDS.Colors.Cyan)
 Textures.AddTexture("2008", "Assets/Textures/Animations/mummy_walking_0.png", "Mummy")
-Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", KDS.Colors.Cyan)
+Textures.AddTexture("2009", "Assets/Textures/Animations/security_guard_walking_0.png", "Security Guard", colorkey=KDS.Colors.Cyan)
 Textures.AddTexture("2010", "Assets/Textures/Animations/bulldog_0.png", "Bulldog")
 Textures.AddTexture("2011", "Assets/Textures/Animations/z_walk_0.png", "Zombie")
 Textures.AddTexture("2012", "Assets/Textures/Animations/archvile_run_0.png", "Archvile")
@@ -261,11 +269,11 @@ Textures.AddTexture("4002", "Assets/Textures/Teachers/KuuMa/idle_0.png", "KuuMa"
 Textures.AddTexture("4999", "Assets/Textures/NPC/Static/person_0/npc-idle_0.png", "Random Static Student")
 Textures.AddTexture("4309", "Assets/Textures/NPC/Room309/0/idle_0.png", "Room 309 NPC")
 
-Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", pygame.image.load("Assets/Editor/Textures/missing.png").convert())
+Textures.NotFoundFallback = TextureHolder.TextureData("----", "<error>", None, pygame.image.load("Assets/Editor/Textures/missing.png").convert())
 
 telep_overlay_tex: Final = pygame.image.load("Assets/Textures/Teleports/telep.png").convert()
 telep_overlay_tex.set_alpha(100)
-Textures.TeleportOverlay = TextureHolder.TextureData("3001", "<error>", telep_overlay_tex) # Set serial so that this overlay isn't drawn over tile 3001
+Textures.TeleportOverlay = TextureHolder.TextureData("3001", "<error>", None, telep_overlay_tex) # Set serial so that this overlay isn't drawn over tile 3001
 #endregion
 
 ### GLOBAL VARIABLES ###
@@ -2348,50 +2356,190 @@ def zoneConsoleHandler(commandlist: Optional[list[str]], zoneRect: pygame.Rect):
     elif command_setting == PropertiesData.ZoneSetting.CustomId:
         PropertiesData.Zones.SetSetting(zoneRect, command_setting, commandlist[1])
 
+class MaterialContainer:
+    FILTER_HEIGHT: int = 40
+    FILTER_PADDING_X: int = 10
+    FILTER_SPACING_X: int = 10
+
+    COLUMNS: int = 12
+    SIZE: int = 70
+    SPACING: tuple[int, int] = (30, 20)
+
+    def __init__(self, data: Iterable[TextureHolder.TextureData]) -> None:
+        self.data: Final[tuple[TextureHolder.TextureData, ...]] = tuple(data)
+
+        self.selector_filter: Final[dict[str | None, KDS.UI.ToggleButton]] = {}
+        self.selectors: Final[list[MaterialSelector]] = []
+        self.rebuild()
+        self.display_size: tuple[int, int] = display_size
+
+        self.pressed: bool = False
+
+    @staticmethod
+    def _compute_offset() -> tuple[int, int]:
+        return (
+            (display_size[0] - (MaterialContainer.SIZE + MaterialContainer.SPACING[0]) * MaterialContainer.COLUMNS) // 2,
+            MaterialContainer.FILTER_HEIGHT + MaterialContainer.SPACING[1]
+        )
+
+    def _build_filter_buttons(self, categories: Iterable[str | None], existing_values: dict[str | None, bool]) -> None:
+        x: int = MaterialContainer._compute_offset()[0]
+        for c in sorted(categories, key=lambda x: x if x is not None else ""): # Sort None as first
+            text: str = c.capitalize() if c is not None else "Uncategorised"
+            rendered = harbinger_font_small.render(text, True, KDS.Colors.White)
+            rect = pygame.Rect(x, 0, rendered.width + 2 * MaterialContainer.FILTER_PADDING_X, MaterialContainer.FILTER_HEIGHT)
+
+            default_value: bool
+            if c in existing_values:
+                default_value = existing_values[c]
+            elif c == "story":
+                default_value = False
+            else:
+                default_value = True
+
+            # Do not lerp, LevelBuilder FPS is not fixed.
+            self.selector_filter[c] = KDS.UI.ToggleButton(rect, self._on_category_toggled, rendered, default_value=default_value, lerp_duration=0)
+
+            x += rect.width + MaterialContainer.FILTER_SPACING_X
+
+    def _on_category_toggled(self, _: bool) -> None:
+        self._rebuild_selectors()
+
+    def _build_selectors(self) -> int:
+        offset: Final = MaterialContainer._compute_offset()
+
+        x_index: int = 0
+        y: int = offset[1]
+
+        for data in self.data:
+            filter_toggle: KDS.UI.ToggleButton | None = self.selector_filter.get(data.category)
+            if filter_toggle is None:
+                KDS.Logging.AutoError(f"No filter found for category: '{data.category}'")
+            elif not filter_toggle.state:
+                continue
+
+            rect = pygame.Rect(offset[0] + x_index * (MaterialContainer.SIZE + MaterialContainer.SPACING[0]), y, MaterialContainer.SIZE, MaterialContainer.SIZE)
+            self.selectors.append(MaterialSelector(rect, data))
+
+            x_index += 1
+            if x_index > MaterialContainer.COLUMNS:
+                x_index = 0
+                y += MaterialContainer.SIZE
+                y += MaterialContainer.SPACING[1]
+
+        if x_index > 0:
+            y += MaterialContainer.SIZE
+            y += MaterialContainer.SPACING[1]
+
+        return y # total height
+
+    def rebuild(self):
+        self._rebuild_filters()
+        self._rebuild_selectors()
+
+    def _rebuild_filters(self):
+        categories: set[str | None] = set(d.category for d in self.data)
+
+        existing: dict[str | None, bool] = {key: value.state for key, value in self.selector_filter.items()}
+        self._clear_filters()
+        self._build_filter_buttons(categories, existing)
+
+    def _rebuild_selectors(self):
+        self._clear_selectors()
+        self.height = self._build_selectors()
+
+    def update(self, surf: pygame.Surface, y: int, mpos: tuple[int, int], pressed: bool, tip_renders: list[pygame.Surface]) -> str | None:
+        if display_size != self.display_size:
+            self.rebuild()
+            self.display_size = display_size
+
+        clicked: bool = False
+        if pressed:
+            self.pressed = True
+        elif self.pressed:
+            self.pressed = False
+            clicked = True
+
+        for f in self.selector_filter.values():
+            f.rect.y += y
+            f.update(surf, mpos, clicked)
+            f.rect.y -= y
+
+        for s in self.selectors:
+            s.rect.y += y
+            result: str | None = s.update(surf, mpos, pressed, clicked, tip_renders)
+            s.rect.y -= y
+
+            if result is not None:
+                return result
+
+        return None
+
+    def _clear_selectors(self) -> None:
+        for s in self.selectors:
+            s.dispose()
+        self.selectors.clear()
+
+    def _clear_filters(self) -> None:
+        for f in self.selector_filter.values():
+            KDS.Cursor.remove_interactable_reference(f)
+        self.selector_filter.clear()
+
+    def dispose(self) -> None:
+        self._clear_selectors()
+        self._clear_filters()
+
+class MaterialSelector:
+    def __init__(self, rect: pygame.Rect, data: TextureHolder.TextureData) -> None:
+        self.rect: Final[pygame.Rect] = rect
+        self.data: Final[TextureHolder.TextureData] = data
+
+        margin_removed_subsurface = self.data.texture.subsurface(self.data.texture.get_bounding_rect())
+        self._texture: Final[pygame.Surface] = KDS.Convert.AspectScale(margin_removed_subsurface, self.rect.size)
+
+    def update(self, surf: pygame.Surface, mpos: tuple[int, int], pressed: bool, clicked: bool, tip_renders: list[pygame.Surface]) -> str | None:
+        collide: bool = self.rect.collidepoint(mpos)
+
+        self._texture.set_alpha(128 if collide and pressed else 255)
+        surf.blit(self._texture, (self.rect.centerx - self._texture.width // 2, self.rect.centery - self._texture.height // 2))
+
+        if collide:
+            KDS.Cursor.add_interactable_reference(self)
+
+            pygame.draw.rect(display, (230, 30, 40), self.rect, 3)
+            tip_renders.append(harbinger_font_small.render(self.data.name, True, KDS.Colors.AviatorRed))
+            tip_renders.append(harbinger_font_small.render(self.data.serialNumber, True, KDS.Colors.RiverBlue))
+            if self.data.is_contraband:
+                tip_renders.append(harbinger_font_small.render("contraband", True, KDS.Colors.Orange))
+
+            if clicked:
+                return self.data.serialNumber
+            else:
+                return None
+        else:
+            KDS.Cursor.remove_interactable_reference(self)
+
+    def dispose(self) -> None:
+        KDS.Cursor.remove_interactable_reference(self)
+
 def materialMenu(previousMaterial: str) -> str:
     global matMenRunning
     matMenRunning = True
-    rscroll = 0
-    BLOCKSIZE = 70
-    SPACING = (100, 90)
-    COLUMNS = 12
-    OFFSET = (display_size[0] // 2 - SPACING[0] * COLUMNS // 2 - BLOCKSIZE // 2, 40)
 
-    class selectorRect:
-        def __init__(self, pos: tuple[int, int], data: TextureHolder.TextureData):
-            self.pos = pos
-            self.rect: pygame.Rect = pygame.Rect(pos[0] * SPACING[0] + OFFSET[0], pos[1] * SPACING[1] + OFFSET[1], BLOCKSIZE, BLOCKSIZE)
-            self.data: TextureHolder.TextureData = data
-
-            self.cursor_attached: bool = False
+    containers: list[MaterialContainer] = []
+    texture_data = KDS.Linq.GroupBy(Textures, lambda x: x.serialNumber[0])
+    for _, tex in sorted(texture_data, key=lambda x: x[0]):
+        containers.append(MaterialContainer(sorted(tex, key=lambda k: k.name.lower())))
 
     def returnWrapper(output: str) -> str:
-        for s in selectorRects:
-            if s.cursor_attached:
-                KDS.Cursor.remove_interactable_reference(s)
+        for c in containers:
+            c.dispose()
         return output
 
-    selectorRects: list[selectorRect] = []
+    MIN_SCROLL: int = -MaterialContainer.SPACING[1]
+    max_scroll: int = MIN_SCROLL
 
-    y = 0
-    x = 0
-    texture_data = KDS.Linq.GroupBy(Textures, lambda x: x.serialNumber[0])
-    for i, (key, tex) in enumerate(sorted(texture_data, key=lambda x: x[0])):
-        for data in sorted(tex, key=lambda k: k.name.lower()):
-            selectorRects.append(selectorRect((x, y), data))
-            x += 1
-            if x > COLUMNS:
-                x = 0
-                y += 1
-
-        # if i < len(texture_data) - 1: # Skips the line adding for the last collection
-        y += 1
-        if x > 0:
-            x = 0
-            y += 1
-
-    ROWS = y
-
+    y_scroll: int = MIN_SCROLL
     while matMenRunning:
         mouse_pressed = pygame.mouse.get_pressed()
         for event in pygame.event.get():
@@ -2402,38 +2550,23 @@ def materialMenu(previousMaterial: str) -> str:
                     matMenRunning = False
                     return returnWrapper(previousMaterial)
             elif event.type == MOUSEWHEEL:
-                if event.y > 0:
-                    rscroll = max(rscroll - 2, 0)
-                else:
-                    rscroll = int(min((rscroll + 2) * 30, (ROWS - 2) * SPACING[1] + OFFSET[1]) / 30) # Not floor divided, because denominator is a multiple digit value.
-        yCalc = rscroll * 30
+                y_scroll -= 10 * event.y
+        y_scroll = KDS.Math.Clamp(y_scroll, MIN_SCROLL, max_scroll)
 
-        tip_renders = []
+        tip_renders: list[pygame.Surface] = []
 
         mpos = pygame.mouse.get_pos()
         display.fill((20, 20, 20))
-        for selection in selectorRects:
-            selection: selectorRect
-            rndY = selection.rect.y - yCalc
-            margin_removed_subsurface = selection.data.texture.subsurface(selection.data.texture.get_bounding_rect())
-            scaledTex = KDS.Convert.AspectScale(margin_removed_subsurface, (BLOCKSIZE, BLOCKSIZE))
-            display.blit(scaledTex, (selection.rect.x + selection.rect.width // 2 - scaledTex.get_width() // 2, rndY + selection.rect.height // 2 - scaledTex.get_height() // 2))
-            if selection.rect.collidepoint(mpos[0], mpos[1] + yCalc):
-                if not selection.cursor_attached:
-                    KDS.Cursor.add_interactable_reference(selection)
-                    selection.cursor_attached = True
 
-                pygame.draw.rect(display, (230, 30, 40), (selection.rect.x, rndY, BLOCKSIZE, BLOCKSIZE), 3)
-                tip_renders.append(harbinger_font_small.render(selection.data.name, True, KDS.Colors.AviatorRed))
-                tip_renders.append(harbinger_font_small.render(selection.data.serialNumber, True, KDS.Colors.RiverBlue))
-                if mouse_pressed[0]:
-                    return returnWrapper(selection.data.serialNumber)
-            elif selection.cursor_attached:
-                KDS.Cursor.remove_interactable_reference(selection)
-                selection.cursor_attached = False
+        y: int = 0
+        for c in containers:
+            res: str | None = c.update(display, y - y_scroll, mpos, mouse_pressed[0], tip_renders)
+            if res is not None:
+                return res
+            y += c.height
+            y += MaterialContainer.SPACING[1]
 
-        if mouse_pressed[0]:
-            return returnWrapper(UnitData.EMPTY)
+        max_scroll = y - 3 * MaterialContainer.SPACING[1] - MaterialContainer.SIZE
 
         if len(tip_renders) > 0:
             totHeight = 0

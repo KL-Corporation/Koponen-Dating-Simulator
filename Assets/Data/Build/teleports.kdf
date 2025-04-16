@@ -26,10 +26,12 @@
     },
     "Hotel Door Teleport": {
         "serialNumber": 7,
+        "category": "story",
         "path": "hotel_door_front.png"
     },
     "Hotel Door Teleport Mirrored": {
         "serialNumber": 8,
+        "category": "story",
         "path": "hotel_door_front_mirrored.png"
     },
     "Door Teleport Left Side": {
@@ -38,6 +40,7 @@
     },
     "Guard Hotel Door Teleport Mirrored": {
         "serialNumber": 10,
+        "category": "story",
         "path": "hotel_door_front_mirrored.png"
     },
     "Nysse Teleport": {

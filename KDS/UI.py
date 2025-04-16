@@ -120,6 +120,8 @@ class Button:
         self.border_radius: int = border_radius
         self.enabled: bool = enabled
 
+        self.remove_cursor_interaction_on_click: bool = True
+
         """Updates and draws the button onto a surface.
 
         Args:
@@ -148,7 +150,8 @@ class Button:
                 if clicked:
                     self.function(*args, **kwargs)
                     executed = True
-                    KDS.Cursor.remove_interactable_reference(self)
+                    if self.remove_cursor_interaction_on_click:
+                        KDS.Cursor.remove_interactable_reference(self)
                 else:
                     KDS.Cursor.add_interactable_reference(self)
                 button_color = self.button_highlighted_color
@@ -172,6 +175,47 @@ class Button:
             surface.blit(self.overlay, (self.rect.center[0] - self.overlay.get_width() // 2, self.rect.center[1] - self.overlay.get_height() // 2))
 
         return executed
+
+class ToggleButton(Button):
+    def __init__(self, rect: pygame.Rect, function: Callable[[bool], Any], overlay: pygame.Surface | str | None = None, default_value: bool = False, button_default_on_color: tuple[int, int, int] = (0, 100, 0), button_default_off_color: tuple[int, int, int] = (100, 0, 0), button_highlighted_on_color: tuple[int, int, int] = (0, 115, 0), button_highlighted_off_color: tuple[int, int, int] = (115, 0, 0), button_pressed_on_color: tuple[int, int, int] = (0, 90, 0), button_pressed_off_color: tuple[int, int, int] = (90, 0, 0), button_disabled_color: tuple[int, int, int] = (75, 75, 75), lerp_duration: int = 6, border_radius: int = -1, enabled: bool = True):
+        self.button_default_on_color: tuple[int, int, int] = button_default_on_color
+        self.button_default_off_color: tuple[int, int, int] = button_default_off_color
+
+        self.button_highlighted_on_color: tuple[int, int, int] = button_highlighted_on_color
+        self.button_highlighted_off_color: tuple[int, int, int] = button_highlighted_off_color
+
+        self.button_pressed_on_color: tuple[int, int, int] = button_pressed_on_color
+        self.button_pressed_off_color: tuple[int, int, int] = button_pressed_off_color
+
+        self.state: bool = default_value
+
+        super().__init__(rect, self._call_wrapper(function), overlay, self._get_default_color(), self._get_highlighted_color(), self._get_pressed_color(), button_disabled_color, lerp_duration, border_radius, enabled)
+        self.remove_cursor_interaction_on_click = False
+
+    def _get_default_color(self) -> tuple[int, int, int]:
+        return self.button_default_on_color if self.state else self.button_default_off_color
+
+    def _get_highlighted_color(self) -> tuple[int, int, int]:
+        return self.button_highlighted_on_color if self.state else self.button_highlighted_off_color
+
+    def _get_pressed_color(self) -> tuple[int, int, int]:
+        return self.button_pressed_on_color if self.state else self.button_pressed_off_color
+
+    def _call_wrapper(self, func: Callable[[bool], Any]) -> Callable[[], Any]:
+        def wrapper() -> Any:
+            self.state = not self.state
+            self.button_default_color = self._get_default_color()
+            self.button_highlighted_color = self._get_highlighted_color()
+            self.button_pressed_color = self._get_pressed_color()
+            return func(self.state)
+
+        return wrapper
+
+    def update(self, surface: pygame.Surface, mouse_pos: tuple[int, int], clicked: bool, *args: Any, **kwargs: Any) -> bool | None:
+        if super().update(surface, mouse_pos, clicked, *args, **kwargs):
+            return self.state
+        else:
+            return None
 
 class Switch:
     def __init__(self, safe_name, switch_rect: pygame.Rect, handle_size: Tuple[int, int], default_value: Union[bool, Any] = False, switch_move_area_padding: Tuple[int, int] = (0, 0), switch_off_color: Tuple[int, int, int] = (120, 120, 120), switch_on_color: Tuple[int, int, int] = KDS.Colors.EmeraldGreen, handle_default_color: Tuple[int, int, int] = (100, 100, 100), handle_highlighted_color: Tuple[int, int, int] = (115, 115, 115), handle_pressed_color: Tuple[int, int, int] = (90, 90, 90), fade_lerp_duration: int = 6, move_lerp_duration: int = 15, custom_path: Optional[str] = None):

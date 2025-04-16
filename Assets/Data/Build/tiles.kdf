@@ -127,6 +127,7 @@
     },
     "Jukebox": {
         "serialNumber": 19,
+        "category": "interactable",
         "path": "jukebox.png",
         "specialTile": true,
         "noCollision": false,
@@ -141,6 +142,7 @@
     },
     "Landmine": {
         "serialNumber": 21,
+        "category": "damage",
         "path": "landmine.png",
         "specialTile": true,
         "noCollision": false,
@@ -372,6 +374,7 @@
     },
     "Level Ender": {
         "serialNumber": 54,
+        "category": "ending",
         "path": "level_ender.png",
         "specialTile": true,
         "noCollision": false,
@@ -477,12 +480,13 @@
     },
     "NICE": {
         "serialNumber": 69,
+        "category": "special",
         "path": "nice.png",
         "specialTile": false,
         "noCollision": false,
         "trueScale": false
     },
-    "I have no idea what to call this": {
+    "Rusted Tile": {
         "serialNumber": 70,
         "path": "block_r.png",
         "specialTile": false,
@@ -505,6 +509,7 @@
     },
     "Level Ender Door": {
         "serialNumber": 73,
+        "category": "ending",
         "path": "door_front.png",
         "specialTile": true,
         "noCollision": false,
@@ -582,6 +587,7 @@
     },
     "Flicker Trigger": {
         "serialNumber": 84,
+        "category": "special",
         "path": "flicker_trigger.png",
         "specialTile": true,
         "noCollision": false,
@@ -603,6 +609,7 @@
     },
     "Barrier": {
         "serialNumber": 87,
+        "category": "special",
         "path": "barrier.png",
         "specialTile": true,
         "noCollision": false,
@@ -645,6 +652,7 @@
     },
     "Fire": {
         "serialNumber": 93,
+        "category": "damage",
         "path": "ground_fire_0.png",
         "specialTile": true,
         "noCollision": false,
@@ -786,6 +794,7 @@
     },
     "Landing Mattress (Otto)": {
         "serialNumber": 113,
+        "category": "damage",
         "path": "patja.png",
         "specialTile": true,
         "noCollision": false,
@@ -821,6 +830,7 @@
     },
     "Invisible Level Ender": {
         "serialNumber": 118,
+        "category": "ending",
         "path": "level_ender_text.png",
         "specialTile": true,
         "noCollision": true,
@@ -856,6 +866,7 @@
     },
     "Niklas": {
         "serialNumber": 123,
+        "category": "story",
         "path": "crackhead.png",
         "specialTile": true,
         "noCollision": false,
@@ -891,6 +902,7 @@
     },
     "Avarn Car": {
         "serialNumber": 128,
+        "category": "story",
         "path": "avarn_car.png",
         "textureOverrideColorkey": "#00FFFF",
         "specialTile": true,
@@ -906,6 +918,7 @@
     },
     "Nysse Bus": {
         "serialNumber": 130,
+        "category": "story",
         "path": "Nysse.png",
         "specialTile": true,
         "noCollision": true,
@@ -913,6 +926,7 @@
     },
     "Play Sound": {
         "serialNumber": 131,
+        "category": "special",
         "path": "sound.png",
         "specialTile": true,
         "noCollision": false,
@@ -1025,6 +1039,7 @@
     },
     "Cork Board": {
         "serialNumber": 148,
+        "category": "story",
         "path": "CorkBoard.png",
         "specialTile": false,
         "noCollision": true,
@@ -1032,6 +1047,7 @@
     },
     "Map": {
         "serialNumber": 149,
+        "category": "story",
         "path": "map.png",
         "specialTile": false,
         "noCollision": true,
@@ -1044,8 +1060,9 @@
         "noCollision": false,
         "trueScale": false
     },
-    "Tile Fire": {
+    "Tile Fire (spreading)": {
         "serialNumber": 151,
+        "category": "damage",
         "path": "tileFire_0.png",
         "specialTile": true,
         "noCollision": true,
@@ -1074,6 +1091,7 @@
     },
     "Fucking": {
         "serialNumber": 155,
+        "category": "story",
         "path": "fucking.png",
         "specialTile": true,
         "noCollision": true,
@@ -1103,12 +1121,14 @@
     "Arto": {
         "serialNumber": 159,
         "path": "arto.png",
+        "category": "story",
         "specialTile": false,
         "noCollision": true,
         "trueScale": true
     },
     "Level Ender Door Mirrored": {
         "serialNumber": 160,
+        "category": "ending",
         "path": "door_front_mirrored.png",
         "specialTile": true,
         "noCollision": false,
@@ -1144,6 +1164,7 @@
     },
     "Hatanpaan Koulu Sign": {
         "serialNumber": 165,
+        "category": "story",
         "path": "hat_logo.png",
         "specialTile": false,
         "noCollision": true,
@@ -1151,6 +1172,7 @@
     },
     "SS-Market Sign": {
         "serialNumber": 166,
+        "category": "story",
         "path": "ssmarket.png",
         "specialTile": false,
         "noCollision": true,
@@ -1158,6 +1180,7 @@
     },
     "SS-Market Wall": {
         "serialNumber": 167,
+        "category": "story",
         "path": "sswall.png",
         "specialTile": false,
         "noCollision": true,
@@ -1165,6 +1188,7 @@
     },
     "Cash Register": {
         "serialNumber": 168,
+        "category": "interactable",
         "path": "cashRegister.png",
         "specialTile": true,
         "noCollision": true,
@@ -1172,6 +1196,7 @@
     },
     "Theft Detector": {
         "serialNumber": 169,
+        "category": "story",
         "path": "theft_detector.png",
         "texturePerPixelAlpha": true,
         "specialTile": true,

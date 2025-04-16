@@ -8,6 +8,7 @@
     },
     "Plasmarifle Cell": {
         "serialNumber": 2,
+        "category": "ammo",
         "path": "cell.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -43,6 +44,7 @@
     },
     "Knife": {
         "serialNumber": 7,
+        "category": "weapon",
         "path": "knife.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -50,6 +52,7 @@
     },
     "Lappi Sytytyspalat": {
         "serialNumber": 8,
+        "category": "story",
         "path": "lappi_sytytyspalat.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -57,6 +60,7 @@
     },
     "Medkit": {
         "serialNumber": 9,
+        "category": "healing",
         "path": "medkit.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -64,6 +68,7 @@
     },
     "Pistol": {
         "serialNumber": 10,
+        "category": "weapon",
         "path": "pistol.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -71,6 +76,7 @@
     },
     "Pistol Mag": {
         "serialNumber": 11,
+        "category": "ammo",
         "path": "pistol_mag.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -78,6 +84,7 @@
     },
     "Plasmarifle": {
         "serialNumber": 12,
+        "category": "weapon",
         "path": "plasmarifle.png",
         "doubleSize": true,
         "supportsInventory": true,
@@ -92,6 +99,7 @@
     },
     "RK 62 Mag": {
         "serialNumber": 14,
+        "category": "ammo",
         "path": "rk_mag.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -99,6 +107,7 @@
     },
     "RK 62": {
         "serialNumber": 15,
+        "category": "weapon",
         "path": "rk62.png",
         "doubleSize": true,
         "supportsInventory": true,
@@ -106,6 +115,7 @@
     },
     "Shotgun": {
         "serialNumber": 16,
+        "category": "weapon",
         "path": "shotgun.png",
         "doubleSize": true,
         "supportsInventory": true,
@@ -113,6 +123,7 @@
     },
     "Shotgun Shells": {
         "serialNumber": 17,
+        "category": "ammo",
         "path": "shotgun_shells.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -120,6 +131,7 @@
     },
     "Soulsphere": {
         "serialNumber": 18,
+        "category": "healing",
         "path": "soulsphere.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -127,6 +139,7 @@
     },
     "SS-Bonuscard": {
         "serialNumber": 19,
+        "category": "story",
         "path": "ss_bonuscard.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -134,6 +147,7 @@
     },
     "Turboneedle": {
         "serialNumber": 20,
+        "category": "healing",
         "path": "turboneedle.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -141,27 +155,15 @@
     },
     "PPSH-41": {
         "serialNumber": 21,
+        "category": "weapon",
         "path": "ppsh41.png",
         "doubleSize": true,
         "supportsInventory": true,
         "isContraband": true
     },
-    "55 S 55 (unarmed)": {
-        "serialNumber": 22,
-        "path": "55s55_without_missile.png",
-        "doubleSize": false,
-        "supportsInventory": false,
-        "isContraband": false
-    },
-    "55 S 55 (armed)": {
-        "serialNumber": 23,
-        "path": "55s55_missile.png",
-        "doubleSize": false,
-        "supportsInventory": false,
-        "isContraband": false
-    },
     "AWM": {
         "serialNumber": 24,
+        "category": "weapon",
         "path": "awm.png",
         "doubleSize": true,
         "supportsInventory": true,
@@ -169,6 +171,7 @@
     },
     "AWM Mag": {
         "serialNumber": 25,
+        "category": "ammo",
         "path": "awm_mag.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -176,6 +179,7 @@
     },
     "Flask (empty)": {
         "serialNumber": 26,
+        "category": "healing",
         "path": "empty_flask.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -183,6 +187,7 @@
     },
     "Flask (meth)": {
         "serialNumber": 27,
+        "category": "healing",
         "path": "flask_meth.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -190,6 +195,7 @@
     },
     "Flask (blood)": {
         "serialNumber": 28,
+        "category": "healing",
         "path": "flask_blood.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -197,6 +203,7 @@
     },
     "Grenade": {
         "serialNumber": 29,
+        "category": "weapon",
         "path": "grenade.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -211,6 +218,7 @@
     },
     "Level Ender Walkie Talkie": {
         "serialNumber": 31,
+        "category": "story",
         "path": "walkie_talkie.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -218,6 +226,7 @@
     },
     "PPSH-41 Mag": {
         "serialNumber": 32,
+        "category": "ammo",
         "path": "ppsh41_mag.png",
         "doubleSize": false,
         "supportsInventory": false,
@@ -232,6 +241,7 @@
     },
     "Chainsaw": {
         "serialNumber": 34,
+        "category": "weapon",
         "path": "chainsaw.png",
         "doubleSize": true,
         "supportsInventory": true,
@@ -246,6 +256,7 @@
     },
     "Walkie Talkie": {
         "serialNumber": 36,
+        "category": "story",
         "path": "walkie_talkie.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -260,6 +271,7 @@
     },
     "Hotel Keycard": {
         "serialNumber": 38,
+        "category": "story",
         "path": "hotel_keycard.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -267,6 +279,7 @@
     },
     "Survey Answers": {
         "serialNumber": 39,
+        "category": "story",
         "path": "misc_paper.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -274,6 +287,7 @@
     },
     "Euro (deprecated)": {
         "serialNumber": 40,
+        "category": "story",
         "path": "euro.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -281,6 +295,7 @@
     },
     "Lager": {
         "serialNumber": 41,
+        "category": "story",
         "path": "lager.png",
         "doubleSize": false,
         "supportsInventory": true,
@@ -288,6 +303,7 @@
     },
     "Wallet": {
         "serialNumber": 42,
+        "category": "story",
         "path": "wallet.png",
         "doubleSize": false,
         "supportsInventory": true,
