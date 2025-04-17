@@ -872,9 +872,12 @@ class Zombie(HostileEnemy):
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=None, death_sound=None, health=health, mv=[1, 8], attackPropability=40)
         self.manualAttackHandling = True
         self.sleep = False
-        self.movementBeforeFreeze: int = self.movement[0]
         self.attackAnim = False
         self.allowJump = False
+
+        # This might change in lateInit...
+        # movementBeforeFreeze should always be set during collision anyway, so this doesn't really matter
+        # self.movementBeforeFreeze: int = self.movement[0]
 
     def update(self, Surface: pygame.Surface, scroll: Sequence[int], tiles: List[List[List[KDS.Build.Tile]]], targetRect: pygame.Rect):
         bullets: List[KDS.World.Bullet] = []
