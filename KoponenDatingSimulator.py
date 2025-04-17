@@ -3856,23 +3856,26 @@ class PlayerClass:
             playWalkSound = (self.walk_sound_delay > 60) if play_walk_sound else False
             if playWalkSound: self.walk_sound_delay = 0
 
-            if self.onLadder:
-                self.wasOnLadder = True
-                self.vertical_momentum = 0
-                if KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
-                    if Ladder.ct > 20:
-                        Ladder.ct = 0
-                    if Ladder.ct == 0: # Separate if to make the sound play immediately.
-                        KDS.Audio.PlaySound(random.choice(Ladder.sounds))
-                    Ladder.ct += 1
+            if self.archvile_knockback_momentum_x is None:
+                if self.onLadder:
+                    self.wasOnLadder = True
+                    self.vertical_momentum = 0
+                    if KDS.Keys.moveUp.pressed or KDS.Keys.moveDown.pressed:
+                        if Ladder.ct > 20:
+                            Ladder.ct = 0
+                        if Ladder.ct == 0: # Separate if to make the sound play immediately.
+                            KDS.Audio.PlaySound(random.choice(Ladder.sounds))
+                        Ladder.ct += 1
 
-                    if KDS.Keys.moveUp.pressed:
-                        self.vertical_momentum += -1
-                    else:
-                        self.vertical_momentum += 1
-            elif self.wasOnLadder:
+                        if KDS.Keys.moveUp.pressed:
+                            self.vertical_momentum += -1
+                        else:
+                            self.vertical_momentum += 1
+                elif self.wasOnLadder:
+                    self.wasOnLadder = False
+                    jump(True)
+            else:
                 self.wasOnLadder = False
-                jump(True)
 
             self.movement[1] += self.vertical_momentum
             self.vertical_momentum = min(self.vertical_momentum + _fall_speed, fall_max_velocity)
@@ -3903,6 +3906,8 @@ class PlayerClass:
             else:
                 if collisions.top:
                     self.vertical_momentum = 0
+                # I don't disable the archvile attack on horizontal collisions
+                # as I like that the player's controls are frozen when they're pushed against a wall
                 self.air_timer += 1
 
             if self.movement[0] != 0 and not self.lockMovement:
