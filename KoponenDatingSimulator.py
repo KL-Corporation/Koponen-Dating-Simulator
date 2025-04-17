@@ -570,7 +570,7 @@ class WorldData:
                             for k, v in idProp[idPropCheck].items():
                                 if k == "checkCollision" and isinstance(value, KDS.Build.Tile): # Checking instance instead of pointer so that Pylance is happy.
                                     value.checkCollision = bool(v)
-                                    if not v and value.texture is not None and isinstance(value.texture, pygame.Surface): # type: ignore  Some tiles have animations as texture
+                                    if not v and value.texture is not None and value.serialNumber not in KDS.Build.Tile.noCollision and isinstance(value.texture, pygame.Surface): # type: ignore  Some tiles have animations as texture
                                         tileDarkOverlay: pygame.Surface | None = KDS.Build.Tile.getCachedDarkOverlay(value.serialNumber, verify_ref_texture=value.texture)
                                         if tileDarkOverlay is None:
                                             KDS.Logging.error(f"No cached dark overlay found for tile: {value.serialNumber}. More details can be found in the log file.", consoleVisible=True)
