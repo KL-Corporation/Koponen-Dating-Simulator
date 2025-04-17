@@ -1015,20 +1015,22 @@ class UnitData:
             remove_undo = None
         # UnitData.placedOnTile = unit
 
-        if mpos_tilepos[1] < len(grid) and mpos_tilepos[0] < len(grid[0]):
+        if mpos_tilepos[1] >= 0 and mpos_tilepos[1] < len(grid) and mpos_tilepos[0] >= 0 and mpos_tilepos[0] < len(grid[0]):
+            tipUnit: UnitData | None = None
             try:
-                tipUnit: UnitData = grid[mpos_tilepos[1]][mpos_tilepos[0]]
+                tipUnit = grid[mpos_tilepos[1]][mpos_tilepos[0]]
             except IndexError:
-                KDS.Logging.debug(f"Mouse pos out of range: {mpos_tilepos}", consoleVisible=True)
-                raise
-            tipProps = tipUnit.properties.GetAll()
-            for _type, properties in tipProps.items():
-                color = _TYPECOLORS[_type]
-                for k, v in properties.items():
-                    if k in ("checkCollision", "identifier"):
-                        continue
-                    rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
-                    tip_renders.append(rendered_tip)
+                KDS.Logging.AutoError(f"Mouse pos out of range: {mpos_tilepos}", consoleVisible=True)
+
+            if tipUnit is not None:
+                tipProps = tipUnit.properties.GetAll()
+                for _type, properties in tipProps.items():
+                    color = _TYPECOLORS[_type]
+                    for k, v in properties.items():
+                        if k in ("checkCollision", "identifier"):
+                            continue
+                        rendered_tip = harbinger_font_small.render(f"{k}: ({type(v).__name__}) {v}", True, color)
+                        tip_renders.append(rendered_tip)
 
         for doorSrl, doorPos, lightOverlay in doorRenders:
             UnitData.renderSerial(surface, None, doorSrl, doorPos, lightOverlay)
