@@ -1,0 +1,55 @@
+{
+    "Data": {
+        "TimeBonus": {
+            "end": 2,
+            "start": 1
+        },
+        "infiniteAmmo": false,
+        "missionsId": "default"
+    },
+    "Entities": {
+        "Koponen": {
+            "enabled": false,
+            "forceIdle": false,
+            "forceTalk": false,
+            "listeners": [],
+            "lscript": [],
+            "startPos": [
+                0,
+                0
+            ],
+            "startWithTalk": false,
+            "talk": false
+        },
+        "Player": {
+            "Inventory": {
+                "0": 10
+            },
+            "keys": [],
+            "spawnInverted": false,
+            "startPos": [
+                2050,
+                1500
+            ],
+            "walletBalance": 0
+        }
+    },
+    "Rendering": {
+        "AmbientLight": {
+            "enabled": false,
+            "tint": [
+                0,
+                0,
+                0
+            ]
+        },
+        "Darkness": {
+            "enabled": false,
+            "playerLight": false,
+            "strength": 0
+        },
+        "Indicator": {
+            "enabled": true
+        }
+    }
+}
