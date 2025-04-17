@@ -214,10 +214,10 @@ class HostileEnemy:
         self._health = max(value, 0)
 
     def internalInit(self, rect : pygame.Rect, w: KDS.Animator.Animation, a: KDS.Animator.Animation, d: KDS.Animator.Animation, i: KDS.Animator.Animation, sight_sound: Optional[pygame.mixer.Sound], death_sound: Optional[pygame.mixer.Sound], health: int, mv: List[int], attackPropability: int, sleep: bool = True, direction: bool = False):
-        self.rect = rect
-        self._health = health
-        self.sleep = sleep
-        self.direction = direction
+        self.rect: pygame.Rect = rect
+        self._health: int = health
+        self.sleep: bool = sleep
+        self.direction: bool = direction
 
         self.animation = KDS.Animator.MultiAnimation(walk = w, attack = a, death = d, idle = i)
 
@@ -231,8 +231,9 @@ class HostileEnemy:
         self.attackF = False
         self.attackRunning = False
         self.manualAttackHandling = False
-        self.movement = mv
+        self.movement: list[int] = mv
         self.allowJump: bool = True
+        self.ignoreGravity: bool = False
         self.collisions = KDS.World.Collisions()
 
         self.enabled = True
@@ -252,6 +253,8 @@ class HostileEnemy:
                 self.listenerInstance.OnTrigger += self.listenerTrigger
         if self.direction:
             self.movement[0] = -self.movement[0]
+        if self.ignoreGravity:
+            self.movement[1] = 0
 
     def onDeath(self) -> List[int]:
         return []
@@ -865,11 +868,11 @@ class Zombie(HostileEnemy):
         i_anim = KDS.Animator.Animation("z_walk", 3, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         a_anim = KDS.Animator.Animation("z_attack", 4, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Loop)
         d_anim = KDS.Animator.Animation("z_death", 5, 10, KDS.Colors.White, KDS.Animator.OnAnimationEnd.Stop)
-        rect = pygame.Rect(pos[0], pos[1] - 36, 34, 64)
+        rect = pygame.Rect(pos[0], pos[1] - 30, 34, 64)
         self.internalInit(rect, w=w_anim, a=a_anim, d=d_anim, i=i_anim, sight_sound=None, death_sound=None, health=health, mv=[1, 8], attackPropability=40)
         self.manualAttackHandling = True
         self.sleep = False
-        self.movementBeforeFreeze = self.movement
+        self.movementBeforeFreeze: int = self.movement[0]
         self.attackAnim = False
         self.allowJump = False
 
@@ -878,12 +881,12 @@ class Zombie(HostileEnemy):
         self.attackAnim = False
         if self.health > 0 and self.rect.colliderect(targetRect):
             if self.movement[0] != 0:
-                self.movementBeforeFreeze = self.movement
-            self.movement = [0, 8]
+                self.movementBeforeFreeze = self.movement[0]
+                self.movement[0] = 0
             bullets = self.attack(69, tiles, targetRect)
             self.attackAnim = True
         elif self.movement[0] == 0:
-            self.movement = self.movementBeforeFreeze
+            self.movement[0] = self.movementBeforeFreeze
         super().update(Surface, scroll, tiles, targetRect)
         return bullets, []
 

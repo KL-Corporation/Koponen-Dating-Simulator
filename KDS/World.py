@@ -157,7 +157,7 @@ class EntityMover:
     def __init__(self, w_sounds: Optional[Dict[str, List[pygame.mixer.Sound]]] = None) -> None:
         self.walkSounds = w_sounds
 
-    def move(self, rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], playWalkSound: bool = False) -> Collisions:
+    def move(self, rect: pygame.Rect, movement: Sequence[float], tiles: List[List[List]], *, playWalkSound: bool = False) -> Collisions:
         if len(movement) != 2:
             raise ValueError(f"Invalid movement size! Expected: 2, Got: {len(movement)}.")
 
