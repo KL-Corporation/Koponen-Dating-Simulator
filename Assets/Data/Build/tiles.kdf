@@ -793,7 +793,7 @@
     },
     "Landing Mattress (Otto)": {
         "serialNumber": 113,
-        "category": "damage",
+        "category": "story",
         "path": "patja.png",
         "specialTile": true,
         "noCollision": false,
@@ -894,6 +894,7 @@
     },
     "Landing Mattress": {
         "serialNumber": 127,
+        "category": "story",
         "path": "patja.png",
         "specialTile": false,
         "noCollision": true,

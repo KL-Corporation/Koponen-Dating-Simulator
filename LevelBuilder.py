@@ -2464,7 +2464,8 @@ class MaterialContainer:
 
         for s in self.selectors:
             s.rect.y += y
-            result: str | None = s.update(surf, mpos, pressed, clicked, tip_renders)
+            show_contraband_tip: KDS.UI.ToggleButton | None = self.selector_filter.get("story")
+            result: str | None = s.update(surf, mpos, pressed, clicked, tip_renders, show_contraband_tip = show_contraband_tip.state if show_contraband_tip is not None else False)
             s.rect.y -= y
 
             if result is not None:
@@ -2494,7 +2495,7 @@ class MaterialSelector:
         margin_removed_subsurface = self.data.texture.subsurface(self.data.texture.get_bounding_rect())
         self._texture: Final[pygame.Surface] = KDS.Convert.AspectScale(margin_removed_subsurface, self.rect.size)
 
-    def update(self, surf: pygame.Surface, mpos: tuple[int, int], pressed: bool, clicked: bool, tip_renders: list[pygame.Surface]) -> str | None:
+    def update(self, surf: pygame.Surface, mpos: tuple[int, int], pressed: bool, clicked: bool, tip_renders: list[pygame.Surface], show_contraband_tip: bool) -> str | None:
         collide: bool = self.rect.collidepoint(mpos)
 
         self._texture.set_alpha(128 if collide and pressed else 255)
@@ -2506,7 +2507,7 @@ class MaterialSelector:
             pygame.draw.rect(display, (230, 30, 40), self.rect, 3)
             tip_renders.append(harbinger_font_small.render(self.data.name, True, KDS.Colors.AviatorRed))
             tip_renders.append(harbinger_font_small.render(self.data.serialNumber, True, KDS.Colors.RiverBlue))
-            if self.data.is_contraband:
+            if show_contraband_tip and self.data.is_contraband:
                 tip_renders.append(harbinger_font_small.render("contraband", True, KDS.Colors.Orange))
 
             if clicked:
@@ -2559,7 +2560,7 @@ def materialMenu(previousMaterial: str) -> str:
         for c in containers:
             res: str | None = c.update(display, y - y_scroll, mpos, mouse_pressed[0], tip_renders)
             if res is not None:
-                return res
+                return returnWrapper(res)
             y += c.height
             y += MaterialContainer.SPACING[1]
 
