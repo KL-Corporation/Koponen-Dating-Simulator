@@ -2745,13 +2745,16 @@ class NysseTeleport(BaseTeleport):
             if KDS.Keys.functionKey.clicked:
                 target_telep: BaseTeleport | None = self.teleport()
                 if self.showLoadingScreen and target_telep is not None:
-                    self._blockingLoadingScreenFunc()
+                    if not quickload:
+                        self._blockingLoadingScreenFunc()
+                    else:
+                        KDS.Logging.info("Bus loading screen skipped due to quickload.", consoleVisible=True)
 
         return self.texture
 
     def _blockingLoadingScreenFunc(self):
         KDS.Loading.Circle.Start(display)
-        # Show loading screen for half the time it would normally be visible
+        # Show loading screen for half the time a full load would normally be visible
         KDS.Loading.fake_load_extra(KDS.Loading.FAKE_LOAD_SECONDS / 2, quickload, pump_events=True)
         KDS.Loading.Circle.Stop() # If we don't wait for exit, the screen doesn't flicker when the loading stops
 
