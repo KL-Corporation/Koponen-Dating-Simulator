@@ -47,7 +47,7 @@ CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.pn
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/gameIcon.png"))
 pygame.display.set_caption("Koponen Dating Simulator")
 display_size = (1200, 800)
-display: pygame.Surface = pygame.display.set_mode(display_size, RESIZABLE | DOUBLEBUF | HWSURFACE | SCALED)
+display: pygame.Surface = pygame.display.set_mode(display_size, SCALED)
 
 # SPLASH SCREEN
 # render as early as possible to make the blink from starting the window as short as possible
