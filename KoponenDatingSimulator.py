@@ -1,5 +1,6 @@
 ﻿#region Priority Initialisation
 from __future__ import annotations
+from collections import deque
 from typing import Any, Callable, Dict, Final, Iterable, List, NamedTuple, Optional, Self, Sequence, Tuple, Type, Union
 import os
 
@@ -311,6 +312,8 @@ current_mission = "none"
 shoot = False
 
 selectedSave = 0
+
+last_100_raw_frametimes: deque[int] = deque(maxlen=100)
 
 esc_menu = False
 
@@ -5930,10 +5933,11 @@ while main_running:
     if KDS.Debug.Enabled:
         frametime_ms: int = KDS.Clock.GetFrameTimeMs()
         raw_frametime_ms: int = KDS.Clock.GetRawFrameTimeMs()
+        last_100_raw_frametimes.append(raw_frametime_ms)
 
         debug_render_data: dict[str, Any] = {
             "Frame Time": f"{frametime_ms} ms",
-            "Raw Frame Time": f"{raw_frametime_ms} ms",
+            "Raw Frame Time": f"{raw_frametime_ms} ms (max: {max(last_100_raw_frametimes)} ms)",
             "CPU Bound": f"{'Yes' if raw_frametime_ms >= frametime_ms else 'No'}", # When raw_frametime == frametime, we are CPU bound as we do not sleep anymore. Int comparison so it's accurate.
             "Player Position": Player.rect.topleft,
             "Enemies": f"{Enemy.total - Enemy.death_count} / {Enemy.total}",

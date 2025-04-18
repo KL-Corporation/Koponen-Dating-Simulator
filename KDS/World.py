@@ -578,7 +578,7 @@ class Bullet:
             )
             pygame.draw.line(
                 Surface,
-                KDS.Colors.EmeraldGreen,
+                KDS.Colors.EmeraldGreen if collision is None or collision[0] == "air" else KDS.Colors.SunYellow,
                 (self.start_center[0] - scroll[0], self.start_center[1] - scroll[1]),
                 (self.rect.centerx - scroll[0], self.rect.centery - scroll[1])
             )
