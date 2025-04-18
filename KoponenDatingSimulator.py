@@ -2445,20 +2445,22 @@ class BaseTeleport(KDS.Build.Tile):
         if self.renderedMessage != None:
             screen.blit(self.renderedMessage, (self.rect.centerx - self.renderedMessage.get_width() // 2 - scroll[0] + self.messageOffset[0], self.rect.centery - self.renderedMessage.get_height() // 2 - scroll[1] + self.messageOffset[1]))
 
-    def teleport(self):
+    def teleport(self) -> BaseTeleport | None:
+        """Returns the teleport target if teleported."""
+
         global trueScroll
         if self.identifier == None:
             KDS.Logging.AutoError("Teleport has no identifier!")
-            return
+            return None
         if not self.interactable:
             if self.nonInteractableSound != None:
                 KDS.Audio.PlaySound(self.nonInteractableSound)
-            return
+            return None
 
         # Getting next teleport if available
         t = BaseTeleport.teleportDatas[self.identifier].Next(self)
         if t == None:
-            return
+            return None
 
         if self.triggerStoryEnding:
             KDS.Koponen.TriggerStoryEnding(Koponen)
@@ -2483,6 +2485,7 @@ class BaseTeleport(KDS.Build.Tile):
         #     KDS.World.Dark.Reset()
         # Triggering Listener
         KDS.Missions.Listeners.Teleport.Trigger()
+        return t
 
     def onTeleport(self):
         pass
@@ -2718,6 +2721,7 @@ class NysseTeleport(BaseTeleport):
         self.blinkerIndex = 0
         self.blinkerRepeatRate = 180 # beats per minute
         self.blinkerLight: bool = False
+        self.showLoadingScreen: bool = False
 
     def lateInit(self) -> None:
         super().lateInit()
@@ -2739,8 +2743,17 @@ class NysseTeleport(BaseTeleport):
             tip: pygame.Surface = Nysse.tip.get_surface()
             screen.blit(tip, (self.rect.centerx - tip.get_width() // 2 - scroll[0], self.rect.y - 5 - tip.get_height() - scroll[1]))
             if KDS.Keys.functionKey.clicked:
-                self.teleport()
+                target_telep: BaseTeleport | None = self.teleport()
+                if self.showLoadingScreen and target_telep is not None:
+                    self._blockingLoadingScreenFunc()
+
         return self.texture
+
+    def _blockingLoadingScreenFunc(self):
+        KDS.Loading.Circle.Start(display)
+        # Show loading screen for half the time it would normally be visible
+        KDS.Loading.fake_load_extra(KDS.Loading.FAKE_LOAD_SECONDS / 2, quickload, pump_events=True)
+        KDS.Loading.Circle.Stop() # If we don't wait for exit, the screen doesn't flicker when the loading stops
 
 class HologramTeleport(BaseTeleport):
     tip: KDS.UI.KeybindFormattedText = KDS.UI.KeybindFormattedText(tip_font, f"Teleport [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)

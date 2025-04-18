@@ -1,4 +1,3 @@
-import time
 from typing import Callable, Final, Tuple, Union
 
 import pygame
@@ -78,12 +77,12 @@ class Circle:
             circleMask = pygame.image.load("Assets/Textures/UI/loading_circle_mask.png").convert_alpha()
             Circle.loadingBackground = pygame.image.load("Assets/Textures/UI/loading_background.png").convert()
             Circle.loadingFill = Circle.loadingBackground.get_at((0, 0))
-        Circle.running = True
         surface_size = surface.get_size()
         Circle.scaledLoadingBackground = KDS.Convert.AspectScale(Circle.loadingBackground, surface_size)
         surface.fill(Circle.loadingFill)
         surface.blit(Circle.scaledLoadingBackground, (surface_size[0] // 2 - Circle.scaledLoadingBackground.get_width() // 2, surface_size[1] // 2 - Circle.scaledLoadingBackground.get_height() // 2))
         pygame.display.flip()
+        Circle.running = True
         Circle.handle = KDS.Jobs.Schedule(Circle.rendering, surface, lambda: not Circle.running)
 
     @staticmethod
@@ -91,6 +90,7 @@ class Circle:
         Circle.running = False
         if Circle.handle != None:
             Circle.handle.Complete()
+            Circle.handle = None
 
 class Story:
     handle = None
@@ -150,7 +150,7 @@ class Story:
             else:
                 pygame.event.pump() # One extra pump before sleep just in case
                 while not Story.handle.IsComplete:
-                    time.sleep(0.1)
+                    pygame.time.wait(100)
                     pygame.event.pump()
             Story.handle = None
 
@@ -158,22 +158,19 @@ FAKE_LOAD_SECONDS: float = 2.0
 def fake_load_extra(loadtime: float, quickload: bool, *, pump_events: bool = True):
     """
     Sleeps until the target load time is reached.
-    This method's accuracy is limited to considerably less than 100 milliseconds when `pump_events` is set to `True`
-
-    if quickload game settings in on, waiting is skipped.
+    If quickload is set to `true`, waiting is skipped.
     """
     if loadtime < FAKE_LOAD_SECONDS:
         if not quickload:
-            loadtime_extra = FAKE_LOAD_SECONDS - loadtime
-            KDS.Logging.info(f"Waiting for {loadtime_extra:.3f} seconds to display the loading screen properly...\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
+            loadtime_seconds: float = FAKE_LOAD_SECONDS - loadtime
+            KDS.Logging.info(f"Waiting for {loadtime_seconds:.3f} seconds to display the loading screen properly...\nThis wait can be skipped by setting Data/quickload to true in your settings.cfg file.", consoleVisible=True)
+            loadtime_ms = round(1000.0 * loadtime_seconds)
             if not pump_events:
-                time.sleep(loadtime_extra)
+                pygame.time.wait(loadtime_ms)
             else:
-                PER_ITERATION_WAIT: float = 0.1 # seconds
-                iterationCount: int = round(loadtime_extra / PER_ITERATION_WAIT)
-                pygame.event.pump()
-                for _ in range(iterationCount):
-                    time.sleep(PER_ITERATION_WAIT)
+                while loadtime_ms > 0:
                     pygame.event.pump()
+                    loadtime_ms -= pygame.time.wait(min(loadtime_ms, 100))
+                pygame.event.pump()
         else:
             KDS.Logging.info("Loading delay skipped due to quickload.", consoleVisible=True)
