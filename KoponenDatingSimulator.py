@@ -42,12 +42,12 @@ game_whole_initialization_logger.start("Initialising Game...")
 game_initialization_logger.start("Initialising pygame...")
 pygame.init()
 
-CompanyLogo = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
+CompanyLogo: Final = pygame.image.load("Assets/Textures/Branding/kl_corporation-logo.png")
 
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/gameIcon.png"))
 pygame.display.set_caption("Koponen Dating Simulator")
-display_size = (1200, 800)
-display: pygame.Surface = pygame.display.set_mode(display_size, SCALED)
+display_size: Final = (1200, 800)
+display: Final[pygame.Surface] = pygame.display.set_mode(display_size, SCALED)
 
 # SPLASH SCREEN
 # render as early as possible to make the blink from starting the window as short as possible
@@ -55,8 +55,8 @@ display.fill(CompanyLogo.get_at((0, 0)))
 display.blit(pygame.transform.smoothscale(CompanyLogo, (500, 500)), (display_size[0] // 2 - 250, display_size[1] // 2 - 250))
 pygame.display.flip()
 
-screen_size = (600, 400)
-screen = pygame.Surface(screen_size)
+screen_size: Final = (600, 400)
+screen: Final = pygame.Surface(screen_size)
 
 pygame.event.set_allowed((
     MOUSEBUTTONDOWN,
@@ -401,6 +401,31 @@ class WorldData:
     PlayerStartPos = (-1, -1)
 
     @staticmethod
+    def _GetPreferredLevelAudio(MapPath: str) -> str | None:
+        # Prefer opus over ogg
+        opus: str = os.path.join(MapPath, "music.opus")
+        if os.path.isfile(opus):
+            return opus
+
+        ogg: str = os.path.join(MapPath, "music.ogg")
+        if os.path.isfile(ogg):
+            return ogg
+
+        return None
+
+    @staticmethod
+    def _FormatLevelMusicError(MapPath: str) -> str:
+        audiofile: str | None = WorldData._GetPreferredLevelAudio(MapPath)
+
+        output: str = str(audiofile is not None)
+        if audiofile is not None:
+            output += " ("
+            output += os.path.splitext(audiofile)[1].removeprefix('.')
+            output += ")"
+
+        return output
+
+    @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
         map_load_profiler: KDS.Logging.MapLoadingProfiler | None = None
         if KDS.Debug.Enabled and not KDS.Logging.profiler_running:
@@ -417,7 +442,7 @@ class WorldData:
     Map Directory: {os.path.isdir(MapPath)}
         Level File: {os.path.isfile(os.path.join(MapPath, "level.dat"))}
         LevelProp File: {os.path.isfile(os.path.join(MapPath, "levelprop.kdf"))}
-        Level Music Audio File (optional): {os.path.isfile(os.path.join(MapPath, "music.ogg"))}
+        Level Music Audio File (optional): {WorldData._FormatLevelMusicError(MapPath)}
         Properties File (optional): {os.path.isfile(os.path.join(MapPath, "properties.kdf"))}
         Level Background Image File (optional): {os.path.isfile(os.path.join(MapPath, "background.png"))}
 
@@ -634,12 +659,13 @@ class WorldData:
         map_load_logger.stop("Object Initialisation Complete.")
 
         map_load_logger.start("Loading Music...")
-        music_file_exists: Final[bool] = os.path.isfile(os.path.join(MapPath, "music.ogg"))
-        if music_file_exists:
-            KDS.Audio.Music.Load(os.path.join(MapPath, "music.ogg"))
+
+        music_file: Final[str | None] = WorldData._GetPreferredLevelAudio(MapPath)
+        if music_file is not None:
+            KDS.Audio.Music.Load(music_file)
         else:
             KDS.Audio.Music.Unload()
-        map_load_logger.stop("Music Loaded." if music_file_exists else "Music Loading Skipped.")
+        map_load_logger.stop("Music Loaded." if music_file is not None else "Music Loading Skipped.")
 
         map_whole_load_logger.stop("Map loading complete.")
         KDS.Logging.debug(f"Unmeasured loading execution time: {map_whole_load_logger.accumulatedTime - map_load_logger.accumulatedTime:.3f}")
@@ -5082,6 +5108,9 @@ def main_menu():
                 if os.path.isfile(campaign_preview_path):
                     try:
                         campaign_preview = pygame.image.load(campaign_preview_path).convert()
+                        if campaign_preview.get_size() == screen_size:
+                            campaign_preview = pygame.transform.scale_by(campaign_preview, 2)
+
                     except Exception as e:
                         KDS.Logging.AutoError(f"Campaign preview image loading failed with error:\n{e}")
             self.preview = campaign_preview if campaign_preview is not None else pygame.Surface(display_size)
