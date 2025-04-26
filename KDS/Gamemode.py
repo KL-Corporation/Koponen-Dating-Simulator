@@ -365,7 +365,7 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         addPerKill: float = KDS.Math.BitIncrement(1 / EnemyCount)
         KDS.Missions.InitialiseMission("kill_all_enemies", "Viholliset")
         KDS.Missions.InitialiseTask("kill_all_enemies", "exit", "Tapa Kaikki Viholliset", (KDS.Missions.Listeners.EnemyDeath, addPerKill))
-    else:
+    else: # preset_default
         Presets.LevelExit()
     #endregion
 
