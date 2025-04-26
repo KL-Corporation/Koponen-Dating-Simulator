@@ -1,3 +1,4 @@
+import KDS.Math
 import KDS.Missions
 import KDS.ConfigManager
 import KDS.Koponen
@@ -357,13 +358,11 @@ Joo vitut jatka pelin pelaamista mä en jaksa kirjottaa enempää tekstiä Kopos
         KDS.Koponen.Talk.Conversation.schedule("Tulen kanssasi", KDS.Koponen.Prefixes.koponen, True)
     #endregion
     #region Presets
+    elif MissionsId == "preset_tutorial":
+        Presets.Tutorial()
     elif MissionsId == "preset_killEnemies":
-        addPerKillForEnemies: float = 1 / EnemyCount
-        addPerKillIfOneLessEnemy = 1 / (EnemyCount - 1)
-        # use average so that if float has inaccuracies, we are as far as possible from any rounding errors.
-        # if we only use EnemyCount, it might not reach 1.0 due to rounding errors
-        # if we only use EnemyCount - 1, it might reach 1.0 too early
-        addPerKill = (addPerKillForEnemies + addPerKillIfOneLessEnemy) / 2
+        # bit increment so that if float addition has inaccuracies, we still reach 1.0
+        addPerKill: float = KDS.Math.BitIncrement(1 / EnemyCount)
         KDS.Missions.InitialiseMission("kill_all_enemies", "Viholliset")
         KDS.Missions.InitialiseTask("kill_all_enemies", "exit", "Tapa Kaikki Viholliset", (KDS.Missions.Listeners.EnemyDeath, addPerKill))
     else:

@@ -1,6 +1,7 @@
-from typing import Final, Iterable, List, NamedTuple, Self, Sequence, SupportsFloat, Tuple, TypeVar, Union, cast
-import sys
-import enum
+from typing import Final, Iterable, Sequence, SupportsFloat, TypeVar
+import sys as _sys
+import enum as _enum
+import math as _math
 
 from math import tan as Tan
 from math import atan as Atan
@@ -26,7 +27,7 @@ import KDS.Clock
 import KDS.Logging
 
 #region Constants
-EPSILON: Final[float] = sys.float_info.epsilon
+EPSILON: Final[float] = _sys.float_info.epsilon
 
 INFINITY: Final[float] = float("inf")
 NEGATIVEINFINITY: Final[float] = float("-inf")
@@ -35,7 +36,7 @@ NAN: Final[float] = float("nan")
 DEG2RAD: Final[float] = (PI * 2) / 360
 RAD2DEG: Final[float] = 1 / DEG2RAD
 
-MAXVALUE: Final[int] = sys.maxsize
+MAXVALUE: Final[int] = _sys.maxsize
 MINVALUE: Final[int] = -MAXVALUE - 1
 #endregion
 
@@ -48,7 +49,7 @@ def Floor(f: float, digits: int = 0) -> float:
     power10: int = pow(10, digits) # Anything to the power of zero is one.
     return FloorToInt(f * power10) / power10
 
-def Sign(f: Union[int, float]) -> int: return bool(f > 0) - bool(f < 0) # Bruh this is like 9000 IQ code
+def Sign(f: int | float) -> int: return bool(f > 0) - bool(f < 0) # Bruh this is like 9000 IQ code
 
 def IsPositiveInfinity(f: float) -> bool: return IsInfinity(f) and f > 0 # faster than f == INFINITY
 def IsNegativeInfinity(f: float) -> bool: return IsInfinity(f) and f < 0 # faster than f == NEGATIVEINFINITY
@@ -99,10 +100,26 @@ def Remap01(value: float, from1: float, from2: float) -> float:
     Converts a value to another value within the given arguments.
     """
     return Remap(value, from1, 0.0, from2, 1.0)
+
+def BitIncrement(value: float) -> float:
+    """
+    Returns the smallest value that compares greater than a specified value.
+    If value equals `KDS.Math.INFINITY`, returns infinity.
+    If value equals `KDS.Math.NAN`, returns NaN.
+    """
+    return _math.nextafter(value, INFINITY)
+
+def BitDecrement(value: float) -> float:
+    """
+    Returns the largest value that compares less than a specified value.
+    If value equals `KDS.Math.NEGATIVEINFINITY`, returns negative infinity.
+    If value equals `KDS.Math.NAN`, returns NaN.
+    """
+    return _math.nextafter(value, NEGATIVEINFINITY)
 #endregion
 
 #region Rounding
-class MidpointRounding(enum.Enum):
+class MidpointRounding(_enum.IntEnum):
     ToEven = 0
     AwayFromZero = 1
 
@@ -135,7 +152,7 @@ def RoundCustomInt(value: float, mode: MidpointRounding = MidpointRounding.ToEve
 #endregion
 
 #region Distance
-def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
+def getDistance(point1: tuple[int, int], point2: tuple[int, int]) -> float:
     """
     Calculates the distance between two points.
     """
@@ -149,7 +166,7 @@ def getDistance(point1: Tuple[int, int], point2: Tuple[int, int]) -> float:
 #endregion
 
 #region Slope
-def getSlope(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+def getSlope(p1: tuple[int, int], p2: tuple[int, int]) -> float:
     """
     Calculates slope of a given straight going trough two points
     """
@@ -170,7 +187,7 @@ def getSlope2(angle: float) -> float: #Angle in degrees
 #endregion
 
 #region Angles
-def GetAngle(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+def GetAngle(p1: tuple[int, int], p2: tuple[int, int]) -> float:
     """Calculates the angle between two vectors faster.
 
     Args:
@@ -188,7 +205,7 @@ def GetAngle(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
         KDS.Logging.AutoError(e)
         return NAN
 
-def GetAngle2(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+def GetAngle2(p1: tuple[int, int], p2: tuple[int, int]) -> float:
         """Calculates the angle between two vectors.
         Args:
             p1 (tuple): First vector
@@ -232,7 +249,7 @@ def LerpUnclamped(a: float, b: float, t: float) -> float:
     """
     return a + (b - a) * t
 
-def LerpColor(a: Sequence[int], b: Sequence[int], t: float) -> Tuple[int, int, int]:
+def LerpColor(a: Sequence[int], b: Sequence[int], t: float) -> tuple[int, int, int]:
     """Same as Lerp, but lerps color sequences instead.
 
     The parameter t is clamped to the range [0, 1]. Variables a and b are assumed to be sequences of size three with integers in range [0, 255].
