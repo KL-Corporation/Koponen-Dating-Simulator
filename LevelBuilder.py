@@ -148,17 +148,38 @@ class TextureHolder:
             self.rescaleTexture()
 
         def rescaleTexture(self):
-            self.scaledTexture: pygame.Surface = pygame.transform.scale(self.texture, (round(self.texture.get_width() * scaleMultiplier), round(self.texture.get_height() * scaleMultiplier)))
-            self.scaledTexture_size: tuple[int, int] = self.scaledTexture.get_size()
+            # Copy so that the surface isn't locked during render if we're still in the middle of transform.flip()
+            self.scaledTexture: pygame.Surface = pygame.transform.scale_by(self.texture, scaleMultiplier)
+            self.scaledTexture_size: tuple[int, int] = self.scaledTexture.size
 
+            self.darkOverlay: pygame.Surface = self._createDarkOverlay()
+
+            # Lazy load to make zooming a bit quicker
+            self._lightOverlay: pygame.Surface | None = None
+            self._scaledTextureMirrored: pygame.Surface | None = None
+
+        @property
+        def scaledTextureMirrored(self) -> pygame.Surface:
+            if self._scaledTextureMirrored is None:
+                self._scaledTextureMirrored = pygame.transform.flip(self.scaledTexture, flip_x=True, flip_y=False)
+            return self._scaledTextureMirrored
+
+        @property
+        def lightOverlay(self) -> pygame.Surface:
+            if self._lightOverlay is None:
+                self._lightOverlay = self._createLightOverlay()
+            return self._lightOverlay
+
+        def _createDarkOverlay(self) -> pygame.Surface:
             drkOvl = self.scaledTexture.convert_alpha()
             drkOvl.fill((0, 0, 0, 64), special_flags=BLEND_RGBA_MIN)
-            self.darkOverlay: pygame.Surface = drkOvl
+            return drkOvl
 
+        def _createLightOverlay(self) -> pygame.Surface:
             lghtOvl = self.scaledTexture.convert_alpha()
             lghtOvl.fill((255, 255, 255, 255), special_flags=BLEND_RGB_MAX)
             lghtOvl.fill((255, 255, 255, 128), special_flags=BLEND_RGBA_MULT)
-            self.lightOverlay: pygame.Surface = lghtOvl
+            return lghtOvl
 
     def __init__(self) -> None:
         self.textures: dict[str, TextureHolder.TextureData] = {}
@@ -300,22 +321,32 @@ remove_undo: ChangeUndoRecord | None = None
 class LevelPropData:
     @staticmethod
     def rescale():
-        LevelPropData.KoponenTextureRescaled = KDS.Convert.AspectScale(LevelPropData.KoponenTexture, (int(LevelPropData.KoponenTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
-        LevelPropData.PlayerTextureRescaled = KDS.Convert.AspectScale(LevelPropData.PlayerTexture, (int(LevelPropData.PlayerTexture.get_width() * scaleMultiplier), 0), KDS.Convert.AspectMode.WidthControlsHeight)
+        # Copy rescaled textures to avoid render during locking
+        LevelPropData.KoponenTextureRescaled = pygame.transform.scale_by(LevelPropData.KoponenTexture, scaleMultiplier)
+
+        player_rescaled: Final[pygame.Surface] = pygame.transform.scale_by(LevelPropData.PlayerTexture, scaleMultiplier)
+        if LevelPropData.PlayerFlipped:
+            LevelPropData.PlayerTextureRescaledAndFlipped = pygame.transform.flip(player_rescaled, flip_x=True, flip_y=False)
+        else:
+            LevelPropData.PlayerTextureRescaledAndFlipped = player_rescaled
 
     ShowKoponen: bool = False
     KoponenPos: tuple[int, int] = (0, 0)
-    KoponenTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/koponen_idle_0.png").convert()
-    KoponenTexture.set_colorkey(KDS.Colors.White)
-    KoponenTexture.set_alpha(64)
     ShowPlayer: bool = False
     PlayerPos: tuple[int, int] = (0, 0)
-    PlayerTexture: pygame.Surface = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
+    PlayerFlipped: bool = False
+
+    KoponenTexture: Final[pygame.Surface] = pygame.image.load("Assets/Textures/Player/koponen_idle_0.png").convert()
+    KoponenTexture.set_colorkey(KDS.Colors.White)
+    KoponenTexture.set_alpha(64)
+
+    PlayerTexture: Final[pygame.Surface] = pygame.image.load("Assets/Textures/Player/idle_0.png").convert()
     PlayerTexture.set_colorkey(KDS.Colors.White)
     PlayerTexture.set_alpha(64)
-    KoponenTextureRescaled: pygame.Surface = pygame.Surface((0, 0))
-    PlayerTextureRescaled: pygame.Surface = pygame.Surface((0, 0))
-    PlayerFlipped: bool = False
+
+    KoponenTextureRescaled: pygame.Surface
+    PlayerTextureRescaledAndFlipped: pygame.Surface
+
 LevelPropData.rescale()
 
 class UndoRecord(ABC):
@@ -814,10 +845,18 @@ class UnitData:
         blitPos = (pos[0], pos[1] - textureData.scaledTexture_size[1] + scalesize) if serial not in Textures.trueScale else (pos[0] - textureData.scaledTexture_size[0] + scalesize, pos[1] - textureData.scaledTexture_size[1] + scalesize)
         #         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Will render some tiles incorrectly
 
-        # blitting
-        surface.blit(textureData.scaledTexture, blitPos)
+        ser0: Final[str] = serial[0]
 
-        ser0: str = serial[0]
+        mirror: bool = False
+        if properties is not None:
+            if ser0 == "2":
+                mirror = bool(properties.Get(UnitType.Enemy, "direction", False))
+            elif ser0 == "4":
+                mirror = bool(properties.Get(UnitType.Entity, "direction", False))
+
+        # blitting
+        surface.blit(textureData.scaledTextureMirrored if mirror else textureData.scaledTexture, blitPos)
+
         if ser0 == "0" and properties is not None:
             checkCollision = properties.Get(UnitType.Tile, "checkCollision", None)
             if isinstance(checkCollision, bool):
@@ -3282,7 +3321,7 @@ def main():
         if LevelPropData.ShowKoponen:
             display.blit(LevelPropData.KoponenTextureRescaled, (LevelPropData.KoponenPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.KoponenPos[1] * scaleMultiplier - scroll[1] * scalesize))
         if LevelPropData.ShowPlayer:
-            display.blit(pygame.transform.flip(LevelPropData.PlayerTextureRescaled, LevelPropData.PlayerFlipped, False), (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
+            display.blit(LevelPropData.PlayerTextureRescaledAndFlipped, (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData(None), (0, 0))

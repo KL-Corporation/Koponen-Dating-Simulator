@@ -1,6 +1,6 @@
 import datetime
 from enum import IntEnum, auto
-from typing import Any, Literal, Sequence, Tuple, TypeVar, Union, cast, Optional
+from typing import Any, Literal, Sequence, Tuple, TypeVar, Union, Optional, Callable, Final
 
 import pygame
 from PIL import Image as PIL_Image
@@ -219,7 +219,8 @@ class ScalingMode(IntEnum):
     Smooth = auto()
 
 def AspectScale(image: pygame.Surface, targetSize: Sequence[int], aspectMode: AspectMode = AspectMode.FitInTarget, scalingMode: ScalingMode = ScalingMode.Quick) -> pygame.Surface:
-    imageSize = image.get_size()
+    imageSize: Final[tuple[int, int]] = image.size
+    scaling: float
     if aspectMode == AspectMode.FitInTarget:
         scaling = min(targetSize[0] / imageSize[0], targetSize[1] / imageSize[1])
     elif aspectMode == AspectMode.EnvelopeTarget or aspectMode == AspectMode.EnvelopeTargetCrop:
@@ -232,18 +233,18 @@ def AspectScale(image: pygame.Surface, targetSize: Sequence[int], aspectMode: As
         KDS.Logging.AutoError("Invalid Aspect Mode! Image will not be scaled.")
         scaling = 1.0
 
+    scalingAlgorithm: Callable[[pygame.Surface, float], pygame.Surface]
     if scalingMode == ScalingMode.Quick:
-        scalingAlgorithm = pygame.transform.scale
+        scalingAlgorithm = pygame.transform.scale_by
     elif scalingMode == ScalingMode.Smooth:
-        scalingAlgorithm = pygame.transform.smoothscale
+        scalingAlgorithm = pygame.transform.smoothscale_by
     else:
         KDS.Logging.AutoError("Invalid Scaling Mode! Image will not be scaled.")
         scalingAlgorithm = lambda surf, _: surf.copy()
 
-    scaled: pygame.Surface = scalingAlgorithm(image, (round(imageSize[0] * scaling), round(imageSize[1] * scaling)))
-
+    scaled: pygame.Surface = scalingAlgorithm(image, scaling)
     if aspectMode == AspectMode.EnvelopeTargetCrop:
-        scaled = cast(pygame.Surface, scaled.subsurface(scaled.get_width() // 2 - targetSize[0] // 2, scaled.get_height() // 2 - targetSize[1] // 2, targetSize[0], targetSize[1]))
+        scaled = scaled.subsurface((scaled.width - targetSize[0]) // 2, (scaled.height - targetSize[1]) // 2, targetSize[0], targetSize[1])
 
     return scaled
 
