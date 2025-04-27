@@ -40,6 +40,9 @@ framerate: float = DEFAULT_FRAMERATE
 def Tick(framerate_override: float | None = None):
     _clock.tick_busy_loop(framerate_override if framerate_override is not None else framerate)
 
+def TickInaccurate(framerate_override: float | None = None):
+    _clock.tick(framerate_override if framerate_override is not None else framerate)
+
 def GetFPS(roundingDigits: Optional[int] = None) -> float:
     fps = _clock.get_fps()
     if roundingDigits != None:

@@ -112,6 +112,13 @@ scaleMultiplier = scalesize / gamesize
 ZOOMRANGE = (3, 128)
 DEFAULTZOOM = scalesize
 
+framelimiter: bool = True
+def get_max_fps() -> int:
+    return 300 if framelimiter else -1
+
+def get_debug_render_data() -> dict[str, Any]:
+    return {"Frame Limiter": "On" if framelimiter else "Off"}
+
 pygame.display.set_caption("KDS Level Builder")
 pygame.display.set_icon(pygame.image.load("Assets/Textures/Branding/levelBuilderIcon.png"))
 def SetDisplaySize(size: tuple[int, int] = (0, 0)):
@@ -1387,6 +1394,9 @@ class BrushData:
         self.__shape: BrushShape = BrushShape.circle
         self.styles: BrushStyles = BrushStyles.default
 
+        self.materialPreviewSize: Final[tuple[int, int]] = (68, 68)
+        self._preview: pygame.Surface | None = None
+
     @property
     def size(self) -> int:
         return self.__size
@@ -1428,6 +1438,12 @@ class BrushData:
         return self._brush
 
     @property
+    def materialPreview(self) -> pygame.Surface:
+        if self._preview is None:
+            self._preview = render_preview(Textures.GetDefaultTexture(self._brush), self.materialPreviewSize)
+        return self._preview
+
+    @property
     def hasProperties(self) -> bool:
         return self._properties is not None
 
@@ -1435,9 +1451,10 @@ class BrushData:
         if brush != self._brush:
             self._brush = brush
             self._current_positions = None
+            self._preview = None
 
         self._properties = None
-        if not self.IsEmpty and properties != None:
+        if not self.IsEmpty and properties is not None:
             correctType = KDS.Linq.FirstOrNone(properties, lambda t: t.value == int(brush[0]))
             if correctType != None:
                 propValues = properties[correctType]
@@ -2528,13 +2545,15 @@ class MaterialContainer:
         self._clear_selectors()
         self._clear_filters()
 
+def render_preview(surf: pygame.Surface, size: tuple[int, int]) -> pygame.Surface:
+    margin_removed_subsurface = surf.subsurface(surf.get_bounding_rect())
+    return KDS.Convert.AspectScale(margin_removed_subsurface, size)
+
 class MaterialSelector:
     def __init__(self, rect: pygame.Rect, data: TextureHolder.TextureData) -> None:
         self.rect: Final[pygame.Rect] = rect
         self.data: Final[TextureHolder.TextureData] = data
-
-        margin_removed_subsurface = self.data.texture.subsurface(self.data.texture.get_bounding_rect())
-        self._texture: Final[pygame.Surface] = KDS.Convert.AspectScale(margin_removed_subsurface, self.rect.size)
+        self._texture: Final[pygame.Surface] = render_preview(self.data.texture, self.rect.size)
 
     def update(self, surf: pygame.Surface, mpos: tuple[int, int], pressed: bool, clicked: bool, tip_renders: list[pygame.Surface], show_contraband_tip: bool) -> str | None:
         collide: bool = self.rect.collidepoint(mpos)
@@ -2622,10 +2641,10 @@ def materialMenu(previousMaterial: str) -> str:
                 cumHeight += tip.get_height() + 8
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData(None), (0, 0))
+            display.blit(KDS.Debug.RenderData(get_debug_render_data()), (0, 0))
 
         pygame.display.flip()
-        KDS.Clock.Tick(-1)
+        KDS.Clock.TickInaccurate(get_max_fps())
 
     return returnWrapper(previousMaterial)
 
@@ -2675,7 +2694,7 @@ def multiselect_menu(title_text: str, options: Sequence[tuple[str, Callable[[], 
         back_btn.update(display, mouse_pos, clicked)
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData(None), (0, 0))
+            display.blit(KDS.Debug.RenderData(get_debug_render_data()), (0, 0))
 
         pygame.display.flip()
         KDS.Clock.Tick()
@@ -2789,7 +2808,7 @@ def menu():
         display.blit(txt_icon, (display_size[0] // 2 - txt_icon.get_width() // 2, display_size[1] // 2 - 300))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData(None), (0, 0))
+            display.blit(KDS.Debug.RenderData(get_debug_render_data()), (0, 0))
 
         if btn_menu:
             pygame.display.flip()
@@ -2937,6 +2956,8 @@ class Selected:
 Drag.registerCalls(DragMode.Default, Selected.Set, None, Selected.Get, Selected.Set)
 
 def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
+    global framelimiter
+
     #region Event Ignoring
     if event.type == ignoreEventOfType:
         return False
@@ -2946,11 +2967,13 @@ def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
         LB_Quit()
         return True # Return True if event handling can be stopped
     elif event.type == KEYDOWN:
-        if event.key == K_F3:
+        if event.key == K_F2:
+            framelimiter = not framelimiter
+        elif event.key == K_F3:
             KDS.Debug.Enabled = not KDS.Debug.Enabled
             KDS.Logging.Profiler(False)
             return True
-        if event.key == K_F4:
+        elif event.key == K_F4:
             if KDS.Debug.Enabled:
                 KDS.Logging.Profiler(not KDS.Logging.profiler_running)
     elif event.type == VIDEORESIZE:
@@ -3206,20 +3229,18 @@ def main():
             pygame.draw.circle(display, _color, (10, 10), 5)
 
         if not brush.IsEmpty:
-            brushPreviewTmpSize: tuple[int, int] = (68, 68)
-            brushPreviewTmpPos: tuple[int, int] = (display_size[0] - 10 - brushPreviewTmpSize[0], 10)
-            brushPreviewPropertiesWidth: int = 2
-            brushPreviewTmpScaled: pygame.Surface = KDS.Convert.AspectScale(Textures.GetDefaultTexture(brush.currentMaterial), brushPreviewTmpSize)
-            display.blit(brushPreviewTmpScaled, brushPreviewTmpPos)
+            brushPreviewPos: tuple[int, int] = (display_size[0] - 10 - brush.materialPreviewSize[0], 10)
+            display.blit(brush.materialPreview, brushPreviewPos)
             if brush.hasProperties:
+                brushPreviewPropertiesWidth: int = 2
                 pygame.draw.rect(
                     display,
                     (255, 0, 255),
                     (
-                        brushPreviewTmpPos[0] - brushPreviewPropertiesWidth,
-                        brushPreviewTmpPos[1] - brushPreviewPropertiesWidth,
-                        brushPreviewTmpSize[0] + (2 * brushPreviewPropertiesWidth),
-                        brushPreviewTmpSize[1] + (2 * brushPreviewPropertiesWidth)
+                        brushPreviewPos[0] - brushPreviewPropertiesWidth,
+                        brushPreviewPos[1] - brushPreviewPropertiesWidth,
+                        brushPreviewPos[0] + (2 * brushPreviewPropertiesWidth),
+                        brushPreviewPos[1] + (2 * brushPreviewPropertiesWidth)
                     ),
                     width=brushPreviewPropertiesWidth
                 )
@@ -3324,10 +3345,10 @@ def main():
             display.blit(LevelPropData.PlayerTextureRescaledAndFlipped, (LevelPropData.PlayerPos[0] * scaleMultiplier - scroll[0] * scalesize, LevelPropData.PlayerPos[1] * scaleMultiplier - scroll[1] * scalesize))
 
         if KDS.Debug.Enabled:
-            display.blit(KDS.Debug.RenderData(None), (0, 0))
+            display.blit(KDS.Debug.RenderData(get_debug_render_data()), (0, 0))
 
         pygame.display.flip()
-        KDS.Clock.Tick(-1)
+        KDS.Clock.TickInaccurate(get_max_fps())
 
 mainRunning = True
 try:
