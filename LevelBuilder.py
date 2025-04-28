@@ -3240,8 +3240,8 @@ def main():
                     (
                         brushPreviewPos[0] - brushPreviewPropertiesWidth,
                         brushPreviewPos[1] - brushPreviewPropertiesWidth,
-                        brushPreviewPos[0] + (2 * brushPreviewPropertiesWidth),
-                        brushPreviewPos[1] + (2 * brushPreviewPropertiesWidth)
+                        brush.materialPreviewSize[0] + (2 * brushPreviewPropertiesWidth),
+                        brush.materialPreviewSize[1] + (2 * brushPreviewPropertiesWidth)
                     ),
                     width=brushPreviewPropertiesWidth
                 )
