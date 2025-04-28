@@ -1512,6 +1512,7 @@ class BrushData:
 
         available_slots: list[tuple[int, int]] = list(selected.difference(output))
         while count < target_count:
+            # TODO: Investigate why this crashes
             assert(len(available_slots) > 0)
             random_index: int = random.randrange(len(available_slots))
             random_pos: tuple[int, int] = available_slots.pop(random_index)
@@ -1712,7 +1713,10 @@ class BrushData:
                 tex = tex.subsurface((max(tex.width - scalesize, 0), max(tex.height - scalesize, 0), min(scalesize, tex.width), min(scalesize, tex.height)))
                 tex.set_alpha(32)
 
-                surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in self._UpdateUnits(grid, will_modify=False).selected_positions))
+                current_positions: Final[BrushData._CurrentPositions] = self._UpdateUnits(grid, will_modify=False)
+                render_positions: Final[frozenset[tuple[int, int]]] = current_positions.selected_positions if self.random_rmv_count != 0 else current_positions.all_positions
+
+                surface.fblits(((tex, ((pos[0] - scroll[0]) * scalesize, (pos[1] - scroll[1]) * scalesize)) for pos in render_positions))
 
             if BrushStyles.pick_brush in self.styles:
                 self._RenderSingle(surface=surface, color=(255, 0, 0))
