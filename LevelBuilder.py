@@ -2438,8 +2438,9 @@ class MaterialContainer:
 
     @staticmethod
     def _compute_offset() -> tuple[int, int]:
+        total_selectors_width: int = (MaterialContainer.SIZE * MaterialContainer.COLUMNS) + (MaterialContainer.SPACING[0] * (MaterialContainer.COLUMNS - 1))
         return (
-            (display_size[0] - (MaterialContainer.SIZE + MaterialContainer.SPACING[0]) * MaterialContainer.COLUMNS) // 2,
+            (display_size[0] - total_selectors_width) // 2,
             MaterialContainer.FILTER_HEIGHT + MaterialContainer.SPACING[1]
         )
 
@@ -2480,7 +2481,7 @@ class MaterialContainer:
             self.selectors.append(MaterialSelector(rect, data))
 
             x_index += 1
-            if x_index > MaterialContainer.COLUMNS:
+            if x_index >= MaterialContainer.COLUMNS:
                 x_index = 0
                 y += MaterialContainer.SIZE
                 y += MaterialContainer.SPACING[1]
