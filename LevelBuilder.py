@@ -1696,9 +1696,11 @@ class BrushData:
 
         if not mouse_pressed[0] and not mouse_pressed[2]:
             self._previous_positions = None
-            # self._current_positions = None
-            # do not modify current positions so that the positions rendered match what is placed
-            # we reset this to None when the position changes
+            if self.size == 0:
+                # If current positions is null, we can start repainting from the same tile again
+                # but the catch is that the positions rendered do not match what is placed on grid.
+                # And thus we reset this only when brush is painting a single tile
+                self._current_positions = None
 
         if surface is not None:
             self._Render(surface=surface)
