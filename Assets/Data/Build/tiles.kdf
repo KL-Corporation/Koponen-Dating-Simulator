@@ -708,6 +708,7 @@
     },
     "Tent": {
         "serialNumber": 101,
+        "category": "special",
         "path": "tent.png",
         "specialTile": true,
         "noCollision": false,
@@ -1157,6 +1158,7 @@
     },
     "Sleepable Bed End": {
         "serialNumber": 164,
+        "category": "story",
         "path": "bed_end.png",
         "specialTile": true,
         "noCollision": true,
