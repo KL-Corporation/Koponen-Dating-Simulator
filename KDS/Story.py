@@ -41,8 +41,14 @@ def switchToStoryHappyTalkMusic():
     KDS.Audio.Music.Play("Assets/Audio/Koponen/happyendingtalksong.ogg")
 
 class EndingType(IntEnum):
+    Unspecified = auto()
+    """Do not show any ending extras. For debugging purposes only."""
+
     Happy = auto()
+    """Show certificate after credits."""
+
     Sad = auto()
+    """Show tombstones before credits."""
 
 def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Returns True if application should quit.
     if endingType == EndingType.Sad:

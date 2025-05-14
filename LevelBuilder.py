@@ -947,7 +947,7 @@ class UnitData:
                         storePriceDiscounted: bool = keys_pressed[K_LSHIFT]
                         storePriceKey: str = "storePrice" if not storePriceDiscounted else "storeDiscountPrice"
                         storePriceMsg: str = "Enter Price:" if not storePriceDiscounted else "Enter Discount Price:"
-                        storePriceStr: str | None = KDS.Console.Start(storePriceMsg, allowEscape=False, checkType=KDS.Console.CheckTypes.Float()) # do not allow escape as it removes the price as well
+                        storePriceStr: str | None = KDS.Console.Start(storePriceMsg, allowEscape=True, checkType=KDS.Console.CheckTypes.Float()) # do not allow escape as it removes the price as well
                         storePriceUndo: ChangeUndoRecord = ChangeUndoRecord()
                         if storePriceStr is not None and len(storePriceStr) > 0:
                             unit.properties.Set(storePriceUndo, UnitType.Item, storePriceKey, float(storePriceStr))

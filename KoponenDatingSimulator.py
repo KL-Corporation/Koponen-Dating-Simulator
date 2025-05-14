@@ -4127,6 +4127,7 @@ def console(oldSurf: pygame.Surface):
             "exam": "break",
             "story_sad_ending": "break",
             "certificate": "break",
+            "credits": "break"
         },
         "tickspeed": {
             "default": "break"
@@ -4410,6 +4411,8 @@ def console(oldSurf: pygame.Surface):
                         KDS.Story.Tombstones(display)
                     elif command_list[1] == "certificate":
                         KDS.School.Certificate(display, KDS.Colors.DefaultBackground)
+                    elif command_list[1] == "credits":
+                        KDS.Story.EndCredits(display, KDS.Story.EndingType.Unspecified)
                     else:
                         KDS.Console.Feed.append("Not a valid runprog program.")
                 else:
