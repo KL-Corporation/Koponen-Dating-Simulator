@@ -79,21 +79,32 @@ def EndCredits(display: pygame.Surface, endingType: EndingType) -> bool: # Retur
 
     running = True
     while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pass # Do not allow the player to close credits
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F3:
+                    KDS.Debug.Enabled = False
+
         display.fill(KDS.Colors.DefaultBackground)
-        pygame.event.get() # Because Windows thinks this app has frozen. DO NOT LET PEOPLE CLOSE THE CREDITS
         display.blit(mdSurf, (mdHorizontalPadding[0], display.get_height() - mdScroll.update() * mdSurf.get_height()))
         if mdScroll.Finished and not KDS.Audio.Music.GetPlaying():
             pygame.mouse.set_visible(True)
             waitTicks += 1
             if waitTicks > 60 * 3:
-                if endingType == EndingType.Happy:
-                    KDS.School.Certificate(display, BackgroundColor=KDS.Colors.DefaultBackground)
                 running = False
-                pygame.event.clear()
+
+        if KDS.Debug.Enabled:
+            display.blit(KDS.Debug.RenderData(None))
         pygame.display.flip()
         KDS.Clock.Tick()
+
     KDS.Audio.Music.Stop()
-    return False
+    pygame.event.clear()
+    if endingType == EndingType.Happy:
+        return KDS.School.Certificate(display, BackgroundColor=KDS.Colors.DefaultBackground)
+    else:
+        return False
 
 def Tombstones(display: pygame.Surface):
     image: pygame.Surface = pygame.image.load("Assets/Textures/UI/bad_ending.png").convert()

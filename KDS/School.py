@@ -601,6 +601,8 @@ def Certificate(display: pygame.Surface, BackgroundColor: tuple[int, int, int] |
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     return False
+                elif event.key == K_F3:
+                    KDS.Debug.Enabled = False
             elif event.type == MOUSEBUTTONUP:
                 if event.button == 1:
                     c = True
@@ -613,6 +615,5 @@ def Certificate(display: pygame.Surface, BackgroundColor: tuple[int, int, int] |
 
         if KDS.Debug.Enabled:
             display.blit(KDS.Debug.RenderData(None), (0, 0))
-
         pygame.display.flip()
         KDS.Clock.Tick()

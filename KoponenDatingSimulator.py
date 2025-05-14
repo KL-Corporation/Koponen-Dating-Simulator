@@ -5168,6 +5168,7 @@ def main_menu():
 
     def storyStartMiddleman(index: int):
         nonlocal story_new_save_override, skip_render_this_frame
+        KDS.Cursor.reset_interactables()
         if story_new_save_override:
             KDS.ConfigManager.Save(index).delete()
         play_story(index)
