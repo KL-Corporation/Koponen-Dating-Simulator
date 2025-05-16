@@ -263,6 +263,7 @@ gasburner_clip: Final = pygame.mixer.Sound("Assets/Audio/Items/gasburner_pickup.
 gasburner_fire: Final = pygame.mixer.Sound("Assets/Audio/Items/gasburner_use.ogg")
 door_opening: Final = pygame.mixer.Sound("Assets/Audio/Tiles/door.ogg")
 door_locked: Final = pygame.mixer.Sound("Assets/Audio/Tiles/door_locked.ogg")
+jungle_cannon_activate: Final = pygame.mixer.Sound("Assets/Audio/Tiles/jungle_cannon_activate.opus")
 coffeemug_sound: Final = pygame.mixer.Sound("Assets/Audio/Items/coffeemug.ogg")
 knife_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/knife_pickup.ogg")
 key_pickup: Final = pygame.mixer.Sound("Assets/Audio/Items/key_pickup.ogg")
@@ -298,6 +299,8 @@ respawn_anchor_sounds: Final = [
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_1.ogg"),
     pygame.mixer.Sound("Assets/Audio/Tiles/respawn_anchor_2.ogg")
 ]
+
+jungle_cannon_activate.set_volume(0.4)
 decorative_head_wakeup_sound.set_volume(0.5)
 plasmarifle_f_sound.set_volume(0.05)
 hurt_sound.set_volume(0.6)
@@ -2466,6 +2469,9 @@ class JungleCannon(KDS.Build.Tile):
                 self.currentAngle = __current_angle_int
                 self.currentAngleTexture = pygame.transform.rotate(jungle_cannon_cannon, self.currentAngle - 90) # -90 since the default texture points upwards
         elif self.target_timer is not None:
+            if self.target_timer == 0:
+                self.targeting_ended()
+
             self.target_timer += 1
             if self.target_timer > JungleCannon.TARGET_TIME:
                 self.target_timer = None
@@ -2506,10 +2512,16 @@ class JungleCannon(KDS.Build.Tile):
         Player.visible = False
         Player.lockMovement = True
 
+        KDS.Audio.PlaySound(jungle_cannon_activate, loops=-1)
+
+    def targeting_ended(self):
+        jungle_cannon_activate.stop()
+
     def shoot(self):
         Player.visible = True
         Player.lockMovement = False
         Player.cannon_shoot(self.endAngle, self.shootVelocity)
+
         KDS.Audio.PlaySound(landmine_explosion)
 
 class BaseTeleport(KDS.Build.Tile):
