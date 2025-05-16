@@ -4576,6 +4576,7 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
         ScreenEffects.Reset()
         #endregion
 
+        #region Reset ammo
         # TODO: We don't seem to be using this old style ammo handling anymore...
         # consider removing
         for c in KDS.Build.Item.serialNumbers.values():
@@ -4584,29 +4585,40 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
                 setattr(c, "ammunition", defaultAmmo)
         #endregion
 
+        # It's probably fine if we only load this during startup
+        # LoadGameSettings()
 
+        loadMapHandle = KDS.Jobs.Schedule(WorldData.LoadMap, mapPath)
+        while not loadMapHandle.IsComplete:
             for event in pygame.event.get(): # No default event handler in loading screen
                 if event.type == QUIT:
                     KDS_Quit()
             pygame.time.wait(100)
 
+        wdata: tuple[tuple[int, int], tuple[int, int]] | None
         try:
+            wdata = loadMapHandle.Complete()
         except Exception as e:
             KDS.Logging.AutoError(e)
             wdata = None
             KDS.System.MessageBox.Show("Unknown Error", "An error occured while loading the map.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
 
+        if wdata is None:
             errored = True
             return
 
+        KDS.Gamemode.SetGamemode(gamemode, KDS.MapProp.LevelProp.Get("Data/missionsId", "missing"), Enemy.total)
 
-        pygame.mouse.set_visible(True)
+        Player.rect.topleft, _ = wdata
 
-    KDS.Gamemode.SetGamemode(gamemode, KDS.MapProp.LevelProp.Get("Data/missionsId", "missing"), Enemy.total)
+        #region Set Game Data
         global level_finished
+        level_finished = False
         #endregion
 
+        main_menu_running = False
         KDS.Scores.ScoreCounter.Start()
+        if reset_scroll:
             true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
         pygame.event.clear()
         KDS.Keys.Reset()
@@ -4619,15 +4631,17 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
     finally:
         if custom_load is not None:
             custom_load.end()
+        else:
             KDS.Loading.Circle.Stop()
 
+        if errored:
             pygame.mouse.set_visible(True)
 
+            if KDS.Audio.Music.Loaded is not None and KDS.Audio.Music.Overridden is None:
                 KDS.Audio.Music.Play()
             else:
                 KDS.Logging.error("Could not resume music after play function error.", consoleVisible=True)
 
-    if custom_load is not None:
 
 
 def play_story(saveIndex: int, newSave: bool = True, oldSurf: Optional[pygame.Surface] = None):
