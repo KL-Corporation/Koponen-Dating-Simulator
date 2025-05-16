@@ -318,7 +318,11 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
                                 addCaretLength(len(cmd) - caret_index)
                 elif event.key == K_TAB:
                     tabbed = True
-                    if tabAdd: suggestionIndex += 1
+                    if tabAdd:
+                        if keys_pressed[K_LSHIFT]:
+                            suggestionIndex -= 1
+                        else:
+                            suggestionIndex += 1
                     tabAdd = True
                 elif event.key == K_UP:
                     tabAdd = False
@@ -382,7 +386,7 @@ def Start(prompt: str = "Enter Command:", allowEscape: bool = True, checkType: O
 
         #region Feed Rendering
         if showFeed:
-            visible_line_count: Final[int] = KDS.Math.CeilToInt(feedRect.height / console_font.get_height())
+            visible_line_count: int = KDS.Math.CeilToInt(feedRect.height / console_font.get_height())
             # use min(max()) instead of clamp
             # as clamp's order of operations is wrong for this situation ( max(min()) )
             console_feed_y = min(max(console_feed_y, -len(Feed) + 1), 0) # +1 so that we show at least one line
