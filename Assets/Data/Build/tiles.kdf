@@ -1222,7 +1222,7 @@
     },
     "Smooth Gold Ore": {
         "serialNumber": 172,
-        "path": "smooth_stone.png",
+        "path": "smooth_gold_ore.png",
         "specialTile": false,
         "noCollision": false,
         "trueScale": false
