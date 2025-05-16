@@ -197,22 +197,29 @@ asset_loading_logger.stop("UI Texture Loading Complete.")
 pygame.event.pump()
 #region Building Textures
 asset_loading_logger.start("Loading Building Textures...")
-door_open: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
-exit_door_open: pygame.Surface = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
+
+jungle_cannon_base: Final = pygame.image.load("Assets/Textures/Tiles/jungle_cannon_base.png").convert()
+jungle_cannon_cannon: Final = pygame.image.load("Assets/Textures/Tiles/jungle_cannon_cannon.png").convert()
+jungle_cannon_base.set_colorkey(KDS.Colors.White)
+jungle_cannon_cannon.set_colorkey(KDS.Colors.White)
+
+door_open: Final = pygame.image.load("Assets/Textures/Tiles/door_front.png").convert()
+exit_door_open: Final = pygame.image.load("Assets/Textures/Tiles/door_open.png").convert_alpha()
+
 asset_loading_logger.stop("Building Texture Loading Complete.")
 #endregion
 pygame.event.pump()
 #region Item Textures
 asset_loading_logger.start("Loading Item Textures...")
-red_key = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
-green_key = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
-blue_key = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
-plasma_ammo = pygame.image.load("Assets/Textures/Items/plasma_ammo.png").convert()
-pistol_f_texture = pygame.image.load("Assets/Textures/Items/pistol_firing.png").convert()
-rk62_f_texture = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
-shotgun_f = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
-ppsh41_f_texture = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
-awm_f_texture = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
+red_key: Final = pygame.image.load("Assets/Textures/Items/red_key.png").convert()
+green_key: Final = pygame.image.load("Assets/Textures/Items/green_key2.png").convert()
+blue_key: Final = pygame.image.load("Assets/Textures/Items/blue_key.png").convert()
+plasma_ammo: Final = pygame.image.load("Assets/Textures/Items/plasma_ammo.png").convert()
+pistol_f_texture: Final = pygame.image.load("Assets/Textures/Items/pistol_firing.png").convert()
+rk62_f_texture: Final = pygame.image.load("Assets/Textures/Items/rk62_firing.png").convert()
+shotgun_f: Final = pygame.image.load("Assets/Textures/Items/shotgun_firing.png").convert()
+ppsh41_f_texture: Final = pygame.image.load("Assets/Textures/Items/ppsh41_f.png").convert()
+awm_f_texture: Final = pygame.image.load("Assets/Textures/Items/awm_f.png").convert()
 
 red_key.set_colorkey(KDS.Colors.White)
 green_key.set_colorkey(KDS.Colors.White)
@@ -228,20 +235,25 @@ asset_loading_logger.stop("Item Texture Loading Complete.")
 pygame.event.pump()
 #region Menu Textures
 asset_loading_logger.start("Loading Menu Textures...")
-gamemode_bc_1_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_1.png").convert()
-gamemode_bc_1_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_2.png").convert()
-gamemode_bc_2_1 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_1.png").convert()
-gamemode_bc_2_2 = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_2.png").convert()
-main_menu_background_2 = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc2.png").convert()
-main_menu_background_3 = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc3.png").convert()
-main_menu_background_4 = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc4.png").convert()
-main_menu_background = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc.png").convert()
-settings_background = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
-agr_background = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
-arrow_button = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
-arrow_button_slim = pygame.image.load("Assets/Textures/UI/Buttons/Arrow_slim.png").convert_alpha()
-main_menu_title = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
+
+gamemode_bc_1_1: Final = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_1.png").convert()
+gamemode_bc_1_2: Final = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_1_2.png").convert()
+gamemode_bc_2_1: Final = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_1.png").convert()
+gamemode_bc_2_2: Final = pygame.image.load("Assets/Textures/UI/Menus/Gamemode/Gamemode_bc_2_2.png").convert()
+
+main_menu_background_2: Final = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc2.png").convert()
+main_menu_background_3: Final = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc3.png").convert()
+main_menu_background_4: Final = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc4.png").convert()
+main_menu_background: Final = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_bc.png").convert()
+settings_background: Final = pygame.image.load("Assets/Textures/UI/Menus/settings_bc.png").convert()
+agr_background: Final = pygame.image.load("Assets/Textures/UI/Menus/tcagr_bc.png").convert()
+
+arrow_button: Final = pygame.image.load("Assets/Textures/UI/Buttons/Arrow.png").convert_alpha()
+arrow_button_slim: Final = pygame.image.load("Assets/Textures/UI/Buttons/Arrow_slim.png").convert_alpha()
+
+main_menu_title: Final = pygame.image.load("Assets/Textures/UI/Menus/Main/main_menu_title.png").convert()
 main_menu_title.set_colorkey(KDS.Colors.White)
+
 asset_loading_logger.stop("Menu Texture Loading Complete.")
 #endregion
 pygame.event.pump()
@@ -2404,6 +2416,102 @@ class TheftDetector(KDS.Build.Tile):
             self.animation.tick = 0
             return self.texture
 
+class JungleCannon(KDS.Build.Tile):
+    TIP_Y_OFFSET: Final[int] = 17
+
+    shoot_tip: Final = KDS.UI.KeybindFormattedText(tip_font, f"Shoot Cannon [{{binding:{KDS.Keys.functionKey.name}}}]", True, KDS.Colors.White)
+    require_palat_tip: Final[pygame.Surface] = tip_font.render("Sytytyspalat Required", True, KDS.Colors.AviatorRed)
+
+    COOLDOWN_TIME: int = 60
+    TARGET_TIME: int = 30
+
+    def __init__(self, position: tuple[int, int], serialNumber: int):
+        super().__init__(position, serialNumber)
+
+        # properties
+        self.startAngle: int = 23
+        self.endAngle: int = 135
+        self.shootVelocity: int = 30
+        self.multiuse: bool = False
+
+        # internal variables
+        self.texture_rect: Final = pygame.Rect(self.rect.topleft, jungle_cannon_base.size)
+
+        self.target_timer: int | None = None
+        self.cooldown: int = False
+
+        self.currentAngle: int = 90
+        self.currentAngleTexture: pygame.Surface = jungle_cannon_cannon
+
+    def lateInit(self) -> None:
+        self.currentAngleFloat: float = float(self.startAngle)
+
+    def update(self) -> pygame.Surface | None:
+        is_shooting: bool
+        if self.target_timer is not None:
+            is_shooting = True
+        elif self.cooldown > 0:
+            self.cooldown -= 1
+            is_shooting = True
+        else:
+            is_shooting = False
+
+        targetAngle: int = self.endAngle if is_shooting else self.startAngle
+
+        if self.currentAngle != targetAngle:
+            self.currentAngleFloat = KDS.Math.MoveTowardsAngle(self.currentAngleFloat, float(targetAngle), 1.0)
+
+            __current_angle_int: int = int(self.currentAngleFloat)
+            if self.currentAngle != __current_angle_int:
+                self.currentAngle = __current_angle_int
+                self.currentAngleTexture = pygame.transform.rotate(jungle_cannon_cannon, self.currentAngle - 90) # -90 since the default texture points upwards
+        elif self.target_timer is not None:
+            self.target_timer += 1
+            if self.target_timer > JungleCannon.TARGET_TIME:
+                self.target_timer = None
+                self.cooldown = JungleCannon.COOLDOWN_TIME
+                self.shoot()
+
+        if self.rect.colliderect(Player.rect):
+            is_sytyspalat: bool = isinstance(Player.inventory.getHandItem(), LappiSytytyspalat)
+
+            if not is_shooting:
+                shoot_tip: Final = JungleCannon.shoot_tip.get_surface()
+                require_tip: Final = JungleCannon.require_palat_tip
+
+                if is_sytyspalat:
+                    screen.blit(shoot_tip, (self.rect.centerx - shoot_tip.width / 2 - scroll[0], self.rect.top + JungleCannon.TIP_Y_OFFSET - shoot_tip.height - scroll[1]))
+                else:
+                    screen.blit(shoot_tip, (self.rect.centerx - shoot_tip.width / 2 - scroll[0], self.rect.top + JungleCannon.TIP_Y_OFFSET - 3 - require_tip.height - shoot_tip.height - scroll[1]))
+                    screen.blit(require_tip, (self.rect.centerx - require_tip.width / 2 - scroll[0], self.rect.top + JungleCannon.TIP_Y_OFFSET - require_tip.height - scroll[1]))
+
+            if not is_shooting and is_sytyspalat and KDS.Keys.functionKey.clicked:
+                if not self.multiuse:
+                    dropped: KDS.Build.Item | None = Player.inventory.dropItem()
+                    if dropped is None:
+                        KDS.Logging.error("Could not drop sytytyspalat item.", True)
+                    elif not isinstance(dropped, LappiSytytyspalat):
+                        KDS.Logging.error(f"Dropped item type was unexpected. Expected '{LappiSytytyspalat.__name__}', Got '{type(dropped).__name__}'.")
+
+                self.target_timer = 0
+                self.targeting_started()
+
+        screen.blit(self.currentAngleTexture, (self.texture_rect.centerx - self.currentAngleTexture.width // 2 - scroll[0], self.texture_rect.centery - self.currentAngleTexture.height // 2 - scroll[1]))
+        screen.blit(jungle_cannon_base, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+        return None
+
+    def targeting_started(self):
+        Player.rect.midbottom = self.rect.midbottom
+        Player.visible = False
+        Player.lockMovement = True
+
+    def shoot(self):
+        Player.visible = True
+        Player.lockMovement = False
+        Player.cannon_shoot(self.endAngle, self.shootVelocity)
+        KDS.Audio.PlaySound(landmine_explosion)
+
 class BaseTeleport(KDS.Build.Tile):
     class TeleportData:
         def __init__(self) -> None:
@@ -2866,7 +2974,8 @@ KDS.Build.Tile.specialTilesClasses = {
     169: TheftDetector,
     179: WallLightVertical,
     180: WallLightVertical,
-    181: GlassPane
+    181: GlassPane,
+    182: JungleCannon
 }
 BaseTeleport.serialNumbers = {
     1: InvisibleTeleport,
@@ -2998,14 +3107,17 @@ class LappiSytytyspalat(KDS.Build.Item):
 
     def __init__(self, position: Tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
+
+        self.igniteTiles: bool = True
         self.requireTaskWithName: str | None = None
         self.requireZoneWithId: str | None = None
+
         self.canSytytys: bool = False
 
     def use(self):
         global Tiles
 
-        disallowSytytys: bool = False
+        disallowSytytys: bool = not self.igniteTiles
 
         if self.requireTaskWithName is not None:
             tmp_miss = KDS.Missions.Missions.GetMission(KDS.Missions.Active_Mission)
@@ -3795,7 +3907,7 @@ class PlayerClass:
         self.animations.reset()
         self.deathSound.stop()
 
-        self.archvile_knockback_momentum_x: int | None = None
+        self.knockback_momentum_x: int | None = None
         self.archvile_fire: bool = False
         # animation in PlayerClass.__init__()
 
@@ -3817,22 +3929,41 @@ class PlayerClass:
             KDS.Audio.PlaySound(hurt_sound)
         self._health = max(value, 0)
 
+    def cannon_shoot(self, angle: int, velocity: float):
+        if self.fly or self.health <= 0:
+            return
+
+        angle %= 360
+
+        x: float = velocity * KDS.Math.Cos(angle * KDS.Math.DEG2RAD)
+        y: float = velocity * KDS.Math.Sin(angle * KDS.Math.DEG2RAD)
+
+        if angle > 90 and angle < 270:
+            self.direction = True
+        elif angle != 90 and angle != 270:
+            self.direction = False
+
+        self.vertical_momentum = -y
+        self.knockback_momentum_x = int(x) # The cannon tends to shoot too low anyway so we'll round this down just in case
+
     def archvile_attack(self, direction: bool):
-        if not self.fly and self.health > 0:
-            # 0.0 <= strength < 1.0 (end is exclusive)
-            strength: float = random.random()
+        if self.fly or self.health <= 0:
+            return
 
-            horizontal: int = int(KDS.Math.Lerp(5, 8, strength))
-            vertical: int = int(KDS.Math.Lerp(13, 18, strength))
+        # 0.0 <= strength < 1.0 (end is exclusive)
+        strength: float = random.random()
 
-            # adjust direction so we don't do the same knockback every time
-            adjust_direction: int = random.randint(-1, 1)
-            horizontal -= adjust_direction
-            vertical += adjust_direction
+        horizontal: int = int(KDS.Math.Lerp(5, 8, strength))
+        vertical: int = int(KDS.Math.Lerp(13, 18, strength))
 
-            self.vertical_momentum = -vertical
-            self.archvile_knockback_momentum_x = horizontal * KDS.Convert.ToMultiplier(direction)
-            self.health -= int(KDS.Math.Lerp(10, 51, strength))
+        # adjust direction so we don't do the same knockback every time
+        adjust_direction: int = random.randint(-1, 1)
+        horizontal -= adjust_direction
+        vertical += adjust_direction
+
+        self.vertical_momentum = -vertical
+        self.knockback_momentum_x = horizontal * KDS.Convert.ToMultiplier(direction)
+        self.health -= int(KDS.Math.Lerp(10, 51, strength))
 
     def update(self):
         if self.infiniteHealth:
@@ -3900,7 +4031,7 @@ class PlayerClass:
             playWalkSound = (self.walk_sound_delay > 60) if play_walk_sound else False
             if playWalkSound: self.walk_sound_delay = 0
 
-            if self.archvile_knockback_momentum_x is None:
+            if self.knockback_momentum_x is None:
                 if self.onLadder:
                     self.wasOnLadder = True
                     self.vertical_momentum = 0
@@ -3932,8 +4063,8 @@ class PlayerClass:
             mover_movement: Sequence[float]
             if self.lockMovement:
                 mover_movement = (0.0, 0.0)
-            elif self.archvile_knockback_momentum_x is not None:
-                mover_movement = (self.archvile_knockback_momentum_x, self.movement[1])
+            elif self.knockback_momentum_x is not None:
+                mover_movement = (self.knockback_momentum_x, self.movement[1])
             else:
                 mover_movement = self.movement
             collisions = self.mover.move(self.rect, mover_movement, Tiles, playWalkSound=playWalkSound)
@@ -3946,7 +4077,7 @@ class PlayerClass:
             if collisions.bottom:
                 self.air_timer = 0
                 self.vertical_momentum = 0
-                self.archvile_knockback_momentum_x = None
+                self.knockback_momentum_x = None
             else:
                 if collisions.top:
                     self.vertical_momentum = 0
@@ -3961,8 +4092,8 @@ class PlayerClass:
             else:
                 self.walking = False
 
-            if self.archvile_knockback_momentum_x is not None:
-                self.direction = self.archvile_knockback_momentum_x > 0
+            if self.knockback_momentum_x is not None:
+                self.direction = self.knockback_momentum_x > 0
 
             if self.walking:
                 if not self.running:
@@ -4008,12 +4139,12 @@ class PlayerClass:
             self.animations.trigger("death")
 
             # use subset of movement to finish last archvile knockback after being killed
-            if self.archvile_knockback_momentum_x is not None:
+            if self.knockback_momentum_x is not None:
                 player_dead_archvile_vertical_mv: float = self.vertical_momentum
                 self.vertical_momentum = min(self.vertical_momentum + (fall_speed * fall_multiplier), fall_max_velocity)
-                collisions = self.mover.move(self.rect, (self.archvile_knockback_momentum_x, player_dead_archvile_vertical_mv), Tiles, playWalkSound=False)
+                collisions = self.mover.move(self.rect, (self.knockback_momentum_x, player_dead_archvile_vertical_mv), Tiles, playWalkSound=False)
                 if collisions.bottom:
-                    self.archvile_knockback_momentum_x = None
+                    self.knockback_momentum_x = None
                 elif collisions.top:
                     self.vertical_momentum = 0
 
@@ -4031,7 +4162,7 @@ class PlayerClass:
                 self.deathWait += 1
         #endregion
 
-Player = PlayerClass()
+Player: Final[PlayerClass] = PlayerClass()
 
 def archvile_fire_func(enabled: bool, verify_target: pygame.Rect) -> None:
     global Player

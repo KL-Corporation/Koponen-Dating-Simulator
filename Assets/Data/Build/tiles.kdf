@@ -1290,5 +1290,13 @@
         "specialTile": true,
         "noCollision": false,
         "trueScale": false
+    },
+    "Jungle Cannon": {
+        "serialNumber": 182,
+        "category": "special",
+        "path": "jungle_cannon_preview.png",
+        "specialTile": true,
+        "noCollision": true,
+        "trueScale": true
     }
 }
