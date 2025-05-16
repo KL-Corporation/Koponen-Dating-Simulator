@@ -1,6 +1,6 @@
 from __future__ import annotations
 import dataclasses
-from typing import Dict, Any, Final, NamedTuple, Self, Sequence, List, TYPE_CHECKING, Tuple, Set, Type, Optional, Union
+from typing import Dict, Any, Final, NamedTuple, Self, Sequence, TYPE_CHECKING, Type, Optional, Union
 import pygame
 import KDS.BuildData
 import KDS.UI
@@ -98,7 +98,7 @@ class Tile:
         tex.fill((0, 0, 0, 64), special_flags=pygame.BLEND_RGBA_MULT)
         return tex
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int, textureLookupOverride: dict[int, pygame.Surface] | None = None):
+    def __init__(self, position: tuple[int, int], serialNumber: int, textureLookupOverride: dict[int, pygame.Surface] | None = None):
         self.serialNumber = serialNumber
 
         # teleport texture lookup is in a different dict
@@ -147,7 +147,7 @@ class Tile:
 
     @staticmethod
     # Tile_list is a list in a list in a list... Also known as a 3D array. Z axis is determined by index. Higher index means more towards the camera. Overlays are a different story
-    def renderUpdate(Tile_list: List[List[List[Tile]]], surface: pygame.Surface, center_position: Tuple[int, int], scroll: Sequence[int]):
+    def renderUpdate(Tile_list: list[list[list[Tile]]], surface: pygame.Surface, center_position: tuple[int, int], scroll: Sequence[int]):
         start_x = round((center_position[0] / 34) - ((surface.get_width() / 34) / 2)) - 1 - Tile._renderPadding
         start_y = round((center_position[1] / 34) - ((surface.get_height() / 34) / 2)) - 1 - Tile._renderPadding
         start_x = max(start_x, 0)
@@ -213,9 +213,9 @@ class Item:
     fall_speed: float = 0.4
     fall_max_velocity: float = 8.0
 
-    inventoryItems: Set[int] = set()
-    inventoryDoubles: Set[int] = set()
-    contraband: Set[int] = set()
+    inventoryItems: set[int] = set()
+    inventoryDoubles: set[int] = set()
+    contraband: set[int] = set()
 
     _textures: Dict[int, _ItemTexture] = {}
 
@@ -225,7 +225,7 @@ class Item:
         for serial, tex in textures.items():
             Item._textures[serial] = _ItemTexture.construct_from_texture(tex)
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
         if not isinstance(self, Item.serialNumbers[serialNumber]):
             raise TypeError(f"Invalid type {type(self).__name__} for item with serial {serialNumber}")
         self.texture: Final[pygame.Surface]
@@ -255,7 +255,7 @@ class Item:
 
     @staticmethod
     # Item_list is a list
-    def renderUpdate(Item_list: Sequence[Item], Tile_list: List[List[List[Tile]]], Surface: pygame.Surface, scroll: Sequence[int]):
+    def renderUpdate(Item_list: Sequence[Item], Tile_list: list[list[list[Tile]]], Surface: pygame.Surface, scroll: Sequence[int]):
         for renderable in Item_list:
             if KDS.Debug.Enabled:
                 pygame.draw.rect(Surface, KDS.Colors.Blue, (renderable.rect.x - scroll[0], renderable.rect.y - scroll[1], renderable.rect.width, renderable.rect.height))
@@ -279,7 +279,7 @@ class Item:
 #                     renderable.physics = False
 
     @staticmethod
-    def _collisionInteractionLogic(item: Item, Item_list: List[Item], inventory: KDS.Inventory.Inventory) -> bool:
+    def _collisionInteractionLogic(item: Item, Item_list: list[Item], inventory: KDS.Inventory.Inventory) -> bool:
         if item.supportsInventory:
             if not inventory.pickupItem(item, allow_find_empty_slot=True): # Return if cannot pickup
                 return False
@@ -290,8 +290,8 @@ class Item:
         return True
 
     @staticmethod
-    def checkCollisions(Item_list: List[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory, Notifications: List[KDS.UI.Notification]):
-        collision_items: List[Item] = []
+    def checkCollisions(Item_list: list[Item], collidingRect: pygame.Rect, inventory: KDS.Inventory.Inventory, Notifications: list[KDS.UI.Notification]):
+        collision_items: list[Item] = []
         shortest_collision_item: Item | None = None
         shortest_distance = KDS.Math.MAXVALUE
 
@@ -325,7 +325,7 @@ class Item:
             Item._canPickupItem = True
 
     @staticmethod
-    def modDroppedPropertiesAndAddToList(Item_list: List[Item], item: Item, player: PlayerClass):
+    def modDroppedPropertiesAndAddToList(Item_list: list[Item], item: Item, player: PlayerClass):
         item.rect.center = player.rect.center
         item.physics = True
         item.vertical_momentum = player.vertical_momentum
@@ -376,7 +376,7 @@ class Weapon(Item):
 
     data: Dict[Type[Weapon], Weapon.WeaponData] = {}
 
-    def __init__(self, position: Tuple[int, int], serialNumber: int) -> None:
+    def __init__(self, position: tuple[int, int], serialNumber: int) -> None:
         super().__init__(position, serialNumber)
 
     #                                                                  ↓  float to pass infinite through
@@ -453,7 +453,7 @@ class Weapon(Item):
         Weapon.data.clear()
 
 class Ammo(Item):
-    def __init__(self, position: Tuple[int, int], serialNumber: int):
+    def __init__(self, position: tuple[int, int], serialNumber: int):
         super().__init__(position, serialNumber)
 
     def internalInit(self, _type: Type[Weapon], addAmmo: int, addScore: int, sound: pygame.mixer.Sound):

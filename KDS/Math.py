@@ -278,7 +278,8 @@ def SmoothStep(a: float, b: float, t: float) -> float:
     return b * t + a * (1 - t)
 
 def MoveTowards(current: float, target: float, maxDelta: float) -> float:
-    """Moves a value current towards target.
+    """
+    Moves a value current towards target.
     This is essentially the same as Lerp, but instead the function will ensure that the speed never exceeds maxDelta. Negative values of maxDelta pushes the value away from target.
 
     Args:
@@ -286,16 +287,19 @@ def MoveTowards(current: float, target: float, maxDelta: float) -> float:
         target (float): The value to move towards.
         maxDelta (float): The maximum change that should be applied to the value.
     """
-    if abs(target - current) <= maxDelta: return target
+    if abs(target - current) <= maxDelta:
+        return target
     return current + Sign(target - current) * maxDelta
 
 def MoveTowardsAngle(current: float, target: float, maxDelta: float) -> float:
-    """Same as MoveTowards but makes sure the values interpolate correctly when they wrap around 360 degrees.
+    """
+    Same as MoveTowards but makes sure the values interpolate correctly when they wrap around 360 degrees.
     Variables current and target are assumed to be in degrees. For optimization reasons, negative values of maxDelta are not supported and may cause oscillation. To push current away from a target angle, add 180 to that angle instead.
     """
 
     deltaAngle = DeltaAngle(current, target)
-    if (-maxDelta < deltaAngle and deltaAngle < maxDelta): return target
+    if -maxDelta < deltaAngle and deltaAngle < maxDelta:
+        return target
     target = current + deltaAngle
     return MoveTowards(current, target, maxDelta)
 
