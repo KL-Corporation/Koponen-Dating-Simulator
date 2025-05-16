@@ -2975,7 +2975,10 @@ def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
         return True # Return True if event handling can be stopped
     elif event.type == KEYDOWN:
         if event.key == K_F2:
-            framelimiter = not framelimiter
+            if not framelimiter:
+                framelimiter = True
+            elif KDS.Debug.Enabled:
+                framelimiter = False
         elif event.key == K_F3:
             KDS.Debug.Enabled = not KDS.Debug.Enabled
             KDS.Logging.Profiler(False)
