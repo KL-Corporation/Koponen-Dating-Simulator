@@ -451,7 +451,6 @@ class WorldData:
     ##### MAP FILE ERROR #####""")
             #endregion
             KDS.System.MessageBox.Show("Map Error", "This map is currently unplayable. You can find more details in the log file.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
-            KDS.Loading.Circle.Stop()
             if map_load_profiler is not None:
                 map_load_profiler.stop()
             return None
@@ -4532,103 +4531,104 @@ def play_function(mapPath: str | None, gamemode: KDS.Gamemode.Modes, reset_scrol
     else:
         KDS.Loading.Circle.Start(display)
 
-    if gamemode == KDS.Gamemode.Modes.CustomCampaign:
-        assert(mapPath is not None)
-        gamemode = KDS.Gamemode.Modes.Campaign
-    elif gamemode == KDS.Gamemode.Modes.Story:
-        assert KDS.ConfigManager.Save.Active != None, "Could not load story mode map! No save active."
-        assert(mapPath is None)
-        mapPath = os.path.join("Assets/Maps/Story", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
-    else:
-        assert(gamemode == KDS.Gamemode.Modes.Campaign)
-        campaignMapPath: Final[str] = os.path.join("Assets/Maps/Campaign", f"map{current_map_index:02d}")
-        assert(mapPath is None or mapPath == campaignMapPath)
-        mapPath = campaignMapPath
+    errored: bool = False
+    try:
+        if gamemode == KDS.Gamemode.Modes.CustomCampaign:
+            assert(mapPath is not None)
+            gamemode = KDS.Gamemode.Modes.Campaign
+        elif gamemode == KDS.Gamemode.Modes.Story:
+            assert KDS.ConfigManager.Save.Active != None, "Could not load story mode map! No save active."
+            assert(mapPath is None)
+            mapPath = os.path.join("Assets/Maps/Story", f"map{KDS.ConfigManager.Save.Active.Story.index:02d}")
+        else:
+            assert(gamemode == KDS.Gamemode.Modes.Campaign)
+            campaignMapPath: Final[str] = os.path.join("Assets/Maps/Campaign", f"map{current_map_index:02d}")
+            assert(mapPath is None or mapPath == campaignMapPath)
+            mapPath = campaignMapPath
 
-    KDS.World.Lighting.Shapes.clear()
+        KDS.World.Lighting.Shapes.clear()
 
-    global Player
-    Player = PlayerClass()
+        #region World Data
+        TheftDetector.globalReset()
+        TileFire.globalReset()
+        # Wallet.globalReset()
+        # levelprop.kdf defines the level's wallet balance so this isn't needed anymore
 
-    #region World Data
-    TheftDetector.globalReset()
-    TileFire.globalReset()
-    # Wallet.globalReset()
-    # levelprop.kdf defines the level's wallet balance so this isn't needed anymore
+        global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones, Particles, Player
+        Items.clear()
+        Explosions.clear()
+        BallisticObjects.clear()
+        Projectiles.clear()
+        Entities.clear()
+        Particles.clear()
 
-    global Items, Explosions, BallisticObjects, Projectiles, Entities, Zones, Particles
-    Items.clear()
-    Explosions.clear()
-    BallisticObjects.clear()
-    Projectiles.clear()
-    Entities.clear()
-    Particles.clear()
+        Zones.clear()
+        KDS.World.Zone.reset()
 
-    Zones.clear()
-    KDS.World.Zone.reset()
-    #endregion
-    #region Class Data
-    KDS.NPC.NPC.InstanceList.clear()
-    KDS.Teachers.Teacher.InstanceList.clear()
-    KDS.World.Zone.StaffOnlyCollisions = 0
-    RespawnAnchor.active = None
-    BaseTeleport.teleportDatas = {}
-    ScreenEffects.Reset()
-    #endregion
+        Player.reset()
+        #endregion
+        #region Class Data
+        KDS.NPC.NPC.InstanceList.clear()
+        KDS.Teachers.Teacher.InstanceList.clear()
+        KDS.World.Zone.StaffOnlyCollisions = 0
+        RespawnAnchor.active = None
+        BaseTeleport.teleportDatas = {}
+        ScreenEffects.Reset()
+        #endregion
 
-    #region Reset ammo
-    # TODO: We don't seem to be using this old style ammo handling anymore...
-    # consider removing
-    for c in KDS.Build.Item.serialNumbers.values():
-        defaultAmmo = getattr(c, "defaultAmmunition", None)
-        if defaultAmmo != None:
-            setattr(c, "ammunition", defaultAmmo)
-    #endregion
+        # TODO: We don't seem to be using this old style ammo handling anymore...
+        # consider removing
+        for c in KDS.Build.Item.serialNumbers.values():
+            defaultAmmo = getattr(c, "defaultAmmunition", None)
+            if defaultAmmo != None:
+                setattr(c, "ammunition", defaultAmmo)
+        #endregion
 
-    # It's probably fine if we only load this during startup
-    # LoadGameSettings()
 
-    loadMapHandle = KDS.Jobs.Schedule(WorldData.LoadMap, mapPath)
-    while not loadMapHandle.IsComplete:
-        for event in pygame.event.get(): # No default event handler in loading screen
-            if event.type == QUIT:
-                KDS_Quit()
-        pygame.time.wait(100)
-    wdata = loadMapHandle.Complete()
+            for event in pygame.event.get(): # No default event handler in loading screen
+                if event.type == QUIT:
+                    KDS_Quit()
+            pygame.time.wait(100)
 
-    # Stupid idea
-    # KDS.System.gc.collect() # Collecting here since player has already waited for long and this application uses a shit ton of RAM
+        try:
+        except Exception as e:
+            KDS.Logging.AutoError(e)
+            wdata = None
+            KDS.System.MessageBox.Show("Unknown Error", "An error occured while loading the map.", KDS.System.MessageBox.Buttons.OK, KDS.System.MessageBox.Icon.EXCLAMATION)
 
-    if not wdata:
+            errored = True
+            return
+
+
         pygame.mouse.set_visible(True)
-        return
 
     KDS.Gamemode.SetGamemode(gamemode, KDS.MapProp.LevelProp.Get("Data/missionsId", "missing"), Enemy.total)
+        global level_finished
+        #endregion
 
-    Player.rect.topleft, _ = wdata
+        KDS.Scores.ScoreCounter.Start()
+            true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
+        pygame.event.clear()
+        KDS.Keys.Reset()
+        game_loading_logger.stop(f"Game Loaded.", consoleVisible=True)
+        KDS.Loading.fake_load_extra(game_loading_logger.accumulatedTime, quickload)
 
-    #region Set Game Data
-    global level_finished
-    level_finished = False
-    #endregion
+        #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
+        if auto_play_music and KDS.Audio.Music.Loaded is not None:
+            KDS.Audio.Music.Play()
+    finally:
+        if custom_load is not None:
+            custom_load.end()
+            KDS.Loading.Circle.Stop()
 
-    main_menu_running = False
-    KDS.Scores.ScoreCounter.Start()
-    if reset_scroll:
-        true_scroll = [float(Player.rect.x - SCROLL_OFFSET[0]), float(Player.rect.y - SCROLL_OFFSET[1])]
-    pygame.event.clear()
-    KDS.Keys.Reset()
-    game_loading_logger.stop(f"Game Loaded.", consoleVisible=True)
-    KDS.Loading.fake_load_extra(game_loading_logger.accumulatedTime, quickload)
+            pygame.mouse.set_visible(True)
+
+                KDS.Audio.Music.Play()
+            else:
+                KDS.Logging.error("Could not resume music after play function error.", consoleVisible=True)
 
     if custom_load is not None:
-        custom_load.end()
-    else:
-        KDS.Loading.Circle.Stop()
 
-    #LoadMap will assign Loaded if it finds a song for the level. If not found LoadMap will call Unload to set Loaded as None.
-    if auto_play_music and KDS.Audio.Music.Loaded != None:
-        KDS.Audio.Music.Play()
 
 def play_story(saveIndex: int, newSave: bool = True, oldSurf: Optional[pygame.Surface] = None):
     pygame.mouse.set_visible(False)
