@@ -104,7 +104,7 @@ class Animation:
                 # but from my testing unloading and reloading didn't give a significant performance boost
                 # so we'll just unload them then to save a bit of RAM
                 _surfaceCache.pop(img.key, None) # Supply a default value so that if the key isn't found, we don't raise an error.
-                if KDS.Logging.running: # Logger might have quit during application exit before __del__ is called
+                if KDS.Logging.get_init(): # Logger might have quit during application exit before __del__ is called
                     KDS.Logging.debug(f"Unloaded shared animation image: {img.key}")
 
     # HACK: I can't be bothered to refactor this old KDS codebase

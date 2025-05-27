@@ -1,11 +1,10 @@
 import cProfile
-import inspect
 import logging
 import os
 import pstats
 import platform
+import traceback
 import KDS.Application
-import KDS.Math
 import KDS.System
 import KDS.Linq
 import pygame
@@ -14,58 +13,54 @@ import faulthandler
 import re
 import psutil
 from datetime import datetime
-from typing import Any, List, Optional, Self
+from typing import Any, Final, List, Self, TextIO
 import time
 
-running = False
-profiler_running = False
-profile = cProfile.Profile()
+_logStream: TextIO | None = None
+_profile: cProfile.Profile | None = None
 
-faultHandlerEnabled: bool = False
-stderrPath: Optional[str] = None
+def get_profiler_running() -> bool:
+    return _profile is not None
 
-def init(_AppDataPath: str, _LogPath: str, _faultHandler: bool = True):
-    global running, AppDataPath, LogPath, stderrPath, faultHandlerEnabled, logFileName
-    running = True
-    AppDataPath = _AppDataPath
-    LogPath = _LogPath
+def get_init() -> bool:
+    return _logStream is not None
+
+def init(LogPath: str, useFaultHandler: bool = True):
+    if get_init():
+        raise RuntimeError("Cannot initialize logging twice!")
+
+    # Create stream
+    logtime: Final[str] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    log_filename: Final[str] = os.path.join(LogPath, f"log_{logtime}.log")
+    stream: TextIO = open(log_filename, mode="a", encoding="utf-8", errors="replace")
+    global _logStream
+    _logStream = stream
+
+    # Setup logging
+    logging.basicConfig(stream=stream, format="%(levelname)s-%(asctime)s: %(message)s", level=logging.NOTSET, datefmt="%H:%M:%S")
+    debug(f"Created log file: {log_filename}")
+
+    # Setup Python runtime internal error handling
+    if useFaultHandler:
+        faulthandler.enable(stream, all_threads=True)
+        debug(f"Enabled faulthandler.")
+
+    # Delete old log files
+    # Our log file stream is still open, so this method cannot destroy our log file, even by accident.
+    _purge_old_log_files(LogPath)
+
+def _purge_old_log_files(LogPath: str, max_logfiles_count: int = 5):
+    debug("Purging old log files...")
 
     logFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".log"))
     logFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
-    while len(logFiles) > 4:
+
+    while len(logFiles) > max_logfiles_count:
         wholeLogPath = os.path.join(LogPath, logFiles.pop(0))
         try:
             os.remove(wholeLogPath)
         except Exception:
-            print(f"Could not remove errorlog file: {wholeLogPath}")
-
-    errorlogFiles: List[str] = list(KDS.Linq.Where(os.listdir(LogPath), lambda f: os.path.splitext(f)[1] == ".errorlog"))
-    errorlogFiles.sort(key=lambda f: int("".join(re.findall(r'\d+', f))))
-    for errorlog in errorlogFiles:
-        wholeErrorlogPath = os.path.join(LogPath, errorlog)
-        rmErrorlog: bool = False
-        with open(wholeErrorlogPath, "r") as f:
-            if len(f.read()) < 1:
-                rmErrorlog = True
-        if rmErrorlog:
-            try:
-                os.remove(wholeErrorlogPath)
-            except Exception:
-                print(f"Could not remove errorlog file: {wholeErrorlogPath}")
-
-    logtime: str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    logFileName = os.path.join(LogPath, f"log_{logtime}.log")
-    logging.basicConfig(filename=logFileName, format="%(levelname)s-%(asctime)s: %(message)s", level=logging.NOTSET, datefmt="%H:%M:%S")
-    debug(f"Created log file: {logFileName}")
-
-    faultHandlerEnabled = _faultHandler
-    if faultHandlerEnabled:
-        stderrPath = os.path.join(LogPath, f"""errorlog_{logtime}.errorlog""")
-        sys.stderr = open(stderrPath, "w")
-        debug(f"Created errorlog file: {stderrPath}")
-        faulthandler.enable(sys.stderr, all_threads=True)
-        debug(f"Enabled faulthandler.")
-
+            print(f"Could not remove log file: {wholeLogPath}")
 
 def log_debug_info():
     """pygame video mode must be initialized before calling this function."""
@@ -136,18 +131,36 @@ def log_debug_info():
 - RAM: {memory_info.available / 1_073_741_824:.2f} GB Available ({memory_info.total / 1_073_741_824:.2f} GB Total)""")
 
 def _log(message: str | BaseException, consoleVisible: bool, stack_info: bool, logLevel: int, color: str, **kwargs: Any) -> None:
-    if not running:
-        print(f"Log not succesful! Logger has been shut down already. Original message: {message}")
+    if not get_init():
+        print(f"Log not succesful! Logger has been shut down already. Original message below:\n{message}")
         return
 
     if isinstance(message, BaseException):
-        message = f"{type(message).__name__}: {str(message)}"
+        exc_msg: list[str]
+        if stack_info:
+            exc_msg = traceback.format_exception(message)
+            stack_info = False # So that we don't write the stack info twice
+        else:
+            exc_msg = traceback.format_exception_only(message)
+        message = "".join(exc_msg)
+
     logging.log(logLevel, message, stack_info=stack_info, stacklevel=3, **kwargs)
-    if stack_info:
-        _frameinfo = inspect.getouterframes(inspect.currentframe(), 2)[2]
-        message = f"File \"{_frameinfo.filename}\", line {_frameinfo.lineno}, in {_frameinfo.function}\n    {message}\n    Read log file for more details."
+
     if consoleVisible:
-        print(KDS.System.Console.Colored(message, color))
+        print(_format_console_msg(message=message, color=color, stack_info=stack_info))
+
+def _format_console_msg(message: str, color: str, stack_info: bool) -> str:
+    if stack_info:
+        stack_frm = None
+        for stack_frm, _ in traceback.walk_stack(None):
+            break
+
+        stack_msg: Final[list[str]] = traceback.format_stack(stack_frm)
+        stack_msg.append(message)
+
+        message = "".join(stack_msg)
+
+    return KDS.System.Console.Colored(message, color)
 
 # remembed to also update the individual log functions (debug, info, etc.) as they use a static variable for performance reasons
 _logLevelColors: dict[int, str] = {
@@ -174,7 +187,7 @@ def AutoError(message: str | BaseException, **kwargs: Any) -> None:
     Args:
         Message (str): The error message.
     """
-    _log(message, True, True, 40, "red", **kwargs)
+    _log(message, True, True, logging.CRITICAL, "red", **kwargs)
 
 def Profiler(enabled: bool = True):
     """Turns the profiler on or off.
@@ -182,15 +195,18 @@ def Profiler(enabled: bool = True):
     Args:
         enabled (bool, optional): Defines if the profiler will be enabled or disabled. Defaults to True.
     """
-    global profiler_running, profile, logFileName
-    if enabled and not profiler_running:
-        profiler_running = True
-        profile = cProfile.Profile()
-        profile.enable()
-    elif not enabled and profiler_running:
-        profiler_running = False
-        profile.disable()
-        _dump_profile_stats(profile, title="EXPORTED PROFILER DATA")
+    global _profile
+    if enabled:
+        if _profile is None:
+            _profile = cProfile.Profile()
+            _profile.enable()
+    else:
+        if _profile is not None:
+            p: cProfile.Profile = _profile
+            _profile = None
+
+            p.disable()
+            _dump_profile_stats(p, title="EXPORTED PROFILER DATA")
 
 class MapLoadingProfiler:
     def __init__(self, *, _profile: cProfile.Profile) -> None:
@@ -208,14 +224,16 @@ class MapLoadingProfiler:
         _dump_profile_stats(self._profile, title="MAP LOADING PROFILER DATA")
 
 def _dump_profile_stats(profile: cProfile.Profile, *, title: str):
-    try:
-        with open(logFileName, "a+") as f:
-            f.write(f"I=========================[ {title} ]=========================I\n\n")
-            ps = pstats.Stats(profile, stream=f)
-            ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
-            ps.print_stats()
-            f.write(f"I=========================[ {title} ]=========================I\n")
-    except IOError as e: AutoError(f"IO Error! Details:\n{e}")
+    f: TextIO | None = _logStream
+    if f is None:
+        AutoError("Could not dump profile stats to log file.")
+        return
+
+    f.write(f"I=========================[ {title} ]=========================I\n\n")
+    ps = pstats.Stats(profile, stream=f)
+    ps.strip_dirs().sort_stats(pstats.SortKey.CUMULATIVE)
+    ps.print_stats()
+    f.write(f"I=========================[ {title} ]=========================I\n")
 
 class ExecutionTimeLogger:
     def __init__(self, logLevel: int, msg_prefix: str) -> None:
@@ -283,17 +301,13 @@ class ExecutionTimeLogger:
         _log(self._msg_prefix + message + f" (took {seconds:.3f} seconds)", consoleVisible=consoleVisible, stack_info=stack_info, logLevel=self._level, color=_logLevelColors[self._level])
 
 def quit():
-    global running, faultHandlerEnabled
-    if faultHandlerEnabled:
-        faultHandlerEnabled = False
+    if faulthandler.is_enabled():
         faulthandler.disable()
-        sys.stderr.close()
-        if stderrPath != None:
-            os.remove(stderrPath)
-        else:
-            AutoError("stderrPath is none when faulthandler is enabled!")
-
-    running = False
-
     logging.shutdown()
     Profiler(False)
+
+    global _logStream
+    ls: TextIO | None = _logStream
+    _logStream = None
+    if ls is not None:
+        ls.close()

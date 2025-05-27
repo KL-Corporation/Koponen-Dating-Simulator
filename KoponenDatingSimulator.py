@@ -34,11 +34,10 @@ os.makedirs(PersistentPaths.Screenshots, exist_ok=True)
 os.makedirs(PersistentPaths.CustomMaps, exist_ok=True)
 #endregion
 
-KDS.Logging.init(PersistentPaths.AppData, PersistentPaths.Logs)
+KDS.Logging.init(PersistentPaths.Logs)
 game_whole_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug()
 game_initialization_logger: Final = KDS.Logging.ExecutionTimeLogger.debug(4 * " ")
 game_whole_initialization_logger.start("Initialising Game...")
-
 game_initialization_logger.start("Initialising pygame...")
 pygame.init()
 
@@ -443,7 +442,7 @@ class WorldData:
     @staticmethod
     def LoadMap(MapPath: str) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
         map_load_profiler: KDS.Logging.MapLoadingProfiler | None = None
-        if KDS.Debug.Enabled and not KDS.Logging.profiler_running:
+        if KDS.Debug.Enabled and not KDS.Logging.get_profiler_running():
             map_load_profiler = KDS.Logging.MapLoadingProfiler.start()
 
         map_whole_load_logger: Final = KDS.Logging.ExecutionTimeLogger.debug("MAP THREAD: ")

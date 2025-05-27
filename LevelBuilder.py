@@ -131,7 +131,7 @@ SetDisplaySize((min(display_size[0], monitor_info.current_w), min(display_size[1
 APPDATA = os.path.join(str(os.getenv('APPDATA')), "KL Corporation", "KDS Level Builder")
 LOGPATH = os.path.join(APPDATA, "logs")
 os.makedirs(LOGPATH, exist_ok=True)
-KDS.Logging.init(APPDATA, LOGPATH)
+KDS.Logging.init(LOGPATH)
 KDS.Logging.log_debug_info()
 KDS.Cursor.init(cursor_index_override=0)
 KDS.Jobs.init()
@@ -2985,7 +2985,7 @@ def defaultEventHandler(event, ignoreEventOfType: int | None = None) -> bool:
             return True
         elif event.key == K_F4:
             if KDS.Debug.Enabled:
-                KDS.Logging.Profiler(not KDS.Logging.profiler_running)
+                KDS.Logging.Profiler(not KDS.Logging.get_profiler_running())
     elif event.type == VIDEORESIZE:
         SetDisplaySize((event.w, event.h))
         return True

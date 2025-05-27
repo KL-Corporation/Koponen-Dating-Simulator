@@ -23,7 +23,7 @@ def RenderData(data: dict[str, Any] | None, fontOverride: pygame.font.Font | Non
     rnd_data: dict[str, Any] = {
         "FPS": KDS.Clock.GetFPS(3)
     }
-    if KDS.Logging.profiler_running:
+    if KDS.Logging.get_profiler_running():
         rnd_data["Profiler"] = "enabled"
     if len(cursor_interactions) > 0:
         rnd_data["Cursor Interactions"] = ", ".join(cursor_interactions)

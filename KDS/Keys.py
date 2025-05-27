@@ -193,12 +193,12 @@ class InventoryKey(Key):
 def _onDownHandlerDebug():
     KDS.Debug.Enabled = not KDS.Debug.Enabled
 
-    if not KDS.Debug.Enabled and KDS.Logging.profiler_running:
+    if not KDS.Debug.Enabled and KDS.Logging.get_profiler_running():
         KDS.Logging.Profiler(False)
 
 def _onDownHandlerProfiler():
     if KDS.Debug.Enabled:
-        KDS.Logging.Profiler(not KDS.Logging.profiler_running)
+        KDS.Logging.Profiler(not KDS.Logging.get_profiler_running())
 
 def _onDownHandlerFullscreen():
     pygame.display.toggle_fullscreen()
