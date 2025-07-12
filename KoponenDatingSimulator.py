@@ -2433,7 +2433,7 @@ class JungleCannon(KDS.Build.Tile):
         # properties
         self.startAngle: int = 23
         self.endAngle: int = 135
-        self.shootVelocity: int = 30
+        self.shootVelocity: int | float = 30
         self.multiuse: bool = False
 
         # internal variables
@@ -2446,6 +2446,20 @@ class JungleCannon(KDS.Build.Tile):
         self.currentAngleTexture: pygame.Surface = jungle_cannon_cannon
 
     def lateInit(self) -> None:
+        if not isinstance(self.startAngle, int): # pyright: ignore [reportUnnecessaryIsInstance]
+            KDS.Logging.warning("Jungle cannon start angle must be an integer, trying to convert value...")
+            try:
+                self.startAngle = int(self.startAngle)
+            except Exception:
+                KDS.Logging.error("Could not convert start angle. Using default value instead.")
+
+        if not isinstance(self.endAngle, int): # pyright: ignore [reportUnnecessaryIsInstance]
+            KDS.Logging.warning("Jungle cannon end angle must be an integer, trying to convert value...")
+            try:
+                self.endAngle = int(self.endAngle)
+            except Exception:
+                KDS.Logging.error("Could not convert end angle. Using default value instead.")
+
         self.currentAngleFloat: float = float(self.startAngle)
 
     def update(self) -> pygame.Surface | None:
