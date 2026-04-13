@@ -3,7 +3,7 @@
 # Python Version: 3.13.5
 
 pygame-ce==2.5.5
-pillow==11.3.0
+pillow==12.2.0
 Markdown==3.8.2
 numpy==2.3.1
 psutil==7.0.0
